@@ -41,10 +41,10 @@ const W = LEFT_PAD + DATA.length * COL_W + (DATA.length - 1) * COL_GAP + 30
 const H = TOP_PAD + STRIP_H + BOT_PAD
 
 function colorForRate(rate: number): string {
-  if (rate >= 75) return '#dc2626'  // critical red
-  if (rate >= 60) return '#ea580c'  // orange
-  if (rate >= 40) return '#f59e0b'  // amber
-  return '#16a34a'                   // green
+  if (rate >= 75) return 'var(--color-sector-salud)'  // critical red
+  if (rate >= 60) return 'var(--color-sector-infraestructura)'  // orange
+  if (rate >= 40) return 'var(--color-risk-high)'  // amber
+  return 'var(--color-sector-hacienda)'                   // green
 }
 
 export function StorySexenioASexenio() {
@@ -109,7 +109,7 @@ export function StorySexenioASexenio() {
                   y1={y}
                   x2={W - 10}
                   y2={y}
-                  stroke={isOECD ? '#22d3ee' : '#1f1f23'}
+                  stroke={isOECD ? 'var(--color-oecd)' : '#1f1f23'}
                   strokeWidth={isOECD ? 1 : 0.5}
                   strokeDasharray={isOECD ? '4 3' : undefined}
                   opacity={isOECD ? 0.8 : 1}
@@ -118,7 +118,7 @@ export function StorySexenioASexenio() {
                   x={LEFT_PAD - 12}
                   y={y + 3}
                   textAnchor="end"
-                  fill={isOECD ? '#22d3ee' : '#52525b'}
+                  fill={isOECD ? 'var(--color-oecd)' : 'var(--color-text-secondary)'}
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={isOECD ? 700 : 400}
@@ -130,7 +130,7 @@ export function StorySexenioASexenio() {
                     x={W - 12}
                     y={y - 4}
                     textAnchor="end"
-                    fill="#22d3ee"
+                    fill="var(--color-oecd)"
                     fontSize={8.5}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={700}
@@ -155,7 +155,7 @@ export function StorySexenioASexenio() {
                   x={cx}
                   y={28}
                   textAnchor="middle"
-                  fill="#f4f4f5"
+                  fill="var(--color-background-elevated)"
                   fontSize={13}
                   fontFamily="var(--font-family-serif)"
                   fontWeight={700}
@@ -166,7 +166,7 @@ export function StorySexenioASexenio() {
                   x={cx}
                   y={44}
                   textAnchor="middle"
-                  fill="#71717a"
+                  fill="var(--color-text-muted)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -177,7 +177,7 @@ export function StorySexenioASexenio() {
                 <text
                   x={cx - 22}
                   y={59}
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -226,7 +226,7 @@ export function StorySexenioASexenio() {
                   x={cx}
                   y={H - 48}
                   textAnchor="middle"
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -238,7 +238,7 @@ export function StorySexenioASexenio() {
                   x={cx}
                   y={H - 32}
                   textAnchor="middle"
-                  fill="#52525b"
+                  fill="var(--color-text-secondary)"
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -263,7 +263,7 @@ export function StorySexenioASexenio() {
                   y1={y1}
                   x2={cx2}
                   y2={y2}
-                  stroke="#f59e0b"
+                  stroke="var(--color-risk-high)"
                   strokeWidth={1.5}
                   strokeDasharray="4 3"
                 />
@@ -276,7 +276,7 @@ export function StorySexenioASexenio() {
             x={W / 2}
             y={H - 10}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >

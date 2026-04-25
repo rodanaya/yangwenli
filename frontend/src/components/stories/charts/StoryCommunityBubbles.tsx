@@ -44,10 +44,10 @@ const NODES: Node[] = [
 ]
 
 function colorFor(risk: number): string {
-  if (risk >= 0.60) return '#dc2626'
-  if (risk >= 0.40) return '#ea580c'
-  if (risk >= 0.25) return '#eab308'
-  return '#16a34a'
+  if (risk >= 0.60) return 'var(--color-sector-salud)'
+  if (risk >= 0.40) return 'var(--color-sector-infraestructura)'
+  if (risk >= 0.25) return 'var(--color-sector-energia)'
+  return 'var(--color-sector-hacienda)'
 }
 
 const W = 680
@@ -163,11 +163,11 @@ export function StoryCommunityBubbles() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="#71717a" strokeWidth={2} />
-            <text x={CX} y={CY - 4} textAnchor="middle" fill="#f4f4f5" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono)">
+            <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="var(--color-text-muted)" strokeWidth={2} />
+            <text x={CX} y={CY - 4} textAnchor="middle" fill="var(--color-background-elevated)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono)">
               INSTITUCIÓN
             </text>
-            <text x={CX} y={CY + 10} textAnchor="middle" fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={CX} y={CY + 10} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               hub
             </text>
           </motion.g>
@@ -195,7 +195,7 @@ export function StoryCommunityBubbles() {
                   x={n.x}
                   y={n.y + 3}
                   textAnchor="middle"
-                  fill="#f4f4f5"
+                  fill="var(--color-background-elevated)"
                   fontSize={9}
                   fontWeight={600}
                   fontFamily="var(--font-family-mono)"
@@ -210,10 +210,10 @@ export function StoryCommunityBubbles() {
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           {[
-            { label: 'Crítico ≥ 0.60', color: '#dc2626' },
-            { label: 'Alto ≥ 0.40',    color: '#ea580c' },
-            { label: 'Medio ≥ 0.25',   color: '#eab308' },
-            { label: 'Bajo < 0.25',    color: '#16a34a' },
+            { label: 'Crítico ≥ 0.60', color: 'var(--color-sector-salud)' },
+            { label: 'Alto ≥ 0.40',    color: 'var(--color-sector-infraestructura)' },
+            { label: 'Medio ≥ 0.25',   color: 'var(--color-sector-energia)' },
+            { label: 'Bajo < 0.25',    color: 'var(--color-sector-hacienda)' },
           ].map(({ label, color }) => (
             <span key={label} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />

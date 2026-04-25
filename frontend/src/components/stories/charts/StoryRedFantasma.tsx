@@ -82,11 +82,11 @@ const CLUSTER_LABELS = [
 ]
 
 function getColor(score: number): string {
-  if (score >= 0.85) return '#dc2626'
-  if (score >= 0.75) return '#ef4444'
-  if (score >= 0.65) return '#f97316'
-  if (score >= 0.55) return '#fb923c'
-  return '#78716c'
+  if (score >= 0.85) return 'var(--color-sector-salud)'
+  if (score >= 0.75) return 'var(--color-risk-critical)'
+  if (score >= 0.65) return 'var(--color-sector-trabajo)'
+  if (score >= 0.55) return 'var(--color-risk-high)'
+  return 'var(--color-text-secondary)'
 }
 
 export function StoryRedFantasma() {
@@ -165,7 +165,7 @@ export function StoryRedFantasma() {
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke="#ef4444"
+                stroke="var(--color-risk-critical)"
                 strokeOpacity={0.2}
                 strokeWidth={0.6}
                 initial={{ pathLength: 0 }}
@@ -188,7 +188,7 @@ export function StoryRedFantasma() {
               x={cluster.x}
               y={cluster.y}
               textAnchor="middle"
-              fill="#a1a1aa"
+              fill="var(--color-text-muted)"
               fontSize={11}
               fontFamily="var(--font-family-mono)"
               fontWeight={600}
@@ -199,7 +199,7 @@ export function StoryRedFantasma() {
               x={cluster.x}
               y={cluster.y + 13}
               textAnchor="middle"
-              fill="#52525b"
+              fill="var(--color-text-secondary)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
@@ -235,7 +235,7 @@ export function StoryRedFantasma() {
                 r={r}
                 fill={getColor(ghost.score)}
                 fillOpacity={0.85}
-                stroke="#450a0a"
+                stroke="var(--color-risk-critical)"
                 strokeWidth={0.8}
               />
             </motion.g>

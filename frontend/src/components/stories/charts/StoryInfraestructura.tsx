@@ -52,9 +52,9 @@ const BAR_H = ROW_H - 3
 const BAR_W = W - PADDING_L - PADDING_R
 
 const COLORS = {
-  direct: '#dc2626',
-  single: '#ea580c',
-  open: '#16a34a',
+  direct: 'var(--color-sector-salud)',
+  single: 'var(--color-sector-infraestructura)',
+  open: 'var(--color-sector-hacienda)',
 }
 
 export function StoryInfraestructura() {
@@ -112,15 +112,15 @@ export function StoryInfraestructura() {
         {/* Column headers */}
         <g transform={`translate(${PADDING_L}, ${PADDING_T - 20})`}>
           <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
-          <text x={12} y={6} fill="#ef4444" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={12} y={6} fill="var(--color-risk-critical)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             DIRECTA
           </text>
           <circle cx={90} cy={2} r={3} fill={COLORS.single} />
-          <text x={99} y={6} fill="#fb923c" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={99} y={6} fill="var(--color-risk-high)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             UN OFERENTE
           </text>
           <circle cx={200} cy={2} r={3} fill={COLORS.open} />
-          <text x={209} y={6} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={209} y={6} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             LICITACIÓN ABIERTA
           </text>
         </g>
@@ -139,7 +139,7 @@ export function StoryInfraestructura() {
                 x={PADDING_L - 10}
                 y={y0 + BAR_H / 2 + 3}
                 textAnchor="end"
-                fill={annotation ? '#fbbf24' : '#71717a'}
+                fill={annotation ? 'var(--color-risk-medium)' : 'var(--color-text-muted)'}
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={annotation ? 700 : 500}
@@ -185,7 +185,7 @@ export function StoryInfraestructura() {
               <text
                 x={PADDING_L + BAR_W + 8}
                 y={y0 + BAR_H / 2 + 3}
-                fill="#d4d4d8"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
@@ -198,7 +198,7 @@ export function StoryInfraestructura() {
                   x={PADDING_L + directW / 2}
                   y={y0 + BAR_H / 2 + 3}
                   textAnchor="middle"
-                  fill="#fef2f2"
+                  fill="var(--color-risk-critical)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -211,7 +211,7 @@ export function StoryInfraestructura() {
                   x={PADDING_L + directW + singleW + openW / 2}
                   y={y0 + BAR_H / 2 + 3}
                   textAnchor="middle"
-                  fill="#052e16"
+                  fill="var(--color-text-secondary)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
@@ -231,12 +231,12 @@ export function StoryInfraestructura() {
                     cx={PADDING_L + BAR_W + 50}
                     cy={y0 + BAR_H / 2}
                     r={3}
-                    fill="#fbbf24"
+                    fill="var(--color-risk-medium)"
                   />
                   <text
                     x={PADDING_L + BAR_W + 60}
                     y={y0 + BAR_H / 2 + 3}
-                    fill="#fbbf24"
+                    fill="var(--color-risk-medium)"
                     fontSize={9}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
@@ -255,7 +255,7 @@ export function StoryInfraestructura() {
           y1={PADDING_T - 4}
           x2={PADDING_L + BAR_W * 0.5}
           y2={PADDING_T + YEARS.length * ROW_H}
-          stroke="#22d3ee"
+          stroke="var(--color-oecd)"
           strokeOpacity={0.4}
           strokeWidth={0.8}
           strokeDasharray="3 3"
@@ -264,7 +264,7 @@ export function StoryInfraestructura() {
           x={PADDING_L + BAR_W * 0.5}
           y={PADDING_T - 26}
           textAnchor="middle"
-          fill="#22d3ee"
+          fill="var(--color-oecd)"
           fontSize={9}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}

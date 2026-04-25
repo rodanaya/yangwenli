@@ -91,10 +91,10 @@ export function StoryAnoSinExcusas() {
           aria-label="Direct award rate by year 2019-2024 with COVID context"
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={36} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={36} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             AÑO
           </text>
-          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)
           </text>
 
@@ -105,7 +105,7 @@ export function StoryAnoSinExcusas() {
               y1={32}
               x2={LABEL_W + oecdDotIdx * DOT_GAP_X - DOT_GAP_X / 2}
               y2={H - 24}
-              stroke="#22d3ee"
+              stroke="var(--color-oecd)"
               strokeWidth={1}
               strokeDasharray="4 3"
               opacity={0.7}
@@ -114,7 +114,7 @@ export function StoryAnoSinExcusas() {
               x={LABEL_W + oecdDotIdx * DOT_GAP_X - DOT_GAP_X / 2}
               y={28}
               textAnchor="middle"
-              fill="#22d3ee"
+              fill="var(--color-oecd)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
@@ -122,10 +122,10 @@ export function StoryAnoSinExcusas() {
               OCDE 25%
             </text>
           </g>
-          <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             %
           </text>
-          <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             CONTEXTO
           </text>
 
@@ -135,7 +135,7 @@ export function StoryAnoSinExcusas() {
             const cy = y0 + ROW_H / 2
             const isRecord = row.year === 2023
             const filled = Math.round(row.daRate / 2)
-            const fillColor = isRecord ? '#dc2626' : '#a16207'
+            const fillColor = isRecord ? 'var(--color-sector-salud)' : 'var(--color-risk-medium)'
 
             return (
               <g key={row.year}>
@@ -147,9 +147,9 @@ export function StoryAnoSinExcusas() {
                     width={STRIP_W + VALUE_W + 8}
                     height={ROW_H - 8}
                     rx={4}
-                    fill="#dc2626"
+                    fill="var(--color-sector-salud)"
                     fillOpacity={0.06}
-                    stroke="#dc2626"
+                    stroke="var(--color-sector-salud)"
                     strokeOpacity={0.3}
                     strokeWidth={0.75}
                   />
@@ -160,7 +160,7 @@ export function StoryAnoSinExcusas() {
                   x={LABEL_W - 10}
                   y={cy - 4}
                   textAnchor="end"
-                  fill={isRecord ? '#f87171' : '#e4e4e7'}
+                  fill={isRecord ? 'var(--color-risk-critical)' : '#e4e4e7'}
                   fontSize={isRecord ? 20 : 16}
                   fontFamily="var(--font-family-serif)"
                   fontWeight={isRecord ? 800 : 600}
@@ -173,7 +173,7 @@ export function StoryAnoSinExcusas() {
                     x={LABEL_W - 10}
                     y={cy + 14}
                     textAnchor="end"
-                    fill={isRecord ? '#fca5a5' : '#71717a'}
+                    fill={isRecord ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                     fontSize={8.5}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={isRecord ? 700 : 400}
@@ -207,7 +207,7 @@ export function StoryAnoSinExcusas() {
                   x={LABEL_W + STRIP_W + VALUE_W - 6}
                   y={cy}
                   textAnchor="end"
-                  fill={isRecord ? '#f87171' : '#d4d4d8'}
+                  fill={isRecord ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                   fontSize={isRecord ? 14 : 12}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={isRecord ? 800 : 600}
@@ -222,16 +222,16 @@ export function StoryAnoSinExcusas() {
                     width={COVID_W - 16}
                     height={ROW_H - 12}
                     rx={3}
-                    fill={row.covid ? '#52525b' : '#18181b'}
+                    fill={row.covid ? 'var(--color-text-secondary)' : '#18181b'}
                     fillOpacity={row.covid ? 0.6 : 0.8}
-                    stroke={row.covid ? '#71717a' : 'var(--color-background-elevated)'}
+                    stroke={row.covid ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
                     strokeWidth={0.75}
                   />
                   <text
                     x={(COVID_W - 16) / 2}
                     y={(ROW_H - 12) / 2 + 3}
                     textAnchor="middle"
-                    fill={row.covid ? '#e4e4e7' : '#71717a'}
+                    fill={row.covid ? '#e4e4e7' : 'var(--color-text-muted)'}
                     fontSize={9}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
@@ -249,7 +249,7 @@ export function StoryAnoSinExcusas() {
             x={LABEL_W + STRIP_W / 2}
             y={H - 6}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >

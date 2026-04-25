@@ -52,7 +52,7 @@ function yFor(v: number) {
 }
 
 function colorFor(code: string): string {
-  return (SECTOR_COLORS as Record<string, string>)[code] || '#64748b'
+  return (SECTOR_COLORS as Record<string, string>)[code] || 'var(--color-sector-otros)'
 }
 
 export function StorySectorParadox() {
@@ -81,14 +81,14 @@ export function StorySectorParadox() {
         aria-label="Sector scatter: direct-award rate on X-axis, high-risk contract percentage on Y-axis"
       >
         {/* Quadrant guides */}
-        <rect x={xFor(75)} y={yFor(20)} width={xFor(100) - xFor(75)} height={yFor(10) - yFor(20)} fill="#dc2626" fillOpacity={0.04} />
-        <rect x={xFor(X_MIN)} y={yFor(20)} width={xFor(75) - xFor(X_MIN)} height={yFor(10) - yFor(20)} fill="#ea580c" fillOpacity={0.05} />
+        <rect x={xFor(75)} y={yFor(20)} width={xFor(100) - xFor(75)} height={yFor(10) - yFor(20)} fill="var(--color-sector-salud)" fillOpacity={0.04} />
+        <rect x={xFor(X_MIN)} y={yFor(20)} width={xFor(75) - xFor(X_MIN)} height={yFor(10) - yFor(20)} fill="var(--color-sector-infraestructura)" fillOpacity={0.05} />
 
         {/* Grid */}
         {[5, 10, 15, 20].map((v) => (
           <g key={`yg-${v}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -96,7 +96,7 @@ export function StorySectorParadox() {
         {[70, 80, 90, 100].map((v) => (
           <g key={`xg-${v}`}>
             <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -107,7 +107,7 @@ export function StorySectorParadox() {
           x={PAD.left + PLOT_W / 2}
           y={H - 12}
           textAnchor="middle"
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
@@ -118,7 +118,7 @@ export function StorySectorParadox() {
           x={15}
           y={PAD.top + PLOT_H / 2}
           textAnchor="middle"
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
@@ -152,7 +152,7 @@ export function StorySectorParadox() {
                 x={xFor(p.daPct)}
                 y={yFor(p.highRiskPct) + r + 12}
                 textAnchor="middle"
-                fill={isParadox ? '#f4f4f5' : '#a1a1aa'}
+                fill={isParadox ? '#f4f4f5' : 'var(--color-text-muted)'}
                 fontSize={isParadox ? 11 : 9}
                 fontWeight={isParadox ? 700 : 500}
                 fontFamily="var(--font-family-mono)"
@@ -165,10 +165,10 @@ export function StorySectorParadox() {
 
         {/* Paradox annotations */}
         <g>
-          <text x={xFor(74)} y={yFor(18)} fill="#fbbf24" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={xFor(74)} y={yFor(18)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
             ← BAJA DA · ALTO RIESGO
           </text>
-          <text x={xFor(92)} y={yFor(3)} fill="#fbbf24" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600} textAnchor="end">
+          <text x={xFor(92)} y={yFor(3)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600} textAnchor="end">
             ALTA DA · BAJO RIESGO →
           </text>
         </g>

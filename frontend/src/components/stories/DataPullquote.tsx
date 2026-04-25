@@ -15,10 +15,10 @@ interface DataPullquoteProps {
 }
 
 const OUTLET_BORDER_COLORS: Record<OutletType, string> = {
-  longform: '#71717a',
-  investigative: '#3b82f6',
-  data_analysis: '#8b5cf6',
-  rubli: '#dc2626',
+  longform: 'var(--color-text-muted)',
+  investigative: 'var(--color-sector-educacion)',
+  data_analysis: 'var(--color-sector-tecnologia)',
+  rubli: 'var(--color-sector-salud)',
 }
 
 function parseStatNumber(stat: string): { num: number; suffix: string; decimals: number } | null {
@@ -51,10 +51,10 @@ export default function DataPullquote({
 
   const borderColor = outlet
     ? OUTLET_BORDER_COLORS[outlet]
-    : statColor.includes('red') ? '#dc2626'
-    : statColor.includes('amber') ? '#eab308'
-    : statColor.includes('blue') ? '#3b82f6'
-    : '#dc2626'
+    : statColor.includes('red') ? 'var(--color-sector-salud)'
+    : statColor.includes('amber') ? 'var(--color-sector-energia)'
+    : statColor.includes('blue') ? 'var(--color-sector-educacion)'
+    : 'var(--color-sector-salud)'
 
   const barColorHex = borderColor
 

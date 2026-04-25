@@ -44,7 +44,7 @@ const DATA: SectorRow[] = [
 ]
 
 const OECD_TARGET = 75
-const OECD_COLOR = '#22d3ee'
+const OECD_COLOR = 'var(--color-oecd)'
 
 const DOTS = 80        // each dot = 1pp (0-80% domain)
 const DOT_R = 3
@@ -60,7 +60,7 @@ const H = 46 + DATA.length * ROW_H + 14
 
 function getSectorColor(code: string): string {
   const key = SECTOR_KEY_MAP[code] || code
-  return SECTOR_COLORS[key] || '#64748b'
+  return SECTOR_COLORS[key] || 'var(--color-sector-otros)'
 }
 
 export function StoryCeroCompetenciaChart() {
@@ -107,7 +107,7 @@ export function StoryCeroCompetenciaChart() {
             x={LABEL_W - 6}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -118,7 +118,7 @@ export function StoryCeroCompetenciaChart() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -161,7 +161,7 @@ export function StoryCeroCompetenciaChart() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                 >

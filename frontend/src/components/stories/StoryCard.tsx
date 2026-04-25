@@ -17,8 +17,8 @@ const TYPE_LABELS: Record<StoryType, string> = {
 const OUTLET_ACCENT: Record<OutletType, string> = {
   longform: '#1a1714',
   investigative: '#d4922a',
-  data_analysis: '#2563eb',
-  rubli: '#dc2626',
+  data_analysis: 'var(--color-accent-data)',
+  rubli: 'var(--color-sector-salud)',
 }
 
 export interface StoryCardProps {

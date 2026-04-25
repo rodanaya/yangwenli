@@ -39,8 +39,8 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 40 + DATA.length * ROW_H + 16
 
 function getVendorColor(daPct: number): string {
-  if (daPct >= 99) return '#dc2626'
-  if (daPct >= 60) return '#ea580c'
+  if (daPct >= 99) return 'var(--color-sector-salud)'
+  if (daPct >= 60) return 'var(--color-sector-infraestructura)'
   return SECTOR_COLORS.agricultura
 }
 
@@ -86,7 +86,7 @@ export function StoryGraneroVacio() {
             x={LABEL_W - 6}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -97,7 +97,7 @@ export function StoryGraneroVacio() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -118,7 +118,7 @@ export function StoryGraneroVacio() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -155,7 +155,7 @@ export function StoryGraneroVacio() {
                   fontWeight={600}
                 >
                   ${row.value.toFixed(2)}B
-                  <tspan fill="#71717a" fontWeight={400}>  {row.daPct}% DA</tspan>
+                  <tspan fill="var(--color-text-muted)" fontWeight={400}>  {row.daPct}% DA</tspan>
                 </text>
               </g>
             )
@@ -175,11 +175,11 @@ export function StoryGraneroVacio() {
 
       <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm" style={{ background: '#dc2626' }} />
+          <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-salud)' }} />
           100% DA
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm" style={{ background: '#ea580c' }} />
+          <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-infraestructura)' }} />
           60-99% DA
         </span>
         <span className="flex items-center gap-1.5">

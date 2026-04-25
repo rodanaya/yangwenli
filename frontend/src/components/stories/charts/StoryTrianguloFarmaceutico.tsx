@@ -41,9 +41,9 @@ const INSTITUTIONS: Institution[] = [
 ]
 
 const VENDORS: Vendor[] = [
-  { id: 'farmacos', label: 'Fármacos Esp.', x: 220, y: 195, total: 128, daRate: 81, score: 0.89, color: '#dc2626' },
-  { id: 'maypo',    label: 'Maypo Intl.',   x: 155, y: 235, total: 92,  daRate: 78, score: 0.84, color: '#ef4444' },
-  { id: 'dimm',     label: 'DIMM',          x: 285, y: 235, total: 65,  daRate: 76, score: 0.81, color: '#f87171' },
+  { id: 'farmacos', label: 'Fármacos Esp.', x: 220, y: 195, total: 128, daRate: 81, score: 0.89, color: 'var(--color-sector-salud)' },
+  { id: 'maypo',    label: 'Maypo Intl.',   x: 155, y: 235, total: 92,  daRate: 78, score: 0.84, color: 'var(--color-risk-critical)' },
+  { id: 'dimm',     label: 'DIMM',          x: 285, y: 235, total: 65,  daRate: 76, score: 0.81, color: 'var(--color-risk-critical)' },
 ]
 
 const EDGES: Edge[] = [
@@ -139,7 +139,7 @@ export function StoryTrianguloFarmaceutico() {
               y1={a.y}
               x2={b.x}
               y2={b.y}
-              stroke="#dc2626"
+              stroke="var(--color-sector-salud)"
               strokeOpacity={0.35}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
@@ -162,7 +162,7 @@ export function StoryTrianguloFarmaceutico() {
               x={mx}
               y={my}
               textAnchor="middle"
-              fill="#fca5a5"
+              fill="var(--color-risk-critical)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               initial={{ opacity: 0 }}
@@ -182,12 +182,12 @@ export function StoryTrianguloFarmaceutico() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
           >
-            <circle cx={inst.x} cy={inst.y} r={28} fill="#18181b" stroke="#3b82f6" strokeWidth={2} />
+            <circle cx={inst.x} cy={inst.y} r={28} fill="#18181b" stroke="var(--color-sector-educacion)" strokeWidth={2} />
             <text
               x={inst.x}
               y={inst.y + 4}
               textAnchor="middle"
-              fill="#93c5fd"
+              fill="var(--color-sector-educacion)"
               fontSize={10}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
@@ -198,7 +198,7 @@ export function StoryTrianguloFarmaceutico() {
               x={inst.x}
               y={inst.y + (i === 0 ? -38 : 46)}
               textAnchor="middle"
-              fill="#52525b"
+              fill="var(--color-text-secondary)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
@@ -221,14 +221,14 @@ export function StoryTrianguloFarmaceutico() {
               r={18 + (v.total / 128) * 10}
               fill={v.color}
               fillOpacity={0.9}
-              stroke="#450a0a"
+              stroke="var(--color-risk-critical)"
               strokeWidth={1.5}
             />
             <text
               x={v.x}
               y={v.y + 3}
               textAnchor="middle"
-              fill="#fef2f2"
+              fill="var(--color-risk-critical)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
@@ -239,7 +239,7 @@ export function StoryTrianguloFarmaceutico() {
               x={v.x}
               y={v.y + (v.id === 'farmacos' ? -36 : 44)}
               textAnchor="middle"
-              fill="#d4d4d8"
+              fill="var(--color-text-muted)"
               fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
@@ -250,12 +250,12 @@ export function StoryTrianguloFarmaceutico() {
 
         {/* Legend */}
         <g transform="translate(20, 400)">
-          <circle cx={6} cy={6} r={6} fill="#18181b" stroke="#3b82f6" strokeWidth={1.5} />
-          <text x={18} y={10} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+          <circle cx={6} cy={6} r={6} fill="#18181b" stroke="var(--color-sector-educacion)" strokeWidth={1.5} />
+          <text x={18} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
             Instituciones federales
           </text>
-          <circle cx={180} cy={6} r={6} fill="#dc2626" />
-          <text x={192} y={10} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+          <circle cx={180} cy={6} r={6} fill="var(--color-sector-salud)" />
+          <text x={192} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
             Proveedor dominante
           </text>
         </g>
@@ -278,7 +278,7 @@ export function StoryTrianguloFarmaceutico() {
                   return (
                     <g key={i}>
                       {isOecd && (
-                        <line x1={i * 8 + 4} y1={0} x2={i * 8 + 4} y2={14} stroke="#22d3ee" strokeWidth={0.7} strokeDasharray="2 2" />
+                        <line x1={i * 8 + 4} y1={0} x2={i * 8 + 4} y2={14} stroke="var(--color-oecd)" strokeWidth={0.7} strokeDasharray="2 2" />
                       )}
                       <motion.circle
                         cx={i * 8 + 4}

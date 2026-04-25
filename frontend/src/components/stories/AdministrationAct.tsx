@@ -29,22 +29,22 @@ interface AdministrationActProps {
 
 const PARTY_COLORS: Record<PartyKey, { border: string; badge: string; badgeText: string; accent: string }> = {
   PAN: {
-    border: '#3b82f6',
+    border: 'var(--color-sector-educacion)',
     badge: 'bg-blue-600',
     badgeText: 'text-text-primary',
-    accent: '#3b82f6',
+    accent: 'var(--color-sector-educacion)',
   },
   PRI: {
-    border: '#16a34a',
+    border: 'var(--color-sector-hacienda)',
     badge: 'bg-green-600',
     badgeText: 'text-text-primary',
-    accent: '#16a34a',
+    accent: 'var(--color-sector-hacienda)',
   },
   MORENA: {
-    border: '#dc2626',
+    border: 'var(--color-sector-salud)',
     badge: 'bg-red-700',
     badgeText: 'text-text-primary',
-    accent: '#dc2626',
+    accent: 'var(--color-sector-salud)',
   },
 }
 
@@ -146,7 +146,7 @@ export default function AdministrationAct({
           <div className="relative">
             <AnimatedFill
               pct={Math.min(stats.daPct, 100)}
-              color={stats.daPct > OECD_DA_BENCHMARK ? partyStyle.accent : '#71717a'}
+              color={stats.daPct > OECD_DA_BENCHMARK ? partyStyle.accent : 'var(--color-text-muted)'}
               height="h-2.5"
               delay={300}
             />

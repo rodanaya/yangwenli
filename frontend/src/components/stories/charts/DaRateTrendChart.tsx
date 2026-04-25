@@ -34,9 +34,9 @@ const ERA_FILL: Record<string, string> = {
 }
 
 const ERA_DOT: Record<string, string> = {
-  calderon: '#3b82f6',
-  pena:     '#ef4444',
-  amlo:     '#f59e0b',
+  calderon: 'var(--color-sector-educacion)',
+  pena:     'var(--color-risk-critical)',
+  amlo:     'var(--color-risk-high)',
 }
 
 const ERA_LABEL: Record<string, string> = {
@@ -153,7 +153,7 @@ export function DaRateTrendChart() {
               x={PAD.left - 8}
               y={yFor(v) + 3}
               textAnchor="end"
-              fill="#52525b"
+              fill="var(--color-text-secondary)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
@@ -168,7 +168,7 @@ export function DaRateTrendChart() {
           x2={W - PAD.right}
           y1={oecdY}
           y2={oecdY}
-          stroke="#22d3ee"
+          stroke="var(--color-oecd)"
           strokeWidth={1.5}
           strokeDasharray="6 3"
         />
@@ -176,7 +176,7 @@ export function DaRateTrendChart() {
           x={W - PAD.right}
           y={oecdY - 4}
           textAnchor="end"
-          fill="#22d3ee"
+          fill="var(--color-oecd)"
           fontSize={9}
           fontFamily="var(--font-family-mono)"
         >
@@ -187,7 +187,7 @@ export function DaRateTrendChart() {
         <motion.path
           d={linePath}
           fill="none"
-          stroke="#52525b"
+          stroke="var(--color-text-secondary)"
           strokeWidth={1.2}
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
@@ -217,7 +217,7 @@ export function DaRateTrendChart() {
                   x={xFor(i)}
                   y={yFor(d.rate) - 12}
                   textAnchor="middle"
-                  fill="#fbbf24"
+                  fill="var(--color-risk-medium)"
                   fontSize={11}
                   fontWeight={700}
                   fontFamily="var(--font-family-mono)"
@@ -238,7 +238,7 @@ export function DaRateTrendChart() {
               x={xFor(i)}
               y={H - PAD.bottom + 16}
               textAnchor="middle"
-              fill="#71717a"
+              fill="var(--color-text-muted)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >

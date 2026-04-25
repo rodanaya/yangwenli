@@ -16,7 +16,7 @@ export default function ChapterBanner({
   title,
   subtitle,
   era,
-  color = '#dc2626',
+  color = 'var(--color-sector-salud)',
   className,
 }: ChapterBannerProps) {
   const { t } = useTranslation('common')

@@ -86,7 +86,7 @@ export function StoryCartelCorazon() {
           x={LABEL_W - 8}
           y={24}
           textAnchor="end"
-          fill="#52525b"
+          fill="var(--color-text-secondary)"
           fontSize={9}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
@@ -94,12 +94,12 @@ export function StoryCartelCorazon() {
           DISPOSITIVO
         </text>
         <g transform={`translate(${LABEL_W}, 20)`}>
-          <circle cx={3} cy={2} r={3} fill="#52525b" />
-          <text x={12} y={6} fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <circle cx={3} cy={2} r={3} fill="var(--color-text-secondary)" />
+          <text x={12} y={6} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             PRECIO MERCADO
           </text>
-          <circle cx={140} cy={2} r={3} fill="#dc2626" />
-          <text x={149} y={6} fill="#ef4444" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <circle cx={140} cy={2} r={3} fill="var(--color-sector-salud)" />
+          <text x={149} y={6} fill="var(--color-risk-critical)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             PAGADO POR IMSS (SOBREPAGO)
           </text>
         </g>
@@ -118,7 +118,7 @@ export function StoryCartelCorazon() {
                 x={LABEL_W - 8}
                 y={y0 + STRIP_H + 6}
                 textAnchor="end"
-                fill="#d4d4d8"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
@@ -128,7 +128,7 @@ export function StoryCartelCorazon() {
                 x={LABEL_W - 8}
                 y={y0 + STRIP_H + 18}
                 textAnchor="end"
-                fill="#52525b"
+                fill="var(--color-text-secondary)"
                 fontSize={8}
                 fontFamily="var(--font-family-mono)"
               >
@@ -144,7 +144,7 @@ export function StoryCartelCorazon() {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y0 + STRIP_H / 2}
                     r={DOT_R}
-                    fill={isFilled ? '#52525b' : 'var(--color-background-elevated)'}
+                    fill={isFilled ? 'var(--color-text-secondary)' : 'var(--color-background-elevated)'}
                     stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
@@ -156,7 +156,7 @@ export function StoryCartelCorazon() {
               <text
                 x={LABEL_W + MAX_DOTS * DOT_GAP + 10}
                 y={y0 + STRIP_H / 2 + 3}
-                fill="#a1a1aa"
+                fill="var(--color-text-muted)"
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
@@ -174,7 +174,7 @@ export function StoryCartelCorazon() {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y0 + STRIP_H + 6 + STRIP_H / 2}
                     r={DOT_R}
-                    fill={isFilled ? (isOverpay ? '#dc2626' : '#71717a') : 'var(--color-background-elevated)'}
+                    fill={isFilled ? (isOverpay ? 'var(--color-sector-salud)' : 'var(--color-text-muted)') : 'var(--color-background-elevated)'}
                     stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
@@ -186,12 +186,12 @@ export function StoryCartelCorazon() {
               <text
                 x={LABEL_W + MAX_DOTS * DOT_GAP + 10}
                 y={y0 + STRIP_H + 6 + STRIP_H / 2 + 3}
-                fill="#ef4444"
+                fill="var(--color-risk-critical)"
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >
-                ${device.imssK}K <tspan fill="#fbbf24">(+{premiumPct}%)</tspan>
+                ${device.imssK}K <tspan fill="var(--color-risk-medium)">(+{premiumPct}%)</tspan>
               </text>
             </g>
           )

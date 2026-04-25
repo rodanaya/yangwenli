@@ -49,16 +49,16 @@ const ERA_LABELS: Record<string, string> = {
 }
 
 const ERA_COLORS: Record<string, string> = {
-  calderon: '#3b82f6',
-  pena: '#ef4444',
-  amlo: '#f59e0b',
+  calderon: 'var(--color-sector-educacion)',
+  pena: 'var(--color-risk-critical)',
+  amlo: 'var(--color-risk-high)',
 }
 
 function riskColor(risk: number): string {
-  if (risk >= 0.5) return '#dc2626'
-  if (risk >= 0.35) return '#ea580c'
-  if (risk >= 0.2) return '#eab308'
-  return '#16a34a'
+  if (risk >= 0.5) return 'var(--color-sector-salud)'
+  if (risk >= 0.35) return 'var(--color-sector-infraestructura)'
+  if (risk >= 0.2) return 'var(--color-sector-energia)'
+  return 'var(--color-sector-hacienda)'
 }
 
 // Chart dimensions
@@ -127,7 +127,7 @@ export function StoryNuevosRicos() {
         {[40, 80, 120, 160].map((v) => (
           <g key={`yg-${v}`}>
             <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}B
             </text>
           </g>
@@ -135,7 +135,7 @@ export function StoryNuevosRicos() {
         {[60, 70, 80].map((v) => (
           <g key={`xg-${v}`}>
             <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
-            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
           </g>
@@ -147,12 +147,12 @@ export function StoryNuevosRicos() {
           x2={xFor(25)}
           y1={PAD.top}
           y2={H - PAD.bottom}
-          stroke="#22d3ee"
+          stroke="var(--color-oecd)"
           strokeWidth={1.5}
           strokeDasharray="6 3"
         />
         {/* Label only if 25 is visible; here X_MIN=50 so place label at start */}
-        <text x={PAD.left + 4} y={PAD.top + 12} fill="#22d3ee" fontSize={9} fontFamily="var(--font-family-mono)">
+        <text x={PAD.left + 4} y={PAD.top + 12} fill="var(--color-oecd)" fontSize={9} fontFamily="var(--font-family-mono)">
           OCDE máx 25% →
         </text>
 
@@ -161,7 +161,7 @@ export function StoryNuevosRicos() {
           x={PAD.left + PLOT_W / 2}
           y={H - 12}
           textAnchor="middle"
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
@@ -172,7 +172,7 @@ export function StoryNuevosRicos() {
           x={15}
           y={PAD.top + PLOT_H / 2}
           textAnchor="middle"
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
@@ -230,7 +230,7 @@ export function StoryNuevosRicos() {
               x={xFor(c.daPct)}
               y={yFor(c.valueB) + 3}
               textAnchor="middle"
-              fill="#f4f4f5"
+              fill="var(--color-background-elevated)"
               fontSize={10}
               fontWeight={700}
               fontFamily="var(--font-family-mono)"
@@ -244,10 +244,10 @@ export function StoryNuevosRicos() {
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
         {[
-          { label: 'Riesgo crítico', color: '#dc2626' },
-          { label: 'Alto',           color: '#ea580c' },
-          { label: 'Medio',          color: '#eab308' },
-          { label: 'Bajo',           color: '#16a34a' },
+          { label: 'Riesgo crítico', color: 'var(--color-sector-salud)' },
+          { label: 'Alto',           color: 'var(--color-sector-infraestructura)' },
+          { label: 'Medio',          color: 'var(--color-sector-energia)' },
+          { label: 'Bajo',           color: 'var(--color-sector-hacienda)' },
         ].map(({ label, color }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, opacity: 0.6 }} />

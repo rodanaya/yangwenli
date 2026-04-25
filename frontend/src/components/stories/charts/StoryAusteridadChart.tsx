@@ -28,8 +28,8 @@ const SPEND_DOT_PER_T = SPEND_DOTS / 4
 const DA_DOTS = 50             // each dot = 2pp (0-100% domain)
 const DA_DOT_PER_PCT = DA_DOTS / 100
 
-const SPEND_COLOR = '#a1a1aa'
-const DA_COLOR = '#dc2626'
+const SPEND_COLOR = 'var(--color-text-muted)'
+const DA_COLOR = 'var(--color-sector-salud)'
 
 const DOT_R = 3
 const DOT_GAP = 8
@@ -106,7 +106,7 @@ export function StoryAusteridadChart() {
                   x={LABEL_W - 6}
                   y={blockY + 4}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -117,7 +117,7 @@ export function StoryAusteridadChart() {
                   x={LABEL_W - 6}
                   y={blockY + 15}
                   textAnchor="end"
-                  fill="#52525b"
+                  fill="var(--color-text-secondary)"
                   fontSize={8}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -127,7 +127,7 @@ export function StoryAusteridadChart() {
                   x={LABEL_W - 6}
                   y={blockY + 25}
                   textAnchor="end"
-                  fill="#52525b"
+                  fill="var(--color-text-secondary)"
                   fontSize={8}
                   fontFamily="var(--font-family-mono)"
                 >

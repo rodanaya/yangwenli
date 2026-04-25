@@ -36,7 +36,7 @@ const W = LEFT_PAD + LABEL_W + DOTS_TOTAL * DOT_GAP + 80
 const H = 50 + SECTORS.length * ROW_H + 20
 
 function colorFor(code: string): string {
-  return (SECTOR_COLORS as Record<string, string>)[code] || '#64748b'
+  return (SECTOR_COLORS as Record<string, string>)[code] || 'var(--color-sector-otros)'
 }
 
 export function DaBySectorChart() {
@@ -71,7 +71,7 @@ export function DaBySectorChart() {
           x2={LEFT_PAD + LABEL_W + oecdDots * DOT_GAP}
           y1={20}
           y2={H - 20}
-          stroke="#22d3ee"
+          stroke="var(--color-oecd)"
           strokeWidth={1.5}
           strokeDasharray="4 3"
         />
@@ -79,7 +79,7 @@ export function DaBySectorChart() {
           x={LEFT_PAD + LABEL_W + oecdDots * DOT_GAP}
           y={15}
           textAnchor="middle"
-          fill="#22d3ee"
+          fill="var(--color-oecd)"
           fontSize={10}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
@@ -99,7 +99,7 @@ export function DaBySectorChart() {
                 x={LEFT_PAD + LABEL_W - 8}
                 y={y + 4}
                 textAnchor="end"
-                fill="#d4d4d8"
+                fill="var(--color-text-muted)"
                 fontSize={11}
                 fontFamily="var(--font-family-mono)"
               >
@@ -145,11 +145,11 @@ export function DaBySectorChart() {
 
       <div className="mt-3 flex items-center gap-4 text-[10px] text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full opacity-50" style={{ background: '#64748b' }} />
+          <span className="w-2 h-2 rounded-full opacity-50" style={{ background: 'var(--color-sector-otros)' }} />
           Debajo de OCDE
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: '#64748b' }} />
+          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-sector-otros)' }} />
           Sobre OCDE — riesgo
         </span>
       </div>

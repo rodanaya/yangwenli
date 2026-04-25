@@ -79,7 +79,7 @@ export function StoryHemoserSplitting() {
                 x2={CHART_W - 8}
                 y1={y}
                 y2={y}
-                stroke="#27272a"
+                stroke="var(--color-text-secondary)"
                 strokeDasharray="3 3"
                 strokeWidth={0.5}
               />
@@ -87,7 +87,7 @@ export function StoryHemoserSplitting() {
                 x={LABEL_W - 6}
                 y={y + 3}
                 textAnchor="end"
-                fill="#52525b"
+                fill="var(--color-text-secondary)"
                 fontSize={8}
                 fontFamily="var(--font-family-mono)"
               >
@@ -102,7 +102,7 @@ export function StoryHemoserSplitting() {
           const filled = Math.round((item.contracts / MAX_VALUE) * ROWS)
           const xCenter = LABEL_W + colIdx * COL_W + COL_W / 2
           const isPeak = item.year === PEAK_YEAR
-          const color = isPeak ? '#dc2626' : '#52525b'
+          const color = isPeak ? 'var(--color-sector-salud)' : 'var(--color-text-secondary)'
           const pctOfTotal = ((item.contracts / TOTAL) * 100).toFixed(1)
 
           return (
@@ -132,7 +132,7 @@ export function StoryHemoserSplitting() {
                 x={xCenter}
                 y={TOP_PAD + (ROWS - filled) * DOT_GAP - 5}
                 textAnchor="middle"
-                fill={isPeak ? '#fca5a5' : '#a1a1aa'}
+                fill={isPeak ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={isPeak ? 700 : 500}
@@ -145,7 +145,7 @@ export function StoryHemoserSplitting() {
                 x={xCenter}
                 y={TOP_PAD + ROWS * DOT_GAP + 14}
                 textAnchor="middle"
-                fill={isPeak ? '#dc2626' : '#71717a'}
+                fill={isPeak ? 'var(--color-sector-salud)' : 'var(--color-text-muted)'}
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={isPeak ? 700 : 400}

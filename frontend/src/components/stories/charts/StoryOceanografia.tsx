@@ -110,12 +110,12 @@ export function StoryOceanografia() {
             const y = yFor(v)
             return (
               <g key={v}>
-                <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="#1f1f23" strokeWidth={0.5} />
+                <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="var(--color-border-hover)" strokeWidth={0.5} />
                 <text
                   x={PAD_L - 8}
                   y={y + 3}
                   textAnchor="end"
-                  fill="#52525b"
+                  fill="var(--color-text-secondary)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -130,7 +130,7 @@ export function StoryOceanografia() {
             x={14}
             y={PAD_T + CHART_H / 2}
             textAnchor="middle"
-            fill="#71717a"
+            fill="var(--color-text-muted)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -152,7 +152,7 @@ export function StoryOceanografia() {
                   y={y}
                   width={barW}
                   height={barH}
-                  fill={isArrest ? '#dc2626' : '#a16207'}
+                  fill={isArrest ? 'var(--color-sector-salud)' : 'var(--color-risk-medium)'}
                   fillOpacity={isArrest ? 0.9 : 0.75}
                   initial={{ height: 0, y: PAD_T + CHART_H }}
                   animate={{ height: barH, y }}
@@ -163,7 +163,7 @@ export function StoryOceanografia() {
                   x={cx}
                   y={y - 4}
                   textAnchor="middle"
-                  fill={isArrest ? '#fca5a5' : '#a8a29e'}
+                  fill={isArrest ? 'var(--color-risk-critical)' : '#a8a29e'}
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -175,7 +175,7 @@ export function StoryOceanografia() {
                   x={cx}
                   y={H - PAD_B + 14}
                   textAnchor="middle"
-                  fill="#71717a"
+                  fill="var(--color-text-muted)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -192,7 +192,7 @@ export function StoryOceanografia() {
               y1={PAD_T}
               x2={xFor(TIMELINE.length - 1)}
               y2={PAD_T + CHART_H}
-              stroke="#dc2626"
+              stroke="var(--color-sector-salud)"
               strokeWidth={1}
               strokeDasharray="3 3"
               opacity={0.6}
@@ -201,7 +201,7 @@ export function StoryOceanografia() {
               x={xFor(TIMELINE.length - 1) - 4}
               y={PAD_T - 10}
               textAnchor="end"
-              fill="#f87171"
+              fill="var(--color-risk-critical)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
@@ -213,7 +213,7 @@ export function StoryOceanografia() {
 
           {/* Legend */}
           <g transform={`translate(${PAD_L}, ${H - 14})`}>
-            <rect width={10} height={8} fill="#a16207" fillOpacity={0.75} />
+            <rect width={10} height={8} fill="var(--color-risk-medium)" fillOpacity={0.75} />
             <text x={14} y={7} fill="#a8a29e" fontSize={9} fontFamily="var(--font-family-mono)">
               contratos anuales · número = contratos firmados
             </text>

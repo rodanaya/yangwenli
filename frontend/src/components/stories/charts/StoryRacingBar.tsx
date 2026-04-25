@@ -27,9 +27,9 @@ const VENDORS: Vendor[] = [
 ]
 
 function colorFor(daPct: number): string {
-  if (daPct >= 99) return '#dc2626'
-  if (daPct >= 60) return '#ea580c'
-  return '#22c55e'
+  if (daPct >= 99) return 'var(--color-sector-salud)'
+  if (daPct >= 60) return 'var(--color-sector-infraestructura)'
+  return 'var(--color-sector-agricultura)'
 }
 
 // Manual layout — SEGALMEX center, others orbit clockwise
@@ -172,7 +172,7 @@ export function StoryRacingBar() {
                   x={pos.x}
                   y={pos.y + 10}
                   textAnchor="middle"
-                  fill="#e4e4e7"
+                  fill="var(--color-border)"
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -183,7 +183,7 @@ export function StoryRacingBar() {
                     x={pos.x}
                     y={pos.y + r + 14}
                     textAnchor="middle"
-                    fill="#fbbf24"
+                    fill="var(--color-risk-medium)"
                     fontSize={9}
                     fontFamily="var(--font-family-mono)"
                   >
@@ -198,15 +198,15 @@ export function StoryRacingBar() {
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: '#dc2626', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-salud)', opacity: 0.5 }} />
             100% adj. directa
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: '#ea580c', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-infraestructura)', opacity: 0.5 }} />
             60-99% directa
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: '#22c55e', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-agricultura)', opacity: 0.5 }} />
             {'< 60% directa'}
           </span>
           <span className="text-text-muted ml-auto">Tamaño = valor total · MXN B</span>

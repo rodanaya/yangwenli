@@ -29,10 +29,10 @@ const DATA: MonthRow[] = [
 ]
 
 const AVG = 48
-const ALERT_COLOR = '#dc2626'
-const WARNING_COLOR = '#ea580c'
-const SOFT_WARN = '#f97316'
-const MUTED_BAR = '#52525b'
+const ALERT_COLOR = 'var(--color-sector-salud)'
+const WARNING_COLOR = 'var(--color-sector-infraestructura)'
+const SOFT_WARN = 'var(--color-sector-trabajo)'
+const MUTED_BAR = 'var(--color-text-secondary)'
 
 const DOTS = 50       // each dot = 1.6B MXN (0-80B domain)
 const DOT_PER_B = DOTS / 80
@@ -98,7 +98,7 @@ export function MonthlySpendingChart() {
             x={LABEL_W - 6}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -109,7 +109,7 @@ export function MonthlySpendingChart() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -123,7 +123,7 @@ export function MonthlySpendingChart() {
             x2={LABEL_W + avgDot * DOT_GAP + DOT_R}
             y1={32}
             y2={40 + DATA.length * ROW_H - 4}
-            stroke="#a1a1aa"
+            stroke="var(--color-text-muted)"
             strokeDasharray="3 3"
             strokeWidth={1}
             opacity={0.5}
@@ -131,7 +131,7 @@ export function MonthlySpendingChart() {
           <text
             x={LABEL_W + avgDot * DOT_GAP + DOT_R + 4}
             y={38}
-            fill="#a1a1aa"
+            fill="var(--color-text-muted)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
@@ -152,7 +152,7 @@ export function MonthlySpendingChart() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                 >

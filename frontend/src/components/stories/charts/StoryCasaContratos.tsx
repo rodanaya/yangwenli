@@ -40,10 +40,10 @@ const CY = H / 2
 const ORBIT_R = 175
 
 function colorForRisk(risk: number): string {
-  if (risk >= 0.80) return '#dc2626'
-  if (risk >= 0.60) return '#ea580c'
-  if (risk >= 0.40) return '#f59e0b'
-  return '#16a34a'
+  if (risk >= 0.80) return 'var(--color-sector-salud)'
+  if (risk >= 0.60) return 'var(--color-sector-infraestructura)'
+  if (risk >= 0.40) return 'var(--color-risk-high)'
+  return 'var(--color-sector-hacienda)'
 }
 
 export function StoryCasaContratos() {
@@ -197,7 +197,7 @@ export function StoryCasaContratos() {
                   x={lx}
                   y={ly - 2}
                   textAnchor={textAnchor}
-                  fill="#e4e4e7"
+                  fill="var(--color-border)"
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -224,13 +224,13 @@ export function StoryCasaContratos() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <circle cx={CX} cy={CY} r={54} fill="#1e3a5f" fillOpacity={0.5} stroke="#3b82f6" strokeWidth={1.5} />
-            <circle cx={CX} cy={CY} r={44} fill="#0c1a2e" stroke="#60a5fa" strokeWidth={1} />
+            <circle cx={CX} cy={CY} r={54} fill="var(--color-sector-defensa)" fillOpacity={0.5} stroke="var(--color-sector-educacion)" strokeWidth={1.5} />
+            <circle cx={CX} cy={CY} r={44} fill="#0c1a2e" stroke="var(--color-sector-educacion)" strokeWidth={1} />
             <text
               x={CX}
               y={CY - 4}
               textAnchor="middle"
-              fill="#e0e7ff"
+              fill="var(--color-background-elevated)"
               fontSize={14}
               fontFamily="var(--font-family-serif)"
               fontWeight={700}
@@ -241,7 +241,7 @@ export function StoryCasaContratos() {
               x={CX}
               y={CY + 12}
               textAnchor="middle"
-              fill="#93c5fd"
+              fill="var(--color-sector-educacion)"
               fontSize={8}
               fontFamily="var(--font-family-mono)"
               letterSpacing="0.05em"
@@ -252,18 +252,18 @@ export function StoryCasaContratos() {
 
           {/* Legend */}
           <g transform={`translate(20, ${H - 28})`}>
-            <text fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+            <text fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
               TAMAÑO = CONTRATOS  ·  COLOR = RIESGO
             </text>
             <g transform="translate(0, 14)">
-              <circle cx={5} cy={0} r={4} fill="#16a34a" />
-              <text x={14} y={3} fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">bajo</text>
-              <circle cx={56} cy={0} r={4} fill="#f59e0b" />
-              <text x={65} y={3} fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">medio</text>
-              <circle cx={116} cy={0} r={4} fill="#ea580c" />
-              <text x={125} y={3} fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">alto</text>
-              <circle cx={160} cy={0} r={4} fill="#dc2626" />
-              <text x={169} y={3} fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">crítico</text>
+              <circle cx={5} cy={0} r={4} fill="var(--color-sector-hacienda)" />
+              <text x={14} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">bajo</text>
+              <circle cx={56} cy={0} r={4} fill="var(--color-risk-high)" />
+              <text x={65} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">medio</text>
+              <circle cx={116} cy={0} r={4} fill="var(--color-sector-infraestructura)" />
+              <text x={125} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">alto</text>
+              <circle cx={160} cy={0} r={4} fill="var(--color-sector-salud)" />
+              <text x={169} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">crítico</text>
             </g>
           </g>
         </svg>

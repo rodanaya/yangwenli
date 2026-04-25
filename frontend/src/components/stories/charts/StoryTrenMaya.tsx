@@ -43,9 +43,9 @@ const W = LABEL_W + STRIP_W + META_W + 40
 const H = 90 + SECTIONS.length * ROW_H + 40
 
 function colorForRate(r: number): string {
-  if (r >= 95) return '#dc2626'
-  if (r >= 80) return '#ea580c'
-  return '#f59e0b'
+  if (r >= 95) return 'var(--color-sector-salud)'
+  if (r >= 80) return 'var(--color-sector-infraestructura)'
+  return 'var(--color-risk-high)'
 }
 
 export function StoryTrenMaya() {
@@ -108,10 +108,10 @@ export function StoryTrenMaya() {
           aria-label="Tren Maya direct award rate by section"
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={32} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={32} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             TRAMO
           </text>
-          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)
           </text>
           {/* OECD line */}
@@ -121,7 +121,7 @@ export function StoryTrenMaya() {
               y1={32}
               x2={LABEL_W + Math.round(OECD_LIMIT / 2) * DOT_GAP_X - DOT_GAP_X / 2}
               y2={H - 36}
-              stroke="#22d3ee"
+              stroke="var(--color-oecd)"
               strokeWidth={1}
               strokeDasharray="4 3"
               opacity={0.7}
@@ -130,7 +130,7 @@ export function StoryTrenMaya() {
               x={LABEL_W + Math.round(OECD_LIMIT / 2) * DOT_GAP_X - DOT_GAP_X / 2}
               y={28}
               textAnchor="middle"
-              fill="#22d3ee"
+              fill="var(--color-oecd)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
@@ -138,7 +138,7 @@ export function StoryTrenMaya() {
               OCDE 25%
             </text>
           </g>
-          <text x={LABEL_W + STRIP_W + META_W / 2 + 20} y={32} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W + STRIP_W + META_W / 2 + 20} y={32} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             VALOR · EJECUTOR
           </text>
 
@@ -148,7 +148,7 @@ export function StoryTrenMaya() {
             y1={64}
             x2={LABEL_W - 24}
             y2={H - 30}
-            stroke="#52525b"
+            stroke="var(--color-text-secondary)"
             strokeWidth={2}
             strokeLinecap="round"
           />
@@ -168,8 +168,8 @@ export function StoryTrenMaya() {
                   cx={LABEL_W - 24}
                   cy={cy}
                   r={6}
-                  fill={isSEDENA ? '#1e3a5f' : '#a16207'}
-                  stroke={isSEDENA ? '#60a5fa' : '#fbbf24'}
+                  fill={isSEDENA ? 'var(--color-sector-defensa)' : 'var(--color-risk-medium)'}
+                  stroke={isSEDENA ? 'var(--color-sector-educacion)' : 'var(--color-risk-medium)'}
                   strokeWidth={1.5}
                 />
                 <text
@@ -189,7 +189,7 @@ export function StoryTrenMaya() {
                   x={LABEL_W - 12}
                   y={cy - 2}
                   textAnchor="end"
-                  fill="#e4e4e7"
+                  fill="var(--color-border)"
                   fontSize={11}
                   fontFamily="var(--font-family-serif)"
                   fontWeight={700}
@@ -200,7 +200,7 @@ export function StoryTrenMaya() {
                   x={LABEL_W - 12}
                   y={cy + 11}
                   textAnchor="end"
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -210,7 +210,7 @@ export function StoryTrenMaya() {
                   x={LABEL_W - 12}
                   y={cy + 22}
                   textAnchor="end"
-                  fill="#71717a"
+                  fill="var(--color-text-muted)"
                   fontSize={8}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -227,7 +227,7 @@ export function StoryTrenMaya() {
                       height={18}
                       rx={3}
                       fill="#1e293b"
-                      stroke="#3b82f6"
+                      stroke="var(--color-sector-educacion)"
                       strokeWidth={0.75}
                       strokeDasharray="3 3"
                       opacity={0.7}
@@ -236,7 +236,7 @@ export function StoryTrenMaya() {
                       x={LABEL_W + STRIP_W / 2}
                       y={cy + 3}
                       textAnchor="middle"
-                      fill="#93c5fd"
+                      fill="var(--color-sector-educacion)"
                       fontSize={10}
                       fontFamily="var(--font-family-mono)"
                       fontWeight={700}
@@ -276,7 +276,7 @@ export function StoryTrenMaya() {
                   </text>
                   <text
                     textAnchor="start"
-                    fill="#a1a1aa"
+                    fill="var(--color-text-muted)"
                     fontSize={9}
                     fontFamily="var(--font-family-mono)"
                     y={12}
@@ -293,7 +293,7 @@ export function StoryTrenMaya() {
             x={W / 2}
             y={H - 10}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >

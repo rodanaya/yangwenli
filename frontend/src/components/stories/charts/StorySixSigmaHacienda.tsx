@@ -24,13 +24,13 @@ const CONTRACT_DOTS = Array.from({ length: 147 }).map((_, i) => {
 })
 
 const COLORS = {
-  critical: '#dc2626',
-  high: '#ea580c',
-  medium: '#eab308',
-  low: '#16a34a',
-  win: '#dc2626',
-  lose: '#a1a1aa',
-  baselineWin: '#22d3ee',
+  critical: 'var(--color-sector-salud)',
+  high: 'var(--color-sector-infraestructura)',
+  medium: 'var(--color-sector-energia)',
+  low: 'var(--color-sector-hacienda)',
+  win: 'var(--color-sector-salud)',
+  lose: 'var(--color-text-muted)',
+  baselineWin: 'var(--color-oecd)',
 }
 
 export function StorySixSigmaHacienda() {
@@ -79,10 +79,10 @@ export function StorySixSigmaHacienda() {
           </p>
           <svg viewBox="0 0 280 310" className="w-full h-auto" role="img" aria-label="Win rate comparison: SixSigma versus sector baseline">
             {/* Titles */}
-            <text x={65} y={20} textAnchor="middle" fill="#ef4444" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={65} y={20} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
               SIXSIGMA
             </text>
-            <text x={215} y={20} textAnchor="middle" fill="#22d3ee" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={215} y={20} textAnchor="middle" fill="var(--color-oecd)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
               LÍNEA BASE
             </text>
 
@@ -100,7 +100,7 @@ export function StorySixSigmaHacienda() {
                   cy={cy}
                   r={4.5}
                   fill={won ? COLORS.win : COLORS.lose}
-                  stroke={won ? 'none' : '#3f3f46'}
+                  stroke={won ? 'none' : 'var(--color-text-secondary)'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -123,7 +123,7 @@ export function StorySixSigmaHacienda() {
                   cy={cy}
                   r={4.5}
                   fill={won ? COLORS.baselineWin : COLORS.lose}
-                  stroke={won ? 'none' : '#3f3f46'}
+                  stroke={won ? 'none' : 'var(--color-text-secondary)'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -133,17 +133,17 @@ export function StorySixSigmaHacienda() {
             })}
 
             {/* Result labels */}
-            <text x={65} y={185} textAnchor="middle" fill="#ef4444" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={65} y={185} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
               92%
             </text>
-            <text x={65} y={201} textAnchor="middle" fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={65} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               ganadas
             </text>
 
-            <text x={215} y={185} textAnchor="middle" fill="#22d3ee" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
               16%
             </text>
-            <text x={215} y={201} textAnchor="middle" fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={215} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               ganadas
             </text>
 
@@ -151,16 +151,16 @@ export function StorySixSigmaHacienda() {
             <line x1={140} y1={35} x2={140} y2={175} stroke="var(--color-border-hover)" strokeWidth={1} strokeDasharray="3 3" />
 
             {/* Callout */}
-            <text x={140} y={230} textAnchor="middle" fill="#fbbf24" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={140} y={230} textAnchor="middle" fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
               5.7× sobre lo esperado
             </text>
-            <text x={140} y={248} textAnchor="middle" fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={248} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               patrón consistente con
             </text>
-            <text x={140} y={262} textAnchor="middle" fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={262} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               requisitos técnicos escritos
             </text>
-            <text x={140} y={276} textAnchor="middle" fill="#a1a1aa" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={140} y={276} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               para un solo proveedor
             </text>
           </svg>
@@ -185,7 +185,7 @@ export function StorySixSigmaHacienda() {
                   r={8}
                   fill={COLORS[level as keyof typeof COLORS]}
                   fillOpacity={0.9}
-                  stroke="#09090b"
+                  stroke="var(--color-text-primary)"
                   strokeWidth={1}
                   initial={{ opacity: 0, scale: 0 }}
                   animate={{ opacity: 1, scale: 1 }}

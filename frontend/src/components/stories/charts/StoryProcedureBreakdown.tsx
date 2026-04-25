@@ -34,9 +34,9 @@ const DATA: SectorRow[] = [
 ]
 
 const COLORS = {
-  direct: '#dc2626',
-  single: '#ea580c',
-  open:   '#16a34a',
+  direct: 'var(--color-sector-salud)',
+  single: 'var(--color-sector-infraestructura)',
+  open:   'var(--color-sector-hacienda)',
 }
 
 const DOTS = 50 // each dot = 2pp
@@ -94,20 +94,20 @@ export function StoryProcedureBreakdown() {
           aria-label="Procedure breakdown dot matrix: 12 sectors, 3 strips each (direct award, single bid, open tender)"
         >
           {/* Header */}
-          <text x={LABEL_W - 8} y={24} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LABEL_W - 8} y={24} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             SECTOR
           </text>
           <g transform={`translate(${LABEL_W}, 20)`}>
             <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
-            <text x={11} y={6} fill="#dc2626" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={11} y={6} fill="var(--color-sector-salud)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               DIRECTA
             </text>
             <circle cx={80} cy={2} r={3} fill={COLORS.single} />
-            <text x={88} y={6} fill="#ea580c" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={88} y={6} fill="var(--color-sector-infraestructura)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               UN SOLO OFERENTE
             </text>
             <circle cx={205} cy={2} r={3} fill={COLORS.open} />
-            <text x={213} y={6} fill="#16a34a" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={213} y={6} fill="var(--color-sector-hacienda)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               LICITACIÓN ABIERTA
             </text>
           </g>
@@ -123,7 +123,7 @@ export function StoryProcedureBreakdown() {
                   x={LABEL_W - 8}
                   y={y0 + TRIO_H / 2}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                 >

@@ -24,10 +24,10 @@ const DATA: MetricRow[] = [
   { metric: 'Concentracion',  unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
 ]
 
-const FOX_COLOR = '#52525b'
-const CALDERON_COLOR = '#71717a'
-const PENA_COLOR = '#a1a1aa'
-const AMLO_COLOR = '#dc2626'
+const FOX_COLOR = 'var(--color-text-secondary)'
+const CALDERON_COLOR = 'var(--color-text-muted)'
+const PENA_COLOR = 'var(--color-text-muted)'
+const AMLO_COLOR = 'var(--color-sector-salud)'
 
 const SEXENIO_ROWS = [
   { key: 'fox',      label: 'Fox',        color: FOX_COLOR,      opacity: 0.55 },
@@ -97,7 +97,7 @@ export function SexenioComparisonChart() {
             x={LABEL_W - 6}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -108,7 +108,7 @@ export function SexenioComparisonChart() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -127,7 +127,7 @@ export function SexenioComparisonChart() {
                   x={LABEL_W - 6}
                   y={blockY}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -158,7 +158,7 @@ export function SexenioComparisonChart() {
                         x={LABEL_W - 6}
                         y={yStrip + STRIP_H / 2 + 3}
                         textAnchor="end"
-                        fill="#71717a"
+                        fill="var(--color-text-muted)"
                         fontSize={9}
                         fontFamily="var(--font-family-mono)"
                       >

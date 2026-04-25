@@ -120,10 +120,10 @@ export function StoryInsabi() {
           aria-label="Seguro Popular vs INSABI comparison chart"
         >
           {/* Headers */}
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="#16a34a" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-sector-hacienda)" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
             Seguro Popular
           </text>
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
             2015-2019
           </text>
 
@@ -131,7 +131,7 @@ export function StoryInsabi() {
             x={LABEL_W + STRIP_W + VALUE_W + COL_GAP + STRIP_W / 2 + VALUE_W / 2}
             y={26}
             textAnchor="middle"
-            fill="#dc2626"
+            fill="var(--color-sector-salud)"
             fontSize={11}
             fontFamily="var(--font-family-serif)"
             fontWeight={700}
@@ -142,7 +142,7 @@ export function StoryInsabi() {
             x={LABEL_W + STRIP_W + VALUE_W + COL_GAP + STRIP_W / 2 + VALUE_W / 2}
             y={42}
             textAnchor="middle"
-            fill="#f87171"
+            fill="var(--color-risk-critical)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.08em"
@@ -164,7 +164,7 @@ export function StoryInsabi() {
             x={LABEL_W + STRIP_W + VALUE_W + COL_GAP / 2}
             y={(H - 36 + 54) / 2}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={10}
             fontFamily="var(--font-family-mono)"
             fontWeight={700}
@@ -181,11 +181,11 @@ export function StoryInsabi() {
 
             // Color logic: green if SP is better, red if INSABI worse
             const spColor = m.worseIsHigher
-              ? (m.seguroPopular < m.insabi ? '#16a34a' : '#dc2626')
-              : (m.seguroPopular > m.insabi ? '#16a34a' : '#dc2626')
+              ? (m.seguroPopular < m.insabi ? 'var(--color-sector-hacienda)' : 'var(--color-sector-salud)')
+              : (m.seguroPopular > m.insabi ? 'var(--color-sector-hacienda)' : 'var(--color-sector-salud)')
             const insabiColor = m.worseIsHigher
-              ? (m.insabi > m.seguroPopular ? '#dc2626' : '#16a34a')
-              : (m.insabi < m.seguroPopular ? '#dc2626' : '#16a34a')
+              ? (m.insabi > m.seguroPopular ? 'var(--color-sector-salud)' : 'var(--color-sector-hacienda)')
+              : (m.insabi < m.seguroPopular ? 'var(--color-sector-salud)' : 'var(--color-sector-hacienda)')
 
             return (
               <g key={m.key}>
@@ -194,7 +194,7 @@ export function StoryInsabi() {
                   x={LABEL_W - 12}
                   y={cy + 3}
                   textAnchor="end"
-                  fill="#e4e4e7"
+                  fill="var(--color-border)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -267,7 +267,7 @@ export function StoryInsabi() {
             x={W / 2}
             y={H - 10}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >

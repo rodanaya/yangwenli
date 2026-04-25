@@ -10,10 +10,10 @@
 import { motion } from 'framer-motion'
 
 const TIERS = [
-  { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: '#dc2626', threshold: '≥ 0.60', count: '184K' },
-  { level: 'High',     pct: 7.5,  valuePct: 18.2, color: '#ea580c', threshold: '≥ 0.40', count: '229K' },
-  { level: 'Medium',   pct: 26.8, valuePct: 23.4, color: '#eab308', threshold: '≥ 0.25', count: '821K' },
-  { level: 'Low',      pct: 59.4, valuePct: 16.6, color: '#16a34a', threshold: '< 0.25', count: '1.82M' },
+  { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: 'var(--color-sector-salud)', threshold: '≥ 0.60', count: '184K' },
+  { level: 'High',     pct: 7.5,  valuePct: 18.2, color: 'var(--color-sector-infraestructura)', threshold: '≥ 0.40', count: '229K' },
+  { level: 'Medium',   pct: 26.8, valuePct: 23.4, color: 'var(--color-sector-energia)', threshold: '≥ 0.25', count: '821K' },
+  { level: 'Low',      pct: 59.4, valuePct: 16.6, color: 'var(--color-sector-hacienda)', threshold: '< 0.25', count: '1.82M' },
 ]
 
 const DOTS_PER_ROW = 50 // each dot = 2% of total contracts
@@ -80,13 +80,13 @@ export function StoryRiskPyramid() {
           aria-label="Dot pyramid showing 4 risk levels, critical at the top with 6 percent, low at the base with 59.4 percent"
         >
           {/* Column headers */}
-          <text x={LEFT_LABEL_W - 8} y={20} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LEFT_LABEL_W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             NIVEL
           </text>
-          <text x={LEFT_LABEL_W + (DOTS_PER_ROW * DOT_GAP) / 2} y={20} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={LEFT_LABEL_W + (DOTS_PER_ROW * DOT_GAP) / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             % DE CONTRATOS (cada punto = 2%)
           </text>
-          <text x={W - 8} y={20} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+          <text x={W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             % DEL VALOR
           </text>
 
@@ -104,7 +104,7 @@ export function StoryRiskPyramid() {
                 <text x={LEFT_LABEL_W - 8} y={y + 3} textAnchor="end" fill={tier.color} fontSize={12} fontFamily="var(--font-family-mono)" fontWeight={700}>
                   {tier.level}
                 </text>
-                <text x={LEFT_LABEL_W - 8} y={y + 16} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W - 8} y={y + 16} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)">
                   {tier.threshold}
                 </text>
 
@@ -123,7 +123,7 @@ export function StoryRiskPyramid() {
                 ))}
 
                 {/* Count */}
-                <text x={LEFT_LABEL_W + totalWidth + 8} y={y + 3} fill="#a1a1aa" fontSize={10} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W + totalWidth + 8} y={y + 3} fill="var(--color-text-muted)" fontSize={10} fontFamily="var(--font-family-mono)">
                   {tier.pct}% · {tier.count}
                 </text>
 
@@ -141,7 +141,7 @@ export function StoryRiskPyramid() {
                     />
                   ))
                 })()}
-                <text x={LEFT_LABEL_W + totalWidth + 12 + 74} y={y + 13} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+                <text x={LEFT_LABEL_W + totalWidth + 12 + 74} y={y + 13} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
                   {tier.valuePct}%
                 </text>
               </g>
@@ -153,7 +153,7 @@ export function StoryRiskPyramid() {
             x={W / 2}
             y={H - 10}
             textAnchor="middle"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >

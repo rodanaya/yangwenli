@@ -21,10 +21,10 @@ interface FraudTimelineRibbonProps {
 }
 
 const ERA_COLORS: Record<EraKey, string> = {
-  fox: '#3b82f6',
-  calderon: '#60a5fa',
-  pena: '#16a34a',
-  amlo: '#dc2626',
+  fox: 'var(--color-sector-educacion)',
+  calderon: 'var(--color-sector-educacion)',
+  pena: 'var(--color-sector-hacienda)',
+  amlo: 'var(--color-sector-salud)',
   sheinbaum: '#a855f7',
 }
 

@@ -11,10 +11,10 @@
 import { motion } from 'framer-motion'
 
 const RINGS = [
-  { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: '#3b82f6', track: '#1e3a8a' },
-  { era: 'Peña Nieto',       years: '2013-2018', rate: 73.1, color: '#ef4444', track: '#7f1d1d' },
-  { era: 'AMLO (promedio)',  years: '2019-2024', rate: 79.4, color: '#f59e0b', track: '#78350f' },
-  { era: 'AMLO · pico 2023', years: '2023',      rate: 82.2, color: '#dc2626', track: '#450a0a' },
+  { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: 'var(--color-sector-educacion)', track: '#1e3a8a' },
+  { era: 'Peña Nieto',       years: '2013-2018', rate: 73.1, color: 'var(--color-risk-critical)', track: '#7f1d1d' },
+  { era: 'AMLO (promedio)',  years: '2019-2024', rate: 79.4, color: 'var(--color-risk-high)', track: '#78350f' },
+  { era: 'AMLO · pico 2023', years: '2023',      rate: 82.2, color: 'var(--color-sector-salud)', track: '#450a0a' },
 ]
 
 const CX = 220
@@ -69,7 +69,7 @@ export function StoryCuartaAdjudicacion() {
               cy={CY}
               r={INNER_R + RINGS.length * (STROKE + GAP) + 10}
               fill="none"
-              stroke="#22d3ee"
+              stroke="var(--color-oecd)"
               strokeOpacity={0.35}
               strokeWidth={1}
               strokeDasharray="3 4"
@@ -110,7 +110,7 @@ export function StoryCuartaAdjudicacion() {
                     y1={CY - (r - STROKE / 2 - 2) * Math.cos((oecdSweep * Math.PI) / 180)}
                     x2={CX + (r + STROKE / 2 + 2) * Math.sin((oecdSweep * Math.PI) / 180)}
                     y2={CY - (r + STROKE / 2 + 2) * Math.cos((oecdSweep * Math.PI) / 180)}
-                    stroke="#22d3ee"
+                    stroke="var(--color-oecd)"
                     strokeWidth={1.5}
                   />
                 </g>
@@ -122,7 +122,7 @@ export function StoryCuartaAdjudicacion() {
               x={CX}
               y={CY - 8}
               textAnchor="middle"
-              fill="#71717a"
+              fill="var(--color-text-muted)"
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               letterSpacing="0.1em"
@@ -133,7 +133,7 @@ export function StoryCuartaAdjudicacion() {
               x={CX}
               y={CY + 14}
               textAnchor="middle"
-              fill="#22d3ee"
+              fill="var(--color-oecd)"
               fontSize={22}
               fontFamily="var(--font-family-mono)"
               fontWeight={700}

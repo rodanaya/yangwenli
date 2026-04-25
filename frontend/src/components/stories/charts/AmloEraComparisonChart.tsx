@@ -23,14 +23,14 @@ const DATA: EraRow[] = [
 ]
 
 const ERA_PALETTE: Record<string, string> = {
-  'Fox': '#52525b',
-  'Calderon': '#71717a',
-  'Pena Nieto': '#a1a1aa',
-  'AMLO': '#dc2626',
+  'Fox': 'var(--color-text-secondary)',
+  'Calderon': 'var(--color-text-muted)',
+  'Pena Nieto': 'var(--color-text-muted)',
+  'AMLO': 'var(--color-sector-salud)',
 }
 
 const OECD_LIMIT = 25
-const OECD_COLOR = '#22d3ee'
+const OECD_COLOR = 'var(--color-oecd)'
 
 const DOTS = 90        // each dot = 1pp (0-90% domain)
 const DOT_R = 3
@@ -86,7 +86,7 @@ export function AmloEraComparisonChart() {
             x={LABEL_W - 6}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -97,7 +97,7 @@ export function AmloEraComparisonChart() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={22}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -140,7 +140,7 @@ export function AmloEraComparisonChart() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                 >
@@ -150,7 +150,7 @@ export function AmloEraComparisonChart() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2 + 10}
                   textAnchor="end"
-                  fill="#52525b"
+                  fill="var(--color-text-secondary)"
                   fontSize={8}
                   fontFamily="var(--font-family-mono)"
                 >

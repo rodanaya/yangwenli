@@ -31,7 +31,7 @@ const DATA: SectorRow[] = [
 ]
 
 const OECD_AVG = 9.0
-const OECD_COLOR = '#22d3ee'
+const OECD_COLOR = 'var(--color-oecd)'
 
 const DOTS = 40        // each dot = 0.5pp (0-20% domain)
 const DOT_PER_PCT = DOTS / 20
@@ -78,7 +78,7 @@ export function RiskBySectorChart() {
             x={LABEL_W - 6}
             y={20}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -89,7 +89,7 @@ export function RiskBySectorChart() {
             x={LABEL_W + COL_W + VALUE_W - 2}
             y={20}
             textAnchor="end"
-            fill="#52525b"
+            fill="var(--color-text-secondary)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
@@ -121,7 +121,7 @@ export function RiskBySectorChart() {
           {/* Rows */}
           {DATA.map((row, rowIdx) => {
             const y0 = 50 + rowIdx * ROW_H
-            const color = SECTOR_COLORS[row.code] || '#64748b'
+            const color = SECTOR_COLORS[row.code] || 'var(--color-sector-otros)'
             const opacity = row.high_pct > OECD_AVG ? 0.95 : 0.55
             const filled = Math.round(row.high_pct * DOT_PER_PCT)
 
@@ -132,7 +132,7 @@ export function RiskBySectorChart() {
                   x={LABEL_W - 6}
                   y={y0 + STRIP_H / 2 + 3}
                   textAnchor="end"
-                  fill="#d4d4d8"
+                  fill="var(--color-text-muted)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                 >

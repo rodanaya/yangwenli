@@ -13,9 +13,9 @@ import type { StoryInlineChartData, StoryChartPoint } from '@/lib/story-content'
 // ---------------------------------------------------------------------------
 
 const DEFAULT_COLORS = [
-  '#d97706', // amber-600
-  '#dc2626', // red-600
-  '#2563eb', // blue-600
+  'var(--color-risk-high)', // amber-600
+  'var(--color-sector-salud)', // red-600
+  'var(--color-accent-data)', // blue-600
   '#7c3aed', // violet-600
   '#059669', // emerald-600
   '#0891b2', // cyan-600
@@ -209,7 +209,7 @@ export function InlineBarChart({
             y1={0}
             x2={refX(data.referenceLine.value)}
             y2={svgH - 12}
-            stroke={data.referenceLine.color ?? '#6366f1'}
+            stroke={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
             strokeWidth={1}
             strokeDasharray="3 3"
             opacity={0.7}
@@ -232,7 +232,7 @@ export function InlineBarChart({
           const y = i * (BAR_HEIGHT + ROW_GAP) + 4
           const barW = Math.max(2, (pt.value / mx) * BAR_AREA)
           const color = pt.highlight
-            ? (pt.value > mx * 0.8 ? '#dc2626' : '#d97706')
+            ? (pt.value > mx * 0.8 ? 'var(--color-sector-salud)' : 'var(--color-risk-high)')
             : (getColor(pt, i))
           const opacity = pt.highlight ? 1 : 0.7
 
@@ -246,7 +246,7 @@ export function InlineBarChart({
                 dominantBaseline="middle"
                 fontSize={12}
                 fontFamily="var(--font-family-mono, monospace)"
-                fill="#a1a1aa"
+                fill="var(--color-text-muted)"
               >
                 {pt.label.length > 18 ? pt.label.slice(0, 17) + '\u2026' : pt.label}
               </text>
@@ -285,7 +285,7 @@ export function InlineBarChart({
                 dominantBaseline="middle"
                 fontSize={11}
                 fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? '#fbbf24' : '#71717a'}
+                fill={pt.highlight ? 'var(--color-risk-medium)' : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
               >
                 {pt.value.toLocaleString()}{unit}
@@ -301,7 +301,7 @@ export function InlineBarChart({
             y={svgH - 4}
             fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
-            fill={data.referenceLine.color ?? '#6366f1'}
+            fill={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
             opacity={0.9}
           >
             {data.referenceLine.label}
@@ -372,7 +372,7 @@ export function InlineLineChart({
   const plotY = (v: number) =>
     PAD.top + plotH - ((v - mn) / (mx - mn)) * plotH
 
-  const mainColor = '#d97706'
+  const mainColor = 'var(--color-risk-high)'
   const linePoints = buildPolyPoints(pts, plotX, plotY)
   const showEveryOther = pts.length > 15
 
@@ -399,7 +399,7 @@ export function InlineLineChart({
               y1={plotY(data.referenceLine.value)}
               x2={W - PAD.right}
               y2={plotY(data.referenceLine.value)}
-              stroke={data.referenceLine.color ?? '#6366f1'}
+              stroke={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               strokeWidth={1}
               strokeDasharray="4 3"
               opacity={0.7}
@@ -409,7 +409,7 @@ export function InlineLineChart({
               y={plotY(data.referenceLine.value) + 4}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill={data.referenceLine.color ?? '#6366f1'}
+              fill={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               opacity={0.9}
             >
               {data.referenceLine.label}
@@ -443,7 +443,7 @@ export function InlineLineChart({
             cx={plotX(i)}
             cy={plotY(pt.value)}
             r={pt.highlight ? 5 : 3}
-            fill={pt.highlight ? '#fbbf24' : mainColor}
+            fill={pt.highlight ? 'var(--color-risk-medium)' : mainColor}
             stroke={pt.highlight ? '#fef3c7' : 'none'}
             strokeWidth={pt.highlight ? 1.5 : 0}
           />
@@ -459,7 +459,7 @@ export function InlineLineChart({
               textAnchor="middle"
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="#fbbf24"
+              fill="var(--color-risk-medium)"
             >
               {pt.annotation}
             </text>
@@ -476,7 +476,7 @@ export function InlineLineChart({
               textAnchor="middle"
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="#71717a"
+              fill="var(--color-text-muted)"
             >
               {pt.label}
             </text>
@@ -491,7 +491,7 @@ export function InlineLineChart({
             textAnchor="middle"
             fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
-            fill="#a1a1aa"
+            fill="var(--color-text-muted)"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
             {data.yLabel}
@@ -526,7 +526,7 @@ export function InlineAreaChart({
   const plotY = (v: number) =>
     PAD.top + plotH - (v / mx) * plotH
 
-  const mainColor = '#ea580c'
+  const mainColor = 'var(--color-sector-infraestructura)'
   const linePoints = buildPolyPoints(pts, plotX, plotY)
   const showEveryOther = pts.length > 15
 
@@ -561,7 +561,7 @@ export function InlineAreaChart({
               y1={plotY(data.referenceLine.value)}
               x2={W - PAD.right}
               y2={plotY(data.referenceLine.value)}
-              stroke={data.referenceLine.color ?? '#6366f1'}
+              stroke={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               strokeWidth={1}
               strokeDasharray="4 3"
               opacity={0.7}
@@ -571,7 +571,7 @@ export function InlineAreaChart({
               y={plotY(data.referenceLine.value) + 4}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill={data.referenceLine.color ?? '#6366f1'}
+              fill={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               opacity={0.9}
             >
               {data.referenceLine.label}
@@ -597,7 +597,7 @@ export function InlineAreaChart({
             cx={plotX(i)}
             cy={plotY(pt.value)}
             r={pt.highlight ? 5 : 3}
-            fill={pt.highlight ? '#fbbf24' : mainColor}
+            fill={pt.highlight ? 'var(--color-risk-medium)' : mainColor}
             stroke={pt.highlight ? '#fef3c7' : 'none'}
             strokeWidth={pt.highlight ? 1.5 : 0}
           />
@@ -611,7 +611,7 @@ export function InlineAreaChart({
               textAnchor="middle"
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="#fbbf24"
+              fill="var(--color-risk-medium)"
             >
               {pt.annotation}
             </text>
@@ -628,7 +628,7 @@ export function InlineAreaChart({
               textAnchor="middle"
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="#71717a"
+              fill="var(--color-text-muted)"
             >
               {pt.label}
             </text>
@@ -642,7 +642,7 @@ export function InlineAreaChart({
             textAnchor="middle"
             fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
-            fill="#a1a1aa"
+            fill="var(--color-text-muted)"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
             {data.yLabel}
@@ -686,7 +686,7 @@ export function InlineSpikeChart({
           const bx = PAD.left + i * barGap + (barGap - barW) / 2
           const barH = Math.max(2, (pt.value / mx) * plotH)
           const by = PAD.top + plotH - barH
-          const color = pt.highlight ? '#d97706' : '#3f3f46'
+          const color = pt.highlight ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
           const labelRotate = pts.length > 12
 
           return (
@@ -710,7 +710,7 @@ export function InlineSpikeChart({
                   textAnchor="middle"
                   fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#fbbf24"
+                  fill="var(--color-risk-medium)"
                 >
                   {pt.annotation}
                 </text>
@@ -724,7 +724,7 @@ export function InlineSpikeChart({
                   textAnchor="middle"
                   fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#fbbf24"
+                  fill="var(--color-risk-medium)"
                 >
                   {pt.value.toLocaleString()}
                 </text>
@@ -738,7 +738,7 @@ export function InlineSpikeChart({
                   textAnchor="end"
                   fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                   transform={`rotate(-45, ${bx + barW / 2}, ${PAD.top + plotH + 6})`}
                 >
                   {pt.label}
@@ -750,7 +750,7 @@ export function InlineSpikeChart({
                   textAnchor="middle"
                   fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                 >
                   {pt.label}
                 </text>
@@ -767,7 +767,7 @@ export function InlineSpikeChart({
               y1={PAD.top + plotH - (data.referenceLine.value / mx) * plotH}
               x2={W - PAD.right}
               y2={PAD.top + plotH - (data.referenceLine.value / mx) * plotH}
-              stroke={data.referenceLine.color ?? '#6366f1'}
+              stroke={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               strokeWidth={1}
               strokeDasharray="4 3"
               opacity={0.7}
@@ -777,7 +777,7 @@ export function InlineSpikeChart({
               y={PAD.top + plotH - (data.referenceLine.value / mx) * plotH - 3}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill={data.referenceLine.color ?? '#6366f1'}
+              fill={data.referenceLine.color ?? 'var(--color-sector-tecnologia)'}
               opacity={0.9}
             >
               {data.referenceLine.label}
@@ -826,7 +826,7 @@ export function InlineDivergingBar({
           y1={0}
           x2={centerX}
           y2={H - 16}
-          stroke="#3f3f46"
+          stroke="var(--color-text-secondary)"
           strokeWidth={1}
         />
         <text
@@ -835,7 +835,7 @@ export function InlineDivergingBar({
           textAnchor="middle"
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
-          fill="#a1a1aa"
+          fill="var(--color-text-muted)"
         >
           0
         </text>
@@ -845,8 +845,8 @@ export function InlineDivergingBar({
           const barW = (Math.abs(pt.value) / absMax) * HALF_W
           const isPos = pt.value >= 0
           const color = isPos
-            ? (pt.highlight ? '#dc2626' : '#d97706')
-            : '#2563eb'
+            ? (pt.highlight ? 'var(--color-sector-salud)' : 'var(--color-risk-high)')
+            : 'var(--color-accent-data)'
           const opacity = pt.highlight ? 1 : 0.75
 
           return (
@@ -859,7 +859,7 @@ export function InlineDivergingBar({
                 dominantBaseline="middle"
                 fontSize={11}
                 fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? '#e4e4e7' : '#a1a1aa'}
+                fill={pt.highlight ? '#e4e4e7' : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
               >
                 {pt.label.length > 18 ? pt.label.slice(0, 17) + '\u2026' : pt.label}
@@ -884,7 +884,7 @@ export function InlineDivergingBar({
                 dominantBaseline="middle"
                 fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
-                fill={pt.highlight ? '#fbbf24' : '#71717a'}
+                fill={pt.highlight ? 'var(--color-risk-medium)' : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
               >
                 {pt.value > 0 ? '+' : ''}{pt.value.toFixed ? pt.value.toFixed(4) : pt.value}

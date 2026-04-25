@@ -24,16 +24,16 @@ interface CrimeCardProps {
 }
 
 const CASE_TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; label: string }> = {
-  ghost_company: { icon: Ghost, color: '#dc2626', label: 'Empresa fantasma' },
-  bid_rigging: { icon: Gavel, color: '#ea580c', label: 'Colusion' },
-  overpricing: { icon: TrendingUp, color: '#eab308', label: 'Sobreprecio' },
-  monopoly: { icon: Building2, color: '#8b5cf6', label: 'Monopolio' },
-  procurement_fraud: { icon: ShieldAlert, color: '#f97316', label: 'Fraude' },
-  conflict_of_interest: { icon: Users, color: '#3b82f6', label: 'Conflicto' },
-  bribery: { icon: ShieldAlert, color: '#be123c', label: 'Soborno' },
+  ghost_company: { icon: Ghost, color: 'var(--color-sector-salud)', label: 'Empresa fantasma' },
+  bid_rigging: { icon: Gavel, color: 'var(--color-sector-infraestructura)', label: 'Colusion' },
+  overpricing: { icon: TrendingUp, color: 'var(--color-sector-energia)', label: 'Sobreprecio' },
+  monopoly: { icon: Building2, color: 'var(--color-sector-tecnologia)', label: 'Monopolio' },
+  procurement_fraud: { icon: ShieldAlert, color: 'var(--color-sector-trabajo)', label: 'Fraude' },
+  conflict_of_interest: { icon: Users, color: 'var(--color-sector-educacion)', label: 'Conflicto' },
+  bribery: { icon: ShieldAlert, color: 'var(--color-sector-gobernacion)', label: 'Soborno' },
 }
 
-const DEFAULT_CONFIG = { icon: ShieldAlert, color: '#64748b', label: 'Irregularidad' }
+const DEFAULT_CONFIG = { icon: ShieldAlert, color: 'var(--color-sector-otros)', label: 'Irregularidad' }
 
 export default function CrimeCard({
   caseName,

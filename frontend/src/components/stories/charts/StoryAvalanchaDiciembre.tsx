@@ -17,18 +17,18 @@ interface Month {
 
 // December 2014 peak case — 51.4B. Neighboring months from COMPRANET.
 const MONTHS: Month[] = [
-  { m: 'ENE', value: 12, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'FEB', value: 15, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'MAR', value: 18, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'ABR', value: 16, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'MAY', value: 17, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'JUN', value: 19, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'JUL', value: 17, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'AGO', value: 20, color: '#3f3f46', stroke: '#52525b' },
-  { m: 'SEP', value: 22, color: '#71717a', stroke: '#a1a1aa' },
-  { m: 'OCT', value: 28, color: '#eab308', stroke: '#facc15' },
-  { m: 'NOV', value: 36, color: '#ea580c', stroke: '#fb923c' },
-  { m: 'DIC', value: 51, color: '#dc2626', stroke: '#ef4444' },
+  { m: 'ENE', value: 12, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'FEB', value: 15, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'MAR', value: 18, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'ABR', value: 16, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'MAY', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'JUN', value: 19, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'JUL', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'AGO', value: 20, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { m: 'SEP', value: 22, color: 'var(--color-text-muted)', stroke: 'var(--color-text-muted)' },
+  { m: 'OCT', value: 28, color: 'var(--color-sector-energia)', stroke: '#facc15' },
+  { m: 'NOV', value: 36, color: 'var(--color-sector-infraestructura)', stroke: 'var(--color-risk-high)' },
+  { m: 'DIC', value: 51, color: 'var(--color-sector-salud)', stroke: 'var(--color-risk-critical)' },
 ]
 
 const AVG = 22.6 // average monthly spend 2014
@@ -107,7 +107,7 @@ export function StoryAvalanchaDiciembre() {
                 x={PADDING_L - 6}
                 y={y + 3}
                 textAnchor="end"
-                fill="#52525b"
+                fill="var(--color-text-secondary)"
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
               >
@@ -123,7 +123,7 @@ export function StoryAvalanchaDiciembre() {
           x2={W - PADDING_R}
           y1={PADDING_T + CHART_H - (AVG / MAX_VAL) * CHART_H}
           y2={PADDING_T + CHART_H - (AVG / MAX_VAL) * CHART_H}
-          stroke="#22d3ee"
+          stroke="var(--color-oecd)"
           strokeWidth={1}
           strokeDasharray="4 3"
           initial={{ pathLength: 0 }}
@@ -133,7 +133,7 @@ export function StoryAvalanchaDiciembre() {
         <text
           x={W - PADDING_R + 4}
           y={PADDING_T + CHART_H - (AVG / MAX_VAL) * CHART_H + 3}
-          fill="#22d3ee"
+          fill="var(--color-oecd)"
           fontSize={9}
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
@@ -173,7 +173,7 @@ export function StoryAvalanchaDiciembre() {
                 x={cx}
                 y={baseY - 8 - dotCount * DOT_SPACING_Y - 6}
                 textAnchor="middle"
-                fill={month.color === '#dc2626' ? '#ef4444' : month.color === '#ea580c' ? '#fb923c' : '#71717a'}
+                fill={month.color === 'var(--color-sector-salud)' ? 'var(--color-risk-critical)' : month.color === 'var(--color-sector-infraestructura)' ? 'var(--color-risk-high)' : 'var(--color-text-muted)'}
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
@@ -186,7 +186,7 @@ export function StoryAvalanchaDiciembre() {
                 x={cx}
                 y={H - PADDING_B + 18}
                 textAnchor="middle"
-                fill={mi === 11 ? '#ef4444' : '#71717a'}
+                fill={mi === 11 ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={mi === 11 ? 700 : 500}
@@ -204,7 +204,7 @@ export function StoryAvalanchaDiciembre() {
             y1={PADDING_T + 30}
             x2={PADDING_L + 11 * COL_W + COL_W / 2 - 6}
             y2={PADDING_T + 50}
-            stroke="#fbbf24"
+            stroke="var(--color-risk-medium)"
             strokeWidth={1}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -213,7 +213,7 @@ export function StoryAvalanchaDiciembre() {
           <motion.text
             x={PADDING_L + 11 * COL_W + COL_W / 2 - 100}
             y={PADDING_T + 24}
-            fill="#fbbf24"
+            fill="var(--color-risk-medium)"
             fontSize={9}
             fontFamily="var(--font-family-mono)"
             fontWeight={600}
