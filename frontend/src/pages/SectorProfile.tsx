@@ -518,8 +518,8 @@ function InsightCard({
   icon: React.ComponentType<{ className?: string }>
 }) {
   const styles = {
-    critical: { border: 'border-red-500/30 bg-red-500/5', text: 'text-red-400' },
-    warning:  { border: 'border-amber-500/30 bg-amber-500/5', text: 'text-amber-400' },
+    critical: { border: 'border-risk-critical/30 bg-risk-critical/5', text: 'text-risk-critical' },
+    warning:  { border: 'border-risk-high/30 bg-risk-high/5', text: 'text-risk-high' },
     positive: { border: 'border-emerald-500/30 bg-emerald-500/5', text: 'text-emerald-400' },
     info:     { border: 'border-cyan-500/30 bg-cyan-500/5', text: 'text-cyan-400' },
   }[type]
@@ -564,7 +564,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
   const gradeColor =
     grade === 'A' || grade === 'A+' ? 'text-emerald-400' :
     grade.startsWith('B') ? 'text-lime-400' :
-    grade.startsWith('C') ? 'text-amber-400' :
+    grade.startsWith('C') ? 'text-risk-high' :
     grade.startsWith('D') ? 'text-orange-400' :
     'text-red-500'
 
@@ -623,7 +623,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
               <span
                 className={cn(
                   'text-xl font-black tabular-nums leading-none',
-                  ind.highlight ? 'text-amber-400' : 'text-text-primary'
+                  ind.highlight ? 'text-risk-high' : 'text-text-primary'
                 )}
               >
                 {ind.value ?? '—'}
@@ -798,8 +798,8 @@ function InvestigationCallout({
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-red-400 flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm font-bold text-red-400">
+          <ShieldAlert className="h-4 w-4 text-risk-critical flex-shrink-0" aria-hidden="true" />
+          <span className="text-sm font-bold text-risk-critical">
             {cases.length} Investigation {cases.length === 1 ? 'Case' : 'Cases'}
           </span>
         </div>
@@ -841,7 +841,7 @@ function InvestigationCallout({
 
       <Link
         to={`/cases?sector=${sectorId}`}
-        className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors font-semibold"
+        className="inline-flex items-center gap-1 text-xs text-risk-critical hover:text-risk-critical/80 transition-colors font-semibold"
       >
         View all cases
         <ExternalLink className="h-3 w-3" aria-hidden="true" />
@@ -1520,7 +1520,7 @@ export function SectorProfile() {
                     <p
                       className={cn(
                         'text-2xl font-black tabular-nums',
-                        item.warn ? 'text-amber-400' : 'text-text-primary'
+                        item.warn ? 'text-risk-high' : 'text-text-primary'
                       )}
                     >
                       {item.value}
