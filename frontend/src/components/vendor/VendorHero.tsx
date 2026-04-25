@@ -9,13 +9,11 @@
  * top-3 model drivers.
  */
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Copy,
   Check,
   Building2,
-  ExternalLink,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react'
@@ -282,14 +280,14 @@ function IdentityLine({
       )}
 
       {scorecard && (
-        <Link
-          to={`/vendors/${vendor.id}/report-card`}
-          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary transition-colors"
-          title={isEs ? 'Ver Libreta de Integridad' : 'View Integrity Report'}
+        // No nested /vendors/:id/report-card route exists — render the badge
+        // statically (was a Link → 404 risk, blocker per functional audit).
+        <span
+          className="inline-flex items-center gap-1.5 text-[11px] text-text-muted"
+          title={isEs ? 'Libreta de Integridad' : 'Integrity Score'}
         >
           <GradeBadge10 grade={scorecard.grade} size="sm" />
-          <ExternalLink className="h-3 w-3 opacity-50" />
-        </Link>
+        </span>
       )}
     </div>
   )
