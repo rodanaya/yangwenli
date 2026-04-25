@@ -483,7 +483,7 @@ function AdminDossierPanel({
               </div>
               <div
                 className="text-2xl font-bold font-mono"
-                style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : RISK_COLORS.low }}
+                style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : 'var(--color-text-secondary)' }}
               >
                 {agg.highRiskPct.toFixed(1)}%
               </div>

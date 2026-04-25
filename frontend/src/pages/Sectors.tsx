@@ -16,7 +16,7 @@ import { categoriesApi } from '@/api/client'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge } from '@/components/ui/badge'
+import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import {
@@ -47,72 +47,8 @@ function formatSpend(value: number): string {
   return formatCompactMXN(value)
 }
 
-// ── RiskBar ───────────────────────────────────────────────────────────────────
-
-interface RiskBarProps {
-  sector: SectorStatistics
-}
-
-function RiskBar({ sector }: RiskBarProps) {
-  const total = sector.total_contracts || 1
-  const critPct = ((sector.critical_risk_count ?? 0) / total) * 100
-  const highPct = ((sector.high_risk_count ?? 0) / total) * 100
-  const medPct = ((sector.medium_risk_count ?? 0) / total) * 100
-  const lowPct = ((sector.low_risk_count ?? 0) / total) * 100
-
-  const segments = [
-    { pct: critPct, color: RISK_COLORS.critical, label: 'Critical' },
-    { pct: highPct, color: RISK_COLORS.high, label: 'High' },
-    { pct: medPct, color: RISK_COLORS.medium, label: 'Medium' },
-    { pct: lowPct, color: RISK_COLORS.low, label: 'Low' },
-  ]
-
-  const titleText = segments
-    .filter((s) => s.pct > 0.5)
-    .map((s) => `${s.label}: ${s.pct.toFixed(1)}%`)
-    .join(' | ')
-
-  return (
-    <div role="img" aria-label={titleText} title={titleText}>
-      {(() => {
-        const DOTS = 50
-        const DOT_R = 3
-        const DOT_GAP = 7
-        const critN = Math.round((critPct / 100) * DOTS)
-        const highN = Math.round((highPct / 100) * DOTS)
-        const medN = Math.round((medPct / 100) * DOTS)
-        const svgW = DOTS * DOT_GAP + DOT_R * 2
-        const svgH = 14
-        const dots: string[] = [
-          ...Array(critN).fill(RISK_COLORS.critical),
-          ...Array(highN).fill(RISK_COLORS.high),
-          ...Array(medN).fill(RISK_COLORS.medium),
-        ]
-        while (dots.length < DOTS) dots.push(RISK_COLORS.low)
-        return (
-          <svg
-            viewBox={`0 0 ${svgW} ${svgH}`}
-            className="w-full"
-            style={{ height: 14 }}
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            {dots.slice(0, DOTS).map((color, i) => (
-              <circle
-                key={i}
-                cx={i * DOT_GAP + DOT_R}
-                cy={svgH / 2}
-                r={DOT_R}
-                fill={color}
-                fillOpacity={0.8}
-              />
-            ))}
-          </svg>
-        )
-      })()}
-    </div>
-  )
-}
+// RiskBar removed — MiniSparkline (below) renders the same 4-bucket distribution
+// using the canonical MiniRiskField primitive. One source of truth.
 
 // ── MiniSparkline ─────────────────────────────────────────────────────────────
 // Renders the 4-bucket risk distribution as a tiny proportional column chart.
@@ -188,7 +124,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
               OCDE {exceedsOECD ? '\u2717' : '\u2713'}
             </span>
-            <RiskBadge level={riskLevel} />
+            <RiskLevelPill level={riskLevel} score={sector.avg_risk_score} />
           </div>
         </div>
 
@@ -218,9 +154,17 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           </span>
         </div>
 
-        {/* Risk distribution bar */}
+        {/* Risk distribution — single MiniRiskField source of truth */}
         <div className="space-y-1.5">
-          <RiskBar sector={sector} />
+          <MiniRiskField
+            criticalPct={((sector.critical_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
+            highPct={((sector.high_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
+            mediumPct={((sector.medium_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
+            lowPct={((sector.low_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
+            seed={sector.sector_id ?? 7}
+            width={320}
+            height={14}
+          />
           <div className="flex items-center justify-between text-[10px] font-mono text-text-muted">
             <span>
               {highPlusCritical > 0
@@ -308,25 +252,30 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
   ]
 
   return (
-    <div className="relative inline-flex items-center gap-2">
-      <span className="text-xs text-text-secondary font-medium">{t('page.sortBy')}:</span>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value as SortKey)}
-          className="appearance-none rounded-lg border border-border bg-background-elevated pl-3 pr-8 py-1.5 text-sm text-text-primary font-medium cursor-pointer hover:border-border focus:outline-none focus:ring-2 focus:ring-border transition-colors"
-          aria-label={t('page.sortBy')}
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
+    <div className="inline-flex items-center gap-3">
+      <span className="text-[11px] text-text-muted font-mono uppercase tracking-widest">
+        {t('page.sortBy')}
+      </span>
+      <div role="radiogroup" aria-label={t('page.sortBy')} className="flex items-center rounded-sm border border-border bg-background-elevated p-0.5">
+        {options.map((o) => {
+          const active = o.value === value
+          return (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(o.value)}
+              className={`px-2.5 py-1 text-[12px] font-medium rounded-sm transition-colors ${
+                active
+                  ? 'bg-accent/15 text-accent'
+                  : 'text-text-muted hover:text-text-primary'
+              }`}
+            >
               {o.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary"
-          aria-hidden="true"
-        />
+            </button>
+          )
+        })}
       </div>
     </div>
   )
