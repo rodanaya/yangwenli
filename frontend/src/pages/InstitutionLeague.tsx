@@ -16,6 +16,14 @@
 import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import {
+  TIER_STYLES,
+  TIER_GRADE_MAP,
+  TIER_NAMES,
+  gradeToTierKey,
+  type TierKey,
+  type TierStyle,
+} from '@/lib/tiers'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -100,63 +108,10 @@ type SortKey =
   | 'pillar_process'
   | 'pillar_external'
 
-type TierKey = 'Excelente' | 'Satisfactorio' | 'Regular' | 'Deficiente' | 'Critico'
-
-// ---------------------------------------------------------------------------
-// 5-tier color system (color palette only — labels come from i18n)
-// ---------------------------------------------------------------------------
-
-interface TierStyle {
-  key: TierKey
-  color: string
-  bg: string
-  border: string
-  textClass: string
-}
-
+// 5-tier color system imported from lib/tiers (shared with InstitutionScorecards).
+// Local TierInfo extends TierStyle with the i18n label resolved at consumption time.
 interface TierInfo extends TierStyle {
   label: string
-}
-
-const TIER_STYLES: Record<TierKey, TierStyle> = {
-  Excelente:     { key: 'Excelente',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.30)',  textClass: 'text-green-400' },
-  Satisfactorio: { key: 'Satisfactorio', color: '#0d9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.30)', textClass: 'text-teal-400' },
-  Regular:       { key: 'Regular',       color: '#d97706', bg: 'rgba(217,119,6,0.12)',  border: 'rgba(217,119,6,0.30)',  textClass: 'text-amber-400' },
-  Deficiente:    { key: 'Deficiente',    color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.30)',  textClass: 'text-orange-400' },
-  Critico:       { key: 'Critico',       color: '#dc2626', bg: 'rgba(220,38,38,0.12)',  border: 'rgba(220,38,38,0.30)',  textClass: 'text-red-400' },
-}
-
-const TIER_NAMES: readonly TierKey[] = ['Excelente', 'Satisfactorio', 'Regular', 'Deficiente', 'Critico'] as const
-
-/** Map any backend grade (S/A/B+/B/C+/C/D/D-/F/F-) to a 5-tier key */
-function gradeToTierKey(grade: string): TierKey {
-  switch (grade) {
-    case 'S':
-    case 'A':
-      return 'Excelente'
-    case 'B+':
-    case 'B':
-      return 'Satisfactorio'
-    case 'C+':
-    case 'C':
-      return 'Regular'
-    case 'D':
-    case 'D-':
-      return 'Deficiente'
-    case 'F':
-    case 'F-':
-    default:
-      return 'Critico'
-  }
-}
-
-// Grades that map to each tier for filter purposes
-const TIER_GRADE_MAP: Record<TierKey, string[]> = {
-  Excelente:     ['S', 'A'],
-  Satisfactorio: ['B+', 'B'],
-  Regular:       ['C+', 'C'],
-  Deficiente:    ['D', 'D-'],
-  Critico:       ['F', 'F-'],
 }
 
 /** Hook that returns an i18n-aware tier-info resolver. */
@@ -225,8 +180,18 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
 
 function RiskDriverPill({ driver }: { driver: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-[9px] text-red-400 font-mono uppercase tracking-wide mt-0.5">
-      <span className="h-1 w-1 rounded-full bg-red-500 flex-shrink-0" />
+    <span
+      className="inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[9px] font-mono uppercase tracking-wide mt-0.5"
+      style={{
+        backgroundColor: 'color-mix(in srgb, var(--color-risk-critical) 10%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--color-risk-critical) 30%, transparent)',
+        color: 'var(--color-risk-critical)',
+      }}
+    >
+      <span
+        className="h-1 w-1 rounded-full flex-shrink-0"
+        style={{ backgroundColor: 'var(--color-risk-critical)' }}
+      />
       {driver}
     </span>
   )

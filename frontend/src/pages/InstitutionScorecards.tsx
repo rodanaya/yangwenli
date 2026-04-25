@@ -10,10 +10,27 @@
  * Editorial dark aesthetic, 3-column card grid, tier filter chips, pagination.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import {
+  useQueryState,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringEnum,
+} from 'nuqs'
+import {
+  TIER_STYLES,
+  TIER_GRADE_MAP,
+  TIER_NAMES,
+  gradeToTierKey,
+  type TierKey,
+  type TierStyle,
+} from '@/lib/tiers'
+
+const SORT_KEYS = ['total_score', 'national_percentile', 'institution_name'] as const
+const SORT_ORDERS = ['asc', 'desc'] as const
 import {
   AlertTriangle,
   ChevronLeft,
@@ -83,63 +100,31 @@ type SortOrder = 'asc' | 'desc'
 // 5-tier Spanish system
 // ---------------------------------------------------------------------------
 
-interface TierInfo {
+// Tier system imported from lib/tiers (shared with InstitutionLeague).
+
+/** TierInfo carries an i18n label alongside the static color tokens. */
+interface TierInfo extends TierStyle {
   label: string
-  color: string
-  bg: string
-  border: string
 }
 
-const TIER_MAP: Record<string, TierInfo> = {
-  Excelente:     { label: 'Excelente',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.30)' },
-  Satisfactorio: { label: 'Satisfactorio', color: '#0d9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.30)' },
-  Regular:       { label: 'Regular',       color: '#d97706', bg: 'rgba(217,119,6,0.12)',  border: 'rgba(217,119,6,0.30)' },
-  Deficiente:    { label: 'Deficiente',    color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.30)' },
-  Critico:       { label: 'Critico',       color: '#dc2626', bg: 'rgba(220,38,38,0.12)',  border: 'rgba(220,38,38,0.30)' },
+/** Map backend grade to TierInfo with i18n label. */
+function gradeToTier(grade: string, t: (k: string) => string): TierInfo {
+  const key = gradeToTierKey(grade)
+  return { ...TIER_STYLES[key], label: t(`tiers.${key}`) }
 }
 
-/** Map backend grade to 5-tier Spanish system */
-function gradeToTier(grade: string): TierInfo {
-  switch (grade) {
-    case 'S':
-    case 'A':
-      return TIER_MAP.Excelente
-    case 'B+':
-    case 'B':
-      return TIER_MAP.Satisfactorio
-    case 'C+':
-    case 'C':
-      return TIER_MAP.Regular
-    case 'D':
-    case 'D-':
-      return TIER_MAP.Deficiente
-    case 'F':
-    case 'F-':
-    default:
-      return TIER_MAP.Critico
-  }
+/** Aggregate 10-grade distribution into 5 tiers. */
+function aggregateTiers(
+  dist: Record<string, number>,
+  t: (k: string) => string
+): Array<{ tier: TierInfo; key: TierKey; count: number; grades: string[] }> {
+  return TIER_NAMES.map((key) => ({
+    key,
+    tier: { ...TIER_STYLES[key], label: t(`tiers.${key}`) },
+    grades: TIER_GRADE_MAP[key],
+    count: TIER_GRADE_MAP[key].reduce((sum, g) => sum + (dist[g] ?? 0), 0),
+  }))
 }
-
-/** Aggregate 10-grade distribution into 5 tiers */
-function aggregateTiers(dist: Record<string, number>): Array<{ tier: TierInfo; count: number; grades: string[] }> {
-  return [
-    { tier: TIER_MAP.Excelente,     count: (dist['S'] ?? 0) + (dist['A'] ?? 0),   grades: ['S', 'A'] },
-    { tier: TIER_MAP.Satisfactorio, count: (dist['B+'] ?? 0) + (dist['B'] ?? 0),  grades: ['B+', 'B'] },
-    { tier: TIER_MAP.Regular,       count: (dist['C+'] ?? 0) + (dist['C'] ?? 0),  grades: ['C+', 'C'] },
-    { tier: TIER_MAP.Deficiente,    count: (dist['D'] ?? 0) + (dist['D-'] ?? 0),  grades: ['D', 'D-'] },
-    { tier: TIER_MAP.Critico,       count: (dist['F'] ?? 0) + (dist['F-'] ?? 0),  grades: ['F', 'F-'] },
-  ]
-}
-
-// Grades that map to each tier for API filtering
-const TIER_GRADE_MAP: Record<string, string[]> = {
-  Excelente:     ['S', 'A'],
-  Satisfactorio: ['B+', 'B'],
-  Regular:       ['C+', 'C'],
-  Deficiente:    ['D', 'D-'],
-  Critico:       ['F', 'F-'],
-}
-const TIER_NAMES = ['Excelente', 'Satisfactorio', 'Regular', 'Deficiente', 'Critico'] as const
 
 const PILLAR_MAXES: Record<string, number> = {
   openness: 25,
@@ -159,7 +144,7 @@ interface TierDistributionBarProps {
 }
 
 function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
-  const tiers = aggregateTiers(distribution)
+  const tiers = aggregateTiers(distribution, t)
   const total = tiers.reduce((s, tier) => s + tier.count, 0)
   if (total === 0) return null
 
@@ -295,9 +280,9 @@ interface InstitutionCardProps {
 }
 
 function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
-  const tier = gradeToTier(item.grade)
+  const tier = gradeToTier(item.grade, t)
   const hasRedSignals = (item.signal_count_red ?? 0) > 0
-  const tierKey = tier.label as string
+  const tierKey = tier.key as string
 
   return (
     <article
@@ -457,7 +442,7 @@ interface TierChipProps {
 }
 
 function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
-  const tier = TIER_MAP[tierName] ?? TIER_MAP.Critico
+  const tier = TIER_STYLES[tierName as TierKey] ?? TIER_STYLES.Critico
   return (
     <button
       onClick={onClick}
@@ -496,12 +481,38 @@ const PER_PAGE = 50
 export default function InstitutionScorecards() {
   const { t } = useTranslation('institutionScorecards')
   const navigate = useNavigate()
-  const [page, setPage] = useState(1)
-  const [selectedTier, setSelectedTier] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<SortKey>('total_score')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [search, setSearch] = useState('')
-  const [searchInput, setSearchInput] = useState('')
+
+  // URL-synced filter / page / sort / search state — refresh preserves
+  // everything; filtered links are shareable.
+  const [page, setPage] = useQueryState('page', parseAsInteger.withDefault(1))
+  const [selectedTier, setSelectedTier] = useQueryState(
+    'tier',
+    parseAsStringEnum<TierKey>([...TIER_NAMES])
+  )
+  const [sortByRaw, setSortBy] = useQueryState(
+    'sort',
+    parseAsStringEnum<SortKey>([...SORT_KEYS]).withDefault('total_score')
+  )
+  const sortBy = sortByRaw as SortKey
+  const [sortOrderRaw, setSortOrder] = useQueryState(
+    'order',
+    parseAsStringEnum<SortOrder>([...SORT_ORDERS]).withDefault('desc')
+  )
+  const sortOrder = sortOrderRaw as SortOrder
+  const [search, setSearch] = useQueryState('q', parseAsString.withDefault(''))
+  const [searchInput, setSearchInput] = useState(search)
+
+  // Live debounce — replaces the old "press Enter or Go" pattern.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (searchInput !== search) {
+        setSearch(searchInput || null)
+        setPage(1)
+      }
+    }, 300)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput])
 
   const handleNavigate = useCallback((id: number) => {
     navigate(`/institutions/${id}`)
@@ -509,6 +520,7 @@ export default function InstitutionScorecards() {
 
   // Map selected tier to backend grade for API call
   const gradeForApi = selectedTier ? TIER_GRADE_MAP[selectedTier]?.[0] : undefined
+  void gradeForApi // referenced below
 
   // Stats query
   const { data: stats, isLoading: statsLoading } = useQuery<InstitutionStats>({
@@ -537,20 +549,20 @@ export default function InstitutionScorecards() {
   const totalCount = listData?.total ?? 0
 
   const gradeDistribution = stats?.grade_distribution ?? {}
-  const tierDistribution = aggregateTiers(gradeDistribution)
+  const tierDistribution = aggregateTiers(gradeDistribution, t)
 
   function handleTierClick(tierName: string) {
     if (selectedTier === tierName) {
       setSelectedTier(null)
     } else {
-      setSelectedTier(tierName)
+      setSelectedTier(tierName as TierKey)
     }
     setPage(1)
   }
 
   function handleSortChange(key: SortKey) {
     if (sortBy === key) {
-      setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
     } else {
       setSortBy(key)
       setSortOrder('desc')
@@ -560,7 +572,7 @@ export default function InstitutionScorecards() {
 
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setSearch(searchInput)
+    setSearch(searchInput || null)
     setPage(1)
   }
 
@@ -770,7 +782,7 @@ export default function InstitutionScorecards() {
                   total: formatNumber(totalCount),
                 })}
                 {selectedTier && (
-                  <>{t('pagination.withTier')}<span className="font-bold" style={{ color: TIER_MAP[selectedTier]?.color ?? '#dc2626' }}>{t(`tiers.${selectedTier}`)}</span></>
+                  <>{t('pagination.withTier')}<span className="font-bold" style={{ color: TIER_STYLES[selectedTier as TierKey]?.color ?? '#dc2626' }}>{t(`tiers.${selectedTier}`)}</span></>
                 )}
                 {search && <>{t('pagination.matching')}<span className="text-text-secondary">{search}</span>&quot;</>}
               </>
