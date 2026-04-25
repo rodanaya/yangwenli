@@ -156,7 +156,7 @@ export function StoryInsabi() {
             y1={54}
             x2={LABEL_W + STRIP_W + VALUE_W + COL_GAP / 2}
             y2={H - 36}
-            stroke="#3d3734"
+            stroke="var(--color-border-hover)"
             strokeWidth={1}
             strokeDasharray="2 3"
           />
@@ -209,8 +209,8 @@ export function StoryInsabi() {
                     cx={LABEL_W + i * DOT_GAP_X + DOT_GAP_X / 2}
                     cy={cy}
                     r={DOT_R}
-                    fill={i < spFilled ? spColor : '#2d2926'}
-                    stroke={i < spFilled ? 'none' : '#3d3734'}
+                    fill={i < spFilled ? spColor : 'var(--color-background-elevated)'}
+                    stroke={i < spFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={i < spFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -238,8 +238,8 @@ export function StoryInsabi() {
                       cx={cx}
                       cy={cy}
                       r={DOT_R}
-                      fill={i < insabiFilled ? insabiColor : '#2d2926'}
-                      stroke={i < insabiFilled ? 'none' : '#3d3734'}
+                      fill={i < insabiFilled ? insabiColor : 'var(--color-background-elevated)'}
+                      stroke={i < insabiFilled ? 'none' : 'var(--color-border-hover)'}
                       strokeWidth={i < insabiFilled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

@@ -116,9 +116,9 @@ export function DaBySectorChart() {
                     cx={LEFT_PAD + LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y}
                     r={DOT_R}
-                    fill={isFilled ? color : '#2d2926'}
+                    fill={isFilled ? color : 'var(--color-background-elevated)'}
                     fillOpacity={isAboveOecd ? 1 : isFilled ? 0.5 : 1}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}

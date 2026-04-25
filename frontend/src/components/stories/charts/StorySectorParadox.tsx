@@ -87,7 +87,7 @@ export function StorySectorParadox() {
         {/* Grid */}
         {[5, 10, 15, 20].map((v) => (
           <g key={`yg-${v}`}>
-            <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="#3d3734" strokeDasharray="2 4" />
+            <line x1={PAD.left} x2={W - PAD.right} y1={yFor(v)} y2={yFor(v)} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
             <text x={PAD.left - 8} y={yFor(v) + 3} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}%
             </text>
@@ -95,7 +95,7 @@ export function StorySectorParadox() {
         ))}
         {[70, 80, 90, 100].map((v) => (
           <g key={`xg-${v}`}>
-            <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="#3d3734" strokeDasharray="2 4" />
+            <line x1={xFor(v)} x2={xFor(v)} y1={PAD.top} y2={H - PAD.bottom} stroke="var(--color-border-hover)" strokeDasharray="2 4" />
             <text x={xFor(v)} y={H - PAD.bottom + 16} textAnchor="middle" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)">
               {v}%
             </text>

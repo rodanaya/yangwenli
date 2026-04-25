@@ -381,7 +381,7 @@ function DotBar({
   value,
   color,
   // Bible §4 canonical light-mode empty dot: cream elevated fill, warm border.
-  // Previously '#2d2926' / '#3d3734' which render BLACK on the cream page.
+  // Previously 'var(--color-background-elevated)' / 'var(--color-border-hover)' which render BLACK on the cream page.
   emptyColor = '#f3f1ec',
   emptyStroke = '#e2ddd6',
   dots = 20,

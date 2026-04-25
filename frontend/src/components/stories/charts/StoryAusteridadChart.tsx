@@ -147,9 +147,9 @@ export function StoryAusteridadChart() {
                             cx={LABEL_W + i * DOT_GAP + DOT_R}
                             cy={yStrip + STRIP_H / 2}
                             r={DOT_R}
-                            fill={isFilled ? SPEND_COLOR : '#2d2926'}
+                            fill={isFilled ? SPEND_COLOR : 'var(--color-background-elevated)'}
                             fillOpacity={isFilled ? 0.75 : 1}
-                            stroke={isFilled ? 'none' : '#3d3734'}
+                            stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -184,9 +184,9 @@ export function StoryAusteridadChart() {
                             cx={LABEL_W + i * DOT_GAP + DOT_R}
                             cy={yStrip + STRIP_H / 2}
                             r={DOT_R}
-                            fill={isFilled ? DA_COLOR : '#2d2926'}
+                            fill={isFilled ? DA_COLOR : 'var(--color-background-elevated)'}
                             fillOpacity={isFilled ? 0.95 : 1}
-                            stroke={isFilled ? 'none' : '#3d3734'}
+                            stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

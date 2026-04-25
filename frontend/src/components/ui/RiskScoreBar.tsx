@@ -74,8 +74,8 @@ export function RiskScoreBar({
                   cx={i * DG + DR}
                   cy={5}
                   r={DR}
-                  fill={i < filled ? color : '#2d2926'}
-                  stroke={i < filled ? undefined : '#3d3734'}
+                  fill={i < filled ? color : 'var(--color-background-elevated)'}
+                  stroke={i < filled ? undefined : 'var(--color-border-hover)'}
                   strokeWidth={i < filled ? 0 : 0.5}
                   fillOpacity={i < filled ? 0.85 : 1}
                 />

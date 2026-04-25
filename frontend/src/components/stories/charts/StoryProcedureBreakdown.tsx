@@ -148,8 +148,8 @@ export function StoryProcedureBreakdown() {
                             cx={LABEL_W + i * DOT_GAP + DOT_R}
                             cy={yStrip + STRIP_H / 2}
                             r={DOT_R}
-                            fill={isFilled ? strip.color : '#2d2926'}
-                            stroke={isFilled ? 'none' : '#3d3734'}
+                            fill={isFilled ? strip.color : 'var(--color-background-elevated)'}
+                            stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

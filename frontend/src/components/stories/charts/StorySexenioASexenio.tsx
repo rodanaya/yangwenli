@@ -211,8 +211,8 @@ export function StorySexenioASexenio() {
                       cx={cx}
                       cy={y}
                       r={DOT_R}
-                      fill={isFilled ? color : '#2d2926'}
-                      stroke={isFilled ? 'none' : isOecdLine ? '#22d3ee44' : '#3d3734'}
+                      fill={isFilled ? color : 'var(--color-background-elevated)'}
+                      stroke={isFilled ? 'none' : isOecdLine ? '#22d3ee44' : 'var(--color-border-hover)'}
                       strokeWidth={isFilled ? 0 : 0.6}
                       initial={{ opacity: 0, scale: 0.6 }}
                       animate={{ opacity: 1, scale: 1 }}

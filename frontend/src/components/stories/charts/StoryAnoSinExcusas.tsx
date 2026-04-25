@@ -192,8 +192,8 @@ export function StoryAnoSinExcusas() {
                       cx={cx}
                       cy={cy}
                       r={DOT_R}
-                      fill={isFilled ? fillColor : '#2d2926'}
-                      stroke={isFilled ? 'none' : '#3d3734'}
+                      fill={isFilled ? fillColor : 'var(--color-background-elevated)'}
+                      stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                       strokeWidth={isFilled ? 0 : 0.6}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -224,7 +224,7 @@ export function StoryAnoSinExcusas() {
                     rx={3}
                     fill={row.covid ? '#52525b' : '#18181b'}
                     fillOpacity={row.covid ? 0.6 : 0.8}
-                    stroke={row.covid ? '#71717a' : '#2d2926'}
+                    stroke={row.covid ? '#71717a' : 'var(--color-background-elevated)'}
                     strokeWidth={0.75}
                   />
                   <text

@@ -134,8 +134,8 @@ export function StoryRiskPyramid() {
                   const baseX = LEFT_LABEL_W + totalWidth + 8
                   return Array.from({ length: N }).map((_, k) => (
                     <circle key={`v-${k}`} cx={baseX + k * DG + DR} cy={y + 10.5} r={DR}
-                      fill={k < filled ? tier.color : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? tier.color : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.55 : 1}
                     />

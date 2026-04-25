@@ -110,7 +110,7 @@ export function StoryRacingBar() {
               cy={CY}
               r={r}
               fill="none"
-              stroke="#3d3734"
+              stroke="var(--color-border-hover)"
               strokeDasharray="2 4"
               strokeWidth={1}
             />
