@@ -62,7 +62,7 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
 }> = {
   pending: {
     icon: Clock,
-    className: 'bg-amber-500/10 text-amber-500 border border-amber-500/30',
+    className: 'bg-risk-high/10 text-risk-high border border-risk-high/30',
   },
   corroborated: {
     icon: CheckCircle2,
@@ -72,7 +72,7 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   },
   refuted: {
     icon: XCircle,
-    className: 'bg-red-500/10 text-red-500 border border-red-500/30',
+    className: 'bg-risk-critical/10 text-risk-critical border border-risk-critical/30',
   },
   inconclusive: {
     icon: HelpCircle,
@@ -363,8 +363,8 @@ function CaseCard({
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} className="w-full h-2.5" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
-                    fill={i < filled ? riskColor : '#2d2926'}
-                    stroke={i < filled ? 'none' : '#3d3734'}
+                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
+                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.5}
                   />
                 ))}
@@ -877,8 +877,8 @@ function CaseTableRow({
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-16 h-2" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                    fill={i < filled ? riskColor : '#2d2926'}
-                    stroke={i < filled ? 'none' : '#3d3734'}
+                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
+                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.5}
                   />
                 ))}
@@ -911,12 +911,12 @@ function CaseTableRow({
       <td className="px-3 py-3">
         <div className="flex flex-wrap gap-1 max-w-[180px]">
           {caseItem.suspicion_score >= 0.6 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-critical/10 text-risk-critical border border-risk-critical/30">
               Riesgo critico
             </span>
           )}
           {caseItem.signals_triggered.includes('high_direct_award_rate') && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-sm bg-risk-high/10 text-risk-high border border-risk-high/30">
               Adj. directa
             </span>
           )}

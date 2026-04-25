@@ -61,11 +61,11 @@ const CARD_HI = 'var(--color-background-elevated)' // elevated card
 const BORDER = 'var(--color-border)'
 const BORDER_HI = 'var(--color-border-hover)'
 const INK = 'var(--color-text-primary)'        // primary text — dark ink
-const INK_MUTED = '#a8a29e'     // secondary
-const INK_DIM = '#78716c'       // tertiary
-const INK_FAINT = '#57534e'     // overlines / captions
-const EMPTY_DOT = '#2d2926'     // dotbar empty (editorial cream)
-const EMPTY_STROKE = '#3d3734'  // dotbar empty stroke
+const INK_MUTED = 'var(--color-text-secondary)'   // secondary
+const INK_DIM = 'var(--color-text-muted)'         // tertiary
+const INK_FAINT = 'var(--color-text-muted)'       // overlines / captions
+const EMPTY_DOT = 'var(--color-background-elevated)'   // dotbar empty (cream)
+const EMPTY_STROKE = 'var(--color-border-hover)'        // dotbar empty stroke
 
 // ============================================================================
 // INLINE DotBar — NYT-style categorical magnitude indicator
