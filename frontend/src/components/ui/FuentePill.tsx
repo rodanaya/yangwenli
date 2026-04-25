@@ -33,7 +33,7 @@ export function FuentePill({
         </span>
       )}
       {verified && (
-        <span className="inline-flex items-center gap-0.5 text-emerald-500 font-semibold ml-0.5">
+        <span className="inline-flex items-center gap-0.5 text-text-muted font-semibold ml-0.5">
           &#10003; {t('verified')}
         </span>
       )}

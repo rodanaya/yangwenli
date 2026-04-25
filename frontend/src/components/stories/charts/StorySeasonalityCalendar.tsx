@@ -56,7 +56,7 @@ export function StorySeasonalityCalendar() {
 
       {/* OECD context */}
       <div className="rounded-sm border border-cyan-500/20 bg-cyan-500/5 p-3">
-        <p className="text-xs font-mono uppercase tracking-wide text-cyan-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-[color:var(--color-oecd)] mb-1">
           OECD BENCHMARK
         </p>
         <p className="text-sm text-text-secondary">

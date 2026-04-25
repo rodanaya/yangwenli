@@ -632,7 +632,7 @@ export default function InstitutionScorecards() {
 
           {/* Explainer context */}
           <div className="rounded-sm border border-violet-500/20 bg-violet-500/5 px-4 py-3">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-violet-400 mb-1">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-sector-tecnologia)] mb-1">
               HALLAZGO
             </p>
             <p className="text-sm text-text-secondary leading-relaxed">

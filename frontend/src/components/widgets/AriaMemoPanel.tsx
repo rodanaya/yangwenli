@@ -135,7 +135,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    <Check className="h-3.5 w-3.5 text-text-muted" />
                     Copiado
                   </>
                 ) : (

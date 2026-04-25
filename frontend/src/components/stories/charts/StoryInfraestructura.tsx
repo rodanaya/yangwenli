@@ -96,7 +96,7 @@ export function StoryInfraestructura() {
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-cyan-400">{oecdBidders}+</div>
+          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)]">{oecdBidders}+</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             oferentes OCDE (Corea, Chile, UE)
           </div>

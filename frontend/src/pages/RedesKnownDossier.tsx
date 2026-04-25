@@ -844,7 +844,7 @@ function SignatureRow({
         {pct}%
       </span>
       {benchmarkLabel && (
-        <span className="text-[9px] text-cyan-400/70 font-mono w-16 text-right">
+        <span className="text-[9px] text-[color:var(--color-oecd)]/70 font-mono w-16 text-right">
           {benchmarkLabel}
         </span>
       )}

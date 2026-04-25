@@ -75,11 +75,11 @@ export function StoryProcedureBreakdown() {
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-risk-critical">93.4%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Agricultura · adj. directa · <span className="text-cyan-400">OCDE máx 25%</span>
+            Agricultura · adj. directa · <span className="text-[color:var(--color-oecd)]">OCDE máx 25%</span>
           </div>
         </div>
-        <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-emerald-400">59.9%</div>
+        <div className="border-l-2 border-text-muted pl-3 py-1">
+          <div className="text-3xl font-mono font-bold text-text-muted">59.9%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Infraestructura · licitación abierta · único sector {'>'}50%
           </div>

@@ -90,7 +90,7 @@ export function StoryCeroCompetenciaChart() {
           <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores bajo 25%</div>
         </div>
         <div className="border-l-2 border-cyan-400 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-cyan-400">0</div>
+          <div className="text-2xl font-mono font-bold text-[color:var(--color-oecd)]">0</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores cumplen OCDE 75%</div>
         </div>
       </div>

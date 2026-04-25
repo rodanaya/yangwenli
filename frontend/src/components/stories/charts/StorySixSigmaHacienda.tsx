@@ -61,7 +61,7 @@ export function StorySixSigmaHacienda() {
           <div className="text-[10px] text-text-muted uppercase tracking-wide">win rate SixSigma</div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-cyan-400">~16%</div>
+          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)]">~16%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">línea base sector Hacienda</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">

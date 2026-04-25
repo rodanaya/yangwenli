@@ -47,7 +47,7 @@ function CopyButton({ text }: { text: string }) {
       aria-label="Copy to clipboard"
     >
       {copied ? (
-        <><Check className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Copied</span></>
+        <><Check className="h-3 w-3 text-text-muted" /><span className="text-text-muted">Copied</span></>
       ) : (
         <><Copy className="h-3 w-3" /><span>Copy</span></>
       )}

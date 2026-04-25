@@ -87,8 +87,8 @@ export function StoryRacingBar() {
             con ≥99% adjudicación directa
           </div>
         </div>
-        <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-emerald-400">93.5%</div>
+        <div className="border-l-2 border-text-muted pl-3 py-1">
+          <div className="text-2xl font-mono font-bold text-text-muted">93.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             DA promedio del sector · OCDE 25%
           </div>

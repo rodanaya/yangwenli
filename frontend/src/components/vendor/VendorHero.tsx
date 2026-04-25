@@ -268,7 +268,7 @@ function IdentityLine({
         >
           <span>{vendor.rfc}</span>
           {rfcCopied ? (
-            <Check className="h-3 w-3 text-emerald-600" />
+            <Check className="h-3 w-3 text-text-muted" />
           ) : (
             <Copy className="h-3 w-3 opacity-60" />
           )}

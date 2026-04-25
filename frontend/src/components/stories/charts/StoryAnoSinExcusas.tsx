@@ -70,7 +70,7 @@ export function StoryAnoSinExcusas() {
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">3.3x</div>
+          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             sobre el máximo OCDE de 25%
           </div>

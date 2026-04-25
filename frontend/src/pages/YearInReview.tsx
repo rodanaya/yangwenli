@@ -184,7 +184,7 @@ function SectorDistributionFull({
               </span>
               <div className="flex-1 flex items-center gap-2">
                 {/* Was: 40 motion.circle nodes per row × 12 rows = 480 animated SVG
-                    elements with hardcoded #2d2926/#3d3734 dark-mode dots. Replaced
+                    elements with hardcoded near-black dark-mode dots. Replaced
                     by canonical <DotBar/>: same 4-bar visual story, 22 dots, no
                     per-dot animation, cream-mode tokens. */}
                 <DotBar
@@ -485,11 +485,11 @@ function RiskEvolution({
 
               {/* OECD threshold */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-cyan-400 w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-[color:var(--color-oecd)] w-28 flex-shrink-0">
                   {t('riskEvolution.oecdTarget')}
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
-                <span className="font-mono text-xs text-cyan-400 w-14 text-right flex-shrink-0 tabular-nums">
+                <span className="font-mono text-xs text-[color:var(--color-oecd)] w-14 text-right flex-shrink-0 tabular-nums">
                   {OECD_HIGH_RISK_THRESHOLD}%
                 </span>
               </div>
@@ -630,7 +630,7 @@ function ProcedureTypeSection({
             style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
             <div className="h-2 w-px bg-cyan-400" />
-            <span className="text-[9px] font-mono text-cyan-400 whitespace-nowrap">
+            <span className="text-[9px] font-mono text-[color:var(--color-oecd)] whitespace-nowrap">
               {t('procedureType.oecdLimit')}
             </span>
           </div>

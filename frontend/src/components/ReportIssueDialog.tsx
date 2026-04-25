@@ -150,7 +150,7 @@ export function ReportIssueDialog({
         {submitted ? (
           // ── Success state ───────────────────────────────────────────────
           <div className="py-8 flex flex-col items-center gap-3 text-center">
-            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+            <CheckCircle2 className="h-10 w-10 text-text-muted" />
             <p className="font-semibold text-text-primary">{t('reportIssue.success')}</p>
             <p className="text-sm text-text-muted max-w-xs">
               {t('reportIssue.successDetail')}

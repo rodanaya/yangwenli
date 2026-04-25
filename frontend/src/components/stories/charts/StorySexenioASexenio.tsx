@@ -84,7 +84,7 @@ export function StorySexenioASexenio() {
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">25%</div>
+          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">25%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             máximo OCDE · todas superan 1.6x o más
           </div>

@@ -538,7 +538,7 @@ export default function CategoryProfile() {
               {daPct.toFixed(0)}%
             </p>
             {daPct > 25 && (
-              <p className="text-[10px] text-cyan-400 font-mono mt-0.5">
+              <p className="text-[10px] text-[color:var(--color-oecd)] font-mono mt-0.5">
                 {t('profile.kpi.oecd')}
               </p>
             )}

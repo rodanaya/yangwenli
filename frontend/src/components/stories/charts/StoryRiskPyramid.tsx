@@ -63,8 +63,8 @@ export function StoryRiskPyramid() {
             ratio valor / volumen (crítico)
           </div>
         </div>
-        <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-emerald-400">13.5%</div>
+        <div className="border-l-2 border-text-muted pl-3 py-1">
+          <div className="text-3xl font-mono font-bold text-text-muted">13.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             tasa de alto riesgo · OCDE máx 15%
           </div>

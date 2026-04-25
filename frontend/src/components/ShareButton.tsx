@@ -82,8 +82,8 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
       >
         {copied ? (
           <>
-            <Check className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="text-emerald-400">{t('share.copied')}</span>
+            <Check className="h-3.5 w-3.5 text-text-muted" />
+            <span className="text-text-muted">{t('share.copied')}</span>
           </>
         ) : (
           <>
@@ -103,7 +103,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
             onClick={handleWhatsApp}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
-            <MessageCircle className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+            <MessageCircle className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
             {t('share.whatsapp')}
           </button>
           <button

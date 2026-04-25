@@ -44,7 +44,7 @@ export function StoryRiskCalendar() {
           <span className="text-[10px] text-text-secondary">Medium risk</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-emerald-700" />
+          <span className="w-3 h-3 rounded-sm bg-text-muted" />
           <span className="text-[10px] text-text-secondary">Low risk</span>
         </div>
         <span className="text-[10px] text-text-muted ml-auto">Hover cells for detail</span>

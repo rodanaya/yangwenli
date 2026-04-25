@@ -53,7 +53,7 @@ export function StatCard({
         <div
           className={cn(
             'text-xs font-mono tabular-nums mt-2',
-            trend.value >= 0 ? 'text-emerald-400' : 'text-risk-critical'
+            trend.value >= 0 ? 'text-text-muted' : 'text-risk-critical'
           )}
         >
           {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value).toFixed(1)}%{' '}

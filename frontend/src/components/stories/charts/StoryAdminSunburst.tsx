@@ -35,8 +35,8 @@ export function StoryAdminSunburst() {
 
       {/* Key comparison stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-emerald-400">MXN 3.1T</div>
+        <div className="border-l-2 border-text-muted pl-3 py-1">
+          <div className="text-2xl font-mono font-bold text-text-muted">MXN 3.1T</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Pena Nieto · largest spender
           </div>

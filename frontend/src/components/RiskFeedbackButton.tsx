@@ -41,7 +41,7 @@ const FEEDBACK_OPTIONS: {
     label: 'Not suspicious',
     description: 'Reviewed — no corruption indicators found',
     Icon: CheckCircle2,
-    colorClass: 'text-emerald-500',
+    colorClass: 'text-text-muted',
   },
   {
     value: 'confirmed_suspicious',

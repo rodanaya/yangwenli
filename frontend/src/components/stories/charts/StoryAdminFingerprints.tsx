@@ -35,8 +35,8 @@ export function StoryAdminFingerprints() {
 
       {/* Key finding strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-emerald-400">7.59%</div>
+        <div className="border-l-2 border-text-muted pl-3 py-1">
+          <div className="text-lg font-mono font-bold text-text-muted">7.59%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Pena Nieto HR · lowest of all 5
           </div>
@@ -44,7 +44,7 @@ export function StoryAdminFingerprints() {
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-lg font-mono font-bold text-risk-high">79.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            AMLO direct awards · <span className="text-cyan-400">OECD: max 25%</span>
+            AMLO direct awards · <span className="text-[color:var(--color-oecd)]">OECD: max 25%</span>
           </div>
         </div>
         <div className="border-l-2 border-pink-500 pl-3 py-1">
