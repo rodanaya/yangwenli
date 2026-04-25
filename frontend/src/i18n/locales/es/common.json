@@ -54,11 +54,12 @@
     "liveData": "Datos en Vivo"
   },
   "notFound": {
-    "code": "404 · PÁGINA NO ENCONTRADA",
-    "title": "Esta página no existe",
-    "description": "La página que buscas puede haberse movido o nunca existió. Intenta navegar de vuelta al panel principal.",
-    "backHome": "Volver al Panel",
-    "viewContracts": "Ver Todos los Contratos"
+    "code": "404 · SIN REGISTRO",
+    "title": "Este registro fue archivado o nunca se indexó",
+    "description": "La página que buscas no está en nuestra base de datos. Busca un proveedor, institución o contrato — o salta a una investigación abierta.",
+    "backHome": "Volver al panel",
+    "viewInvestigations": "Investigaciones abiertas →",
+    "searchPlaceholder": "Buscar proveedores, instituciones, contratos…"
   },
   "dossier": {
     "addToDossier": "Agregar al expediente",

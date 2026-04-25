@@ -45,11 +45,12 @@
     "liveData": "Live Data"
   },
   "notFound": {
-    "code": "404 · PAGE NOT FOUND",
-    "title": "This page doesn't exist",
-    "description": "The page you're looking for may have moved or never existed. Try navigating back to the dashboard.",
-    "backHome": "Back to Dashboard",
-    "viewContracts": "View All Contracts"
+    "code": "404 · NO RECORD FOUND",
+    "title": "This record has been archived or was never indexed",
+    "description": "The page you're looking for isn't in our database. Search for a vendor, institution or contract — or jump to an open investigation.",
+    "backHome": "Back to dashboard",
+    "viewInvestigations": "Open investigations →",
+    "searchPlaceholder": "Search vendors, institutions, contracts…"
   },
   "dossier": {
     "addToDossier": "Add to Dossier",

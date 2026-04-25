@@ -9,17 +9,18 @@ import { Shield, Database, FileText, Github, Lock } from 'lucide-react'
 // ============================================================================
 
 interface SectionProps {
+  id: string
   title: string
   children: React.ReactNode
 }
 
-function Section({ title, children }: SectionProps) {
+function Section({ id, title, children }: SectionProps) {
   return (
-    <section className="mb-10">
-      <h2 className="text-base font-semibold text-text-primary mb-3 pb-2 border-b border-border">
-        {title}
+    <section id={id} className="mb-10 scroll-mt-20">
+      <h2 className="font-editorial text-lg font-semibold text-text-primary mb-3 pb-2 border-b border-border">
+        <a href={`#${id}`} className="hover:text-accent transition-colors no-underline">{title}</a>
       </h2>
-      <div className="space-y-3 text-sm text-text-primary leading-relaxed">{children}</div>
+      <div className="space-y-3 text-[15px] text-text-primary leading-relaxed">{children}</div>
     </section>
   )
 }
@@ -53,13 +54,13 @@ export default function Privacy() {
             <div className="flex items-center gap-1 rounded border border-border bg-background-elevated p-0.5">
               <button
                 onClick={() => setLang('es')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'es' ? 'bg-amber-500/20 text-amber-400' : 'text-text-primary hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'es' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 ES
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'en' ? 'bg-amber-500/20 text-amber-400' : 'text-text-primary hover:text-text-primary'}`}
+                className={`px-2.5 py-1 text-[11px] font-mono rounded-sm transition-colors ${lang === 'en' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-primary'}`}
               >
                 EN
               </button>
@@ -85,7 +86,7 @@ export default function Privacy() {
         </div>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '1. Quiénes somos (Responsable del tratamiento)' : '1. Who We Are (Data Controller)'}>
+        <Section id="who" title={isEs ? '1. Quiénes somos (Responsable del tratamiento)' : '1. Who We Are (Data Controller)'}>
           <p>
             {isEs
               ? 'RUBLI es una plataforma de investigación de código abierto y sin fines de lucro para el análisis de datos de contrataciones del gobierno federal mexicano. El proyecto es mantenido de forma voluntaria por colaboradores y no está afiliado a ninguna entidad gubernamental, partido político o empresa comercial.'
@@ -94,7 +95,7 @@ export default function Privacy() {
           </p>
           <p>
             {isEs ? 'Para consultas relacionadas con datos, contáctenos a través de ' : 'For data-related enquiries, contact us via '}
-            <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">
+            <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               GitHub Issues
             </a>
             {isEs ? '. Nos comprometemos a responder en un plazo de 30 días.' : '. We aim to respond within 30 days.'}
@@ -102,7 +103,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '2. Qué datos tratamos' : '2. What Data We Process'}>
+        <Section id="data" title={isEs ? '2. Qué datos tratamos' : '2. What Data We Process'}>
           <div className="space-y-4">
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
@@ -111,8 +112,8 @@ export default function Privacy() {
               </div>
               <p>
                 {isEs
-                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-text-primary">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
-                  : <>Approximately 3.1 million contract records sourced from <strong className="text-text-primary">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
+                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-text-primary">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
+                  : <>Approximately 3.1 million contract records sourced from <strong className="text-text-primary">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
                 }
               </p>
             </div>
@@ -152,7 +153,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '3. Base legal' : '3. Legal Basis'}>
+        <Section id="legal-basis" title={isEs ? '3. Base legal' : '3. Legal Basis'}>
           <p>{isEs ? 'Nuestro tratamiento de datos públicos de contrataciones se fundamenta en:' : 'Our processing of public procurement data is grounded in:'}</p>
           <ul className="list-disc list-inside space-y-2 ml-1">
             <li>
@@ -179,7 +180,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '4. Datos de visitantes — Lo que NO recopilamos' : '4. Visitor Data — What We Do NOT Collect'}>
+        <Section id="visitor-data" title={isEs ? '4. Datos de visitantes — Lo que NO recopilamos' : '4. Visitor Data — What We Do NOT Collect'}>
           <p>{isEs ? 'No realizamos ninguna de las siguientes acciones:' : 'We do not:'}</p>
           <ul className="list-disc list-inside space-y-1.5 ml-1">
             {isEs ? <>
@@ -205,7 +206,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '5. Retención y almacenamiento de datos' : '5. Data Retention & Storage'}>
+        <Section id="retention" title={isEs ? '5. Retención y almacenamiento de datos' : '5. Data Retention & Storage'}>
           <p>
             {isEs
               ? 'Los registros de contrataciones se conservan mientras la plataforma esté en funcionamiento y los datos fuente estén disponibles en COMPRANET. La base de datos se reconstruye periódicamente a partir de los archivos fuente y no contiene datos más allá de los publicados en los sistemas gubernamentales oficiales.'
@@ -221,7 +222,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '6. Sus derechos (LFPDPPP — ARCO)' : '6. Your Rights (LFPDPPP — ARCO)'}>
+        <Section id="arco" title={isEs ? '6. Sus derechos (LFPDPPP — ARCO)' : '6. Your Rights (LFPDPPP — ARCO)'}>
           <p>
             {isEs
               ? <> Conforme a la LFPDPPP, usted tiene derecho de <strong className="text-text-primary">Acceso, Rectificación, Cancelación y Oposición</strong> (derechos ARCO) respecto a sus datos personales.</>
@@ -233,7 +234,7 @@ export default function Privacy() {
               ? <>Dado que RUBLI deriva sus datos de fuentes gubernamentales públicas, el mecanismo principal para corregir errores en los registros de contrataciones es a través de COMPRANET o la institución contratante correspondiente. Sin embargo, si considera que RUBLI conserva o muestra datos personales suyos que son inexactos o deben eliminarse, abra un </>
               : <>Because RUBLI derives its data from public government sources, the primary mechanism for correcting errors in procurement records is through COMPRANET or the relevant contracting institution. However, if you believe RUBLI holds or displays personal data about you that is inaccurate or should be removed, please open a </>
             }
-            <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">
+            <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               {isEs ? 'issue en GitHub' : 'GitHub Issue'}
             </a>{' '}
             {isEs ? <>etiquetado <Tag>privacy</Tag>. Responderemos en un plazo de 30 días.</> : <>labelled <Tag>privacy</Tag>. We will respond within 30 days.</>}
@@ -241,7 +242,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '7. Servicios de terceros' : '7. Third-Party Services'}>
+        <Section id="third-parties" title={isEs ? '7. Servicios de terceros' : '7. Third-Party Services'}>
           <p>
             {isEs
               ? 'La plataforma RUBLI no integra servicios de terceros que recopilen datos personales (por ejemplo, mapas incrustados, botones de redes sociales o widgets de chat). Todo el procesamiento de datos ocurre en la infraestructura de servidores de RUBLI.'
@@ -257,7 +258,7 @@ export default function Privacy() {
         </Section>
 
         {/* ------------------------------------------------------------------ */}
-        <Section title={isEs ? '8. Cambios a este aviso' : '8. Changes to This Policy'}>
+        <Section id="changes" title={isEs ? '8. Cambios a este aviso' : '8. Changes to This Policy'}>
           <p>
             {isEs
               ? 'Podemos actualizar este aviso para reflejar cambios en la plataforma o en la legislación aplicable. La fecha en la parte superior de esta página indica la revisión más reciente. Los cambios sustanciales se anunciarán a través del repositorio de GitHub del proyecto.'
@@ -272,15 +273,15 @@ export default function Privacy() {
             href="https://github.com/rodanaya/yangwenli"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-text-primary hover:text-text-primary transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             {isEs ? 'Código fuente (MIT)' : 'Source code (MIT)'}
           </a>
-          <a href="/terms" className="text-xs text-text-primary hover:text-text-primary transition-colors">
+          <a href="/terms" className="text-xs text-text-secondary hover:text-text-primary transition-colors">
             {isEs ? 'Términos de uso' : 'Terms of Use'}
           </a>
-          <a href="/methodology" className="text-xs text-text-primary hover:text-text-primary transition-colors">
+          <a href="/methodology" className="text-xs text-text-secondary hover:text-text-primary transition-colors">
             {isEs ? 'Metodología' : 'Methodology'}
           </a>
         </div>
