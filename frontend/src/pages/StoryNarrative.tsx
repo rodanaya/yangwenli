@@ -302,11 +302,14 @@ function ChapterSection({
 // Shared status config (used in Hero + Methodology)
 // ---------------------------------------------------------------------------
 
+// Tokenized — was 4 dark-mode pill styles (text-color-400 + bg-color-950)
+// that read as washed-out muddy patches on the cream broadsheet. Routed
+// through canonical risk + accent + OECD tokens.
 const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
-  solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
-  reporteado:  { labelKey: 'story.statusReporteado',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
-  auditado:    { labelKey: 'story.statusAuditado',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
-  procesado:   { labelKey: 'story.statusProcesado',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
+  solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-risk-high',                   bg: 'bg-risk-high/10',                                  border: 'border-risk-high/30' },
+  reporteado:  { labelKey: 'story.statusReporteado', color: 'text-[color:var(--color-accent-data)]', bg: 'bg-[color:var(--color-accent-data)]/10',     border: 'border-[color:var(--color-accent-data)]/30'   },
+  auditado:    { labelKey: 'story.statusAuditado',  color: 'text-[color:var(--color-oecd)]',        bg: 'bg-[color:var(--color-oecd)]/10',            border: 'border-[color:var(--color-oecd)]/30' },
+  procesado:   { labelKey: 'story.statusProcesado', color: 'text-risk-critical',                   bg: 'bg-risk-critical/10',                          border: 'border-risk-critical/30'   },
 }
 
 // ---------------------------------------------------------------------------
@@ -538,7 +541,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         <div className="text-sm text-text-secondary leading-relaxed space-y-3">
           <p>
             {t('story.methodologyP1')}{' '}
-            <ProseStat value="3,051,294" color="text-red-400" animate={false} />{' '}
+            <ProseStat value="3,051,294" color="text-risk-critical" animate={false} />{' '}
             {t('story.methodologyP2')}
           </p>
           <p>
@@ -553,7 +556,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         {story.nextSteps && story.nextSteps.length > 0 && (
           <div className="mt-8 p-4 rounded-sm border border-border bg-background-card">
             <h4 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
-              <ChevronRight className="h-4 w-4 text-red-400" />
+              <ChevronRight className="h-4 w-4 text-risk-critical" />
               {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">
