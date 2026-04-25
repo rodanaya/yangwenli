@@ -1,6 +1,4 @@
 {
-  "title": "Administration Analysis",
-  "subtitle": "Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)",
   "dossier": {
     "sectionLabel": "Administration Summary",
     "politicalContext": "Political Context",
@@ -9,15 +7,8 @@
     "topSectors": "Top Spending Sectors",
     "noScandals": "No documented cases for this period in the RUBLI ground truth corpus.",
     "linkToCases": "View in Cases",
-    "party": "Party",
-    "term": "Term",
     "fingerprint": {
-      "totalSpend": "Total Spend",
-      "directAward": "Direct Award",
-      "singleBid": "Single Bid",
-      "avgRisk": "Avg Risk Score",
-      "highRisk": "High-Risk Rate",
-      "vendors": "Active Vendors"
+      "highRisk": "High-Risk Rate"
     },
     "severityLabels": {
       "critical": "CRIT",
@@ -65,19 +56,9 @@
   "documentedCases": "Documented Corruption Cases",
   "documentedCasesNote": "Manually verified from public records and ASF investigations — not ML-detected",
   "noData": "No yearly data available for this administration",
-  "noEvents": "No events recorded for this period",
   "insufficientData": "Insufficient data for transition analysis",
-  "metrics": {
-    "contractsPerYear": "Contracts / Year",
-    "avgAnnualSpend": "Avg Annual Spend",
-    "avgRiskScore": "Avg Risk Score",
-    "directAwardPct": "Direct Award %",
-    "highRiskPct": "High Risk %",
-    "singleBidPct": "Single Bid %"
-  },
   "table": {
-    "metric": "Metric",
-    "selected": "Selected"
+    "metric": "Metric"
   },
   "statCards": {
     "contracts": "Contracts",
@@ -94,7 +75,6 @@
     "political": "Political Cycle",
     "compare": "Period Comparison"
   },
-  "selected": "Selected",
   "contracts": "contracts",
   "incompleteDataset": "Incomplete Dataset",
   "incompleteDatasetDescription": "Sheinbaum's administration began October 2024. This data covers ~4 months vs. 6-year full terms for other presidents. Direct comparisons may be misleading.",
@@ -102,8 +82,6 @@
   "anomaliesNote": "years deviating >1.8σ from 23-year baseline",
   "sectorCorrelations": "Sector Risk Correlations",
   "sectorCorrelationsNote": "Sector pairs with correlated risk trajectories (|r| ≥ 0.70) during this administration",
-  "correlation": "correlation",
-  "transitionFrom": "→",
   "heatmapSubtitle": "Risk metrics by sector for the selected administration — sorted by high-risk contract percentage.",
   "transitionSubtitle": "Changes in key indicators between consecutive administrations. Values marked ! or !! are statistically unusual (≥1.8σ from historical average).",
   "keyEventsSubtitle": "Legislative reforms, documented scandals, and crises that affected public procurement patterns during this administration.",
@@ -162,11 +140,9 @@
   "vendorSection": {
     "title": "Top Vendors by Administration",
     "subtitle": "Largest recipients of federal contracts, by presidential term",
-    "marketShare": "of era spend",
     "noData": "Insufficient data for this period",
     "contracts": "contracts",
-    "riskScore": "avg. risk",
-    "gtWarning": "Flagged in ground truth"
+    "riskScore": "avg. risk"
   },
   "classifiedHeader": {
     "eyebrow": "Comparative Analysis · RUBLI · National Transparency System",
@@ -210,26 +186,12 @@
     "loadingData": "Loading sector data…"
   },
   "politicalView": {
-    "title": "Election Year Effect",
-    "subtitle": "Average procurement risk in election vs non-election years (2002–2025)",
-    "electionYears": "Election Years",
-    "nonElectionYears": "Non-Election Years",
-    "riskDelta": "Risk Delta",
-    "avgRiskScore": "avg risk score",
     "insufficientData": "Insufficient data",
     "higherInElection": "Higher risk in election years",
     "lowerInElection": "Lower risk in election years",
-    "noSignificantDiff": "No significant difference",
-    "electionMinusNon": "election − non-election",
-    "relative": "% relative",
-    "sexenioBreakdownTitle": "Sexenio Year Breakdown",
-    "sexenioBreakdownDesc": "Average procurement risk across Years 1–6 of the presidential term (all administrations pooled)"
+    "noSignificantDiff": "No significant difference"
   },
   "trajectoryChart": {
-    "termYear": "Yr {{n}}",
-    "avgRiskLabel": "Average risk score",
-    "directAwardLabel": "Direct award rate",
-    "highRiskLabel": "High-risk contract rate",
     "title": "Risk Trajectory by Term Year — All Administrations",
     "subtitle": "Each line traces one administration's metric across term years 1–6. Dashed = partial term data.",
     "metricRisk": "Risk",
@@ -270,37 +232,16 @@
     "crisis": "Crisis"
   },
   "compareView": {
-    "sourceNote": "Source: COMPRANET contracts weighted by volume · {{metric}}",
     "signalWorse": "Worse",
     "signalBetter": "Better"
   },
   "grade": {
-    "title": "PROCUREMENT GRADE",
-    "subtitle": "OECD-aligned score based on direct award rate, high-risk rate, and single-bid rate",
-    "scoreLabel": "Score",
-    "directAward": "Direct Award",
-    "highRisk": "High Risk Rate",
-    "singleBid": "Single Bid",
-    "gradeA": "Excellent — below OECD alert thresholds on all indicators",
-    "gradeB": "Good — mostly within OECD guidelines",
-    "gradeC": "Fair — some indicators above recommended levels",
-    "gradeD": "Poor — multiple indicators in alert zone",
-    "gradeF": "Critical — exceeds OECD thresholds across indicators"
+    "title": "PROCUREMENT GRADE"
   },
   "radar": {
     "title": "All Administrations: Procurement Fingerprint",
     "subtitle": "Comparative radar of 5 key procurement metrics across all presidencies (higher = better performance)",
-    "axisDirectAward": "Direct Award",
-    "axisHighRisk": "High Risk",
-    "axisSingleBid": "Single Bid",
-    "axisAvgRisk": "Avg Risk",
-    "axisVolume": "Volume",
-    "legend": "Administration"
-  },
-  "transition": {
-    "comparisonLabel": "vs prior administration",
-    "fromAdmin": "From",
-    "toAdmin": "To"
+    "axisVolume": "Volume"
   },
   "actCard": {
     "contracts": "Contracts",
@@ -310,53 +251,6 @@
     "daVsOecd": "Direct Award vs OECD ({{pct}}%)",
     "oecdBenchmark": "OECD {{pct}}%",
     "notableCase": "Notable case:"
-  },
-  "politicalView2": {
-    "title": "Election Year Effect",
-    "subtitle": "Average procurement risk in election vs non-election years (2002–2025)",
-    "electionYears": "Election Years",
-    "nonElectionYears": "Non-Election Years",
-    "riskDelta": "Risk Delta",
-    "avgRiskScore": "avg risk score",
-    "electionMinusNon": "election − non-election",
-    "relative": "% relative",
-    "higherInElection": "Higher risk in election years",
-    "lowerInElection": "Lower risk in election years",
-    "noSignificantDiff": "No significant difference",
-    "insufficientData": "Insufficient data",
-    "sexenioBreakdownTitle": "Sexenio Year Breakdown",
-    "sexenioBreakdownDesc": "Average procurement risk across Years 1–6 of the presidential term (all administrations pooled)",
-    "sexenioFootnote": "Year 1 = first year of administration, Year 6 = final year before election. Higher risk in late sexenio years may indicate \"budget dump\" spending."
-  },
-  "compareView2": {
-    "title": "Compare Periods",
-    "subtitle": "Compare procurement risk and total spending between any two time windows. Click an administration preset to fill Period A.",
-    "quickPresets": "Quick Presets → Period A",
-    "periodA": "Period A",
-    "periodB": "Period B",
-    "periodsIdentical": "Periods are identical",
-    "compareBtn": "Compare Periods",
-    "loadingBtn": "Loading…",
-    "resultsTitle": "Results: Period A ({{s1}}–{{e1}}) vs Period B ({{s2}}–{{e2}})",
-    "colMetric": "Metric",
-    "colPeriodA": "Period A",
-    "colPeriodB": "Period B",
-    "colDelta": "Δ (B − A)",
-    "colSignal": "Signal",
-    "signalWorse": "Worse",
-    "signalBetter": "Better",
-    "metricAvgRisk": "Avg Risk Score",
-    "metricTotalSpend": "Total Spending",
-    "footnote": "Signal: \"Worse\" = risk increased between periods. \"Better\" = risk decreased. Spending change is reported as neutral — higher spending may reflect legitimate growth or procurement expansion."
-  },
-  "grade2": {
-    "subtitle": "Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate."
-  },
-  "matrix": {
-    "metricRisk": "Avg Risk",
-    "metricDA": "Direct Award %",
-    "metricHR": "High Risk %",
-    "metricSB": "Single Bid %"
   },
   "share": "Share",
   "lede": {

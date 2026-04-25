@@ -1,6 +1,5 @@
 {
   "trackingLabel": "ANÁLISIS DE CAPTURA INSTITUCIONAL",
-  "title": "Territorios Ocupados",
   "titleV2": "Mapa de Captura Institucional",
   "subtitle": "¿Qué instituciones del gobierno dependen más de un solo proveedor?",
   "editorialLede": {
@@ -28,13 +27,9 @@
     "competitive": "Competitiva"
   },
   "sourcePill": "contratos analizados",
-  "loading": "Construyendo matriz de captura...",
   "errorTitle": "Error al Cargar",
   "errorMessage": "No se pudieron cargar los datos de flujo de dinero.",
   "errorHint": "Intenta recargar la página. Si el problema persiste, es posible que el servicio esté temporalmente fuera de línea.",
-  "emptyTitle": "Sin Datos de Captura",
-  "emptyMessage": "No hay datos de flujo institución-proveedor para los filtros seleccionados.",
-  "emptyHint": "Intente ajustar el sector o el rango de años.",
   "whatIsCapture": {
     "label": "¿QUÉ ES LA CAPTURA INSTITUCIONAL?",
     "body": "La captura institucional ocurre cuando un solo proveedor gana una porción tan grande de los contratos de una institución que efectivamente controla sus decisiones de compra. Según las directrices de la OCDE, cuando un proveedor acumula más del 30% del gasto total de contratación de una institución, es una señal de alerta significativa. Por encima del 50%, representa una dependencia casi total — un patrón asociado con colusión, contratos fantasma y corrupción sistémica.",
@@ -56,7 +51,6 @@
   },
   "filters": {
     "allSectors": "Todos los Sectores",
-    "bySector": "Filtrar por Sector",
     "sectorLabel": "Sector:",
     "yearLabel": "Año:",
     "period2018": "2018–2022",
@@ -67,9 +61,6 @@
     "capture15": "≥15%",
     "capture30": "≥30%",
     "capture50": "≥50%",
-    "displayMode": "Modo de Visualización",
-    "byValue": "Por Valor",
-    "byCount": "Por Contratos",
     "resetAll": "Restablecer filtros",
     "currentView": "Mostrando",
     "noResults": "Ninguna institución alcanza el umbral de captura ≥{{pct}}% para la selección actual."
@@ -82,20 +73,8 @@
   },
   "heatmap": {
     "sectionLabel": "MAPA DE CONCENTRACIÓN",
-    "institution": "Institución",
-    "vendor": "Proveedor",
-    "value": "Valor",
-    "pctBudget": "del gasto institucional",
     "contracts": "contratos",
-    "highCapture": "Alta Captura",
-    "lowCapture": "Baja Captura",
     "mobileLabel": "Top Concentraciones — Lista"
-  },
-  "legend": {
-    "total": "Captura Total (>50%)",
-    "high": "Alto Riesgo (30–50%)",
-    "moderate": "Moderado (15–30%)",
-    "low": "Bajo (<15%)"
   },
   "hero": {
     "worstCapture": "Mayor captura institucional"
@@ -111,11 +90,9 @@
     "content": "Calculado sobre 3.05M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. Alta concentración (>30%) es un indicador de riesgo según las directrices de contratación de la OCDE. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
   },
   "stats": {
-    "topFlows": "FLUJOS ANALIZADOS",
     "capturedInstitutions": "INSTITUCIONES MOSTRADAS",
     "dominantVendors": "PROVEEDORES MOSTRADOS",
-    "highCaptureFlows": "ALTA CAPTURA",
-    "highCaptureDesc": "Flujos donde proveedor tiene >30% del gasto institucional"
+    "highCaptureFlows": "ALTA CAPTURA"
   },
   "riskLabels": {
     "total": "Captura Total",

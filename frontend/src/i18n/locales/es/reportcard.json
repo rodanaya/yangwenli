@@ -1,15 +1,7 @@
 {
-  "pageEyebrow": "Integridad Procuratoria",
   "pageTitle": "Salud de la Contratación Pública",
-  "pageSubtitle": "¿Qué tan bien maneja México el gasto p��blico federal?",
   "pageSubtitleV2": "Evaluación basada en indicadores OCDE y modelo de riesgo v0.6.5",
-
   "heroGradeLabel": "Calificación General",
-  "heroHeadline_good": "Compras públicas de México: {{grade}} — Buen desempeño según est��ndares internacionales",
-  "heroHeadline_ok": "Compras públicas de México: {{grade}} — Hay margen de mejora",
-  "heroHeadline_poor": "Compras públicas de México: {{grade}} — Se detectan problemas significativos",
-  "heroHeadline_bad": "Compras públicas de México: {{grade}} — Se requiere acción urgente",
-
   "oecdContextTitle": "CONTEXTO OCDE",
   "oecdDALabel": "Tasa de adjudicación directa",
   "oecdDABenchmark": "Recomendación OCDE: máximo 25%",
@@ -18,7 +10,6 @@
   "oecdSBBenchmark": "Recomendación OCDE: máximo 15%",
   "oecdMexicoSB": "México: {{pct}}%",
   "heroBadgeLabel": "Basado en {{count}} indicadores internacionales · OCDE, FMI, Banco Mundial",
-
   "metricRiskTitle": "1 de cada {{n}} contratos muestra señales de riesgo",
   "metricRiskSubtitle": "de todos los contratos federales analizados muestran patrones consistentes con corrupción — detectados por nuestro modelo de IA",
   "metricRiskNote": "Referencia OCDE: menos del 15%",
@@ -28,50 +19,26 @@
   "metricCasesTitle": "{{count}} casos documentados",
   "metricCasesSubtitle": "casos de corrupción confirmados usados para entrenar y validar el modelo de detección de riesgos",
   "metricCasesNote": "IMSS, Segalmex, compras COVID, y más",
-
   "whatThisMeansTitle": "¿Qué significa esto?",
-  "bullet1_poor": "Más de 1 de cada 10 contratos del gobierno muestra patrones que coinciden con casos de corrupción conocidos — esto supera la norma de la OCDE.",
-  "bullet1_ok": "Alrededor de 1 de cada 7 contratos del gobierno muestra patrones de riesgo — cercano al límite de la OCDE de menos del 15%.",
   "bullet2": "Los sectores con mayor riesgo son {{sectors}} — donde la competencia es más baja y la concentración de proveedores es más alta.",
   "bullet3": "Las adjudicaciones directas (contratos sin licitación pública) representan una gran parte del gasto total, reduciendo la rendición de cuentas.",
-
   "sectorTitle": "Riesgo por sector",
   "sectorSubtitle": "Rojo más oscuro = más contratos marcados como alto riesgo en ese sector. Haz clic en un sector para ver detalles.",
   "sectorHighRisk": "alto riesgo",
   "sectorGoTo": "Ver sector",
-
   "trendTitle": "¿Está mejorando o empeorando?",
-  "trendImproving": "Mejorando",
-  "trendStable": "Sin cambios",
-  "trendWorsening": "Empeorando",
-  "trendSentence_improving": "Las tasas de competencia han mejorado en los últimos 3 años — menos contratos van a un solo proveedor sin licitación pública.",
-  "trendSentence_stable": "La calidad de las compras se ha mantenido relativamente estable — sin mejoras ni deterioros importantes en los últimos años.",
-  "trendSentence_worsening": "Las tasas de competencia han disminuido en años recientes — más contratos se otorgan sin licitación abierta.",
   "trendSince": "Tendencia desde {{year}}",
-
-  "methodologyLink": "¿Cómo se calcula esto?",
   "methodologyNote": "Este reporte usa el Índice de Salud de Compras Públicas (PHI) y el modelo de riesgo RUBLI v0.6.5. Las calificaciones reflejan tasas de competencia, licitaciones con un solo postor, concentración de proveedores y alertas externas. Todos los datos provienen de COMPRANET, el registro oficial de compras de México.",
   "sourcesLabel": "Fuentes: COMPRANET · Benchmarks OCDE · FMI CRI · Registro EFOS del SAT",
-
   "loading": "Cargando datos de compras...",
   "error": "Error al cargar datos. Intenta de nuevo.",
   "computing": "Calculando datos de salud procuratoria...",
   "computingDetail": "Esto puede tomar un momento. Se actualiza automáticamente...",
-
-  "gradeA": "Excelente",
-  "gradeB": "Bueno",
-  "gradeC": "Aceptable",
-  "gradeD": "Deficiente",
-  "gradeF": "Reprobado",
-
   "riskLevelCritical": "Crítico",
   "riskLevelHigh": "Alto",
   "riskLevelMedium": "Medio",
   "riskLevelLow": "Bajo",
-
-  "ofValue": "del valor",
-  "countLabel": "contratos",
-  "viewFullMethodology": "Ver metodología completa \u2192",
+  "viewFullMethodology": "Ver metodología completa →",
   "gradeMethodology": {
     "body": "Calificación basada en 5 dimensiones: tasa de adjudicación directa, concentración de proveedores, tasa de riesgo crítico, indicadores de fraccionamiento, y cobertura de datos. OCDE recomienda <25% adjudicaciones directas — México promedió 79.4%."
   }

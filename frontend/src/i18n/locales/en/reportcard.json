@@ -1,15 +1,7 @@
 {
-  "pageEyebrow": "Procurement Integrity",
   "pageTitle": "Procurement Health Index",
-  "pageSubtitle": "How well does Mexico's federal government manage public spending?",
   "pageSubtitleV2": "Assessment based on OECD indicators and risk model v0.6.5",
-
   "heroGradeLabel": "Overall Score",
-  "heroHeadline_good": "Mexico's procurement: {{grade}} — Performing well by international standards",
-  "heroHeadline_ok": "Mexico's procurement: {{grade}} — Room for improvement",
-  "heroHeadline_poor": "Mexico's procurement: {{grade}} — Significant problems detected",
-  "heroHeadline_bad": "Mexico's procurement: {{grade}} — Urgent action needed",
-
   "oecdContextTitle": "OECD CONTEXT",
   "oecdDALabel": "Direct award rate",
   "oecdDABenchmark": "OECD recommendation: maximum 25%",
@@ -18,7 +10,6 @@
   "oecdSBBenchmark": "OECD recommendation: maximum 15%",
   "oecdMexicoSB": "Mexico: {{pct}}%",
   "heroBadgeLabel": "Based on {{count}} international indicators · OECD, IMF, World Bank",
-
   "metricRiskTitle": "1 in {{n}} contracts shows risk signals",
   "metricRiskSubtitle": "of all federal contracts analyzed show patterns consistent with corruption — flagged by our AI model",
   "metricRiskNote": "OECD benchmark: under 15%",
@@ -28,50 +19,26 @@
   "metricCasesTitle": "{{count}} documented cases",
   "metricCasesSubtitle": "confirmed corruption cases used to train and validate the risk detection model",
   "metricCasesNote": "IMSS, Segalmex, COVID procurement, and more",
-
   "whatThisMeansTitle": "What this means",
-  "bullet1_poor": "More than 1 in 10 government contracts shows patterns that match known corruption cases — this is above OECD norms.",
-  "bullet1_ok": "About 1 in 7 government contracts shows risk patterns — close to the OECD benchmark of under 15%.",
   "bullet2": "The most at-risk sectors are {{sectors}} — where competition is lowest and vendor concentration is highest.",
   "bullet3": "Direct awards (contracts given without a public bid) account for a large portion of total spending, reducing accountability.",
-
   "sectorTitle": "Risk by sector",
   "sectorSubtitle": "Darker red = more contracts flagged as high risk in that sector. Click a sector for details.",
   "sectorHighRisk": "high risk",
   "sectorGoTo": "View sector",
-
   "trendTitle": "Is it getting better or worse?",
-  "trendImproving": "Getting better",
-  "trendStable": "Holding steady",
-  "trendWorsening": "Getting worse",
-  "trendSentence_improving": "Competition rates have improved over the past 3 years — fewer contracts go to a single vendor without a public bid.",
-  "trendSentence_stable": "Procurement quality has remained roughly stable — no major improvement or deterioration in recent years.",
-  "trendSentence_worsening": "Competition rates have declined in recent years — more contracts are being awarded without open bidding.",
   "trendSince": "Trend since {{year}}",
-
-  "methodologyLink": "How is this calculated?",
   "methodologyNote": "This report uses the Procurement Health Index (PHI) and the RUBLI AI risk model (v0.6.5). Grades reflect competition rates, single-bidder tenders, vendor concentration, and external red flags. All data comes from COMPRANET, Mexico's official procurement registry.",
   "sourcesLabel": "Sources: COMPRANET · OECD Procurement Benchmarks · IMF CRI · SAT EFOS Registry",
-
   "loading": "Loading procurement data...",
   "error": "Failed to load data. Please try again.",
   "computing": "Computing procurement health data...",
   "computingDetail": "This may take a moment. Refreshing automatically...",
-
-  "gradeA": "Excellent",
-  "gradeB": "Good",
-  "gradeC": "Acceptable",
-  "gradeD": "Poor",
-  "gradeF": "Failing",
-
   "riskLevelCritical": "Critical",
   "riskLevelHigh": "High",
   "riskLevelMedium": "Medium",
   "riskLevelLow": "Low",
-
-  "ofValue": "of value",
-  "countLabel": "contracts",
-  "viewFullMethodology": "View full methodology \u2192",
+  "viewFullMethodology": "View full methodology →",
   "gradeMethodology": {
     "body": "Grade based on 5 dimensions: direct award rate, vendor concentration, critical risk rate, threshold-splitting indicators, and data coverage. OECD recommends <25% direct awards — Mexico averaged 79.4%."
   }

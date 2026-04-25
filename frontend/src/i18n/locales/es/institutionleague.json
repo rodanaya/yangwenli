@@ -1,7 +1,4 @@
 {
-  "eyebrow": "LIGA DE TRANSPARENCIA INSTITUCIONAL",
-  "title": "Liga de Transparencia Institucional",
-  "subtitle": "Clasificaciones basadas en tasa de competencia, licitaciones unicas, equidad de precios e indicadores de riesgo en {{total}} instituciones evaluadas",
   "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
   "meta": "FEDERAL · 2018–2025 · v0.6.5",
   "headline": {
@@ -10,23 +7,12 @@
   },
   "lede": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE. ISSSTE, IMSS-BIENESTAR, CONAGUA y el extinto INSABI — disuelto en 2023 pero aún con 3,560 contratos vigentes — completan el top cinco. La razón de alto riesgo del INSABI — 43 por ciento — es la peor de cualquier dependencia federal con más de 2,000 contratos.",
   "lede_none": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE.",
-  "podiumTitle": "Mejores Instituciones",
-  "podiumSubtitle": "Instituciones con las puntuaciones de transparencia más altas",
-  "podiumHeadline": "Las tres instituciones más transparentes",
-  "podiumKicker": "Podio",
   "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
-  "tableTitle": "Clasificación Completa",
   "tableKicker": "Tabla general",
   "tableHeadline": "Clasificación completa — {{total}} instituciones",
   "acts": {
     "one": "LAS CABEZAS DE SERIE",
     "two": "LA CLASIFICACIÓN COMPLETA"
-  },
-  "hero": {
-    "leagueVerdict": "VEREDICTO DE LA LIGA",
-    "annualRanking": "Ranking anual de rendición de cuentas · Instituciones federales 2002–2025",
-    "scoreRange": "Una puntuación menor a 40 indica falla sistémica en apertura, precios, diversidad de proveedores, integridad del proceso y alertas externas.",
-    "benchmark": "Umbral de integridad OCDE: 60"
   },
   "champions": {
     "kicker": "CUADRO DE HONOR",
@@ -43,7 +29,6 @@
     "headline": "Distribución de puntuaciones entre {{total}} instituciones federales",
     "sub": "Cada institución cae en una de cinco bandas. La mediana es {{median}}.",
     "bandLabel": "{{min}}–{{max}}",
-    "institutions": "instituciones",
     "ariaLabel": "Histograma de distribución de puntuaciones agrupadas en bandas de 20 puntos"
   },
   "pillarRadar": {
@@ -55,10 +40,6 @@
     "process": "Proceso",
     "external": "Externo"
   },
-  "sectorPicker": {
-    "all": "Todos los sectores",
-    "count": "{{num}}"
-  },
   "expandRow": "Mostrar desglose de pilares",
   "collapseRow": "Ocultar desglose de pilares",
   "finding": {
@@ -69,10 +50,7 @@
     "searchPlaceholder": "Buscar instituciones…",
     "sectorLabel": "Sector",
     "allSectors": "Todos los sectores",
-    "allGrades": "Todas las calificaciones",
     "allTiers": "Todos los niveles",
-    "minContracts": "Contratos mínimos",
-    "sortBy": "Ordenar por",
     "adjustFilters": "Intenta ajustar los filtros o la búsqueda.",
     "search": "Buscar instituciones",
     "tier": "Nivel",
@@ -83,17 +61,12 @@
     "medianScore": "Puntuación Mediana",
     "topPerformer": "Mejor Institución",
     "worstPerformer": "Institución Más Débil",
-    "gradeDistribution": "Distribución de Calificaciones",
-    "institutionsCount": "{{num}} instituciones",
-    "scoreOutOf": "de 100",
     "outOfHundred": "/ 100",
     "evaluated": "Instituciones evaluadas",
     "critical": "En nivel crítico",
     "median": "Puntuación mediana",
     "tiers": "Niveles",
-    "tiersRange": "Excelente → Crítico",
-    "findingCritical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{count}} están en nivel Crítico.",
-    "findingNormal": "Solo el {{pct}}% de las {{total}} instituciones evaluadas alcanza nivel Satisfactorio o superior."
+    "tiersRange": "Excelente → Crítico"
   },
   "statsAriaLabel": "Estadísticas generales",
   "pagination": {
@@ -106,32 +79,12 @@
   },
   "hallazgo": "HALLAZGO",
   "columns": {
-    "rank": "#",
     "institution": "Institución",
     "grade": "Nivel",
     "score": "Puntuación",
-    "sector": "Sector",
-    "contracts": "Contratos",
-    "pillarOpenness": "Apertura",
-    "pillarPrice": "Precios",
-    "pillarVendors": "Proveedores",
-    "pillarProcess": "Proceso",
-    "pillarExternal": "Externo",
     "pillars": "Pilares",
     "trend": "Tendencia",
     "percentile": "Percentil Nacional"
-  },
-  "grades": {
-    "S": "Ejemplar",
-    "A": "Solido",
-    "B+": "Bueno",
-    "B": "Adecuado",
-    "C+": "Vigilancia",
-    "C": "Preocupante",
-    "D": "Alto Riesgo",
-    "D-": "Riesgo Muy Alto",
-    "F": "Critico",
-    "F-": "Bandera Roja"
   },
   "tiers": {
     "Excelente": "Excelente",
@@ -149,28 +102,13 @@
     "stable": "Estable",
     "declining": "Deteriorando"
   },
-  "confidence": {
-    "high": "Alta confianza",
-    "medium": "Confianza media",
-    "wide": "Baja confianza (pocos contratos)"
-  },
-  "pillars": {
-    "openness": "Competencia y Apertura",
-    "price": "Equidad de Precios",
-    "vendors": "Diversidad de Proveedores",
-    "process": "Integridad del Proceso",
-    "external": "Alertas Externas"
-  },
   "percentileLabel": "Percentil {{n}}",
   "worstPerformerBadge": "Peor Desempeño",
   "tableAriaLabel": "Ranking de instituciones",
   "rowAriaLabel": "#{{rank}} {{name}}, puntuación {{score}}, nivel {{tier}}",
   "empty": "Ninguna institución coincide con los filtros actuales.",
-  "loading": "Cargando clasificaciones institucionales…",
   "loadingShort": "Cargando…",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
-  "viewProfile": "Ver perfil",
-  "noSector": "Sin clasificar",
   "sortAriaLabel": "Ordenar por {{label}}",
   "methodologyFootnote": "RUBLI Índice de Salud de Contrataciones v0.6.5 · COMPRANET 2002–2025 · Metodología OCDE / FMI",
   "tabs": {

@@ -1,6 +1,4 @@
 {
-  "pageTitle": "Institutional Transparency · Individual Scorecards",
-  "pageSubtitle": "Explore the transparency of {{total}} federal institutions.",
   "description": "Explore and filter scorecards. Each institution is scored on openness, pricing, vendor diversity, process integrity, and external flags.",
   "note": "Individual scorecards, not the national average",
   "stats": {
@@ -19,39 +17,19 @@
     "Deficiente": "Deficient",
     "Critico": "Critical"
   },
-  "pillars": {
-    "apert": "Open",
-    "prec": "Price",
-    "prov": "Vendor",
-    "proc": "Process",
-    "ext": "External",
-    "openness": "Openness",
-    "pricing": "Pricing",
-    "vendors": "Vendor Diversity",
-    "process": "Process Integrity",
-    "external": "External Flags"
-  },
   "filters": {
     "byLevel": "Filter by level:",
     "search": "Search institutions…",
     "go": "Go",
     "clear": "Clear",
-    "sort": "Sort:",
-    "sortScore": "Score",
-    "sortPercentile": "Percentile",
-    "sortName": "Name"
+    "sort": "Sort:"
   },
   "table": {
-    "score": "Score",
-    "improving": "Improving",
-    "declining": "Declining",
-    "stable": "Stable",
     "percentile": "Percentile {{n}}",
     "outOf": "/ 100",
     "viewProfile": "View Profile"
   },
   "distribution": {
-    "title": "Distribution by transparency level",
     "subtitle": "Distribution by level — {{total}} institutions",
     "ariaLabel": "Distribution by transparency level"
   },
@@ -78,7 +56,6 @@
     "matching": " matching \""
   },
   "aria": {
-    "stats": "General statistics",
     "distributionSection": "Distribution by level",
     "filters": "Filters",
     "cards": "Institution cards",
@@ -92,6 +69,5 @@
     "redAlerts": "{{count}} red alerts",
     "profileLink": "View profile of {{name}}"
   },
-  "loading": "Loading scorecards…",
   "noResults": "No institutions match the current filters."
 }

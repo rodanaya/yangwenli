@@ -1,23 +1,14 @@
 {
-  "title": "Análisis por Administración",
-  "subtitle": "Análisis profundo de patrones de contratación en administraciones presidenciales mexicanas (2002–2025)",
   "dossier": {
-    "sectionLabel": "Resumen de Administraci\u00f3n",
+    "sectionLabel": "Resumen de Administración",
     "politicalContext": "Contexto Político",
     "procurementFingerprint": "Huella de Contratación",
     "knownScandals": "Casos de Corrupción Documentados",
     "topSectors": "Sectores con Mayor Gasto",
     "noScandals": "Sin casos documentados para este período en el corpus de casos verificados de RUBLI.",
     "linkToCases": "Ver en Casos",
-    "party": "Partido",
-    "term": "Período",
     "fingerprint": {
-      "totalSpend": "Gasto Total",
-      "directAward": "Adj. Directa",
-      "singleBid": "Lic. Única",
-      "avgRisk": "Puntaje Riesgo",
-      "highRisk": "Tasa Alto Riesgo",
-      "vendors": "Proveedores Activos"
+      "highRisk": "Tasa Alto Riesgo"
     },
     "severityLabels": {
       "critical": "CRIT",
@@ -50,8 +41,8 @@
     "contexts": {
       "fox": "La victoria de Vicente Fox en 2000 rompió 71 años de hegemonía priista. Como primer presidente panista, su administración priorizó la transparencia económica y lanzó COMPRANET como plataforma digital de compras públicas, aunque heredó redes de clientelismo profundamente arraigadas.",
       "calderon": "Felipe Calderón ganó la controvertida elección de 2006 por un margen del 0.56%. Su administración lanzó una guerra militarizada contra el narcotráfico que reconfiguró el gasto federal, generando grandes contratos de emergencia exentos de licitación en los sectores de defensa y seguridad.",
-      "pena_nieto": "Enrique Pe\u00f1a Nieto regres\u00f3 al poder en 2012 prometiendo modernizaci\u00f3n. Sus seis a\u00f1os registraron algunas de las investigaciones de corrupci\u00f3n m\u00e1s destacadas de M\u00e9xico \u2014 Casa Blanca, La Estafa Maestra y Odebrecht-PEMEX \u2014 que expusieron importantes brechas en la supervisi\u00f3n de la contrataci\u00f3n p\u00fablica.",
-      "amlo": "Andr\u00e9s Manuel L\u00f3pez Obrador gan\u00f3 la elecci\u00f3n de 2018 con el mayor margen de la historia moderna de M\u00e9xico (53%). Su autollamada 'Cuarta Transformaci\u00f3n' centraliz\u00f3 el poder de contrataci\u00f3n, alcanzando una tasa r\u00e9cord de adjudicaciones directas del 78.9% al tiempo que eludía la licitaci\u00f3n competitiva, citando metas de austeridad y anticorrupci\u00f3n.",
+      "pena_nieto": "Enrique Peña Nieto regresó al poder en 2012 prometiendo modernización. Sus seis años registraron algunas de las investigaciones de corrupción más destacadas de México — Casa Blanca, La Estafa Maestra y Odebrecht-PEMEX — que expusieron importantes brechas en la supervisión de la contratación pública.",
+      "amlo": "Andrés Manuel López Obrador ganó la elección de 2018 con el mayor margen de la historia moderna de México (53%). Su autollamada 'Cuarta Transformación' centralizó el poder de contratación, alcanzando una tasa récord de adjudicaciones directas del 78.9% al tiempo que eludía la licitación competitiva, citando metas de austeridad y anticorrupción.",
       "sheinbaum": "Claudia Sheinbaum, elegida en junio de 2024 con el 59% de los votos, es la primera presidenta de México. Científica del clima de formación, asumió el cargo el 1 de octubre de 2024, heredando las estructuras institucionales de AMLO. Sus primeros meses muestran una reducción direccional en las adjudicaciones directas, aunque los riesgos de continuidad siguen siendo elevados."
     }
   },
@@ -65,19 +56,9 @@
   "documentedCases": "Casos de Corrupcion Documentados",
   "documentedCasesNote": "Verificados manualmente desde registros públicos e investigaciones de la ASF — no detectados por ML",
   "noData": "Sin datos anuales disponibles para esta administración",
-  "noEvents": "Sin eventos registrados para este período",
   "insufficientData": "Datos insuficientes para el análisis de transición",
-  "metrics": {
-    "contractsPerYear": "Contratos / Año",
-    "avgAnnualSpend": "Gasto Anual Promedio",
-    "avgRiskScore": "Riesgo Promedio",
-    "directAwardPct": "Adj. Directa %",
-    "highRiskPct": "Alto Riesgo %",
-    "singleBidPct": "Licitación Única %"
-  },
   "table": {
-    "metric": "Métrica",
-    "selected": "Seleccionada"
+    "metric": "Métrica"
   },
   "statCards": {
     "contracts": "Contratos",
@@ -94,7 +75,6 @@
     "political": "Ciclo Político",
     "compare": "Comparación de Períodos"
   },
-  "selected": "Seleccionada",
   "contracts": "contratos",
   "incompleteDataset": "Conjunto de Datos Incompleto",
   "incompleteDatasetDescription": "La administración de Sheinbaum inicio en octubre de 2024. Estos datos cubren ~4 meses vs. terminos completos de 6 años para otros presidentes. Las comparaciones directas pueden ser engañosas.",
@@ -102,8 +82,6 @@
   "anomaliesNote": "años que se desvían >1.8σ de la línea base de 23 años",
   "sectorCorrelations": "Correlaciones de Riesgo Sectorial",
   "sectorCorrelationsNote": "Pares de sectores con trayectorias de riesgo correlacionadas (|r| ≥ 0.70) durante esta administración",
-  "correlation": "correlación",
-  "transitionFrom": "→",
   "heatmapSubtitle": "Métricas de riesgo por sector durante la administración seleccionada — ordenadas por porcentaje de contratos de alto riesgo.",
   "transitionSubtitle": "Cambios en indicadores clave entre administraciones consecutivas. Los valores marcados con ! o !! son estadísticamente inusuales (≥1.8σ del promedio histórico).",
   "keyEventsSubtitle": "Reformas legislativas, escándalos documentados y crisis que afectaron los patrones de contratación pública durante esta administración.",
@@ -162,14 +140,12 @@
   "vendorSection": {
     "title": "Principales Proveedores por Administración",
     "subtitle": "Mayores receptores de contratos federales, por sexenio",
-    "marketShare": "del gasto de la era",
     "noData": "Datos insuficientes para este período",
     "contracts": "contratos",
-    "riskScore": "riesgo prom.",
-    "gtWarning": "Señalado en casos verificados"
+    "riskScore": "riesgo prom."
   },
   "classifiedHeader": {
-    "eyebrow": "An\u00e1lisis Comparativo · RUBLI · Sistema Nacional de Transparencia",
+    "eyebrow": "Análisis Comparativo · RUBLI · Sistema Nacional de Transparencia",
     "title": "Administraciones en Perfil Comparativo",
     "subtitle": "Análisis comparativo de riesgo en contratación pública federal · 2001–2025 · {{contracts}} contratos · ${{value}} MXN auditados",
     "highestRiskNote": "AMLO registró la tasa más alta de riesgo:",
@@ -210,26 +186,12 @@
     "loadingData": "Cargando datos sectoriales…"
   },
   "politicalView": {
-    "title": "Efecto del Año Electoral",
-    "subtitle": "Riesgo promedio de contratación en años electorales vs no electorales (2002–2025)",
-    "electionYears": "Años Electorales",
-    "nonElectionYears": "Años No Electorales",
-    "riskDelta": "Delta de Riesgo",
-    "avgRiskScore": "riesgo promedio",
     "insufficientData": "Datos insuficientes",
     "higherInElection": "Mayor riesgo en años electorales",
     "lowerInElection": "Menor riesgo en años electorales",
-    "noSignificantDiff": "Sin diferencia significativa",
-    "electionMinusNon": "electoral − no electoral",
-    "relative": "% relativo",
-    "sexenioBreakdownTitle": "Desglose por Año del Sexenio",
-    "sexenioBreakdownDesc": "Riesgo promedio de contratación en los años 1–6 del período presidencial (todas las administraciones agrupadas)"
+    "noSignificantDiff": "Sin diferencia significativa"
   },
   "trajectoryChart": {
-    "termYear": "Año {{n}}",
-    "avgRiskLabel": "Puntaje de riesgo promedio",
-    "directAwardLabel": "Tasa de adjudicación directa",
-    "highRiskLabel": "Tasa de contratos de alto riesgo",
     "title": "Trayectoria de Riesgo por Año del Sexenio — Todas las Administraciones",
     "subtitle": "Cada línea traza la métrica de una administración a través de los años 1–6 del sexenio. Discontinua = datos parciales.",
     "metricRisk": "Riesgo",
@@ -244,7 +206,7 @@
     "title": "Mapa de Calor de Intensidad de Contratación",
     "subtitle": "% del gasto total de cada administración asignado por sector. Celdas más oscuras = mayor concentración del gasto en ese sector."
   },
-  "expedientes": "Perfiles de Administraci\u00f3n",
+  "expedientes": "Perfiles de Administración",
   "cardLabels": {
     "expediente": "Expediente",
     "contratos": "Contratos",
@@ -270,37 +232,16 @@
     "crisis": "Crisis"
   },
   "compareView": {
-    "sourceNote": "Fuente: contratos COMPRANET ponderados por volumen · {{metric}}",
     "signalWorse": "Peor",
     "signalBetter": "Mejor"
   },
   "grade": {
-    "title": "CALIFICACIÓN DE COMPRAS",
-    "subtitle": "Puntuación alineada con OCDE basada en adjudicación directa, riesgo alto y licitación única",
-    "scoreLabel": "Puntaje",
-    "directAward": "Adjudicación Directa",
-    "highRisk": "Tasa de Alto Riesgo",
-    "singleBid": "Licitación Única",
-    "gradeA": "Excelente — por debajo de los umbrales de alerta OCDE en todos los indicadores",
-    "gradeB": "Bueno — mayormente dentro de las pautas OCDE",
-    "gradeC": "Regular — algunos indicadores sobre los niveles recomendados",
-    "gradeD": "Deficiente — múltiples indicadores en zona de alerta",
-    "gradeF": "Crítico — supera umbrales OCDE en varios indicadores"
+    "title": "CALIFICACIÓN DE COMPRAS"
   },
   "radar": {
     "title": "Todas las Administraciones: Huella de Compras",
     "subtitle": "Radar comparativo de 5 métricas clave de contratación en todas las presidencias (más alto = mejor desempeño)",
-    "axisDirectAward": "Adj. Directa",
-    "axisHighRisk": "Alto Riesgo",
-    "axisSingleBid": "Licit. Única",
-    "axisAvgRisk": "Riesgo Prom.",
-    "axisVolume": "Volumen",
-    "legend": "Administración"
-  },
-  "transition": {
-    "comparisonLabel": "vs administración anterior",
-    "fromAdmin": "De",
-    "toAdmin": "A"
+    "axisVolume": "Volumen"
   },
   "actCard": {
     "contracts": "Contratos",
@@ -310,53 +251,6 @@
     "daVsOecd": "Adj. directa vs OCDE ({{pct}}%)",
     "oecdBenchmark": "OCDE {{pct}}%",
     "notableCase": "Caso notable:"
-  },
-  "politicalView2": {
-    "title": "Efecto del Año Electoral",
-    "subtitle": "Riesgo promedio de contratación en años electorales vs no electorales (2002–2025)",
-    "electionYears": "Años Electorales",
-    "nonElectionYears": "Años No Electorales",
-    "riskDelta": "Delta de Riesgo",
-    "avgRiskScore": "riesgo promedio",
-    "electionMinusNon": "electoral − no electoral",
-    "relative": "% relativo",
-    "higherInElection": "Mayor riesgo en años electorales",
-    "lowerInElection": "Menor riesgo en años electorales",
-    "noSignificantDiff": "Sin diferencia significativa",
-    "insufficientData": "Datos insuficientes",
-    "sexenioBreakdownTitle": "Desglose por Año del Sexenio",
-    "sexenioBreakdownDesc": "Riesgo promedio de contratación en los años 1–6 del período presidencial (todas las administraciones agrupadas)",
-    "sexenioFootnote": "Año 1 = primer año de la administración, Año 6 = último año antes de la elección. Un mayor riesgo en los años tardíos del sexenio puede indicar gasto de fin de período."
-  },
-  "compareView2": {
-    "title": "Comparar Períodos",
-    "subtitle": "Compara el riesgo de contratación y el gasto total entre dos ventanas de tiempo. Haz clic en un preset para llenar el Período A.",
-    "quickPresets": "Presets rápidos → Período A",
-    "periodA": "Período A",
-    "periodB": "Período B",
-    "periodsIdentical": "Los períodos son idénticos",
-    "compareBtn": "Comparar Períodos",
-    "loadingBtn": "Cargando…",
-    "resultsTitle": "Resultados: Período A ({{s1}}–{{e1}}) vs Período B ({{s2}}–{{e2}})",
-    "colMetric": "Métrica",
-    "colPeriodA": "Período A",
-    "colPeriodB": "Período B",
-    "colDelta": "Δ (B − A)",
-    "colSignal": "Señal",
-    "signalWorse": "Peor",
-    "signalBetter": "Mejor",
-    "metricAvgRisk": "Riesgo Promedio",
-    "metricTotalSpend": "Gasto Total",
-    "footnote": "Señal: «Peor» = el riesgo aumentó entre períodos. «Mejor» = el riesgo disminuyó. El cambio en el gasto se reporta como neutro — un mayor gasto puede reflejar crecimiento legítimo o expansión de la contratación."
-  },
-  "grade2": {
-    "subtitle": "Basado en los parámetros de la OCDE: tasa de adjudicación directa, tasa de alto riesgo y tasa de licitación única."
-  },
-  "matrix": {
-    "metricRisk": "Riesgo Prom.",
-    "metricDA": "Adj. Directa %",
-    "metricHR": "Alto Riesgo %",
-    "metricSB": "Lic. Única %"
   },
   "share": "Compartir",
   "lede": {

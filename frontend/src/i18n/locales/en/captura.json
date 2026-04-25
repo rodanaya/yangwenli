@@ -1,6 +1,5 @@
 {
   "trackingLabel": "INSTITUTIONAL CAPTURE ANALYSIS",
-  "title": "Institutional Capture Map",
   "titleV2": "Institutional Capture Map",
   "subtitle": "Which government institutions are most dependent on a single vendor?",
   "editorialLede": {
@@ -28,13 +27,9 @@
     "competitive": "Competitive"
   },
   "sourcePill": "contracts analyzed",
-  "loading": "Building capture matrix...",
   "errorTitle": "Failed to Load",
   "errorMessage": "Could not load money flow data.",
   "errorHint": "Try reloading the page. If the problem persists, the service may be temporarily offline.",
-  "emptyTitle": "No Capture Data",
-  "emptyMessage": "No institution-vendor flow data available for the selected filters.",
-  "emptyHint": "Try adjusting the sector or year range filter.",
   "whatIsCapture": {
     "label": "WHAT IS INSTITUTIONAL CAPTURE?",
     "body": "Institutional capture occurs when a single vendor wins such a large share of an institution's contracts that it effectively controls the institution's purchasing decisions. According to OECD guidelines, when one vendor accounts for more than 30% of an institution's total procurement spend, it is a significant red flag. Above 50%, it represents near-total dependence — a pattern associated with bid rigging, ghost contracts, and systemic corruption.",
@@ -56,7 +51,6 @@
   },
   "filters": {
     "allSectors": "All Sectors",
-    "bySector": "Filter by Sector",
     "sectorLabel": "Sector:",
     "yearLabel": "Year:",
     "period2018": "2018–2022",
@@ -67,9 +61,6 @@
     "capture15": "≥15%",
     "capture30": "≥30%",
     "capture50": "≥50%",
-    "displayMode": "Display Mode",
-    "byValue": "By Value",
-    "byCount": "By Count",
     "resetAll": "Reset filters",
     "currentView": "Showing",
     "noResults": "No institutions meet the ≥{{pct}}% capture threshold for the current selection."
@@ -82,20 +73,8 @@
   },
   "heatmap": {
     "sectionLabel": "CONCENTRATION MAP",
-    "institution": "Institution",
-    "vendor": "Vendor",
-    "value": "Value",
-    "pctBudget": "of institution spend",
     "contracts": "contracts",
-    "highCapture": "High Capture",
-    "lowCapture": "Low Capture",
     "mobileLabel": "Top Concentrations — List"
-  },
-  "legend": {
-    "total": "Total Capture (>50%)",
-    "high": "High Risk (30–50%)",
-    "moderate": "Moderate (15–30%)",
-    "low": "Low (<15%)"
   },
   "hero": {
     "worstCapture": "Top institution capture"
@@ -111,11 +90,9 @@
     "content": "Calculated from 3.05M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a risk indicator per OECD procurement guidelines. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
   },
   "stats": {
-    "topFlows": "TOP FLOWS ANALYZED",
     "capturedInstitutions": "INSTITUTIONS SHOWN",
     "dominantVendors": "VENDORS SHOWN",
-    "highCaptureFlows": "HIGH CAPTURE",
-    "highCaptureDesc": "Flows where vendor holds >30% of institution spend"
+    "highCaptureFlows": "HIGH CAPTURE"
   },
   "riskLabels": {
     "total": "Total Capture",
