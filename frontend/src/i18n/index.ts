@@ -23,10 +23,6 @@ import esWatchlist from './locales/es/watchlist.json'
 import enWatchlist from './locales/en/watchlist.json'
 import esGlossary from './locales/es/glossary.json'
 import enGlossary from './locales/en/glossary.json'
-import esSpending from './locales/es/spending.json'
-import enSpending from './locales/en/spending.json'
-import esRedflags from './locales/es/redflags.json'
-import enRedflags from './locales/en/redflags.json'
 import esProcurement from './locales/es/procurement.json'
 import enProcurement from './locales/en/procurement.json'
 import esAdministrations from './locales/es/administrations.json'
@@ -41,24 +37,16 @@ import esVendors from './locales/es/vendors.json'
 import enVendors from './locales/en/vendors.json'
 import esInstitutions from './locales/es/institutions.json'
 import enInstitutions from './locales/en/institutions.json'
-import esLimitations from './locales/es/limitations.json'
-import enLimitations from './locales/en/limitations.json'
 import esMethodology from './locales/es/methodology.json'
 import enMethodology from './locales/en/methodology.json'
-import esMoneyflow from './locales/es/moneyflow.json'
-import enMoneyflow from './locales/en/moneyflow.json'
 import esTemporal from './locales/es/temporal.json'
 import enTemporal from './locales/en/temporal.json'
-import esPatterns from './locales/es/patterns.json'
-import enPatterns from './locales/en/patterns.json'
 import esWorkspace from './locales/es/workspace.json'
 import enWorkspace from './locales/en/workspace.json'
 import esSubnational from './locales/es/subnational.json'
 import enSubnational from './locales/en/subnational.json'
 import esYearinreview from './locales/es/yearinreview.json'
 import enYearinreview from './locales/en/yearinreview.json'
-import esLanding from './locales/es/landing.json'
-import enLanding from './locales/en/landing.json'
 import esVendorcompare from './locales/es/vendorcompare.json'
 import enVendorcompare from './locales/en/vendorcompare.json'
 import esApiexplorer from './locales/es/apiexplorer.json'
@@ -69,8 +57,6 @@ import esAria from './locales/es/aria.json'
 import enAria from './locales/en/aria.json'
 import esCaptura from './locales/es/captura.json'
 import enCaptura from './locales/en/captura.json'
-import esRedes from './locales/es/redes.json'
-import enRedes from './locales/en/redes.json'
 import esSeismograph from './locales/es/seismograph.json'
 import enSeismograph from './locales/en/seismograph.json'
 import esTelescope from './locales/es/telescope.json'
@@ -85,8 +71,6 @@ import esCollusion from './locales/es/collusion.json'
 import enCollusion from './locales/en/collusion.json'
 import esSettings from './locales/es/settings.json'
 import enSettings from './locales/en/settings.json'
-import esPoliticalcycle from './locales/es/politicalcycle.json'
-import enPoliticalcycle from './locales/en/politicalcycle.json'
 import esCategories from './locales/es/categories.json'
 import enCategories from './locales/en/categories.json'
 import esRedThread from './locales/es/redThread.json'
@@ -107,22 +91,19 @@ i18n
         common: esCommon, sectors: esSectors, nav: esNav, dashboard: esDashboard,
         explore: esExplore, contracts: esContracts, investigation: esInvestigation,
         executive: esExecutive, watchlist: esWatchlist,
-        glossary: esGlossary, spending: esSpending,
-        redflags: esRedflags,
+        glossary: esGlossary,
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
         network: esNetwork, cases: esCases, vendors: esVendors, institutions: esInstitutions,
-        limitations: esLimitations, methodology: esMethodology,
-        moneyflow: esMoneyflow, temporal: esTemporal, patterns: esPatterns,
+        methodology: esMethodology,
+        temporal: esTemporal,
         workspace: esWorkspace,
         subnational: esSubnational,
         yearinreview: esYearinreview,
-        landing: esLanding,
         vendorcompare: esVendorcompare,
         apiexplorer: esApiexplorer,
         reportcard: esReportcard,
         aria: esAria,
         captura: esCaptura,
-        redes: esRedes,
         seismograph: esSeismograph,
         telescope: esTelescope,
         journalists: esJournalists,
@@ -130,7 +111,6 @@ i18n
         institutionleague: esInstitutionleague,
         collusion: esCollusion,
         settings: esSettings,
-        politicalcycle: esPoliticalcycle,
         categories: esCategories,
         redThread: esRedThread,
         procurementCalendar: esProcurementCalendar,
@@ -141,22 +121,19 @@ i18n
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
         explore: enExplore, contracts: enContracts, investigation: enInvestigation,
         executive: enExecutive, watchlist: enWatchlist,
-        glossary: enGlossary, spending: enSpending,
-        redflags: enRedflags,
+        glossary: enGlossary,
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
         network: enNetwork, cases: enCases, vendors: enVendors, institutions: enInstitutions,
-        limitations: enLimitations, methodology: enMethodology,
-        moneyflow: enMoneyflow, temporal: enTemporal, patterns: enPatterns,
+        methodology: enMethodology,
+        temporal: enTemporal,
         workspace: enWorkspace,
         subnational: enSubnational,
         yearinreview: enYearinreview,
-        landing: enLanding,
         vendorcompare: enVendorcompare,
         apiexplorer: enApiexplorer,
         reportcard: enReportcard,
         aria: enAria,
         captura: enCaptura,
-        redes: enRedes,
         seismograph: enSeismograph,
         telescope: enTelescope,
         journalists: enJournalists,
@@ -164,7 +141,6 @@ i18n
         institutionleague: enInstitutionleague,
         collusion: enCollusion,
         settings: enSettings,
-        politicalcycle: enPoliticalcycle,
         categories: enCategories,
         redThread: enRedThread,
         procurementCalendar: enProcurementCalendar,
