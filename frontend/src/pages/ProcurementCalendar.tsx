@@ -57,7 +57,7 @@ function formatLocalDate(dateStr: string, weekdaysLong: string[], monthsLong: st
 // =============================================================================
 
 function getDayColor(total: number, riskRate: number, maxContracts: number): string {
-  if (total === 0) return 'hsl(220, 10%, 11%)'
+  if (total === 0) return 'var(--color-background-elevated)'
   const intensity = Math.sqrt(total / maxContracts)
   const hue =
     riskRate > 0.30 ? 0    // red — critical risk
@@ -70,9 +70,10 @@ function getDayColor(total: number, riskRate: number, maxContracts: number): str
 }
 
 function getRiskBadgeColor(riskRate: number): string {
-  if (riskRate > 0.30) return 'text-red-400 bg-red-950/50 border-red-800'
-  if (riskRate > 0.20) return 'text-orange-400 bg-orange-950/50 border-orange-800'
-  if (riskRate > 0.10) return 'text-blue-400 bg-blue-950/50 border-blue-800'
+  // Cream-mode tokens — was bg-red-950/50 etc (near-black on cream).
+  if (riskRate > 0.30) return 'text-risk-critical bg-[color:var(--color-risk-critical)]/10 border-[color:var(--color-risk-critical)]/30'
+  if (riskRate > 0.20) return 'text-risk-high bg-[color:var(--color-risk-high)]/10 border-[color:var(--color-risk-high)]/30'
+  if (riskRate > 0.10) return 'text-[color:var(--color-oecd)] bg-[color:var(--color-oecd)]/10 border-[color:var(--color-oecd)]/30'
   return 'text-text-secondary bg-background-card border-border'
 }
 
@@ -193,7 +194,7 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
           <span
             className={cn(
               'font-mono',
-              day.risk_rate > 0.30 ? 'text-red-400' :
+              day.risk_rate > 0.30 ? 'text-risk-critical' :
               day.risk_rate > 0.20 ? 'text-orange-400' :
               day.risk_rate > 0.10 ? 'text-blue-400' : 'text-text-secondary'
             )}
@@ -207,7 +208,7 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
           </div>
         )}
         {isElectionYear && month >= 3 && month <= 5 && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-amber-400/80 text-[10px]">
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[10px]">
             {t('events.preElectoral')}
           </div>
         )}
@@ -400,7 +401,7 @@ function Legend() {
   const { t } = useTranslation('procurementCalendar')
 
   const swatches: { label: string; color: string }[] = [
-    { label: t('legend.noContracts'), color: 'hsl(220, 10%, 11%)' },
+    { label: t('legend.noContracts'), color: 'var(--color-background-elevated)' },
     { label: t('legend.riskLow'), color: getDayColor(100, 0.05, 3000) },
     { label: t('legend.riskMedium'), color: getDayColor(400, 0.15, 3000) },
     { label: t('legend.riskHigh'), color: getDayColor(800, 0.25, 3000) },
@@ -531,7 +532,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
           <div className="space-y-1.5">
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-red-400">{t('decemberSection.december')}</span>
+                <span className="text-risk-critical">{t('decemberSection.december')}</span>
                 <span className="text-text-secondary font-mono">{decRiskPct}%</span>
               </div>
               {(() => {
@@ -735,7 +736,7 @@ export default function ProcurementCalendar() {
         {/* Election year banner */}
         {isElectionYear && (
           <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-amber-950/20 px-4 py-3">
-            <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+            <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
             <p className="text-xs text-amber-300 leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
             </p>
@@ -807,7 +808,7 @@ export default function ProcurementCalendar() {
                 <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-red-600 mb-1">
                   {t('insights.peakRiskDay')}
                 </div>
-                <div className="text-lg font-bold font-mono text-red-400">
+                <div className="text-lg font-bold font-mono text-risk-critical">
                   {(stats.highestRiskDay.risk_rate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-text-muted">
@@ -847,7 +848,7 @@ export default function ProcurementCalendar() {
               </div>
               <div className={cn(
                 'text-lg font-bold font-mono',
-                isElectionYear ? 'text-amber-400' : 'text-text-secondary'
+                isElectionYear ? 'text-risk-high' : 'text-text-secondary'
               )}>
                 {isElectionYear ? t('insights.electoral') : t('insights.regular')}
               </div>
@@ -890,7 +891,7 @@ export default function ProcurementCalendar() {
               {/* Election year note */}
               {isElectionYear && (
                 <div className="border border-amber-800/50 bg-amber-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-amber-300">
                       {t('patterns.electionPattern')}
@@ -935,7 +936,7 @@ export default function ProcurementCalendar() {
 
         {/* Editorial findings callout */}
         <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 mb-2">
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-2">
             {t('finding.label')}
           </p>
           <p className="text-sm text-text-secondary leading-relaxed">
