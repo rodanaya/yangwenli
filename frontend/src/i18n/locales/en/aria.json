@@ -30,10 +30,6 @@
     "novelOnly": "New leads only",
     "novelOnlyTooltip": "Show only leads not already in the documented cases database"
   },
-  "gtBadge": {
-    "knownTooltip": "Already in documented cases database",
-    "nuevo": "New"
-  },
   "tier1": {
     "heading": "Critical Leads — Tier 1",
     "subtitle": "Highest-priority vendors by Investigation Priority Score",
@@ -63,21 +59,6 @@
     "description": "Passive monitoring — automated alerts",
     "label": "TIER 4",
     "name": "LOW"
-  },
-  "impactHero": {
-    "kicker": "ARIA · AUTOMATED RISK INVESTIGATION ALGORITHM",
-    "headline": "ARIA: Automated Risk Investigation Algorithm.",
-    "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against ~748 documented corruption cases.",
-    "stat1Label": "Vendors under active monitoring",
-    "stat2Label": "Critical alerts (Tier 1)",
-    "stat3Label": "Priority levels by IPS score",
-    "pipelineTitle": "HOW ARIA WORKS",
-    "step1Label": "ML SCORING",
-    "step1Body": "v0.6.5 logistic model: 9 statistical factors per contract",
-    "step2Label": "PATTERN DETECTION",
-    "step2Body": "P1 Monopoly · P2 Shell Company · P3 Intermediary · P6 Capture",
-    "step3Label": "EXTERNAL REGISTRIES",
-    "step3Body": "EFOS SAT · SFP · RUPC · ASF — 5 cross-referenced registries"
   },
   "whyItMatters": {
     "kicker": "WHY IT MATTERS",
@@ -109,15 +90,7 @@
     "avgRisk": "Avg Risk",
     "directAward": "Direct Award"
   },
-  "rowLabels": {
-    "contracts": "Contracts:",
-    "avgRisk": "Avg Risk:",
-    "directAward": "Direct Award:",
-    "institution": "Institution:"
-  },
   "memo": {
-    "less": "Less",
-    "full": "Full memo",
     "loadError": "Error loading memo"
   },
   "pagination": {
@@ -146,29 +119,13 @@
     "P6": "Institutional Capture",
     "P7": "Suspicious Network"
   },
-  "badges": {
-    "new": "NEW",
-    "efos": "EFOS"
-  },
-  "primer": {
-    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 318,441 vendors across 4 priority tiers — start with Tier 1 for the highest-priority cases.",
-    "cta": "Start here",
-    "dismiss": "Dismiss"
-  },
   "searchBar": {
     "placeholder": "Search vendors by name...",
     "patternLabel": "Filter by pattern",
     "allPatterns": "All patterns"
   },
-  "tierCollapse": {
-    "show": "Show {{count}} vendors",
-    "hide": "Collapse"
-  },
   "patternSection": {
     "title": "Detected Risk Patterns"
-  },
-  "tierSection": {
-    "objectives": "Priority Leads — Tier 1"
   },
   "queueSection": {
     "title": "Investigation Queue"
@@ -194,7 +151,6 @@
     "promoteToGT": "↑ Add to Ground Truth",
     "alreadyInGT": "Already in Ground Truth"
   },
-  "intelligenceDetails": "Analysis Details",
   "header": {
     "systemLabel": "ARIA System · Procurement Risk Analysis",
     "live": "LIVE",
@@ -209,65 +165,17 @@
     "headline": "Risk Analysis Briefing",
     "subtitle": "Automated risk queue with priority-level classification"
   },
-  "situationReport": "Status Report",
   "methodology": {
     "title": "How does ARIA work?",
     "body": "ARIA combines ML risk score (v0.6.5), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
   },
   "threatLevels": "Priority Levels",
-  "vendorCard": {
-    "disclaimer": "ⓘ Statistical risk indicator — not a legal determination"
-  },
   "ipsBreakdown": {
     "title": "IPS Breakdown",
     "risk": "Risk (40%)",
     "ensemble": "Ensemble (20%)",
     "financial": "Financial (20%)",
     "external": "External (20%)"
-  },
-  "disappeared": {
-    "badge": "DISAPPEARED",
-    "lastContract": "Last contract: {{year}}"
-  },
-  "burst": {
-    "label": "Burst"
-  },
-  "topInstitution": {
-    "label": "Main client",
-    "capture": "Institutional capture"
-  },
-  "valuePerContract": {
-    "label": "Avg contract",
-    "highFlag": "⚠ Above typical range"
-  },
-  "fpBadge": {
-    "label": "Known Signal",
-    "patent": "Patent holder",
-    "dataError": "Data error",
-    "structural": "Structural monopoly",
-    "penalty": "Penalty applied"
-  },
-  "efosBadge": {
-    "definitivo": "EFOS Definitivo",
-    "provisional": "EFOS Provisional"
-  },
-  "efficiencyStats": {
-    "reviewed": "Reviewed",
-    "confirmationRate": "of reviewed leads corroborated",
-    "confirmationRateTooltip": "Share of reviewed vendors where the risk lead was corroborated by external evidence (news, ASF audits, court records)",
-    "t1Complete": "T1 complete"
-  },
-  "ariaReview": {
-    "sectionTitle": "ARIA Review",
-    "status": "Status",
-    "notes": "Notes",
-    "reviewedAt": "Reviewed",
-    "noReview": "No review yet"
-  },
-  "actions": {
-    "vendorProfile": "Vendor Profile",
-    "redThread": "Red Thread Investigation",
-    "copyName": "Copy vendor name"
   },
   "filterBar": {
     "active": "{{count}} filter(s) active",
@@ -296,13 +204,5 @@
     "headline": "ARIA is unavailable",
     "body": "The investigation queue could not be loaded. The backend may be restarting — try refreshing in a moment.",
     "retry": "Retry"
-  },
-  "explainer": {
-    "kicker": "ARIA · Automated Risk Investigation Algorithm",
-    "body": "ARIA combines nine analysis modules — v0.6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",
-    "t1Label": "Highest priority review",
-    "t2Label": "Priority review",
-    "t3Label": "Active monitoring",
-    "t4Label": "Passive monitoring"
   }
 }

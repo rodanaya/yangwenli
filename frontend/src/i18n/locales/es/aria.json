@@ -30,10 +30,6 @@
     "novelOnly": "Solo nuevos",
     "novelOnlyTooltip": "Mostrar solo leads que no están en la base de casos documentados"
   },
-  "gtBadge": {
-    "knownTooltip": "Ya en base de casos documentados",
-    "nuevo": "Nuevo"
-  },
   "tier1": {
     "heading": "Pistas Críticas — Nivel 1",
     "subtitle": "Proveedores prioritarios según la Puntuación de Prioridad de Investigación",
@@ -63,21 +59,6 @@
     "description": "Vigilancia pasiva — alertas automáticas",
     "label": "NIVEL 4",
     "name": "BAJO"
-  },
-  "impactHero": {
-    "kicker": "ARIA · ANÁLISIS AUTOMATIZADO DE RIESGO",
-    "headline": "ARIA: Evaluación Automatizada de Riesgo en Contrataciones.",
-    "subhead": "Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra ~748 casos documentados de corrupción.",
-    "stat1Label": "Proveedores bajo vigilancia activa",
-    "stat2Label": "Alertas críticas (Nivel 1)",
-    "stat3Label": "Niveles de prioridad por score IPS",
-    "pipelineTitle": "CÓMO FUNCIONA ARIA",
-    "step1Label": "ML SCORING",
-    "step1Body": "v0.6.5 logistic model: 9 factores estadísticos por contrato",
-    "step2Label": "DETECCIÓN DE PATRONES",
-    "step2Body": "P1 Monopolio · P2 Empresa Fantasma · P3 Intermediario · P6 Captura",
-    "step3Label": "REGISTROS EXTERNOS",
-    "step3Body": "EFOS SAT · SFP · RUPC · ASF — 5 registros cruzados"
   },
   "whyItMatters": {
     "kicker": "POR QUÉ IMPORTA",
@@ -109,15 +90,7 @@
     "avgRisk": "Riesgo Promedio",
     "directAward": "Adjudicación Directa"
   },
-  "rowLabels": {
-    "contracts": "Contratos:",
-    "avgRisk": "Riesgo Promedio:",
-    "directAward": "Adjudicación Directa:",
-    "institution": "Institución:"
-  },
   "memo": {
-    "less": "Menos",
-    "full": "Nota completa",
     "loadError": "Error al cargar memo"
   },
   "pagination": {
@@ -146,29 +119,13 @@
     "P6": "Captura Institucional",
     "P7": "Red Sospechosa"
   },
-  "badges": {
-    "new": "NUEVO",
-    "efos": "EFOS"
-  },
-  "primer": {
-    "text": "ARIA es el algoritmo automatizado de investigación de riesgo de RUBLI. Analiza 318,441 proveedores en 4 niveles de prioridad — comienza con el Nivel 1 para los casos de mayor prioridad.",
-    "cta": "Comenzar aquí",
-    "dismiss": "Descartar"
-  },
   "searchBar": {
     "placeholder": "Buscar proveedores por nombre...",
     "patternLabel": "Filtrar por patrón",
     "allPatterns": "Todos los patrones"
   },
-  "tierCollapse": {
-    "show": "Mostrar {{count}} proveedores",
-    "hide": "Colapsar"
-  },
   "patternSection": {
     "title": "Patrones de Riesgo Detectados"
-  },
-  "tierSection": {
-    "objectives": "Pistas Prioritarias — Nivel 1"
   },
   "queueSection": {
     "title": "Pistas de Investigación"
@@ -194,7 +151,6 @@
     "promoteToGT": "↑ Añadir a Ground Truth",
     "alreadyInGT": "Ya en Ground Truth"
   },
-  "intelligenceDetails": "Detalles del Análisis",
   "header": {
     "systemLabel": "Sistema ARIA · Análisis de Riesgo en Adquisiciones",
     "live": "EN VIVO",
@@ -209,65 +165,17 @@
     "headline": "Briefing de Análisis de Riesgo",
     "subtitle": "Cola automatizada de riesgo con priorización por nivel"
   },
-  "situationReport": "Estado del Sistema",
   "methodology": {
     "title": "¿Cómo funciona ARIA?",
     "body": "ARIA combina score de riesgo ML (v0.6.5), detección de anomalías PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
   },
   "threatLevels": "Niveles de Prioridad",
-  "vendorCard": {
-    "disclaimer": "ⓘ Indicador estadístico de riesgo — no es una determinación legal"
-  },
   "ipsBreakdown": {
     "title": "Desglose IPS",
     "risk": "Riesgo (40%)",
     "ensemble": "Ensemble (20%)",
     "financial": "Financiero (20%)",
     "external": "Externo (20%)"
-  },
-  "disappeared": {
-    "badge": "DESAPARECIÓ",
-    "lastContract": "Último contrato: {{year}}"
-  },
-  "burst": {
-    "label": "Ráfaga"
-  },
-  "topInstitution": {
-    "label": "Cliente principal",
-    "capture": "Captura institucional"
-  },
-  "valuePerContract": {
-    "label": "Contrato promedio",
-    "highFlag": "⚠ Por encima del rango típico"
-  },
-  "fpBadge": {
-    "label": "Señal Conocida",
-    "patent": "Titular de patente",
-    "dataError": "Error de datos",
-    "structural": "Monopolio estructural",
-    "penalty": "Penalización"
-  },
-  "efosBadge": {
-    "definitivo": "EFOS Definitivo",
-    "provisional": "EFOS Provisional"
-  },
-  "efficiencyStats": {
-    "reviewed": "Revisados",
-    "confirmationRate": "de señales corroboradas",
-    "confirmationRateTooltip": "Porcentaje de proveedores revisados donde la señal de riesgo fue corroborada con evidencia externa (noticias, auditorías ASF, registros judiciales)",
-    "t1Complete": "T1 completo"
-  },
-  "ariaReview": {
-    "sectionTitle": "Revisión ARIA",
-    "status": "Estado",
-    "notes": "Notas",
-    "reviewedAt": "Revisado",
-    "noReview": "Sin revisión"
-  },
-  "actions": {
-    "vendorProfile": "Perfil del Proveedor",
-    "redThread": "Investigación Hilo Rojo",
-    "copyName": "Copiar nombre del proveedor"
   },
   "filterBar": {
     "active": "{{count}} filtro(s) activo(s)",
@@ -286,18 +194,10 @@
     "P1": "Un proveedor domina un mercado — >60% del gasto sectorial",
     "P2": "Empresa fantasma: sin empleados, sin historial, contratos repentinos",
     "P3": "Proveedor actua como intermediario entre gobierno y subcontratistas",
-    "P4": "M\u00faltiples proveedores coordinan licitaciones — rotaci\u00f3n o cobertura",
+    "P4": "Múltiples proveedores coordinan licitaciones — rotación o cobertura",
     "P5": "Precios de contratos significativamente arriba del mercado",
-    "P6": "Una instituci\u00f3n otorga >80% de su presupuesto a un solo proveedor",
+    "P6": "Una institución otorga >80% de su presupuesto a un solo proveedor",
     "P7": "Proveedores comparten direcciones, representantes o patrones RFC"
-  },
-  "explainer": {
-    "kicker": "ARIA · Algoritmo Automatizado de Investigación de Riesgos",
-    "body": "ARIA combina nueve módulos de análisis — puntuación de riesgo v0.6.5, detección de anomalías PyOD, análisis de redes de co-licitación, y cruce con registros externos (SAT EFOS, SFP, ASF) — para clasificar a los >318K proveedores en cuatro niveles de prioridad de investigación. Los proveedores T1 son los 320 casos más críticos: todos muestran múltiples señales de alarma simultáneas.",
-    "t1Label": "Revisión prioritaria máxima",
-    "t2Label": "Revisión prioritaria",
-    "t3Label": "Monitoreo activo",
-    "t4Label": "Monitoreo pasivo"
   },
   "connectionError": {
     "title": "Error de Conexión",
