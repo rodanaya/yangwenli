@@ -47,7 +47,7 @@ const notFoundRetry = (count: number, err: unknown) => {
 }
 
 export function useVendorData(
-  vendorId: string | undefined,
+  vendorIdRaw: string | number | undefined,
   opts: UseVendorDataOptions
 ) {
   const {
@@ -57,7 +57,13 @@ export function useVendorData(
     contractsPerPage = 50,
   } = opts
 
-  const enabled = !!vendorId
+  const vendorId =
+    vendorIdRaw == null || vendorIdRaw === ''
+      ? undefined
+      : typeof vendorIdRaw === 'number'
+        ? vendorIdRaw
+        : Number(vendorIdRaw)
+  const enabled = vendorId != null && Number.isFinite(vendorId)
   const evidenceTabActive = activeTab === 'evidence' || activeTab === 'overview'
 
   // ───────────────────────────── Eager queries ────────────────────────────
@@ -104,14 +110,14 @@ export function useVendorData(
 
   const externalFlags = useQuery({
     queryKey: ['vendor-external-flags', vendorId],
-    queryFn: () => vendorApi.getExternalFlags(Number(vendorId!)),
+    queryFn: () => vendorApi.getExternalFlags(vendorId!),
     enabled,
     staleTime: 10 * MIN,
   })
 
   const qqw = useQuery<VendorQQWResponse>({
     queryKey: ['vendor-qqw', vendorId],
-    queryFn: () => vendorApi.getQQW(Number(vendorId!)),
+    queryFn: () => vendorApi.getQQW(vendorId!),
     enabled,
     staleTime: HOUR,
   })
