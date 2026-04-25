@@ -225,7 +225,6 @@ export default function Executive() {
     const totalContracts = d?.overview?.total_contracts ?? 3_051_294
     const totalValue = d?.overview?.total_value_mxn ?? 9_881_000_000_000
     const highCriticalRate = 13.49
-    const valueAtRisk = totalValue * 0.139 // approx based on high+critical share of value
     const rd = Array.isArray(d?.risk_distribution) ? d!.risk_distribution : []
     const highCriticalCount =
       rd.reduce(
@@ -233,6 +232,14 @@ export default function Executive() {
           r.risk_level === 'critical' || r.risk_level === 'high' ? sum + (r.count ?? 0) : sum,
         0,
       ) || 412_845
+    // Estimated value-at-risk: high+critical contract count / total contract
+    // count × total spend. This is an approximation that assumes uniform value
+    // distribution across risk bands (which is NOT exact — high-risk contracts
+    // skew larger). Labeled as ESTIMATED in the UI; the only honest alternative
+    // is a backend high_risk_value field that doesn't exist yet.
+    const highRiskShare =
+      totalContracts > 0 ? highCriticalCount / totalContracts : 0.139
+    const valueAtRisk = totalValue * highRiskShare
     return {
       totalContracts,
       totalValue,
@@ -253,9 +260,11 @@ export default function Executive() {
       color: '#dc2626',
     },
     {
-      value: formatCompactMXN(stats.valueAtRisk),
-      label: lang === 'en' ? 'VALUE AT RISK' : 'VALOR EN RIESGO',
-      context: lang === 'en' ? 'Est. in high+critical contracts' : 'Est. en contratos de riesgo alto+crítico',
+      value: `~${formatCompactMXN(stats.valueAtRisk)}`,
+      label: lang === 'en' ? 'VALUE AT RISK (EST.)' : 'VALOR EN RIESGO (EST.)',
+      context: lang === 'en'
+        ? 'High+critical contract share × total spend'
+        : 'Proporción de alto+crítico × gasto total',
       color: '#f59e0b',
     },
     {
@@ -413,14 +422,14 @@ export default function Executive() {
                   <strong className="text-text-primary">Grupo Farmacos Especializados</strong> won 6,303 federal health contracts over fourteen years.
                   Seventy-nine percent were awarded without competitive bidding — 3× the OECD ceiling.
                   RUBLI's model — trained on <strong className="text-text-primary">Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement</strong>, and 18 other prosecuted scandals — now flags <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contracts</strong> with the same fingerprint.
-                  Together they represent <strong className="text-text-primary">{formatCompactMXN(stats.valueAtRisk)} MXN</strong> — roughly one year of Mexico&apos;s federal health budget plus defense.
+                  Together they represent an estimated <strong className="text-text-primary">~{formatCompactMXN(stats.valueAtRisk)} MXN</strong> in flagged spend (high+critical contract share × total spend; assumes uniform value distribution across risk bands).
                   These are investigation signals, not verdicts.
                 </>
               : <>
                   <strong className="text-text-primary">Grupo Farmacos Especializados</strong> ganó 6,303 contratos federales de salud en catorce años.
                   El 79% fueron adjudicaciones directas — 3× el umbral OCDE.
                   El modelo de RUBLI — entrenado con <strong className="text-text-primary">Segalmex, Odebrecht, Fantasmas del IMSS, compras de emergencia COVID</strong> y 18 escándalos más ya procesados — ahora señala <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contratos</strong> con la misma huella.
-                  Juntos representan <strong className="text-text-primary">{formatCompactMXN(stats.valueAtRisk)} MXN</strong> — aproximadamente el presupuesto federal anual de salud más el de defensa.
+                  Juntos representan un estimado de <strong className="text-text-primary">~{formatCompactMXN(stats.valueAtRisk)} MXN</strong> en gasto señalado (proporción alto+crítico × gasto total; asume distribución uniforme de valor entre niveles).
                   Son señales de investigación, no veredictos.
                 </>
             }
