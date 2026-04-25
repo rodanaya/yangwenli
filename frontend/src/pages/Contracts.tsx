@@ -572,32 +572,9 @@ export function Contracts() {
         { value: '9.9T MXN', label: 'Total validated spend' },
       ]}
     >
-      {/* Investigation preset shelf */}
-      <div className="surface-card border border-border/50 rounded-sm p-4 mb-4">
-        <p className="lede-dateline mb-3">Investigation presets</p>
-        <div className="flex flex-wrap gap-2">
-          {CONTRACT_PRESET_DEFS.map((preset) => {
-            const Icon = preset.icon
-            const isActive = activePreset === preset.id
-            return (
-              <button
-                key={preset.id}
-                onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
-                title={t(preset.descriptionKey)}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-mono tracking-wide transition-all',
-                  isActive
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
-                    : 'border-border/50 bg-background-elevated text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-background-elevated/80'
-                )}
-              >
-                <Icon className="h-3 w-3" />
-                {t(preset.labelKey)}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      {/* Investigation preset shelf removed — same 9 presets render inline
+          inside the filter bar below (L~693). Two visual styles for the
+          identical control was the noisiest finding from Batch C critique. */}
 
       <Act number="I" label="THE LEDGER">
 
