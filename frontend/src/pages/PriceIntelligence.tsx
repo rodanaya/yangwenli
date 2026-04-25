@@ -444,7 +444,7 @@ function ReincidentesSection({
                           yr >= 2023
                             ? 'text-orange-300 bg-orange-500/15 border-orange-500/30'
                             : yr >= 2020
-                              ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                              ? 'text-risk-high bg-risk-high/10 border-risk-high/30'
                               : 'text-text-secondary bg-background-elevated border-border'
                         return (
                           <span
@@ -646,9 +646,9 @@ function MostExtremeCallout({
       {/* Red accent bar */}
       <div className="absolute top-0 left-0 h-full w-1 bg-red-500" aria-hidden="true" />
       <div className="flex items-start gap-3 mb-3">
-        <Flame className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <Flame className="w-5 h-5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-red-400 mb-0.5">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical mb-0.5">
             EL CONTRATO MÁS EXTREMO
           </p>
           <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
@@ -698,7 +698,7 @@ function MostExtremeCallout({
             <RiskScoreBadge score={contract.risk_score ?? 0} />
             <Link
               to={`/contracts/${contract.contract_id}`}
-              className="inline-flex items-center gap-1 font-mono uppercase tracking-wide text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded px-2 py-0.5 transition-colors"
+              className="inline-flex items-center gap-1 font-mono uppercase tracking-wide text-risk-critical hover:text-risk-critical/80 border border-risk-critical/30 hover:border-risk-critical/60 rounded px-2 py-0.5 transition-colors"
             >
               Abrir expediente
               <ExternalLink className="w-3 h-3" />
@@ -709,7 +709,7 @@ function MostExtremeCallout({
         {/* Hero factor */}
         <div className="border-l-2 border-red-500 pl-4 md:pl-5 md:text-right">
           <div
-            className="font-bold text-red-400 font-mono tabular-nums leading-none"
+            className="font-bold text-risk-critical font-mono tabular-nums leading-none"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: 'clamp(2.5rem, 6vw, 4rem)',
@@ -1149,7 +1149,7 @@ function OverpricingTimelineSection({
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-red-400 tabular-nums">
+          <div className="text-lg font-mono font-bold text-risk-critical tabular-nums">
             {peakValueYear.year}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1157,7 +1157,7 @@ function OverpricingTimelineSection({
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-amber-400 tabular-nums">
+          <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {yearData.length}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1406,9 +1406,9 @@ function RiskLevelPriceGap({
         {/* Headline: the premium */}
         {stats.premium > 0 && stats.standard.count > 0 && stats.flagged.count > 0 && (
           <div className="flex items-baseline gap-3 flex-wrap">
-            <TrendingUp className="w-5 h-5 text-red-400 flex-shrink-0" aria-hidden="true" />
+            <TrendingUp className="w-5 h-5 text-risk-critical flex-shrink-0" aria-hidden="true" />
             <div
-              className="text-3xl md:text-4xl font-bold text-red-400 font-mono tabular-nums leading-none"
+              className="text-3xl md:text-4xl font-bold text-risk-critical font-mono tabular-nums leading-none"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               +{stats.premium.toFixed(0)}%
@@ -1433,7 +1433,7 @@ function RiskLevelPriceGap({
                   n={formatNumber(stats.flagged.count)}
                 </span>
               </div>
-              <div className="text-sm font-mono font-bold text-red-400 tabular-nums">
+              <div className="text-sm font-mono font-bold text-risk-critical tabular-nums">
                 {formatCompactMXN(stats.flagged.avg)}
               </div>
             </div>
@@ -1506,7 +1506,7 @@ function RiskLevelPriceGap({
             <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted mb-1">
               Flagged · valor total
             </p>
-            <p className="text-sm font-mono text-red-400 tabular-nums">
+            <p className="text-sm font-mono text-risk-critical tabular-nums">
               {formatCompactMXN(stats.flagged.total)}
             </p>
           </div>
@@ -1596,7 +1596,7 @@ export default function PriceIntelligence() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center gap-3 p-6 text-text-secondary border border-border rounded-sm bg-background/40">
-          <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+          <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-text-secondary">{t('compranetUnavailableTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('errorMessage')}</p>
@@ -1756,8 +1756,8 @@ export default function PriceIntelligence() {
                   dangerouslySetInnerHTML={{
                     __html: t('kpiLede', {
                       n: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
-                      value: `<strong class="text-red-400">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
-                      z: `<strong class="text-amber-400">${avgZ.toFixed(1)}</strong>`,
+                      value: `<strong class="text-risk-critical">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
+                      z: `<strong class="text-risk-high">${avgZ.toFixed(1)}</strong>`,
                       interpolation: { escapeValue: false },
                     })
                   }}
@@ -1777,7 +1777,7 @@ export default function PriceIntelligence() {
 
                   {/* 2. Value at risk */}
                   <div className="border-l-2 border-red-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-red-400 tabular-nums">
+                    <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
                       {formatCompactMXN(summary.total_value_mxn)}
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1787,7 +1787,7 @@ export default function PriceIntelligence() {
 
                   {/* 3. Average z-score */}
                   <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-amber-400 tabular-nums">
+                    <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       +{avgZ.toFixed(1)}&sigma;
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -2127,15 +2127,15 @@ export default function PriceIntelligence() {
         const savings = avgZ > 1 ? summary.total_value_mxn * (1 - 1 / avgZ) : 0
         return (
           <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4 max-w-3xl">
-            <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+            <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
               HALLAZGO
             </p>
             <p className="text-sm text-text-secondary">
               De los {formatNumber(summary.total_outliers)} contratos anomalos detectados, el
               sobreprecio estimado asciende a{' '}
-              <strong className="text-amber-300">{formatCompactMXN(savings)}</strong>. Esto equivale
+              <strong className="text-accent-hover">{formatCompactMXN(savings)}</strong>. Esto equivale
               al presupuesto para{' '}
-              <strong className="text-amber-300">
+              <strong className="text-accent-hover">
                 {formatNumber(Math.round(savings / 160000))}
               </strong>{' '}
               becas universitarias anuales.
@@ -2160,7 +2160,7 @@ export default function PriceIntelligence() {
         </Link>
         <Link
           to="/aria"
-          className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors border border-amber-500/30 hover:border-amber-500/60 rounded px-2.5 py-1 font-mono uppercase tracking-wide"
+          className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-risk-high/80 transition-colors border border-risk-high/30 hover:border-risk-high/60 rounded px-2.5 py-1 font-mono uppercase tracking-wide"
         >
           Cola de investigacion ARIA
           <ExternalLink className="w-3 h-3" />
