@@ -329,8 +329,9 @@ function VeredictoHeader({
           <HallazgoStat
             value={formatNumber(Math.round(hhiA))}
             label={`HHI ${toTitleCase(instA.siglas || instA.name).slice(0, 20)}`}
-            color={`border-[${infoA.color}]`}
-            className="min-w-[140px]"
+            color="border-l-current"
+            style={{ color: infoA.color, borderLeftColor: infoA.color }}
+            className="min-w-[140px] text-text-primary"
           />
           <span
             className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
@@ -350,8 +351,9 @@ function VeredictoHeader({
           <HallazgoStat
             value={formatNumber(Math.round(hhiB))}
             label={`HHI ${toTitleCase(instB.siglas || instB.name).slice(0, 20)}`}
-            color={`border-[${infoB.color}]`}
-            className="min-w-[140px]"
+            color="border-l-current"
+            style={{ color: infoB.color, borderLeftColor: infoB.color }}
+            className="min-w-[140px] text-text-primary"
           />
           <span
             className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
@@ -737,35 +739,34 @@ function RiskDistribution({
   nameA: string
   nameB: string
 }) {
-  // Approximate risk distribution from available data
+  // Honest two-bucket split — the API returns high_risk_pct (critical+high
+  // combined) and avg_risk_score. The previous version fabricated a 4-level
+  // distribution from those two numbers using arbitrary multipliers. On a
+  // corruption-investigation platform that's an integrity issue: invented
+  // numbers presented as procurement facts. Show only what we actually know.
   const totalA = instA.total_contracts ?? 0
   const totalB = instB.total_contracts ?? 0
   const highPctA = instA.high_risk_pct ?? 0
   const highPctB = instB.high_risk_pct ?? 0
-
-  // We have high_risk_pct which combines critical+high. Estimate breakdown.
-  const riskScoreA = instA.avg_risk_score ?? 0
-  const riskScoreB = instB.avg_risk_score ?? 0
-
-  // Estimate distribution based on available metrics
-  const critPctA = riskScoreA >= 0.3 ? highPctA * 0.4 : highPctA * 0.2
-  const highOnlyPctA = highPctA - critPctA
-  const medPctA = Math.max(0, Math.min(100 - highPctA, riskScoreA * 100))
-  const lowPctA = Math.max(0, 100 - highPctA - medPctA)
-
-  const critPctB = riskScoreB >= 0.3 ? highPctB * 0.4 : highPctB * 0.2
-  const highOnlyPctB = highPctB - critPctB
-  const medPctB = Math.max(0, Math.min(100 - highPctB, riskScoreB * 100))
-  const lowPctB = Math.max(0, 100 - highPctB - medPctB)
+  const restPctA = Math.max(0, 100 - highPctA)
+  const restPctB = Math.max(0, 100 - highPctB)
 
   const { i18n: riskDistI18n } = useTranslation('institutions')
   const isEsRisk = riskDistI18n.language.startsWith('es')
 
   const chartData = [
-    { level: isEsRisk ? 'Critico' : 'Critical', a: critPctA, b: critPctB, color: RISK_COLORS.critical },
-    { level: isEsRisk ? 'Alto' : 'High', a: highOnlyPctA, b: highOnlyPctB, color: RISK_COLORS.high },
-    { level: isEsRisk ? 'Medio' : 'Medium', a: medPctA, b: medPctB, color: RISK_COLORS.medium },
-    { level: isEsRisk ? 'Bajo' : 'Low', a: lowPctA, b: lowPctB, color: RISK_COLORS.low },
+    {
+      level: isEsRisk ? 'Riesgo alto+' : 'High risk+',
+      a: highPctA,
+      b: highPctB,
+      color: RISK_COLORS.high,
+    },
+    {
+      level: isEsRisk ? 'Resto' : 'Rest',
+      a: restPctA,
+      b: restPctB,
+      color: RISK_COLORS.low,
+    },
   ]
 
   return (
@@ -774,15 +775,17 @@ function RiskDistribution({
         className="text-lg font-bold text-text-primary mb-1"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
-        {isEsRisk ? 'Distribucion de Riesgo' : 'Risk Distribution'}
+        {isEsRisk ? 'Tasa de alto riesgo' : 'High-risk rate'}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        {isEsRisk ? 'Porcentaje estimado de contratos por nivel de riesgo.' : 'Estimated percentage of contracts by risk level.'}
+        {isEsRisk
+          ? 'Porcentaje de contratos clasificados como crítico o alto por el modelo.'
+          : 'Percentage of contracts classified as critical or high by the model.'}
         {totalA > 0 && totalB > 0 && (
           <span> {isEsRisk ? 'Base:' : 'Base:'} {formatNumber(totalA)} vs {formatNumber(totalB)} {isEsRisk ? 'contratos.' : 'contracts.'}</span>
         )}
       </p>
-      <div className="rounded-lg border border-border/40 bg-background/30 p-4" role="img" aria-label="Dot matrix chart comparing risk level distribution between two institutions">
+      <div className="rounded-lg border border-border/40 bg-background/30 p-4" role="img" aria-label="Dot matrix chart comparing high-risk rate between two institutions">
         <PairedDotStrips data={chartData} colorA={COLOR_A} colorB={COLOR_B} nameA={nameA} nameB={nameB} />
       </div>
       {/* Legend */}
