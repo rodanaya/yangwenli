@@ -9,16 +9,42 @@ import { AppBanner } from './AppBanner'
 import { MobileBottomNav } from './MobileBottomNav'
 import { pageVariants } from '@/lib/animations'
 
+const SIDEBAR_COLLAPSED_KEY = 'rubli_sidebar_collapsed'
+
 export function MainLayout() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    () => window.innerWidth < 1280
-  )
+  // Hydrate from localStorage; otherwise auto-collapse below 1280px.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+      if (stored === '0') return false
+      if (stored === '1') return true
+    } catch {
+      /* localStorage unavailable (SSR / private mode) — fall through */
+    }
+    return window.innerWidth < 1280
+  })
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
-  // Auto-collapse sidebar below 1280px breakpoint
+  // Persist user preference whenever it changes.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0')
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, [sidebarCollapsed])
+
+  // Auto-collapse sidebar below 1280px breakpoint (only if user hasn't
+  // explicitly chosen a state — keep manual choice on viewport resize).
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1280px)')
-    const handler = (e: MediaQueryListEvent) => setSidebarCollapsed(!e.matches)
+    const handler = (e: MediaQueryListEvent) => {
+      try {
+        const stored = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
+        if (stored !== null) return // user has a preference; respect it
+      } catch { /* noop */ }
+      setSidebarCollapsed(!e.matches)
+    }
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [])
