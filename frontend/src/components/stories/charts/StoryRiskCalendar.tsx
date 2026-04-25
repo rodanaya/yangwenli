@@ -58,14 +58,14 @@ export function StoryRiskCalendar() {
       {/* Year annotations */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-          <div className="text-[10px] font-mono text-red-400 uppercase tracking-wide">2020 — COVID SPIKE</div>
+          <div className="text-[10px] font-mono text-risk-critical uppercase tracking-wide">2020 — COVID SPIKE</div>
           <p className="text-xs text-text-secondary mt-1">
             Emergency procurement bypassed normal competitive procedures. Average risk
             scores reached their highest sustained levels in the 10-year window.
           </p>
         </div>
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-          <div className="text-[10px] font-mono text-amber-400 uppercase tracking-wide">DECEMBER PATTERN</div>
+          <div className="text-[10px] font-mono text-risk-high uppercase tracking-wide">DECEMBER PATTERN</div>
           <p className="text-xs text-text-secondary mt-1">
             Year-end budget exhaustion is visible in every single row. December risk averages
             are 64% higher than the October trough — the most reliable seasonal signal in

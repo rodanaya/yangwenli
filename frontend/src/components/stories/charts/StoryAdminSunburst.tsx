@@ -42,7 +42,7 @@ export function StoryAdminSunburst() {
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-amber-400">79.5%</div>
+          <div className="text-2xl font-mono font-bold text-risk-high">79.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             AMLO direct awards · highest ever
           </div>

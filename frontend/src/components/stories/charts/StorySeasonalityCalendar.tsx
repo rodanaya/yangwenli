@@ -36,13 +36,13 @@ export function StorySeasonalityCalendar() {
       {/* Two stat callouts */}
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-red-400">+64%</div>
+          <div className="text-3xl font-mono font-bold text-risk-critical">+64%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             December risk vs. October baseline
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-amber-400">MXN 4.87M</div>
+          <div className="text-3xl font-mono font-bold text-risk-high">MXN 4.87M</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             avg contract in December · 1.7x annual avg
           </div>

@@ -86,7 +86,7 @@ export function StoryCeroCompetenciaChart() {
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-red-500">{criticalSectors}</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">{criticalSectors}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores bajo 25%</div>
         </div>
         <div className="border-l-2 border-cyan-400 pl-3 py-0.5">
@@ -204,7 +204,7 @@ export function StoryCeroCompetenciaChart() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

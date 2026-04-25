@@ -70,7 +70,7 @@ function getDayColor(total: number, riskRate: number, maxContracts: number): str
 }
 
 function getRiskBadgeColor(riskRate: number): string {
-  // Cream-mode tokens — was bg-red-950/50 etc (near-black on cream).
+  // Cream-mode tokens — was bg-risk-critical/10/50 etc (near-black on cream).
   if (riskRate > 0.30) return 'text-risk-critical bg-[color:var(--color-risk-critical)]/10 border-[color:var(--color-risk-critical)]/30'
   if (riskRate > 0.20) return 'text-risk-high bg-[color:var(--color-risk-high)]/10 border-[color:var(--color-risk-high)]/30'
   if (riskRate > 0.10) return 'text-[color:var(--color-oecd)] bg-[color:var(--color-oecd)]/10 border-[color:var(--color-oecd)]/30'
@@ -680,12 +680,12 @@ export default function ProcurementCalendar() {
                 y === year
                   ? 'bg-background-elevated text-text-primary border-border font-bold'
                   : 'bg-transparent text-text-secondary border-border hover:border-border hover:text-text-secondary',
-                ELECTION_YEARS.has(y) && y !== year && 'border-amber-800/60 text-amber-500/80'
+                ELECTION_YEARS.has(y) && y !== year && 'border-amber-800/60 text-risk-high/80'
               )}
               aria-pressed={y === year}
             >
               {y}
-              {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-amber-500">*</span>}
+              {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-risk-high">*</span>}
             </button>
           ))}
           <span className="text-[9px] text-amber-600/70 font-mono ml-1">{t('electionSuffix')}</span>
@@ -735,9 +735,9 @@ export default function ProcurementCalendar() {
 
         {/* Election year banner */}
         {isElectionYear && (
-          <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-amber-950/20 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-risk-high/10/20 px-4 py-3">
             <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
-            <p className="text-xs text-amber-300 leading-relaxed">
+            <p className="text-xs text-accent leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
             </p>
           </div>
@@ -804,7 +804,7 @@ export default function ProcurementCalendar() {
 
             {/* Highest risk day */}
             {stats.highestRiskDay && (
-              <div className="border border-red-900/40 bg-red-950/10 rounded-sm p-3">
+              <div className="border border-red-900/40 bg-risk-critical/10/10 rounded-sm p-3">
                 <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-red-600 mb-1">
                   {t('insights.peakRiskDay')}
                 </div>
@@ -837,7 +837,7 @@ export default function ProcurementCalendar() {
             <div className={cn(
               'border rounded-sm p-3',
               isElectionYear
-                ? 'border-amber-900/40 bg-amber-950/10'
+                ? 'border-amber-900/40 bg-risk-high/10/10'
                 : 'border-border bg-background-card'
             )}>
               <div className={cn(
@@ -890,10 +890,10 @@ export default function ProcurementCalendar() {
 
               {/* Election year note */}
               {isElectionYear && (
-                <div className="border border-amber-800/50 bg-amber-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
+                <div className="border border-amber-800/50 bg-risk-high/10/20 rounded-sm px-4 py-3 flex gap-3 items-start">
                   <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-sm font-semibold text-amber-300">
+                    <div className="text-sm font-semibold text-accent">
                       {t('patterns.electionPattern')}
                     </div>
                     <div className="text-xs text-text-secondary mt-0.5">

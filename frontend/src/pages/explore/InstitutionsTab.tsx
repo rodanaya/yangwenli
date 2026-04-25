@@ -605,7 +605,7 @@ function ValueConcentrationAlerts() {
         aria-controls="value-concentration-content"
       >
         <div className="flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-amber-400" aria-hidden="true" />
+          <ShieldAlert className="h-4 w-4 text-risk-high" aria-hidden="true" />
           <span className="text-sm font-semibold text-text-primary">{t('concentration.title')}</span>
           {data?.total != null && (
             <span className="text-xs text-text-muted">({t('concentration.alertCount', { count: data.total })})</span>
@@ -666,9 +666,9 @@ function ValueConcentrationAlerts() {
                     // Share color
                     const shareColor =
                       row.value_share_pct >= 75
-                        ? 'text-red-400 font-bold'
+                        ? 'text-risk-critical font-bold'
                         : row.value_share_pct >= 50
-                          ? 'text-amber-400 font-semibold'
+                          ? 'text-risk-high font-semibold'
                           : 'text-text-primary'
 
                     return (
@@ -700,10 +700,10 @@ function ValueConcentrationAlerts() {
                         <td className="px-3 py-2 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             {row.value_share_pct >= 75 && (
-                              <AlertTriangle className="h-3 w-3 text-red-400 shrink-0" aria-label="Critical concentration" />
+                              <AlertTriangle className="h-3 w-3 text-risk-critical shrink-0" aria-label="Critical concentration" />
                             )}
                             {row.value_share_pct >= 50 && row.value_share_pct < 75 && (
-                              <AlertTriangle className="h-3 w-3 text-amber-400 shrink-0" aria-label="High concentration" />
+                              <AlertTriangle className="h-3 w-3 text-risk-high shrink-0" aria-label="High concentration" />
                             )}
                             <span className={cn('tabular-nums', shareColor)}>
                               {row.value_share_pct.toFixed(1)}%

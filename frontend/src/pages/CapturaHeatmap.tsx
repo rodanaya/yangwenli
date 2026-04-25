@@ -271,7 +271,7 @@ function TopCapturedList({
 function HhiBadge({ hhi, t }: { hhi: number; t: ReturnType<typeof useTranslation>['t'] }) {
   if (hhi > 0.25) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/15 text-risk-critical border border-red-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-red-500/30">
         {t('hhi.highCapture')}
       </span>
     )
@@ -724,7 +724,7 @@ export default function CapturaHeatmap() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Stat 1: severe capture count */}
           <div className="border-l-2 border-red-500 pl-4 py-1">
-            <div className="text-2xl font-mono font-bold text-red-500">
+            <div className="text-2xl font-mono font-bold text-risk-critical">
               {topCaptured.filter(r => r.pct >= 0.5).length}
             </div>
             <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5">
@@ -807,7 +807,7 @@ export default function CapturaHeatmap() {
                 setYearRange('all')
                 setMinCapture(0)
               }}
-              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-2.5 py-0.5 rounded-sm hover:bg-amber-500/10 transition-colors"
+              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
             >
               ↺ {t('filters.resetAll')}
             </button>
@@ -905,7 +905,7 @@ export default function CapturaHeatmap() {
       {error && !isLoading && (
         <div className="bg-surface-card border border-red-500/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-sm bg-red-500/10 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-sm bg-risk-critical/10 flex items-center justify-center flex-shrink-0">
               <Info className="h-5 w-5 text-risk-critical" />
             </div>
             <div>
@@ -924,7 +924,7 @@ export default function CapturaHeatmap() {
         <div className="space-y-5">
           <div className="bg-surface-card border border-amber-500/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
-              <div className="h-10 w-10 rounded-sm bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+              <div className="h-10 w-10 rounded-sm bg-risk-high/10 flex items-center justify-center flex-shrink-0">
                 <Info className="h-5 w-5 text-risk-high" />
               </div>
               <div className="flex-1 min-w-0">
@@ -943,7 +943,7 @@ export default function CapturaHeatmap() {
                     setYearRange('all')
                     setMinCapture(0)
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-3 py-1.5 rounded-sm hover:bg-amber-500/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-3 py-1.5 rounded-sm hover:bg-risk-high/10 transition-colors"
                 >
                   ↺ {t('emptyState.resetButton')}
                 </button>

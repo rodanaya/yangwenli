@@ -562,7 +562,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
             <ul className="space-y-2">
               {story.nextSteps.map((step, i) => (
                 <li key={i} className="flex gap-2 text-xs text-text-secondary leading-relaxed">
-                  <span className="text-red-500 font-bold shrink-0 mt-0.5">{i + 1}.</span>
+                  <span className="text-risk-critical font-bold shrink-0 mt-0.5">{i + 1}.</span>
                   <span>{step}</span>
                 </li>
               ))}

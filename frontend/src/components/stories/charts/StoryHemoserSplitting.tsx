@@ -52,11 +52,11 @@ export function StoryHemoserSplitting() {
       {/* Hero stats row */}
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-red-500">93K</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">93K</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos fraccionados</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-amber-400">20.5K</div>
+          <div className="text-2xl font-mono font-bold text-risk-high">20.5K</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">pico en 2023</div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export function StoryHemoserSplitting() {
 
       {/* Annotation pills */}
       <div className="mt-4 flex flex-wrap gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-red-500/10 border border-red-500/20 text-[10px] text-red-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-risk-critical/10 border border-red-500/20 text-[10px] text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           2023: 20,512 contratos — máximo del sexenio
         </span>

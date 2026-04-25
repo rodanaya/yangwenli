@@ -119,7 +119,7 @@ export default function CrimeCard({
       {/* Fraud amount */}
       {estimatedFraudBn !== undefined && (
         <div className="text-right shrink-0">
-          <p className="text-lg font-black text-red-400 font-mono tabular-nums leading-tight">
+          <p className="text-lg font-black text-risk-critical font-mono tabular-nums leading-tight">
             {estimatedFraudBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B
           </p>
           <p className="text-[10px] text-text-muted uppercase tracking-wider">MXN</p>

@@ -110,7 +110,7 @@ export function StoryNuevosRicos() {
       </p>
 
       <div className="border-l-2 border-red-500 pl-4 py-1 mb-4">
-        <div className="text-3xl font-mono font-bold text-red-500">+25pp</div>
+        <div className="text-3xl font-mono font-bold text-risk-critical">+25pp</div>
         <div className="text-[11px] text-text-secondary mt-0.5">
           DA promedio Calderón → AMLO —{' '}
           <span className="text-cyan-400">{(eraCentroids[2].daPct / 25).toFixed(1)}x el límite OCDE</span>
@@ -258,7 +258,7 @@ export function StoryNuevosRicos() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

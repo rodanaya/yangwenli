@@ -174,7 +174,7 @@ export default function ContractDetail() {
             </span>
           )}
           {contract.is_election_year && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-950/40 text-amber-400 border border-amber-600/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10/40 text-risk-high border border-amber-600/30">
               <Zap className="h-2.5 w-2.5" aria-hidden="true" />
               ELECTION YEAR
             </span>
@@ -359,7 +359,7 @@ export default function ContractDetail() {
                 {/* Disclaimer for high-risk */}
                 {isHighRisk && (
                   <div className="mt-4 flex items-start gap-2 rounded-sm bg-amber-500/5 border border-amber-500/20 px-3 py-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500/80 mt-0.5 shrink-0" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" />
                     <p className="text-[11px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
                       an investigative signal, not a verdict.
@@ -385,7 +385,7 @@ export default function ContractDetail() {
                       </Badge>
                     )}
                     {contract.is_single_bid && (
-                      <Badge className="text-xs bg-red-600/15 text-red-400 border border-red-600/30">
+                      <Badge className="text-xs bg-red-600/15 text-risk-critical border border-red-600/30">
                         Single bid
                       </Badge>
                     )}
@@ -401,7 +401,7 @@ export default function ContractDetail() {
                     )}
                     {contract.is_threshold_gaming && (
                       <Badge
-                        className="text-xs bg-amber-950/30 text-amber-400 border border-amber-500/30"
+                        className="text-xs bg-risk-high/10/30 text-risk-high border border-amber-500/30"
                         title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}
                       >
                         Threshold gaming
@@ -587,7 +587,7 @@ export default function ContractDetail() {
                 href={contract.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-amber-400 hover:text-amber-300 font-medium group"
+                className="inline-flex items-center gap-2 text-sm text-risk-high hover:text-accent font-medium group"
               >
                 <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                 View on COMPRANET
@@ -642,7 +642,7 @@ export default function ContractDetail() {
               {contract.vendor_id && (
                 <Link
                   to={`/thread/${contract.vendor_id}`}
-                  className="flex items-center justify-between group py-2 text-amber-400 hover:text-amber-300"
+                  className="flex items-center justify-between group py-2 text-risk-high hover:text-accent"
                 >
                   <div className="flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5" />
@@ -750,7 +750,7 @@ function StatBlock({
       </p>
       <p
         className={`text-xl md:text-2xl font-bold font-mono tabular-nums leading-tight ${
-          emphasis ? 'text-amber-400' : 'text-text-primary'
+          emphasis ? 'text-risk-high' : 'text-text-primary'
         }`}
         style={valueColor ? { color: valueColor } : undefined}
       >
@@ -781,7 +781,7 @@ function AnomalyScoreCard({
               {(score * 100).toFixed(0)}%
             </span>
             {isAiConfirmed && (
-              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-red-600/20 text-red-400 border border-red-600/30">
+              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-red-600/20 text-risk-critical border border-red-600/30">
                 <svg
                   className="h-2.5 w-2.5"
                   viewBox="0 0 24 24"
@@ -857,7 +857,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
     delay == null
       ? 'text-text-secondary'
       : delay < 5
-      ? 'text-red-500'
+      ? 'text-risk-critical'
       : delay < 15
       ? 'text-orange-500'
       : 'text-text-secondary'
@@ -905,7 +905,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
               <Zap className="h-3 w-3" />
               Timing
             </p>
-            <p className="text-lg font-bold text-amber-400 leading-tight">
+            <p className="text-lg font-bold text-risk-high leading-tight">
               Election year
             </p>
             <p className="text-[11px] text-text-muted mt-1">

@@ -121,7 +121,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           </div>
           <div className="flex items-center gap-1.5">
             {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
+            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
               OCDE {exceedsOECD ? '\u2717' : '\u2713'}
             </span>
             <RiskLevelPill level={riskLevel} score={sector.avg_risk_score} />
@@ -149,7 +149,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
               {formatNumber(sector.total_vendors ?? 0)} {t('card.vendors')}
             </span>
           </div>
-          <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-text-muted'}`}>
+          <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-risk-critical' : 'text-text-muted'}`}>
             {daPct.toFixed(0)}% {t('card.directAward')}
           </span>
         </div>
@@ -984,7 +984,7 @@ export function Sectors() {
         {error && (
           <div
             role="alert"
-            className="rounded-sm border border-red-500/30 bg-red-500/10 p-6 text-center text-sm text-red-400"
+            className="rounded-sm border border-red-500/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
           >
             {t('page.failedToLoad')}
           </div>

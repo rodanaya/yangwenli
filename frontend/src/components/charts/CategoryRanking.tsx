@@ -95,7 +95,7 @@ export function CategoryRanking({ categories, lang, limit = 20, onSelect }: Prop
         <span className="text-text-muted/90">
           {formatCompactMXN(totalOfRanked)}
           <span className="text-text-muted/40 mx-1.5">·</span>
-          <span className="text-amber-400/80 font-bold">{sharePct.toFixed(0)}%</span>
+          <span className="text-risk-high/80 font-bold">{sharePct.toFixed(0)}%</span>
           <span className="text-text-muted/40 ml-1.5">
             {lang === 'en' ? 'of total spend' : 'del gasto total'}
           </span>
@@ -269,7 +269,7 @@ function RankingRow({
               {isHighDA && (
                 <>
                   <span className="text-text-muted/30">·</span>
-                  <span className="text-amber-400/80">
+                  <span className="text-risk-high/80">
                     {cat.direct_award_pct.toFixed(0)}% {lang === 'en' ? 'direct award' : 'adj. directa'}
                   </span>
                 </>

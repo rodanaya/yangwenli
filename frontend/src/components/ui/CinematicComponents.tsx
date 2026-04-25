@@ -287,9 +287,9 @@ export function MarqueeBanner({
           animationDirection: animDir,
         }}
       >
-        <span className="text-red-500/90">{joined}</span>
-        <span className="text-red-500/90">{joined}</span>
-        <span className="text-red-500/90">{joined}</span>
+        <span className="text-risk-critical/90">{joined}</span>
+        <span className="text-risk-critical/90">{joined}</span>
+        <span className="text-risk-critical/90">{joined}</span>
       </div>
 
       <style>{`

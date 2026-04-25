@@ -168,7 +168,7 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
       {isLoading ? (
         <AdminSkeleton />
       ) : error ? (
-        <div className="text-sm text-red-400 py-4">
+        <div className="text-sm text-risk-critical py-4">
           {t('politicalStrip.errorLoading')}
         </div>
       ) : vendors.length === 0 ? (

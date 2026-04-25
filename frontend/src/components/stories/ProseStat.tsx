@@ -17,7 +17,7 @@ export default function ProseStat({
   value,
   suffix = '',
   prefix = '',
-  color = 'text-red-400',
+  color = 'text-risk-critical',
   label,
   animate = true,
   decimals = 0,

@@ -212,7 +212,7 @@ function TierNavigationRow({
         </div>
       </div>
 
-      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isActive ? 'text-amber-400 translate-x-0.5' : 'text-text-muted')} />
+      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isActive ? 'text-risk-high translate-x-0.5' : 'text-text-muted')} />
     </button>
   )
 }
@@ -351,7 +351,7 @@ function ReviewPopover({
         <button
           onClick={() => promoteMutation.mutate()}
           disabled={promoteMutation.isPending || promoteMutation.isSuccess}
-          className="w-full py-1.5 rounded text-xs font-medium border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 disabled:opacity-50 transition-colors"
+          className="w-full py-1.5 rounded text-xs font-medium border border-amber-500/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
         >
           {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
         </button>
@@ -487,7 +487,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
         <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setReviewOpen((v) => !v)}
-            className="hidden sm:inline-flex p-1.5 rounded text-text-muted hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+            className="hidden sm:inline-flex p-1.5 rounded text-text-muted hover:text-risk-high hover:bg-risk-high/10 transition-colors"
             aria-label={t('reviewPopover.updateTitle')}
             title={t('reviewPopover.updateTitle')}
           >
@@ -501,7 +501,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               onClose={() => setReviewOpen(false)}
             />
           )}
-          <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </motion.div>
@@ -607,7 +607,7 @@ export default function AriaPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
-          <p className="text-xs font-mono uppercase tracking-widest text-red-500 mb-2">{t('connectionError.title')}</p>
+          <p className="text-xs font-mono uppercase tracking-widest text-risk-critical mb-2">{t('connectionError.title')}</p>
           <p className="text-lg font-bold text-text-primary mb-2">{t('connectionError.headline')}</p>
           <p className="text-sm text-text-muted">{t('connectionError.body')}</p>
           <button
@@ -871,7 +871,7 @@ export default function AriaPage() {
                     <span className="text-[10px] text-text-muted font-mono">·</span>
                     <button
                       onClick={clearAll}
-                      className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors"
+                      className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors"
                     >
                       {t('filterBar.clearAll')} ({activeFilterCount})
                     </button>

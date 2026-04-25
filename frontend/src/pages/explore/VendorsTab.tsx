@@ -671,7 +671,7 @@ function FlashVendorRadar() {
 
               {/* Active badge legend */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-risk-critical/10 border border-red-500/20 text-risk-critical text-xs font-medium">
                   Active
                 </span>
                 <span className="text-xs text-text-muted">= vendor still active today</span>
@@ -681,7 +681,7 @@ function FlashVendorRadar() {
               {/* Active vendors list (below scatter) */}
               {allDots.filter((d) => d.is_currently_active).length > 0 && (
                 <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
-                  <p className="text-xs font-semibold text-red-400 mb-2">Currently Active Flash Vendors</p>
+                  <p className="text-xs font-semibold text-risk-critical mb-2">Currently Active Flash Vendors</p>
                   <div className="space-y-1">
                     {allDots
                       .filter((d) => d.is_currently_active)

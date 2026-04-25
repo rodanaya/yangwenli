@@ -65,11 +65,11 @@ export function StoryGraneroVacio() {
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-red-500">93.5%</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">93.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">adj. directa en el sector</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-amber-400">6</div>
+          <div className="text-2xl font-mono font-bold text-risk-high">6</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">proveedores dominan</div>
         </div>
       </div>
@@ -164,7 +164,7 @@ export function StoryGraneroVacio() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-4">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

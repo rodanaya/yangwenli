@@ -90,19 +90,19 @@ export function StoryTrianguloFarmaceutico() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-500">$128B</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">$128B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Fármacos Especializados · score 0.89
           </div>
         </div>
         <div className="border-l-2 border-red-400 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-400">$92B</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">$92B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Maypo Internacional · score 0.84
           </div>
         </div>
         <div className="border-l-2 border-red-300 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-300">$65B</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">$65B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             DIMM · score 0.81
           </div>
@@ -295,14 +295,14 @@ export function StoryTrianguloFarmaceutico() {
                   )
                 })}
               </svg>
-              <div className="w-12 text-[11px] font-mono text-red-400 text-right">{v.daRate}%</div>
+              <div className="w-12 text-[11px] font-mono text-risk-critical text-right">{v.daRate}%</div>
             </div>
           )
         })}
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-text-secondary">

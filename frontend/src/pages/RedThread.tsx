@@ -668,7 +668,7 @@ function ChapterMoney({ timeline, t }: {
           </div>
           {peakRiskYear && (
             <div className="bg-background border border-red-900/50 rounded-sm px-4 py-3">
-              <p className="editorial-label text-red-500 mb-1">{t('money.peakByRisk')}</p>
+              <p className="editorial-label text-risk-critical mb-1">{t('money.peakByRisk')}</p>
               <p className="text-text-primary font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
           )}

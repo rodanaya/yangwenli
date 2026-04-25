@@ -31,7 +31,7 @@ interface AriaMemoProps {
 
 function TierBadge({ tier }: { tier: number }) {
   const colors: Record<number, string> = {
-    1: 'bg-red-600/20 text-red-400 border-red-600/30',
+    1: 'bg-red-600/20 text-risk-critical border-red-600/30',
     2: 'bg-orange-600/20 text-orange-400 border-orange-600/30',
     3: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30',
     4: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
@@ -114,7 +114,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
         {isLoading ? (
           <MemoSkeleton />
         ) : error ? (
-          <div className="flex items-center gap-2 text-sm text-red-400 py-2">
+          <div className="flex items-center gap-2 text-sm text-risk-critical py-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {t('memo.loadError')}
           </div>

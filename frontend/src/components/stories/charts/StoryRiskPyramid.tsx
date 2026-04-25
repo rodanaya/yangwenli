@@ -52,7 +52,7 @@ export function StoryRiskPyramid() {
       {/* Hero stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-red-400">MXN 4.1T</div>
+          <div className="text-3xl font-mono font-bold text-risk-critical">MXN 4.1T</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             en contratos críticos
           </div>
@@ -164,12 +164,12 @@ export function StoryRiskPyramid() {
 
       {/* Finding */}
       <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-red-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-risk-critical mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-text-secondary">
           La forma de la pirámide se invierte cuando la medida cambia de número a valor:
-          <strong className="text-red-400"> 6% de contratos cargan 42% del dinero</strong>.
+          <strong className="text-risk-critical"> 6% de contratos cargan 42% del dinero</strong>.
           El patrón es consistente en los 12 sectores — la corrupción gravita hacia los contratos grandes.
         </p>
       </div>

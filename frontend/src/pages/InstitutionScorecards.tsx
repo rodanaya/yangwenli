@@ -265,7 +265,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
 
 function TrendIcon({ direction, t }: { direction: string | null; t: (key: string) => string }) {
   if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label={t('trend.improving')} />
-  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label={t('trend.declining')} />
+  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3 w-3 text-text-muted" aria-label={t('trend.stable')} />
 }
 
@@ -326,7 +326,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
             {/* Red signal badge */}
             {hasRedSignals && (
               <span
-                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-red-400 bg-red-500/10 border border-red-500/20"
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-risk-critical bg-risk-critical/10 border border-red-500/20"
                 aria-label={t('aria.redAlerts', { count: item.signal_count_red })}
               >
                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
@@ -372,7 +372,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
         {/* Top risk driver */}
         {item.top_risk_driver && (
           <div className="pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-amber-500/8 border border-amber-500/15 text-[9px] text-amber-400 font-mono uppercase tracking-wide">
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-amber-500/8 border border-amber-500/15 text-[9px] text-risk-high font-mono uppercase tracking-wide">
               <span className="h-1 w-1 rounded-full bg-amber-400 flex-shrink-0" aria-hidden="true" />
               {item.top_risk_driver}
             </span>
@@ -897,7 +897,7 @@ export default function InstitutionScorecards() {
 
         {/* Footer note — context footnote */}
         <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400/70 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high/70 mb-1">
             {t('footnotes.title')}
           </p>
           <p className="text-[11px] text-text-secondary leading-relaxed">

@@ -566,7 +566,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
     grade.startsWith('B') ? 'text-lime-400' :
     grade.startsWith('C') ? 'text-risk-high' :
     grade.startsWith('D') ? 'text-orange-400' :
-    'text-red-500'
+    'text-risk-critical'
 
   const indicators: Array<{ label: string; value: string | null; benchmark: string; highlight: boolean }> = [
     {
@@ -804,7 +804,7 @@ function InvestigationCallout({
           </span>
         </div>
         {totalLoss > 0 && (
-          <span className="text-xs font-mono font-bold text-red-300 tabular-nums flex-shrink-0">
+          <span className="text-xs font-mono font-bold text-risk-critical tabular-nums flex-shrink-0">
             est. loss: {formatCompactMXN(totalLoss)}+
           </span>
         )}

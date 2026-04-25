@@ -45,7 +45,7 @@ export default function Privacy() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
-              <Shield className="h-5 w-5 text-amber-500/80" aria-hidden="true" />
+              <Shield className="h-5 w-5 text-risk-high/80" aria-hidden="true" />
               <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-text-primary">
                 {isEs ? 'Aviso de Privacidad' : 'Privacy Policy'}
               </span>
@@ -77,7 +77,7 @@ export default function Privacy() {
         {/* Summary card */}
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.04] p-4 mb-10">
           <p className="text-sm text-text-primary leading-relaxed">
-            <span className="font-semibold text-amber-400/80">TL;DR{isEs ? '' : ':'}:</span>{' '}
+            <span className="font-semibold text-risk-high/80">TL;DR{isEs ? '' : ':'}:</span>{' '}
             {isEs
               ? <>RUBLI procesa <strong className="text-text-primary">registros públicos de contrataciones</strong> del gobierno federal mexicano. No recopilamos información personal de visitantes. No usamos cookies de rastreo ni analíticas. Los únicos datos de carácter personal que manejamos son los <strong className="text-text-primary">RFC públicos de personas morales</strong> (empresas), publicados por el gobierno en COMPRANET.</>
               : <>RUBLI processes <strong className="text-text-primary">public procurement records</strong> from the Mexican federal government. We do not collect personal information about visitors. We do not use tracking cookies or analytics. The only personal-adjacent data we hold are the <strong className="text-text-primary">public tax IDs (RFC) of legal entities</strong> (companies), which are published by the government in the COMPRANET database.</>
@@ -133,7 +133,7 @@ export default function Privacy() {
 
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Lock className="h-4 w-4 text-amber-400/70" aria-hidden="true" />
+                <Lock className="h-4 w-4 text-risk-high/70" aria-hidden="true" />
                 <span className="text-sm font-medium text-text-primary">{isEs ? 'RFC — Solo personas morales' : 'RFC — Legal Entities Only'}</span>
               </div>
               <p>

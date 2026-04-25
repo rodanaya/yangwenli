@@ -33,8 +33,8 @@ const TYPE_CONFIG: Record<
   RedThreadItem['type'],
   { icon: typeof AlertTriangle; colorClass: string }
 > = {
-  sanctions: { icon: AlertTriangle, colorClass: 'text-red-400 bg-red-500/15 border-red-500/30' },
-  scandal: { icon: Newspaper, colorClass: 'text-red-400 bg-red-500/15 border-red-500/30' },
+  sanctions: { icon: AlertTriangle, colorClass: 'text-risk-critical bg-risk-critical/15 border-red-500/30' },
+  scandal: { icon: Newspaper, colorClass: 'text-risk-critical bg-risk-critical/15 border-red-500/30' },
   investigation_case: {
     icon: FileSearch,
     colorClass: 'text-orange-400 bg-orange-500/15 border-orange-500/30',
@@ -42,7 +42,7 @@ const TYPE_CONFIG: Record<
   co_bidder: { icon: Users, colorClass: 'text-purple-400 bg-purple-500/15 border-purple-500/30' },
   high_risk_vendor: {
     icon: Shield,
-    colorClass: 'text-amber-400 bg-amber-500/15 border-amber-500/30',
+    colorClass: 'text-risk-high bg-risk-high/15 border-amber-500/30',
   },
   asf_finding: {
     icon: ClipboardList,

@@ -518,7 +518,7 @@ function RiskEvolution({
           <p
             className={cn(
               'text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
-              isAboveOECD ? 'text-red-400' : 'text-text-muted',
+              isAboveOECD ? 'text-risk-critical' : 'text-text-muted',
             )}
           >
             {isAboveOECD ? t('riskEvolution.aboveOECD') : t('riskEvolution.belowOECD')}
@@ -642,8 +642,8 @@ function ProcedureTypeSection({
 
         {isAboveOECD && (
           <div className="mt-3 flex items-start gap-2 rounded border border-red-500/30 bg-red-500/5 px-3 py-2">
-            <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-[11px] text-red-300/90 leading-relaxed">
+            <AlertTriangle className="h-3.5 w-3.5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-[11px] text-risk-critical/90 leading-relaxed">
               {t('findings.highDirectAward', { pct: directPct.toFixed(1) })}
               {isAboveAvg && ` · ${(directPct - historicalAvg).toFixed(1)} pp vs avg`}
             </p>
@@ -714,8 +714,8 @@ function TopVendorsTable({
               <span
                 className={cn(
                   'font-mono text-sm font-bold tabular-nums',
-                  rank === 1 ? 'text-red-400' :
-                  rank <= 3 ? 'text-amber-400' :
+                  rank === 1 ? 'text-risk-critical' :
+                  rank <= 3 ? 'text-risk-high' :
                   rank <= 10 ? 'text-text-primary' : 'text-text-muted',
                 )}
                 style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -755,7 +755,7 @@ function TopVendorsTable({
       {vendors.length > 5 && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-3 flex items-center gap-1.5 text-xs font-mono uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors"
+          className="mt-3 flex items-center gap-1.5 text-xs font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors"
         >
           <ChevronDown
             className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')}
@@ -1130,7 +1130,7 @@ export default function YearInReview() {
                   className={cn(
                     'px-3.5 py-1.5 text-sm font-bold transition-all rounded-sm border',
                     y === validYear
-                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/60 shadow-sm'
+                      ? 'bg-risk-high/10 text-risk-high border-amber-500/60 shadow-sm'
                       : 'text-text-muted hover:text-text-primary border-border/40 hover:border-border',
                   )}
                   style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -1577,7 +1577,7 @@ export default function YearInReview() {
           {/* Notable risk contracts */}
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" aria-hidden="true" />
               <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
                 {t('notableRisks.sectionLabel')}
               </p>

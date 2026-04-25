@@ -102,7 +102,7 @@ export function FolderSidebar({
                 e.stopPropagation()
                 onDeleteFolder(folder.id)
               }}
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-text-muted hover:text-red-400 hover:bg-red-500/10"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-text-muted hover:text-risk-critical hover:bg-risk-critical/10"
               aria-label={`Delete folder ${folder.name}`}
             >
               <Trash2 className="h-3 w-3" />

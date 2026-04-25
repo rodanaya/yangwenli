@@ -86,7 +86,7 @@ export function CollisionFlash({ className }: { className?: string }) {
         {/* Vendor A */}
         <Link
           to={`/vendors/${pair.vendor_id_a}`}
-          className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 transition-colors"
+          className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-risk-critical/10/20 hover:bg-risk-critical/10/40 transition-colors"
         >
           <span className="block text-[11px] font-mono font-semibold text-text-primary leading-tight truncate">
             {nameA}
@@ -115,7 +115,7 @@ export function CollisionFlash({ className }: { className?: string }) {
         {/* Vendor B */}
         <Link
           to={`/vendors/${pair.vendor_id_b}`}
-          className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 transition-colors"
+          className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-risk-critical/10/20 hover:bg-risk-critical/10/40 transition-colors"
         >
           <span className="block text-[11px] font-mono font-semibold text-text-primary leading-tight truncate">
             {nameB}

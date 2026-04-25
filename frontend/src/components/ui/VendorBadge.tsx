@@ -27,8 +27,8 @@ export function VendorBadge({ isEfos, efosStage, isSfp }: VendorBadgeProps) {
         <span
           className={
             definitivo
-              ? 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-950/70 text-red-300 border border-red-700 shrink-0'
-              : 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-950/60 text-amber-300 border border-amber-800 shrink-0'
+              ? 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/10/70 text-risk-critical border border-red-700 shrink-0'
+              : 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10/60 text-accent border border-amber-800 shrink-0'
           }
           title={
             definitivo

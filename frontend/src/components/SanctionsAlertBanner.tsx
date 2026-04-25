@@ -28,9 +28,9 @@ const EFOS_TOOLTIP =
 
 function getSanctionChipClass(listType: string) {
   if (listType === 'efos_presunto') {
-    return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+    return 'bg-amber-500/20 text-accent border-amber-500/30'
   }
-  return 'bg-red-500/20 text-red-300 border-red-500/30'
+  return 'bg-red-500/20 text-risk-critical border-red-500/30'
 }
 
 export function SanctionsAlertBanner({
@@ -51,18 +51,18 @@ export function SanctionsAlertBanner({
       className={cn(
         'rounded-md border p-3',
         allPresunto
-          ? 'border-amber-500/40 bg-amber-500/10'
-          : 'border-red-500/40 bg-red-500/10',
+          ? 'border-amber-500/40 bg-risk-high/10'
+          : 'border-red-500/40 bg-risk-critical/10',
         className
       )}
       role="alert"
     >
       <div className="flex items-start gap-2">
         <AlertTriangle
-          className={cn('h-4 w-4 mt-0.5 shrink-0', allPresunto ? 'text-amber-400' : 'text-red-400')}
+          className={cn('h-4 w-4 mt-0.5 shrink-0', allPresunto ? 'text-risk-high' : 'text-risk-critical')}
         />
         <div className="flex-1 min-w-0">
-          <p className={cn('text-sm font-medium', allPresunto ? 'text-amber-300' : 'text-red-300')}>
+          <p className={cn('text-sm font-medium', allPresunto ? 'text-accent' : 'text-risk-critical')}>
             On {sanctions.length} sanctions list{sanctions.length > 1 ? 's' : ''}:{' '}
             <span className={allPresunto ? 'text-amber-200' : 'text-red-200'}>{listTypes.join(' | ')}</span>
           </p>
@@ -87,8 +87,8 @@ export function SanctionsAlertBanner({
           className={cn(
             'shrink-0 rounded p-1',
             allPresunto
-              ? 'hover:bg-amber-500/20 text-amber-400'
-              : 'hover:bg-red-500/20 text-red-400'
+              ? 'hover:bg-amber-500/20 text-risk-high'
+              : 'hover:bg-red-500/20 text-risk-critical'
           )}
           aria-label={expanded ? 'Collapse details' : 'Expand details'}
         >
@@ -115,7 +115,7 @@ export function SanctionsAlertBanner({
               key={i}
               className={cn(
                 'flex items-center justify-between text-xs',
-                s.list_type === 'efos_presunto' ? 'text-amber-300/80' : 'text-red-300/80'
+                s.list_type === 'efos_presunto' ? 'text-accent/80' : 'text-risk-critical/80'
               )}
             >
               <span title={s.list_type.startsWith('efos') ? EFOS_TOOLTIP : undefined}>

@@ -379,7 +379,7 @@ export function NetworkGraphModal({
                 <span className="font-mono">{data.total_nodes}</span> {lang === 'en' ? 'nodes' : 'nodos'} ·{' '}
                 <span className="font-mono">{data.total_links}</span> {lang === 'en' ? 'connections' : 'conexiones'}
                 {data.total_nodes >= 60 && (
-                  <span className="block text-[10px] text-amber-500/60 mt-0.5">
+                  <span className="block text-[10px] text-risk-high/60 mt-0.5">
                     {lang === 'en' ? 'Showing top 60 nodes by value' : 'Mostrando top 60 nodos por valor'}
                   </span>
                 )}

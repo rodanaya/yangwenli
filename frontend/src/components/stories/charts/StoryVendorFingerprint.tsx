@@ -35,7 +35,7 @@ export function StoryVendorFingerprint() {
           RUBLI · Vendor Forensics
         </p>
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
-                        bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+                        bg-risk-critical/10 border border-red-500/20 text-xs text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           Critical risk
         </div>
@@ -49,15 +49,15 @@ export function StoryVendorFingerprint() {
         On August 2, 2023, ISSSTE awarded HEMOSER 12 separate cardiac supply contracts
         — a textbook &ldquo;threshold splitting&rdquo; pattern designed to keep each contract
         below the competitive bidding threshold. The SHAP model assigns HEMOSER a risk score
-        of <span className="text-red-400 font-mono font-bold">0.94</span> — in the top 2% of
+        of <span className="text-risk-critical font-mono font-bold">0.94</span> — in the top 2% of
         all 200K+ active vendors.
       </p>
 
       {/* SHAP factor callouts */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: 'Same-day', value: '+1.24', color: 'text-red-400', note: 'strongest signal' },
-          { label: 'Concentration', value: '+0.88', color: 'text-red-400', note: 'market share' },
+          { label: 'Same-day', value: '+1.24', color: 'text-risk-critical', note: 'strongest signal' },
+          { label: 'Concentration', value: '+0.88', color: 'text-risk-critical', note: 'market share' },
           { label: 'Price volatility', value: '+0.62', color: 'text-orange-400', note: 'contract sizes vary' },
           { label: 'Inst. diversity', value: '-0.14', color: 'text-teal-400', note: 'protective factor' },
         ].map((f) => (
@@ -88,7 +88,7 @@ export function StoryVendorFingerprint() {
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
           Each petal represents one of the 9 active risk model features.
-          <strong className="text-red-400"> Red petals</strong> are risk-increasing factors;
+          <strong className="text-risk-critical"> Red petals</strong> are risk-increasing factors;
           <strong className="text-teal-400"> teal petals</strong> are protective.
           Petal size is proportional to the SHAP contribution — larger petals drive
           the risk score higher. The center badge shows the overall score.
@@ -102,7 +102,7 @@ export function StoryVendorFingerprint() {
         </p>
         <a
           href="/aria"
-          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide"
+          className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
         >
           <ExternalLink className="h-3 w-3" />
           View ARIA investigation queue

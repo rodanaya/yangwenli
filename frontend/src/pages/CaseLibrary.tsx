@@ -645,10 +645,10 @@ export default function CaseLibrary() {
               borderLeft: '3px solid #ef4444',
             }}
           >
-            <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" />
             <div>
               <p
-                className="text-[13px] font-semibold text-red-300 mb-1"
+                className="text-[13px] font-semibold text-risk-critical mb-1"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {t('loadError')}

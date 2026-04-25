@@ -102,7 +102,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
               className={cn(
                 'px-2 py-0.5 border-l border-border/30 transition-colors',
                 viewMode === 'risk'
-                  ? 'bg-red-500/20 text-red-400'
+                  ? 'bg-red-500/20 text-risk-critical'
                   : 'text-text-muted hover:text-text-secondary'
               )}
             >

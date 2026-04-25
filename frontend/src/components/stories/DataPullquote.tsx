@@ -36,7 +36,7 @@ export default function DataPullquote({
   attribution,
   stat,
   statLabel,
-  statColor = 'text-red-400',
+  statColor = 'text-risk-critical',
   barValue,
   barLabel,
   outlet,

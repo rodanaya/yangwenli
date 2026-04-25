@@ -796,10 +796,10 @@ export default function VendorCompare() {
 
       {/* Error state */}
       {hasError && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2 mb-6">
-          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+        <div className="rounded-md border border-red-500/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
+          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">{t('errorTitle')}</p>
+            <p className="text-sm font-medium text-risk-critical">{t('errorTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">
               {t('errorBody')}
             </p>

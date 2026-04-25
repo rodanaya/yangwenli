@@ -127,7 +127,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Crosshair className="h-5 w-5 text-red-400" />
+            <Crosshair className="h-5 w-5 text-risk-critical" />
             <h3
               className="text-lg font-bold text-text-primary"
               style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -160,7 +160,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
       {isLoading ? (
         <LoadingSkeleton />
       ) : error ? (
-        <div className="text-sm text-red-400 py-4">{t('ariaWidget.loadError')}</div>
+        <div className="text-sm text-risk-critical py-4">{t('ariaWidget.loadError')}</div>
       ) : vendors.length === 0 ? (
         <div className="text-sm text-text-muted py-4 italic">
           {t('ariaWidget.noVendorsInTier', { tier })}

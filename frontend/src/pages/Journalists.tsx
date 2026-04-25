@@ -260,7 +260,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         {/* LEFT — editorial */}
         <div className="lg:col-span-3">
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-red-500">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical">
               {t('featuredLabel')}
             </span>
             <span className="h-px w-8 bg-red-500/50" />
@@ -301,7 +301,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
             </span>
           </div>
 
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:text-red-400 transition-colors">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-risk-critical group-hover:text-risk-critical transition-colors">
             {t('cards.readInvestigation')}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
               →
@@ -611,7 +611,7 @@ function AriaLiveTicker() {
       <div className="flex items-center gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-500">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical">
             LIVE
           </span>
         </span>
@@ -777,7 +777,7 @@ export default function Journalists() {
             }}
           >
             RUBLI{' '}
-            <span className="italic text-red-500">Investigations</span>
+            <span className="italic text-risk-critical">Investigations</span>
           </h1>
 
           <p
@@ -805,14 +805,14 @@ export default function Journalists() {
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              <span className="text-red-500 font-bold tabular-nums">
+              <span className="text-risk-critical font-bold tabular-nums">
                 {prosecutedCount}
               </span>{' '}
               {t('masthead.prosecutedLabel', { defaultValue: 'Prosecuted' })}
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              <span className="text-amber-400 font-bold tabular-nums">
+              <span className="text-risk-high font-bold tabular-nums">
                 {activeLeadsCount}
               </span>{' '}
               {t('masthead.activeLabel', { defaultValue: 'Active leads' })}

@@ -72,7 +72,7 @@ export function StoryMoneySankeyChart() {
       {/* Key stats row */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-400">
+          <div className="text-2xl font-mono font-bold text-risk-critical">
             MXN {(TOTAL_MXN / 1e9).toFixed(0)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
@@ -80,7 +80,7 @@ export function StoryMoneySankeyChart() {
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-amber-400">
+          <div className="text-2xl font-mono font-bold text-risk-high">
             {TOTAL_CONTRACTS.toLocaleString()}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
@@ -88,7 +88,7 @@ export function StoryMoneySankeyChart() {
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-400">97%</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">97%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             avg risk score · all critical
           </div>
@@ -102,7 +102,7 @@ export function StoryMoneySankeyChart() {
 
       {/* Finding callout */}
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-text-secondary">
@@ -119,7 +119,7 @@ export function StoryMoneySankeyChart() {
         </p>
         <a
           href="/aria"
-          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide"
+          className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
         >
           <ExternalLink className="h-3 w-3" />
           Investigate vendors

@@ -19,9 +19,9 @@ interface SharedContractsModalProps {
 }
 
 const RISK_BADGE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  critical: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/25' },
+  critical: { bg: 'bg-risk-critical/15', text: 'text-risk-critical', border: 'border-red-500/25' },
   high:     { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/25' },
-  medium:   { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/25' },
+  medium:   { bg: 'bg-risk-high/15', text: 'text-risk-high', border: 'border-amber-500/25' },
   low:      { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/25' },
 }
 
@@ -124,7 +124,7 @@ export function SharedContractsModal({
         <div className="flex items-start justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="min-w-0 flex-1 pr-4">
             <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-amber-400 shrink-0" aria-hidden="true" />
+              <FileText className="h-4 w-4 text-risk-high shrink-0" aria-hidden="true" />
               <h2
                 id="shared-contracts-title"
                 className="text-sm font-semibold text-text-primary uppercase tracking-wide"
@@ -152,14 +152,14 @@ export function SharedContractsModal({
         {summary && (
           <div className="flex items-center gap-6 px-5 py-3 bg-amber-500/8 border-b border-amber-500/15 shrink-0">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" aria-hidden="true" />
-              <span className="text-xs font-mono text-amber-300">
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-high shrink-0" aria-hidden="true" />
+              <span className="text-xs font-mono text-accent">
                 <span className="font-bold text-amber-200">{formatNumber(summary.shared_procedure_count)}</span>
                 {' '}{lang === 'en' ? 'shared procedures' : 'procedimientos compartidos'}
               </span>
             </div>
             <div className="h-3 w-px bg-amber-500/20" aria-hidden="true" />
-            <span className="text-xs font-mono text-amber-300">
+            <span className="text-xs font-mono text-accent">
               <span className="font-bold text-amber-200">{formatCompactMXN(summary.total_shared_amount)}</span>
               {' '}{lang === 'en' ? 'in combined contracts' : 'en contratos combinados'}
             </span>
@@ -177,8 +177,8 @@ export function SharedContractsModal({
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <AlertTriangle className="h-7 w-7 text-red-400" aria-hidden="true" />
-              <p className="text-sm text-red-300 font-medium">{t('errors.failedToLoad')}</p>
+              <AlertTriangle className="h-7 w-7 text-risk-critical" aria-hidden="true" />
+              <p className="text-sm text-risk-critical font-medium">{t('errors.failedToLoad')}</p>
               <p className="text-xs text-text-muted">{t('errors.couldNotLoad')}</p>
             </div>
           ) : contracts.length === 0 ? (
@@ -255,7 +255,7 @@ export function SharedContractsModal({
                               </span>
                             )}
                             {c.is_single_bid && (
-                              <span className="text-[9px] font-mono uppercase bg-red-500/10 border border-red-500/20 text-red-400 px-1 rounded">
+                              <span className="text-[9px] font-mono uppercase bg-risk-critical/10 border border-red-500/20 text-risk-critical px-1 rounded">
                                 {lang === 'en' ? '1 bid' : '1 oferta'}
                               </span>
                             )}

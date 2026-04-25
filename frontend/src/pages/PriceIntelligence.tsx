@@ -671,7 +671,7 @@ function MostExtremeCallout({
             {contract.vendor_id ? (
               <Link
                 to={`/vendors/${contract.vendor_id}`}
-                className="hover:text-red-300 transition-colors"
+                className="hover:text-risk-critical transition-colors"
               >
                 {formatVendorName(contract.vendor_name, 60)}
               </Link>
@@ -679,7 +679,7 @@ function MostExtremeCallout({
               formatVendorName(contract.vendor_name, 60)
             )}
             <span className="text-text-muted"> cobró </span>
-            <span className="text-red-300 font-mono tabular-nums">{formatCompactMXN(contract.amount_mxn)}</span>
+            <span className="text-risk-critical font-mono tabular-nums">{formatCompactMXN(contract.amount_mxn)}</span>
             <span className="text-text-muted"> a </span>
             <span className="text-text-secondary">{contract.institution_name}</span>
             <span className="text-text-muted"> ({contract.contract_year}).</span>
@@ -1454,7 +1454,7 @@ function RiskLevelPriceGap({
                   </svg>
                 )
               })()}
-              <p className="text-[10px] font-mono text-red-300/80 mt-1 tracking-wide">
+              <p className="text-[10px] font-mono text-risk-critical/80 mt-1 tracking-wide">
                 precio promedio · +{stats.flagged.avg_z.toFixed(1)}σ
               </p>
             </div>

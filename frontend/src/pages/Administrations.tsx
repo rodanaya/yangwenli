@@ -3187,7 +3187,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             {t('patternsView.chartFootnote')}
           </p>
           {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
-            <p className="text-[10px] text-amber-500/80 font-mono mt-1">
+            <p className="text-[10px] text-risk-high/80 font-mono mt-1">
               <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> {t('patternsView.regimeShiftNote')}
             </p>
           )}
@@ -3573,7 +3573,7 @@ function ComparePeriodView() {
               <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-[0.15em]">
                 Period A
                 {p1Start === p2Start && p1End === p2End ? (
-                  <span className="ml-2 text-amber-500/80">Periods are identical</span>
+                  <span className="ml-2 text-risk-high/80">Periods are identical</span>
                 ) : null}
               </div>
               <div className="flex items-center gap-2">

@@ -1097,11 +1097,11 @@ export default function CorruptionClusters() {
               Cada tipología deja una huella distintiva en seis dimensiones de
               contratación pública. Leer estas huellas — no los nombres de los
               proveedores — es lo que convierte datos en diagnóstico. Una
-              <span className="font-mono text-red-500"> Empresa Fantasma </span>
+              <span className="font-mono text-risk-critical"> Empresa Fantasma </span>
               pulsa en adjudicación directa y diversidad institucional baja. Un
-              <span className="font-mono text-red-500"> Monopolio </span>
+              <span className="font-mono text-risk-critical"> Monopolio </span>
               pulsa en concentración. La
-              <span className="font-mono text-red-500"> Colusión </span>
+              <span className="font-mono text-risk-critical"> Colusión </span>
               pulsa en tamaño de red. La huella es el patrón.
             </>
           ) : (
@@ -1109,11 +1109,11 @@ export default function CorruptionClusters() {
               Each typology leaves a distinctive fingerprint across six dimensions of
               public procurement. Reading these fingerprints — not the vendor names —
               is what turns data into a diagnosis. A
-              <span className="font-mono text-red-500"> Ghost Company </span>
+              <span className="font-mono text-risk-critical"> Ghost Company </span>
               pulses on direct award and low institutional diversity. A
-              <span className="font-mono text-red-500"> Monopoly </span>
+              <span className="font-mono text-risk-critical"> Monopoly </span>
               pulses on concentration.
-              <span className="font-mono text-red-500"> Collusion </span>
+              <span className="font-mono text-risk-critical"> Collusion </span>
               pulses on network size. The fingerprint is the pattern.
             </>
           )}
@@ -1168,9 +1168,9 @@ export default function CorruptionClusters() {
               <>
                 Cada punto es un proveedor T1 confirmado en esa combinación
                 patrón × sector. La densidad revela el DNA sectorial de cada
-                patrón: <span className="font-mono text-red-500">P5 Sobreprecio</span> sature
-                en Salud; <span className="font-mono text-red-500">P7 Red</span> se dispersa
-                entre Gobernación e Infraestructura; <span className="font-mono text-red-500">P1
+                patrón: <span className="font-mono text-risk-critical">P5 Sobreprecio</span> sature
+                en Salud; <span className="font-mono text-risk-critical">P7 Red</span> se dispersa
+                entre Gobernación e Infraestructura; <span className="font-mono text-risk-critical">P1
                 Monopolio</span> es un fenómeno de salud pública. Los vacíos también
                 cuentan historia.
               </>
@@ -1178,9 +1178,9 @@ export default function CorruptionClusters() {
               <>
                 Each dot is a confirmed T1 vendor in that pattern × sector
                 combination. Density reveals the sector DNA of each pattern:
-                <span className="font-mono text-red-500"> P5 Overpricing</span> saturates
-                Health; <span className="font-mono text-red-500">P7 Network</span> spreads
-                across Interior and Infrastructure; <span className="font-mono text-red-500">P1
+                <span className="font-mono text-risk-critical"> P5 Overpricing</span> saturates
+                Health; <span className="font-mono text-risk-critical">P7 Network</span> spreads
+                across Interior and Infrastructure; <span className="font-mono text-risk-critical">P1
                 Monopoly</span> is a public-health phenomenon. The gaps also
                 tell a story.
               </>
@@ -1264,7 +1264,7 @@ export default function CorruptionClusters() {
           <EvidenceStrip gtTypes={gtTypes} gtTotal={gtTotal} />
 
           <div className="flex items-start gap-2 pt-3 border-t border-border/20 text-[11px] text-text-muted leading-relaxed">
-            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-amber-500/70" />
+            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" />
             <p>
               {isEs ? (
                 <>

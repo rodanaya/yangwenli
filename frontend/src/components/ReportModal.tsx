@@ -248,7 +248,7 @@ export function ReportModal({
           )}
 
           {error && (
-            <div className="text-sm text-red-400 p-4 text-center">
+            <div className="text-sm text-risk-critical p-4 text-center">
               {t('report.loadFailed')}
             </div>
           )}

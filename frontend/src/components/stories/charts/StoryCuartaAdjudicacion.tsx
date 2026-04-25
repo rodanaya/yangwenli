@@ -171,7 +171,7 @@ export function StoryCuartaAdjudicacion() {
 
       {/* Finding */}
       <div className="mt-5 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-red-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-critical mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

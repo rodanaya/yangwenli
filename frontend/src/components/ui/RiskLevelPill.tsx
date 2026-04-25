@@ -17,14 +17,14 @@ interface RiskLevelPillProps {
 // Critical=red-500, high=amber-500, medium=amber-800/zinc, low=zinc-500 (no green).
 const RISK_STYLES = {
   critical: {
-    bg: 'bg-red-500/15',
-    text: 'text-red-400',
+    bg: 'bg-risk-critical/15',
+    text: 'text-risk-critical',
     border: 'border-red-500/30',
     dot: '#ef4444',
   },
   high: {
-    bg: 'bg-amber-500/15',
-    text: 'text-amber-400',
+    bg: 'bg-risk-high/15',
+    text: 'text-risk-high',
     border: 'border-amber-500/30',
     dot: '#f59e0b',
   },

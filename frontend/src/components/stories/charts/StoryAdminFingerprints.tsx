@@ -42,7 +42,7 @@ export function StoryAdminFingerprints() {
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-amber-400">79.5%</div>
+          <div className="text-lg font-mono font-bold text-risk-high">79.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             AMLO direct awards · <span className="text-cyan-400">OECD: max 25%</span>
           </div>
@@ -63,7 +63,7 @@ export function StoryAdminFingerprints() {
       {/* Caveat + finding */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-3">
-          <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+          <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
             HALLAZGO
           </p>
           <p className="text-xs text-text-secondary leading-relaxed">

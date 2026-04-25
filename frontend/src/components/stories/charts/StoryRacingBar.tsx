@@ -76,7 +76,7 @@ export function StoryRacingBar() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-red-400">MXN {totalValue.toFixed(1)}B</div>
+          <div className="text-2xl font-mono font-bold text-risk-critical">MXN {totalValue.toFixed(1)}B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Total del clúster (6 proveedores)
           </div>
@@ -214,7 +214,7 @@ export function StoryRacingBar() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

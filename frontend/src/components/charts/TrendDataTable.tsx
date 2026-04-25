@@ -294,7 +294,7 @@ export default function TrendDataTable({
                           className={cn(
                             'tabular-nums text-sm font-medium',
                             row.high_risk_pct >= 15
-                              ? 'text-red-400'
+                              ? 'text-risk-critical'
                               : row.high_risk_pct >= 10
                               ? 'text-orange-400'
                               : 'text-text-secondary'

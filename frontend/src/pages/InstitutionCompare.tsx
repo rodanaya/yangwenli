@@ -446,7 +446,7 @@ function MetricTable({
                   const pctStr = vA !== 0 ? ` (${sign}${((d / Math.abs(vA)) * 100).toFixed(0)}%)` : ''
                   const DeltaIcon = d > 0 ? TrendingUp : d < 0 ? TrendingDown : Minus
                   deltaEl = (
-                    <td className={cn('px-4 py-3 text-center text-xs font-mono', worse ? 'text-red-400' : 'text-text-muted')}>
+                    <td className={cn('px-4 py-3 text-center text-xs font-mono', worse ? 'text-risk-critical' : 'text-text-muted')}>
                       <span className="inline-flex items-center gap-1">
                         <DeltaIcon className="h-3 w-3" />
                         {Math.abs(d) >= 1000 ? formatCompactMXN(d) : `${sign}${d.toFixed(1)}`}
@@ -465,13 +465,13 @@ function MetricTable({
                   <td className="px-4 py-3 text-xs text-text-secondary font-medium">{isEs ? m.labelEs : m.label}</td>
                   <td className={cn(
                     'px-4 py-3 text-center text-xs font-mono tabular-nums',
-                    aIsWorse ? 'text-red-400 font-semibold' : 'text-text-primary',
+                    aIsWorse ? 'text-risk-critical font-semibold' : 'text-text-primary',
                   )}>
                     {vA !== null ? m.format(vA) : '--'}
                   </td>
                   <td className={cn(
                     'px-4 py-3 text-center text-xs font-mono tabular-nums',
-                    bIsWorse ? 'text-red-400 font-semibold' : 'text-text-primary',
+                    bIsWorse ? 'text-risk-critical font-semibold' : 'text-text-primary',
                   )}>
                     {vB !== null ? m.format(vB) : '--'}
                   </td>
@@ -1117,7 +1117,7 @@ export default function InstitutionCompare() {
             </Button>
           </div>
           {selectedA && selectedB && selectedA === selectedB && (
-            <p className="text-xs text-red-400 text-center mt-2">
+            <p className="text-xs text-risk-critical text-center mt-2">
               {isEs
                 ? 'Selecciona dos instituciones diferentes para comparar.'
                 : 'Select two different institutions to compare.'}
@@ -1128,10 +1128,10 @@ export default function InstitutionCompare() {
 
       {/* Error state */}
       {hasError && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2 mb-6">
-          <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+        <div className="rounded-lg border border-red-500/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
+          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">{t('compare.loadError')}</p>
+            <p className="text-sm font-medium text-risk-critical">{t('compare.loadError')}</p>
             <p className="text-xs text-text-muted mt-0.5">
               {t('compare.loadErrorDesc')}
             </p>

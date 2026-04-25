@@ -73,7 +73,7 @@ export function StoryProcedureBreakdown() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-red-400">93.4%</div>
+          <div className="text-3xl font-mono font-bold text-risk-critical">93.4%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Agricultura · adj. directa · <span className="text-cyan-400">OCDE máx 25%</span>
           </div>
@@ -178,7 +178,7 @@ export function StoryProcedureBreakdown() {
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-text-secondary">

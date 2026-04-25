@@ -121,7 +121,7 @@ function VerifyPanel() {
   return (
     <details className="mt-3 border border-amber-500/15 rounded bg-amber-500/[0.03] group/verify">
       <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[10px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
-        <Info className="h-3 w-3 text-amber-500/60 flex-shrink-0" aria-hidden="true" />
+        <Info className="h-3 w-3 text-risk-high/60 flex-shrink-0" aria-hidden="true" />
         {t('verify.toggle')}
       </summary>
       <div className="px-3 pb-3 pt-1 space-y-2">
@@ -141,7 +141,7 @@ function VerifyPanel() {
             {t('verify.editorial')}
           </p>
         </div>
-        <p className="text-[10px] text-amber-500/60 italic leading-relaxed">
+        <p className="text-[10px] text-risk-high/60 italic leading-relaxed">
           {t('verify.disclaimer')}
         </p>
       </div>

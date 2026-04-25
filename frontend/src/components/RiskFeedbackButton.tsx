@@ -48,14 +48,14 @@ const FEEDBACK_OPTIONS: {
     label: 'Confirmed suspicious',
     description: 'Evidence of irregularity or corruption found',
     Icon: AlertCircle,
-    colorClass: 'text-red-500',
+    colorClass: 'text-risk-critical',
   },
   {
     value: 'needs_review',
     label: 'Needs review',
     description: 'Flagged for deeper manual investigation',
     Icon: HelpCircle,
-    colorClass: 'text-amber-500',
+    colorClass: 'text-risk-high',
   },
 ]
 

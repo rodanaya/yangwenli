@@ -679,7 +679,7 @@ export function Contracts() {
               className={cn(
                 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition-colors',
                 isActive
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-medium'
+                  ? 'bg-amber-500/20 text-risk-high border-amber-500/40 font-medium'
                   : 'bg-background-elevated text-text-secondary hover:bg-background-elevated border-border'
               )}
             >
@@ -810,8 +810,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_direct_award
-              ? 'border-amber-500 text-amber-500 bg-amber-500/10 font-semibold'
-              : 'border-border text-text-muted hover:border-amber-500/50 hover:text-amber-500'
+              ? 'border-amber-500 text-risk-high bg-risk-high/10 font-semibold'
+              : 'border-border text-text-muted hover:border-amber-500/50 hover:text-risk-high'
           )}
           aria-pressed={!!filters.is_direct_award}
         >
@@ -824,8 +824,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_single_bid
-              ? 'border-red-500 text-red-500 bg-red-500/10 font-semibold'
-              : 'border-border text-text-muted hover:border-red-500/50 hover:text-red-500'
+              ? 'border-red-500 text-risk-critical bg-risk-critical/10 font-semibold'
+              : 'border-border text-text-muted hover:border-red-500/50 hover:text-risk-critical'
           )}
           aria-pressed={!!filters.is_single_bid}
         >
@@ -989,7 +989,7 @@ export function Contracts() {
               <button
                 key={tag.key}
                 onClick={() => removeFilterTag(tag.key)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/20 text-risk-high border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
                 {tag.label}
@@ -1367,7 +1367,7 @@ function ContractRow({
           <div className="flex items-center gap-1 min-w-0">
             {contract.vendor_is_individual && (
               <span
-                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 leading-none"
+                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-amber-500/40 bg-risk-high/10 text-risk-high leading-none"
                 title="Natural person (individual) — not a company"
               >
                 PERSON
@@ -1451,7 +1451,7 @@ function ContractRow({
               <span
                 title={`Anomalía multivariada detectada (distancia=${contract.mahalanobis_distance.toFixed(1)})`}
                 aria-label="Multivariate anomaly detected"
-                className="text-amber-400 cursor-help leading-none inline-flex"
+                className="text-risk-high cursor-help leading-none inline-flex"
               >
                 <AlertTriangle className="h-3 w-3" />
               </span>

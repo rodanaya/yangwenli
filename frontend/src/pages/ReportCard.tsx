@@ -284,7 +284,7 @@ function HeroImpactSection({
 
         {/* Stat 2 -- critical contracts */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-red-500">
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-risk-critical">
             {criticalCountLabel}
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
@@ -294,7 +294,7 @@ function HeroImpactSection({
 
         {/* Stat 3 -- high-risk rate */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-amber-500">
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-risk-high">
             {highRiskRate}%
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
@@ -749,14 +749,14 @@ function WhatThisMeans({
         {t('whatThisMeansTitle')}
       </h2>
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-3">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-3">
           HALLAZGO
         </p>
         <ul className="space-y-3" role="list">
           {bullets.map((bullet, i) => (
             <li key={i} className="flex gap-3 text-sm leading-relaxed text-text-secondary">
               <span
-                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-amber-500/20"
                 aria-hidden="true"
               >
                 {i + 1}
@@ -923,7 +923,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                 {/* Go to sector link */}
                 <button
                   onClick={() => navigate(`/sectors/${sector.sector_id}`)}
-                  className="text-[10px] font-mono uppercase tracking-wide flex-shrink-0 transition-colors text-amber-400 hover:text-amber-300"
+                  className="text-[10px] font-mono uppercase tracking-wide flex-shrink-0 transition-colors text-risk-high hover:text-accent"
                   aria-label={`${t('sectorGoTo')}: ${displayName}`}
                 >
                   {t('sectorGoTo')} &rarr;
@@ -1058,7 +1058,7 @@ function MethodologyFooter() {
           </p>
           <button
             onClick={() => navigate('/methodology')}
-            className="text-[10px] font-mono font-bold uppercase tracking-wide transition-colors text-amber-400 hover:text-amber-300"
+            className="text-[10px] font-mono font-bold uppercase tracking-wide transition-colors text-risk-high hover:text-accent"
           >
             {t('viewFullMethodology')}
           </button>
@@ -1113,7 +1113,7 @@ function ErrorState() {
   return (
     <div className="flex items-center justify-center min-h-[40vh] bg-background">
       <div className="text-center">
-        <p role="alert" className="text-red-400 mb-2">{t('error')}</p>
+        <p role="alert" className="text-risk-critical mb-2">{t('error')}</p>
         <p className="text-text-muted text-xs font-mono">COMPRANET data may be temporarily unavailable.</p>
       </div>
     </div>
@@ -1196,7 +1196,7 @@ function ReportCard() {
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-amber-500">
+            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
               Salud del Sistema · Índice Nacional de Integridad
             </p>
           </div>

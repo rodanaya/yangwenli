@@ -70,7 +70,7 @@ export function StoryAvalanchaDiciembre() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-red-500">$51.4B</div>
+          <div className="text-3xl font-mono font-bold text-risk-critical">$51.4B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">DIC 2014 · pico histórico</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
@@ -227,7 +227,7 @@ export function StoryAvalanchaDiciembre() {
       </svg>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-text-secondary">

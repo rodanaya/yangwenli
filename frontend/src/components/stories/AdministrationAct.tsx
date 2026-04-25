@@ -130,7 +130,7 @@ export default function AdministrationAct({
                 className={cn(
                   'text-lg font-bold tabular-nums',
                   s.label === t('actCard.directAward') && s.value > OECD_DA_BENCHMARK
-                    ? 'text-red-400'
+                    ? 'text-risk-critical'
                     : 'text-text-primary'
                 )}
               />
@@ -171,7 +171,7 @@ export default function AdministrationAct({
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
               <span>{t('actCard.notableCase')} <span className="text-text-secondary font-medium">{stats.notableCase}</span></span>
               {stats.notableCaseValue && (
-                <span className="text-red-400 font-bold">{stats.notableCaseValue}</span>
+                <span className="text-risk-critical font-bold">{stats.notableCaseValue}</span>
               )}
             </div>
           </div>

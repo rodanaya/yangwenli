@@ -211,7 +211,7 @@ export default function FraudTimelineRibbon({
                       {c.caseName}
                     </p>
                     {c.valueBn !== undefined && (
-                      <p className="text-[11px] font-bold text-red-400 font-mono tabular-nums">
+                      <p className="text-[11px] font-bold text-risk-critical font-mono tabular-nums">
                         {c.valueBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B MXN
                       </p>
                     )}

@@ -630,7 +630,7 @@ export function ConcentrationConstellation({
               <span style={{ color: meta.color }}>{meta.t1} T1</span>
             </div>
             {onClusterClick && (
-              <div className="text-[10px] font-mono text-amber-400 tracking-wider uppercase">
+              <div className="text-[10px] font-mono text-risk-high tracking-wider uppercase">
                 {isEs ? '→ Ver detalle' : '→ View detail'}
               </div>
             )}

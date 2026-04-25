@@ -44,7 +44,7 @@ export function AuthField({
 
 /**
  * AuthErrorPill — editorial error display with a left bar instead of dark
- * mode wash. Replaces the `bg-red-950/50 border-red-900/60 text-red-400`
+ * mode wash. Replaces the `bg-risk-critical/10/50 border-red-900/60 text-risk-critical`
  * pill that washes out on cream.
  */
 export function AuthErrorPill({ message }: { message: string }) {

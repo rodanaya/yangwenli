@@ -1490,7 +1490,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <AlertTriangle className="h-4 w-4 text-risk-high" />
                   {lang === 'en' ? 'ASF Audit Findings' : 'Hallazgos de auditoria ASF'}
                 </CardTitle>
               </CardHeader>

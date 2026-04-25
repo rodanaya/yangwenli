@@ -175,7 +175,7 @@ export function StorySectorParadox() {
       </svg>
 
       <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">

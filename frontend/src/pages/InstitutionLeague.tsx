@@ -138,7 +138,7 @@ function useTierByKey() {
 function TrendIcon({ direction }: { direction: string | null }) {
   const { t } = useTranslation('institutionleague')
   if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label={t('trend.improving')} />
-  if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-red-400" aria-label={t('trend.declining')} />
+  if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
 
@@ -384,15 +384,15 @@ function RedFlagCard({
     >
       {/* Top bar: rank + flag */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono font-black tracking-[0.15em] uppercase text-red-400">
+        <span className="text-[10px] font-mono font-black tracking-[0.15em] uppercase text-risk-critical">
           #{rank}
         </span>
-        <Flag className="h-4 w-4 text-red-500 flex-shrink-0" aria-hidden="true" />
+        <Flag className="h-4 w-4 text-risk-critical flex-shrink-0" aria-hidden="true" />
       </div>
 
       {/* Score — red */}
       <div className="flex items-baseline gap-1.5">
-        <span className="text-5xl font-black font-mono tabular-nums leading-none text-red-500">
+        <span className="text-5xl font-black font-mono tabular-nums leading-none text-risk-critical">
           {item.total_score.toFixed(0)}
         </span>
         <span className="text-text-muted text-[11px] font-mono">/100</span>
@@ -534,7 +534,7 @@ function ScoreHistogram({
           style={{ left: `calc(${medianPct}% * 0.9 + 5%)` }}
           aria-hidden="true"
         >
-          <span className="absolute -top-1 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-wide bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded whitespace-nowrap">
+          <span className="absolute -top-1 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-wide bg-amber-500/20 text-risk-high px-1.5 py-0.5 rounded whitespace-nowrap">
             Median {median.toFixed(0)}
           </span>
         </div>
@@ -1024,7 +1024,7 @@ export default function InstitutionLeague() {
         {!hasFilters && redFlagItems.length >= 3 && (
           <section aria-labelledby="redflags-heading" className="space-y-3">
             <div>
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-red-500/90 mb-1 flex items-center gap-2">
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical/90 mb-1 flex items-center gap-2">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}
               </p>
@@ -1140,7 +1140,7 @@ export default function InstitutionLeague() {
           </div>
 
           {isError && (
-            <div className="flex items-center gap-3 p-4 rounded-sm bg-red-950/40 border border-red-800/40 text-red-300 text-sm">
+            <div className="flex items-center gap-3 p-4 rounded-sm bg-risk-critical/10/40 border border-red-800/40 text-risk-critical text-sm">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               {t('error')}
             </div>
@@ -1275,7 +1275,7 @@ export default function InstitutionLeague() {
                             </span>
                           </div>
                           {isWorstPerformer && (
-                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-[0.15em] text-red-500 whitespace-nowrap">
+                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-[0.15em] text-risk-critical whitespace-nowrap">
                               {t('worstPerformerBadge')}
                             </div>
                           )}
@@ -1468,7 +1468,7 @@ function StatCard({
       `}
     >
       <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted">{label}</p>
-      <p className={`text-2xl font-bold font-mono tabular-nums mt-1 ${accent === 'red' ? 'text-red-400' : 'text-text-primary'}`}>
+      <p className={`text-2xl font-bold font-mono tabular-nums mt-1 ${accent === 'red' ? 'text-risk-critical' : 'text-text-primary'}`}>
         {value}
       </p>
       {sub && (

@@ -56,14 +56,14 @@ export function ReportIssueDialog({
       label: t('reportIssue.categories.bug'),
       description: t('reportIssue.categories.bugDesc'),
       Icon: Bug,
-      color: 'text-red-400 border-red-500/30 bg-red-500/5',
+      color: 'text-risk-critical border-red-500/30 bg-red-500/5',
     },
     {
       value: 'wrong_data',
       label: t('reportIssue.categories.wrongData'),
       description: t('reportIssue.categories.wrongDataDesc'),
       Icon: Database,
-      color: 'text-amber-400 border-amber-500/30 bg-amber-500/5',
+      color: 'text-risk-high border-amber-500/30 bg-amber-500/5',
     },
     {
       value: 'data_correction',

@@ -190,7 +190,7 @@ export function ThresholdSplittingChart() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-0.5">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-0.5">
           HALLAZGO
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
