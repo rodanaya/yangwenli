@@ -305,8 +305,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       {!isCollapsed && ariaT1Count > 0 && (
         <div className="mx-2 mb-2 px-3 py-3 rounded-sm border border-border bg-background-card">
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-red-400/80">
+            <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" />
+            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical/90">
               {i18n.language === 'es' ? 'Vivo · Cola T1' : 'Live · T1 Queue'}
             </span>
           </div>
@@ -318,7 +318,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           </p>
           <a
             href="/aria"
-            className="text-[10px] font-mono tracking-[0.12em] uppercase text-red-400/90 hover:text-red-300 transition-colors inline-flex items-center gap-1"
+            className="text-[10px] font-mono tracking-[0.12em] uppercase text-risk-critical/90 hover:text-risk-critical transition-colors inline-flex items-center gap-1"
           >
             {i18n.language === 'es' ? 'Abrir cola' : 'Open queue'}
             <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
