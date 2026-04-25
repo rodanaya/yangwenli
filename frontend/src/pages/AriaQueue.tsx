@@ -49,26 +49,26 @@ type PatternKey = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
 //   amber  = ghost / intermediary (P2, P3, P7) — vendor opacity
 //   zinc   = everything else (P4, P5) — neutral / pattern unknown
 const PATTERN_META: Record<PatternKey, { text: string; bg: string; border: string; dot: string }> = {
-  P1: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
-  P2: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
-  P3: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
-  P4: { text: 'text-text-secondary',  bg: 'bg-background-elevated',  border: 'border-border',  dot: 'bg-background-elevated' },
-  P5: { text: 'text-text-secondary',  bg: 'bg-background-elevated',  border: 'border-border',  dot: 'bg-background-elevated' },
-  P6: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
-  P7: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
+  P1: { text: 'text-risk-critical', bg: 'bg-risk-critical/10', border: 'border-risk-critical/30', dot: 'bg-risk-critical' },
+  P2: { text: 'text-risk-high',     bg: 'bg-risk-high/10',     border: 'border-risk-high/30',     dot: 'bg-risk-high' },
+  P3: { text: 'text-risk-high',     bg: 'bg-risk-high/10',     border: 'border-risk-high/30',     dot: 'bg-risk-high' },
+  P4: { text: 'text-text-secondary',bg: 'bg-background-elevated', border: 'border-border', dot: 'bg-background-elevated' },
+  P5: { text: 'text-text-secondary',bg: 'bg-background-elevated', border: 'border-border', dot: 'bg-background-elevated' },
+  P6: { text: 'text-risk-critical', bg: 'bg-risk-critical/10', border: 'border-risk-critical/30', dot: 'bg-risk-critical' },
+  P7: { text: 'text-risk-high',     bg: 'bg-risk-high/10',     border: 'border-risk-high/30',     dot: 'bg-risk-high' },
 }
 
 // IPS pill color mirrors risk severity bands (critical/high/medium/low).
 const IPS_TEXT_COLOR = (score: number) => {
-  if (score >= 0.75) return 'text-red-400'   // critical
-  if (score >= 0.50) return 'text-amber-400' // high
-  if (score >= 0.30) return 'text-text-secondary'  // medium
-  return 'text-text-muted'                      // low
+  if (score >= 0.75) return 'text-risk-critical'
+  if (score >= 0.50) return 'text-risk-high'
+  if (score >= 0.30) return 'text-text-secondary'
+  return 'text-text-muted'
 }
 
 const IPS_BG_COLOR = (score: number) => {
-  if (score >= 0.75) return 'bg-red-500/10 border-red-500/20'
-  if (score >= 0.50) return 'bg-amber-500/10 border-amber-500/20'
+  if (score >= 0.75) return 'bg-risk-critical/10 border-risk-critical/30'
+  if (score >= 0.50) return 'bg-risk-high/10 border-risk-high/30'
   if (score >= 0.30) return 'bg-background-elevated border-border'
   return 'bg-background-card border-border'
 }
@@ -98,8 +98,8 @@ type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
 // "confirmed" no longer uses green — confirmed-corrupt is a critical finding, not a "safe" state.
 const REVIEW_STATUS_META: Record<ReviewStatus, { className: string }> = {
   pending:   { className: 'bg-background-elevated text-text-secondary border-border' },
-  reviewing: { className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  confirmed: { className: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  reviewing: { className: 'bg-risk-high/10 text-risk-high border-risk-high/30' },
+  confirmed: { className: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30' },
   dismissed: { className: 'bg-background-card text-text-muted border-border' },
 }
 
@@ -359,7 +359,7 @@ function ReviewPopover({
         <p className="text-[10px] text-text-muted text-center">{t('reviewPopover.alreadyInGT')}</p>
       )}
       {(mutation.isError || promoteMutation.isError) && (
-        <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
+        <p className="text-[10px] text-risk-critical">{t('reviewPopover.error')}</p>
       )}
     </div>
   )
@@ -375,9 +375,9 @@ function ReviewPopover({
 // ============================================================================
 
 const TIER_GHOST_META = {
-  confirmed:    { label: 'Confirmed', labelEs: 'Confirmado',    color: '#ef4444', bg: 'bg-red-500/10',    border: 'border-red-500/20',    dot: 'bg-red-500' },
-  multi_signal: { label: 'Multi-Signal', labelEs: 'Multi-Señal', color: '#f59e0b', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
-  behavioral:   { label: 'Behavioral', labelEs: 'Conductual',   color: 'var(--color-text-muted)', bg: 'bg-background-elevated',   border: 'border-border',  dot: 'bg-background-elevated' },
+  confirmed:    { label: 'Confirmed', labelEs: 'Confirmado',    color: 'var(--color-risk-critical)', bg: 'bg-risk-critical/10', border: 'border-risk-critical/30', dot: 'bg-risk-critical' },
+  multi_signal: { label: 'Multi-Signal', labelEs: 'Multi-Señal', color: 'var(--color-risk-high)',     bg: 'bg-risk-high/10',     border: 'border-risk-high/30',     dot: 'bg-risk-high' },
+  behavioral:   { label: 'Behavioral', labelEs: 'Conductual',   color: 'var(--color-text-muted)',    bg: 'bg-background-elevated', border: 'border-border', dot: 'bg-background-elevated' },
 }
 
 const SIG_LABELS: Record<string, { en: string; es: string }> = {
@@ -416,11 +416,11 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
   if (ghostData === undefined && !ghostLoading) return null
 
   return (
-    <div className="mt-4 rounded-sm border border-amber-500/20 bg-amber-500/[0.03]">
+    <div className="mt-4 rounded-sm border border-risk-high/30 bg-risk-high/[0.03]">
       {/* Panel header */}
       <div className="px-4 py-3 border-b border-amber-500/15 flex items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high">
             {isEs ? 'ANÁLISIS DE CONFIANZA · EMPRESAS FANTASMA' : 'GHOST CONFIDENCE ANALYSIS'}
           </p>
           <p className="text-xs text-text-muted mt-0.5">
@@ -518,7 +518,7 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
                             className={cn(
                               'text-[10px] font-mono px-1.5 py-0.5 rounded border',
                               isExternal
-                                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                                ? 'bg-risk-critical/10 border-risk-critical/30 text-risk-critical'
                                 : 'bg-background-elevated border-border text-text-secondary'
                             )}
                           >
@@ -627,7 +627,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               {item.vendor_name}
             </h3>
             {item.new_vendor_risk && (
-              <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+              <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
                 NEW
               </span>
             )}
@@ -973,7 +973,7 @@ export default function AriaPage() {
                 className={cn(
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                   newVendorOnly
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
                     : 'bg-background-card text-text-secondary border-border hover:border-border'
                 )}
               >
