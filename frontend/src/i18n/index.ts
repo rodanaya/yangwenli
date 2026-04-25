@@ -29,8 +29,6 @@ import esAdministrations from './locales/es/administrations.json'
 import enAdministrations from './locales/en/administrations.json'
 import esPrice from './locales/es/price.json'
 import enPrice from './locales/en/price.json'
-import esNetwork from './locales/es/network.json'
-import enNetwork from './locales/en/network.json'
 import esCases from './locales/es/cases.json'
 import enCases from './locales/en/cases.json'
 import esVendors from './locales/es/vendors.json'
@@ -43,8 +41,6 @@ import esTemporal from './locales/es/temporal.json'
 import enTemporal from './locales/en/temporal.json'
 import esWorkspace from './locales/es/workspace.json'
 import enWorkspace from './locales/en/workspace.json'
-import esSubnational from './locales/es/subnational.json'
-import enSubnational from './locales/en/subnational.json'
 import esYearinreview from './locales/es/yearinreview.json'
 import enYearinreview from './locales/en/yearinreview.json'
 import esVendorcompare from './locales/es/vendorcompare.json'
@@ -57,14 +53,8 @@ import esAria from './locales/es/aria.json'
 import enAria from './locales/en/aria.json'
 import esCaptura from './locales/es/captura.json'
 import enCaptura from './locales/en/captura.json'
-import esSeismograph from './locales/es/seismograph.json'
-import enSeismograph from './locales/en/seismograph.json'
-import esTelescope from './locales/es/telescope.json'
-import enTelescope from './locales/en/telescope.json'
 import esJournalists from './locales/es/journalists.json'
 import enJournalists from './locales/en/journalists.json'
-import esScandals from './locales/es/scandals.json'
-import enScandals from './locales/en/scandals.json'
 import esInstitutionleague from './locales/es/institutionleague.json'
 import enInstitutionleague from './locales/en/institutionleague.json'
 import esCollusion from './locales/es/collusion.json'
@@ -93,21 +83,17 @@ i18n
         executive: esExecutive, watchlist: esWatchlist,
         glossary: esGlossary,
         procurement: esProcurement, administrations: esAdministrations, price: esPrice,
-        network: esNetwork, cases: esCases, vendors: esVendors, institutions: esInstitutions,
+        cases: esCases, vendors: esVendors, institutions: esInstitutions,
         methodology: esMethodology,
         temporal: esTemporal,
         workspace: esWorkspace,
-        subnational: esSubnational,
         yearinreview: esYearinreview,
         vendorcompare: esVendorcompare,
         apiexplorer: esApiexplorer,
         reportcard: esReportcard,
         aria: esAria,
         captura: esCaptura,
-        seismograph: esSeismograph,
-        telescope: esTelescope,
         journalists: esJournalists,
-        scandals: esScandals,
         institutionleague: esInstitutionleague,
         collusion: esCollusion,
         settings: esSettings,
@@ -123,21 +109,17 @@ i18n
         executive: enExecutive, watchlist: enWatchlist,
         glossary: enGlossary,
         procurement: enProcurement, administrations: enAdministrations, price: enPrice,
-        network: enNetwork, cases: enCases, vendors: enVendors, institutions: enInstitutions,
+        cases: enCases, vendors: enVendors, institutions: enInstitutions,
         methodology: enMethodology,
         temporal: enTemporal,
         workspace: enWorkspace,
-        subnational: enSubnational,
         yearinreview: enYearinreview,
         vendorcompare: enVendorcompare,
         apiexplorer: enApiexplorer,
         reportcard: enReportcard,
         aria: enAria,
         captura: enCaptura,
-        seismograph: enSeismograph,
-        telescope: enTelescope,
         journalists: enJournalists,
-        scandals: enScandals,
         institutionleague: enInstitutionleague,
         collusion: enCollusion,
         settings: enSettings,
