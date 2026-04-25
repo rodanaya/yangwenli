@@ -325,8 +325,8 @@ function HeroCaptureCallout({
       </div>
       <div className="text-right shrink-0">
         <div
-          className="text-4xl font-bold font-mono tabular-nums leading-none"
-          style={{ color: '#f87171', fontFamily: 'var(--font-family-serif)' }}
+          className="text-3xl sm:text-4xl font-bold font-mono tabular-nums leading-none"
+          style={{ color: 'var(--color-risk-critical)', fontFamily: 'var(--font-family-serif)' }}
           aria-label={`${(row.pct * 100).toFixed(1)}%`}
         >
           {formatPercent(row.pct, 1)}
