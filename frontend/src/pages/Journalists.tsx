@@ -240,7 +240,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         'group relative block w-full text-left',
         'bg-background-card border border-border rounded-sm',
         'overflow-hidden transition-colors duration-200',
-        'hover:border-[rgba(255,255,255,0.14)]'
+        'hover:border-border-hover'
       )}
       aria-label={headline}
     >
@@ -296,7 +296,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
             >
               [{status.label}]
             </span>
-            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-[rgba(255,255,255,0.08)] bg-background-card rounded-sm">
+            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-border bg-background-card rounded-sm">
               {ERA_LABEL[item.era]}
             </span>
           </div>
@@ -310,7 +310,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         </div>
 
         {/* RIGHT — three stats */}
-        <div className="lg:col-span-2 flex flex-col justify-between gap-6 lg:border-l lg:border-[rgba(255,255,255,0.06)] lg:pl-10">
+        <div className="lg:col-span-2 flex flex-col justify-between gap-6 lg:border-l lg:border-border lg:pl-10">
           <div>
             <div
               className="font-mono font-bold text-text-primary leading-none"
@@ -338,7 +338,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
                 Contracts
               </p>
             </div>
-            <div className="border-l-2 border-[rgba(255,255,255,0.12)] pl-3">
+            <div className="border-l-2 border-border-hover pl-3">
               <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
                 {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
               </div>
@@ -372,7 +372,7 @@ function GridCard({ item }: { item: Investigation }) {
       className={cn(
         'group relative flex flex-col',
         'bg-background-card border border-border rounded-sm',
-        'transition-colors duration-200 hover:border-[rgba(255,255,255,0.16)]'
+        'transition-colors duration-200 hover:border-border-hover'
       )}
       aria-label={headline}
     >
@@ -391,7 +391,7 @@ function GridCard({ item }: { item: Investigation }) {
           >
             {FRAUD_LABEL[item.type]}
           </span>
-          <span className="h-px flex-1 bg-[rgba(255,255,255,0.05)]" />
+          <span className="h-px flex-1 bg-background-elevated" />
           <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
             {ERA_LABEL[item.era]}
           </span>
@@ -438,7 +438,7 @@ function GridCard({ item }: { item: Investigation }) {
         </div>
 
         {/* Footer: status pill + read story link */}
-        <div className="mt-auto pt-3 border-t border-[rgba(255,255,255,0.05)] flex items-center justify-between">
+        <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
           <span
             className={cn(
               'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
@@ -559,7 +559,7 @@ function FilterStrip({
               'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em] border transition-colors',
               isActive
                 ? 'bg-background-elevated text-text-primary border-border font-bold'
-                : 'bg-transparent text-text-secondary border-[rgba(255,255,255,0.08)] hover:text-text-primary hover:border-[rgba(255,255,255,0.2)]'
+                : 'bg-transparent text-text-secondary border-border hover:text-text-primary hover:border-border-hover'
             )}
           >
             {f.accent && !isActive && (
@@ -606,7 +606,7 @@ function AriaLiveTicker() {
   return (
     <section
       aria-label={t('ticker.aria', { defaultValue: 'Live investigations' })}
-      className="mt-16 pt-8 border-t border-[rgba(255,255,255,0.07)]"
+      className="mt-16 pt-8 border-t border-border"
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5">
@@ -619,7 +619,7 @@ function AriaLiveTicker() {
           {total > 0 ? total.toLocaleString('en-US') : items.length}{' '}
           {t('ticker.label', { defaultValue: 'vendors under active investigation' })}
         </span>
-        <span className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+        <span className="h-px flex-1 bg-background-elevated" />
         <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
           ARIA · TIER 1
         </span>
@@ -641,7 +641,7 @@ function AriaLiveTicker() {
               className={cn(
                 'group flex items-center justify-between gap-3',
                 'px-3 py-2.5 bg-background-card border border-border',
-                'rounded-sm hover:border-[rgba(255,255,255,0.15)] transition-colors'
+                'rounded-sm hover:border-border-hover transition-colors'
               )}
             >
               <span
@@ -750,7 +750,7 @@ export default function Journalists() {
             MASTHEAD
         ================================================================= */}
         <header className="pt-14 sm:pt-20 pb-10">
-          <div className="flex items-center gap-3 mb-6 pb-3 border-b border-[rgba(255,255,255,0.07)]">
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">
@@ -866,7 +866,7 @@ export default function Journalists() {
             <GridCard key={item.slug} item={item} />
           ))}
           {filtered.length === 0 && (
-            <div className="col-span-full py-16 text-center border border-dashed border-[rgba(255,255,255,0.08)] rounded-sm">
+            <div className="col-span-full py-16 text-center border border-dashed border-border rounded-sm">
               <p className="text-sm font-mono text-text-muted">
                 {t('grid.empty', {
                   defaultValue: 'No investigations match this filter.',
@@ -884,7 +884,7 @@ export default function Journalists() {
         {/* =================================================================
             FOOTER
         ================================================================= */}
-        <footer className="mt-16 pt-8 pb-16 border-t border-[rgba(255,255,255,0.07)]">
+        <footer className="mt-16 pt-8 pb-16 border-t border-border">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
             <span>
               Source:{' '}

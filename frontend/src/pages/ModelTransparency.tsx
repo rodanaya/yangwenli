@@ -140,7 +140,7 @@ function StatCard({ value, label, sub }: { value: string; label: string; sub?: s
 
 function SectionKicker({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+    <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-border">
       <span
         className="h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: accent ? ACCENT : '#52525b' }}
@@ -299,7 +299,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           headline="Three features do most of the work"
           deck="Nine active coefficients in the global model; these three carry the largest magnitudes."
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[rgba(255,255,255,0.08)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-border">
           {[
             {
               eyebrow: 'Strongest positive',
@@ -327,8 +327,8 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
               key={sig.name}
               className="px-5 py-6"
               style={{
-                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : undefined,
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                borderRight: i < 2 ? '1px solid var(--color-border)' : undefined,
+                borderBottom: '1px solid var(--color-border)',
                 borderTop: `2px solid ${sig.color}`,
               }}
             >
@@ -384,9 +384,9 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         />
 
         {/* Divergent-bar chart, hairline rows */}
-        <div className="border-y border-[rgba(255,255,255,0.08)]">
+        <div className="border-y border-border">
           {/* Header row */}
-          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-[rgba(255,255,255,0.06)]">
+          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border">
             <span>Feature</span>
             <span className="text-center">Protective ← 0 → Risk-increasing</span>
             <span className="text-right font-mono tabular-nums w-20">β</span>
@@ -398,9 +398,9 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
             return (
               <div
                 key={c.factor}
-                className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 items-center py-3.5 px-1 group hover:bg-[rgba(255,255,255,0.015)] transition-colors"
+                className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 items-center py-3.5 px-1 group hover:bg-background-elevated transition-colors"
                 style={{
-                  borderBottom: i < liveCoefficients.length - 1 ? '1px solid rgba(255,255,255,0.04)' : undefined,
+                  borderBottom: i < liveCoefficients.length - 1 ? '1px solid var(--color-border)' : undefined,
                 }}
               >
                 <div>
@@ -424,7 +424,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                     return (
                       <svg viewBox={`0 0 ${totalW} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
                         {/* Zero line */}
-                        <line x1={totalW / 2} y1={0} x2={totalW / 2} y2={8} stroke="rgba(255,255,255,0.2)" strokeWidth={0.8} />
+                        <line x1={totalW / 2} y1={0} x2={totalW / 2} y2={8} stroke="var(--color-border-hover)" strokeWidth={0.8} />
                         {/* Left side (negative) */}
                         {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
                           const cx = totalW / 2 - (i * DG + DR) - 1
@@ -521,8 +521,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         </div>
 
         {/* Editorial hairline table */}
-        <div className="border-y border-[rgba(255,255,255,0.08)]">
-          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-[rgba(255,255,255,0.06)]">
+        <div className="border-y border-border">
+          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border">
             <span>Level</span>
             <span>Threshold</span>
             <span className="text-right">Contracts</span>
@@ -531,9 +531,9 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           {RISK_DISTRIBUTION.map((row, i) => (
             <div
               key={row.level}
-              className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 items-center py-3.5 px-1 hover:bg-[rgba(255,255,255,0.015)] transition-colors"
+              className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 items-center py-3.5 px-1 hover:bg-background-elevated transition-colors"
               style={{
-                borderBottom: i < RISK_DISTRIBUTION.length - 1 ? '1px solid rgba(255,255,255,0.04)' : undefined,
+                borderBottom: i < RISK_DISTRIBUTION.length - 1 ? '1px solid var(--color-border)' : undefined,
               }}
             >
               <div className="flex items-center gap-3">
@@ -581,7 +581,7 @@ function AuditTrailTab() {
           {/* Vertical rail */}
           <div
             className="absolute top-2 bottom-2 left-[7px] w-px"
-            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+            style={{ backgroundColor: 'var(--color-background-elevated)' }}
           />
 
           {VERSION_HISTORY.map((entry, i) => {
@@ -629,12 +629,12 @@ function AuditTrailTab() {
                     </span>
                   )}
                   {entry.status === 'preserved' && (
-                    <span className="px-2 py-0.5 text-text-secondary border border-[rgba(255,255,255,0.12)]">
+                    <span className="px-2 py-0.5 text-text-secondary border border-border-hover">
                       Preserved
                     </span>
                   )}
                   {entry.status === 'superseded' && (
-                    <span className="px-2 py-0.5 text-text-muted border border-[rgba(255,255,255,0.06)]">
+                    <span className="px-2 py-0.5 text-text-muted border border-border">
                       Superseded
                     </span>
                   )}
@@ -809,8 +809,8 @@ export default function ModelTransparency() {
       {/* ============================================================== */}
       {/* Editorial hero                                                  */}
       {/* ============================================================== */}
-      <header className="pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+      <header className="pb-8" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-border">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             <span className="text-text-secondary">RUBLI</span>
