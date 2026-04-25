@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DotBar } from '@/components/ui/DotBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
@@ -1264,22 +1265,14 @@ function WatchlistRow({
                   <span className="text-xs text-text-secondary w-36 truncate capitalize font-mono">
                     {f.factor.replace(/_/g, ' ')}
                   </span>
-                  {(() => {
-                    const N = 24, DR = 2, DG = 5
-                    const filled = Math.max(1, Math.round((Math.min(100, f.pct) / 100) * N))
-                    return (
-                      <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1 max-w-[200px]" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
-                        {Array.from({ length: N }).map((_, k) => (
-                          <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                            fill={k < filled ? '#fb923c' : '#2d2926'}
-                            stroke={k < filled ? undefined : '#3d3734'}
-                            strokeWidth={k < filled ? 0 : 0.5}
-                            fillOpacity={k < filled ? 0.7 : 1}
-                          />
-                        ))}
-                      </svg>
-                    )
-                  })()}
+                  <div className="flex-1 max-w-[200px]">
+                    <DotBar
+                      value={Math.min(100, f.pct)}
+                      max={100}
+                      color="var(--color-risk-high)"
+                      ariaLabel={`${f.factor.replace(/_/g, ' ')}: ${f.pct.toFixed(0)} percent`}
+                    />
+                  </div>
                   <span className="text-xs tabular-nums text-text-muted font-mono">
                     {f.pct.toFixed(0)}%
                   </span>

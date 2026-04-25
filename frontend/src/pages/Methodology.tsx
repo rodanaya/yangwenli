@@ -337,7 +337,14 @@ const CoefficientChart = memo(function CoefficientChart() {
   const chartData = useMemo(() => V6_COEFFICIENTS.map((c) => ({
     name: t(`featureNames.${c.nameKey}`),
     coeff: c.coeff,
-    fill: c.coeff > 0 ? '#f59e0b' : c.coeff < 0 ? '#52525b' : '#64748b',
+    // Tokenized: positive coefficient = risk-increasing (amber); negative =
+    // protective (neutral text-muted); zero = subtle. Was 3 hex constants.
+    fill:
+      c.coeff > 0
+        ? 'var(--color-risk-high)'
+        : c.coeff < 0
+          ? 'var(--color-text-secondary)'
+          : 'var(--color-text-muted)',
   })), [t])
 
   // Scale: coefficients range from -0.6 to +1.3; we use a symmetric 0-based axis.
@@ -359,7 +366,7 @@ const CoefficientChart = memo(function CoefficientChart() {
           x2={MD_LABEL_W + ZERO_DOT * MD_DOT_GAP + MD_DOT_R}
           y1={MD_TOP_PAD - 2}
           y2={MD_TOP_PAD + chartData.length * MD_ROW_H}
-          stroke="#52525b"
+          stroke="var(--color-text-muted)"
           strokeDasharray="3 3"
           strokeWidth={0.6}
         />
