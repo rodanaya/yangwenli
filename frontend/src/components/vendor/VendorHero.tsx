@@ -116,19 +116,24 @@ export function VendorHero({
               <button
                 type="button"
                 onClick={() => setVariantsOpen((o) => !o)}
-                className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary transition-colors"
+                aria-expanded={variantsOpen}
+                aria-controls="vendor-name-variants"
+                className="flex items-center gap-1 text-[11px] text-text-muted hover:text-text-secondary transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded-sm"
               >
                 {variantsOpen ? (
-                  <ChevronUp className="h-3 w-3" />
+                  <ChevronUp className="h-3 w-3" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="h-3 w-3" />
+                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
                 )}
                 {isEs
                   ? `${nameVariants.length} variante(s) del nombre`
                   : `${nameVariants.length} name variant(s)`}
               </button>
               {variantsOpen && (
-                <ul className="mt-1.5 ml-4 text-[11px] text-text-secondary space-y-0.5 list-disc">
+                <ul
+                  id="vendor-name-variants"
+                  className="mt-1.5 ml-4 text-[11px] text-text-secondary space-y-0.5 list-disc"
+                >
                   {nameVariants.slice(0, 8).map((v, i) => (
                     <li key={i}>{v.variant_name}</li>
                   ))}

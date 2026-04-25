@@ -184,7 +184,12 @@ export function VendorActivityTab({
           </span>
         </div>
         {contractsLoading ? (
-          <div className="space-y-2">
+          <div
+            className="space-y-2"
+            role="status"
+            aria-live="polite"
+            aria-label={isEs ? 'Cargando contratos' : 'Loading contracts'}
+          >
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-12 w-full rounded-sm" />
             ))}
@@ -217,7 +222,20 @@ export function VendorActivityTab({
                     <tr
                       key={c.id}
                       onClick={() => onContractClick?.(c)}
-                      className="border-t border-border/30 hover:bg-background-elevated/50 cursor-pointer"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          onContractClick?.(c)
+                        }
+                      }}
+                      tabIndex={onContractClick ? 0 : -1}
+                      role={onContractClick ? 'button' : undefined}
+                      aria-label={
+                        onContractClick
+                          ? `${isEs ? 'Ver detalle del contrato' : 'View contract'}: ${c.title ?? c.id}`
+                          : undefined
+                      }
+                      className="border-t border-border/30 hover:bg-background-elevated/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]"
                     >
                       <td className="px-3 py-2 max-w-[280px] truncate text-text-primary">
                         {c.title ?? '—'}
@@ -252,16 +270,18 @@ export function VendorActivityTab({
                     size="sm"
                     disabled={contractsPage <= 1}
                     onClick={() => onContractsPageChange(contractsPage - 1)}
+                    aria-label={isEs ? 'Página anterior' : 'Previous page'}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     disabled={contractsPage >= totalPages}
                     onClick={() => onContractsPageChange(contractsPage + 1)}
+                    aria-label={isEs ? 'Página siguiente' : 'Next page'}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
