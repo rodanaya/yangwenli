@@ -13,6 +13,7 @@ import {
   type RadarSeries,
 } from '@/components/charts/editorial'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { COMPARE_HEX } from '@/lib/compare-colors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
@@ -639,14 +640,14 @@ function VendorPicker() {
           selectedVendor={selectedA}
           onSelect={setSelectedA}
           onClear={() => setSelectedA(null)}
-          color="#06b6d4"
+          color={COMPARE_HEX.a}
         />
         <VendorSearchInput
           label={t('picker.labelB')}
           selectedVendor={selectedB}
           onSelect={setSelectedB}
           onClear={() => setSelectedB(null)}
-          color="#a78bfa"
+          color={COMPARE_HEX.b}
         />
       </div>
 

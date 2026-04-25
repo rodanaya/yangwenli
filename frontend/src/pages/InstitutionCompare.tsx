@@ -30,8 +30,11 @@ import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
 // Constants
 // ============================================================================
 
-const COLOR_A = '#06b6d4' // cyan
-const COLOR_B = '#a78bfa' // violet
+// Comparison palette imported from canonical lib — was a cyan/violet hex
+// pair shared with VendorCompare with no source of truth.
+import { COMPARE_HEX } from '@/lib/compare-colors'
+const COLOR_A = COMPARE_HEX.a
+const COLOR_B = COMPARE_HEX.b
 
 const HHI_COLORS: Record<string, string> = {
   captura: '#dc2626',
