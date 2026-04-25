@@ -318,13 +318,13 @@ function ChampionCard({
       className={`relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
         border ${isLeader
           ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-background-elevated hover:border-yellow-400/70'
-          : 'border-emerald-700/30 bg-gradient-to-b from-emerald-950/20 to-background-elevated hover:border-emerald-600/50'
+          : 'border-border-hover bg-gradient-to-b from-background-elevated to-background-elevated hover:border-border-hover'
         }`}
       aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
     >
       {/* Top bar: rank + trophy for #1 */}
       <div className="flex items-center justify-between">
-        <span className={`text-[10px] font-mono font-black tracking-[0.15em] uppercase ${isLeader ? 'text-yellow-400' : 'text-emerald-400'}`}>
+        <span className={`text-[10px] font-mono font-black tracking-[0.15em] uppercase ${isLeader ? 'text-yellow-400' : 'text-text-muted'}`}>
           #{rank}
         </span>
         {isLeader ? (
@@ -992,7 +992,7 @@ export default function InstitutionLeague() {
           <section aria-labelledby="champions-heading" className="space-y-3">
             <div className="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-emerald-500/80 mb-1 flex items-center gap-2">
+                <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted/80 mb-1 flex items-center gap-2">
                   <Trophy className="h-3 w-3" aria-hidden="true" />
                   {t('champions.kicker')}
                 </p>

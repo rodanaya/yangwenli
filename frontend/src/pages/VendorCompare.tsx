@@ -436,7 +436,7 @@ function ComparisonStatCards({
         const aStr = vA !== null ? m.format(vA) : '--'
         const bStr = vB !== null ? m.format(vB) : '--'
 
-        // Cream-mode tokens — was border-red-500 / border-emerald-500
+        // Cream-mode tokens — was border-red-500 / border-text-muted
         // (high-saturation greens broke bible §3.10 'no green for safety').
         let aColor = 'border-border'
         let bColor = 'border-border'

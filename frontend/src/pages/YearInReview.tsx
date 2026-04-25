@@ -505,20 +505,20 @@ function RiskEvolution({
       <div
         className={cn(
           'mt-4 rounded-sm border px-4 py-3 flex items-start gap-3',
-          isAboveOECD ? 'border-red-500/30 bg-red-500/5' : 'border-emerald-500/30 bg-emerald-500/5',
+          isAboveOECD ? 'border-red-500/30 bg-red-500/5' : 'border-border-hover bg-background-elevated',
         )}
       >
         <div
           className={cn(
             'h-2 w-2 rounded-full flex-shrink-0 mt-1.5',
-            isAboveOECD ? 'bg-red-500 animate-pulse' : 'bg-emerald-500',
+            isAboveOECD ? 'bg-red-500 animate-pulse' : 'bg-text-muted',
           )}
         />
         <div>
           <p
             className={cn(
               'text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
-              isAboveOECD ? 'text-red-400' : 'text-emerald-400',
+              isAboveOECD ? 'text-red-400' : 'text-text-muted',
             )}
           >
             {isAboveOECD ? t('riskEvolution.aboveOECD') : t('riskEvolution.belowOECD')}
@@ -1228,7 +1228,7 @@ export default function YearInReview() {
                   annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
                   color={
                     spendingChangePct == null ? 'border-border'
-                      : spendingChangePct > 0 ? 'border-emerald-500'
+                      : spendingChangePct > 0 ? 'border-text-muted'
                         : 'border-red-500'
                   }
                 />

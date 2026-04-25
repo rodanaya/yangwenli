@@ -520,7 +520,7 @@ function InsightCard({
   const styles = {
     critical: { border: 'border-risk-critical/30 bg-risk-critical/5', text: 'text-risk-critical' },
     warning:  { border: 'border-risk-high/30 bg-risk-high/5', text: 'text-risk-high' },
-    positive: { border: 'border-emerald-500/30 bg-emerald-500/5', text: 'text-emerald-400' },
+    positive: { border: 'border-border-hover bg-background-elevated', text: 'text-text-muted' },
     info:     { border: 'border-cyan-500/30 bg-cyan-500/5', text: 'text-cyan-400' },
   }[type]
 
@@ -562,7 +562,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
   const singleBidRate = data.indicators?.single_bid_rate?.value ?? null
 
   const gradeColor =
-    grade === 'A' || grade === 'A+' ? 'text-emerald-400' :
+    grade === 'A' || grade === 'A+' ? 'text-text-muted' :
     grade.startsWith('B') ? 'text-lime-400' :
     grade.startsWith('C') ? 'text-risk-high' :
     grade.startsWith('D') ? 'text-orange-400' :

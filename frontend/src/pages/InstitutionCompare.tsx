@@ -446,7 +446,7 @@ function MetricTable({
                   const pctStr = vA !== 0 ? ` (${sign}${((d / Math.abs(vA)) * 100).toFixed(0)}%)` : ''
                   const DeltaIcon = d > 0 ? TrendingUp : d < 0 ? TrendingDown : Minus
                   deltaEl = (
-                    <td className={cn('px-4 py-3 text-center text-xs font-mono', worse ? 'text-red-400' : 'text-emerald-400')}>
+                    <td className={cn('px-4 py-3 text-center text-xs font-mono', worse ? 'text-red-400' : 'text-text-muted')}>
                       <span className="inline-flex items-center gap-1">
                         <DeltaIcon className="h-3 w-3" />
                         {Math.abs(d) >= 1000 ? formatCompactMXN(d) : `${sign}${d.toFixed(1)}`}

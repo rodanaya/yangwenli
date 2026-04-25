@@ -1720,11 +1720,11 @@ export default function PriceIntelligence() {
           </div>
         ) : summary && summary.total_outliers === 0 ? (
           // --- HEALTHY SYSTEM: no anomalies detected at current threshold -----
-          <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 max-w-3xl">
+          <div className="rounded-sm border border-border-hover bg-background-elevated p-6 space-y-4 max-w-3xl">
             <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <CheckCircle2 className="w-6 h-6 text-text-muted flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-emerald-400 mb-1">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('healthySystemLabel')}
                 </p>
                 <h2
