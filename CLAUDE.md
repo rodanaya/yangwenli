@@ -296,4 +296,44 @@ Unified 5-registry scraper feeding ARIA Module 5. Run `python -m scripts.centine
 
 ---
 
+## Frontend Foundations (post-Apr 2026 redesign marathon)
+
+The 53-commit Spring 2026 redesign ("ship-by-Monday") consolidated the
+40-page frontend onto a small set of canonical primitives. Future work
+should consume these instead of reinventing.
+
+### Shared lib modules
+- `frontend/src/lib/tiers.ts` — 5-tier transparency system (Excelente / Satisfactorio / Regular / Deficiente / Critico) with hex + tailwind classes. Used by `InstitutionLeague`, `InstitutionScorecards`, all entity scorecards.
+- `frontend/src/lib/administrations.ts` — Mexican federal terms (Fox / Calderón / Peña Nieto / AMLO / Sheinbaum) with year boundaries. Replaces 4 duplicate definitions.
+- `frontend/src/lib/compare-colors.ts` — `COMPARE_HEX.{a,b}` for A-vs-B comparison pages. Slot A = editorial gold, B = OECD cyan. Bible §3.10-compliant (no green for safety).
+- `frontend/src/lib/constants.ts` — `RISK_COLORS`, `SECTOR_COLORS`, `RISK_THRESHOLDS`, `getRiskLevelFromScore`. **Always import from here**; do not redefine locally.
+
+### Canonical UI primitives
+- `<DotBar value max color>` — fixed N=22 dot strip. Replaced 11+ inline reimplementations across entity profiles, AriaQueue, ReportCard, etc.
+- `<DotBarRow label readout value max>` — labeled variant.
+- `<StatRow stats columns>` — flat label+value grid (no card chrome). Replaces the "card-per-stat" pattern.
+- `<PriorityAlert flags>` — single alert that takes a sorted flag list and renders highest-severity as a headline + rest as pills. Replaced the 5 stacked alert banners on VendorProfile.
+- `<SortHeaderTh field activeField order onSort>` — canonical sortable table-header cell with aria-sort.
+
+### Vendor dossier composition
+- `frontend/src/components/vendor/{VendorHero, VendorEvidenceTab, VendorActivityTab, VendorNetworkTab}.tsx` — VendorProfile rewrite (4,733 → 330 LOC composition).
+- `frontend/src/components/vendor/buildFlags.ts` — pure function `buildVendorFlags(input): PriorityFlag[]` consolidating GT / EFOS / SFP / ARIA / co-bidding signals.
+- `frontend/src/hooks/useVendorData.ts` — consolidates 18 useQuery calls with tab-deferred fetches.
+
+### Auth shell
+- `frontend/src/components/auth/{AuthShell, AuthField}.tsx` — shared masthead + form-input primitives for `LoginPage` + `RegisterPage`.
+
+### CI gate
+- `frontend/scripts/lint-tokens.mjs` + `npm run lint:tokens` — fails if any forbidden pattern (`text-red-400`, `bg-emerald-*`, `#2d2926`, etc) re-enters `src/pages` or `src/components`. Run before commit.
+
+### Ship reports archive
+The marathon committee reports live under `.claude/marathon/`:
+- `SHIP_CHECKLIST.md` — 6 quality control bands (B1 Build · B2 Tokens · B3 Integrity · B4 A11y · B5 i18n · B6 Visual)
+- `SHIP_REPORT.md` — final sign-off + 10-URL demo path
+- `ship-signoff-matrix.md` — 40 pages × 6 bands
+- `ship-audit-{visual,functional,integrity,a11y,perf}.md` — original committee findings
+- `ship-audit-{visual,integrity,a11y}-2nd-pass.md` — independent verification
+
+---
+
 *RUBLI — open-source procurement intelligence platform for Mexican federal contracting data.*
