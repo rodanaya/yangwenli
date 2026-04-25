@@ -1187,7 +1187,7 @@ function ReportCard() {
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
   // Ground truth cases count -- institution-scoped windowed cases (v6.5 model)
-  const GT_CASES_COUNT = 748
+  const GT_CASES_COUNT = 1363
 
   return (
     <main className="min-h-screen bg-background" id="main-content">

@@ -1116,7 +1116,7 @@ function CaseBody({
               <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
                 Across {riskDist.totalVendors} {riskDist.totalVendors === 1 ? 'vendor' : 'vendors'}{' '}
                 with COMPRANET contracts. The v0.6.5 model uses 9 features — price volatility,
-                vendor concentration, institution diversity — calibrated against 748 confirmed
+                vendor concentration, institution diversity — calibrated against 1,363 confirmed
                 corruption cases.
                 {avgRiskScore < 0.3 && (
                   <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 11 }}>

@@ -211,7 +211,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             sub="All v0.6.5-tagged records, 2002–2025."
           />
           <StatCard
-            value="748"
+            value="1,363"
             label="Ground-truth cases"
             sub="603 vendors · 288K scoped contracts."
           />
@@ -223,7 +223,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
         <SectionHeadline
           eyebrow="How the model works"
           headline="Similarity to documented corruption — not literal probability"
-          deck="A calibrated logistic regression trained on 748 ground-truth cases produces a 0–1 score for every federal procurement contract since 2002."
+          deck="A calibrated logistic regression trained on 1,363 ground-truth cases produces a 0–1 score for every federal procurement contract since 2002."
         />
 
         <div className="max-w-3xl space-y-5">
@@ -248,7 +248,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
               R
             </span>
             UBLI scores every Mexican federal procurement contract on a 0–1 scale
-            by comparing it against patterns from 748 documented corruption cases — ghost
+            by comparing it against patterns from 1,363 documented corruption cases — ghost
             companies, bid rigging, captured institutions, inflated contracts.
           </p>
           <p className="text-[0.95rem] leading-[1.7] text-text-secondary" style={{ fontFamily: 'var(--font-family-serif)' }}>
@@ -795,9 +795,9 @@ export default function ModelTransparency() {
     <EditorialPageShell
       kicker="MODEL TRANSPARENCY · GROUND TRUTH"
       headline="The cases that teach the model what corruption looks like."
-      paragraph="The RUBLI risk model is trained on 748 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
+      paragraph="The RUBLI risk model is trained on 1,363 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
       stats={[
-        { value: '748', label: 'GT cases' },
+        { value: '1,363', label: 'GT cases' },
         { value: '603', label: 'Vendors' },
         { value: '~288K', label: 'Contracts' },
         { value: 'v0.6.5', label: 'Active model' },

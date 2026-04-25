@@ -670,12 +670,12 @@ export function Methodology() {
     <EditorialPageShell
       kicker="METHODOLOGY · TRANSPARENCY REPORT"
       headline="How we score corruption risk."
-      paragraph="RUBLI v0.6.5 uses a logistic regression model trained on 748 documented corruption cases to score 3.1 million procurement contracts. This page explains the methodology, limitations, and how to interpret scores for investigative purposes."
+      paragraph="RUBLI v0.6.5 uses a logistic regression model trained on 1,363 documented corruption cases to score 3.1 million procurement contracts. This page explains the methodology, limitations, and how to interpret scores for investigative purposes."
       stats={[
         { value: 'v0.6.5', label: 'Model version' },
         { value: '0.828', label: 'Test AUC' },
         { value: '13.49%', label: 'High-risk rate' },
-        { value: '748', label: 'Ground truth cases' },
+        { value: '1,363', label: 'Ground truth cases' },
       ]}
     >
     <Act number="I" label="THE MODEL">
@@ -741,7 +741,7 @@ export function Methodology() {
             source="OECD benchmark: 2–15%"
           />
           <PullQuote
-            stat="748"
+            stat="1,363"
             label="Ground-truth cases"
             source="603 vendors · ~288K contracts"
           />
@@ -809,7 +809,7 @@ export function Methodology() {
                   <ul className="text-xs text-text-muted space-y-0.5">
                     <li>· SAT EFOS Definitivo list (13,960 vendors)</li>
                     <li>· SFP sanctions registry (544 vendors)</li>
-                    <li>· Ground truth cases (748 documented investigations)</li>
+                    <li>· Ground truth cases (1,363 documented investigations)</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-[#ef4444]/15">
