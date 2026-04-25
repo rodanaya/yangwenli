@@ -436,13 +436,14 @@ function ComparisonStatCards({
         const aStr = vA !== null ? m.format(vA) : '--'
         const bStr = vB !== null ? m.format(vB) : '--'
 
-        // Determine which is "worse"
+        // Cream-mode tokens — was border-red-500 / border-emerald-500
+        // (high-saturation greens broke bible §3.10 'no green for safety').
         let aColor = 'border-border'
         let bColor = 'border-border'
         if (vA !== null && vB !== null && Math.abs(vA - vB) > 0.001) {
           const aIsWorse = m.higherIsBad ? vA > vB : vA < vB
-          aColor = aIsWorse ? 'border-red-500' : 'border-emerald-500'
-          bColor = aIsWorse ? 'border-emerald-500' : 'border-red-500'
+          aColor = aIsWorse ? 'border-risk-critical' : 'border-text-muted'
+          bColor = aIsWorse ? 'border-text-muted' : 'border-risk-critical'
         }
 
         return (
@@ -494,7 +495,8 @@ function DeltaCell({ valueA, valueB, higherIsBad }: { valueA: number | null; val
     <td
       className={cn(
         'px-3 py-2 text-center text-xs font-mono',
-        bIsWorse ? 'text-red-400' : 'text-emerald-400'
+        // No green-for-safe per bible §3.10 — only flag the worse side.
+        bIsWorse ? 'text-risk-critical' : 'text-text-muted'
       )}
       aria-label={`Delta: ${sign}${delta.toFixed(1)} ${pct}`}
     >
@@ -525,10 +527,16 @@ function MetricTable({
         <thead>
           <tr className="border-b border-border bg-background/60">
             <th className="px-3 py-2 text-left text-xs font-semibold text-text-muted">{t('metricColLabel')}</th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-cyan-400">
+            <th
+              className="px-3 py-2 text-center text-xs font-semibold"
+              style={{ color: COMPARE_HEX.a }}
+            >
               {aName.slice(0, 22)}
             </th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-violet-400">
+            <th
+              className="px-3 py-2 text-center text-xs font-semibold"
+              style={{ color: COMPARE_HEX.b }}
+            >
               {bName.slice(0, 22)}
             </th>
             <th className="px-3 py-2 text-center text-xs font-semibold text-text-muted">
