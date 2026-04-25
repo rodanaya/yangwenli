@@ -19,12 +19,10 @@ import {
   Plus,
   Loader2,
   CheckCircle,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
 } from 'lucide-react'
 import type { ExplorerFilters } from '@/hooks/useExplorerFilters'
 import type { DossierSummary } from '@/components/AddToDossierButton'
+import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 
 type SortField = 'avg_risk_score' | 'total_contracts' | 'total_value_mxn' | 'direct_award_pct'
 type SortOrder = 'asc' | 'desc'
@@ -583,18 +581,9 @@ function InlineDossierTrigger({
   )
 }
 
-// =============================================================================
-// Sortable column header
-// =============================================================================
-
-function SortHeader({
-  field,
-  label,
-  sortField,
-  sortOrder,
-  onSort,
-  className = '',
-}: {
+// SortHeader extracted to components/ui/SortHeaderTh — local wrapper preserved
+// to keep the existing call-site shape (sortField/sortOrder vs activeField/order).
+function SortHeader(props: {
   field: SortField
   label: string
   sortField: SortField
@@ -602,23 +591,15 @@ function SortHeader({
   onSort: (field: SortField) => void
   className?: string
 }) {
-  const isActive = sortField === field
   return (
-    <th className={`font-medium cursor-pointer select-none ${className}`}>
-      <button
-        onClick={() => onSort(field)}
-        className="inline-flex items-center gap-0.5 hover:text-text-primary transition-colors uppercase tracking-wider text-[11px]"
-      >
-        {label}
-        {isActive ? (
-          sortOrder === 'desc'
-            ? <ArrowDown className="h-2.5 w-2.5 ml-0.5" />
-            : <ArrowUp className="h-2.5 w-2.5 ml-0.5" />
-        ) : (
-          <ArrowUpDown className="h-2.5 w-2.5 ml-0.5 opacity-30" />
-        )}
-      </button>
-    </th>
+    <SortHeaderTh
+      field={props.field}
+      label={props.label}
+      activeField={props.sortField}
+      order={props.sortOrder}
+      onSort={props.onSort}
+      className={props.className}
+    />
   )
 }
 
