@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { RISK_COLORS } from '@/lib/constants'
 import { analysisApi, exportApi, contractApi, sectorApi, statsApi } from '@/api/client'
 import type { GradeDistribution, StructureQuality, FieldCompleteness, KeyIssue } from '@/api/client'
 import {
@@ -74,11 +75,14 @@ const GRADE_COLORS: Record<string, string> = {
   'F-': '#fca5a5',
 }
 
+// Routed through canonical RISK_COLORS — was a 4-hex local map duplicating
+// the platform palette and contradicting the bible §3.10 'no green for low'
+// rule (#4ade80 was a green low-severity that crept in here).
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#f87171',
-  high: '#fb923c',
-  medium: '#fbbf24',
-  low: '#4ade80',
+  critical: RISK_COLORS.critical,
+  high: RISK_COLORS.high,
+  medium: RISK_COLORS.medium,
+  low: RISK_COLORS.low,
 }
 
 const TABS = [
@@ -572,10 +576,12 @@ function DataQualityTab() {
         <CardContent>
           <div className="space-y-3">
             {[
-              { structure: 'A', years: '2002-2010', rfc: '0.1%', quality: 'Lowest', color: '#fb923c', desc: 'Legacy format, minimal RFC coverage, risk scores may be underestimated' },
-              { structure: 'B', years: '2010-2017', rfc: '15.7%', quality: 'Better', color: '#fbbf24', desc: 'Improved coverage, UPPERCASE text, 72.2% direct award flags' },
-              { structure: 'C', years: '2018-2022', rfc: '30.3%', quality: 'Good', color: '#60a5fa', desc: 'Mixed case text, 78.4% direct award flags, better field completeness' },
-              { structure: 'D', years: '2023-2025', rfc: '47.4%', quality: 'Best', color: '#4ade80', desc: '100% Partida codes, highest RFC coverage, most reliable risk scoring' },
+              // Tokenized — was 4 raw hex constants. Quality progresses from
+              // risk-high (oldest/worst) → OECD cyan (newest/best). No green.
+              { structure: 'A', years: '2002-2010', rfc: '0.1%', quality: 'Lowest', color: 'var(--color-risk-high)', desc: 'Legacy format, minimal RFC coverage, risk scores may be underestimated' },
+              { structure: 'B', years: '2010-2017', rfc: '15.7%', quality: 'Better', color: 'var(--color-risk-medium)', desc: 'Improved coverage, UPPERCASE text, 72.2% direct award flags' },
+              { structure: 'C', years: '2018-2022', rfc: '30.3%', quality: 'Good', color: 'var(--color-accent-data)', desc: 'Mixed case text, 78.4% direct award flags, better field completeness' },
+              { structure: 'D', years: '2023-2025', rfc: '47.4%', quality: 'Best', color: 'var(--color-oecd)', desc: '100% Partida codes, highest RFC coverage, most reliable risk scoring' },
             ].map(s => (
               <div key={s.structure} className="flex items-start gap-3 p-3 rounded-sm" style={{ backgroundColor: `${s.color}08` }}>
                 <div className="flex h-8 w-8 items-center justify-center rounded-sm flex-shrink-0 font-bold text-sm" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
@@ -1008,9 +1014,10 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
     // Color by structure letter (A=red lowest quality … D=green best)
     const colorByStructure: Record<string, string> = {
       A: '#f87171',
-      B: '#fb923c',
-      C: '#fbbf24',
-      D: '#4ade80',
+      // Same structure-quality progression as above; no green low.
+      B: 'var(--color-risk-high)',
+      C: 'var(--color-risk-medium)',
+      D: 'var(--color-oecd)',
     }
     return {
       ...d,
@@ -1109,9 +1116,10 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
             {(() => {
               const N = 24, DR = 2, DG = 5
               const filled = Math.max(1, Math.round((field.fill_rate / 100) * N))
-              const color = field.fill_rate >= 90 ? '#4ade80'
-                : field.fill_rate >= 70 ? '#60a5fa'
-                : field.fill_rate >= 50 ? '#fbbf24'
+              // No green low — best fill bucket = OECD cyan. Tokens.
+              const color = field.fill_rate >= 90 ? 'var(--color-oecd)'
+                : field.fill_rate >= 70 ? 'var(--color-accent-data)'
+                : field.fill_rate >= 50 ? 'var(--color-risk-medium)'
                 : '#f87171'
               return (
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
