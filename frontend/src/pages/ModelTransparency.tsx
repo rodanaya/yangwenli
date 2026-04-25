@@ -12,17 +12,19 @@ import { Act } from '@/components/layout/Act'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { analysisApi } from '@/api/client'
-import { CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { CURRENT_MODEL_VERSION, RISK_COLORS } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
 import { FileText, BarChart3, History } from 'lucide-react'
 
 // ============================================================================
-// Design tokens
+// Design tokens — routed through CSS vars so the page stays in sync with the
+// rest of the cream broadsheet. Previous local hex (#d4922a / #38bdf8)
+// were the entire visual identity of the page; now derived from --color-*.
 // ============================================================================
 
-const ACCENT = '#d4922a'
-const POSITIVE = '#d4922a' // amber for risk-increasing
-const NEGATIVE = '#38bdf8' // cyan/blue for protective
+const ACCENT = 'var(--color-accent)'        // editorial gold (amber)
+const POSITIVE = 'var(--color-risk-high)'   // amber: risk-increasing factors
+const NEGATIVE = 'var(--color-oecd)'        // cyan: protective factors
 
 // ============================================================================
 // Static model data (v0.6.5)
@@ -48,10 +50,10 @@ const ACTIVE_COEFFICIENTS: Coefficient[] = [
 ]
 
 const RISK_DISTRIBUTION = [
-  { level: 'Critical', threshold: '≥ 0.60', count: 184_031, pct: 6.01, color: '#dc2626' },
-  { level: 'High',     threshold: '≥ 0.40', count: 228_814, pct: 7.48, color: '#ea580c' },
-  { level: 'Medium',   threshold: '≥ 0.25', count: 821_251, pct: 26.84, color: '#eab308' },
-  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: 'var(--color-text-muted)' },
+  { level: 'Critical', threshold: '≥ 0.60', count: 184_031, pct: 6.01, color: RISK_COLORS.critical },
+  { level: 'High',     threshold: '≥ 0.40', count: 228_814, pct: 7.48, color: RISK_COLORS.high },
+  { level: 'Medium',   threshold: '≥ 0.25', count: 821_251, pct: 26.84, color: RISK_COLORS.medium },
+  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: RISK_COLORS.low },
 ]
 
 interface VersionEntry {
