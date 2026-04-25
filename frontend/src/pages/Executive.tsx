@@ -99,15 +99,15 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
         aria-label="Timeline of documented corruption cases 2002–2025"
       >
         {/* Main axis */}
-        <line x1={AXIS_X0} x2={AXIS_X1} y1={AXIS_Y} y2={AXIS_Y} stroke="#2a2520" strokeWidth={1.5} />
+        <line x1={AXIS_X0} x2={AXIS_X1} y1={AXIS_Y} y2={AXIS_Y} stroke="var(--color-border-hover)" strokeWidth={1.5} />
 
         {/* Tick marks and year labels */}
         {TICK_YEARS.map(y => (
           <g key={y}>
-            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y - 4} y2={AXIS_Y + 4} stroke="#3a3530" strokeWidth={1} />
+            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y - 4} y2={AXIS_Y + 4} stroke="var(--color-border)" strokeWidth={1} />
             <text
               x={yearToX(y)} y={AXIS_Y + 16}
-              textAnchor="middle" fill="#52525b"
+              textAnchor="middle" fill="var(--color-text-muted)"
               fontSize={9} fontFamily="var(--font-family-mono, monospace)"
             >
               {y}
@@ -157,7 +157,7 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
               <text
                 x={x} y={nameLabelY}
                 textAnchor="middle"
-                fill="#78716c"
+                fill="var(--color-text-secondary)"
                 fontSize={8}
                 fontFamily="var(--font-family-sans, sans-serif)"
               >
