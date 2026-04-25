@@ -2,13 +2,6 @@
   "notFound": "Vendor Not Found",
   "notFoundDescription": "The requested vendor could not be found.",
   "backToVendors": "Back to Vendors",
-  "alsoKnownAs": "Also known as:",
-  "viewNetwork": "View Network",
-  "findSimilar": "Find Similar",
-  "compare": "Compare",
-  "exportCSV": "Export CSV",
-  "exporting": "Exporting…",
-  "readInvestigation": "Read the Investigation",
   "tabs": {
     "overview": "Overview",
     "risk": "Risk Analysis",
@@ -17,15 +10,6 @@
     "external": "External Records",
     "aria": "ARIA",
     "periodista": "Journalist"
-  },
-  "kpi": {
-    "totalContracts": "Total Contracts",
-    "totalValue": "Total Value",
-    "institutions": "Institutions",
-    "uniqueAgencies": "Unique agencies",
-    "highRisk": "High Risk",
-    "yearsActive": "Years Active",
-    "yearsOfActivity": "Years of activity"
   },
   "coBidding": {
     "title": "Co-Bidding Pattern Detected",
@@ -59,127 +43,10 @@
     "documented": "Documented:",
     "couldNotCheck": "Could not check case status"
   },
-  "criticalAlert": {
-    "efosDefinitivoTitle": "SAT EFOS Definitivo — Confirmed ghost company under Art. 69-B Mexican Tax Code",
-    "efosDefinitivoBody": "The Mexican Tax Authority (SAT) has formally confirmed this entity engages in non-existent transactions. Contracts may be fraudulent.",
-    "groundTruthTitle": "Documented in {{count}} corruption case(s) in RUBLI ground truth",
-    "groundTruthBody": "Statistical patterns in this vendor's procurement history match documented corruption cases.",
-    "highRiskLabel": "HIGH RISK"
-  },
   "badges": {
     "sfpSanctioned": "SFP Sanctioned",
     "efosStageDef": "SAT EFOS Definitivo (Confirmed)",
     "efosStagePresunto": "SAT EFOS Presunto (Alleged)"
-  },
-  "cards": {
-    "riskProfile": "Risk Profile",
-    "procurementPatterns": "Procurement Patterns",
-    "directAwards": "Direct Awards",
-    "singleBids": "Single Bids",
-    "avgContract": "Avg Contract",
-    "sectors": "Sectors",
-    "aiPatternAnalysis": "AI Pattern Analysis",
-    "knownScandals": "Documented Cases",
-    "vendorSummary": "Summary",
-    "primarySector": "Primary Sector",
-    "yearsActive": "Years Active",
-    "sectorsServed": "Sectors Served",
-    "vendorGroup": "Group",
-    "notClassified": "Not classified",
-    "recentContracts": "Recent Contracts",
-    "viewAll": "View all",
-    "noContractsFound": "No contracts found",
-    "topInstitutions": "Top Institutions",
-    "noInstitutionsFound": "No institutions found",
-    "institutionalRelationships": "Institutional Relationships",
-    "institutionalRelationshipsNote": "Long-tenured vendor relationships correlate with higher single-bid rates and prices (Coviello & Gagliarducci 2017)",
-    "procurementFootprint": "Procurement Footprint",
-    "procurementFootprintNote": "Sector × institution relationships, sized by total value",
-    "footprintLegend": "Color = sector · badge = avg risk score · sorted by total value",
-    "yrs": "yrs",
-    "long": "LONG",
-    "valueShareByInstitution": "Value share by institution",
-    "integrityScore": "Integrity Score"
-  },
-  "risk": {
-    "riskScore": "Risk Score",
-    "riskTrend": "Risk Trend",
-    "contractLifecycle": "Contract Lifecycle",
-    "statisticalAnomaly": "Statistical Anomaly",
-    "avgMahalanobis": "Avg Mahalanobis D²",
-    "maxD2": "Max D²",
-    "anomalousContracts": "Anomalous Contracts",
-    "chiSquaredNote": "Based on chi-squared test (k=12, p<0.05)",
-    "riskFactorContribution": "Risk Factor Contribution (v0.6.5 Z-Scores)",
-    "riskFactorContributionFallback": "Risk Factor Contribution (v0.6.5 Model)",
-    "riskFactorDetails": "Risk Factor Details",
-    "noRiskFactorData": "No risk factor data available",
-    "noRiskFactors": "No risk factors available",
-    "sortByRisk": "Sort by risk and go to highest",
-    "viewMostRisky": "View riskiest contract",
-    "perVendorAnalysis": "Per-Vendor Risk Factor Analysis",
-    "shapAnalysis": "SHAP Analysis",
-    "primaryFactors": "PRIMARY FACTORS",
-    "modelEvolution": "Model Evolution",
-    "counterfactual": "What If…?",
-    "counterfactualSubtitle": "Estimated score if each factor were at sector average (z=0).",
-    "counterfactualAtAvg": "If z = 0 (sector average)",
-    "counterfactualFootnote": "Simulation based on model v0.6.5 (PU c={{c}}, intercept={{intercept}})",
-    "noSignificantFactors": "No significant factors to analyze.",
-    "loadAnalysis": "Load analysis",
-    "loadAnalysisHint": "Click \"Load analysis\" to fetch AI-generated pattern insights for this vendor.",
-    "couldNotLoad": "Could not load this section. Try refreshing.",
-    "noPatternInsights": "No pattern insights available for this vendor.",
-    "couldNotLoadPeerComparison": "Could not load peer comparison data. Try refreshing.",
-    "fingerprint": "RISK FINGERPRINT",
-    "fingerprintSubtitle": "Unique risk signature · Area proportional to each factor's SHAP contribution",
-    "fingerprintLegend": "Red petals = risk factors · Blue petals = protective factors · Area proportional to SHAP value",
-    "vsSectorAvg": "vs sector avg."
-  },
-  "history": {
-    "activityCalendar": "Contract Activity Calendar",
-    "calendarDescription": "Contract activity over the last 5 years. Darker cells indicate more contracts in that month.",
-    "noCalendarData": "No contract date data available for calendar view.",
-    "noContractData": "No contract data available",
-    "allContracts": "All Contracts",
-    "calendarLess": "Less",
-    "calendarMore": "More",
-    "contractAnalysis": "CONTRACT ANALYSIS",
-    "yearFilter": "Year",
-    "sortLabel": "Sort",
-    "allYears": "All Years",
-    "sortDateDesc": "Date (newest)",
-    "sortAmountDesc": "Amount (highest)",
-    "sortRiskDesc": "Risk Score (highest)",
-    "pageOf": "Page {{page}} of {{total}}",
-    "showing": "{{count}} shown of {{totalCount}} contracts — Page total:",
-    "exportCSVAll": "Export CSV (All)",
-    "noMatchFilters": "No contracts match the current filters.",
-    "pagePrev": "Previous",
-    "pageNext": "Next",
-    "filterAll": "All",
-    "filterCritical": "Critical",
-    "filterHigh": "High",
-    "filterMedium": "Medium",
-    "filterLow": "Low",
-    "contractsCount": "{{count}} contracts",
-    "avgRisk": "Risk: {{score}}"
-  },
-  "network": {
-    "openNetworkGraph": "Open Network Graph",
-    "networkGraphDescription": "Explore the full vendor relationship network with interactive graph visualization.",
-    "topology": "Network Topology",
-    "clusteringCoefficient": "Clustering Coefficient",
-    "closedTriangles": "Closed Triangles",
-    "biddingTrianglesDetected": "Bidding triangles detected",
-    "highClustering": "High clustering — tightly connected bidding group",
-    "moderateClustering": "Moderate clustering",
-    "lowClustering": "Low clustering",
-    "highClusteringAlert": "High network clustering detected. This vendor's bidding partners form a tightly connected group. See co-bidding patterns below.",
-    "rolesLabel": "Roles:",
-    "roleDecoy": "🔴 Cover bidder — bids but rarely wins",
-    "roleRotation": "🟠 Rotation — vendors take turns winning",
-    "roleAccomplice": "🟡 Frequent co-winner — both win frequently together"
   },
   "flags": {
     "highDirectAward": "{{pct}}% of contracts were direct awards (bypassed competitive tendering)",
@@ -248,78 +115,12 @@
   "shap": {
     "protectiveFactors": "Protective factors (reducing risk):"
   },
-  "plainLanguage": {
-    "riskSentence": {
-      "highDirectAward": "{{name}} bypasses competitive bidding on {{pct}}% of contracts — {{multiple}}× the national average of 35%.",
-      "highSingleBid": "{{name}} wins {{pct}}% of competitive bids unopposed — a single-bidder pattern consistent with market capture.",
-      "highRiskPattern": "{{name}} shows procurement patterns that closely resemble {{count}} documented corruption cases in the RUBLI ground truth database.",
-      "default": "{{name}}'s procurement profile warrants closer examination."
-    },
-    "scaleSentence": {
-      "highValue": "Total contract value of {{amount}} places it among Mexico's highest-value government suppliers.",
-      "highCount": "{{total}} contracts over its procurement history suggests deep institutional relationships."
-    },
-    "whatThisMeans": "What this means",
-    "forReporters": "For journalists"
-  },
   "noContributingFactors": "No contributing risk factors found.",
-  "untitledContract": "Untitled",
-  "noRiskFactorsTriggered": "No risk factors triggered",
-  "priceVolatility": {
-    "title": "Price Volatility",
-    "zscore": "z-score vs. sector",
-    "description": "This vendor's contract amounts vary significantly more than sector peers — the strongest statistical signal in the v0.6.5 model."
-  },
-  "ghostRisk": {
-    "title": "Ghost Company Risk",
-    "triggers": "Triggers",
-    "description": "This vendor shows structural patterns consistent with ghost companies: new, minimal activity, concentrated awards."
-  },
   "yearEnd": {
     "title": "Year-End Concentration",
     "vendorPct": "This vendor",
     "sectorAvg": "Sector avg",
     "description": "December contracts bypass normal review cycles — a timing anomaly associated with budget dumping."
-  },
-  "protectiveFactors": {
-    "title": "Protective Factors",
-    "description": "These factors lower the risk score — the model treats them as signals of legitimate operations.",
-    "show": "Show protective factors",
-    "hide": "Hide protective factors"
-  },
-  "histogram": {
-    "title": "Contract Size Distribution",
-    "description": "3M MXN threshold marks the single-tender limit. Clusters just below the line may indicate threshold splitting.",
-    "yLabel": "Contracts",
-    "thresholdLabel": "3M MXN limit"
-  },
-  "externalRecords": {
-    "loading": "Loading external records...",
-    "confirmedGhostCompany": "CRITICAL: Vendor confirmed on SAT Art. 69-B ghost company list",
-    "sfpSanctionsFound": "{{count}} SFP sanction record(s) found",
-    "noSfpSanctions": "No SFP sanctions — external records available",
-    "noExternalRecords": "No external records found for this vendor",
-    "sourceNote": "Sources: SFP Proveedores Sancionados · RUPC Vendor Registry · ASF Audit Findings · SAT Art. 69-B EFOS",
-    "rupcNotFound": "Not found in RUPC registry.",
-    "rupcRfcRequired": "RFC required for RUPC lookup.",
-    "complianceGrade": "Compliance Grade",
-    "status": "Status",
-    "registered": "Registered",
-    "expires": "Expires",
-    "asfNotFound": "No ASF audit findings on record. ASF data coverage is limited to scraped records.",
-    "efosNotFound": "Not found on SAT Art. 69-B EFOS/EDOS ghost company list.",
-    "efosConfirmed": "Confirmed ghost company — invoices from this vendor are confirmed to simulate operations under Art. 69-B CFF.",
-    "efosPresunto": "Under review as presumed ghost company (Art. 69-B CFF).",
-    "efosFavorecido": "Received invoices from a confirmed ghost company.",
-    "efosDesvirtuado": "Successfully challenged Art. 69-B classification.",
-    "qqwLoading": "Loading QQW data...",
-    "qqwOfficials": "Procurement officials who signed contracts with this vendor (from QQW dataset):",
-    "qqwContracts": "Recent contracts in QQW dataset ({{count}} total):",
-    "dataSourceNote": "External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability. SAT Art. 69-B list updated monthly via scripts/load_sat_efos.py. QQW data fetched via scripts/fetch_qqw_data.py (top 200 high-risk vendors).",
-    "sanction": "Sanction",
-    "report": "Report",
-    "contracts": "contract(s)",
-    "sfpSanctionsLabel": "SFP SANCTIONS"
   },
   "aria": {
     "notInQueue": "This vendor is not in the ARIA investigation queue.",
@@ -332,16 +133,7 @@
     "fpPenalty": "FP Penalty",
     "riskScoreLabel": "Risk Score (v0.6.5)"
   },
-  "groundTruthBanner": {
-    "appearsIn": "This vendor appears in {{count}} documented procurement irregularity case(s)",
-    "trainingSetNote": "This vendor is part of RUBLI's ground truth training set — contracts matching documented corruption patterns."
-  },
   "sectorPercentile": "Top {{pct}}% in sector",
-  "confidenceInterval": "95% CI: {{lo}}–{{hi}}",
-  "groupTitle": "This vendor belongs to a related network group",
-  "nameVariantsMore": "+{{count}} more",
-  "rfcCopied": "RFC copied",
-  "copyRfc": "Copy RFC",
   "vendorGroupTooltip": "This vendor belongs to a related network group",
   "riskBadge": {
     "critical": "CRIT",
@@ -349,7 +141,6 @@
     "medium": "MED",
     "low": "LOW"
   },
-  "modelEvolution": "Model Evolution",
   "share": "Share",
   "lede": {
     "eyebrow": "VENDOR PROFILE",

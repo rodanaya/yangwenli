@@ -2,13 +2,6 @@
   "notFound": "Proveedor No Encontrado",
   "notFoundDescription": "El proveedor solicitado no pudo ser encontrado.",
   "backToVendors": "Volver a Proveedores",
-  "alsoKnownAs": "También conocido como:",
-  "viewNetwork": "Ver Red",
-  "findSimilar": "Buscar Similares",
-  "compare": "Comparar",
-  "exportCSV": "Exportar CSV",
-  "exporting": "Exportando…",
-  "readInvestigation": "Leer la Investigación",
   "tabs": {
     "overview": "Resumen",
     "risk": "Análisis de Riesgo",
@@ -17,15 +10,6 @@
     "external": "Registros Externos",
     "aria": "ARIA",
     "periodista": "Periodista"
-  },
-  "kpi": {
-    "totalContracts": "Total de Contratos",
-    "totalValue": "Valor Total",
-    "institutions": "Instituciones",
-    "uniqueAgencies": "Dependencias únicas",
-    "highRisk": "Alto Riesgo",
-    "yearsActive": "Años Activo",
-    "yearsOfActivity": "Años de actividad"
   },
   "coBidding": {
     "title": "Patrón de Co-licitación Detectado",
@@ -59,127 +43,10 @@
     "documented": "Documentado:",
     "couldNotCheck": "No se pudo verificar el estado del caso"
   },
-  "criticalAlert": {
-    "efosDefinitivoTitle": "SAT EFOS Definitivo — Empresa fantasma confirmada bajo el Art. 69-B del Código Fiscal",
-    "efosDefinitivoBody": "El Servicio de Administración Tributaria (SAT) ha confirmado formalmente que esta entidad realiza operaciones inexistentes. Los contratos pueden ser fraudulentos.",
-    "groundTruthTitle": "Documentado en {{count}} caso(s) de corrupción en la base RUBLI",
-    "groundTruthBody": "Los patrones estadísticos del historial de contratación de este proveedor coinciden con casos de corrupción documentados.",
-    "highRiskLabel": "ALTO RIESGO"
-  },
   "badges": {
     "sfpSanctioned": "Sancionado por SFP",
     "efosStageDef": "SAT EFOS Definitivo (Confirmado)",
     "efosStagePresunto": "SAT EFOS Presunto (Presunto)"
-  },
-  "cards": {
-    "riskProfile": "Perfil de Riesgo",
-    "procurementPatterns": "Patrones de Contratación",
-    "directAwards": "Adjudicaciones Directas",
-    "singleBids": "Licitaciones Únicas",
-    "avgContract": "Contrato Promedio",
-    "sectors": "Sectores",
-    "aiPatternAnalysis": "Análisis de Patrones con IA",
-    "knownScandals": "Casos Documentados",
-    "vendorSummary": "Resumen",
-    "primarySector": "Sector Principal",
-    "yearsActive": "Años Activo",
-    "sectorsServed": "Sectores Atendidos",
-    "vendorGroup": "Grupo",
-    "notClassified": "Sin clasificar",
-    "recentContracts": "Contratos Recientes",
-    "viewAll": "Ver todos",
-    "noContractsFound": "No se encontraron contratos",
-    "topInstitutions": "Principales Instituciones",
-    "noInstitutionsFound": "No se encontraron instituciones",
-    "institutionalRelationships": "Relaciones Institucionales",
-    "institutionalRelationshipsNote": "Las relaciones prolongadas con proveedores se correlacionan con mayores tasas de licitación única y precios (Coviello & Gagliarducci 2017)",
-    "procurementFootprint": "Huella de Contratación",
-    "procurementFootprintNote": "Relaciones sector × institución, dimensionadas por valor total",
-    "footprintLegend": "Color = sector · insignia = puntuación de riesgo promedio · ordenado por valor total",
-    "yrs": "años",
-    "long": "LARGO",
-    "valueShareByInstitution": "Distribución de valor por institución",
-    "integrityScore": "Calificación de Integridad"
-  },
-  "risk": {
-    "riskScore": "Puntuación de Riesgo",
-    "riskTrend": "Tendencia de Riesgo",
-    "contractLifecycle": "Ciclo de Vida del Contrato",
-    "statisticalAnomaly": "Anomalía Estadística",
-    "avgMahalanobis": "D² Mahalanobis Promedio",
-    "maxD2": "D² Máximo",
-    "anomalousContracts": "Contratos Anómalos",
-    "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
-    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v0.6.5)",
-    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v0.6.5)",
-    "riskFactorDetails": "Detalles de Factores de Riesgo",
-    "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
-    "noRiskFactors": "No hay factores de riesgo disponibles",
-    "sortByRisk": "Ordena por riesgo y va al inicio de la lista",
-    "viewMostRisky": "Ver contrato más riesgoso",
-    "perVendorAnalysis": "Análisis de Factores de Riesgo por Proveedor",
-    "shapAnalysis": "Análisis SHAP",
-    "primaryFactors": "FACTORES PRINCIPALES",
-    "modelEvolution": "Evolución del Modelo",
-    "counterfactual": "¿Qué Pasaría Si…?",
-    "counterfactualSubtitle": "Puntaje estimado si cada factor estuviera en el promedio del sector (z=0).",
-    "counterfactualAtAvg": "Si z = 0 (promedio del sector)",
-    "counterfactualFootnote": "Simulación basada en el modelo v0.6.5 (PU c={{c}}, intercepto={{intercept}})",
-    "noSignificantFactors": "No hay factores significativos para analizar.",
-    "loadAnalysis": "Cargar análisis",
-    "loadAnalysisHint": "Haz clic en «Cargar análisis» para obtener observaciones generadas por IA sobre los patrones de este proveedor.",
-    "couldNotLoad": "No se pudo cargar esta sección. Intenta actualizar la página.",
-    "noPatternInsights": "No hay análisis de patrones disponibles para este proveedor.",
-    "couldNotLoadPeerComparison": "No se pudieron cargar los datos de comparación entre pares. Intenta actualizar.",
-    "fingerprint": "HUELLA DE RIESGO",
-    "fingerprintSubtitle": "Firma de riesgo única · Área proporcional a la contribución SHAP de cada factor",
-    "fingerprintLegend": "Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP",
-    "vsSectorAvg": "vs prom. sectorial"
-  },
-  "history": {
-    "activityCalendar": "Calendario de Actividad de Contratos",
-    "calendarDescription": "Actividad de contratos en los últimos 5 años. Las celdas más oscuras indican más contratos en ese mes.",
-    "noCalendarData": "No hay datos de fecha de contratos disponibles para la vista de calendario.",
-    "noContractData": "No hay datos de contratos disponibles",
-    "allContracts": "Todos los Contratos",
-    "calendarLess": "Menos",
-    "calendarMore": "Más",
-    "contractAnalysis": "ANÁLISIS DE CONTRATOS",
-    "yearFilter": "Año",
-    "sortLabel": "Ordenar",
-    "allYears": "Todos los Años",
-    "sortDateDesc": "Fecha (más reciente)",
-    "sortAmountDesc": "Monto (mayor)",
-    "sortRiskDesc": "Puntaje de Riesgo (mayor)",
-    "pageOf": "Página {{page}} de {{total}}",
-    "showing": "{{count}} mostrados de {{totalCount}} contratos — Total de página:",
-    "exportCSVAll": "Exportar CSV (Todos)",
-    "noMatchFilters": "Ningún contrato coincide con los filtros actuales.",
-    "pagePrev": "Anterior",
-    "pageNext": "Siguiente",
-    "filterAll": "Todos",
-    "filterCritical": "Crítico",
-    "filterHigh": "Alto",
-    "filterMedium": "Medio",
-    "filterLow": "Bajo",
-    "contractsCount": "{{count}} contratos",
-    "avgRisk": "Riesgo: {{score}}"
-  },
-  "network": {
-    "openNetworkGraph": "Abrir Gráfico de Red",
-    "networkGraphDescription": "Explore la red completa de relaciones de proveedores con visualización gráfica interactiva.",
-    "topology": "Topología de Red",
-    "clusteringCoefficient": "Coeficiente de Agrupamiento",
-    "closedTriangles": "Triángulos Cerrados",
-    "biddingTrianglesDetected": "Triángulos de licitación detectados",
-    "highClustering": "Alta agrupación — posible estructura de cartel",
-    "moderateClustering": "Agrupación moderada",
-    "lowClustering": "Baja agrupación",
-    "highClusteringAlert": "Alta concentración de red detectada. Los socios licitadores de este proveedor forman un grupo muy cohesionado. Ver patrones de co-licitación a continuación.",
-    "rolesLabel": "Roles:",
-    "roleDecoy": "🔴 Oferente de cobertura — rara vez gana",
-    "roleRotation": "🟠 Rotación — los proveedores se turnan para ganar",
-    "roleAccomplice": "🟡 Co-ganador frecuente — ambos ganan frecuentemente juntos"
   },
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
@@ -248,78 +115,12 @@
   "shap": {
     "protectiveFactors": "Factores protectores (reducen el riesgo):"
   },
-  "plainLanguage": {
-    "riskSentence": {
-      "highDirectAward": "{{name}} evita la licitación competitiva en el {{pct}}% de sus contratos — {{multiple}}× el promedio nacional del 35%.",
-      "highSingleBid": "{{name}} gana el {{pct}}% de las licitaciones competitivas sin oposición — patrón de licitante único consistente con captura de mercado.",
-      "highRiskPattern": "{{name}} muestra patrones de contratación que se asemejan estrechamente a {{count}} casos de corrupción documentados en la base de datos RUBLI.",
-      "default": "El perfil de contratación de {{name}} amerita un examen más detallado."
-    },
-    "scaleSentence": {
-      "highValue": "El valor total de contratos de {{amount}} lo ubica entre los proveedores de mayor valor del gobierno mexicano.",
-      "highCount": "{{total}} contratos a lo largo de su historia de contratación sugieren relaciones institucionales profundas."
-    },
-    "whatThisMeans": "Qué significa esto",
-    "forReporters": "Para periodistas"
-  },
   "noContributingFactors": "No se encontraron factores de riesgo contribuyentes.",
-  "untitledContract": "Sin título",
-  "noRiskFactorsTriggered": "Sin factores de riesgo activados",
-  "priceVolatility": {
-    "title": "Volatilidad de Precios",
-    "zscore": "z-score vs. sector",
-    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v0.6.5."
-  },
-  "ghostRisk": {
-    "title": "Riesgo de Empresa Fantasma",
-    "triggers": "Indicadores",
-    "description": "Este proveedor muestra patrones estructurales consistentes con empresas fantasma: reciente, actividad mínima, adjudicaciones concentradas."
-  },
   "yearEnd": {
     "title": "Concentración de Fin de Año",
     "vendorPct": "Este proveedor",
     "sectorAvg": "Promedio sectorial",
     "description": "Los contratos de diciembre evitan los ciclos normales de revisión — una anomalía de tiempo asociada con el vaciado de presupuesto."
-  },
-  "protectiveFactors": {
-    "title": "Factores Protectores",
-    "description": "Estos factores reducen la puntuación de riesgo — el modelo los trata como señales de operaciones legítimas.",
-    "show": "Mostrar factores protectores",
-    "hide": "Ocultar factores protectores"
-  },
-  "histogram": {
-    "title": "Distribución por Tamaño de Contrato",
-    "description": "El umbral de 3M MXN marca el límite de licitación directa. Los grupos justo por debajo de la línea pueden indicar fraccionamiento.",
-    "yLabel": "Contratos",
-    "thresholdLabel": "Límite 3M MXN"
-  },
-  "externalRecords": {
-    "loading": "Cargando registros externos...",
-    "confirmedGhostCompany": "CRÍTICO: Proveedor confirmado en la lista de empresas fantasma SAT Art. 69-B",
-    "sfpSanctionsFound": "{{count}} registro(s) de sanción SFP encontrado(s)",
-    "noSfpSanctions": "Sin sanciones SFP — registros externos disponibles",
-    "noExternalRecords": "No se encontraron registros externos para este proveedor",
-    "sourceNote": "Fuentes: SFP Proveedores Sancionados · Registro RUPC · Hallazgos ASF · SAT Art. 69-B EFOS",
-    "rupcNotFound": "No encontrado en el registro RUPC.",
-    "rupcRfcRequired": "Se requiere RFC para consulta RUPC.",
-    "complianceGrade": "Calificación de Cumplimiento",
-    "status": "Estado",
-    "registered": "Registrado",
-    "expires": "Vence",
-    "asfNotFound": "Sin hallazgos de auditoría ASF en registro. La cobertura de datos ASF está limitada a registros obtenidos por scraping.",
-    "efosNotFound": "No encontrado en la lista SAT Art. 69-B EFOS/EDOS de empresas fantasma.",
-    "efosConfirmed": "Empresa fantasma confirmada — las facturas de este proveedor se presumen fraudulentas bajo el Art. 69-B CFF.",
-    "efosPresunto": "Bajo revisión como presunta empresa fantasma (Art. 69-B CFF).",
-    "efosFavorecido": "Recibió facturas de una empresa fantasma confirmada.",
-    "efosDesvirtuado": "Desvirtuó exitosamente la clasificación Art. 69-B.",
-    "qqwLoading": "Cargando datos QQW...",
-    "qqwOfficials": "Funcionarios de adquisiciones que firmaron contratos con este proveedor (del conjunto de datos QQW):",
-    "qqwContracts": "Contratos recientes en el conjunto de datos QQW ({{count}} en total):",
-    "dataSourceNote": "Los datos externos se cargan desde registros públicos y pueden estar incompletos. Los datos de sanciones SFP y RUPC deben actualizarse manualmente mediante scripts del backend. La cobertura ASF depende de la disponibilidad de scraping web. La lista SAT Art. 69-B se actualiza mensualmente mediante scripts/load_sat_efos.py. Los datos QQW se obtienen mediante scripts/fetch_qqw_data.py (200 proveedores de mayor riesgo).",
-    "sanction": "Sanción",
-    "report": "Reporte",
-    "contracts": "contrato(s)",
-    "sfpSanctionsLabel": "SANCIONES SFP"
   },
   "aria": {
     "notInQueue": "Este proveedor no está en la cola de investigación ARIA.",
@@ -332,16 +133,7 @@
     "fpPenalty": "Penalización por Falso Positivo",
     "riskScoreLabel": "Puntaje de Riesgo (v0.6.5)"
   },
-  "groundTruthBanner": {
-    "appearsIn": "Este proveedor aparece en {{count}} caso(s) de corrupción documentado(s)",
-    "trainingSetNote": "Este proveedor es parte del conjunto de entrenamiento de RUBLI — contratos que coinciden con patrones de corrupción documentados."
-  },
   "sectorPercentile": "Top {{pct}}% en sector",
-  "confidenceInterval": "IC 95%: {{lo}}–{{hi}}",
-  "groupTitle": "Este proveedor pertenece a un grupo de red relacionado",
-  "nameVariantsMore": "+{{count}} más",
-  "rfcCopied": "RFC copiado",
-  "copyRfc": "Copiar RFC",
   "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado",
   "riskBadge": {
     "critical": "CRIT",
@@ -349,7 +141,6 @@
     "medium": "MED",
     "low": "BAJO"
   },
-  "modelEvolution": "Evolución del Modelo",
   "share": "Compartir",
   "lede": {
     "eyebrow": "PERFIL DE PROVEEDOR",
