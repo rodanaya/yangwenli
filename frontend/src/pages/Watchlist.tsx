@@ -641,53 +641,15 @@ export function Watchlist() {
 
       {/* Main content */}
       <div className="flex-1 space-y-6">
-        {/* Editorial masthead */}
-        <header
-          className="border-b pb-8"
-          style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-        >
-          <div
-            className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
-            style={{ color: 'rgba(255,255,255,0.55)' }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span>RUBLI</span>
-            <span aria-hidden>·</span>
-            <span>{t('subtitleFull')}</span>
-            <span aria-hidden>·</span>
-            <span className="font-mono tabular-nums">v0.6.5</span>
-          </div>
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1 min-w-0">
-              <div className="text-kicker text-kicker--investigation mb-3">
-                {t('title')}
-              </div>
-              <h1
-                className="font-bold text-text-primary leading-[1.05] mb-4"
-                style={{
-                  fontFamily: 'var(--font-family-serif)',
-                  fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
-                  letterSpacing: '-0.025em',
-                }}
-              >
-                {t('title')}
-              </h1>
-              <p
-                className="italic text-text-secondary leading-[1.55] max-w-2xl"
-                style={{
-                  fontFamily: 'var(--font-family-serif)',
-                  fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
-                }}
-              >
-                {t('subtitleFull')}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading} className="flex-shrink-0">
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              {t('refresh')}
-            </Button>
-          </div>
-        </header>
+        {/* Inline-header masthead removed — EditorialPageShell already
+            provides kicker + headline + paragraph + stats above the Act.
+            Keep only the refresh control inline. */}
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading} className="flex-shrink-0">
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {t('refresh')}
+          </Button>
+        </div>
 
         {/* Stat cards — 4 cards with stagger animation */}
         <motion.div
