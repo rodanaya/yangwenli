@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -25,7 +25,10 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { watchlistApi, caseLibraryApi, ariaApi } from '@/api/client'
-import { ReportIssueDialog } from '@/components/ReportIssueDialog'
+// ReportIssueDialog is lazy — only loads when user clicks the issue button
+const ReportIssueDialog = lazy(() =>
+  import('@/components/ReportIssueDialog').then((m) => ({ default: m.ReportIssueDialog }))
+)
 
 export interface SidebarProps {
   collapsed: boolean
@@ -437,7 +440,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           </div>
         </div>
       </div>
-      <ReportIssueDialog open={reportOpen} onOpenChange={setReportOpen} />
+      {reportOpen && (
+        <Suspense fallback={null}>
+          <ReportIssueDialog open={reportOpen} onOpenChange={setReportOpen} />
+        </Suspense>
+      )}
     </aside>
     </>
   )
