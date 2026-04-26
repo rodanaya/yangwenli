@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vendorApi, institutionApi, dossierApi } from '@/api/client'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { RISK_COLORS, SECTORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -290,8 +291,9 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
           <Link
             to={`/vendors/${vendor.id}`}
             className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
+            title={vendor.name}
           >
-            {vendor.name}
+            {formatVendorName(vendor.name, 40)}
           </Link>
         </div>
         {sector && (
