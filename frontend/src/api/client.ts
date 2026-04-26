@@ -211,7 +211,18 @@ const WRITE_KEY: string | undefined =
 if (WRITE_KEY) {
   api.interceptors.request.use((config) => {
     const method = (config.method ?? '').toUpperCase()
+    const url = config.url ?? ''
+    // Always send write key on mutations (existing behavior)
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      config.headers['X-Rubli-Key'] = WRITE_KEY
+    }
+    // Also send on personal-workspace GETs — these endpoints leak user
+    // data when unauthenticated (P0 finding from 2026-04-26 audit).
+    // Backend now requires X-Rubli-Key for these GETs as well.
+    if (
+      method === 'GET' &&
+      (url.includes('/watchlist') || url.includes('/dossiers') || url.includes('/folders'))
+    ) {
       config.headers['X-Rubli-Key'] = WRITE_KEY
     }
     return config
