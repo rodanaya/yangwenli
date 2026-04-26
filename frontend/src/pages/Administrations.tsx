@@ -10,7 +10,7 @@
  * L6: Events Timeline
  */
 
-import { useMemo, useState, useRef, memo } from 'react'
+import { lazy, Suspense, useMemo, useState, useRef, memo } from 'react'
 import { Link } from 'react-router-dom'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
@@ -60,13 +60,16 @@ import {
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
-import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
-import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
-import { SectorAdminHeatmap } from '@/components/charts/SectorAdminHeatmap'
-import { AdminConcentrationTimeline } from '@/components/charts/AdminConcentrationTimeline'
+// AdminVendorBreakdown is used in the default 'overview' tab — keep eager.
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
-import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
+// All other charts only render when user navigates within the page —
+// lazy-load so initial /administrations page-load doesn't pay for them.
+const AdministrationFingerprints = lazy(() => import('@/components/charts/AdministrationFingerprints'))
+const AdminSectorSunburst = lazy(() => import('@/components/charts/AdminSectorSunburst').then(m => ({ default: m.AdminSectorSunburst })))
+const AdminSectorHeatmap = lazy(() => import('@/components/charts/AdminSectorHeatmap').then(m => ({ default: m.AdminSectorHeatmap })))
+const SectorAdminHeatmap = lazy(() => import('@/components/charts/SectorAdminHeatmap').then(m => ({ default: m.SectorAdminHeatmap })))
+const AdminConcentrationTimeline = lazy(() => import('@/components/charts/AdminConcentrationTimeline').then(m => ({ default: m.AdminConcentrationTimeline })))
+const AdminRiskTrajectory = lazy(() => import('@/components/charts/AdminRiskTrajectory').then(m => ({ default: m.AdminRiskTrajectory })))
 import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 
@@ -1242,11 +1245,13 @@ export default function Administrations() {
               </p>
             </CardHeader>
             <CardContent>
-              <AdminRiskTrajectory
-                administrations={adminTrajectoryLines}
-                metric={trajectoryMetric}
-                loading={yoyLoading}
-              />
+              <Suspense fallback={<div className="h-[300px] bg-background-card animate-pulse rounded-sm" />}>
+                <AdminRiskTrajectory
+                  administrations={adminTrajectoryLines}
+                  metric={trajectoryMetric}
+                  loading={yoyLoading}
+                />
+              </Suspense>
             </CardContent>
           </div>
         </>
@@ -1433,13 +1438,17 @@ export default function Administrations() {
         </summary>
         <div className="card border-t-0 rounded-t-none">
           <CardContent className="pt-4">
-            <AdminSectorSunburst />
+            <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
+              <AdminSectorSunburst />
+            </Suspense>
           </CardContent>
         </div>
       </details>
 
       {/* Administration Fingerprints — radar comparison */}
-      <AdministrationFingerprints />
+      <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
+        <AdministrationFingerprints />
+      </Suspense>
 
       {/* ── PROCUREMENT INTENSITY HEATMAP ── */}
       {sectorYearData.length > 0 && (
@@ -1455,7 +1464,9 @@ export default function Administrations() {
               </p>
             </CardHeader>
             <CardContent>
-              <AdminSectorHeatmap sectorYearData={sectorYearData} />
+              <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
+                <AdminSectorHeatmap sectorYearData={sectorYearData} />
+              </Suspense>
             </CardContent>
           </div>
         </ScrollReveal>
@@ -1477,7 +1488,9 @@ export default function Administrations() {
             </p>
           </CardHeader>
           <CardContent>
-            <SectorAdminHeatmap />
+            <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
+              <SectorAdminHeatmap />
+            </Suspense>
           </CardContent>
         </section>
       </ScrollReveal>
@@ -1498,7 +1511,9 @@ export default function Administrations() {
             </p>
           </CardHeader>
           <CardContent>
-            <AdminConcentrationTimeline height={300} />
+            <Suspense fallback={<div className="h-[300px] bg-background-card animate-pulse rounded-sm" />}>
+              <AdminConcentrationTimeline height={300} />
+            </Suspense>
           </CardContent>
         </section>
       </ScrollReveal>
