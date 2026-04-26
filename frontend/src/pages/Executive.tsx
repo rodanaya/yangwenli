@@ -21,11 +21,100 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi, contractApi } from '@/api/client'
+import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// § 2 La Lente — micro-stat tile used in the platform self-portrait grid
+// ─────────────────────────────────────────────────────────────────────────────
+function LenteStat({
+  value, label, context, color, href,
+}: { value: string; label: string; context: string; color: string; href?: string }) {
+  const inner = (
+    <>
+      <div
+        className="font-mono font-bold text-[24px] leading-none tabular-nums"
+        style={{ color }}
+      >
+        {value}
+      </div>
+      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-2">
+        {label}
+      </div>
+      <div className="text-[10px] text-text-muted mt-1 leading-[1.4]">
+        {context}
+      </div>
+    </>
+  )
+  if (href) {
+    return (
+      <a
+        href={href}
+        className="block group hover:opacity-90 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded-sm"
+      >
+        {inner}
+      </a>
+    )
+  }
+  return <div>{inner}</div>
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// § 5 Historias Ejemplares — three hand-picked vendor dossiers
+// Showcases the v3.0 EntityIdentityChip primitive in production.
+// ─────────────────────────────────────────────────────────────────────────────
+type DossierFlag = 'gt' | 'efos' | 'sfp' | 'ghost' | 'fp_structural'
+interface ExampleDossier {
+  vendorId: number
+  name: string
+  risk: number
+  tier: 1 | 2 | 3 | 4
+  flags: DossierFlag[]
+  contracts: string
+  value: string
+  kicker: { en: string; es: string }
+  lede: { en: string; es: string }
+}
+
+const EXAMPLE_DOSSIERS: ExampleDossier[] = [
+  {
+    vendorId: 29277,
+    name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
+    risk: 0.99, tier: 1, flags: ['gt'],
+    contracts: '6,303', value: '$133.2B MXN',
+    kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
+    lede: {
+      en: 'Distributed $133.2B MXN in medicines to IMSS over 14 years (60% of vendor value). 79% direct-award. COFECE investigated 2018, AMLO veto 2019, SFP sanctioned.',
+      es: 'Distribuyó $133.2B MXN en medicamentos al IMSS en 14 años (60% del valor del vendor). 79% adjudicación directa. COFECE investigó 2018, veto AMLO 2019, SFP sancionó.',
+    },
+  },
+  {
+    vendorId: 31655,
+    name: 'LICONSA S.A. DE C.V.',
+    risk: 0.92, tier: 1, flags: ['gt'],
+    contracts: '~3,000', value: 'multi-billion MXN',
+    kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
+    lede: {
+      en: 'Government parastatal at the center of the Segalmex food-distribution scandal. One of the platform\'s anchor GT cases for the v0.6.5 model training.',
+      es: 'Paraestatal gubernamental al centro del escándalo de distribución de alimentos Segalmex. Uno de los casos GT ancla para el entrenamiento del modelo v0.6.5.',
+    },
+  },
+  {
+    vendorId: 39876,
+    name: 'COVID EMERGENCY PROCUREMENT NETWORK',
+    risk: 0.85, tier: 1, flags: ['gt'],
+    contracts: '5,371', value: 'emergency-procurement',
+    kicker: { en: 'COVID EMBEZZLEMENT · MULTIPLE VENDORS', es: 'COVID DESVÍO · MÚLTIPLES VENDORS' },
+    lede: {
+      en: 'Cluster of 5+ vendors that captured COVID-19 emergency procurement bypassing competitive bidding. Documented in case GT-COVID-2020.',
+      es: 'Cluster de 5+ proveedores que capturaron compras de emergencia COVID-19 evadiendo licitación competitiva. Documentado en caso GT-COVID-2020.',
+    },
+  },
+]
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline data — major documented corruption cases 2002-2025
@@ -219,6 +308,22 @@ export default function Executive() {
     retry: 1,
   })
   const recentCritical: ContractListItem[] = recentCriticalData?.data ?? []
+
+  // § 2 La Lente — live ARIA platform stats (T1-T4 vendor distribution)
+  const { data: ariaStats } = useQuery({
+    queryKey: ['executive', 'aria-stats-v3'],
+    queryFn: () => ariaApi.getStats(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+
+  // § 2 La Lente — GT case corpus growth signal
+  const { data: caseStats } = useQuery({
+    queryKey: ['executive', 'case-stats-v3'],
+    queryFn: () => caseLibraryApi.getStats(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
 
   const stats = useMemo(() => {
     const d = dashboard
@@ -467,6 +572,115 @@ export default function Executive() {
                   {k.context}
                 </div>
               </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── § 2 LA LENTE — what RUBLI uniquely sees (platform self-portrait) ─── */}
+        <section className="mb-12" aria-labelledby="la-lente-title">
+          <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
+            {lang === 'en' ? '§ 2 · The Lens — what RUBLI uniquely sees' : '§ 2 · La Lente — lo que RUBLI ve de manera única'}
+          </div>
+          <div className="surface-card p-6 rounded-sm">
+            <p className="text-sm leading-[1.7] text-text-secondary max-w-[68ch] mb-6">
+              {lang === 'en' ? (
+                <>
+                  Beyond the headline numbers, RUBLI maintains an <strong className="text-text-primary">automated investigative infrastructure</strong>:
+                  a 4-tier priority queue ranking every active vendor in the federal universe; LLM-generated investigation memos
+                  for the most-likely cases; an ever-growing ground-truth corpus of documented Mexican corruption scandals;
+                  and a per-sector calibrated risk model with vendor-stratified validation.
+                </>
+              ) : (
+                <>
+                  Más allá de las cifras titulares, RUBLI mantiene una <strong className="text-text-primary">infraestructura de investigación automatizada</strong>:
+                  una cola priorizada en 4 niveles que ordena cada proveedor activo del universo federal; memos de
+                  investigación generados por LLM para los casos más probables; un corpus de casos documentados de corrupción
+                  mexicana en crecimiento continuo; y un modelo de riesgo calibrado por sector con validación estratificada por proveedor.
+                </>
+              )}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-border/40">
+              <LenteStat
+                value={formatNumber(ariaStats?.latest_run?.tier1_count ?? 320)}
+                label={lang === 'en' ? 'TIER 1 LEADS' : 'LÍDERES TIER 1'}
+                context={lang === 'en' ? 'Highest priority' : 'Máxima prioridad'}
+                color="var(--color-risk-critical)"
+                href="/aria"
+              />
+              <LenteStat
+                value={formatNumber((ariaStats?.latest_run?.tier2_count ?? 1234) + (ariaStats?.latest_run?.tier3_count ?? 5016))}
+                label={lang === 'en' ? 'TIER 2-3 LEADS' : 'LÍDERES TIER 2-3'}
+                context={lang === 'en' ? 'Watch list' : 'Lista de vigilancia'}
+                color="var(--color-risk-high)"
+                href="/aria"
+              />
+              <LenteStat
+                value={formatNumber(1843)}
+                label={lang === 'en' ? 'INVESTIGATIVE MEMOS' : 'MEMOS DE INVESTIGACIÓN'}
+                context={lang === 'en' ? 'Per-vendor LLM dossiers' : 'Dossiers LLM por proveedor'}
+                color="var(--color-accent)"
+                href="/aria"
+              />
+              <LenteStat
+                value={formatNumber(caseStats?.total_cases ?? 1380)}
+                label={lang === 'en' ? 'GT CASES' : 'CASOS DOCUMENTADOS'}
+                context={lang === 'en' ? 'Mexican corruption corpus' : 'Corpus mexicano'}
+                color="var(--color-accent)"
+                href="/cases"
+              />
+              <LenteStat
+                value="91"
+                label={lang === 'en' ? 'CATEGORIES' : 'CATEGORÍAS'}
+                context={lang === 'en' ? 'Auto-classified' : 'Auto-clasificadas'}
+                color="var(--color-accent)"
+                href="/sectors?view=categories"
+              />
+              <LenteStat
+                value="0.828"
+                label={lang === 'en' ? 'TEST AUC' : 'AUC PRUEBA'}
+                context={lang === 'en' ? 'Vendor-stratified · v0.6.5' : 'Estratif. por vendor · v0.6.5'}
+                color="var(--color-text-muted)"
+                href="/methodology"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* ─── § 5 HISTORIAS EJEMPLARES — try-it dossiers ─── */}
+        <section className="mb-12" aria-labelledby="historias-title">
+          <div id="historias-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
+            {lang === 'en' ? '§ 5 · Example dossiers — open one' : '§ 5 · Historias ejemplares — abre una'}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {EXAMPLE_DOSSIERS.map((d) => (
+              <article
+                key={d.vendorId}
+                className="surface-card p-5 rounded-sm hover:border-border-hover transition-colors"
+              >
+                <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
+                  {d.kicker[lang]}
+                </div>
+                <div className="mb-3">
+                  <EntityIdentityChip
+                    type="vendor"
+                    id={d.vendorId}
+                    name={d.name}
+                    riskScore={d.risk}
+                    ariaTier={d.tier}
+                    flags={d.flags}
+                    size="md"
+                    narrative
+                  />
+                </div>
+                <p className="text-xs text-text-secondary leading-[1.6] mb-3">
+                  {d.lede[lang]}
+                </p>
+                <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
+                  <span>{d.contracts} contratos</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{d.value}</span>
+                </div>
+              </article>
             ))}
           </div>
         </section>
