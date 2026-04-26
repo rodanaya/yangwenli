@@ -29,16 +29,18 @@ interface AriaMemoProps {
 // Sub-components
 // ---------------------------------------------------------------------------
 
+// Tier badge — uses canonical risk tokens (v3.0 trust manifest invariant 3).
+// T1=critical, T2=high, T3=medium, T4=low/neutral.
 function TierBadge({ tier }: { tier: number }) {
   const colors: Record<number, string> = {
-    1: 'bg-red-600/20 text-risk-critical border-red-600/30',
-    2: 'bg-orange-600/20 text-orange-400 border-orange-600/30',
-    3: 'bg-yellow-600/20 text-yellow-400 border-yellow-600/30',
-    4: 'bg-blue-600/20 text-blue-400 border-blue-600/30',
+    1: 'bg-risk-critical/15 text-risk-critical border-risk-critical/30',
+    2: 'bg-risk-high/15 text-risk-high border-risk-high/30',
+    3: 'bg-risk-medium/15 text-risk-medium border-risk-medium/30',
+    4: 'bg-text-muted/15 text-text-muted border-border',
   }
   return (
-    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border', colors[tier] ?? colors[4])}>
-      Tier {tier}
+    <span className={cn('inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider border', colors[tier] ?? colors[4])}>
+      T{tier}
     </span>
   )
 }
