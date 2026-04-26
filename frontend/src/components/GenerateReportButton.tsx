@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ReportModal } from '@/components/ReportModal'
+
+// ReportModal (308 LOC + PDF generation deps) only loads on first click.
+const ReportModal = lazy(() =>
+  import('@/components/ReportModal').then((m) => ({ default: m.ReportModal }))
+)
 
 interface GenerateReportButtonProps {
   reportType: 'vendor' | 'institution' | 'sector'
@@ -25,13 +29,17 @@ export function GenerateReportButton({
         Generate Report
       </Button>
 
-      <ReportModal
-        reportType={reportType}
-        entityId={entityId}
-        entityName={entityName}
-        open={open}
-        onClose={() => setOpen(false)}
-      />
+      {open && (
+        <Suspense fallback={null}>
+          <ReportModal
+            reportType={reportType}
+            entityId={entityId}
+            entityName={entityName}
+            open={open}
+            onClose={() => setOpen(false)}
+          />
+        </Suspense>
+      )}
     </>
   )
 }
