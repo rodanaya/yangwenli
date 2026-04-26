@@ -7,7 +7,7 @@
  */
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, lazy, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
@@ -21,7 +21,9 @@ import { StoryCard } from '@/components/stories/StoryCard'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
 import { cn } from '@/lib/utils'
-import * as StoryCharts from '@/components/stories/charts'
+// Story charts are lazy-loaded — see CHART_REGISTRY below. Each story
+// page only renders ONE chart component, so eagerly importing all 41
+// would balloon the StoryNarrative page chunk for no benefit.
 import {
   InlineDotGrid,
   InlineBarChart,
@@ -53,48 +55,51 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
 // Chart registry — maps chartId to component
 // ---------------------------------------------------------------------------
 
+const lazyChart = (loader: () => Promise<{ [key: string]: React.ComponentType }>, name: string) =>
+  lazy(() => loader().then((m) => ({ default: m[name] })))
+
 const CHART_REGISTRY: Record<string, React.ComponentType> = {
-  'da-rate-trend': StoryCharts.DaRateTrendChart,
-  'da-by-sector': StoryCharts.DaBySectorChart,
-  'amlo-era-comparison': StoryCharts.AmloEraComparisonChart,
-  'covid-emergency': StoryCharts.CovidEmergencyChart,
-  'monthly-spending': StoryCharts.MonthlySpendingChart,
-  'risk-by-sector': StoryCharts.RiskBySectorChart,
-  'vendor-concentration': StoryCharts.VendorConcentrationChart,
-  'threshold-splitting': StoryCharts.ThresholdSplittingChart,
-  'sexenio-comparison': StoryCharts.SexenioComparisonChart,
-  'temporal-risk': StoryCharts.StoryTemporalRiskChart,
-  'sector-risk-heatmap': StoryCharts.StorySectorRiskHeatmap,
-  'seasonality-calendar': StoryCharts.StorySeasonalityCalendar,
-  'money-sankey': StoryCharts.StoryMoneySankeyChart,
-  'admin-sunburst': StoryCharts.StoryAdminSunburst,
-  'sector-paradox': StoryCharts.StorySectorParadox,
-  'risk-pyramid': StoryCharts.StoryRiskPyramid,
-  'administration-fingerprints': StoryCharts.StoryAdminFingerprints,
-  'sector-risk-trends': StoryCharts.StorySectorRiskTrends,
-  'racing-bar': StoryCharts.StoryRacingBar,
-  'risk-calendar': StoryCharts.StoryRiskCalendar,
-  'community-bubbles': StoryCharts.StoryCommunityBubbles,
-  'procedure-breakdown': StoryCharts.StoryProcedureBreakdown,
-  'vendor-fingerprint': StoryCharts.StoryVendorFingerprint,
-  'story-cuarta-adj': StoryCharts.StoryCuartaAdjudicacion,
-  'story-granero-vacio': StoryCharts.StoryGraneroVacio,
-  'story-nuevos-ricos': StoryCharts.StoryNuevosRicos,
-  'story-hemoser': StoryCharts.StoryHemoserSplitting,
-  'story-austeridad': StoryCharts.StoryAusteridadChart,
-  'story-cero-competencia': StoryCharts.StoryCeroCompetenciaChart,
-  'story-triangulo-farmaceutico': StoryCharts.StoryTrianguloFarmaceutico,
-  'story-avalancha-diciembre': StoryCharts.StoryAvalanchaDiciembre,
-  'story-cartel-corazon': StoryCharts.StoryCartelCorazon,
-  'story-red-fantasma': StoryCharts.StoryRedFantasma,
-  'story-infraestructura': StoryCharts.StoryInfraestructura,
-  'story-sixsigma-hacienda': StoryCharts.StorySixSigmaHacienda,
-  'story-oceanografia': StoryCharts.StoryOceanografia,
-  'story-sexenio-sexenio': StoryCharts.StorySexenioASexenio,
-  'story-casa-contratos': StoryCharts.StoryCasaContratos,
-  'story-ano-sin-excusas': StoryCharts.StoryAnoSinExcusas,
-  'story-insabi': StoryCharts.StoryInsabi,
-  'story-tren-maya': StoryCharts.StoryTrenMaya,
+  'da-rate-trend': lazyChart(() => import('@/components/stories/charts/DaRateTrendChart'), 'DaRateTrendChart'),
+  'da-by-sector': lazyChart(() => import('@/components/stories/charts/DaBySectorChart'), 'DaBySectorChart'),
+  'amlo-era-comparison': lazyChart(() => import('@/components/stories/charts/AmloEraComparisonChart'), 'AmloEraComparisonChart'),
+  'covid-emergency': lazyChart(() => import('@/components/stories/charts/CovidEmergencyChart'), 'CovidEmergencyChart'),
+  'monthly-spending': lazyChart(() => import('@/components/stories/charts/MonthlySpendingChart'), 'MonthlySpendingChart'),
+  'risk-by-sector': lazyChart(() => import('@/components/stories/charts/RiskBySectorChart'), 'RiskBySectorChart'),
+  'vendor-concentration': lazyChart(() => import('@/components/stories/charts/VendorConcentrationChart'), 'VendorConcentrationChart'),
+  'threshold-splitting': lazyChart(() => import('@/components/stories/charts/ThresholdSplittingChart'), 'ThresholdSplittingChart'),
+  'sexenio-comparison': lazyChart(() => import('@/components/stories/charts/SexenioComparisonChart'), 'SexenioComparisonChart'),
+  'temporal-risk': lazyChart(() => import('@/components/stories/charts/StoryTemporalRiskChart'), 'StoryTemporalRiskChart'),
+  'sector-risk-heatmap': lazyChart(() => import('@/components/stories/charts/StorySectorRiskHeatmap'), 'StorySectorRiskHeatmap'),
+  'seasonality-calendar': lazyChart(() => import('@/components/stories/charts/StorySeasonalityCalendar'), 'StorySeasonalityCalendar'),
+  'money-sankey': lazyChart(() => import('@/components/stories/charts/StoryMoneySankeyChart'), 'StoryMoneySankeyChart'),
+  'admin-sunburst': lazyChart(() => import('@/components/stories/charts/StoryAdminSunburst'), 'StoryAdminSunburst'),
+  'sector-paradox': lazyChart(() => import('@/components/stories/charts/StorySectorParadox'), 'StorySectorParadox'),
+  'risk-pyramid': lazyChart(() => import('@/components/stories/charts/StoryRiskPyramid'), 'StoryRiskPyramid'),
+  'administration-fingerprints': lazyChart(() => import('@/components/stories/charts/StoryAdminFingerprints'), 'StoryAdminFingerprints'),
+  'sector-risk-trends': lazyChart(() => import('@/components/stories/charts/StorySectorRiskTrends'), 'StorySectorRiskTrends'),
+  'racing-bar': lazyChart(() => import('@/components/stories/charts/StoryRacingBar'), 'StoryRacingBar'),
+  'risk-calendar': lazyChart(() => import('@/components/stories/charts/StoryRiskCalendar'), 'StoryRiskCalendar'),
+  'community-bubbles': lazyChart(() => import('@/components/stories/charts/StoryCommunityBubbles'), 'StoryCommunityBubbles'),
+  'procedure-breakdown': lazyChart(() => import('@/components/stories/charts/StoryProcedureBreakdown'), 'StoryProcedureBreakdown'),
+  'vendor-fingerprint': lazyChart(() => import('@/components/stories/charts/StoryVendorFingerprint'), 'StoryVendorFingerprint'),
+  'story-cuarta-adj': lazyChart(() => import('@/components/stories/charts/StoryCuartaAdjudicacion'), 'StoryCuartaAdjudicacion'),
+  'story-granero-vacio': lazyChart(() => import('@/components/stories/charts/StoryGraneroVacio'), 'StoryGraneroVacio'),
+  'story-nuevos-ricos': lazyChart(() => import('@/components/stories/charts/StoryNuevosRicos'), 'StoryNuevosRicos'),
+  'story-hemoser': lazyChart(() => import('@/components/stories/charts/StoryHemoserSplitting'), 'StoryHemoserSplitting'),
+  'story-austeridad': lazyChart(() => import('@/components/stories/charts/StoryAusteridadChart'), 'StoryAusteridadChart'),
+  'story-cero-competencia': lazyChart(() => import('@/components/stories/charts/StoryCeroCompetenciaChart'), 'StoryCeroCompetenciaChart'),
+  'story-triangulo-farmaceutico': lazyChart(() => import('@/components/stories/charts/StoryTrianguloFarmaceutico'), 'StoryTrianguloFarmaceutico'),
+  'story-avalancha-diciembre': lazyChart(() => import('@/components/stories/charts/StoryAvalanchaDiciembre'), 'StoryAvalanchaDiciembre'),
+  'story-cartel-corazon': lazyChart(() => import('@/components/stories/charts/StoryCartelCorazon'), 'StoryCartelCorazon'),
+  'story-red-fantasma': lazyChart(() => import('@/components/stories/charts/StoryRedFantasma'), 'StoryRedFantasma'),
+  'story-infraestructura': lazyChart(() => import('@/components/stories/charts/StoryInfraestructura'), 'StoryInfraestructura'),
+  'story-sixsigma-hacienda': lazyChart(() => import('@/components/stories/charts/StorySixSigmaHacienda'), 'StorySixSigmaHacienda'),
+  'story-oceanografia': lazyChart(() => import('@/components/stories/charts/StoryOceanografia'), 'StoryOceanografia'),
+  'story-sexenio-sexenio': lazyChart(() => import('@/components/stories/charts/StorySexenioASexenio'), 'StorySexenioASexenio'),
+  'story-casa-contratos': lazyChart(() => import('@/components/stories/charts/StoryCasaContratos'), 'StoryCasaContratos'),
+  'story-ano-sin-excusas': lazyChart(() => import('@/components/stories/charts/StoryAnoSinExcusas'), 'StoryAnoSinExcusas'),
+  'story-insabi': lazyChart(() => import('@/components/stories/charts/StoryInsabi'), 'StoryInsabi'),
+  'story-tren-maya': lazyChart(() => import('@/components/stories/charts/StoryTrenMaya'), 'StoryTrenMaya'),
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
@@ -268,7 +273,13 @@ function ChapterSection({
           return (
             <ScrollReveal className="my-8">
               {ChartComponent ? (
-                <ChartComponent />
+                <Suspense fallback={
+                  <div className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center" role="img" aria-label={cfg.title}>
+                    {cfg.title}
+                  </div>
+                }>
+                  <ChartComponent />
+                </Suspense>
               ) : (
                 <div
                   className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
