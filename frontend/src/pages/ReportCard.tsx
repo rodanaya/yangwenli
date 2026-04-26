@@ -403,7 +403,7 @@ function HeroSection({
         role="region"
         aria-label={t('heroGradeLabel')}
       >
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 py-10 px-8">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 py-10 px-4 sm:px-8">
           {/* Score + semaforo */}
           <motion.div
             className="flex-shrink-0 flex items-center gap-4"
@@ -418,9 +418,8 @@ function HeroSection({
                 {/* Glow pulse honors prefers-reduced-motion — was an infinite
                     textShadow loop ignoring the OS setting per Batch A critique. */}
                 <motion.span
-                  className="leading-none font-black font-mono tabular-nums motion-safe:[animation:reportcard-glow_3.2s_ease-in-out_infinite]"
+                  className="leading-none font-black font-mono tabular-nums text-[5rem] sm:text-[7.5rem] motion-safe:[animation:reportcard-glow_3.2s_ease-in-out_infinite]"
                   style={{
-                    fontSize: '7.5rem',
                     color: mx.color,
                     textShadow: `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
                   }}
