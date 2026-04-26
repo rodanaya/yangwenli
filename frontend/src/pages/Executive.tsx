@@ -104,14 +104,14 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     },
   },
   {
-    vendorId: 39876,
-    name: 'COVID EMERGENCY PROCUREMENT NETWORK',
+    vendorId: 6038,
+    name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
-    contracts: '5,371', value: 'emergency-procurement',
-    kicker: { en: 'COVID EMBEZZLEMENT · MULTIPLE VENDORS', es: 'COVID DESVÍO · MÚLTIPLES VENDORS' },
+    contracts: '~17B contracts', value: '$17.2B MXN',
+    kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
-      en: 'Cluster of 5+ vendors that captured COVID-19 emergency procurement bypassing competitive bidding. Documented in case GT-COVID-2020.',
-      es: 'Cluster de 5+ proveedores que capturaron compras de emergencia COVID-19 evadiendo licitación competitiva. Documentado en caso GT-COVID-2020.',
+      en: '$17.2B MXN in COVID-era IMSS medical supplies. Same-day-award pattern flagged by ARIA as Tier 1. Documented case in the GT corpus.',
+      es: '$17.2B MXN en insumos médicos al IMSS durante COVID. Patrón de adjudicación mismo-día detectado por ARIA Tier 1. Caso documentado en el corpus GT.',
     },
   },
 ]

@@ -381,6 +381,15 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             ? 'Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red de co-contratación. El tamaño es el valor capturado; el color, el patrón de corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la red.'
             : 'Each circle is a community of vendors detected by Louvain over the co-contracting network. Size maps to value captured; color maps to the dominant corruption pattern. No individual vendors here — only the shape of the network.'}
         </p>
+        {/* HONESTY DISCLAIMER per data-quality audit: the 10 community
+            objects below are an ILLUSTRATIVE COMPOSITION pending the
+            full vendor_communities table wire. Institution names are
+            real but case counts are placeholder values. */}
+        <p className="text-[10px] text-risk-medium/80 mt-2 max-w-3xl leading-relaxed font-mono uppercase tracking-wider">
+          {isEs
+            ? '⚠ Composición ilustrativa · datos en validación contra la tabla vendor_communities'
+            : '⚠ Illustrative composition · data pending full vendor_communities wire'}
+        </p>
       </div>
 
       <div className="relative" onMouseLeave={() => onHover(null)}>

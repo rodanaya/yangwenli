@@ -17,7 +17,6 @@ import {
   History,
   Building2,
   Network,
-  Activity,
   GitCompareArrows,
   TrendingUp,
   Newspaper,
@@ -288,21 +287,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               })}
             </NavSection>
           ))}
-          {/* API Explorer — external link, opens in new tab */}
-          {!isCollapsed && (
-            <div className="px-2 pt-1">
-              <a
-                href="/api/v1/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-[color:var(--color-sidebar-hover)] transition-all duration-100"
-              >
-                <Activity className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-on-dark-muted)] group-hover:text-[color:var(--color-text-on-dark-secondary)]" aria-hidden="true" />
-                <span className="truncate">{t('apiExplorer')}</span>
-                <svg className="ml-auto h-3 w-3 opacity-40 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-              </a>
-            </div>
-          )}
+          {/* API Explorer link removed — pointed at /api/v1/docs which 404s.
+              Per docs/PROJECT_LOCKED_V3.md "every nav entry must lead to
+              a working page". */}
 
         </nav>
       </ScrollArea>
