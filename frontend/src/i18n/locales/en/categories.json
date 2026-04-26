@@ -47,9 +47,7 @@
     },
     "tooltip": {
       "spend": "Spend",
-      "risk": "Risk",
-      "contracts": "Contracts",
-      "riskPct": "Risk: {{value}}%"
+      "risk": "Risk"
     },
     "empty": {
       "noTrend": "No trend data for this category.",
@@ -65,8 +63,6 @@
     },
     "footnote": "Sheinbaum = partial 2025. Fox includes partial COMPRANET data.",
     "adminTooltip": {
-      "spend": "Spend:",
-      "contracts": "Contracts:",
       "risk": "Risk:"
     },
     "concentrationMarket": "Top 3 hold {{pct}}% of market"

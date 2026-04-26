@@ -45,8 +45,6 @@ import esYearinreview from './locales/es/yearinreview.json'
 import enYearinreview from './locales/en/yearinreview.json'
 import esVendorcompare from './locales/es/vendorcompare.json'
 import enVendorcompare from './locales/en/vendorcompare.json'
-import esApiexplorer from './locales/es/apiexplorer.json'
-import enApiexplorer from './locales/en/apiexplorer.json'
 import esReportcard from './locales/es/reportcard.json'
 import enReportcard from './locales/en/reportcard.json'
 import esAria from './locales/es/aria.json'
@@ -89,7 +87,6 @@ i18n
         workspace: esWorkspace,
         yearinreview: esYearinreview,
         vendorcompare: esVendorcompare,
-        apiexplorer: esApiexplorer,
         reportcard: esReportcard,
         aria: esAria,
         captura: esCaptura,
@@ -115,7 +112,6 @@ i18n
         workspace: enWorkspace,
         yearinreview: enYearinreview,
         vendorcompare: enVendorcompare,
-        apiexplorer: enApiexplorer,
         reportcard: enReportcard,
         aria: enAria,
         captura: enCaptura,

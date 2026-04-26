@@ -28,11 +28,7 @@
   "export": {
     "bulkExportTitle": "Exportación Masiva",
     "bulkExportDesc": "Exportaciones rápidas para flujos de investigación comunes",
-    "dataQuality": {
-      "loadError": "Error al cargar métricas de calidad de datos"
-    },
     "limitsTitle": "Límites de Exportación",
-    "limitsDescription": "Las exportaciones están limitadas a {{count}} registros por defecto. Para exportaciones más grandes, contacte al administrador o use la API directamente.",
     "contracts": {
       "title": "Contratos",
       "description": "Exportar datos de contratos con puntuaciones de riesgo y clasificaciones"
@@ -40,8 +36,6 @@
     "vendors": {
       "title": "Proveedores",
       "description": "Exportar perfiles de proveedores con métricas de riesgo y clasificaciones"
-    },
-    "exportSuccess": "{{type}} exportado como {{format}} exitosamente.",
-    "exportError": "Error en la exportación: {{error}}"
+    }
   }
 }

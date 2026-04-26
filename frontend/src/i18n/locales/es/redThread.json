@@ -67,8 +67,7 @@
     "dotDescription": "Cada punto es un año. El tamaño refleja el valor total. El color refleja el riesgo promedio. Pasa el cursor para más detalles.",
     "legend": {
       "sizeLabel": "Tamaño = valor anual de contratos"
-    },
-    "dotTooltip": "{{year}} · {{value}} · {{count}} contratos · riesgo prom. {{risk}}%"
+    }
   },
   "pattern": {
     "heading": "Lo Que Encontró el Algoritmo",
@@ -95,8 +94,6 @@
     },
     "coBiddingPartners": "Socios en Licitación",
     "noCoBidders": "No se detectaron patrones de licitación coordinada.",
-    "sharedProcedures_one": "{{count}} procedimiento compartido",
-    "sharedProcedures_other": "{{count}} procedimientos compartidos",
     "openNetworkGraph": "Abrir Gráfico de Red Completo",
     "openNetworkGraphDesc": "Gráfico de fuerza dirigida interactivo con co-licitantes, entidades relacionadas y clústeres comunitarios.",
     "coBidderAnalysis": "Análisis de Co-Licitantes",
@@ -117,8 +114,6 @@
     "peakRiskLabel": "{{year}} — {{pct}}% puntuación prom.",
     "chartValueLabel": "Valor de Contratos por Año (millones MXN)",
     "chartRiskLabel": "Puntuación de Riesgo Promedio por Año (%)",
-    "tooltipValue": "Valor",
-    "tooltipRisk": "Riesgo Prom.",
     "riskNote": "Umbrales de riesgo: Crítico ≥60%, Alto ≥40%, Medio ≥25%. Referencia OCDE: 2–15% alto riesgo."
   },
   "verdict": {

@@ -28,11 +28,7 @@
   "export": {
     "bulkExportTitle": "Bulk Export",
     "bulkExportDesc": "Quick exports for common investigation workflows",
-    "dataQuality": {
-      "loadError": "Failed to load data quality metrics"
-    },
     "limitsTitle": "Export Limits",
-    "limitsDescription": "Exports are limited to {{count}} records by default. For larger exports, please contact the administrator or use the API directly.",
     "contracts": {
       "title": "Contracts",
       "description": "Export contract data with risk scores and classifications"
@@ -40,8 +36,6 @@
     "vendors": {
       "title": "Vendors",
       "description": "Export vendor profiles with risk metrics and classifications"
-    },
-    "exportSuccess": "{{type}} exported as {{format}} successfully!",
-    "exportError": "Export failed: {{error}}"
+    }
   }
 }

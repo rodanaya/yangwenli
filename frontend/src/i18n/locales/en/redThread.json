@@ -67,8 +67,7 @@
     "dotDescription": "Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.",
     "legend": {
       "sizeLabel": "Size = annual contract value"
-    },
-    "dotTooltip": "{{year}} · {{value}} · {{count}} contracts · avg risk {{risk}}%"
+    }
   },
   "pattern": {
     "heading": "What the Algorithm Found",
@@ -95,8 +94,6 @@
     },
     "coBiddingPartners": "Co-Bidding Partners",
     "noCoBidders": "No coordinated bidding patterns detected.",
-    "sharedProcedures_one": "{{count}} shared procedure",
-    "sharedProcedures_other": "{{count}} shared procedures",
     "openNetworkGraph": "Open Full Network Graph",
     "openNetworkGraphDesc": "Interactive force-directed graph showing co-bidders, related entities, and community clusters.",
     "coBidderAnalysis": "Co-Bidder Analysis",
@@ -117,8 +114,6 @@
     "peakRiskLabel": "{{year}} — {{pct}}% avg score",
     "chartValueLabel": "Contract Value by Year (MXN millions)",
     "chartRiskLabel": "Average Risk Score by Year (%)",
-    "tooltipValue": "Value",
-    "tooltipRisk": "Avg Risk",
     "riskNote": "Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. OECD benchmark: 2–15% high-risk."
   },
   "verdict": {
