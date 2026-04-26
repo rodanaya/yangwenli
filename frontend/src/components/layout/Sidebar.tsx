@@ -20,6 +20,11 @@ import {
   Activity,
   GitCompareArrows,
   TrendingUp,
+  Tag,
+  Fingerprint,
+  Newspaper,
+  Briefcase,
+  Sparkles,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -55,33 +60,45 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
-// 7-item editorial sidebar per architect audit. Previous 19-item nav collapsed
-// based on redundancy matrix (direct_award % appeared on 24 of 41 pages;
-// investigate section had 8 doorways into the same queue). Minor destinations
-// reachable via: Dashboard KPI links, CommandPalette (Cmd+K), in-page drill.
+// v3.0 sidebar — 5 sections / 14 items per docs/SITE_IA.md
+// Restructured to expose the 9-entity dossier model: adds Categorías
+// (the user-flagged landmark — 91 categories), Patrones (P1-P7 dossiers),
+// Sala de Redacción (newsroom), Brief Ejecutivo (funder summary), and
+// Mi Espacio (workspace). Renames /capture → /captura (Spanish-first
+// per editorial bible).
 const NAV_SECTIONS: NavSectionDef[] = [
   {
-    sectionKey: 'sections.overview',
+    sectionKey: 'sections.discover',
     items: [
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+      { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
+      { i18nKey: 'executive', href: '/executive', icon: Sparkles },
     ],
   },
   {
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
-      { i18nKey: 'intersection', href: '/intersection', icon: GitCompareArrows },
-      { i18nKey: 'capture', href: '/capture', icon: TrendingUp },
+      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
+    ],
+  },
+  {
+    sectionKey: 'sections.explore',
+    items: [
+      { i18nKey: 'categories', href: '/categories', icon: Tag },
+      { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
+      { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
       { i18nKey: 'network', href: '/network', icon: Network },
     ],
   },
   {
     sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
+      { i18nKey: 'capture', href: '/captura', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
+      { i18nKey: 'intersection', href: '/intersection', icon: GitCompareArrows },
     ],
   },
   {

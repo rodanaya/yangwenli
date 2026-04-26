@@ -27,6 +27,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   ArrowLeft,
+  BookOpen,
   Download,
   Loader2,
   Shield,
@@ -187,6 +188,22 @@ export function VendorProfile() {
         shap={data.shap.data}
         actions={
           <>
+            {/* PRIMARY CTA: open the narrative thread (the editorial flagship).
+                Per docs/SITE_IA.md user-journey #1, this is the highest-leverage
+                CTA in the platform — RedThread is the single best editorial
+                surface and was previously discoverable only via direct URL. */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => navigate(`/thread/${vendorId}`)}
+              className="h-8 text-xs"
+              title={isEs ? 'Abrir narrativa de investigación' : 'Open investigation narrative'}
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="ml-1.5 hidden sm:inline">
+                {isEs ? 'Hilo' : 'Thread'}
+              </span>
+            </Button>
             <AddToWatchlistButton
               itemType="vendor"
               itemId={vendorId}

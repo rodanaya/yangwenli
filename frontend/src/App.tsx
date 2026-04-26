@@ -232,13 +232,15 @@ function App() {
                 }
               />
               <Route
-                path="capture"
+                path="captura"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <CaptureCreep />
                   </SuspenseBoundary>
                 }
               />
+              {/* Spanish-first rename per docs/SITE_IA.md — preserve old URL */}
+              <Route path="capture" element={<Navigate to="/captura" replace />} />
               <Route
                 path="clusters"
                 element={

@@ -14,6 +14,7 @@ import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { DotBarRow } from '@/components/ui/DotBar'
 import { parseFactorLabel } from '@/lib/risk-factors'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 
 interface VendorEvidenceTabProps {
   vendor: VendorDetailResponse
@@ -44,6 +45,15 @@ export function VendorEvidenceTab({
 
   return (
     <div className="space-y-8">
+      {/* § 1 Lede — ARIA investigative memo (5,800-char dossier surfaced here
+          per docs/VENDOR_DOSSIER_SCHEME.md). Previously invisible: the memo
+          existed in aria_queue.memo_text but no page imported AriaMemoPanel. */}
+      <AriaMemoPanel
+        vendorId={Number(vendor.id)}
+        vendorName={vendor.name}
+        tier={(vendor as { tier?: number; aria_tier?: number }).aria_tier ?? (vendor as { tier?: number }).tier}
+      />
+
       {/* Risk waterfall */}
       <section aria-labelledby="waterfall-title">
         <SectionTitle id="waterfall-title">

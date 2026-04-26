@@ -1,5 +1,7 @@
 {
   "sections": {
+    "discover": "DISCOVER",
+    "explore": "EXPLORE",
     "overview": "OVERVIEW",
     "investigation": "INVESTIGATION",
     "analysis": "ANALYSIS",
@@ -70,6 +72,7 @@
   "annotations": "My Notes",
   "apiExplorer": "API Explorer",
   "journalists": "Investigations",
+  "newsroom": "Newsroom",
   "reportCard": "Institution Report Card",
   "settings": "Settings",
   "expandSidebar": "Expand sidebar",
