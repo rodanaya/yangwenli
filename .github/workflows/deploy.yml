@@ -19,7 +19,7 @@ jobs:
       - name: Add server to known hosts
         run: ssh-keyscan -H ${{ secrets.HETZNER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Sync code to server (no DB)
+      - name: Sync code to server (no DB, preserve secrets + untracked)
         run: |
           rsync -az --delete \
             --exclude='backend/RUBLI_NORMALIZED.db*' \
@@ -31,6 +31,11 @@ jobs:
             --exclude='.git/' \
             --exclude='*.pyc' \
             --exclude='__pycache__/' \
+            --exclude='.env' \
+            --exclude='.env.prod' \
+            --exclude='.env.prod.utf8' \
+            --exclude='.env.local' \
+            --exclude='.env.*.local' \
             . \
             root@${{ secrets.HETZNER_IP }}:/opt/rubli/
 
