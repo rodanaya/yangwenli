@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
+import { lazy, Suspense, useState, useMemo, useRef, useEffect } from 'react'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -62,7 +62,9 @@ import {
   Clock,
   Globe,
 } from 'lucide-react'
-import { NetworkGraphModal } from '@/components/NetworkGraphModal'
+const NetworkGraphModal = lazy(() =>
+  import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal }))
+)
 import {
   EditorialAreaChart,
   EditorialComposedChart,
@@ -615,13 +617,17 @@ export function InstitutionProfile() {
         </div>
       </header>
 
-      <NetworkGraphModal
-        open={networkOpen}
-        onOpenChange={setNetworkOpen}
-        centerType="institution"
-        centerId={institutionId}
-        centerName={toTitleCase(institution.name)}
-      />
+      {networkOpen && (
+        <Suspense fallback={null}>
+          <NetworkGraphModal
+            open={networkOpen}
+            onOpenChange={setNetworkOpen}
+            centerType="institution"
+            centerId={institutionId}
+            centerName={toTitleCase(institution.name)}
+          />
+        </Suspense>
+      )}
 
       <EditorialPageShell
         kicker="PERFIL INSTITUCIONAL · MÉXICO"

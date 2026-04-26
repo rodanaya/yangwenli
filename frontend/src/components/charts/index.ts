@@ -2,8 +2,10 @@
  * Chart Components
  * Centralized exports for all visualization components and Recharts re-exports
  *
- * NOTE: Heatmap is NOT exported here to avoid bundling echarts (~900KB) into every page.
- * Import Heatmap directly: import { Heatmap } from '@/components/charts/Heatmap'
+ * NOTE: ECharts consumers (VendorConcentrationTreemap, NetworkGraphModal,
+ * NetworkMiniGraph) are NOT exported here — they're imported via dynamic
+ * `import()` at their call sites so the echarts vendor chunk only loads
+ * when the user actually opens the network/treemap views.
  */
 
 // Custom chart components (Recharts-based only)

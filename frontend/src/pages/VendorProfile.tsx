@@ -20,7 +20,7 @@
  *   - i18n ES/EN throughout
  *   - Tab state via ?tab=
  */
-import { useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
@@ -49,7 +49,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 
 import { ContractDetailModal } from '@/components/ContractDetailModal'
-import { NetworkGraphModal } from '@/components/NetworkGraphModal'
+const NetworkGraphModal = lazy(() =>
+  import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal }))
+)
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { ShareButton } from '@/components/ShareButton'
@@ -280,14 +282,18 @@ export function VendorProfile() {
         onOpenChange={(open) => !open && setSelectedContract(null)}
       />
 
-      {/* Network graph drawer */}
-      <NetworkGraphModal
-        open={networkOpen}
-        onOpenChange={setNetworkOpen}
-        centerType="vendor"
-        centerId={vendorId}
-        centerName={vendor.name}
-      />
+      {/* Network graph drawer — lazy loads echarts only when opened */}
+      {networkOpen && (
+        <Suspense fallback={null}>
+          <NetworkGraphModal
+            open={networkOpen}
+            onOpenChange={setNetworkOpen}
+            centerType="vendor"
+            centerId={vendorId}
+            centerName={vendor.name}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
