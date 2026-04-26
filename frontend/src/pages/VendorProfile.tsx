@@ -48,7 +48,9 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 
-import { ContractDetailModal } from '@/components/ContractDetailModal'
+const ContractDetailModal = lazy(() =>
+  import('@/components/ContractDetailModal').then((m) => ({ default: m.ContractDetailModal }))
+)
 const NetworkGraphModal = lazy(() =>
   import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal }))
 )
@@ -275,12 +277,16 @@ export function VendorProfile() {
         </TabPanel>
       </SimpleTabs>
 
-      {/* Contract detail drawer */}
-      <ContractDetailModal
-        contractId={selectedContract?.id ?? null}
-        open={!!selectedContract}
-        onOpenChange={(open) => !open && setSelectedContract(null)}
-      />
+      {/* Contract detail drawer — lazy */}
+      {selectedContract && (
+        <Suspense fallback={null}>
+          <ContractDetailModal
+            contractId={selectedContract?.id ?? null}
+            open={!!selectedContract}
+            onOpenChange={(open) => !open && setSelectedContract(null)}
+          />
+        </Suspense>
+      )}
 
       {/* Network graph drawer — lazy loads echarts only when opened */}
       {networkOpen && (

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react'
+import React, { lazy, Suspense, useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -60,7 +60,9 @@ import {
   BookmarkCheck,
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
-import { ContractDetailModal } from '@/components/ContractDetailModal'
+const ContractDetailModal = lazy(() =>
+  import('@/components/ContractDetailModal').then((m) => ({ default: m.ContractDetailModal }))
+)
 import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
@@ -1174,11 +1176,15 @@ export function Contracts() {
         </div>
       )}
 
-      <ContractDetailModal
-        contractId={selectedContractId}
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-      />
+      {isDetailOpen && (
+        <Suspense fallback={null}>
+          <ContractDetailModal
+            contractId={selectedContractId}
+            open={isDetailOpen}
+            onOpenChange={setIsDetailOpen}
+          />
+        </Suspense>
+      )}
 
       {/* Floating compare bar */}
       {compareIds.size >= 2 && (

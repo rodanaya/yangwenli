@@ -28,7 +28,9 @@ import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { NarrativeCard } from '@/components/NarrativeCard'
-import { ContractDetailModal } from '@/components/ContractDetailModal'
+const ContractDetailModal = lazy(() =>
+  import('@/components/ContractDetailModal').then((m) => ({ default: m.ContractDetailModal }))
+)
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
@@ -1652,11 +1654,15 @@ export function InstitutionProfile() {
       </Act>
       </EditorialPageShell>
 
-      <ContractDetailModal
-        contractId={selectedContractId}
-        open={isDetailOpen}
-        onOpenChange={setIsDetailOpen}
-      />
+      {isDetailOpen && (
+        <Suspense fallback={null}>
+          <ContractDetailModal
+            contractId={selectedContractId}
+            open={isDetailOpen}
+            onOpenChange={setIsDetailOpen}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
