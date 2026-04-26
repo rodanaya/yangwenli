@@ -306,6 +306,16 @@ Unified 5-registry scraper feeding ARIA Module 5. Run `python -m scripts.centine
 | [`docs/VENDOR_DOSSIER_SCHEME.md`](docs/VENDOR_DOSSIER_SCHEME.md) | One entity's 10-section editorial template + 5 trust-manifest invariants |
 | [`docs/SITE_SKELETON.md`](docs/SITE_SKELETON.md) | All 9 entity dossier types + 5 macro landings + 3 tools + cross-reference graph |
 | [`docs/SITE_IA.md`](docs/SITE_IA.md) | URL scheme + sidebar (5 sections / 14 items) + 5 user journeys + persistent UI |
+| [`docs/DATA_INTEGRITY_PLAN.md`](docs/DATA_INTEGRITY_PLAN.md) | **5-agent data audit findings + triaged S.* tasks for Sonnet handoff** (memo provenance, GT boost removal, post-ETL refresh, orphan triage, evidence rubric, taxonomy expansion) |
+
+### v3.0 Honest pitch matrix (use these when describing the platform)
+| Old claim | Honest version |
+|---|---|
+| "320 Tier-1 priority leads" | "320 GT-anchored T1 vendors · model-discovery uplift in calibration (S.7)" |
+| "1,843 vendor LLM memos" | "~440 LLM-narrative · 699 templated search prompts (visually demoted) · 618 analyst stubs" |
+| "1,380 documented corruption cases" | "739 cases with vendor links · 641 orphan placeholders pending mining (S.5)" |
+| "$2.84T MXN estimated fraud" | "$2.84T summed from estimated_fraud_mxn (41 cases NULL on this field)" |
+| "91-category auto-classification" | "72 active categories covering 99.73% of contracts. Education/Gobernación/Trabajo each have 1 category — taxonomy expansion in S.10-S.12" |
 
 ### v3.0 unifying primitives
 - `frontend/src/components/ui/EntityIdentityChip.tsx` — **THE** chip used everywhere outside an entity's own dossier. Type-discriminated (vendor / institution / sector / category / case / pattern / network). Routes to canonical dossier route.

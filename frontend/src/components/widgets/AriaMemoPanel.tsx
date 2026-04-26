@@ -22,7 +22,31 @@ interface AriaMemoProps {
   vendorId: number
   vendorName: string
   tier?: number
+  /** Vendor flagged as structural false positive (e.g. multinational pharma OEM).
+   *  Per docs/DATA_INTEGRITY_PLAN.md task N.2 — defamation guard. */
+  isFalsePositive?: boolean
+  fpReason?: string
   className?: string
+}
+
+// Heuristic: detect templated/auto-generated memos so the UI can demote them
+// honestly. Per docs/DATA_INTEGRITY_PLAN.md task N.3 — 38% of memos are
+// template strings whose "FUENTES" block is a search prompt, not citations.
+function isTemplatedMemo(text: string): boolean {
+  if (!text) return false
+  return (
+    text.includes('Buscar manualmente') ||
+    text.includes('PREGUNTAS DE INVESTIGACIÓN') ||
+    /Hipótesis Alternativas?:/.test(text) ||
+    text.includes('Animal Político / Proceso / Latinus')
+  )
+}
+
+// Heuristic: detect memos written before the Mar 25 v0.6.5 rescore.
+// Per docs/DATA_INTEGRITY_PLAN.md task N.4.
+function hasStaleModelReference(text: string): boolean {
+  if (!text) return false
+  return /\bv5\.[01]\b/.test(text) || /modelo v5\b/i.test(text)
 }
 
 // ---------------------------------------------------------------------------
@@ -59,7 +83,7 @@ function MemoSkeleton() {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMemoProps) {
+export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpReason, className }: AriaMemoProps) {
   const { t } = useTranslation('aria')
   const [copied, setCopied] = useState(false)
 
@@ -69,6 +93,11 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
     staleTime: 600_000, // 10 min
     enabled: vendorId > 0,
   })
+
+  // Provenance heuristics — see docs/DATA_INTEGRITY_PLAN.md § 1
+  const memoText = memo?.memo_text ?? ''
+  const isTemplated = isTemplatedMemo(memoText)
+  const hasStaleScore = hasStaleModelReference(memoText)
 
   async function handleCopy() {
     if (!memo?.memo_text) return
@@ -122,6 +151,37 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
           </div>
         ) : memo?.memo_text ? (
           <>
+            {/* === Provenance disclaimer banners (docs/DATA_INTEGRITY_PLAN.md N.2-N.4) === */}
+            {isFalsePositive && (
+              <div className="mb-4 px-4 py-3 border-l-4 border-text-muted bg-text-muted/10 rounded-sm">
+                <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1">
+                  ⚠ Marcado como falso positivo estructural
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Este vendor es un proveedor multinacional o estructural. La concentración refleja su posición de mercado,
+                  <strong className="text-text-primary"> no evidencia de fraude.</strong> El perfil se mantiene únicamente para transparencia metodológica.
+                  {fpReason && <span className="block mt-1 text-text-muted font-mono text-[10px]">Motivo: {fpReason}</span>}
+                </p>
+              </div>
+            )}
+            {isTemplated && !isFalsePositive && (
+              <div className="mb-4 px-4 py-3 border-l-4 border-risk-medium bg-risk-medium/10 rounded-sm">
+                <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1">
+                  Memo automático · sin verificación humana
+                </p>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Este memo fue generado por plantilla, no por análisis investigativo. La sección "FUENTES" sugiere búsquedas manuales
+                  (no son citaciones verificadas). <strong className="text-text-primary">Use solo como punto de partida</strong> para investigación periodística.
+                </p>
+              </div>
+            )}
+            {hasStaleScore && (
+              <div className="mb-4 px-4 py-2 border-l-2 border-risk-medium/50 bg-risk-medium/5 rounded-sm">
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  ⓘ Memo escrito antes del rescore de marzo 2026 (modelo v0.6.5). Las puntuaciones citadas pueden no coincidir con los valores actuales.
+                </p>
+              </div>
+            )}
             <div
               className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap"
               style={{ fontFamily: 'var(--font-family-serif)' }}

@@ -586,16 +586,18 @@ export default function Executive() {
               {lang === 'en' ? (
                 <>
                   Beyond the headline numbers, RUBLI maintains an <strong className="text-text-primary">automated investigative infrastructure</strong>:
-                  a 4-tier priority queue ranking every active vendor in the federal universe; LLM-generated investigation memos
-                  for the most-likely cases; an ever-growing ground-truth corpus of documented Mexican corruption scandals;
-                  and a per-sector calibrated risk model with vendor-stratified validation.
+                  a 4-tier priority queue (Tier 1 currently <em>anchored on the documented GT corpus</em> — model-discovery uplift in active calibration);
+                  LLM-narrative + templated investigation memos for ~440 hand-curated vendors plus broader auto-coverage;
+                  a ground-truth corpus growing across all 12 sectors; and a per-sector calibrated risk model with vendor-stratified validation.
+                  See the <a href="/methodology" className="text-accent hover:underline">methodology</a> for honest scope and limits.
                 </>
               ) : (
                 <>
                   Más allá de las cifras titulares, RUBLI mantiene una <strong className="text-text-primary">infraestructura de investigación automatizada</strong>:
-                  una cola priorizada en 4 niveles que ordena cada proveedor activo del universo federal; memos de
-                  investigación generados por LLM para los casos más probables; un corpus de casos documentados de corrupción
-                  mexicana en crecimiento continuo; y un modelo de riesgo calibrado por sector con validación estratificada por proveedor.
+                  una cola priorizada en 4 niveles (Tier 1 actualmente <em>anclado al corpus GT documentado</em> — el descubrimiento puro del modelo está en calibración);
+                  memos LLM-narrativa + plantillados para ~440 proveedores curados manualmente más cobertura automatizada amplia;
+                  un corpus de casos documentados creciente en los 12 sectores; y un modelo de riesgo calibrado por sector con validación estratificada por proveedor.
+                  Consulta la <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites honestos.
                 </>
               )}
             </p>
