@@ -94,9 +94,11 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
     enabled: vendorId > 0,
   })
 
-  // Provenance heuristics — see docs/DATA_INTEGRITY_PLAN.md § 1
+  // Provenance — prefer the canonical memo_type column from S.3 classification,
+  // fall back to text heuristic if API doesn't return it (e.g. older deploys).
   const memoText = memo?.memo_text ?? ''
-  const isTemplated = isTemplatedMemo(memoText)
+  const memoType = (memo as { memo_type?: string } | null | undefined)?.memo_type
+  const isTemplated = memoType === 'template' || memoType === 'duplicate' || isTemplatedMemo(memoText)
   const hasStaleScore = hasStaleModelReference(memoText)
 
   async function handleCopy() {

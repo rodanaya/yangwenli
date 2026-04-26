@@ -887,30 +887,58 @@ def get_aria_memo(
     vendor_id: int,
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
-    """Get the ARIA investigation memo for a specific vendor."""
-    if not _table_exists(conn, "aria_memos"):
-        raise HTTPException(status_code=404, detail="No ARIA memos have been generated yet.")
+    """Get the ARIA investigation memo for a specific vendor.
 
-    row = conn.execute(
+    Reads from aria_memos table (canonical, 22 hand-curated rows) and
+    falls back to aria_queue.memo_text (1,843 auto-generated dossiers)
+    when the canonical table doesn't have a row. The fallback unlocks
+    the broader memo corpus per docs/DATA_INTEGRITY_PLAN.md task S.3.
+
+    Provenance metadata (memo_provenance / memo_status from S.3
+    classification) is included so the frontend can demote templated
+    memos with the disclaimer banner.
+    """
+    # First try the curated aria_memos table
+    if _table_exists(conn, "aria_memos"):
+        row = conn.execute(
+            """
+            SELECT m.vendor_id, m.memo_text, m.memo_type, m.generated_by,
+                   m.created_at, m.case_id,
+                   COALESCE(q.vendor_name, v.name) AS vendor_name
+            FROM aria_memos m
+            LEFT JOIN aria_queue q ON m.vendor_id = q.vendor_id
+            LEFT JOIN vendors v ON m.vendor_id = v.id
+            WHERE m.vendor_id = ?
+            ORDER BY m.created_at DESC
+            LIMIT 1
+            """,
+            (vendor_id,),
+        ).fetchone()
+        if row is not None:
+            return AriaMemoResponse(**_row_to_dict(row))
+
+    # Fallback to aria_queue.memo_text — the 1,843-row auto-generated corpus.
+    # Read provenance/status if S.3 classification has run.
+    fallback = conn.execute(
         """
-        SELECT m.vendor_id, m.memo_text, m.memo_type, m.generated_by,
-               m.created_at, m.case_id,
-               COALESCE(q.vendor_name, v.name) AS vendor_name
-        FROM aria_memos m
-        LEFT JOIN aria_queue q ON m.vendor_id = q.vendor_id
-        LEFT JOIN vendors v ON m.vendor_id = v.id
-        WHERE m.vendor_id = ?
-        ORDER BY m.created_at DESC
+        SELECT q.vendor_id,
+               q.vendor_name,
+               q.memo_text,
+               q.memo_provenance AS memo_type,
+               'aria_pipeline' AS generated_by,
+               q.memo_generated_at AS created_at,
+               NULL AS case_id
+        FROM aria_queue q
+        WHERE q.vendor_id = ? AND q.memo_text IS NOT NULL
         LIMIT 1
         """,
         (vendor_id,),
     ).fetchone()
 
-    if row is None:
+    if fallback is None:
         raise HTTPException(status_code=404, detail=f"No memo found for vendor {vendor_id}.")
 
-    d = _row_to_dict(row)
-    return AriaMemoResponse(**d)
+    return AriaMemoResponse(**_row_to_dict(fallback))
 
 
 @router.get("/memos", response_model=AriaMemoListResponse)
