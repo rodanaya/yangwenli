@@ -104,13 +104,10 @@ export default defineConfig({
             'tailwind-merge',
             'class-variance-authority',
             'zustand',
-            'scrollama',
             'html-to-image',
           ],
           // Icons - often large
           'vendor-icons': ['lucide-react'],
-          // GSAP — only used by Intro.tsx splash screen
-          'vendor-gsap': ['gsap'],
           // Framer Motion — used by RedThread and editorial components
           'vendor-motion': ['framer-motion'],
           // ECharts — used by echarts-for-react components
