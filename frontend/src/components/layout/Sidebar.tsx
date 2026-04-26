@@ -20,11 +20,8 @@ import {
   Activity,
   GitCompareArrows,
   TrendingUp,
-  Tag,
-  Fingerprint,
   Newspaper,
   Briefcase,
-  Sparkles,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -60,19 +57,17 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
-// v3.0 sidebar — 5 sections / 14 items per docs/SITE_IA.md
-// Restructured to expose the 9-entity dossier model: adds Categorías
-// (the user-flagged landmark — 91 categories), Patrones (P1-P7 dossiers),
-// Sala de Redacción (newsroom), Brief Ejecutivo (funder summary), and
-// Mi Espacio (workspace). Renames /capture → /captura (Spanish-first
-// per editorial bible).
+// v3.0 LOCKED sidebar — 4 sections / 12 items.
+// Removed entries that pointed at broken or duplicate destinations
+// (Brief Ejecutivo duplicated /, Patrones had no route, Categorías only
+// redirected). Per docs/PROJECT_LOCKED_V3.md — every nav entry must lead
+// to a working page. No exceptions.
 const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.discover',
     items: [
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
-      { i18nKey: 'executive', href: '/executive', icon: Sparkles },
     ],
   },
   {
@@ -86,10 +81,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.explore',
     items: [
-      { i18nKey: 'categories', href: '/categories', icon: Tag },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'patterns', href: '/patterns', icon: Fingerprint },
       { i18nKey: 'network', href: '/network', icon: Network },
     ],
   },
