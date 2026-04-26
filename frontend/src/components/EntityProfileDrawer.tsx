@@ -190,7 +190,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             <div className="flex items-center gap-2 mt-1.5">
               <RiskBadge score={avgScore} className="text-xs" />
               <span className="text-xs text-text-muted">
-                {t('drawer.aiRiskScore')}: {(avgScore * 100).toFixed(0)}%
+                {t('drawer.aiRiskScore')}: {avgScore.toFixed(2)}
               </span>
             </div>
           )}

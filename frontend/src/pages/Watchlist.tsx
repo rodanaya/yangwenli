@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DotBar } from '@/components/ui/DotBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { getRiskLevelFromScore } from '@/lib/constants'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
 import { DossierCreateDialog } from '@/components/DossierCreateDialog'
@@ -61,12 +62,17 @@ function formatRiskPct(score: number | null | undefined): string {
   return `${(score * 100).toFixed(1)}%`
 }
 
+// Canonical thresholds via getRiskLevelFromScore (v0.6.5: 0.60/0.40/0.25).
+// Trust manifest invariant 3: never inline thresholds — always go through @/lib/constants.
+const RISK_COLOR_CLASS: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+  critical: 'text-risk-critical',
+  high: 'text-risk-high',
+  medium: 'text-risk-medium',
+  low: 'text-risk-low',
+}
 function getRiskColor(score: number | null | undefined): string {
   if (score === null || score === undefined) return 'text-text-muted'
-  if (score >= 0.5) return 'text-risk-critical'
-  if (score >= 0.3) return 'text-risk-high'
-  if (score >= 0.1) return 'text-risk-medium'
-  return 'text-risk-low'
+  return RISK_COLOR_CLASS[getRiskLevelFromScore(score)]
 }
 
 // ============================================================================
