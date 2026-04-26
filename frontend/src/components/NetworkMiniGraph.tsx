@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '@/lib/echarts-core'
 import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { networkApi } from '@/api/client'

@@ -8,7 +8,7 @@ import { useMemo, useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '@/lib/echarts-core'
 import { Share2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import {
   Dialog,

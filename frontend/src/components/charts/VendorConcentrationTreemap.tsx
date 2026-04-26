@@ -5,7 +5,7 @@
  * Design: dark editorial (zinc-900 bg), risk-colored cells, zinc-800 borders.
  */
 import { useMemo } from 'react'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '@/lib/echarts-core'
 import { useNavigate } from 'react-router-dom'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'

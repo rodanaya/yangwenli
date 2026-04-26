@@ -4,7 +4,7 @@
  */
 
 import { memo, useMemo } from 'react'
-import ReactECharts from 'echarts-for-react'
+import ReactECharts from '@/lib/echarts-core'
 // Theme handled by CSS variables
 
 interface HeatmapData {
