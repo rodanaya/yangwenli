@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { DotBar } from '@/components/ui/DotBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { getRiskLevelFromScore } from '@/lib/constants'
+import { formatEntityName } from '@/lib/entity/format'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
 import { DossierCreateDialog } from '@/components/DossierCreateDialog'
@@ -1142,7 +1143,7 @@ function WatchlistRow({
             className="text-left font-medium hover:text-accent transition-colors truncate max-w-[200px]"
             title={item.item_name}
           >
-            {item.item_name}
+            {formatEntityName(item.item_type as 'vendor' | 'institution' | 'category', item.item_name, 'sm')}
           </button>
           {item.reason && (
             <span className="text-xs text-text-muted truncate max-w-[200px]" title={item.reason}>

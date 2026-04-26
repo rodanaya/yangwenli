@@ -296,7 +296,47 @@ Unified 5-registry scraper feeding ARIA Module 5. Run `python -m scripts.centine
 
 ---
 
-## Frontend Foundations (post-Apr 2026 redesign marathon)
+## Frontend v3.0 — Dossiers (current canonical model)
+
+**Started 2026-04-26 · the consolidation of 28 vendor surfaces into a single dossier-driven hypertext platform.** Read these 4 docs before touching anything frontend:
+
+| Doc | What it locks |
+|---|---|
+| [`docs/FRONTEND_V3_PLAN.md`](docs/FRONTEND_V3_PLAN.md) | THE EXECUTION PLAN — 4 phases, task IDs, Sonnet handoff template |
+| [`docs/VENDOR_DOSSIER_SCHEME.md`](docs/VENDOR_DOSSIER_SCHEME.md) | One entity's 10-section editorial template + 5 trust-manifest invariants |
+| [`docs/SITE_SKELETON.md`](docs/SITE_SKELETON.md) | All 9 entity dossier types + 5 macro landings + 3 tools + cross-reference graph |
+| [`docs/SITE_IA.md`](docs/SITE_IA.md) | URL scheme + sidebar (5 sections / 14 items) + 5 user journeys + persistent UI |
+
+### v3.0 unifying primitives
+- `frontend/src/components/ui/EntityIdentityChip.tsx` — **THE** chip used everywhere outside an entity's own dossier. Type-discriminated (vendor / institution / sector / category / case / pattern / network). Routes to canonical dossier route.
+- `frontend/src/lib/entity/format.ts` — `formatEntityName(type, name, size)` — single funnel for all entity name rendering.
+- `frontend/src/lib/entity/lede.ts` — `getLedeFor(type, ctx)` returns 80-word synthesized lede. Vendor variant truncates `aria_queue.memo_text` intelligently.
+- `frontend/src/lib/entity/verdict.ts` — `getVerdictFor(type, ctx)` returns 4-bucket classification (critical/high/medium/neutral) per dossier scheme § 8.
+
+### v3.0 hard rules (every commit must respect)
+1. `<EntityIdentityChip>` is the ONLY way to render an entity outside its own dossier. Plain `<Link to={`/vendors/${id}`}>{name}</Link>` is forbidden.
+2. Risk thresholds via `getRiskLevelFromScore` from `@/lib/constants` (v0.6.5: 0.60/0.40/0.25). No inline ladders.
+3. Vendor names through `formatVendorName` or `formatEntityName(type, name, size)`. No raw `{vendor.name}` or `toTitleCase(vendor.name)`.
+4. Canonical data sources: `vendor_stats.*` for vendor numbers, `category_stats.*` for categories, `institution_stats.*` for institutions. Deprecate raw `vendors.avg_risk_score`.
+5. Risk copy: "indicador de riesgo" / "risk indicator" — never "X% probability of corruption".
+6. Spanish § kickers for editorial sections. English fallback via i18n.
+7. No green for low risk (Bible §3.10). `low` renders as `text-text-muted`.
+8. Every commit message cites which doc + § section it implements: e.g. `feat(dossier P3 § 2): Category Dossier La Demanda section`.
+
+### v3.0 sidebar (5 sections / 14 items)
+```
+DESCUBRIR  Inteligencia Nacional · Sala de Redacción · Brief Ejecutivo
+INVESTIGAR La Cola (ARIA) · Mi Espacio · Casos
+EXPLORAR   Categorías · Sectores · Instituciones · Patrones · Red
+ANÁLISIS   Captura · Administraciones · La Intersección
+PLATAFORMA Metodología
+```
+
+5 NEW entries vs v2.1: Categorías (the user-flagged landmark), Patrones, Sala de Redacción, Brief Ejecutivo, Mi Espacio. Renamed `/capture` → `/captura` (Spanish-first per editorial bible).
+
+---
+
+## Frontend Foundations (post-Apr 2026 redesign marathon — v2.1 baseline)
 
 The 53-commit Spring 2026 redesign ("ship-by-Monday") consolidated the
 40-page frontend onto a small set of canonical primitives. Future work

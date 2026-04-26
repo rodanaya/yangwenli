@@ -22,6 +22,7 @@ import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
 import { TableExportButton } from '@/components/TableExportButton'
 import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -436,8 +437,8 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
         {/* Vendor name + subline — the editorial anchor */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-text-primary truncate leading-tight">
-              {item.vendor_name}
+            <h3 className="text-base font-semibold text-text-primary truncate leading-tight" title={item.vendor_name}>
+              {formatVendorName(item.vendor_name, 48)}
             </h3>
             {item.new_vendor_risk && (
               <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
