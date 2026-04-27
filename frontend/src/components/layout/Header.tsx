@@ -40,7 +40,7 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const { t } = useTranslation('nav')
+  const { t, i18n } = useTranslation('nav')
   const { t: tc } = useTranslation('common')
   const { user, logout } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
@@ -114,13 +114,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const title = i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath)
   const parentPath = getParentPath(currentPath)
 
-  // Editorial masthead date — "TUE · APR 17 · 2026"
-  const editorialDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).toUpperCase().replace(/,/g, ' ·')
+  // Editorial masthead date — locale-aware (F1 audit fix). Spanish users
+  // see "MAR · 17 ABR · 2026" instead of the always-en-US "TUE · APR 17 · 2026".
+  const editorialDate = new Date().toLocaleDateString(
+    i18n.language?.startsWith('es') ? 'es-MX' : 'en-US',
+    { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
+  ).toUpperCase().replace(/,/g, ' ·').replace(/\./g, '')
 
   return (
     <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-border bg-background/85 px-4 md:px-5 backdrop-blur-xl">

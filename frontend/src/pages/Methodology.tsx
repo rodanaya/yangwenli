@@ -347,12 +347,13 @@ const CoefficientChart = memo(function CoefficientChart() {
           : 'var(--color-text-muted)',
   })), [t])
 
-  // Scale: coefficients range from -0.6 to +1.3; we use a symmetric 0-based axis.
-  // Dots are a signed magnitude strip — zero at dot index 23 (approximately).
-  const RANGE_MIN = -0.6
-  const RANGE_MAX = 1.3
-  const SPAN = RANGE_MAX - RANGE_MIN           // 1.9
-  const ZERO_DOT = Math.round(((0 - RANGE_MIN) / SPAN) * MD_DOTS) // ≈15
+  // Scale: v0.6.5 coefficients range from -0.39 to +0.55. Symmetric 0-based axis.
+  // (v5.x had ±1.3; updated per F5 audit — actual v0.6.5 max is price_volatility +0.5343,
+  // min is institution_diversity -0.3821.)
+  const RANGE_MIN = -0.55
+  const RANGE_MAX = 0.55
+  const SPAN = RANGE_MAX - RANGE_MIN           // 1.10
+  const ZERO_DOT = Math.round(((0 - RANGE_MIN) / SPAN) * MD_DOTS) // ≈11 (midpoint)
 
   const chartW = MD_LABEL_W + MD_DOTS * MD_DOT_GAP + MD_VAL_W
   const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
@@ -1527,12 +1528,13 @@ export function Methodology() {
                       { l: 'CompraNet abolished Apr 2025', i: 'Future data unavailable; 1.9M records already deleted', f: 'Dependent on government decisions' },
                       { l: 'Pre-2010 data quality', i: '25% of records less reliable', f: 'Structural COMPRANET limitation' },
                       { l: 'Correlation ≠ causation', i: 'Scores require investigative follow-up', f: 'By design — model informs, not concludes' },
-                      { l: 'Structural concentration', i: 'Some sectors over-flagged (Defensa, Energía)', f: 'Sector-specific exclusion lists' },
+                      { l: 'Structural concentration (sector)', i: 'Some sectors over-flagged (Defensa, Energía)', f: 'Sector-specific exclusion lists' },
                       { l: 'Temporal stationarity', i: 'New fraud patterns may be undetected', f: 'Periodic retraining with new cases' },
                       { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
-                      { l: 'Mexico concentration model', i: 'Bid-rotation collusion underdetected', f: 'Add collusion-ring ground truth' },
                       { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
                       { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.6.5 split', f: 'Point-in-time rolling features' },
+                      { l: 'Ghost-companion boost applied post-OECD calibration', i: 'HR=13.49% exceeds 9% target by design (+403K boosted contracts)', f: 'Documented intentional design decision' },
+                      { l: 'ARIA T1 = ground-truth lookup', i: 'External-flags +0.20 IPS boost guarantees GT vendors enter T1; T2 is the actual discovery surface', f: 'S.7 deliberate recalibration session pending' },
                     ] as const).map((row) => (
                       <tr key={row.l} className="hover:bg-accent/[0.03]">
                         <td className="px-3 py-2 text-text-primary">{row.l}</td>

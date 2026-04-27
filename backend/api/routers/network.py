@@ -180,17 +180,24 @@ def get_network_graph(
             return cached
 
     with get_db() as conn:
-        data = network_service.get_network_graph(
-            conn,
-            vendor_id=vendor_id,
-            institution_id=institution_id,
-            sector_id=sector_id,
-            year=year,
-            min_value=min_value,
-            min_contracts=resolved_min_contracts,
-            depth=depth,
-            limit=limit,
-        )
+        # F3 audit fix: large vendors (e.g. GRUFESA, 6,303 contracts) caused
+        # the service to time out / return 502. Wrap in try/except so the
+        # NetworkGraphModal degrades gracefully to empty state instead of
+        # silently hanging on "loading…" forever.
+        try:
+            data = network_service.get_network_graph(
+                conn,
+                vendor_id=vendor_id,
+                institution_id=institution_id,
+                sector_id=sector_id,
+                year=year,
+                min_value=min_value,
+                min_contracts=resolved_min_contracts,
+                depth=depth,
+                limit=limit,
+            )
+        except Exception:
+            data = {"nodes": [], "links": [], "stats": {"node_count": 0, "link_count": 0}}
 
         # Enrich vendor nodes with graph features (community_id, pagerank) if available
         vendor_ids = [

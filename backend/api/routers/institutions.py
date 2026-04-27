@@ -1767,17 +1767,25 @@ def get_institution_officials(
         if not conn.execute("SELECT id FROM institutions WHERE id = ?", (institution_id,)).fetchone():
             raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
 
-        # Check if table has data for this institution
-        officials = conn.execute("""
-            SELECT official_name, total_contracts, first_contract_year, last_contract_year,
-                   single_bid_pct, direct_award_pct, avg_risk_score,
-                   vendor_diversity, hhi_vendors
-            FROM official_risk_profiles
-            WHERE institution_id = ?
-              AND total_contracts >= ?
-            ORDER BY avg_risk_score DESC
-            LIMIT ?
-        """, (institution_id, min_contracts, limit)).fetchall()
+        # F4 audit fix: official_risk_profiles table may be missing or
+        # have a corrupted/missing index in some DB snapshots. Wrap in
+        # try/except so the Officials tab degrades gracefully to empty
+        # state instead of returning 503 DB_UNAVAILABLE.
+        try:
+            officials = conn.execute("""
+                SELECT official_name, total_contracts, first_contract_year, last_contract_year,
+                       single_bid_pct, direct_award_pct, avg_risk_score,
+                       vendor_diversity, hhi_vendors
+                FROM official_risk_profiles
+                WHERE institution_id = ?
+                  AND total_contracts >= ?
+                ORDER BY avg_risk_score DESC
+                LIMIT ?
+            """, (institution_id, min_contracts, limit)).fetchall()
+        except sqlite3.OperationalError:
+            # Table missing or query error — return empty (UI shows
+            # "no officials data" instead of crashing the whole tab).
+            officials = []
 
         has_oficial_firmante = "oficial_firmante" in [
             c[1] for c in conn.execute("PRAGMA table_info(contracts)").fetchall()
