@@ -32,15 +32,39 @@ const ALLOWLIST_FILES = [
 const PATTERNS = [
   // ── FAIL tier ────────────────────────────────────────────────────────
   // Tailwind 400-tier saturations — dark-mode era, washed-out on cream.
+  // Original 5 hues: 'fail' (the worst offenders, already 0 in fail tier)
   {
     name: 'Tailwind text-{red|amber|emerald|cyan|violet}-{300|400|500}',
     regex: 'text-(red|amber|emerald|cyan|violet)-(300|400|500)',
     severity: 'fail',
   },
   {
-    name: 'Tailwind bg-*-950 (near-black on cream)',
+    name: 'Tailwind bg-*-950 (red|amber|emerald|cyan|violet|slate|zinc)',
     regex: 'bg-(red|amber|emerald|cyan|violet|slate|zinc)-950',
     severity: 'fail',
+  },
+  // Newly-discovered hues (orange/purple/yellow) and border/bg variants:
+  // 'warn' for now — too much pre-existing debt to block on. Promote to
+  // 'fail' once each pattern's count drops below ~10.
+  {
+    name: 'Tailwind text-{orange|purple|yellow}-{300|400|500} (warn — dark-mode era hues)',
+    regex: 'text-(orange|purple|yellow)-(300|400|500)',
+    severity: 'warn',
+  },
+  {
+    name: 'Tailwind border-{red|amber|emerald|orange|purple}-{300|400|500|600|700} (warn)',
+    regex: 'border-(red|amber|emerald|orange|purple)-(300|400|500|600|700)',
+    severity: 'warn',
+  },
+  {
+    name: 'Tailwind bg-{orange|purple}-950 (warn)',
+    regex: 'bg-(orange|purple)-950',
+    severity: 'warn',
+  },
+  {
+    name: 'Tailwind bg-{red|orange|purple}-{600|700}/* opacity (warn)',
+    regex: 'bg-(red|orange|purple)-(600|700)/[0-9]+',
+    severity: 'warn',
   },
   // Hardcoded dark-mode hex — render as black bullets on cream.
   {

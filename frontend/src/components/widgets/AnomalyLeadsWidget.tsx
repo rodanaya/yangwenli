@@ -15,6 +15,8 @@ import { cn, formatCompactMXN } from '@/lib/utils'
 import { getRiskLevelFromScore } from '@/lib/constants'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 import { Crosshair, ExternalLink } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -64,26 +66,26 @@ function PatternBadge({ pattern }: { pattern: string | null }) {
 }
 
 function IPSBar({ score }: { score: number }) {
-  const pct = Math.min(100, Math.round(score * 100))
+  // IPS thresholds are bespoke (>0.7 / >0.5) — they're queue-priority bands,
+  // not the v0.6.5 model thresholds. Colors come from the canonical risk
+  // palette so the visual grammar matches the rest of the platform.
+  const color =
+    score > 0.7
+      ? 'var(--color-risk-critical)'
+      : score > 0.5
+        ? 'var(--color-risk-high)'
+        : 'var(--color-risk-medium)'
   return (
     <div className="flex items-center gap-1.5">
-      {(() => {
-        const N = 12, DR = 2, DG = 5
-        const filled = Math.max(1, Math.round((pct / 100) * N))
-        const color = score > 0.7 ? '#f87171' : score > 0.5 ? '#fb923c' : '#fbbf24'
-        return (
-          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-            {Array.from({ length: N }).map((_, i) => (
-              <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                fill={i < filled ? color : 'var(--color-background-elevated)'}
-                stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={i < filled ? 0 : 0.5}
-                fillOpacity={i < filled ? 0.85 : 1}
-              />
-            ))}
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={score}
+        max={1}
+        dots={12}
+        color={color}
+        emptyColor="var(--color-background-elevated)"
+        emptyStroke="var(--color-border-hover)"
+        ariaLabel={`IPS ${score.toFixed(2)}`}
+      />
       <span className="text-[11px] font-mono text-text-secondary">{score.toFixed(2)}</span>
     </div>
   )
@@ -186,15 +188,13 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
                   className="border-b border-border/50 hover:bg-background-elevated/50 transition-colors"
                 >
                   <td className="py-2 pr-2 text-text-muted font-mono text-xs">{idx + 1}</td>
-                  <td className="py-2 pr-2">
-                    <Link
-                      to={`/vendors/${v.vendor_id}`}
-                      className="text-text-primary hover:text-accent font-medium text-xs truncate flex items-center gap-1 max-w-[190px]"
-                      title={v.vendor_name}
-                    >
-                      <span className="truncate">{v.vendor_name}</span>
-                      <ExternalLink size={10} className="shrink-0 opacity-40" />
-                    </Link>
+                  <td className="py-2 pr-2 max-w-[190px]">
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={v.vendor_id}
+                      name={v.vendor_name}
+                      size="sm"
+                    />
                   </td>
                   <td className="py-2 pr-2">
                     <span

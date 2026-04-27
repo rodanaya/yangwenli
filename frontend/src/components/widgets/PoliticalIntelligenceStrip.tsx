@@ -8,12 +8,13 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
 import type { TopByPeriodResponse, TopPeriodEntityItem } from '@/api/client'
 import { cn, formatCompactMXN } from '@/lib/utils'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 import { Landmark } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -42,34 +43,31 @@ const PARTY_COLORS: Record<string, string> = {
 function VendorBar({ vendor, maxValue }: { vendor: TopPeriodEntityItem; maxValue: number }) {
   const riskLevel = vendor.avg_risk_score != null ? getRiskLevelFromScore(vendor.avg_risk_score) : 'low'
   const barColor = RISK_COLORS[riskLevel]
-  const pct = maxValue > 0 ? Math.max(4, (vendor.total_value_mxn / maxValue) * 100) : 4
+  const value = maxValue > 0 ? Math.max(0.04, vendor.total_value_mxn / maxValue) : 0.04
 
   return (
     <div className="flex items-center gap-2 py-1.5">
-      <Link
-        to={`/vendors/${vendor.id}`}
-        className="text-xs text-text-primary hover:text-accent truncate w-40 shrink-0"
-        title={vendor.name}
-      >
-        {vendor.name}
-      </Link>
+      <div className="w-40 shrink-0">
+        <EntityIdentityChip
+          type="vendor"
+          id={vendor.id}
+          name={vendor.name}
+          size="sm"
+          hideIcon
+        />
+      </div>
       <div className="flex-1 flex items-center gap-1.5">
-        {(() => {
-          const N = 24, DR = 2.5, DG = 6.5
-          const filled = Math.max(1, Math.round((pct / 100) * N))
-          return (
-            <svg viewBox={`0 0 ${N * DG} 8`} className="flex-1" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
-              {Array.from({ length: N }).map((_, i) => (
-                <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                  fill={i < filled ? barColor : 'var(--color-background-elevated)'}
-                  stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                  strokeWidth={i < filled ? 0 : 0.5}
-                  fillOpacity={i < filled ? 0.85 : 1}
-                />
-              ))}
-            </svg>
-          )
-        })()}
+        <DotBar
+          value={value}
+          max={1}
+          dots={24}
+          dotR={2.5}
+          dotGap={6.5}
+          color={barColor}
+          emptyColor="var(--color-background-elevated)"
+          emptyStroke="var(--color-border-hover)"
+          ariaLabel={`Magnitud ${(value * 100).toFixed(0)}%`}
+        />
         <span className="text-[10px] font-mono text-text-muted w-16 text-right shrink-0">
           {formatCompactMXN(vendor.total_value_mxn)}
         </span>
