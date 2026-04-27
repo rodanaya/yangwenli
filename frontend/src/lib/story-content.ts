@@ -1515,10 +1515,11 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'CompraNet already has the data to flag threshold manipulation automatically. The question is why it has never been required to do so.',
-          stat: '3 reforms',
-          statLabel: 'since 2012 that could have mandated automated threshold monitoring',
+          stat: '75%',
+          statLabel: 'of threshold-cluster contracts are direct awards — no competition, no public tender',
           barValue: 0.75,
-          barLabel: 'fraction of 300K-cluster contracts that are direct awards',
+          barLabel: 'OECD ceiling for non-competitive procedures: 30%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'EU Procurement Directive 2014/24/EU. Art. 5 (aggregation rules and anti-splitting).',
