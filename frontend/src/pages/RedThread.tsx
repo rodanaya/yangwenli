@@ -281,7 +281,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
 
   return (
-    <section id="chapter-timeline" className="min-h-screen py-24 px-4 sm:px-8 max-w-5xl mx-auto">
+    <section id="chapter-timeline" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter
         label={t('chapters.headings.timeline')}
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
@@ -667,7 +667,7 @@ function ChapterMoney({ timeline, t }: {
             <p className="text-text-primary font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
           </div>
           {peakRiskYear && (
-            <div className="bg-background border border-red-900/50 rounded-sm px-4 py-3">
+            <div className="bg-background border border-risk-critical/30 rounded-sm px-4 py-3">
               <p className="editorial-label text-risk-critical mb-1">{t('money.peakByRisk')}</p>
               <p className="text-text-primary font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
@@ -1054,7 +1054,7 @@ function ThreadSkeleton({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="w-1 h-16 bg-[#dc2626] mx-auto mb-6 animate-pulse rounded-full" />
+        <div className="w-1 h-16 bg-risk-critical mx-auto mb-6 animate-pulse rounded-full" />
         <p className="text-text-muted text-sm animate-pulse">{label}</p>
       </div>
     </div>
