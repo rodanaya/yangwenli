@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
+import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -320,6 +320,138 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TopCategoriesChart — top 8 spending categories by total value + risk overlay
+// "Where the money goes" — spend concentration + which categories look suspicious
+// ─────────────────────────────────────────────────────────────────────────────
+interface CategorySummaryItem {
+  category_id: number
+  name_es: string
+  name_en: string
+  sector_code: string
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  direct_award_pct: number
+}
+
+function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['executive', 'categories-top-spend'],
+    queryFn: async () => {
+      const result = await categoriesApi.getSummary() as { data: CategorySummaryItem[] }
+      const sorted = [...(result?.data ?? [])].sort((a, b) => b.total_value - a.total_value)
+      return sorted.slice(0, 8)
+    },
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-8 bg-background-elevated/40 rounded animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (isError || !data?.length) return null
+
+  const maxValue = data[0].total_value
+  const totalShown = data.reduce((s, c) => s + c.total_value, 0)
+
+  const getRiskColor = (risk: number) => {
+    if (risk >= 0.60) return '#dc2626'
+    if (risk >= 0.40) return '#f59e0b'
+    if (risk >= 0.25) return '#a06820'
+    return 'var(--color-text-muted)'
+  }
+
+  return (
+    <div>
+      <div className="space-y-2">
+        {data.map((cat, idx) => {
+          const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
+          const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
+          const barPct = maxValue > 0 ? (cat.total_value / maxValue) * 100 : 0
+          const riskColor = getRiskColor(cat.avg_risk)
+          const riskPct = Math.round(cat.avg_risk * 100)
+          const daDisplay = cat.direct_award_pct != null
+            ? `${Math.round(cat.direct_award_pct)}% DA`
+            : null
+
+          return (
+            <div key={cat.category_id} className="flex items-center gap-2 group">
+              {/* Rank */}
+              <span className="text-[9px] font-mono text-text-muted w-4 text-right flex-shrink-0">
+                {idx + 1}
+              </span>
+
+              {/* Sector dot */}
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: sectorColor }}
+              />
+
+              {/* Category name */}
+              <span
+                className="text-[11px] font-mono text-text-secondary flex-shrink-0 truncate"
+                style={{ width: '11rem' }}
+                title={name}
+              >
+                {name}
+              </span>
+
+              {/* Spend bar */}
+              <div className="flex-1 relative h-[14px] rounded-sm overflow-hidden"
+                style={{ background: 'var(--color-border)' }}>
+                <div
+                  className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500"
+                  style={{
+                    width: `${barPct}%`,
+                    backgroundColor: sectorColor,
+                    opacity: 0.55,
+                  }}
+                />
+                {/* Spend label inside bar */}
+                <span
+                  className="absolute inset-y-0 left-2 flex items-center text-[9px] font-mono tabular-nums"
+                  style={{ color: 'var(--color-text-primary)' }}
+                >
+                  {formatCompactMXN(cat.total_value)}
+                </span>
+              </div>
+
+              {/* Risk % */}
+              <span
+                className="text-[10px] font-mono font-bold w-8 text-right flex-shrink-0 tabular-nums"
+                style={{ color: riskColor }}
+                title={daDisplay ?? undefined}
+              >
+                {riskPct}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend row */}
+      <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
+        <span className="text-[9px] font-mono text-text-muted">
+          {lang === 'en' ? 'Bar width = total spend · Right % = avg risk score' : 'Ancho barra = gasto total · % derecha = puntaje de riesgo promedio'}
+        </span>
+        <span className="text-[9px] font-mono text-text-muted">
+          {lang === 'en'
+            ? `top 8 = ${formatCompactMXN(totalShown)} of MX$9.9T total`
+            : `top 8 = ${formatCompactMXN(totalShown)} del total MX$9.9B`}
+        </span>
       </div>
     </div>
   )
@@ -789,52 +921,7 @@ export default function Executive() {
           </div>
         </section>
 
-        {/* ─── Signal Cards (top 3 predictors) ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? 'Three AI fingerprints — patterns invisible without machine learning' : 'Tres huellas de IA — patrones invisibles sin aprendizaje automático'}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {signals.map((s, idx) => (
-              <motion.article
-                key={s.num}
-                className="surface-card border-l-2 rounded-sm p-5"
-                style={{ borderLeftColor: s.color }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08 }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                    {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
-                  </span>
-                </div>
-                <div className="mb-3">
-                  <span
-                    className="font-mono font-bold text-[34px] tabular-nums leading-none block"
-                    style={{ color: s.color }}
-                  >
-                    β {s.finding}
-                  </span>
-                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">
-                    {s.findingLabel}
-                  </p>
-                </div>
-                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">
-                  {s.name}
-                </h3>
-                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">
-                  {s.detection}
-                </p>
-                <p className="text-xs text-text-secondary leading-[1.6]">
-                  {s.body}
-                </p>
-              </motion.article>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── KEY FINDINGS — specific discoveries, not just methodology ─── */}
+        {/* ─── KEY FINDINGS — specific discoveries with animated visualizations ─── */}
         <section className="mb-12" aria-labelledby="findings-title">
           <div id="findings-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
@@ -846,106 +933,330 @@ export default function Executive() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* Finding 1 — Ghost economy */}
-            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#dc2626' }}>
+            {/* Finding 01 — Ghost Economy: compare-gap animation */}
+            <motion.article
+              className="surface-card rounded-sm p-5 border-l-2"
+              style={{ borderLeftColor: '#dc2626' }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4 }}
+            >
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
               </div>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#dc2626' }}>
-                  6,034
-                </span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
-                  {lang === 'en' ? 'probable ghost\ncompanies detected' : 'empresas fantasma\ndetectadas'}
-                </span>
+              <div className="flex items-end gap-3 mb-4">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#dc2626' }}>6,034</span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'probable ghost\ncompanies detected' : 'empresas fantasma\ndetectadas'}</span>
               </div>
-              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
-                {lang === 'en'
-                  ? 'SAT officially confirmed 42. RUBLI found 143× more.'
-                  : 'SAT confirmó 42 oficialmente. RUBLI encontró 143× más.'}
+              {/* Animated compare-gap bars */}
+              <div className="space-y-2 mb-4">
+                <div>
+                  <div className="text-[8px] font-mono text-text-muted mb-1 uppercase tracking-[0.08em]">
+                    {lang === 'en' ? 'SAT officially confirmed — 42' : 'SAT confirmados oficialmente — 42'}
+                  </div>
+                  <div className="relative h-[10px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                    <motion.div
+                      className="absolute inset-y-0 left-0 rounded-sm"
+                      style={{ background: '#dc2626', opacity: 0.4, transformOrigin: 'left' }}
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: 0.3 }}
+                    />
+                    {/* 42 / 6034 ≈ 0.7% — show minimum visible 3px */}
+                    <div className="absolute inset-y-0 left-0 rounded-sm" style={{ width: 3, background: '#dc2626', opacity: 0.6 }} />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[8px] font-mono mb-1 uppercase tracking-[0.08em]" style={{ color: '#dc2626' }}>
+                    {lang === 'en' ? 'RUBLI P2 detection — 6,034' : 'Detección RUBLI P2 — 6,034'}
+                  </div>
+                  <div className="relative h-[10px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                    <motion.div
+                      className="absolute inset-y-0 left-0 rounded-sm"
+                      style={{ background: '#dc2626', width: '100%', transformOrigin: 'left' }}
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.1, delay: 0.7, ease: 'easeOut' }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+                {lang === 'en' ? 'SAT officially confirmed 42. RUBLI found 143× more.' : 'SAT confirmó 42 oficialmente. RUBLI encontró 143× más.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
-                  ? 'Pattern P2: vendors with no digital footprint, burst activity, RFC anomalies, and shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
-                  : 'Patrón P2: proveedores sin huella digital, actividad en ráfaga, anomalías RFC y domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
+                  ? 'No digital footprint, burst activity, RFC anomalies, shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
+                  : 'Sin huella digital, actividad en ráfaga, anomalías RFC, domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
               </p>
-            </article>
+            </motion.article>
 
-            {/* Finding 2 — Audit blindspot */}
-            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#f59e0b' }}>
+            {/* Finding 02 — Audit Blindspot: fill animation */}
+            <motion.article
+              className="surface-card rounded-sm p-5 border-l-2"
+              style={{ borderLeftColor: '#f59e0b' }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
               </div>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#f59e0b' }}>
-                  95%
-                </span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
-                  {lang === 'en' ? 'of high-value contracts\nnever audited' : 'de contratos de alto valor\nnunca auditados'}
-                </span>
+              <div className="flex items-end gap-3 mb-4">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#f59e0b' }}>95%</span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'of high-value contracts\nnever audited' : 'de contratos de alto valor\nnunca auditados'}</span>
               </div>
-              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
-                {lang === 'en'
-                  ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.'
-                  : 'MX$1.25 billones sobre 5B MXN — sin cobertura de auditoría.'}
+              {/* Animated fill strip */}
+              <div className="mb-4">
+                <div className="relative h-[28px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                  {/* 95% unaudited fills from left */}
+                  <motion.div
+                    className="absolute inset-y-0 left-0 flex items-center"
+                    style={{ background: 'rgba(245,158,11,0.22)', transformOrigin: 'left' }}
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.4, delay: 0.3, ease: 'easeOut' }}
+                  >
+                    <div style={{ width: 'calc(95vw)' }} />
+                  </motion.div>
+                  <motion.div
+                    className="absolute inset-y-0 left-0 rounded-sm"
+                    style={{ width: '95%', transformOrigin: 'left' }}
+                    initial={{ scaleX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.4, delay: 0.3, ease: 'easeOut' }}
+                  >
+                    <div className="h-full rounded-sm" style={{ background: 'rgba(245,158,11,0.28)' }} />
+                  </motion.div>
+                  {/* 5% audited — bright strip at right */}
+                  <motion.div
+                    className="absolute inset-y-0 right-0 rounded-sm"
+                    style={{ width: '5%', background: '#10b981', opacity: 0.7 }}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 0.7 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 1.6 }}
+                  />
+                  <div className="absolute inset-0 flex items-center px-2">
+                    <span className="text-[9px] font-mono font-bold" style={{ color: '#f59e0b' }}>
+                      {lang === 'en' ? '95% NEVER REVIEWED' : '95% NUNCA REVISADO'}
+                    </span>
+                    <span className="ml-auto text-[8px] font-mono" style={{ color: '#10b981' }}>5% ✓</span>
+                  </div>
+                </div>
+              </div>
+              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+                {lang === 'en' ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.' : 'MX$1.25 billones sobre 5B MXN — sin cobertura de auditoría.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
-                  ? 'ASF reviews roughly 5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
-                  : 'La ASF revisa aproximadamente 5% de contratos sobre MX$5B al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció y el proveedor se disolvió.'}
+                  ? 'ASF reviews ~5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
+                  : 'La ASF revisa ~5% de contratos sobre MX$5B al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció.'}
               </p>
-            </article>
+            </motion.article>
 
-            {/* Finding 3 — Threshold splitting */}
-            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#8b5cf6' }}>
+            {/* Finding 03 — Threshold Gaming: two-bar comparison */}
+            <motion.article
+              className="surface-card rounded-sm p-5 border-l-2"
+              style={{ borderLeftColor: '#8b5cf6' }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
               </div>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#8b5cf6' }}>
-                  75%
-                </span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
-                  {lang === 'en' ? 'of threshold-cluster\ncontracts — direct award' : 'de contratos en umbral\n— adjudicación directa'}
-                </span>
+              <div className="flex items-end gap-3 mb-4">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#8b5cf6' }}>75%</span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'DA rate near\ntender thresholds' : 'tasa adjudicación\ncerca de umbrales'}</span>
               </div>
-              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
-                {lang === 'en'
-                  ? 'Contracts cluster statistically just below competitive-tender thresholds.'
-                  : 'Los contratos se agrupan estadísticamente justo debajo de los umbrales de licitación.'}
+              {/* Two-bar vertical comparison */}
+              <div className="flex items-end gap-4 mb-4" style={{ height: 64 }}>
+                <div className="flex flex-col items-center gap-1 flex-1">
+                  <span className="text-[9px] font-mono font-bold" style={{ color: '#8b5cf6' }}>75%</span>
+                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
+                      style={{ background: '#8b5cf6', opacity: 0.65, transformOrigin: 'bottom' }}
+                      initial={{ scaleY: 0 }}
+                      whileInView={{ scaleY: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '75%', background: '#8b5cf6', opacity: 0.65 }} />
+                  </div>
+                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">{lang === 'en' ? 'near\nthreshold' : 'cerca\numbral'}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1 flex-1">
+                  <span className="text-[9px] font-mono text-text-muted">30%</span>
+                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
+                      style={{ background: '#10b981', opacity: 0.5, transformOrigin: 'bottom' }}
+                      initial={{ scaleY: 0 }}
+                      whileInView={{ scaleY: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '30%', background: '#10b981', opacity: 0.5 }} />
+                  </div>
+                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">OECD {lang === 'en' ? 'ceiling' : 'umbral'}</span>
+                </div>
+                <div className="flex flex-col items-center gap-1 flex-1">
+                  <span className="text-[9px] font-mono text-text-muted">~28%</span>
+                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
+                    <motion.div
+                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
+                      style={{ background: '#64748b', opacity: 0.4, transformOrigin: 'bottom' }}
+                      initial={{ scaleY: 0 }}
+                      whileInView={{ scaleY: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.8, ease: 'easeOut' }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '28%', background: '#64748b', opacity: 0.4 }} />
+                  </div>
+                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">{lang === 'en' ? 'far from\nthreshold' : 'lejos del\numbral'}</span>
+                </div>
+              </div>
+              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+                {lang === 'en' ? 'Contracts cluster statistically just below tender thresholds.' : 'Los contratos se agrupan estadísticamente justo debajo de los umbrales.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
-                  ? 'A large single contract is split into multiple awards just below the legal threshold that would trigger a public tender. The density spike is detectable only when you can see all 3.1M contracts at once.'
-                  : 'Un contrato grande se divide en múltiples adjudicaciones justo por debajo del umbral que requeriría licitación pública. El pico de densidad solo es detectable cuando se ven los 3.1M contratos a la vez.'}
+                  ? 'Large contracts split into multiple awards just below the legal threshold that triggers public tender. The density spike is detectable only across all 3.1M contracts at once.'
+                  : 'Contratos grandes divididos en múltiples adjudicaciones justo bajo el umbral legal. El pico de densidad solo es detectable con los 3.1M contratos a la vez.'}
               </p>
-            </article>
+            </motion.article>
 
-            {/* Finding 4 — Institutional capture */}
-            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#a06820' }}>
+            {/* Finding 04 — Institutional Capture: dot-field animation */}
+            <motion.article
+              className="surface-card rounded-sm p-5 border-l-2"
+              style={{ borderLeftColor: '#a06820' }}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
               </div>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>
-                  15,923
-                </span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
-                  {lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con patrón\nde captura P6'}
-                </span>
+              <div className="flex items-end gap-3 mb-4">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con\npatrón captura P6'}</span>
               </div>
-              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
-                {lang === 'en'
-                  ? 'A single vendor locks a single institution — year after year, no competition.'
-                  : 'Un solo proveedor captura una sola institución — año tras año, sin competencia.'}
+              {/* Dot-field: 8×5 = 40 dots, ~12 highlighted as captured */}
+              <div className="mb-4">
+                <svg viewBox="0 0 200 56" className="w-full" style={{ height: 56 }} aria-hidden>
+                  {Array.from({ length: 8 }).map((_, col) =>
+                    Array.from({ length: 5 }).map((_, row) => {
+                      const cx = 12 + col * 25
+                      const cy = 8 + row * 10
+                      const isCapture = (col === 2 && row <= 3) || (col === 5 && row <= 2) || (col === 7 && row <= 1)
+                      const delayMs = (col * 5 + row) * 40
+                      return (
+                        <motion.circle
+                          key={`${col}-${row}`}
+                          cx={cx} cy={cy} r={isCapture ? 3.5 : 2.5}
+                          fill={isCapture ? '#a06820' : 'var(--color-border-hover)'}
+                          opacity={isCapture ? 0.85 : 0.4}
+                          initial={{ scale: 0, opacity: 0 }}
+                          whileInView={{ scale: 1, opacity: isCapture ? 0.85 : 0.4 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.3, delay: 0.5 + delayMs / 1000 }}
+                        />
+                      )
+                    })
+                  )}
+                  {/* Label arrows showing "capture" columns */}
+                  <text x={62} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
+                  <text x={137} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
+                  <text x={187} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
+                </svg>
+                <div className="text-[8px] font-mono text-text-muted mt-1">
+                  {lang === 'en' ? 'amber = vendor captured to one institution · dots = vendor-institution pairs' : 'ámbar = proveedor capturado a una institución · puntos = pares proveedor-institución'}
+                </div>
+              </div>
+              <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
+                {lang === 'en' ? 'One vendor locks one institution — year after year, no competition.' : 'Un proveedor captura una institución — año tras año, sin competencia.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
-                  ? 'Institutional capture (P6) is distinct from national monopoly: one vendor dominates one specific agency\'s spending with abnormal concentration and above-threshold risk. Detectable only through cross-institution comparison.'
-                  : 'La captura institucional (P6) es distinta del monopolio nacional: un proveedor domina el gasto de una sola agencia con concentración anormal y riesgo superior al umbral. Solo detectable mediante comparación entre instituciones.'}
+                  ? 'P6 capture differs from national monopoly: abnormal concentration in one agency with above-threshold risk. Detectable only through cross-institution comparison.'
+                  : 'La captura P6 difiere del monopolio nacional: concentración anormal en una sola agencia con riesgo por encima del umbral. Solo detectable comparando entre instituciones.'}
               </p>
-            </article>
+            </motion.article>
 
+          </div>
+        </section>
+
+        {/* ─── SPENDING CATEGORIES — where the money goes ─── */}
+        <section className="mb-12" aria-labelledby="categories-title">
+          <div className="flex items-start justify-between mb-1">
+            <div id="categories-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? 'Where the money goes — 91 auto-classified categories' : 'Dónde va el dinero — 91 categorías auto-clasificadas'}
+            </div>
+            <button
+              onClick={() => navigate('/sectors?view=categories')}
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
+            >
+              {lang === 'en' ? 'All categories' : 'Todas'}
+              <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Every peso in COMPRANET classified into one of 91 spending categories — automatically, at 99.7% coverage. The top 8 account for the majority of federal spend. Risk scores vary sharply by category, revealing where irregularities concentrate.'
+              : 'Cada peso en COMPRANET clasificado en una de 91 categorías de gasto — automáticamente, con 99.7% de cobertura. Las 8 principales concentran la mayoría del gasto federal. Los puntajes de riesgo varían considerablemente por categoría, revelando dónde se concentran las irregularidades.'}
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <TopCategoriesChart lang={lang} />
+          </div>
+        </section>
+
+        {/* ─── How we found it: ML methodology ─── */}
+        <section className="mb-12">
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'How the model detects these patterns' : 'Cómo el modelo detecta estos patrones'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Three statistical signals — learned from 1,363 documented corruption cases — that appear consistently across ghost companies, monopolies, and overpricing schemes.'
+              : 'Tres señales estadísticas — aprendidas de 1,363 casos documentados — que aparecen consistentemente en empresas fantasma, monopolios y esquemas de sobreprecio.'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {signals.map((s, idx) => (
+              <motion.article
+                key={s.num}
+                className="surface-card border-l-2 rounded-sm p-5"
+                style={{ borderLeftColor: s.color }}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                    {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
+                  </span>
+                </div>
+                <div className="mb-3">
+                  <span className="font-mono font-bold text-[34px] tabular-nums leading-none block" style={{ color: s.color }}>
+                    β {s.finding}
+                  </span>
+                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">{s.findingLabel}</p>
+                </div>
+                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">{s.name}</h3>
+                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">{s.detection}</p>
+                <p className="text-xs text-text-secondary leading-[1.6]">{s.body}</p>
+              </motion.article>
+            ))}
           </div>
         </section>
 
