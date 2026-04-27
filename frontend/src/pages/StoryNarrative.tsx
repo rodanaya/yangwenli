@@ -302,6 +302,7 @@ function ChapterSection({
             barLabel={chapter.pullquote.barLabel}
             outlet={story.outlet}
             statColor={story.leadStat.color}
+            vizTemplate={chapter.pullquote.vizTemplate}
           />
         )}
       </div>

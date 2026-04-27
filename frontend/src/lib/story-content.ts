@@ -8,6 +8,8 @@
  * All statistics are verified against RUBLI_NORMALIZED.db (verified Apr 2026).
  */
 
+import type { VizTemplate } from '@/components/stories/DataPullquote'
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -29,6 +31,7 @@ export interface StoryChapterDef {
     statLabel: string
     barValue?: number
     barLabel?: string
+    vizTemplate?: VizTemplate
   }
   chartConfig?: {
     type:
@@ -163,6 +166,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'P2-flagged vendors',
           barValue: 0.007,
           barLabel: '0.7% officially detected',
+          vizTemplate: 'mass-sliver',
         },
         sources: [
           'SAT. (2026). Listado definitivo de contribuyentes que facturaron operaciones simuladas (Art. 69-B LISR). Servicio de Administración Tributaria.',
@@ -195,8 +199,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Official enforcement has confirmed 42 ghost companies. The structural evidence suggests thousands more.',
           stat: '1,200-2,400',
           statLabel: 'estimated unrecognized ghost companies',
-          barValue: 0.30,
-          barLabel: 'mid-range of fraud-research base rate',
         },
         sources: [
           'OECD. (2023). Public Procurement Performance Report. Chapter 5: pattern-based anomaly detection.',
@@ -217,8 +219,6 @@ export const STORIES: StoryDef[] = [
           quote: 'An individual person — not a company — winning federal contracts worth 370 million pesos, and then disappearing from the record entirely.',
           stat: '2.5B MXN',
           statLabel: 'largest P2-pattern vendor, two contracts',
-          barValue: 0.24,
-          barLabel: 'avg risk score for P2 population',
         },
         sources: [
           'RUBLI vendor_stats and aria_queue tables, queried April 2026.',
@@ -255,8 +255,6 @@ export const STORIES: StoryDef[] = [
           quote: 'A ghost company is a two-sided transaction. Mexico names the shell. Mexico does not name the official who signed.',
           stat: '1,954',
           statLabel: 'SFP vendor sanctions (2002-2025)',
-          barValue: 0.32,
-          barLabel: 'share of P2 population sanctioned',
         },
         sources: [
           'SFP. (2025). Directorio de servidores públicos sancionados. Unidad de Responsabilidades Administrativas.',
@@ -343,6 +341,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'avg risk, contracts above 5B MXN',
           barValue: 0.94,
           barLabel: 'critical threshold: 0.60',
+          vizTemplate: 'redline-gauge',
         },
         sources: [
           'RUBLI v0.6.5 risk model. Contract-level scoring, 3,051,294 records. Query: April 2026.',
@@ -365,6 +364,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'direct-award rate for contracts >10M MXN in salud & energía',
           barValue: 0.90,
           barLabel: 'OECD recommended maximum: 25-30%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'OECD. (2015). Recommendation of the Council on Public Procurement.',
@@ -387,6 +387,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'DIMM vendor risk score — highest in the 300K-vendor database',
           barValue: 0.9887,
           barLabel: 'critical threshold: 0.60',
+          vizTemplate: 'redline-gauge',
         },
         sources: [
           'RUBLI vendor_stats table, top-value salud sector vendors, April 2026.',
@@ -409,6 +410,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'ASF annual audit rate for contracts >50M MXN',
           barValue: 0.04,
           barLabel: 'OECD adequate frequency: 15-20%',
+          vizTemplate: 'mass-sliver',
         },
         sources: [
           'OECD. (2023). Public Procurement Performance Report: Mexico.',
@@ -432,6 +434,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'in contracts above 5B MXN',
           barValue: 0.05,
           barLabel: 'estimated audit coverage rate',
+          vizTemplate: 'mass-sliver',
         },
         sources: [
           'Transparencia Mexicana. (2023). Índice Nacional de Corrupción y Buen Gobierno.',
@@ -480,6 +483,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'risk score, Grupo Fármacos Especializados',
           barValue: 0.9831,
           barLabel: 'critical threshold: 0.60',
+          vizTemplate: 'redline-gauge',
         },
         sources: [
           'RUBLI aria_queue and vendor_stats tables. P1 pattern classification, April 2026.',
@@ -525,8 +529,6 @@ export const STORIES: StoryDef[] = [
           quote: 'From 360 million pesos in 2003 to 10 billion in 2018. Then a policy change rearranged the plumbing, and the flow relocated.',
           stat: '10.05B MXN',
           statLabel: 'Maypo peak contracting year (2018)',
-          barValue: 0.96,
-          barLabel: 'vendor risk score',
         },
         sources: [
           'RUBLI year-by-year contract analysis for Farmacéuticos Maypo, April 2026.',
@@ -549,6 +551,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'share of P1 pharmaceutical contracts via direct award',
           barValue: 0.69,
           barLabel: 'OECD recommended maximum: 25-30%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'OECD/COFECE. (2021). Competition Assessment of the Mexican Health Sector.',
@@ -569,8 +572,6 @@ export const STORIES: StoryDef[] = [
           quote: 'A pharmaceutical distributor with a late-career annual spike of 19.5 billion pesos in a single year. The algorithm sees what oversight has not.',
           stat: '19.46B MXN',
           statLabel: 'Laboratorios PISA, 2025 annual contracting',
-          barValue: 0.96,
-          barLabel: 'vendor risk score',
         },
         sources: [
           'RUBLI ARIA queue, Tier 1 vendors with P1 classification, April 2026.',
@@ -590,8 +591,6 @@ export const STORIES: StoryDef[] = [
           quote: 'RUBLI\'s P1 list is 44 COFECE investigations waiting to happen. Five years after OECD called for this monitoring, Mexico has not acted.',
           stat: '44',
           statLabel: 'P1-classified monopoly vendors',
-          barValue: 0.74,
-          barLabel: 'average risk score',
         },
         sources: [
           'OECD/COFECE. (2021). Competition Assessment of the Mexican Health Sector. Recommendations 3-5.',
@@ -641,6 +640,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'peak single-bid rate (2011)',
           barValue: 0.644,
           barLabel: 'OECD warning threshold: 15%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI analysis of contracts table, is_single_bid flag, 2002-2024. Queried April 2026.',
@@ -691,8 +691,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Electronic bidding in 2010 should have lowered the single-bid rate. It raised it. The digital transition codified the pattern rather than breaking it.',
           stat: '2010',
           statLabel: 'year CompraNet became mandatory',
-          barValue: 0.52,
-          barLabel: 'single-bid rate that year',
         },
         sources: [
           'DOF. (2012). Reformas a la Ley de Adquisiciones para la obligatoriedad de CompraNet.',
@@ -713,8 +711,6 @@ export const STORIES: StoryDef[] = [
           quote: 'When half of all "competitive" procedures have one bidder, year after year, decade after decade, the word "competitive" has lost its meaning.',
           stat: '3,985',
           statLabel: 'vendors in P5 systematic co-bidding pattern',
-          barValue: 0.50,
-          barLabel: 'average share of co-bidding procedures they win',
         },
         sources: [
           'Conley, T., & Decarolis, F. (2016). Detecting Bidders Groups in Collusive Auctions. American Economic Journal: Microeconomics.',
@@ -737,6 +733,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'consecutive years with single-bid rate above OECD ceiling',
           barValue: 0.49,
           barLabel: 'most recent (2023) single-bid rate',
+          vizTemplate: 'horizon',
         },
         sources: [
           'Transparencia Mexicana. (2023). Índice Nacional de Corrupción y Buen Gobierno.',
@@ -758,8 +755,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Nobody is individually breaking the rules. The corruption lies in the pattern across 800,000 procedures, not in any single transaction.',
           stat: '800,000+',
           statLabel: 'single-bid competitive procedures 2010-2024',
-          barValue: 0.55,
-          barLabel: 'share of all competitive procedures',
         },
         sources: [
           'IMCO. (2024). Índice de Riesgos de Corrupción en Compras Públicas.',
@@ -806,8 +801,6 @@ export const STORIES: StoryDef[] = [
           quote: '15,923 vendors in the capture pattern. 2,974 in the intermediary pattern. 526 billion pesos of federal spending running through these two structures alone.',
           stat: '526.8B MXN',
           statLabel: 'P3 intermediary contracts, eight sectors',
-          barValue: 0.34,
-          barLabel: 'share via direct award',
         },
         sources: [
           'RUBLI ARIA P6 and P3 pattern analysis, run ID 28d5c453, March 25 2026.',
@@ -848,8 +841,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Infrastructure alone moves 179 billion pesos through intermediary structures. The overhead cost — if OECD research applies — is 27 to 54 billion pesos.',
           stat: '179.5B MXN',
           statLabel: 'P3 intermediary contracts in infraestructura',
-          barValue: 0.30,
-          barLabel: 'OECD estimated markup range',
         },
         sources: [
           'RUBLI P3 sector analysis, April 2026.',
@@ -872,6 +863,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'P6 contracting at IMSS + CFE + PEMEX + SCT + CONAGUA',
           barValue: 0.78,
           barLabel: 'share via direct adjudication',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'ASF. (2022). Auditoría de Desempeño 2022-6-06G00-07-0024. Adquisición de Medicamentos, IMSS.',
@@ -892,8 +884,6 @@ export const STORIES: StoryDef[] = [
           quote: 'La Estafa Maestra moved 7.67 billion pesos through an intermediary structure in two years. RUBLI\'s current P3 population is running 526 billion.',
           stat: '79-158B MXN',
           statLabel: 'estimated annual overhead cost of P3 intermediation',
-          barValue: 0.22,
-          barLabel: 'OECD median overhead estimate',
         },
         sources: [
           'ASF. (2017). Auditoría de Desempeño 2016-0-06100-07-0161. La Estafa Maestra.',
@@ -917,6 +907,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'total P3 + P6 vendors awaiting pattern-based investigation',
           barValue: 0.62,
           barLabel: 'share in direct-award contracts',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'SFP. (2025). Programa de Auditoría a Unidades Compradoras 2025.',
@@ -967,6 +958,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'direct award rate 2023',
           barValue: 0.822,
           barLabel: 'OECD recommended maximum: ~25-30%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI contracts table analysis, is_direct_award flag, 2010-2024. Queried April 2026.',
@@ -1013,8 +1005,6 @@ export const STORIES: StoryDef[] = [
           quote: 'The OECD ceiling is 30 percent. Mexico\'s floor is 60 percent. The distance between them is where competitive procurement used to live.',
           stat: '14 years',
           statLabel: 'consecutive years above 60% direct-award rate',
-          barValue: 0.78,
-          barLabel: 'average direct-award rate across 2010-2024',
         },
         sources: [
           'RUBLI year-over-year direct award analysis, 2018-2022, April 2026.',
@@ -1037,6 +1027,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'direct award rate in 2020 (pandemic year)',
           barValue: 0.781,
           barLabel: 'was already 77.8% in 2019 pre-pandemic',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público, Art. 41.',
@@ -1057,8 +1048,6 @@ export const STORIES: StoryDef[] = [
           quote: 'A 15 percent competitive premium on 720 billion pesos in direct awards equals roughly 108 billion pesos annually — the cost of competition foregone.',
           stat: '~108B MXN',
           statLabel: 'estimated annual cost of non-competitive procurement premium',
-          barValue: 0.15,
-          barLabel: 'conservative premium vs. competitive',
         },
         sources: [
           'Decarolis, F., & Giuffrida, L. (2019). Civil Servants and Cartels: The Revolving Door and Corruption in Procurement. American Economic Review.',
@@ -1081,6 +1070,7 @@ export const STORIES: StoryDef[] = [
           statLabel: '2023 direct-award contracts by face value',
           barValue: 0.82,
           barLabel: 'share of federal procurement in 2023',
+          vizTemplate: 'mosaic-tile',
         },
         sources: [
           'Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público, Art. 41, Art. 42.',
@@ -1130,6 +1120,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'AMLO-era high-risk rate',
           barValue: 0.176,
           barLabel: 'OECD ceiling: 15%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI contracts table. Grouped by administration by contract_year. Queried April 2026.',
@@ -1168,8 +1159,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Four administrations. Two parties. Four bars, each taller than the one before it. The trend is structural, not partisan.',
           stat: '+122%',
           statLabel: 'increase in high-risk rate from Fox to AMLO',
-          barValue: 0.17,
-          barLabel: 'AMLO rate',
         },
         sources: [
           'RUBLI administration-level risk analysis, April 2026.',
@@ -1192,6 +1181,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'AMLO-era procurement spending (2019-2024)',
           barValue: 0.782,
           barLabel: 'share awarded without competition',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI direct-award and risk analysis by year, 2019-2024. April 2026.',
@@ -1212,8 +1202,6 @@ export const STORIES: StoryDef[] = [
           quote: '185,248 high-risk contracts in a single administration. ASF\'s six-year audit capacity covers 3 to 5 percent. The rest will never be reviewed.',
           stat: '~485B MXN',
           statLabel: 'AMLO-era high-risk contracts by value',
-          barValue: 0.18,
-          barLabel: 'share of total administration spending',
         },
         sources: [
           'RUBLI year-by-year contract counts and spending aggregates, 2019-2024.',
@@ -1234,8 +1222,6 @@ export const STORIES: StoryDef[] = [
           quote: 'The gap between real-time visibility and formal accountability is what RUBLI closes. What oversight bodies do with that visibility is a political choice.',
           stat: '12.9%',
           statLabel: 'Sheinbaum-era high-risk rate (partial period)',
-          barValue: 0.129,
-          barLabel: 'AMLO peak was 17.6%',
         },
         sources: [
           'RUBLI Sheinbaum-era contract analysis (contract_year=2025, partial). April 2026.',
@@ -1285,6 +1271,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'P3 contracts in infrastructure + energy + health',
           barValue: 0.79,
           barLabel: 'share of all P3-pattern contracting',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI ARIA P3 pattern analysis, run ID 28d5c453, March 25 2026.',
@@ -1325,8 +1312,6 @@ export const STORIES: StoryDef[] = [
           quote: '1,128 intermediary-pattern vendors in infrastructure alone. The pass-through industry is larger than Mexico\'s annual federal education budget.',
           stat: '1,128',
           statLabel: 'P3 vendors in infraestructura',
-          barValue: 0.38,
-          barLabel: 'of all P3 vendors',
         },
         sources: [
           'RUBLI P3 sector analysis, April 2026.',
@@ -1347,8 +1332,6 @@ export const STORIES: StoryDef[] = [
           quote: 'La Estafa Maestra moved 7.67 billion pesos in two years. RUBLI\'s current P3 population moves 526 billion pesos across 23 years.',
           stat: '7.67B MXN',
           statLabel: 'La Estafa Maestra — the documented prototype',
-          barValue: 0.60,
-          barLabel: 'avg risk score for La Estafa Maestra-linked vendors',
         },
         sources: [
           'ASF. (2017). Auditoría de Desempeño 2016-0-06100-07-0161. La Estafa Maestra.',
@@ -1369,8 +1352,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Subcontracting is legal. Overpriced subcontracting that enriches a middleman at public expense is not. The line between them runs through bank records UIF has not subpoenaed.',
           stat: '2,974',
           statLabel: 'P3 intermediary-pattern vendors in RUBLI queue',
-          barValue: 0.42,
-          barLabel: 'average risk score',
         },
         sources: [
           'UNODC. (2020). UN Convention Against Corruption: Implementation Guide. Article 19 (abuse of functions).',
@@ -1393,6 +1374,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'major COFECE procurement cartel cases, last 5 years',
           barValue: 0.00,
           barLabel: 'despite OECD recommendations',
+          vizTemplate: 'zero-bar',
         },
         sources: [
           'OECD. (2023). Public Procurement Performance Report: Mexico. Recommendation 5.',
@@ -1441,6 +1423,7 @@ export const STORIES: StoryDef[] = [
           statLabel: 'contracts at exactly 210K MXN',
           barValue: 0.76,
           barLabel: 'excess above baseline',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
           'RUBLI contracts table, amount_mxn histogram analysis. Queried April 2026.',
@@ -1494,8 +1477,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Three statistical spikes in a 200K range. Each aligned precisely with a regulatory threshold. The distribution is not what it would be in an honest system.',
           stat: '~40,000',
           statLabel: 'excess contracts at threshold values',
-          barValue: 0.15,
-          barLabel: 'share of 200K-400K range',
         },
         sources: [
           'RUBLI histogram analysis of contract amounts, 200K-400K range in 10K buckets.',
@@ -1516,8 +1497,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Article 17 explicitly prohibits splitting contracts to avoid competitive thresholds. Tens of thousands of contracts at exactly threshold values suggest the prohibition is widely ignored.',
           stat: 'Art. 17 LAASSP',
           statLabel: 'prohibits threshold splitting',
-          barValue: 0.10,
-          barLabel: 'estimated price premium from splitting',
         },
         sources: [
           'World Bank. (2019). Procurement Fraud Indicators: Threshold Manipulation in Public Contracting.',
@@ -1609,8 +1588,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Of 16 risk features, price volatility emerged as the strongest predictor — a coefficient 43 percent higher than the next-strongest feature.',
           stat: '+0.5343',
           statLabel: 'price_volatility coefficient in v0.6.5 model',
-          barValue: 0.5343,
-          barLabel: 'next strongest: vendor_concentration (+0.3749)',
         },
         sources: [
           'RUBLI v0.6.5 model calibration results. Run ID CAL-v6.1-202603251039. AUC test: 0.828.',
@@ -1652,8 +1629,6 @@ export const STORIES: StoryDef[] = [
           quote: 'Only one protective feature survived regularization: the diversity of institutions a vendor serves. Broad reach is the structural signature of legitimacy.',
           stat: '-0.3821',
           statLabel: 'institution_diversity coefficient (protective)',
-          barValue: 0.38,
-          barLabel: 'absolute magnitude',
         },
         sources: [
           'RUBLI v0.6.5 model coefficient table, docs/RISK_METHODOLOGY_v6.md.',

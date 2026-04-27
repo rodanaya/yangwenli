@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
 import { cn } from '@/lib/utils'
-import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -27,9 +26,11 @@ interface Investigation {
   sub: string
   type: FraudType
   status: StatusKind
-  amount: number // MXN billions
+  amount: number // MXN billions — kept for featured card stats panel
   era: Era
-  contracts: number
+  contracts: number // kept for featured card stats panel
+  heroStat: string  // the one number that makes you stop scrolling
+  heroLabel: string // one-line context for that number
 }
 
 const INVESTIGATIONS: Investigation[] = [
@@ -42,6 +43,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 6034,
+    heroStat: '6,034',
+    heroLabel: 'ghost-pattern vendors — only 42 officially confirmed',
   },
   {
     slug: 'el-gran-precio',
@@ -52,6 +55,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 6240,
     era: 'cross',
     contracts: 23469,
+    heroStat: '0.70',
+    heroLabel: 'avg risk score on the 23K largest contracts',
   },
   {
     slug: 'el-monopolio-invisible',
@@ -62,6 +67,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 133.2,
     era: 'cross',
     contracts: 6303,
+    heroStat: 'MX$133B',
+    heroLabel: 'one vendor, one buyer, fourteen years',
   },
   {
     slug: 'la-ilusion-competitiva',
@@ -72,6 +79,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    heroStat: '49.4%',
+    heroLabel: 'of "competitive" tenders had exactly one bidder',
   },
   {
     slug: 'captura-institucional',
@@ -82,6 +91,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 787,
     era: 'cross',
     contracts: 530000,
+    heroStat: 'MX$787B',
+    heroLabel: '15,923 vendors · IMSS · CFE · PEMEX',
   },
   {
     slug: 'marea-de-adjudicaciones',
@@ -92,6 +103,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    heroStat: '82%',
+    heroLabel: 'of 2023 contracts awarded without competition',
   },
   {
     slug: 'el-sexenio-del-riesgo',
@@ -102,6 +115,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 2760,
     era: 'amlo',
     contracts: 1049729,
+    heroStat: '17.6%',
+    heroLabel: 'AMLO-era high-risk rate — double Fox\'s 7.9%',
   },
   {
     slug: 'la-industria-del-intermediario',
@@ -112,6 +127,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 518,
     era: 'cross',
     contracts: 10633,
+    heroStat: '2,974',
+    heroLabel: 'shell intermediaries · MX$518B channelled',
   },
   {
     slug: 'el-umbral-de-los-300k',
@@ -122,6 +139,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 22.6,
     era: 'cross',
     contracts: 75474,
+    heroStat: '75,474',
+    heroLabel: 'contracts priced at exactly MX$300,000',
   },
   {
     slug: 'volatilidad-el-precio-del-riesgo',
@@ -132,6 +151,8 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    heroStat: '+0.53',
+    heroLabel: 'model coefficient — strongest signal in 3M contracts',
   },
 ]
 
@@ -195,43 +216,10 @@ const ERA_LABEL: Record<Era, string> = {
 
 // Map MX$ billion amount → 0..1 intensity, log-scaled.
 // Linear scaling was useless: amounts span 0–6240 (3 orders of magnitude),
-// so most cards rendered 1 dot of 22 with the largest case eating the rest.
-// Log-scale spreads them legibly: 22.6B -> ~8 dots, 133B -> ~12, 787B -> ~17,
-// 2760B -> ~20, 6240B -> 22. Zero-amount data leads still render empty.
-const MAX_AMOUNT = Math.max(...INVESTIGATIONS.map((i) => i.amount))
-const LOG_MAX = Math.log(MAX_AMOUNT + 1)
-function amountToIntensity(amount: number): number {
-  return amount > 0 ? Math.log(amount + 1) / LOG_MAX : 0
-}
-
 function formatBillions(amount: number): string {
   if (amount === 0) return 'DATA LEAD'
   if (amount >= 1000) return `MX$${(amount / 1000).toFixed(2)}T`
   return `MX$${amount.toFixed(1)}B`
-}
-
-// ---------------------------------------------------------------------------
-// Dot-matrix intensity bar
-// ---------------------------------------------------------------------------
-
-function IntensityBar({ value, color }: { value: number; color: string }) {
-  // Use canonical DotBar geometry but with bigger spacing so the bar
-  // stretches across the card row legibly. Default geometry (DR=2, DG=5)
-  // shrinks to ~108px, which looks like a tiny strip of black specks
-  // floating at the left of a 300px row. Bumping to DR=3, DG=12 makes
-  // each dot ~6px diameter and the whole bar ~264px — a clean, scannable
-  // intensity readout.
-  return (
-    <DotBar
-      value={Math.min(1, value)}
-      max={1}
-      color={color}
-      dots={22}
-      dotR={3}
-      dotGap={12}
-      ariaLabel="Investigation intensity"
-    />
-  )
 }
 
 // ---------------------------------------------------------------------------
@@ -375,10 +363,7 @@ function GridCard({ item }: { item: Investigation }) {
   const { t } = useTranslation('journalists')
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
-  const intensity = amountToIntensity(item.amount)
-
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
-  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
 
   return (
     <Link
@@ -391,90 +376,66 @@ function GridCard({ item }: { item: Investigation }) {
       aria-label={headline}
     >
       {/* Left accent bar */}
-      <div
-        className="absolute left-0 top-0 bottom-0 w-[3px]"
-        style={{ background: accent }}
-      />
+      <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} />
 
-      <div className="pl-6 pr-5 py-5 flex flex-col flex-1 gap-4">
-        {/* Type tag */}
-        <div className="flex items-center gap-2">
+      <div className="pl-5 pr-5 pt-4 pb-4 flex flex-col flex-1">
+
+        {/* Top: fraud type + era */}
+        <div className="flex items-center gap-2 mb-4">
           <span
             className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]"
             style={{ color: accent }}
           >
             {FRAUD_LABEL[item.type]}
           </span>
-          <span className="h-px flex-1 bg-background-elevated" />
-          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+          <span className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
+          <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted">
             {ERA_LABEL[item.era]}
           </span>
         </div>
 
         {/* Headline */}
         <h3
-          className="text-text-primary leading-[1.18] font-serif"
+          className="text-text-primary leading-[1.22] mb-5"
           style={{
             fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-            fontSize: '17px',
+            fontSize: '15px',
             fontWeight: 700,
-            letterSpacing: '-0.015em',
+            letterSpacing: '-0.01em',
           }}
         >
           {headline}
         </h3>
 
-        {/* One-line lede */}
-        <p className="text-xs text-text-secondary font-mono tabular-nums leading-snug line-clamp-2">
-          {sub}
-        </p>
-
-        {/* Hero number */}
-        <div>
+        {/* Hero stat — pushed to bottom of content area */}
+        <div className="mt-auto mb-5">
           <div
-            className="font-mono font-bold text-text-primary leading-none tabular-nums"
-            style={{ fontSize: '2rem', letterSpacing: '-0.03em' }}
+            className="font-mono font-black leading-none tabular-nums"
+            style={{ fontSize: '2.75rem', letterSpacing: '-0.04em', color: accent }}
           >
-            {formatBillions(item.amount)}
+            {item.heroStat}
           </div>
-          <p className="text-[11px] text-text-muted font-mono mt-2 tabular-nums">
-            {item.contracts.toLocaleString('en-US')} contracts ·{' '}
-            {sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? ''}
+          <p className="text-[10px] font-mono text-text-muted mt-1.5 leading-snug">
+            {item.heroLabel}
           </p>
         </div>
 
-        {/* Intensity bar */}
-        <div className="flex items-center gap-3">
-          <IntensityBar value={intensity} color="#f59e0b" />
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {t('cards.scale')}
-          </span>
-        </div>
-
-        {/* Footer: status pill + read story link */}
-        <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
+        {/* Footer */}
+        <div className="pt-3 border-t border-border flex items-center justify-between">
           <span
             className={cn(
               'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
-              status.color,
-              status.border,
-              status.bg
+              status.color, status.border, status.bg
             )}
           >
             [{status.label}]
           </span>
-          <span
-            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-text-muted group-hover:text-text-primary transition-colors"
-          >
+          <span className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-text-muted group-hover:text-text-primary transition-colors">
             {t('cards.readStory')}
-            <span
-              className="inline-block transition-transform duration-200 group-hover:translate-x-0.5"
-              aria-hidden="true"
-            >
-              →
-            </span>
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">→</span>
           </span>
         </div>
+
       </div>
     </Link>
   )
