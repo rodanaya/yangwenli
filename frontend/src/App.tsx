@@ -59,6 +59,7 @@ const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
+const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
 function SectorRedirect() {
@@ -117,6 +118,15 @@ function App() {
             {/* Retired: /intro and /landing now redirect to the front page (/) */}
             <Route path="intro" element={<Navigate to="/" replace />} />
             <Route path="landing" element={<Navigate to="/" replace />} />
+            {/* Internal — visual canon for canonical chart primitives. Not in main nav. */}
+            <Route
+              path="_dev/charts"
+              element={
+                <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                  <ChartCatalog />
+                </SuspenseBoundary>
+              }
+            />
             <Route path="/" element={<MainLayout />}>
               {/* Front page — Executive briefing + the galleries map. */}
               <Route

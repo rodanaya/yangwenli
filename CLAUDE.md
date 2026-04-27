@@ -185,10 +185,16 @@ PLATAFORMA Metodología
 
 ### Canonical UI primitives
 
-- `<DotBar value max color>` / `<DotBarRow label readout value max>` — fixed N=22 dot strip.
+- `<DotBar value max color>` / `<DotBarRow label readout value max>` — single dot strip (`@/components/ui/DotBar`). Default geometry N=22, dotR=2, dotGap=5; can override with `dots` / `dotR` / `dotGap` for legacy call sites. **Round dots, fixed pixel width** — never use `preserveAspectRatio="none"` or `w-full` stretch on the SVG.
+- `<DotStrip rows>` — multi-row ranked dot matrix (`@/components/charts/editorial`). Bible §4 canonical (N=50, R=3, GAP=8). Pass `colorToken` for semantic colors; use `colorRaw` only when colors come from external lookup tables (sector palette, GRADE_COLORS, etc.).
 - `<StatRow stats columns>` — flat label+value grid.
 - `<PriorityAlert flags>` — single severity-sorted alert (replaced 5 stacked banners on VendorProfile).
 - `<SortHeaderTh field activeField order onSort>` — canonical sortable header with aria-sort.
+
+**Dot-chart rules** (consolidated 2026-04-27):
+- `DotBar` for inline single-bar metrics (one value, one bar). `DotStrip` for ranked multi-row visualizations.
+- **Never inline `<circle>` dot strips in pages.** The April audit found 50+ inline reimplementations across 25 files; all new code routes through the two primitives above.
+- `frontend/src/components/charts/DotStrip.tsx` is a **legacy adapter** that internally renders the editorial primitive. Existing callers stay; new code imports from `@/components/charts/editorial`.
 
 ### Vendor dossier composition
 

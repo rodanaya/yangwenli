@@ -68,8 +68,12 @@ const EMPTY_DOT = 'var(--color-background-elevated)'   // dotbar empty (cream)
 const EMPTY_STROKE = 'var(--color-border-hover)'        // dotbar empty stroke
 
 // ============================================================================
-// INLINE DotBar — NYT-style categorical magnitude indicator
+// DotBar — local wrapper around the canonical primitive (one renderer for
+// the codebase). Local API kept stable so existing call sites in this file
+// don't change. Geometry maps: size→dotR (radius=size/2), size+gap→dotGap.
 // ============================================================================
+
+import { DotBar as CanonicalDotBar } from '@/components/ui/DotBar'
 
 function DotBar({
   value,
@@ -86,23 +90,17 @@ function DotBar({
   size?: number
   gap?: number
 }) {
-  const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0
-  const filled = Math.round(ratio * dots)
-  const w = dots * (size + gap) - gap
   return (
-    <svg width={w} height={size} style={{ display: 'block' }} aria-hidden="true">
-      {Array.from({ length: dots }, (_, i) => (
-        <circle
-          key={i}
-          cx={i * (size + gap) + size / 2}
-          cy={size / 2}
-          r={size / 2}
-          fill={i < filled ? color : EMPTY_DOT}
-          stroke={i < filled ? undefined : EMPTY_STROKE}
-          strokeWidth={i < filled ? 0 : 0.5}
-        />
-      ))}
-    </svg>
+    <CanonicalDotBar
+      value={value}
+      max={max}
+      color={color}
+      emptyColor={EMPTY_DOT}
+      emptyStroke={EMPTY_STROKE}
+      dots={dots}
+      dotR={size / 2}
+      dotGap={size + gap}
+    />
   )
 }
 

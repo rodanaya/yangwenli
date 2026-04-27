@@ -23,8 +23,15 @@ export interface DotStripRow {
   label: string
   /** 0–1 fraction, controls how many dots are filled */
   fraction: number
-  /** Semantic color for filled dots */
-  colorToken: ColorToken
+  /** Semantic color for filled dots. Preferred over colorRaw. */
+  colorToken?: ColorToken
+  /**
+   * Escape hatch: raw CSS color (hex or var()). Used by the legacy DotStrip
+   * adapter and by callers that resolve colors from external lookup tables.
+   * Prefer colorToken; this exists so adapters don't need to maintain a
+   * separate hex→token mapping. If both are set, colorRaw wins.
+   */
+  colorRaw?: string
   /** Mono value rendered at right (e.g. "81.9%", "5.2B") */
   valueLabel?: string
   /** Optional href — the whole row becomes clickable */
@@ -82,7 +89,7 @@ export function DotStrip({
       <ul className="divide-y divide-border/40" role="list">
         {rows.map((row, rowIdx) => {
           const filled = Math.round(row.fraction * N)
-          const filledColor = tokenColor(row.colorToken)
+          const filledColor = row.colorRaw ?? tokenColor(row.colorToken ?? 'neutral')
           const RowEl: React.ElementType = row.href ? 'a' : 'div'
           const rowProps = row.href
             ? { href: row.href, className: 'hover:bg-background-elevated transition-colors' }
@@ -204,7 +211,7 @@ function DotColumns({ rows, N, darkContext, staticMode }: DotColumnsProps) {
     <div className="flex items-end gap-3 w-full overflow-x-auto">
       {rows.map((row, colIdx) => {
         const filled = Math.round(row.fraction * N)
-        const filledColor = tokenColor(row.colorToken)
+        const filledColor = row.colorRaw ?? tokenColor(row.colorToken ?? 'neutral')
         return (
           <div key={colIdx} className="flex flex-col items-center gap-1">
             <svg

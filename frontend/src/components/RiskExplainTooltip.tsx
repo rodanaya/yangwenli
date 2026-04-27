@@ -1,6 +1,12 @@
 /**
- * RiskExplainTooltip — hover a risk badge to see top contributing z-score features
- * Uses /api/v1/contracts/{id}/risk-explanation (RiskExplanation type)
+ * RiskExplainTooltip — hover a risk badge to see top contributing z-score features.
+ * Uses /api/v1/contracts/{id}/risk-explanation (RiskExplanation type).
+ *
+ * NOTE: there are 3 similarly-named components in this folder, each distinct:
+ *   RiskExplainTooltip.tsx  → hover tooltip (this file)
+ *   RiskExplanation.tsx     → exports RiskExplanationPanel (inline panel)
+ *   RiskExplainer.tsx       → exports RiskFactorTable (methodology page)
+ * They are NOT duplicates. Don't try to consolidate.
  */
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { useQuery } from '@tanstack/react-query'

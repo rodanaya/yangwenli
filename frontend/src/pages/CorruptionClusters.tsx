@@ -375,13 +375,14 @@ function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
 }
 
 // ============================================================================
-// DotBar — compact dot-grid bar for encoding 0–1 values
+// DotBar — local wrapper around the canonical primitive. Adds a `label` flag
+// for inline % readout. Geometry maps: size→dotR (radius=size/2), size+gap→dotGap.
 // ============================================================================
+import { DotBar as CanonicalDotBar } from '@/components/ui/DotBar'
+
 function DotBar({
   value,
   color,
-  // Bible §4 canonical light-mode empty dot: cream elevated fill, warm border.
-  // Previously 'var(--color-background-elevated)' / 'var(--color-border-hover)' which render BLACK on the cream page.
   emptyColor = '#f3f1ec',
   emptyStroke = '#e2ddd6',
   dots = 20,
@@ -399,36 +400,33 @@ function DotBar({
   label?: boolean
 }) {
   const v = Math.max(0, Math.min(1, value))
-  const filled = Math.round(v * dots)
-  const w = dots * (size + gap) - gap
+  const bar = (
+    <CanonicalDotBar
+      value={v}
+      max={1}
+      color={color}
+      emptyColor={emptyColor}
+      emptyStroke={emptyStroke}
+      dots={dots}
+      dotR={size / 2}
+      dotGap={size + gap}
+    />
+  )
+  if (!label) return bar
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <svg width={w} height={size} style={{ display: 'block', flexShrink: 0 }}>
-        {Array.from({ length: dots }, (_, i) => (
-          <circle
-            key={i}
-            cx={i * (size + gap) + size / 2}
-            cy={size / 2}
-            r={size / 2}
-            fill={i < filled ? color : emptyColor}
-            stroke={i < filled ? undefined : emptyStroke}
-            strokeWidth={i < filled ? 0 : 0.5}
-          />
-        ))}
-      </svg>
-      {label && (
-        <span
-          style={{
-            fontSize: 11,
-            color: 'var(--color-text-muted)',
-            fontFamily: 'var(--font-family-mono, monospace)',
-            minWidth: 32,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {Math.round(v * 100)}%
-        </span>
-      )}
+      {bar}
+      <span
+        style={{
+          fontSize: 11,
+          color: 'var(--color-text-muted)',
+          fontFamily: 'var(--font-family-mono, monospace)',
+          minWidth: 32,
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
+        {Math.round(v * 100)}%
+      </span>
     </div>
   )
 }

@@ -268,8 +268,12 @@ const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
 }
 
 // ---------------------------------------------------------------------------
-// Inline DotBar component — editorial micro-chart for rates and magnitudes.
+// DotBar — local wrapper around the canonical primitive (one renderer for
+// the codebase). Local API kept stable so this file's many call sites don't
+// have to change. Geometry maps: size→dotR (radius=size/2), size+gap→dotGap.
 // ---------------------------------------------------------------------------
+
+import { DotBar as CanonicalDotBar } from '@/components/ui/DotBar'
 
 function DotBar({
   value,
@@ -286,29 +290,18 @@ function DotBar({
   size?: number
   gap?: number
 }) {
-  const clamped = Math.max(0, Math.min(1, value))
-  const filled = Math.round(clamped * dots)
-  const w = dots * (size + gap) - gap
   return (
-    <svg
-      width={w}
-      height={size}
-      style={{ display: 'block' }}
-      role="img"
-      aria-label={`${Math.round(clamped * 100)} percent`}
-    >
-      {Array.from({ length: dots }, (_, i) => (
-        <circle
-          key={i}
-          cx={i * (size + gap) + size / 2}
-          cy={size / 2}
-          r={size / 2}
-          fill={i < filled ? color : emptyColor}
-          stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-          strokeWidth={i < filled ? 0 : 0.5}
-        />
-      ))}
-    </svg>
+    <CanonicalDotBar
+      value={value}
+      max={1}
+      color={color}
+      emptyColor={emptyColor}
+      emptyStroke="var(--color-border-hover)"
+      dots={dots}
+      dotR={size / 2}
+      dotGap={size + gap}
+      ariaLabel={`${Math.round(Math.max(0, Math.min(1, value)) * 100)} percent`}
+    />
   )
 }
 
