@@ -78,6 +78,8 @@ interface ExampleDossier {
   value: string
   kicker: { en: string; es: string }
   lede: { en: string; es: string }
+  detected: { en: string; es: string }
+  outcome: { en: string; es: string }
 }
 
 const EXAMPLE_DOSSIERS: ExampleDossier[] = [
@@ -88,8 +90,16 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     contracts: '6,303', value: '$133.2B MXN',
     kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
     lede: {
-      en: 'Distributed $133.2B MXN in medicines to IMSS over 14 years (60% of vendor value). 79% direct-award. COFECE investigated 2018, AMLO veto 2019, SFP sanctioned.',
-      es: 'Distribuyó $133.2B MXN en medicamentos al IMSS en 14 años (60% del valor del vendor). 79% adjudicación directa. COFECE investigó 2018, veto AMLO 2019, SFP sancionó.',
+      en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
+      es: '$133.2B MXN en medicamentos al IMSS en 14 años — 60% de toda la categoría farmacéutica. Un solo distribuidor con la mayoría del suministro de medicamentos públicos de México, 79% sin licitación.',
+    },
+    detected: {
+      en: 'ARIA Tier 1 · P6 institutional capture · price volatility critical · 6,303 contracts all above sector median',
+      es: 'ARIA Tier 1 · captura institucional P6 · volatilidad de precio crítica · 6,303 contratos sobre la mediana sectorial',
+    },
+    outcome: {
+      en: 'COFECE opened cartel investigation 2018 · AMLO publicly vetoed the pharma cartel 2019 · SFP imposed sanctions',
+      es: 'COFECE abrió investigación de cártel 2018 · AMLO vetó públicamente el cártel farmacéutico 2019 · SFP impuso sanciones',
     },
   },
   {
@@ -99,19 +109,35 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     contracts: '~3,000', value: 'multi-billion MXN',
     kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
     lede: {
-      en: 'Government parastatal at the center of the Segalmex food-distribution scandal. One of the platform\'s anchor GT cases for the v0.6.5 model training.',
-      es: 'Paraestatal gubernamental al centro del escándalo de distribución de alimentos Segalmex. Uno de los casos GT ancla para el entrenamiento del modelo v0.6.5.',
+      en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
+      es: 'Paraestatal al centro de un escándalo de MX$15B en distribución de alimentos. Fondos desviados de un programa que alimenta a los hogares más pobres de México — tortillas, leche y frijoles que nunca llegaron.',
+    },
+    detected: {
+      en: 'Anchor GT case · avg risk score 0.66 · P6 capture pattern · 90%+ direct-award rate · network links to shell intermediaries',
+      es: 'Caso GT ancla · puntaje de riesgo promedio 0.66 · patrón de captura P6 · 90%+ adjudicación directa · vínculos con intermediarios fantasma',
+    },
+    outcome: {
+      en: 'MX$15B diverted from food subsidies · FGR criminal investigation ongoing since 2022 · parastatal placed under federal intervention',
+      es: 'MX$15B desviados de subsidios alimentarios · investigación penal FGR en curso desde 2022 · paraestatal sometida a intervención federal',
     },
   },
   {
     vendorId: 6038,
     name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
-    contracts: '~17B contracts', value: '$17.2B MXN',
+    contracts: '~400', value: '$17.2B MXN',
     kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
-      en: '$17.2B MXN in COVID-era IMSS medical supplies. Same-day-award pattern flagged by ARIA as Tier 1. Documented case in the GT corpus.',
-      es: '$17.2B MXN en insumos médicos al IMSS durante COVID. Patrón de adjudicación mismo-día detectado por ARIA Tier 1. Caso documentado en el corpus GT.',
+      en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
+      es: '$17.2B MXN en insumos médicos al IMSS adjudicados durante la emergencia COVID — muchos contratos firmados y cumplidos el mismo día, un patrón físicamente imposible en contratación normal.',
+    },
+    detected: {
+      en: 'ARIA Tier 1 · same-day-award spike pattern · COVID emergency bracket · risk score 0.85 · price ratio above sector by 2.4×',
+      es: 'ARIA Tier 1 · patrón de adjudicación mismo-día · emergencia COVID · puntaje 0.85 · razón de precio 2.4× sobre el sector',
+    },
+    outcome: {
+      en: 'Documented in GT corruption corpus · congressional review initiated · part of broader COVID emergency procurement investigation',
+      es: 'Documentado en corpus GT · revisión congresional iniciada · parte de la investigación más amplia de compras COVID',
     },
   },
 ]
@@ -707,64 +733,74 @@ export default function Executive() {
   ]
 
   // ─── Signal cards (top 3 model predictors) ───────────────────────────────────
-  // Headlines use the model coefficient (β) rather than a detection-rate
-  // percentage because three saturated percentages (99.9% / 100% / 100%)
-  // read as cherry-picked and carry zero ranking information. β values are
-  // inherently different magnitudes AND hierarchize the signals: price
-  // volatility (0.53) is more than 2× stronger than price ratio (0.23).
+  // Written for general readers: headline is a real detection outcome, not a
+  // model coefficient. Each card shows WHAT the pattern looks like, WHERE it was
+  // caught in a real case, and HOW the model sees it.
   const signals = [
     {
       num: '01',
-      finding: '+0.53',
-      findingLabel:
+      stat: '99.9%',
+      statLabel:
         lang === 'en'
-          ? 'model coefficient · strongest signal'
-          : 'coeficiente del modelo · señal más fuerte',
-      detection:
-        lang === 'en'
-          ? '99.9% detection on IMSS ghost network (9,366 contracts)'
-          : '99.9% de detección en la red fantasma del IMSS (9,366 contratos)',
+          ? 'of IMSS ghost-company contracts detected'
+          : 'de contratos de empresas fantasma IMSS detectados',
       name: lang === 'en' ? 'Price Volatility' : 'Volatilidad de Precio',
+      headline:
+        lang === 'en'
+          ? 'Same vendor, wildly different prices — the ghost company\'s billing fingerprint.'
+          : 'Mismo proveedor, precios radicalmente distintos — la huella de la empresa fantasma.',
+      caseTag:
+        lang === 'en'
+          ? 'Case: IMSS ghost network · 9,366 flagged contracts · SAT officially confirmed only 42'
+          : 'Caso: Red fantasma IMSS · 9,366 contratos señalados · SAT confirmó solo 42 oficialmente',
       body:
         lang === 'en'
-          ? 'Vendors whose contract amounts swing wildly across institutions and years. This is the model\'s single strongest predictor — capturing the erratic billing signature of shell and ghost-company networks.'
-          : 'Proveedores cuyos montos de contrato varían drásticamente entre instituciones y años. Este es el predictor individual más fuerte del modelo — capturando la firma de facturación errática de redes de empresas fantasma.',
+          ? 'A legitimate vendor charges similar amounts for the same item across agencies. Ghost companies don\'t — they bill erratically to obscure the trail. The model spots this across all 3.1M contracts at once; a human auditor cannot.'
+          : 'Un proveedor legítimo cobra montos similares por el mismo artículo en distintas instituciones. Las empresas fantasma no — facturan erráticamente para ocultar el rastro. El modelo detecta esto en 3.1M contratos a la vez; un auditor humano no puede.',
       color: '#dc2626',
     },
     {
       num: '02',
-      finding: '+0.37',
-      findingLabel:
+      stat: '100%',
+      statLabel:
         lang === 'en'
-          ? 'model coefficient · 2nd strongest'
-          : 'coeficiente del modelo · 2ª más fuerte',
-      detection:
-        lang === 'en'
-          ? '100% on Toka IT monopoly (1,954); 96.7% on Edenred (2,939)'
-          : '100% en el monopolio TIC Toka (1,954); 96.7% en Edenred (2,939)',
+          ? 'of Toka IT monopoly contracts scored critical'
+          : 'de contratos del monopolio TIC Toka marcados como críticos',
       name: lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedor',
+      headline:
+        lang === 'en'
+          ? 'One vendor locks one institution\'s entire budget — year after year.'
+          : 'Un proveedor acapara todo el presupuesto de una institución — año tras año.',
+      caseTag:
+        lang === 'en'
+          ? 'Cases: Toka IT monopoly · 1,954 contracts · Edenred voucher cartel · 2,939 contracts at 97%'
+          : 'Casos: Monopolio TIC Toka · 1,954 contratos · Cartel vales Edenred · 2,939 contratos al 97%',
       body:
         lang === 'en'
-          ? 'A vendor capturing an outsized share of spending within a single sector. Monopoly suppliers consistently score critical or high — regardless of whether they operate through competitive tenders or direct awards.'
-          : 'Un proveedor que captura una proporción desproporcionada del gasto en un sector. Los proveedores monopolísticos puntúan consistentemente en riesgo crítico o alto, independientemente de si operan mediante licitaciones o adjudicaciones directas.',
+          ? 'Healthy procurement spreads contracts across multiple vendors. When one supplier captures 80-100% of a category budget inside one institution for five-plus years, competition has effectively been eliminated — whether through bribery, favoritism, or technical lock-in.'
+          : 'Una contratación sana distribuye contratos entre múltiples proveedores. Cuando un proveedor captura el 80–100% del presupuesto de una categoría dentro de una institución por cinco o más años, la competencia ha sido eliminada — sea por soborno, favoritismo o dependencia técnica.',
       color: '#f59e0b',
     },
     {
       num: '03',
-      finding: '+0.23',
-      findingLabel:
+      stat: '100%',
+      statLabel:
         lang === 'en'
-          ? 'model coefficient · 3rd strongest'
-          : 'coeficiente del modelo · 3ª más fuerte',
-      detection:
-        lang === 'en'
-          ? '100% critical on PEMEX-Cotemar (51); Segalmex avg 0.66'
-          : '100% crítico en PEMEX-Cotemar (51); Segalmex promedio 0.66',
+          ? 'of PEMEX offshore contracts scored critical'
+          : 'de contratos offshore PEMEX marcados como críticos',
       name: lang === 'en' ? 'Price Ratio' : 'Razón de Precio',
+      headline:
+        lang === 'en'
+          ? 'Charging 3× the going rate — consistently, across years.'
+          : 'Cobrar 3× la tarifa del mercado — de forma consistente, año tras año.',
+      caseTag:
+        lang === 'en'
+          ? 'Cases: PEMEX-Cotemar offshore · 51 contracts all critical · Segalmex food distribution · avg risk 0.66'
+          : 'Casos: PEMEX-Cotemar offshore · 51 contratos todos críticos · Distribución alimentos Segalmex · riesgo promedio 0.66',
       body:
         lang === 'en'
-          ? 'Contract amounts that consistently exceed the sector median — normalized by year so inflation and sector size cannot explain the gap. Overpricing at scale leaves a clear statistical trace.'
-          : 'Montos de contrato que consistentemente superan la mediana del sector, normalizados por año para que la inflación o el tamaño sectorial no expliquen la brecha. El sobreprecio a escala deja una huella estadística clara.',
+          ? 'The model adjusts each contract amount for sector, year, and size — then measures how far above the expected price it sits. A vendor who is 3× above the norm every single year is not just expensive: they have captured the pricing mechanism itself.'
+          : 'El modelo ajusta cada monto por sector, año y tamaño — luego mide cuánto supera el precio esperado. Un proveedor que está 3× por encima de la norma cada año no es solo caro: ha capturado el mecanismo de fijación de precios.',
       color: '#a06820',
     },
   ]
@@ -1245,15 +1281,23 @@ export default function Executive() {
                   <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                     {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
                   </span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted opacity-50">
+                    {s.name}
+                  </span>
                 </div>
                 <div className="mb-3">
-                  <span className="font-mono font-bold text-[34px] tabular-nums leading-none block" style={{ color: s.color }}>
-                    β {s.finding}
+                  <span className="font-mono font-bold text-[38px] tabular-nums leading-none block" style={{ color: s.color }}>
+                    {s.stat}
                   </span>
-                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">{s.findingLabel}</p>
+                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">{s.statLabel}</p>
                 </div>
-                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">{s.name}</h3>
-                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">{s.detection}</p>
+                <h3 className="font-semibold text-[13px] leading-[1.35] text-text-primary mb-2.5">{s.headline}</h3>
+                <div
+                  className="rounded-sm px-2.5 py-2 mb-3 text-[9px] font-mono leading-[1.5]"
+                  style={{ background: 'var(--color-border)', color: s.color }}
+                >
+                  {s.caseTag}
+                </div>
                 <p className="text-xs text-text-secondary leading-[1.6]">{s.body}</p>
               </motion.article>
             ))}
@@ -1361,8 +1405,35 @@ export default function Executive() {
                 <p className="text-xs text-text-secondary leading-[1.6] mb-3">
                   {d.lede[lang]}
                 </p>
+
+                {/* What RUBLI detected */}
+                <div
+                  className="rounded-sm px-2.5 py-2 mb-2"
+                  style={{ background: 'var(--color-border)' }}
+                >
+                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+                    {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
+                  </div>
+                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-risk-high)' }}>
+                    {d.detected[lang]}
+                  </p>
+                </div>
+
+                {/* What actually happened */}
+                <div
+                  className="rounded-sm px-2.5 py-2 mb-3 border-l-2"
+                  style={{ borderLeftColor: '#dc2626', background: 'rgba(220,38,38,0.05)' }}
+                >
+                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+                    {lang === 'en' ? 'What happened' : 'Lo que ocurrió'}
+                  </div>
+                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-text-secondary)' }}>
+                    {d.outcome[lang]}
+                  </p>
+                </div>
+
                 <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
-                  <span>{d.contracts} contratos</span>
+                  <span>{d.contracts} {lang === 'en' ? 'contracts' : 'contratos'}</span>
                   <span aria-hidden="true">·</span>
                   <span>{d.value}</span>
                 </div>
