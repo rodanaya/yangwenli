@@ -193,8 +193,16 @@ const ERA_LABEL: Record<Era, string> = {
   cross: 'CROSS-ERA',
 }
 
-// Map MX$ billion amount → 0..1 intensity, anchored to largest case in set
+// Map MX$ billion amount → 0..1 intensity, log-scaled.
+// Linear scaling was useless: amounts span 0–6240 (3 orders of magnitude),
+// so most cards rendered 1 dot of 22 with the largest case eating the rest.
+// Log-scale spreads them legibly: 22.6B -> ~8 dots, 133B -> ~12, 787B -> ~17,
+// 2760B -> ~20, 6240B -> 22. Zero-amount data leads still render empty.
 const MAX_AMOUNT = Math.max(...INVESTIGATIONS.map((i) => i.amount))
+const LOG_MAX = Math.log(MAX_AMOUNT + 1)
+function amountToIntensity(amount: number): number {
+  return amount > 0 ? Math.log(amount + 1) / LOG_MAX : 0
+}
 
 function formatBillions(amount: number): string {
   if (amount === 0) return 'DATA LEAD'
@@ -361,7 +369,7 @@ function GridCard({ item }: { item: Investigation }) {
   const { t } = useTranslation('journalists')
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
-  const intensity = item.amount / MAX_AMOUNT
+  const intensity = amountToIntensity(item.amount)
 
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
   const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
