@@ -397,10 +397,7 @@ function GridCard({ item }: { item: Investigation }) {
         </h3>
 
         {/* Brief abstract — pushed to bottom of content area */}
-        <p
-          className="mt-auto mb-5 text-[11px] leading-[1.55] text-text-secondary"
-          style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}
-        >
+        <p className="mt-auto mb-5 text-[13px] leading-[1.6] text-text-primary">
           {item.brief}
         </p>
 
