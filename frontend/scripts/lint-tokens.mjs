@@ -20,7 +20,13 @@
 import { execSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 
-const ROOTS = ['src/pages', 'src/components']
+// Scan paths. src/hooks was added 2026-04-27 after AnimatedFill in
+// useAnimations.tsx was discovered to have been hiding three forbidden
+// patterns (preserveAspectRatio="none" stretched ovals, dark-mode hex
+// '#2d2926' rendering as black on cream, Math.max(1,…) floor making
+// sub-percent stats meaningless) for weeks. The lint scope was the
+// reason the bug survived multiple audits.
+const ROOTS = ['src/pages', 'src/components', 'src/hooks']
 
 // Files that are LEGITIMATELY palette / token authorities. Any hex in these
 // is canonical, by definition. Exempt from hex-literal warnings.
@@ -152,7 +158,7 @@ if (warnings.length > 0) {
 
 if (failures.length === 0) {
   console.log(
-    `✓ token hygiene gate PASS — 0 forbidden patterns in src/pages + src/components` +
+    `✓ token hygiene gate PASS — 0 forbidden patterns in ${ROOTS.join(' + ')}` +
       (warnHits > 0 ? ` (${warnHits} warnings)` : '')
   )
   process.exit(0)
