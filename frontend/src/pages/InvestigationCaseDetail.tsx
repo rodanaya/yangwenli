@@ -74,6 +74,7 @@ const EMPTY_STROKE = 'var(--color-border-hover)'        // dotbar empty stroke
 // ============================================================================
 
 import { DotBar as CanonicalDotBar } from '@/components/ui/DotBar'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 function DotBar({
   value,

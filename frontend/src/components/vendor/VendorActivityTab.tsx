@@ -7,7 +7,6 @@
  */
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import type {
   ContractListItem,
   VendorDetailResponse,
@@ -27,6 +26,7 @@ import {
   toTitleCase,
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 interface LifecycleTimelineEntry {
   year: number

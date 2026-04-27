@@ -24,6 +24,7 @@ import {
 import type { ExplorerFilters } from '@/hooks/useExplorerFilters'
 import type { DossierSummary } from '@/components/AddToDossierButton'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 type SortField = 'avg_risk_score' | 'total_contracts' | 'total_value_mxn' | 'direct_award_pct'
 type SortOrder = 'asc' | 'desc'

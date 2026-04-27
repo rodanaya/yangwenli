@@ -178,24 +178,34 @@ function buildChip(type, idExpr, nameExpr) {
 
 /**
  * Add `import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'`
- * to the source if not already present. Inserts after the last existing import.
+ * to the source if not already imported. Two bugs to avoid:
+ *
+ *   1. Don't gate on `source.includes('EntityIdentityChip')` — by the time
+ *      this runs, the rewrite has already inserted <EntityIdentityChip> JSX.
+ *      Check specifically for the IMPORT statement.
+ *
+ *   2. Don't insert after a `^import .+$` match that's the OPENING line of a
+ *      multiline `import { ... } from '...'` block — that puts the new import
+ *      inside the curly braces and produces a syntax error. Anchor on the
+ *      LINE that ends with `from '...'` (the closing line of any import).
  */
 function ensureImport(source) {
-  if (source.includes('EntityIdentityChip')) return source
-  const importRe = /^import .+ from .+$/gm
+  const importLine = `import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'`
+  // Already imported? (matches both `import { EntityIdentityChip }` and
+  // `import { Foo, EntityIdentityChip, Bar }`.)
+  if (/import\s*\{[^}]*\bEntityIdentityChip\b[^}]*\}\s*from/m.test(source)) {
+    return source
+  }
+  // Find the last line that ends an import — i.e. ends with `from '...'` or
+  // `from "..."`. This handles both single-line and multiline import blocks.
+  const importEndRe = /^.*\bfrom\s+['"][^'"]+['"];?\s*$/gm
   let lastEnd = 0
   let m
-  while ((m = importRe.exec(source)) !== null) {
+  while ((m = importEndRe.exec(source)) !== null) {
     lastEnd = m.index + m[0].length
   }
   if (lastEnd === 0) return source // no imports? bail
-  const before = source.slice(0, lastEnd)
-  const after = source.slice(lastEnd)
-  return (
-    before +
-    `\nimport { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'` +
-    after
-  )
+  return source.slice(0, lastEnd) + '\n' + importLine + source.slice(lastEnd)
 }
 
 // ---- Run --------------------------------------------------------------------

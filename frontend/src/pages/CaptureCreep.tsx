@@ -7,7 +7,6 @@
  * >= 50% across at least 4 years. Each row is a publishable story.
  */
 
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -16,6 +15,7 @@ import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 /**
  * Mini sparkline of share-percent over the observed years. Pure SVG —

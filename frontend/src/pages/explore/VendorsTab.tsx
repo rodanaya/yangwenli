@@ -45,6 +45,7 @@ import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
 import { VendorBadge } from '@/components/ui/VendorBadge'
 import { EditorialScatterChart } from '@/components/charts/editorial'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // =============================================================================
 // Column and Preset Configuration

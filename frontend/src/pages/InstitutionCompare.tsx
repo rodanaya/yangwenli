@@ -33,6 +33,7 @@ import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
 // Comparison palette imported from canonical lib — was a cyan/violet hex
 // pair shared with VendorCompare with no source of truth.
 import { COMPARE_HEX } from '@/lib/compare-colors'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 const COLOR_A = COMPARE_HEX.a
 const COLOR_B = COMPARE_HEX.b
 

@@ -15,14 +15,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
-import { ArrowUpRight, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
 // Hook: detect mobile viewport (below md = 768px)

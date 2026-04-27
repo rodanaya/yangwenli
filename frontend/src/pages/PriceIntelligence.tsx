@@ -42,6 +42,7 @@ import {
   Flame,
   TrendingUp,
 } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // --- Constants ---------------------------------------------------------------
 
@@ -423,7 +424,7 @@ function ReincidentesSection({
                   className="border-b border-border hover:bg-background-elevated transition-colors"
                 >
                   <td className="py-2 px-3 max-w-[200px]">
-                    <EntityIdentityChip type="vendor" id={v.vendor_id} name={formatVendorName(v.vendor_name, 40)} size="sm" />
+                    <EntityIdentityChip type="vendor" id={v.vendor_id ?? 0} name={formatVendorName(v.vendor_name, 40)} size="sm" />
                   </td>
                   <td className="py-2 px-3">
                     <div className="flex flex-wrap gap-1">

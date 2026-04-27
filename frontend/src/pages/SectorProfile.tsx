@@ -62,6 +62,7 @@ import {
   type LineSeries,
 } from '@/components/charts/editorial'
 import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ── constants ────────────────────────────────────────────────────────────────
 

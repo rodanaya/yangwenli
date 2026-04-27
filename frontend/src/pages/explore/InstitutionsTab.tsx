@@ -53,6 +53,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // =============================================================================
 // Column and Preset Configuration

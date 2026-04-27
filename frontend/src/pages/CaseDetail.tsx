@@ -10,6 +10,7 @@ import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bible §2: cream page + white cards + warm border + dark ink.
