@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
 import { EditorialAreaChart } from '@/components/charts/editorial'
+import { DotBar } from '@/components/ui/DotBar'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -220,7 +221,7 @@ function ChapterSubject({ vendor, aria, t }: {
             note: t('notes.oecdBenchmark'),
           },
         ].map((s) => (
-          <div key={s.label} className="bg-background border border-border rounded-sm p-5">
+          <div key={s.label} className="bg-background-card border border-border rounded-sm p-5">
             <p className="editorial-label text-text-muted mb-1">{s.label}</p>
             <p className="text-2xl font-black text-text-primary font-mono tabular-nums">{s.value}</p>
             <AnnotationNote>{s.note}</AnnotationNote>
@@ -430,24 +431,18 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
               className="relative rounded-sm border border-border overflow-hidden"
               style={{ backgroundColor: bgColor }}
             >
-              {/* Fill dot-matrix (was: solid bar) */}
-              <div className="absolute bottom-1 left-0 right-0 px-4 opacity-60 pointer-events-none">
-                {(() => {
-                  const N = 40, DR = 1.5, DG = 4
-                  const filled = Math.max(1, Math.round((width / 100) * N))
-                  return (
-                    <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
-                      {Array.from({ length: N }).map((_, k) => (
-                        <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                          fill={k < filled ? color : 'var(--color-background-elevated)'}
-                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                          strokeWidth={k < filled ? 0 : 0.5}
-                          fillOpacity={k < filled ? 0.45 : 0.3}
-                        />
-                      ))}
-                    </svg>
-                  )
-                })()}
+              {/* Decorative fill bar — canonical DotBar (round dots, no oval-stretch). */}
+              <div className="absolute bottom-1 left-4 right-4 opacity-50 pointer-events-none">
+                <DotBar
+                  value={width / 100}
+                  max={1}
+                  dots={40}
+                  dotR={1.5}
+                  dotGap={4}
+                  color={color}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border-hover)"
+                />
               </div>
               <div className="relative flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -520,7 +515,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-background border border-border rounded-sm p-6">
+        <div className="bg-background-card border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.institutionsServed')}</p>
           <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</p>
           <AnnotationNote>
@@ -532,7 +527,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
           </AnnotationNote>
         </div>
 
-        <div className="bg-background border border-border rounded-sm p-6">
+        <div className="bg-background-card border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.sectorsActive')}</p>
           <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{vendor.sectors_count}</p>
           <AnnotationNote>
@@ -662,12 +657,12 @@ function ChapterMoney({ timeline, t }: {
       {/* Annotations */}
       {peakYear && (
         <div className="flex flex-wrap gap-4 mb-8">
-          <div className="bg-background border border-border rounded-sm px-4 py-3">
+          <div className="bg-background-card border border-border rounded-sm px-4 py-3">
             <p className="editorial-label text-text-muted mb-1">{t('money.peakByValue')}</p>
             <p className="text-text-primary font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
           </div>
           {peakRiskYear && (
-            <div className="bg-background border border-risk-critical/30 rounded-sm px-4 py-3">
+            <div className="bg-background-card border border-risk-critical/30 rounded-sm px-4 py-3">
               <p className="editorial-label text-risk-critical mb-1">{t('money.peakByRisk')}</p>
               <p className="text-text-primary font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
@@ -676,7 +671,7 @@ function ChapterMoney({ timeline, t }: {
       )}
 
       {/* Area chart: contract value over time */}
-      <div ref={ref} className="bg-background border border-border rounded-sm p-6 mb-6">
+      <div ref={ref} className="bg-background-card border border-border rounded-sm p-6 mb-6">
         <p className="editorial-label text-text-muted mb-4">{t('money.chartValueLabel')}</p>
         <AnimatePresence>
           {inView && (
@@ -701,7 +696,7 @@ function ChapterMoney({ timeline, t }: {
 
       {/* Dot-matrix: avg risk score by year */}
       {chartData.some((d) => d.risk > 0) && (
-        <div className="bg-background border border-border rounded-sm p-6">
+        <div className="bg-background-card border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-4">{t('money.chartRiskLabel')}</p>
           <RiskHistoryDotMatrix chartData={chartData} />
           <AnnotationNote>
@@ -724,9 +719,9 @@ const RH_BOTTOM_PAD = 20
 const RH_LEFT_PAD = 32
 
 function riskColor(pct: number): string {
-  if (pct > 50) return '#dc2626'
-  if (pct > 30) return '#ea580c'
-  if (pct > 15) return '#eab308'
+  if (pct > 50) return 'var(--color-risk-critical)'
+  if (pct > 30) return 'var(--color-risk-high)'
+  if (pct > 15) return 'var(--color-risk-medium)'
   return 'var(--color-text-muted)'
 }
 
@@ -855,7 +850,7 @@ function ChapterVerdict({
       </p>
 
       {/* Score card */}
-      <div className="bg-background border border-border rounded-sm p-8 mb-8">
+      <div className="bg-background-card border border-border rounded-sm p-8 mb-8">
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="editorial-label text-text-muted mb-2">{t('verdict.riskIndicatorScore')}</p>
@@ -977,7 +972,7 @@ function ChapterVerdict({
       </div>
 
       {/* Disclaimer */}
-      <div className="mt-10 p-4 bg-background border border-border rounded-sm">
+      <div className="mt-10 p-4 bg-background-card border border-border rounded-sm">
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary leading-relaxed">
