@@ -24,6 +24,7 @@ export type VizTemplate =
   | 'dot-ratio'
   | 'wave-breaker'
   | 'pile-up'
+  | 'compare-gap'
 
 interface DataPullquoteProps {
   quote: string
@@ -164,7 +165,7 @@ function BreachCeiling({ value, color, label, revealed }: VizProps) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. MassSliver — tiny confirmed sliver vs the vast undetected mass
 // ─────────────────────────────────────────────────────────────────────────────
-function MassSliver({ value, color, label, revealed }: VizProps) {
+function MassSliver({ value, color, revealed }: VizProps) {
   const pct = Math.max(0, Math.min(1, value)) * 100
   // Visual minimum: always at least 3.5% wide so the sliver is never invisible
   const visualPct = Math.max(3.5, pct)
@@ -218,14 +219,6 @@ function MassSliver({ value, color, label, revealed }: VizProps) {
           {undetectedStr}% sin detectar
         </div>
       </div>
-      {label && (
-        <div
-          className="mt-1.5 text-[9px] font-mono uppercase tracking-[0.12em]"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          {label}
-        </div>
-      )}
     </div>
   )
 }
@@ -695,6 +688,52 @@ function PileUp({ value, color, revealed, label }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 15. CompareGap — two horizontal bars: tiny official vs full structural
+//     Economist dumbbell approach: the contrast IS the story
+// ─────────────────────────────────────────────────────────────────────────────
+function CompareGap({ value, color, revealed }: VizProps) {
+  const smallPct = Math.max(value * 100, 1.5)
+  return (
+    <div className="space-y-3">
+      <div>
+        <div className="text-[9px] font-mono uppercase tracking-[0.1em] mb-1" style={{ color }}>
+          Confirmados oficialmente
+        </div>
+        <div className="relative h-3 rounded-sm" style={{ background: 'var(--color-border)' }}>
+          <div
+            className="absolute inset-y-0 left-0 origin-left rounded-sm"
+            style={{
+              width: `${smallPct}%`,
+              background: color,
+              opacity: revealed ? 0.9 : 0,
+              transform: revealed ? 'scaleX(1)' : 'scaleX(0)',
+              transition: 'transform 800ms cubic-bezier(0.16,1,0.3,1) 200ms, opacity 400ms',
+            }}
+          />
+        </div>
+      </div>
+      <div>
+        <div className="text-[9px] font-mono uppercase tracking-[0.1em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
+          Estimado estructural (RUBLI P2)
+        </div>
+        <div className="relative h-3 rounded-sm" style={{ background: 'var(--color-border)' }}>
+          <div
+            className="absolute inset-y-0 left-0 origin-left rounded-sm"
+            style={{
+              width: '100%',
+              background: 'var(--color-text-muted)',
+              opacity: revealed ? 0.38 : 0,
+              transform: revealed ? 'scaleX(1)' : 'scaleX(0)',
+              transition: 'transform 900ms cubic-bezier(0.16,1,0.3,1) 500ms, opacity 600ms ease-out 400ms',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Renderer
 // ─────────────────────────────────────────────────────────────────────────────
 function renderViz(template: VizTemplate, props: VizProps) {
@@ -713,6 +752,7 @@ function renderViz(template: VizTemplate, props: VizProps) {
     case 'dot-ratio': return <DotRatio {...props} />
     case 'wave-breaker': return <WaveBreaker {...props} />
     case 'pile-up': return <PileUp {...props} />
+    case 'compare-gap': return <CompareGap {...props} />
   }
 }
 

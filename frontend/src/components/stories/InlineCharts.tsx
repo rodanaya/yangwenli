@@ -333,7 +333,7 @@ export function InlineBarChart({
                 fill={pt.highlight ? 'var(--color-risk-medium)' : 'var(--color-text-muted)'}
                 fontWeight={pt.highlight ? 700 : 400}
               >
-                {pt.value.toLocaleString()}{unit}
+                {pt.value.toLocaleString()}{unit ? ` ${unit}` : ''}
               </text>
             </g>
           )

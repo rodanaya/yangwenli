@@ -199,6 +199,9 @@ export const STORIES: StoryDef[] = [
           quote: 'Official enforcement has confirmed 42 ghost companies. The structural evidence suggests thousands more.',
           stat: '1,200-2,400',
           statLabel: 'estimated unrecognized ghost companies',
+          barValue: 0.034,
+          barLabel: '42 SAT-confirmed against ~1,200 structural minimum (RUBLI P2)',
+          vizTemplate: 'compare-gap',
         },
         sources: [
           'OECD. (2023). Public Procurement Performance Report. Chapter 5: pattern-based anomaly detection.',
@@ -255,6 +258,8 @@ export const STORIES: StoryDef[] = [
           quote: 'A ghost company is a two-sided transaction. Mexico names the shell. Mexico does not name the official who signed.',
           stat: '1,954',
           statLabel: 'SFP vendor sanctions (2002-2025)',
+          barValue: 0,
+          vizTemplate: 'zero-bar',
         },
         sources: [
           'SFP. (2025). Directorio de servidores públicos sancionados. Unidad de Responsabilidades Administrativas.',
@@ -406,10 +411,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'At current audit rates, the average large Mexican federal contract will be reviewed once every 20 to 33 years. Most will never be reviewed at all.',
-          stat: '3-5%',
-          statLabel: 'ASF annual audit rate for contracts >50M MXN',
+          stat: '~25 years',
+          statLabel: 'average wait between audits for a high-value federal contract',
           barValue: 0.04,
-          barLabel: 'OECD adequate frequency: 15-20%',
+          barLabel: 'OECD minimum: 15% annual coverage — implies review every 6–7 years',
           vizTemplate: 'mass-sliver',
         },
         sources: [
@@ -430,10 +435,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Mexico audits its cleanest contracts the most and its riskiest contracts the least. The accountability gap grows with every peso.',
-          stat: '1.32T MXN',
-          statLabel: 'in contracts above 5B MXN',
+          stat: '95%',
+          statLabel: 'of contracts above 5B MXN never audited — MX$1.25T unreviewed',
           barValue: 0.05,
-          barLabel: 'estimated audit coverage rate',
+          barLabel: 'estimated audit coverage rate: 5%',
           vizTemplate: 'mass-sliver',
         },
         sources: [
