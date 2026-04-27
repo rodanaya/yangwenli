@@ -162,33 +162,70 @@ function BreachCeiling({ value, color, label, revealed }: VizProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. MassSliver — tiny sliver vs vast empty void
+// 2. MassSliver — tiny confirmed sliver vs the vast undetected mass
 // ─────────────────────────────────────────────────────────────────────────────
-function MassSliver({ value, color, revealed }: VizProps) {
+function MassSliver({ value, color, label, revealed }: VizProps) {
   const pct = Math.max(0, Math.min(1, value)) * 100
-  const undetected = (100 - pct).toFixed(1)
+  // Visual minimum: always at least 3.5% wide so the sliver is never invisible
+  const visualPct = Math.max(3.5, pct)
+  const detectedStr = pct < 1 ? pct.toFixed(1) : Math.round(pct).toString()
+  const undetectedStr = (100 - pct).toFixed(pct < 1 ? 1 : 0)
+
   return (
-    <div className="relative h-20" style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)' }}>
+    <div>
       <div
-        className="absolute inset-y-0 left-0 origin-left"
+        className="relative h-11"
         style={{
-          width: `${Math.max(0.4, pct)}%`,
-          background: color,
-          transform: revealed ? 'scaleY(1)' : 'scaleY(0)',
-          transition: 'transform 700ms cubic-bezier(0.16, 1, 0.3, 1) 200ms',
-        }}
-      />
-      <div
-        className="absolute inset-0 flex items-center justify-center font-serif italic text-2xl"
-        style={{
-          color: 'var(--color-text-muted)',
-          opacity: revealed ? 0.45 : 0,
-          transition: 'opacity 800ms ease-out 600ms',
-          letterSpacing: '0.02em',
+          borderTop: '1px solid var(--color-border)',
+          borderBottom: '1px solid var(--color-border)',
         }}
       >
-        {undetected}% sin detectar
+        {/* Colored sliver — minimum 3.5% so it's always visible */}
+        <div
+          className="absolute inset-y-0 left-0"
+          style={{
+            width: `${visualPct}%`,
+            background: color,
+            opacity: revealed ? 1 : 0,
+            transition: 'opacity 600ms ease-out 200ms',
+          }}
+        />
+        {/* Percentage label just after the sliver edge */}
+        <div
+          className="absolute top-0 bottom-0 flex items-center font-mono font-bold text-[11px]"
+          style={{
+            left: `calc(${visualPct}% + 6px)`,
+            color,
+            opacity: revealed ? 1 : 0,
+            transition: 'opacity 600ms ease-out 450ms',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {detectedStr}%
+        </div>
+        {/* Undetected mass label — right-aligned in the void */}
+        <div
+          className="absolute inset-0 flex items-center justify-end pr-3"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(0.7rem, 1.4vw, 0.85rem)',
+            color: 'var(--color-text-muted)',
+            opacity: revealed ? 0.5 : 0,
+            transition: 'opacity 700ms ease-out 700ms',
+          }}
+        >
+          {undetectedStr}% sin detectar
+        </div>
       </div>
+      {label && (
+        <div
+          className="mt-1.5 text-[9px] font-mono uppercase tracking-[0.12em]"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {label}
+        </div>
+      )}
     </div>
   )
 }

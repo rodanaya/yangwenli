@@ -428,7 +428,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-            className="mb-10 space-y-2"
+            className="mb-8 space-y-1"
           >
             {story.kickerStats.map((stat, idx) => {
               const valueColor =
@@ -443,13 +443,13 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, delay: 0.35 + idx * 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-wrap items-baseline gap-x-3"
+                  className="flex flex-wrap items-baseline gap-x-2"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {stat.prefix && (
                     <span
                       className="text-text-secondary italic"
-                      style={{ fontSize: 'clamp(1.1rem, 1.6vw, 1.4rem)' }}
+                      style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
                       {stat.prefix}
                     </span>
@@ -457,7 +457,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   <span
                     className="font-bold tabular-nums leading-none"
                     style={{
-                      fontSize: 'clamp(2.75rem, 7vw, 5rem)',
+                      fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
                       letterSpacing: '-0.035em',
                       color: valueColor,
                     }}
@@ -467,7 +467,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   {stat.suffix && (
                     <span
                       className="text-text-secondary italic"
-                      style={{ fontSize: 'clamp(1.1rem, 1.6vw, 1.4rem)' }}
+                      style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
                       {stat.suffix}
                     </span>

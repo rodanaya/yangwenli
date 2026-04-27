@@ -29,8 +29,7 @@ interface Investigation {
   amount: number // MXN billions — kept for featured card stats panel
   era: Era
   contracts: number // kept for featured card stats panel
-  heroStat: string  // the one number that makes you stop scrolling
-  heroLabel: string // one-line context for that number
+  brief: string // 2-sentence abstract shown on the grid card
 }
 
 const INVESTIGATIONS: Investigation[] = [
@@ -43,8 +42,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 6034,
-    heroStat: '6,034',
-    heroLabel: 'ghost-pattern vendors — only 42 officially confirmed',
+    brief: '6,034 vendors flagged by RUBLI\'s ghost algorithm — only 42 officially confirmed by SAT. The other 5,992 are still contracting with the federal government.',
   },
   {
     slug: 'el-gran-precio',
@@ -55,8 +53,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 6240,
     era: 'cross',
     contracts: 23469,
-    heroStat: '0.70',
-    heroLabel: 'avg risk score on the 23K largest contracts',
+    brief: 'The 112 largest federal contracts — each above 5B MXN — carry an average risk score of 0.94. Contract size and corruption risk climb together, almost perfectly.',
   },
   {
     slug: 'el-monopolio-invisible',
@@ -67,8 +64,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 133.2,
     era: 'cross',
     contracts: 6303,
-    heroStat: 'MX$133B',
-    heroLabel: 'one vendor, one buyer, fourteen years',
+    brief: 'Four pharmaceutical distributors collected 326 billion pesos from IMSS over 23 years with no meaningful competition. Their combined risk score averages 0.96.',
   },
   {
     slug: 'la-ilusion-competitiva',
@@ -79,8 +75,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
-    heroStat: '49.4%',
-    heroLabel: 'of "competitive" tenders had exactly one bidder',
+    brief: 'For 14 straight years, over 45% of Mexico\'s "competitive" procurement had exactly one bidder. The OECD flags anything above 15% as a structural red flag.',
   },
   {
     slug: 'captura-institucional',
@@ -91,8 +86,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 787,
     era: 'cross',
     contracts: 530000,
-    heroStat: 'MX$787B',
-    heroLabel: '15,923 vendors · IMSS · CFE · PEMEX',
+    brief: '15,923 vendors show behavioral capture signatures at IMSS, CFE, PEMEX, SCT, and CONAGUA. That\'s nearly a trillion pesos of systematically captured contracting.',
   },
   {
     slug: 'marea-de-adjudicaciones',
@@ -103,8 +97,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
-    heroStat: '82%',
-    heroLabel: 'of 2023 contracts awarded without competition',
+    brief: '82.2% of 2023 federal contracts were direct awards — no competition, no public tender. Every administration since 2010 has been worse than the one before it.',
   },
   {
     slug: 'el-sexenio-del-riesgo',
@@ -115,8 +108,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 2760,
     era: 'amlo',
     contracts: 1049729,
-    heroStat: '17.6%',
-    heroLabel: 'AMLO-era high-risk rate — double Fox\'s 7.9%',
+    brief: 'AMLO\'s 17.6% high-risk rate is the first in 23 years to breach the OECD ceiling. Four administrations, two parties — one relentlessly ascending line.',
   },
   {
     slug: 'la-industria-del-intermediario',
@@ -127,8 +119,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 518,
     era: 'cross',
     contracts: 10633,
-    heroStat: '2,974',
-    heroLabel: 'shell intermediaries · MX$518B channelled',
+    brief: '2,974 vendors appear to win government contracts and subcontract the actual work, extracting a fee at each tier. In infrastructure, energy, and health: 414 billion pesos.',
   },
   {
     slug: 'el-umbral-de-los-300k',
@@ -139,8 +130,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 22.6,
     era: 'cross',
     contracts: 75474,
-    heroStat: '75,474',
-    heroLabel: 'contracts priced at exactly MX$300,000',
+    brief: '28,264 contracts at exactly 210,000 pesos. 22,064 at exactly 300,000. The statistical spikes at these values are impossible without systematic threshold manipulation.',
   },
   {
     slug: 'volatilidad-el-precio-del-riesgo',
@@ -151,8 +141,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
-    heroStat: '+0.53',
-    heroLabel: 'model coefficient — strongest signal in 3M contracts',
+    brief: 'Of 16 candidate risk features, price volatility emerged as the strongest predictor of corruption — coefficient +0.5343, 43% stronger than the next signal.',
   },
 ]
 
@@ -407,18 +396,13 @@ function GridCard({ item }: { item: Investigation }) {
           {headline}
         </h3>
 
-        {/* Hero stat — pushed to bottom of content area */}
-        <div className="mt-auto mb-5">
-          <div
-            className="font-mono font-black leading-none tabular-nums"
-            style={{ fontSize: '2.75rem', letterSpacing: '-0.04em', color: accent }}
-          >
-            {item.heroStat}
-          </div>
-          <p className="text-[10px] font-mono text-text-muted mt-1.5 leading-snug">
-            {item.heroLabel}
-          </p>
-        </div>
+        {/* Brief abstract — pushed to bottom of content area */}
+        <p
+          className="mt-auto mb-5 text-[11px] leading-[1.55] text-text-secondary"
+          style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}
+        >
+          {item.brief}
+        </p>
 
         {/* Footer */}
         <div className="pt-3 border-t border-border flex items-center justify-between">

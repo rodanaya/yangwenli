@@ -92,10 +92,10 @@ export function InlineDotGrid({
     total > 8000
       ? { dotSize: 4, dotGap: 1.5, cols: 110 }
       : total > 4000
-        ? { dotSize: 5, dotGap: 1.5, cols: 90 }
+        ? { dotSize: 3.5, dotGap: 1, cols: 130 }
         : total > 2000
-          ? { dotSize: 6, dotGap: 2, cols: 70 }
-          : { dotSize: 8, dotGap: 2, cols: 40 }
+          ? { dotSize: 5, dotGap: 1.5, cols: 80 }
+          : { dotSize: 7, dotGap: 2, cols: 40 }
 
   // Decide whether to render true 1:1 or scale down. For the ghost story
   // (6,034 dots) we render every vendor.
