@@ -332,7 +332,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
   const parsed = parseLeadStat(story.leadStat.value)
 
   return (
-    <header className="relative bg-black overflow-hidden" role="banner">
+    <header className="relative bg-background overflow-hidden border-b border-border" role="banner">
       <div
         className="absolute inset-0 opacity-[0.04]"
         style={{
@@ -831,9 +831,9 @@ export default function StoryNarrative() {
   const accentColor = OUTLET_ACCENT[story.outlet] || '#dc2626'
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       {/* Sticky header: back link + reading progress */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-border">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border">
         {/* Progress bar */}
         <div
           className="absolute bottom-0 left-0 h-[2px] transition-all duration-100"
