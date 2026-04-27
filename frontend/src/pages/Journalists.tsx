@@ -215,14 +215,20 @@ function formatBillions(amount: number): string {
 // ---------------------------------------------------------------------------
 
 function IntensityBar({ value, color }: { value: number; color: string }) {
-  // Routed through canonical <DotBar/>. Empty-cell fill was rgba(255,255,255,0.08)
-  // — invisible on cream. DotBar uses var(--color-border) for the noise-floor.
+  // Use canonical DotBar geometry but with bigger spacing so the bar
+  // stretches across the card row legibly. Default geometry (DR=2, DG=5)
+  // shrinks to ~108px, which looks like a tiny strip of black specks
+  // floating at the left of a 300px row. Bumping to DR=3, DG=12 makes
+  // each dot ~6px diameter and the whole bar ~264px — a clean, scannable
+  // intensity readout.
   return (
     <DotBar
       value={Math.min(1, value)}
       max={1}
       color={color}
-      className="w-full"
+      dots={22}
+      dotR={3}
+      dotGap={12}
       ariaLabel="Investigation intensity"
     />
   )
