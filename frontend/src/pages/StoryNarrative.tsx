@@ -420,7 +420,62 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           </span>
         </motion.div>
 
-        {/* Lead stat */}
+        {/* Kicker stats — per-story 3-row punchline. Falls through to leadStat
+            when story.kickerStats is undefined. */}
+        {story.kickerStats && story.kickerStats.length > 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
+            className="mb-10 space-y-2"
+          >
+            {story.kickerStats.map((stat, idx) => {
+              const valueColor =
+                stat.tone === 'critical'
+                  ? 'var(--color-risk-critical)'
+                  : stat.tone === 'data'
+                    ? 'var(--color-accent)'
+                    : 'var(--color-text-primary)'
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.35 + idx * 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="flex flex-wrap items-baseline gap-x-3"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  {stat.prefix && (
+                    <span
+                      className="text-text-secondary italic"
+                      style={{ fontSize: 'clamp(1.1rem, 1.6vw, 1.4rem)' }}
+                    >
+                      {stat.prefix}
+                    </span>
+                  )}
+                  <span
+                    className="font-bold tabular-nums leading-none"
+                    style={{
+                      fontSize: 'clamp(2.75rem, 7vw, 5rem)',
+                      letterSpacing: '-0.035em',
+                      color: valueColor,
+                    }}
+                  >
+                    {stat.value}
+                  </span>
+                  {stat.suffix && (
+                    <span
+                      className="text-text-secondary italic"
+                      style={{ fontSize: 'clamp(1.1rem, 1.6vw, 1.4rem)' }}
+                    >
+                      {stat.suffix}
+                    </span>
+                  )}
+                </motion.div>
+              )
+            })}
+          </motion.div>
+        ) : (
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -453,6 +508,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             <p className="text-text-muted text-sm mt-1">{story.leadStat.sublabel}</p>
           )}
         </motion.div>
+        )}
 
         {/* Thin colored divider */}
         <motion.div

@@ -73,10 +73,10 @@ function ChartCard({
 // 1. InlineDotGrid
 // ---------------------------------------------------------------------------
 
-const DOT_COLS = 40
-const DOT_SIZE = 8
-const DOT_GAP = 2
-const MAX_DOTS = 1200
+// 1:1 dot grid — every vendor gets a real dot. Highlighted points are clustered
+// in the top-left so the visual ratio is legible at a glance. Auto-sized to keep
+// the canvas under ~9000 dots; below that, render all of them.
+const MAX_TRUE_DOTS = 9000
 
 export function InlineDotGrid({
   data,
@@ -86,32 +86,79 @@ export function InlineDotGrid({
   title: string
 }) {
   const total = data.points.reduce((s, p) => s + p.value, 0)
-  const scale = total > MAX_DOTS ? MAX_DOTS / total : 1
 
-  // Build flat array of (color, highlight) for each displayed dot
+  // Choose dot geometry based on total. Smaller dots when there are more.
+  const { dotSize, dotGap, cols } =
+    total > 8000
+      ? { dotSize: 4, dotGap: 1.5, cols: 110 }
+      : total > 4000
+        ? { dotSize: 5, dotGap: 1.5, cols: 90 }
+        : total > 2000
+          ? { dotSize: 6, dotGap: 2, cols: 70 }
+          : { dotSize: 8, dotGap: 2, cols: 40 }
+
+  // Decide whether to render true 1:1 or scale down. For the ghost story
+  // (6,034 dots) we render every vendor.
+  const scale = total > MAX_TRUE_DOTS ? MAX_TRUE_DOTS / total : 1
+  const displayed = Math.round(total * scale)
+
+  // Build [highlights..., rest...] in render order. Highlighted dots fill the
+  // first N positions of the grid (top-left cluster), so the visual ratio of
+  // "this small block vs. the field" hits the reader instantly.
   const dots: { color: string; highlight: boolean }[] = []
+  // Pass 1: highlighted points first
   for (let i = 0; i < data.points.length; i++) {
     const pt = data.points[i]
+    if (!pt.highlight) continue
     const count = Math.round(pt.value * scale)
     const color = getColor(pt, i)
-    const highlight = !!pt.highlight
-    for (let d = 0; d < count; d++) {
-      dots.push({ color, highlight })
-    }
+    for (let d = 0; d < count; d++) dots.push({ color, highlight: true })
+  }
+  // Pass 2: non-highlighted
+  for (let i = 0; i < data.points.length; i++) {
+    const pt = data.points[i]
+    if (pt.highlight) continue
+    const count = Math.round(pt.value * scale)
+    const color = getColor(pt, i)
+    for (let d = 0; d < count; d++) dots.push({ color, highlight: false })
   }
 
-  // Highlighted dots first so they render in front visually (order matters for glow)
-  const sorted = [
-    ...dots.filter((d) => d.highlight),
-    ...dots.filter((d) => !d.highlight),
-  ]
+  const rows = Math.ceil(displayed / cols)
+  const svgW = cols * (dotSize + dotGap)
+  const svgH = rows * (dotSize + dotGap)
 
-  const rows = Math.ceil(sorted.length / DOT_COLS)
-  const svgW = DOT_COLS * (DOT_SIZE + DOT_GAP)
-  const svgH = rows * (DOT_SIZE + DOT_GAP)
+  // Stat callout numbers — pulled from the highlighted vs non-highlighted split
+  const highlighted = data.points.filter((p) => p.highlight)
+  const others = data.points.filter((p) => !p.highlight)
+  const highlightedTotal = highlighted.reduce((s, p) => s + p.value, 0)
+  const othersTotal = others.reduce((s, p) => s + p.value, 0)
+  const highlightedColor = highlighted[0] ? getColor(highlighted[0], 0) : 'var(--color-risk-critical)'
+  const othersColor = others[0] ? getColor(others[0], 1) : 'var(--color-text-muted)'
 
   return (
     <ChartCard title={title} annotation={data.annotation}>
+      {/* Stat callout — leads with the ratio so the chart reinforces, not introduces */}
+      {highlighted.length > 0 && others.length > 0 && (
+        <div className="grid grid-cols-2 gap-6 mb-6 px-2">
+          <div>
+            <div className="font-mono font-bold tabular-nums leading-none" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: highlightedColor }}>
+              {highlightedTotal.toLocaleString()}
+            </div>
+            <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-text-muted mt-2">
+              {highlighted[0].label}
+            </div>
+          </div>
+          <div>
+            <div className="font-mono font-bold tabular-nums leading-none" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', color: othersColor }}>
+              {othersTotal.toLocaleString()}
+            </div>
+            <div className="text-[11px] font-mono uppercase tracking-[0.12em] text-text-muted mt-2">
+              {others[0].label}
+            </div>
+          </div>
+        </div>
+      )}
+
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
         preserveAspectRatio="xMidYMid meet"
@@ -120,26 +167,26 @@ export function InlineDotGrid({
       >
         <defs>
           <filter id="dot-glow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
         </defs>
-        {sorted.map((dot, i) => {
-          const col = i % DOT_COLS
-          const row = Math.floor(i / DOT_COLS)
-          const cx = col * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2
-          const cy = row * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2
+        {dots.map((dot, i) => {
+          const col = i % cols
+          const row = Math.floor(i / cols)
+          const cx = col * (dotSize + dotGap) + dotSize / 2
+          const cy = row * (dotSize + dotGap) + dotSize / 2
           return (
             <circle
               key={i}
               cx={cx}
               cy={cy}
-              r={dot.highlight ? DOT_SIZE / 2 + 1 : DOT_SIZE / 2}
+              r={dot.highlight ? dotSize / 2 + 0.5 : dotSize / 2}
               fill={dot.color}
-              opacity={dot.highlight ? 1 : 0.35}
+              opacity={dot.highlight ? 1 : 0.55}
               filter={dot.highlight ? 'url(#dot-glow)' : undefined}
             />
           )
@@ -147,22 +194,20 @@ export function InlineDotGrid({
       </svg>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 pt-2 pb-1">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 pt-3 pb-1">
         {data.points.map((pt, i) => (
           <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary">
             <span
               className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: getColor(pt, i), opacity: pt.highlight ? 1 : 0.5 }}
+              style={{ backgroundColor: getColor(pt, i), opacity: pt.highlight ? 1 : 0.55 }}
             />
             <span>{pt.label}</span>
-            <span className="text-text-muted tabular-nums">
-              {pt.value.toLocaleString()}
-            </span>
+            <span className="text-text-muted tabular-nums">{pt.value.toLocaleString()}</span>
           </div>
         ))}
         {scale < 1 && (
-          <span className="text-[10px] font-mono text-text-primary self-center">
-            (displaying {MAX_DOTS} of {total.toLocaleString()} proportionally)
+          <span className="text-[10px] font-mono text-text-muted self-center">
+            (displaying {displayed.toLocaleString()} of {total.toLocaleString()} proportionally)
           </span>
         )}
       </div>

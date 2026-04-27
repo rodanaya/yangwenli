@@ -98,6 +98,22 @@ export interface StoryDef {
   byline: string
   estimatedMinutes: number
   leadStat: { value: string; label: string; sublabel?: string; color: string }
+  /**
+   * Optional per-story hero override. When present, StoryHero renders a 3-row
+   * kicker-stat punchline INSTEAD of the default leadStat block. Use when the
+   * story is built around a comparison (e.g. SAT confirmed 42 / RUBLI flagged
+   * 6,034 / 5,992 still doing business).
+   */
+  kickerStats?: Array<{
+    /** Optional verb prefix shown in muted serif before the number (e.g. "SAT confirmed") */
+    prefix?: string
+    /** The number itself — rendered enormous */
+    value: string
+    /** Tail text after the number (e.g. "ghosts.") — same line, smaller */
+    suffix?: string
+    /** Visual emphasis: 'critical' = red callout, 'data' = amber, 'muted' = neutral */
+    tone?: 'critical' | 'data' | 'muted'
+  }>
   chapters: StoryChapterDef[]
   relatedSlugs?: string[]
   caseIds?: number[]
@@ -125,6 +141,11 @@ export const STORIES: StoryDef[] = [
     estimatedMinutes: 16,
     status: 'solo_datos',
     leadStat: { value: '6,034', label: 'ghost-pattern vendors', sublabel: '0.7% officially detected', color: '#f59e0b' },
+    kickerStats: [
+      { prefix: 'SAT confirmed', value: '42', suffix: 'ghosts.', tone: 'muted' },
+      { prefix: 'RUBLI flagged', value: '6,034', suffix: 'matching the same pattern.', tone: 'data' },
+      { value: '5,992', suffix: 'still doing business with the government.', tone: 'critical' },
+    ],
     chapters: [
       {
         id: 'ch1',
