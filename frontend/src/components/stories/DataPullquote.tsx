@@ -102,20 +102,19 @@ export default function DataPullquote({
           </div>
           <p className="text-sm text-text-secondary mb-3">{statLabel}</p>
 
-          {/* Stat bar */}
+          {/* Stat bar — note: the {stat} number is already huge above this,
+              so we don't repeat it as a tail label here (was causing "6,034"
+              to appear twice with confusing visual hierarchy). */}
           {barValue !== undefined && (
             <div role="img" aria-label={`${stat}${barLabel ? ` — ${barLabel}` : ''}`}>
-              <div className="flex items-center gap-3">
-                <AnimatedFill
-                  pct={barValue}
-                  color={barColorHex}
-                  height="h-2.5"
-                  delay={200}
-                />
-                <span className={cn('text-xs font-bold tabular-nums shrink-0', statColor)}>{stat}</span>
-              </div>
+              <AnimatedFill
+                pct={barValue}
+                color={barColorHex}
+                height="h-1.5"
+                delay={200}
+              />
               {barLabel && (
-                <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1.5">{barLabel}</p>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider mt-2">{barLabel}</p>
               )}
             </div>
           )}
