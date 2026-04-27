@@ -1045,6 +1045,7 @@ def get_institution_contracts(
                 c.contract_date, c.contract_year, c.sector_id,
                 s.name_es as sector_name, c.risk_score, c.risk_level,
                 c.is_direct_award, c.is_single_bid,
+                c.vendor_id, c.institution_id,
                 v.name as vendor_name, i.name as institution_name,
                 c.procedure_type
             FROM contracts c
@@ -1072,6 +1073,11 @@ def get_institution_contracts(
                 risk_level=row["risk_level"],
                 is_direct_award=bool(row["is_direct_award"]),
                 is_single_bid=bool(row["is_single_bid"]),
+                # F4 audit fix: include the IDs so click-through links work.
+                # Previously NULL, breaking /vendors/{id} and /institutions/{id}
+                # navigation from the institution profile contracts table.
+                vendor_id=row["vendor_id"],
+                institution_id=row["institution_id"],
                 vendor_name=row["vendor_name"],
                 institution_name=row["institution_name"],
                 procedure_type=row["procedure_type"],
