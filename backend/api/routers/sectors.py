@@ -370,9 +370,9 @@ def get_sector(
                         trends = [
                             SectorTrend(
                                 year=r["year"],
-                                total_contracts=r.get("total_contracts", 0),
-                                total_value_mxn=r.get("total_value_mxn", 0),
-                                avg_risk_score=round(r.get("avg_risk_score", 0) or 0, 4),
+                                total_contracts=r.get("contracts", r.get("total_contracts", 0)),
+                                total_value_mxn=r.get("total_value", r.get("total_value_mxn", 0)),
+                                avg_risk_score=round(r.get("avg_risk", r.get("avg_risk_score", 0)) or 0, 4),
                                 direct_award_pct=r.get("direct_award_pct", 0) or 0,
                                 single_bid_pct=r.get("single_bid_pct", 0) or 0,
                             )
