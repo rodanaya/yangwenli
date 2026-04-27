@@ -834,6 +834,121 @@ export default function Executive() {
           </div>
         </section>
 
+        {/* ─── KEY FINDINGS — specific discoveries, not just methodology ─── */}
+        <section className="mb-12" aria-labelledby="findings-title">
+          <div id="findings-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-5 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Four findings that only became visible at scale — impossible to see by auditing contracts one by one.'
+              : 'Cuatro hallazgos que solo se volvieron visibles a escala — imposibles de detectar auditando contrato por contrato.'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Finding 1 — Ghost economy */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#dc2626' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#dc2626' }}>
+                  6,034
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'probable ghost\ncompanies detected' : 'empresas fantasma\ndetectadas'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'SAT officially confirmed 42. RUBLI found 143× more.'
+                  : 'SAT confirmó 42 oficialmente. RUBLI encontró 143× más.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'Pattern P2: vendors with no digital footprint, burst activity, RFC anomalies, and shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
+                  : 'Patrón P2: proveedores sin huella digital, actividad en ráfaga, anomalías RFC y domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
+              </p>
+            </article>
+
+            {/* Finding 2 — Audit blindspot */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#f59e0b' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#f59e0b' }}>
+                  95%
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'of high-value contracts\nnever audited' : 'de contratos de alto valor\nnunca auditados'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.'
+                  : 'MX$1.25 billones sobre 5B MXN — sin cobertura de auditoría.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'ASF reviews roughly 5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
+                  : 'La ASF revisa aproximadamente 5% de contratos sobre MX$5B al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció y el proveedor se disolvió.'}
+              </p>
+            </article>
+
+            {/* Finding 3 — Threshold splitting */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#8b5cf6' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#8b5cf6' }}>
+                  75%
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'of threshold-cluster\ncontracts — direct award' : 'de contratos en umbral\n— adjudicación directa'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'Contracts cluster statistically just below competitive-tender thresholds.'
+                  : 'Los contratos se agrupan estadísticamente justo debajo de los umbrales de licitación.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'A large single contract is split into multiple awards just below the legal threshold that would trigger a public tender. The density spike is detectable only when you can see all 3.1M contracts at once.'
+                  : 'Un contrato grande se divide en múltiples adjudicaciones justo por debajo del umbral que requeriría licitación pública. El pico de densidad solo es detectable cuando se ven los 3.1M contratos a la vez.'}
+              </p>
+            </article>
+
+            {/* Finding 4 — Institutional capture */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#a06820' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>
+                  15,923
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con patrón\nde captura P6'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'A single vendor locks a single institution — year after year, no competition.'
+                  : 'Un solo proveedor captura una sola institución — año tras año, sin competencia.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'Institutional capture (P6) is distinct from national monopoly: one vendor dominates one specific agency\'s spending with abnormal concentration and above-threshold risk. Detectable only through cross-institution comparison.'
+                  : 'La captura institucional (P6) es distinta del monopolio nacional: un proveedor domina el gasto de una sola agencia con concentración anormal y riesgo superior al umbral. Solo detectable mediante comparación entre instituciones.'}
+              </p>
+            </article>
+
+          </div>
+        </section>
+
         {/* ─── § 2 LA LENTE — what RUBLI uniquely sees (platform self-portrait) ─── */}
         <section className="mb-12" aria-labelledby="la-lente-title">
           <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
