@@ -101,23 +101,13 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
             letterSpacing: '-0.01em',
           }}
         >
-          <Link
-            to={`/vendors/${c.vendor_id}`}
-            className="hover:text-[color:var(--color-accent)] transition-colors"
-          >
-            {c.vendor_name}
-          </Link>
+          <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" />
           {' '}
           <span className="text-text-muted" style={{ fontWeight: 400 }}>
             {lang === 'es' ? 'capturó' : 'captured'}
           </span>
           {' '}
-          <Link
-            to={`/institutions/${c.institution_id}`}
-            className="hover:text-[color:var(--color-accent)] transition-colors"
-          >
-            {c.institution_name}
-          </Link>
+          <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" />
         </h3>
         <p className="text-[13px] text-text-secondary leading-[1.55]">
           {lang === 'es' ? (

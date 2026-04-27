@@ -857,21 +857,7 @@ export function InvestigationCaseDetail() {
                     {/* Top row: name + risk number */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0 flex-1">
-                        <Link
-                          to={`/vendors/${v.vendor_id}`}
-                          style={{
-                            fontSize: 15,
-                            fontFamily: 'var(--font-family-serif, Georgia, serif)',
-                            fontWeight: 600,
-                            color: INK,
-                            lineHeight: 1.25,
-                            display: 'block',
-                            letterSpacing: '-0.01em',
-                          }}
-                          className="transition-colors hover:underline"
-                        >
-                          {toTitleCase(v.name)}
-                        </Link>
+                        <EntityIdentityChip type="vendor" id={v.vendor_id} name={toTitleCase(v.name)} size="sm" />
                         <div className="flex items-center gap-2 mt-1">
                           {v.rfc && (
                             <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_FAINT, letterSpacing: '0.03em' }}>

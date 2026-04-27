@@ -234,15 +234,7 @@ function TopCapturedList({
               </div>
               <div className="text-xs text-text-muted/50">
                 {t('topCaptured.topVendor')}:{' '}
-                <Link
-                  to={`/vendors/${row.topVendorId}`}
-                  className="font-semibold text-text-primary hover:text-primary transition-colors"
-                  title={row.topVendor}
-                  aria-label={`${t('topCaptured.viewVendor')}: ${row.topVendor}`}
-                >
-                  {truncName(row.topVendor, 36)}
-                  <ArrowUpRight className="inline ml-0.5 w-3 h-3 opacity-50" aria-hidden="true" />
-                </Link>
+                <EntityIdentityChip type="vendor" id={row.topVendorId} name={truncName(row.topVendor, 36)} size="sm" />
               </div>
               <div className="text-[10px] text-text-muted/40">
                 {formatCompactMXN(row.value)} &middot; {formatNumber(row.contracts)} {t('topCaptured.contracts')}
@@ -313,14 +305,7 @@ function HeroCaptureCallout({
         </div>
         <div className="text-xs text-text-muted/60 mt-0.5">
           {t('topCaptured.topVendor')}:{' '}
-          <Link
-            to={`/vendors/${row.topVendorId}`}
-            className="font-semibold text-text-primary hover:text-primary transition-colors"
-            title={row.topVendor}
-          >
-            {truncName(row.topVendor, 40)}
-            <ArrowUpRight className="inline ml-0.5 w-3 h-3 opacity-50" aria-hidden="true" />
-          </Link>
+          <EntityIdentityChip type="vendor" id={row.topVendorId} name={truncName(row.topVendor, 40)} size="sm" />
         </div>
       </div>
       <div className="text-right shrink-0">
@@ -395,14 +380,7 @@ function CaptureBarChart({
                 {/* Dominant vendor */}
                 <div className="flex items-center gap-1.5 text-xs text-text-muted/60">
                   <span>{t('topCaptured.topVendor')}:</span>
-                  <Link
-                    to={`/vendors/${row.topVendorId}`}
-                    className="font-medium text-text-primary hover:text-primary transition-colors truncate"
-                    title={row.topVendor}
-                  >
-                    {row.topVendor}
-                    <ArrowUpRight className="inline ml-0.5 w-3 h-3 opacity-40" aria-hidden="true" />
-                  </Link>
+                  <EntityIdentityChip type="vendor" id={row.topVendorId} name={row.topVendor} size="sm" />
                 </div>
 
                 {/* Horizontal bar */}
@@ -1043,14 +1021,7 @@ export default function CapturaHeatmap() {
                     >
                       {truncName(cell.institution, 32)}
                     </div>
-                    <Link
-                      to={`/vendors/${cell.vendorId}`}
-                      className="text-sm font-medium text-text-primary hover:text-primary truncate block"
-                      title={cell.vendor}
-                    >
-                      {truncName(cell.vendor, 32)}
-                      <ArrowUpRight className="inline ml-1 w-3 h-3 opacity-50" aria-hidden="true" />
-                    </Link>
+                    <EntityIdentityChip type="vendor" id={cell.vendorId} name={truncName(cell.vendor, 32)} size="sm" />
                   </div>
                   <div className="text-right shrink-0">
                     <div

@@ -544,12 +544,7 @@ function TopVendorsComparison({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-text-muted font-mono">#{idx + 1}</span>
-                        <Link
-                          to={`/vendors/${v.vendor_id}`}
-                          className="text-xs font-medium text-text-primary hover:text-accent truncate"
-                        >
-                          {toTitleCase(v.vendor_name)}
-                        </Link>
+                        <EntityIdentityChip type="vendor" id={v.vendor_id} name={toTitleCase(v.vendor_name)} size="sm" />
                       </div>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-xs text-text-muted font-mono tabular-nums">

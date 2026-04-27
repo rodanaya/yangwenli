@@ -288,13 +288,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
               title={ts(sector.code)}
             />
           )}
-          <Link
-            to={`/vendors/${vendor.id}`}
-            className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
-            title={vendor.name}
-          >
-            {formatVendorName(vendor.name, 40)}
-          </Link>
+          <EntityIdentityChip type="vendor" id={vendor.id} name={formatVendorName(vendor.name, 40)} size="sm" />
         </div>
         {sector && (
           <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>
@@ -407,12 +401,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
               title={ts(sector.code)}
             />
           )}
-          <Link
-            to={`/institutions/${instId}`}
-            className="font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-xs"
-          >
-            {instName}
-          </Link>
+          <EntityIdentityChip type="institution" id={instId} name={instName} size="sm" />
         </div>
         {sector && (
           <div className="ml-3 text-[10px] mt-0.5" style={{ color: sector.color }}>

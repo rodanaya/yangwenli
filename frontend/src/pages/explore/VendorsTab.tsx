@@ -690,12 +690,7 @@ function FlashVendorRadar() {
                         const level = getRiskLevel(d.avg_risk_score)
                         return (
                           <div key={d.vendor_id} className="flex items-center justify-between gap-2">
-                            <Link
-                              to={`/vendors/${d.vendor_id}`}
-                              className="text-xs text-text-primary hover:text-accent truncate max-w-[260px]"
-                            >
-                              {toTitleCase(d.vendor_name)}
-                            </Link>
+                            <EntityIdentityChip type="vendor" id={d.vendor_id} name={toTitleCase(d.vendor_name)} size="sm" />
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-xs font-mono tabular-nums text-text-muted">{formatCompactMXN(d.total_value)}</span>
                               <span
@@ -799,12 +794,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
           />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <Link
-                to={`/vendors/${vendor.id}`}
-                className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-[250px] lg:max-w-[350px]"
-              >
-                {toTitleCase(vendor.name)}
-              </Link>
+              <EntityIdentityChip type="vendor" id={vendor.id} name={toTitleCase(vendor.name)} size="sm" />
               {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" />
               )}

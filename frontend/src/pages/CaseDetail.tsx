@@ -1186,19 +1186,7 @@ function CaseBody({
                         }}
                       >
                         {vendor.vendor_id ? (
-                          <Link
-                            to={`/vendors/${vendor.vendor_id}`}
-                            style={{
-                              fontFamily: 'var(--font-family-serif, Georgia, serif)',
-                              fontSize: 17,
-                              fontWeight: 700,
-                              color: TEXT_PRIMARY,
-                              textDecoration: 'none',
-                              letterSpacing: '-0.01em',
-                            }}
-                          >
-                            {vendor.vendor_name}
-                          </Link>
+                          <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name} size="sm" />
                         ) : (
                           <span
                             style={{

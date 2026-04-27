@@ -276,13 +276,7 @@ function ExtremeCaseCard({
       {/* Vendor */}
       <p className="text-sm text-text-secondary truncate mb-0.5">
         {contract.vendor_id ? (
-          <Link
-            to={`/vendors/${contract.vendor_id}`}
-            className="hover:underline text-blue-400"
-            title={contract.vendor_name}
-          >
-            {formatVendorName(contract.vendor_name, 40)}
-          </Link>
+          <EntityIdentityChip type="vendor" id={contract.vendor_id} name={formatVendorName(contract.vendor_name, 40)} size="sm" />
         ) : (
           formatVendorName(contract.vendor_name, 40)
         )}
@@ -429,13 +423,7 @@ function ReincidentesSection({
                   className="border-b border-border hover:bg-background-elevated transition-colors"
                 >
                   <td className="py-2 px-3 max-w-[200px]">
-                    <Link
-                      to={`/vendors/${v.vendor_id}`}
-                      className="text-xs font-medium text-text-secondary hover:underline truncate block"
-                      title={v.vendor_name}
-                    >
-                      {formatVendorName(v.vendor_name, 40)}
-                    </Link>
+                    <EntityIdentityChip type="vendor" id={v.vendor_id} name={formatVendorName(v.vendor_name, 40)} size="sm" />
                   </td>
                   <td className="py-2 px-3">
                     <div className="flex flex-wrap gap-1">
@@ -669,12 +657,7 @@ function MostExtremeCallout({
             }}
           >
             {contract.vendor_id ? (
-              <Link
-                to={`/vendors/${contract.vendor_id}`}
-                className="hover:text-risk-critical transition-colors"
-              >
-                {formatVendorName(contract.vendor_name, 60)}
-              </Link>
+              <EntityIdentityChip type="vendor" id={contract.vendor_id} name={formatVendorName(contract.vendor_name, 60)} size="sm" />
             ) : (
               formatVendorName(contract.vendor_name, 60)
             )}

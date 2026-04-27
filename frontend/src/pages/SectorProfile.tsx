@@ -307,12 +307,7 @@ function VendorTable({
                   </td>
                   <td className="py-2.5 px-3">
                     <div>
-                      <Link
-                        to={`/vendors/${vendor.vendor_id}`}
-                        className="font-medium text-text-primary hover:text-accent transition-colors"
-                      >
-                        {toTitleCase(vendor.vendor_name ?? vendor.name ?? '')}
-                      </Link>
+                      <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={toTitleCase(vendor.vendor_name ?? vendor.name ?? '')} size="sm" />
                       {(() => {
                         const N = 16, DR = 2, DG = 4
                         const filled = Math.max(1, Math.round((barPct / 100) * N))

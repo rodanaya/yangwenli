@@ -678,22 +678,12 @@ function ValueConcentrationAlerts() {
                       >
                         {/* Institution */}
                         <td className="px-3 py-2">
-                          <Link
-                            to={`/institutions/${row.institution_id}`}
-                            className="text-xs text-text-primary hover:text-accent transition-colors truncate block max-w-[180px] lg:max-w-[250px]"
-                          >
-                            {toTitleCase(row.institution_name)}
-                          </Link>
+                          <EntityIdentityChip type="institution" id={row.institution_id} name={toTitleCase(row.institution_name)} size="sm" />
                         </td>
 
                         {/* Vendor */}
                         <td className="px-3 py-2">
-                          <Link
-                            to={`/vendors/${row.vendor_id}`}
-                            className="text-xs text-text-primary hover:text-accent transition-colors truncate block max-w-[180px] lg:max-w-[250px]"
-                          >
-                            {toTitleCase(row.vendor_name)}
-                          </Link>
+                          <EntityIdentityChip type="vendor" id={row.vendor_id} name={toTitleCase(row.vendor_name)} size="sm" />
                         </td>
 
                         {/* Share % */}
@@ -800,12 +790,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
           })()}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <Link
-                to={`/institutions/${institution.id}`}
-                className="text-xs font-medium text-text-primary hover:text-accent transition-colors truncate block max-w-[250px] lg:max-w-[400px]"
-              >
-                {toTitleCase(institution.name)}
-              </Link>
+              <EntityIdentityChip type="institution" id={institution.id} name={toTitleCase(institution.name)} size="sm" />
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {institution.siglas && (
