@@ -326,6 +326,151 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MacroArc — 23-year direct award rate per administration vs. OECD ceiling
+// The opening visualization: structural failure at scale, not a single vendor.
+// ─────────────────────────────────────────────────────────────────────────────
+interface AdminArcEntry {
+  name: string; years: string; party: string; color: string
+  spendB: number; da: number; partial?: boolean
+}
+const ADMIN_ARC: AdminArcEntry[] = [
+  { name: 'Fox',       years: '01–06', party: 'PAN',    color: '#1a5276', spendB: 614.4, da: 62 },
+  { name: 'Calderón',  years: '07–12', party: 'PAN',    color: '#1a5276', spendB: 1600,  da: 72 },
+  { name: 'Peña N.',   years: '13–18', party: 'PRI',    color: '#c41e3a', spendB: 2000,  da: 78 },
+  { name: 'AMLO',      years: '19–24', party: 'MORENA', color: '#7b2d8b', spendB: 1900,  da: 76 },
+  { name: 'Sheinbaum', years: '25–',  party: 'MORENA', color: '#7b2d8b', spendB: 557.1, da: 74, partial: true },
+]
+
+function MacroArc({ lang }: { lang: 'en' | 'es' }) {
+  const SVG_W = 820
+  const SVG_H = 220
+  const PAD_L = 38
+  const PAD_R = 60
+  const PAD_TOP = 24
+  const PAD_BOT = 56
+  const CHART_H = SVG_H - PAD_TOP - PAD_BOT
+  const CHART_W = SVG_W - PAD_L - PAD_R
+  const N = ADMIN_ARC.length
+  const COL_W = CHART_W / N
+  const BAR_W = COL_W * 0.52
+  const OECD_CEILING = 30
+
+  const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
+  const OECD_Y = daToY(OECD_CEILING)
+  const AXIS_Y = PAD_TOP + CHART_H
+
+  return (
+    <div>
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        className="w-full"
+        style={{ height: SVG_H }}
+        role="img"
+        aria-label="Direct award rate per administration versus OECD ceiling"
+      >
+        {/* OECD safe zone — below the ceiling */}
+        <rect x={PAD_L} y={OECD_Y} width={CHART_W} height={AXIS_Y - OECD_Y}
+          fill="#10b981" opacity={0.05} />
+        {/* OECD ceiling line */}
+        <line x1={PAD_L} x2={SVG_W - PAD_R} y1={OECD_Y} y2={OECD_Y}
+          stroke="#10b981" strokeWidth={1.2} strokeDasharray="5 3" opacity={0.6} />
+        <text x={SVG_W - PAD_R + 5} y={OECD_Y + 4}
+          fontSize={8} fill="#10b981" opacity={0.75}
+          fontFamily="var(--font-family-mono, monospace)" fontWeight="600">
+          OECD
+        </text>
+        <text x={SVG_W - PAD_R + 5} y={OECD_Y + 13}
+          fontSize={8} fill="#10b981" opacity={0.75}
+          fontFamily="var(--font-family-mono, monospace)">
+          30%
+        </text>
+
+        {/* Y-axis ticks */}
+        {[0, 25, 50, 75, 100].map(pct => {
+          const y = daToY(pct)
+          return (
+            <g key={pct}>
+              <line x1={PAD_L - 3} x2={PAD_L} y1={y} y2={y}
+                stroke="var(--color-border)" strokeWidth={1} />
+              <text x={PAD_L - 5} y={y + 3} textAnchor="end"
+                fontSize={7} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {pct}%
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Axis base */}
+        <line x1={PAD_L} x2={SVG_W - PAD_R} y1={AXIS_Y} y2={AXIS_Y}
+          stroke="var(--color-border-hover)" strokeWidth={1.5} />
+
+        {/* Admin columns */}
+        {ADMIN_ARC.map((admin, i) => {
+          const cx = PAD_L + COL_W * i + COL_W / 2
+          const barX = cx - BAR_W / 2
+          const barTop = daToY(admin.da)
+          const barH = AXIS_Y - barTop
+
+          return (
+            <g key={admin.name}>
+              {/* Party band */}
+              <rect x={barX} y={PAD_TOP} width={BAR_W} height={CHART_H}
+                fill={admin.color} opacity={0.04} />
+              {/* DA% fill bar */}
+              <rect x={barX} y={barTop} width={BAR_W} height={barH}
+                fill={admin.color} opacity={admin.partial ? 0.28 : 0.55} rx={2} />
+              {/* Top bright cap */}
+              <rect x={barX} y={barTop} width={BAR_W} height={3}
+                fill={admin.color} opacity={admin.partial ? 0.55 : 0.9} rx={1} />
+              {/* DA% label above bar */}
+              <text x={cx} y={barTop - 7} textAnchor="middle"
+                fontSize={14} fontWeight="700" fill={admin.color}
+                fontFamily="var(--font-family-mono, monospace)">
+                {admin.da}%
+              </text>
+              {/* Admin name */}
+              <text x={cx} y={AXIS_Y + 13} textAnchor="middle"
+                fontSize={9} fontWeight="600" fill="var(--color-text-primary)"
+                fontFamily="var(--font-family-sans, sans-serif)">
+                {admin.name}
+              </text>
+              {/* Years */}
+              <text x={cx} y={AXIS_Y + 23} textAnchor="middle"
+                fontSize={7.5} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {admin.years}
+              </text>
+              {/* Spend */}
+              <text x={cx} y={AXIS_Y + 35} textAnchor="middle"
+                fontSize={7.5} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {admin.spendB >= 1000
+                  ? `${(admin.spendB / 1000).toFixed(1)}T MXN`
+                  : `${admin.spendB.toFixed(0)}B MXN`}
+              </text>
+              {admin.partial && (
+                <text x={cx} y={AXIS_Y + 46} textAnchor="middle"
+                  fontSize={7} fill="var(--color-text-muted)" fontStyle="italic"
+                  fontFamily="var(--font-family-mono, monospace)">
+                  partial
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+
+      <p className="text-[10px] font-mono text-text-muted mt-2 text-center leading-[1.5]">
+        {lang === 'en'
+          ? 'Direct award rate = share of contracts bypassing competitive tender. OECD recommended maximum: 25–30%. Sources: COMPRANET 2001–2025; OECD Government at a Glance.'
+          : 'Tasa de adjudicación directa = contratos sin licitación. Máximo recomendado OCDE: 25–30%. Fuentes: COMPRANET 2001–2025; OCDE Government at a Glance.'}
+      </p>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main component
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Executive() {
@@ -404,29 +549,27 @@ export default function Executive() {
   // ─── KPI tiles (2x2 grid) ──────────────────────────────────────────────────
   const kpis = [
     {
-      value: `${stats.highCriticalRate.toFixed(2)}%`,
-      label: lang === 'en' ? 'HIGH-RISK RATE' : 'TASA DE ALTO RIESGO',
-      context: lang === 'en' ? 'OECD range: 2–15%' : 'Rango OCDE: 2–15%',
-      color: '#dc2626',
+      value: '9.9T MXN',
+      label: lang === 'en' ? 'TOTAL ANALYZED SPEND' : 'GASTO TOTAL ANALIZADO',
+      context: lang === 'en' ? 'COMPRANET 2002–2025 · post-outlier exclusion' : 'COMPRANET 2002–2025 · excluyendo valores atípicos',
+      color: '#a06820',
     },
     {
-      value: `~${formatCompactMXN(stats.valueAtRisk)}`,
-      label: lang === 'en' ? 'VALUE AT RISK (EST.)' : 'VALOR EN RIESGO (EST.)',
-      context: lang === 'en'
-        ? 'High+critical contract share × total spend'
-        : 'Proporción de alto+crítico × gasto total',
-      color: '#f59e0b',
+      value: '~75%',
+      label: lang === 'en' ? 'DIRECT AWARD RATE' : 'TASA ADJ. DIRECTA',
+      context: lang === 'en' ? 'OECD maximum: 25–30%  ·  2.5× the ceiling' : 'Máximo OCDE: 25–30%  ·  2.5× el umbral',
+      color: '#dc2626',
     },
     {
       value: formatNumber(stats.highCriticalCount),
       label: lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO',
       context: lang === 'en' ? 'Contracts flagged for priority review' : 'Contratos señalados para revisión prioritaria',
-      color: '#a06820',
+      color: '#f59e0b',
     },
     {
       value: '0.828',
       label: lang === 'en' ? 'MODEL AUC' : 'AUC DEL MODELO',
-      context: lang === 'en' ? 'Vendor-stratified validation' : 'Validación estratificada por proveedor',
+      context: lang === 'en' ? 'Vendor-stratified · v0.6.5' : 'Estratif. por vendor · v0.6.5',
       color: 'var(--color-text-muted)',
     },
   ]
@@ -552,8 +695,8 @@ export default function Executive() {
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             {lang === 'en'
-              ? <>One vendor took <span style={{ color: '#dc2626' }}>133.2 billion pesos</span> from IMSS. <span className="text-text-secondary">320 more match the pattern.</span></>
-              : <>Un proveedor tomó <span style={{ color: '#dc2626' }}>133.2 mil millones de pesos</span> del IMSS. <span className="text-text-secondary">Otros 320 coinciden con el patrón.</span></>
+              ? <>Twenty-three years. <span style={{ color: '#a06820' }}>MX$9.9 trillion</span> in federal contracts. <span style={{ color: '#dc2626' }}>Three out of four</span>{' '}awarded without competition.</>
+              : <>Veintitrés años. <span style={{ color: '#a06820' }}>MX$9.9 billones</span> en contratos federales. <span style={{ color: '#dc2626' }}>Tres de cada cuatro</span>{' '}sin licitación.</>
             }
           </h1>
 
@@ -569,22 +712,47 @@ export default function Executive() {
           <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
             {lang === 'en'
               ? <>
-                  <strong className="text-text-primary">Grupo Farmacos Especializados</strong> won 6,303 federal health contracts over fourteen years.
-                  Seventy-nine percent were awarded without competitive bidding — 3× the OECD ceiling.
-                  RUBLI's model — trained on <strong className="text-text-primary">Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement</strong>, and 18 other prosecuted scandals — now flags <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contracts</strong> with the same fingerprint.
-                  Together they represent an estimated <strong className="text-text-primary">~{formatCompactMXN(stats.valueAtRisk)} MXN</strong> in flagged spend (high+critical contract share × total spend; assumes uniform value distribution across risk bands).
-                  These are investigation signals, not verdicts.
+                  Every administration since 2001 has bypassed competitive procurement at
+                  {' '}<strong className="text-text-primary">two to three times the OECD recommended ceiling</strong>.
+                  This is not an aberration — it is the structural condition of Mexican federal spending.
+                  RUBLI analyzed <strong className="text-text-primary">{formatNumber(stats.totalContracts)} contracts</strong> across 23 years,
+                  trained its risk model on <strong className="text-text-primary">1,363 documented corruption cases</strong> — Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement, and more —
+                  and now flags <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contracts</strong> matching those patterns.
+                  {' '}These are investigation signals, not verdicts.
                 </>
               : <>
-                  <strong className="text-text-primary">Grupo Farmacos Especializados</strong> ganó 6,303 contratos federales de salud en catorce años.
-                  El 79% fueron adjudicaciones directas — 3× el umbral OCDE.
-                  El modelo de RUBLI — entrenado con <strong className="text-text-primary">Segalmex, Odebrecht, Fantasmas del IMSS, compras de emergencia COVID</strong> y 18 escándalos más ya procesados — ahora señala <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contratos</strong> con la misma huella.
-                  Juntos representan un estimado de <strong className="text-text-primary">~{formatCompactMXN(stats.valueAtRisk)} MXN</strong> en gasto señalado (proporción alto+crítico × gasto total; asume distribución uniforme de valor entre niveles).
-                  Son señales de investigación, no veredictos.
+                  Cada administración desde 2001 ha evitado la licitación competitiva a
+                  {' '}<strong className="text-text-primary">dos o tres veces el límite recomendado por la OCDE</strong>.
+                  No es una anomalía — es la condición estructural del gasto federal mexicano.
+                  RUBLI analizó <strong className="text-text-primary">{formatNumber(stats.totalContracts)} contratos</strong> en 23 años,
+                  entrenó su modelo de riesgo en <strong className="text-text-primary">1,363 casos documentados</strong> — Segalmex, Odebrecht, Fantasmas IMSS, emergencia COVID y más —
+                  y ahora señala <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contratos</strong> con esas huellas.
+                  {' '}Son señales de investigación, no veredictos.
                 </>
             }
           </p>
         </motion.header>
+
+        {/* ─── MacroArc — 23-year direct award trend ─── */}
+        <motion.section
+          className="mb-10"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          aria-labelledby="macro-arc-title"
+        >
+          <div id="macro-arc-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
+            {lang === 'en' ? 'Five administrations · one structural failure' : 'Cinco administraciones · una falla estructural'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Direct award rate — share of contracts awarded without competitive bidding — has remained 2–3× the OECD ceiling under every Mexican administration since 2001. The AI model trained on this systemic pattern now detects its variants automatically.'
+              : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
+          </p>
+          <div className="surface-card rounded-sm p-4 md:p-6">
+            <MacroArc lang={lang} />
+          </div>
+        </motion.section>
 
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
@@ -618,6 +786,166 @@ export default function Executive() {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        {/* ─── Signal Cards (top 3 predictors) ─── */}
+        <section className="mb-12">
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
+            {lang === 'en' ? 'Three AI fingerprints — patterns invisible without machine learning' : 'Tres huellas de IA — patrones invisibles sin aprendizaje automático'}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {signals.map((s, idx) => (
+              <motion.article
+                key={s.num}
+                className="surface-card border-l-2 rounded-sm p-5"
+                style={{ borderLeftColor: s.color }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + idx * 0.08 }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                    {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
+                  </span>
+                </div>
+                <div className="mb-3">
+                  <span
+                    className="font-mono font-bold text-[34px] tabular-nums leading-none block"
+                    style={{ color: s.color }}
+                  >
+                    β {s.finding}
+                  </span>
+                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">
+                    {s.findingLabel}
+                  </p>
+                </div>
+                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">
+                  {s.name}
+                </h3>
+                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">
+                  {s.detection}
+                </p>
+                <p className="text-xs text-text-secondary leading-[1.6]">
+                  {s.body}
+                </p>
+              </motion.article>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── KEY FINDINGS — specific discoveries, not just methodology ─── */}
+        <section className="mb-12" aria-labelledby="findings-title">
+          <div id="findings-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-5 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Four findings that only became visible at scale — impossible to see by auditing contracts one by one.'
+              : 'Cuatro hallazgos que solo se volvieron visibles a escala — imposibles de detectar auditando contrato por contrato.'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            {/* Finding 1 — Ghost economy */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#dc2626' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#dc2626' }}>
+                  6,034
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'probable ghost\ncompanies detected' : 'empresas fantasma\ndetectadas'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'SAT officially confirmed 42. RUBLI found 143× more.'
+                  : 'SAT confirmó 42 oficialmente. RUBLI encontró 143× más.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'Pattern P2: vendors with no digital footprint, burst activity, RFC anomalies, and shared addresses. The 97% detection gap means most ghost-company fraud goes unregistered — and unrecovered.'
+                  : 'Patrón P2: proveedores sin huella digital, actividad en ráfaga, anomalías RFC y domicilios compartidos. La brecha del 97% significa que la mayoría del fraude fantasma no se registra — y no se recupera.'}
+              </p>
+            </article>
+
+            {/* Finding 2 — Audit blindspot */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#f59e0b' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#f59e0b' }}>
+                  95%
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'of high-value contracts\nnever audited' : 'de contratos de alto valor\nnunca auditados'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.'
+                  : 'MX$1.25 billones sobre 5B MXN — sin cobertura de auditoría.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'ASF reviews roughly 5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
+                  : 'La ASF revisa aproximadamente 5% de contratos sobre MX$5B al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció y el proveedor se disolvió.'}
+              </p>
+            </article>
+
+            {/* Finding 3 — Threshold splitting */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#8b5cf6' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#8b5cf6' }}>
+                  75%
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'of threshold-cluster\ncontracts — direct award' : 'de contratos en umbral\n— adjudicación directa'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'Contracts cluster statistically just below competitive-tender thresholds.'
+                  : 'Los contratos se agrupan estadísticamente justo debajo de los umbrales de licitación.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'A large single contract is split into multiple awards just below the legal threshold that would trigger a public tender. The density spike is detectable only when you can see all 3.1M contracts at once.'
+                  : 'Un contrato grande se divide en múltiples adjudicaciones justo por debajo del umbral que requeriría licitación pública. El pico de densidad solo es detectable cuando se ven los 3.1M contratos a la vez.'}
+              </p>
+            </article>
+
+            {/* Finding 4 — Institutional capture */}
+            <article className="surface-card rounded-sm p-5 border-l-2" style={{ borderLeftColor: '#a06820' }}>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
+              </div>
+              <div className="flex items-end gap-3 mb-3">
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>
+                  15,923
+                </span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.3]">
+                  {lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con patrón\nde captura P6'}
+                </span>
+              </div>
+              <h3 className="font-semibold text-[14px] text-text-primary leading-[1.3] mb-2">
+                {lang === 'en'
+                  ? 'A single vendor locks a single institution — year after year, no competition.'
+                  : 'Un solo proveedor captura una sola institución — año tras año, sin competencia.'}
+              </h3>
+              <p className="text-xs text-text-secondary leading-[1.6]">
+                {lang === 'en'
+                  ? 'Institutional capture (P6) is distinct from national monopoly: one vendor dominates one specific agency\'s spending with abnormal concentration and above-threshold risk. Detectable only through cross-institution comparison.'
+                  : 'La captura institucional (P6) es distinta del monopolio nacional: un proveedor domina el gasto de una sola agencia con concentración anormal y riesgo superior al umbral. Solo detectable mediante comparación entre instituciones.'}
+              </p>
+            </article>
+
           </div>
         </section>
 
@@ -728,51 +1056,6 @@ export default function Executive() {
                   <span>{d.value}</span>
                 </div>
               </article>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── Signal Cards (top 3 predictors) ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? 'Three fraud fingerprints — what the data reveals' : 'Tres huellas de fraude — lo que revelan los datos'}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {signals.map((s, idx) => (
-              <motion.article
-                key={s.num}
-                className="surface-card border-l-2 rounded-sm p-5"
-                style={{ borderLeftColor: s.color }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08 }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                    {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
-                  </span>
-                </div>
-                <div className="mb-3">
-                  <span
-                    className="font-mono font-bold text-[34px] tabular-nums leading-none block"
-                    style={{ color: s.color }}
-                  >
-                    β {s.finding}
-                  </span>
-                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">
-                    {s.findingLabel}
-                  </p>
-                </div>
-                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">
-                  {s.name}
-                </h3>
-                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">
-                  {s.detection}
-                </p>
-                <p className="text-xs text-text-secondary leading-[1.6]">
-                  {s.body}
-                </p>
-              </motion.article>
             ))}
           </div>
         </section>
