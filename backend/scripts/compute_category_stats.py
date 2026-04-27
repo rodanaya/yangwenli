@@ -85,11 +85,15 @@ def compute_category_stats():
                 c.category_id,
                 c.vendor_id,
                 v.name as vendor_name,
-                COUNT(*) as cnt,
-                ROW_NUMBER() OVER (PARTITION BY c.category_id ORDER BY COUNT(*) DESC) as rn
+                COALESCE(SUM(c.amount_mxn), 0) as total_value,
+                ROW_NUMBER() OVER (
+                    PARTITION BY c.category_id
+                    ORDER BY COALESCE(SUM(c.amount_mxn), 0) DESC, COUNT(*) DESC
+                ) as rn
             FROM contracts c
             JOIN vendors v ON v.id = c.vendor_id
             WHERE c.category_id IS NOT NULL
+              AND c.vendor_id IS NOT NULL
             GROUP BY c.category_id, c.vendor_id
         )
         UPDATE category_stats
@@ -109,11 +113,15 @@ def compute_category_stats():
                 c.category_id,
                 c.institution_id,
                 i.name as inst_name,
-                COUNT(*) as cnt,
-                ROW_NUMBER() OVER (PARTITION BY c.category_id ORDER BY COUNT(*) DESC) as rn
+                COALESCE(SUM(c.amount_mxn), 0) as total_value,
+                ROW_NUMBER() OVER (
+                    PARTITION BY c.category_id
+                    ORDER BY COALESCE(SUM(c.amount_mxn), 0) DESC, COUNT(*) DESC
+                ) as rn
             FROM contracts c
             JOIN institutions i ON i.id = c.institution_id
             WHERE c.category_id IS NOT NULL
+              AND c.institution_id IS NOT NULL
             GROUP BY c.category_id, c.institution_id
         )
         UPDATE category_stats

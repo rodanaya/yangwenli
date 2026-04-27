@@ -242,32 +242,43 @@ def get_institution(institution_id: int):
         ]
 
         # Supplier diversity: HHI over recent years (Prozorro analytics; Fazekas CRI)
-        hhi_rows = cursor.execute("""
-            WITH vendor_shares AS (
-                SELECT contract_year, vendor_id,
-                       SUM(COALESCE(amount_mxn, 0)) AS vendor_value
-                FROM contracts
-                WHERE institution_id = ? AND vendor_id IS NOT NULL
-                  AND contract_year IS NOT NULL AND amount_mxn > 0
-                GROUP BY contract_year, vendor_id
-            ),
-            year_totals AS (
-                SELECT contract_year,
-                       SUM(vendor_value) AS total_value,
-                       COUNT(DISTINCT vendor_id) AS unique_vendors
-                FROM vendor_shares GROUP BY contract_year
-            )
-            SELECT vs.contract_year,
-                   ROUND(SUM((vs.vendor_value * 100.0 / yt.total_value) *
-                             (vs.vendor_value * 100.0 / yt.total_value)), 1) AS hhi,
-                   yt.unique_vendors
-            FROM vendor_shares vs
-            JOIN year_totals yt ON vs.contract_year = yt.contract_year
-            WHERE yt.total_value > 0
-            GROUP BY vs.contract_year
-            ORDER BY vs.contract_year DESC
-            LIMIT 10
-        """, (institution_id,)).fetchall()
+        # Precomputed in institution_hhi (was 77s live for IMSS, now <10ms).
+        # Falls back to live aggregation if the precomputed table is missing.
+        try:
+            hhi_rows = cursor.execute("""
+                SELECT contract_year, hhi, unique_vendors
+                FROM institution_hhi
+                WHERE institution_id = ?
+                ORDER BY contract_year DESC
+                LIMIT 10
+            """, (institution_id,)).fetchall()
+        except sqlite3.OperationalError:
+            hhi_rows = cursor.execute("""
+                WITH vendor_shares AS (
+                    SELECT contract_year, vendor_id,
+                           SUM(COALESCE(amount_mxn, 0)) AS vendor_value
+                    FROM contracts
+                    WHERE institution_id = ? AND vendor_id IS NOT NULL
+                      AND contract_year IS NOT NULL AND amount_mxn > 0
+                    GROUP BY contract_year, vendor_id
+                ),
+                year_totals AS (
+                    SELECT contract_year,
+                           SUM(vendor_value) AS total_value,
+                           COUNT(DISTINCT vendor_id) AS unique_vendors
+                    FROM vendor_shares GROUP BY contract_year
+                )
+                SELECT vs.contract_year,
+                       ROUND(SUM((vs.vendor_value * 100.0 / yt.total_value) *
+                                 (vs.vendor_value * 100.0 / yt.total_value)), 1) AS hhi,
+                       yt.unique_vendors
+                FROM vendor_shares vs
+                JOIN year_totals yt ON vs.contract_year = yt.contract_year
+                WHERE yt.total_value > 0
+                GROUP BY vs.contract_year
+                ORDER BY vs.contract_year DESC
+                LIMIT 10
+            """, (institution_id,)).fetchall()
 
         supplier_diversity = None
         if hhi_rows:
