@@ -1,9 +1,14 @@
 /**
- * El Atlas — full-viewport exploration of the procurement universe.
+ * El Observatorio — full-viewport exploration of the procurement universe.
+ * (Internal symbol names — Atlas component, ATLAS_STORIES, atlasMode — keep
+ * the legacy "atlas" prefix; renaming them is pure churn. The route also
+ * stays /atlas to preserve URL identity and the rubli_atlas_visited_v1
+ * localStorage flag. /observatorio and /observatory are added as route
+ * aliases that redirect to /atlas — see App.tsx.)
  *
- * The dashboard's § 1 Atlas at 220px is the elevator pitch. This page is the
- * walking tour: same constellation engine at full size, with two extra axes
- * the dashboard doesn't have:
+ * The dashboard's § 1 constellation at 220px is the elevator pitch. This
+ * page is the walking tour: same constellation engine at full size, with
+ * two extra axes the dashboard doesn't have:
  *
  *   1. YEAR SCRUBBER  — slide through 2008-2025 to watch the universe evolve.
  *      Each year re-keys the constellation, retriggering the cinematic reveal
@@ -1126,7 +1131,7 @@ export default function Atlas() {
           className="font-serif font-extrabold text-[32px] sm:text-[44px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3 text-balance"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          {lang === 'en' ? <>El Atlas. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Atlas. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
+          {lang === 'en' ? <>The Observatory. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Observatorio. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
         </h1>
         <p className="text-base leading-[1.7] text-text-secondary text-pretty">
           {lang === 'en'
@@ -1291,7 +1296,7 @@ export default function Atlas() {
         <div
           className="flex items-center text-[10px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
           role="tablist"
-          aria-label={lang === 'en' ? 'Atlas lens' : 'Lente del Atlas'}
+          aria-label={lang === 'en' ? 'Observatory lens' : 'Lente del Observatorio'}
           style={{ border: '1px solid var(--color-border)' }}
         >
           {(
