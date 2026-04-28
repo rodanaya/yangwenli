@@ -216,6 +216,55 @@ Observatory deep-link CTAs in chart chapters and closing chapters open
 `/atlas` with `?lens=...&year=...&pin=...` state — readers can manipulate
 the live constellation showing the same data the chapter discusses.
 
+### Story graphics aesthetic spec (Apr 2026 redesign)
+
+DataPullquote (`frontend/src/components/stories/DataPullquote.tsx`) and
+InlineCharts (`frontend/src/components/stories/InlineCharts.tsx`) follow
+the dashboard's "Headline Numbers" tile rhythm:
+
+```
+┌─────────────────────────────────────┐
+▎ EYEBROW · MICRO MONO    DATELINE    │   chrome
+│ "italic Playfair quote, demoted"    │   secondary
+│ — attribution                        │
+│ ─────────────                        │
+│  6,034   ← Playfair Italic 800       │   anchor
+│  Label · mono                         │
+│                                       │
+│  SECTION ID · MICRO MONO              │   eyebrow
+│  ▰▰▰▰▰▰▰▰░░░░░░  [micro-viz]        │
+│  caption · mono                       │
+└─────────────────────────────────────┘
+   ↑ left 3px sector accent
+```
+
+Key rules:
+- **Numbers in Playfair Display Italic 800** with `tabular-nums`
+  (never font-sans `font-black`). Color set via `style={{ color: hex }}`,
+  never via `cn(..., hexString)` — a hex applied as a className is
+  silently stripped and the number inherits link blue / parent color.
+  The April 2026 audit found this exact bug across all 10 story heros.
+- **DataPullquote viz templates** — 14 public names map to 6
+  disciplined renderer families (proportion / threshold / gauge /
+  sliver / era / null) via `TEMPLATE_FAMILY` in DataPullquote.tsx.
+  Story-content.ts keeps using the old names; new code should pick
+  one of the 14 aliases that maps to the right family.
+- **Sector palette only** in InlineCharts — `HIGHLIGHT_COLOR`
+  (sector-salud), `REFERENCE_COLOR` (sector-tecnologia),
+  `ANCHOR_COLOR` (#a06820 dashboard amber). No random violets, cyans,
+  limes.
+- **Container queries** scope DataPullquote adaptations to the figure's
+  *own* width, not the viewport. The same component renders at 383px
+  (FeatureChapter sidebar grid), 656px (StandardChapter prose),
+  848px (closing chapter), 976px (chart chapter) on the same page —
+  viewport media queries can't distinguish them. `container-type:
+  inline-size` on the figure + `@container dpq (max-width: 480px)` for
+  the narrow stack.
+- **Accent precedence (DataPullquote)**: hex `statColor`
+  (the `leadStat.color` from story-content.ts) wins over `outlet`
+  (the journalism category). Otherwise the hero and pullquote can
+  end up in different colors on the same story.
+
 ### Spanish currency formatting (Mexican convention)
 
 `formatCompactMXN()` is locale-aware; Spanish output uses:
