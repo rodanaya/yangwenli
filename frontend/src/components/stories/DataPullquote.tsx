@@ -509,12 +509,20 @@ export default function DataPullquote({
     parsed ? parsed.decimals : 0
   )
 
-  // Outlet drives the accent. Falls back to statColor heuristic if no outlet.
-  const accent = outlet
-    ? OUTLET_ACCENT[outlet]
+  // Accent precedence (April 2026 fix):
+  //   1. statColor as a literal hex (e.g. "#dc2626") — this is the
+  //      editorial color set per-story in story-content.ts via
+  //      leadStat.color, and it must MATCH the hero stat for the same
+  //      story to have a coherent chromatic identity. Wins over outlet.
+  //   2. statColor as a Tailwind utility ("text-red-400" etc.) — legacy
+  //      callers used to pass these; map by substring.
+  //   3. Outlet category default — last-resort, only when no statColor.
+  const accent = /^#[0-9a-f]{3,8}$/i.test(statColor)
+    ? statColor
     : statColor.includes('red')   ? 'var(--color-sector-salud)'
     : statColor.includes('amber') ? '#a06820'
     : statColor.includes('blue')  ? 'var(--color-sector-tecnologia)'
+    : outlet ? OUTLET_ACCENT[outlet]
     : 'var(--color-sector-salud)'
 
   const [vizRef, revealed] = useReveal()
