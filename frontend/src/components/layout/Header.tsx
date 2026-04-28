@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { analysisApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
+import { getStoryBySlug } from '@/lib/story-content'
 
 const CommandPalette = lazy(() =>
   import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
@@ -316,11 +317,41 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   investigation: 'Investigation',
 }
 
+/**
+ * Convert a kebab-case URL slug into Title Case ("el-ejercito-fantasma" →
+ * "El Ejercito Fantasma"). Lowercase short connector words. Used as a
+ * fallback when no canonical title is available.
+ */
+function slugToTitle(slug: string): string {
+  const SHORT_CONNECTORS = new Set(['de', 'la', 'el', 'del', 'y', 'a', 'en', 'con', 'por', 'of', 'the', 'and', 'in', 'on', 'for'])
+  return slug
+    .split('-')
+    .map((word, i) => {
+      const lower = word.toLowerCase()
+      if (i > 0 && SHORT_CONNECTORS.has(lower)) return lower
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join(' ')
+}
+
 function getBreadcrumbTitle(path: string): string {
   const parts = path.split('/').filter(Boolean)
   if (parts.length === 0) return 'Dashboard'
 
   const lastPart = parts[parts.length - 1]
+
+  // /stories/:slug → resolve to canonical story headline (from story-content
+  // metadata) so the breadcrumb reads "El Ejército Fantasma" not the slug.
+  if (parts.length === 2 && parts[0] === 'stories') {
+    const story = getStoryBySlug(lastPart)
+    if (story) {
+      // Prefer Spanish title when present; the i18n locale isn't trivially
+      // accessible from this util, and Spanish is our primary locale.
+      return story.headline_es || story.headline
+    }
+    return slugToTitle(lastPart)
+  }
+
   if (/^\d+$/.test(lastPart)) {
     const parentSegment = parts.length >= 2 ? parts[parts.length - 2] : ''
     const entityLabel = ENTITY_TYPE_LABELS[parentSegment]
@@ -328,6 +359,12 @@ function getBreadcrumbTitle(path: string): string {
     const parentRoute = parts.slice(0, -1).join('/')
     const parentKey = ROUTE_I18N_KEYS[`/${parentRoute}`]
     if (parentKey) return `#${lastPart}`
+  }
+
+  // Generic slug → title fallback for any other kebab-case URL segment.
+  // Eliminates the "El-ejercito-fantasma" pattern across the platform.
+  if (lastPart.includes('-')) {
+    return slugToTitle(lastPart)
   }
 
   return lastPart.charAt(0).toUpperCase() + lastPart.slice(1)
