@@ -34,9 +34,24 @@ interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
   totalContracts: number
   mode?: ConstellationMode
+  /**
+   * Optional override for the cluster meta — when provided, replaces the
+   * default mode-based meta generation. Used by /atlas to pass an expanded
+   * 32+ category set without baking that into the dashboard's compact view.
+   */
+  metaOverride?: ClusterMeta[]
+  /**
+   * Optional override for the seed used to position dots — useful when an
+   * override meta is paired with an extra dimension (e.g. year) so dots
+   * visibly re-shuffle on each combination.
+   */
+  seedOverride?: number
   onClusterClick?: (clusterCode: string) => void
   className?: string
 }
+
+// Re-export ClusterMeta so /atlas can construct override meta arrays.
+export type { ClusterMeta }
 
 // ── Layout constants ──────────────────────────────────────────────────────
 const SVG_W = 840
@@ -203,6 +218,8 @@ export function ConcentrationConstellation({
   rows,
   totalContracts,
   mode = 'patterns',
+  metaOverride,
+  seedOverride,
   onClusterClick,
   className,
 }: ConcentrationConstellationProps) {
@@ -210,13 +227,14 @@ export function ConcentrationConstellation({
   const isEs = i18n.language === 'es'
   const [hoveredCluster, setHoveredCluster] = useState<number | null>(null)
 
-  // Pick the active meta array for the current mode
+  // Pick the active meta array for the current mode (or use override)
   const activeMeta: ClusterMeta[] = useMemo(() => {
+    if (metaOverride && metaOverride.length > 0) return metaOverride
     if (mode === 'sectors')    return buildSectorMeta(isEs)
     if (mode === 'sexenios')   return buildSexenioMeta(isEs)
     if (mode === 'categories') return buildCategoryMeta(isEs)
     return buildPatternMeta(isEs)
-  }, [mode, isEs])
+  }, [mode, isEs, metaOverride])
 
   const MODE_KICKERS = useMemo(() => buildModeKickers(isEs), [isEs])
 
@@ -264,8 +282,10 @@ export function ConcentrationConstellation({
     cumWeights[cumWeights.length - 1] = 1
 
     // Seed varies by mode so dot positions change when user toggles — the
-    // panel feels alive and re-organizing rather than frozen.
-    const seed = mode === 'sectors' ? 27182
+    // panel feels alive and re-organizing rather than frozen. seedOverride
+    // (used by /atlas year scrubber) lets us re-seed per year.
+    const seed = seedOverride !== undefined ? seedOverride
+      : mode === 'sectors'    ? 27182
       : mode === 'sexenios'   ? 16180
       : mode === 'categories' ? 14142
       : 31415
@@ -376,7 +396,7 @@ export function ConcentrationConstellation({
         low:      findAnchor('low',      PAD_T + FIELD_H * 0.82),
       },
     }
-  }, [rows, activeMeta, mode])
+  }, [rows, activeMeta, mode, seedOverride])
 
   const criticalRow = rows.find((r) => r.level === 'critical')
   const highRow = rows.find((r) => r.level === 'high')

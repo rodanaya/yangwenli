@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Newspaper,
   Briefcase,
+  Sparkles,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -96,6 +97,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.platform',
     items: [
+      { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
     ],
   },

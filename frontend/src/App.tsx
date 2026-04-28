@@ -37,6 +37,7 @@ const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
 const Executive = lazy(() => import('@/pages/Executive'))
+const Atlas = lazy(() => import('@/pages/Atlas'))
 // SpendingCategories removed; /categories now redirects to /sectors?view=categories
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
@@ -256,6 +257,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <CorruptionClusters />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="atlas"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Atlas />
                   </SuspenseBoundary>
                 }
               />
