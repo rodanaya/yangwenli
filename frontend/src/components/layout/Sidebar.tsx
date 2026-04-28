@@ -67,6 +67,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.discover',
     items: [
       { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+      { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
     ],
   },
@@ -97,7 +98,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.platform',
     items: [
-      { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
     ],
   },

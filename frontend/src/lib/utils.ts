@@ -33,10 +33,39 @@ export function formatMXN(amount: number): string {
 }
 
 /**
- * Format large amounts in compact form (e.g., 1.5B MXN)
- * Uses locale-aware suffixes: English B/M/K, Spanish B/M/K (same)
+ * Format large amounts in compact form, locale-aware.
+ *
+ * English (default): "1.5B MXN" / "9.9T MXN" — billion = 10⁹, trillion = 10¹².
+ *
+ * Mexican Spanish — uses MDP (millones de pesos) as the canonical unit because
+ *   "billion" = "mil millones" (10⁹) which doesn't translate cleanly. The
+ *   Mexican procurement convention is to express most public amounts in MDP.
+ *   - >= 10¹²:  "X.X billones MXN"     (billón in Spanish = 10¹² = English trillion)
+ *   - >= 10⁹:   "X,XXX MDP"            (e.g., 1.5B MXN → "1,500 MDP")
+ *   - >= 10⁶:   "X.X MDP"
+ *   - else:     formatMXN
  */
 export function formatCompactMXN(amount: number): string {
+  const lang = i18n.language || 'en'
+  const isEs = lang.startsWith('es')
+
+  if (isEs) {
+    if (amount >= 1_000_000_000_000) {
+      return `${(amount / 1_000_000_000_000).toFixed(1)} billones MXN`
+    }
+    if (amount >= 1_000_000_000) {
+      // Express in MDP with thousand separators — "1,500 MDP" reads clearly
+      const mdp = amount / 1_000_000
+      return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(Math.round(mdp))} MDP`
+    }
+    if (amount >= 1_000_000) {
+      return `${(amount / 1_000_000).toFixed(1)} MDP`
+    }
+    if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)} mil MXN`
+    return formatMXN(amount)
+  }
+
+  // English
   if (amount >= 1_000_000_000_000) return `${(amount / 1_000_000_000_000).toFixed(1)}T MXN`
   if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B MXN`
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M MXN`
