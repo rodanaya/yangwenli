@@ -204,18 +204,585 @@ function ChapterSources({ sources }: { sources: string[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Chapter section
+// Chapter section — variant-aware layouts (news-website style hierarchy).
+//
+// Same chapter data renders differently depending on which variant the picker
+// chooses. This breaks the monotonous "every chapter is a 65ch box" rhythm
+// that made /stories feel like a blog post instead of a magazine spread.
 // ---------------------------------------------------------------------------
 
-function ChapterSection({
-  chapter,
-  story,
-  accentColor,
-}: {
-  chapter: StoryChapterDef
-  story: StoryDef
-  accentColor: string
-}) {
+type ChapterVariant =
+  | 'hero'              // first chapter: full-width, oversized, drop cap, gradient backdrop
+  | 'feature'           // rich chapter: wider, asymmetric pullquote breakout
+  | 'data-spotlight'    // chart-driven: chart breaks out wider than text
+  | 'quote-spotlight'   // quote-driven: massive Playfair italic
+  | 'connective'        // short transitional: narrow column, brief
+  | 'closing'           // final chapter: generous closing thesis
+  | 'standard'          // default rhythm
+
+function pickChapterVariant(
+  chapter: StoryChapterDef,
+  index: number,
+  total: number,
+): ChapterVariant {
+  if (index === 0) return 'hero'
+  if (index === total - 1) return 'closing'
+  const proseLen = chapter.prose?.length ?? 0
+  const hasChart = !!chapter.chartConfig
+  const hasQuote = !!chapter.pullquote
+  // Chapter centered on chart (brief text + chart, no quote)
+  if (hasChart && !hasQuote && proseLen <= 2) return 'data-spotlight'
+  // Chapter centered on quote (brief text + quote, no chart)
+  if (hasQuote && !hasChart && proseLen <= 2) return 'quote-spotlight'
+  // Short transitional chapter
+  if (!hasChart && !hasQuote && proseLen === 1) return 'connective'
+  // Rich content chapter
+  if (hasChart && hasQuote && proseLen >= 2) return 'feature'
+  return 'standard'
+}
+
+// ── Render helpers (shared across variants) ───────────────────────────────
+
+function renderChartBlock(
+  chapter: StoryChapterDef,
+  className = 'my-8',
+) {
+  if (!chapter.chartConfig) return null
+  const cfg = chapter.chartConfig
+  if (cfg.data) {
+    const InlineChart = INLINE_CHART_MAP[cfg.type]
+    return (
+      <ScrollReveal className={className}>
+        {InlineChart ? (
+          <InlineChart data={cfg.data} title={cfg.title} />
+        ) : (
+          <div
+            className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
+            role="img"
+            aria-label={cfg.title}
+          >
+            {cfg.title}
+          </div>
+        )}
+      </ScrollReveal>
+    )
+  }
+  const chartId = cfg.chartId || TYPE_TO_CHART_ID[cfg.type]
+  const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
+  return (
+    <ScrollReveal className={className}>
+      {ChartComponent ? (
+        <Suspense fallback={
+          <div className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center" role="img" aria-label={cfg.title}>
+            {cfg.title}
+          </div>
+        }>
+          <ChartComponent />
+        </Suspense>
+      ) : (
+        <div
+          className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
+          role="img"
+          aria-label={cfg.title}
+        >
+          {cfg.title}
+        </div>
+      )}
+    </ScrollReveal>
+  )
+}
+
+function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = '') {
+  if (!chapter.pullquote) return null
+  return (
+    <div className={className}>
+      <DataPullquote
+        quote={chapter.pullquote.quote}
+        stat={chapter.pullquote.stat}
+        statLabel={chapter.pullquote.statLabel}
+        barValue={chapter.pullquote.barValue}
+        barLabel={chapter.pullquote.barLabel}
+        outlet={story.outlet}
+        statColor={story.leadStat.color}
+        vizTemplate={chapter.pullquote.vizTemplate}
+      />
+    </div>
+  )
+}
+
+// ── Decorative chapter divider (sits between chapters) ────────────────────
+
+function ChapterDivider({ accentColor }: { accentColor: string }) {
+  return (
+    <div className="my-16 flex items-center justify-center" aria-hidden="true">
+      <span
+        className="block h-px w-12 opacity-40"
+        style={{ background: accentColor }}
+      />
+      <span
+        className="mx-3 h-1.5 w-1.5 rounded-full opacity-70"
+        style={{ background: accentColor }}
+      />
+      <span
+        className="block h-px w-12 opacity-40"
+        style={{ background: accentColor }}
+      />
+    </div>
+  )
+}
+
+// ── Variant: HERO (chapter 1) ─────────────────────────────────────────────
+
+function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  const paddedNumber = String(chapter.number).padStart(2, '0')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-20 relative"
+    >
+      {/* Editorial backdrop — soft accent gradient */}
+      <div
+        className="absolute inset-x-0 top-0 h-[420px] -z-10 pointer-events-none rounded-lg"
+        style={{
+          background: `linear-gradient(180deg, ${accentColor}10 0%, transparent 100%)`,
+        }}
+      />
+
+      <ScrollReveal>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-10 relative">
+          {/* Massive watermark numeral */}
+          <span
+            className="absolute -top-2 right-2 sm:right-8 select-none pointer-events-none font-extrabold leading-none"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(180px, 28vw, 360px)',
+              color: accentColor,
+              opacity: 0.07,
+              letterSpacing: '-0.04em',
+            }}
+            aria-hidden="true"
+          >
+            {paddedNumber}
+          </span>
+
+          {/* Top eyebrow */}
+          <p
+            className="text-[11px] uppercase tracking-[0.22em] font-bold mb-4"
+            style={{ color: accentColor }}
+          >
+            {t('storyType.chapter', 'Chapter')} {paddedNumber}
+            {story.era && (
+              <>
+                <span className="mx-2 opacity-50">·</span>
+                <span className="text-text-muted">{getEraLabel(story.era, t)}</span>
+              </>
+            )}
+          </p>
+
+          {/* Massive editorial title */}
+          <h2
+            className="text-[40px] sm:text-[56px] md:text-[68px] leading-[1.05] tracking-[-0.02em] font-extrabold text-text-primary mb-5 text-balance"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {chapter.title}
+          </h2>
+
+          {chapter.subtitle && (
+            <p className="text-lg sm:text-xl text-text-secondary leading-[1.5] mb-10 text-pretty max-w-3xl">
+              {chapter.subtitle}
+            </p>
+          )}
+        </div>
+      </ScrollReveal>
+
+      {/* Lede paragraph with drop cap + remaining body */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0">
+        {chapter.prose.map((paragraph, i) => (
+          <ScrollReveal key={i} delay={i * 60}>
+            <p
+              className={cn(
+                'text-text-primary leading-[1.75] mb-6',
+                i === 0 ? 'text-[19px] hero-dropcap' : 'text-[17px] text-text-secondary',
+              )}
+              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+            >
+              {paragraph}
+            </p>
+          </ScrollReveal>
+        ))}
+
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} />
+        )}
+
+        {/* Hero stat callout — if pullquote exists, render it as a hero-sized
+            breakout below the lede. */}
+        {chapter.pullquote && (
+          <ScrollReveal className="my-10">
+            {renderPullquote(chapter, story)}
+          </ScrollReveal>
+        )}
+
+        {/* Chart, if any — wider than text column */}
+        {chapter.chartConfig && (
+          <div className="my-10 -mx-4 sm:mx-[-10%] md:mx-[-15%]">
+            {renderChartBlock(chapter, '')}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ── Variant: FEATURE (rich content chapter) ───────────────────────────────
+
+function FeatureChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-20"
+    >
+      <ChapterBanner
+        number={chapter.number}
+        title={chapter.title}
+        subtitle={chapter.subtitle}
+        era={story.era ? getEraLabel(story.era, t) : undefined}
+        color={accentColor}
+      />
+
+      {/* Two-column layout on desktop: prose + breakout pullquote */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6">
+        {/* Body column */}
+        <div className="lg:col-span-7 lg:col-start-1">
+          {chapter.prose.map((paragraph, i) => (
+            <ScrollReveal key={i} delay={i * 60}>
+              <p
+                className={cn(
+                  'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                  i === 0 && 'feature-dropcap',
+                )}
+                style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+              >
+                {paragraph}
+              </p>
+            </ScrollReveal>
+          ))}
+          {chapter.sources && chapter.sources.length > 0 && (
+            <ChapterSources sources={chapter.sources} />
+          )}
+        </div>
+
+        {/* Sidebar pullquote — sticky on desktop, breaks out of grid */}
+        {chapter.pullquote && (
+          <aside className="lg:col-span-5 lg:col-start-8">
+            <ScrollReveal className="lg:sticky lg:top-24">
+              {renderPullquote(chapter, story)}
+            </ScrollReveal>
+          </aside>
+        )}
+      </div>
+
+      {/* Chart spans full editorial width below */}
+      {chapter.chartConfig && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8">
+          {renderChartBlock(chapter, '')}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Variant: DATA-SPOTLIGHT (chart-driven chapter) ────────────────────────
+
+function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-20"
+    >
+      <ChapterBanner
+        number={chapter.number}
+        title={chapter.title}
+        subtitle={chapter.subtitle}
+        era={story.era ? getEraLabel(story.era, t) : undefined}
+        color={accentColor}
+      />
+
+      {/* Brief lede in normal column */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-8">
+        {chapter.prose.map((paragraph, i) => (
+          <ScrollReveal key={i} delay={i * 60}>
+            <p
+              className={cn(
+                'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                i === 0 && 'feature-dropcap',
+              )}
+              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+            >
+              {paragraph}
+            </p>
+          </ScrollReveal>
+        ))}
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} />
+        )}
+      </div>
+
+      {/* Chart breakout — wider than prose */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <ScrollReveal>
+          <div
+            className="rounded-lg p-1 sm:p-2"
+            style={{
+              background: `linear-gradient(135deg, ${accentColor}15, transparent 60%)`,
+              borderTop: `2px solid ${accentColor}`,
+            }}
+          >
+            {renderChartBlock(chapter, 'p-3 sm:p-5 bg-background rounded-md')}
+          </div>
+        </ScrollReveal>
+      </div>
+
+      {/* Optional pullquote at bottom */}
+      {chapter.pullquote && (
+        <div className="max-w-prose mx-auto px-4 sm:px-0 mt-10">
+          <ScrollReveal>
+            {renderPullquote(chapter, story)}
+          </ScrollReveal>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Variant: QUOTE-SPOTLIGHT (quote-driven chapter) ───────────────────────
+
+function QuoteSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-20"
+    >
+      <ChapterBanner
+        number={chapter.number}
+        title={chapter.title}
+        subtitle={chapter.subtitle}
+        era={story.era ? getEraLabel(story.era, t) : undefined}
+        color={accentColor}
+      />
+
+      {/* Brief context */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-10">
+        {chapter.prose.map((paragraph, i) => (
+          <ScrollReveal key={i} delay={i * 60}>
+            <p className="text-text-primary leading-[1.75] mb-5 text-[17px]">
+              {paragraph}
+            </p>
+          </ScrollReveal>
+        ))}
+      </div>
+
+      {/* Massive Playfair italic quote — wider breakout */}
+      {chapter.pullquote && (
+        <ScrollReveal>
+          <figure
+            className="max-w-4xl mx-auto px-4 sm:px-6 my-10"
+            aria-label={t('storyType.pullquote', 'Pull quote')}
+          >
+            <div
+              className="relative pl-6 sm:pl-10 pr-4 py-6"
+              style={{ borderLeft: `4px solid ${accentColor}` }}
+            >
+              {/* Decorative open-quote */}
+              <span
+                className="absolute -top-4 -left-2 select-none pointer-events-none"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 80,
+                  lineHeight: 1,
+                  color: accentColor,
+                  opacity: 0.25,
+                }}
+                aria-hidden="true"
+              >“</span>
+              <blockquote
+                className="text-[26px] sm:text-[34px] md:text-[40px] leading-[1.18] tracking-[-0.01em] font-medium italic text-text-primary text-balance"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                {chapter.pullquote.quote}
+              </blockquote>
+              {chapter.pullquote.stat && (
+                <div className="mt-6 pt-4 border-t border-border/60 flex items-baseline gap-4">
+                  <div
+                    className="font-extrabold tabular-nums leading-none flex-shrink-0"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      color: accentColor,
+                      fontSize: 36,
+                    }}
+                  >
+                    {chapter.pullquote.stat}
+                  </div>
+                  {chapter.pullquote.statLabel && (
+                    <p className="text-sm text-text-muted leading-[1.5]">
+                      {chapter.pullquote.statLabel}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </figure>
+        </ScrollReveal>
+      )}
+
+      {/* Source citations remain available */}
+      {chapter.sources && chapter.sources.length > 0 && (
+        <div className="max-w-prose mx-auto px-4 sm:px-0">
+          <ChapterSources sources={chapter.sources} />
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Variant: CONNECTIVE (short transitional chapter) ──────────────────────
+
+function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-16"
+    >
+      {/* Smaller chapter marker, no big banner */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0 mb-6">
+        <ScrollReveal>
+          <div className="flex items-baseline gap-3 mb-2">
+            <span
+              className="text-[10px] uppercase tracking-[0.22em] font-bold"
+              style={{ color: accentColor }}
+            >
+              {t('storyType.chapter', 'Chapter')} {String(chapter.number).padStart(2, '0')}
+            </span>
+            {story.era && (
+              <span className="text-[10px] text-text-muted">
+                · {getEraLabel(story.era, t)}
+              </span>
+            )}
+          </div>
+          <h2
+            className="text-[24px] sm:text-[28px] leading-[1.2] font-bold text-text-primary mb-4 text-balance"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {chapter.title}
+          </h2>
+        </ScrollReveal>
+      </div>
+
+      {/* Narrow column for connective tissue */}
+      <div className="max-w-[55ch] mx-auto px-4 sm:px-0">
+        {chapter.prose.map((paragraph, i) => (
+          <ScrollReveal key={i} delay={i * 60}>
+            <p className="text-text-secondary leading-[1.75] mb-5 text-[17px] italic">
+              {paragraph}
+            </p>
+          </ScrollReveal>
+        ))}
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} />
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ── Variant: CLOSING (final chapter) ──────────────────────────────────────
+
+function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+  const { t } = useTranslation('common')
+  return (
+    <section
+      id={`chapter-${chapter.id}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
+      className="mb-12 relative"
+    >
+      <div
+        className="absolute inset-x-0 top-0 h-[280px] -z-10 pointer-events-none rounded-lg"
+        style={{
+          background: `linear-gradient(180deg, ${accentColor}08 0%, transparent 100%)`,
+        }}
+      />
+
+      <ScrollReveal>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-6">
+          <p
+            className="text-[10px] uppercase tracking-[0.22em] font-bold mb-4"
+            style={{ color: accentColor }}
+          >
+            ◆ {t('storyType.closing', 'Closing')} · {t('storyType.chapter', 'Chapter')} {String(chapter.number).padStart(2, '0')}
+          </p>
+          <h2
+            className="text-[32px] sm:text-[44px] md:text-[52px] leading-[1.08] tracking-[-0.015em] font-extrabold text-text-primary mb-4 text-balance"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {chapter.title}
+          </h2>
+          {chapter.subtitle && (
+            <p className="text-lg text-text-secondary leading-[1.55] mb-8 text-pretty">
+              {chapter.subtitle}
+            </p>
+          )}
+        </div>
+      </ScrollReveal>
+
+      <div className="max-w-prose mx-auto px-4 sm:px-0">
+        {chapter.prose.map((paragraph, i) => (
+          <ScrollReveal key={i} delay={i * 60}>
+            <p
+              className={cn(
+                'text-text-primary leading-[1.75] mb-5 text-[17px] sm:text-[18px]',
+                i === 0 && 'feature-dropcap',
+              )}
+              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+            >
+              {paragraph}
+            </p>
+          </ScrollReveal>
+        ))}
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} />
+        )}
+      </div>
+
+      {chapter.pullquote && (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-10">
+          <ScrollReveal>
+            {renderPullquote(chapter, story)}
+          </ScrollReveal>
+        </div>
+      )}
+
+      {chapter.chartConfig && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-10">
+          {renderChartBlock(chapter, '')}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// ── Variant: STANDARD (current default, refined) ──────────────────────────
+
+function StandardChapter({ chapter, story, accentColor }: ChapterRenderProps) {
   const { t } = useTranslation('common')
   return (
     <section
@@ -234,7 +801,13 @@ function ChapterSection({
       <div className="max-w-prose mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
-            <p className="text-text-secondary leading-relaxed mb-6 text-lg">
+            <p
+              className={cn(
+                'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                i === 0 && 'feature-dropcap',
+              )}
+              style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+            >
               {paragraph}
             </p>
           </ScrollReveal>
@@ -244,70 +817,41 @@ function ChapterSection({
           <ChapterSources sources={chapter.sources} />
         )}
 
-        {chapter.chartConfig && (() => {
-          const cfg = chapter.chartConfig
-
-          // Inline data-driven charts — rendered when cfg.data is present
-          if (cfg.data) {
-            const InlineChart = INLINE_CHART_MAP[cfg.type]
-            return (
-              <ScrollReveal className="my-8">
-                {InlineChart ? (
-                  <InlineChart data={cfg.data} title={cfg.title} />
-                ) : (
-                  <div
-                    className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
-                    role="img"
-                    aria-label={cfg.title}
-                  >
-                    {cfg.title}
-                  </div>
-                )}
-              </ScrollReveal>
-            )
-          }
-
-          // Existing registry-based charts (unchanged)
-          const chartId = cfg.chartId || TYPE_TO_CHART_ID[cfg.type]
-          const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
-          return (
-            <ScrollReveal className="my-8">
-              {ChartComponent ? (
-                <Suspense fallback={
-                  <div className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center" role="img" aria-label={cfg.title}>
-                    {cfg.title}
-                  </div>
-                }>
-                  <ChartComponent />
-                </Suspense>
-              ) : (
-                <div
-                  className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
-                  role="img"
-                  aria-label={cfg.title}
-                >
-                  {cfg.title}
-                </div>
-              )}
-            </ScrollReveal>
-          )
-        })()}
-
+        {chapter.chartConfig && renderChartBlock(chapter)}
         {chapter.pullquote && (
-          <DataPullquote
-            quote={chapter.pullquote.quote}
-            stat={chapter.pullquote.stat}
-            statLabel={chapter.pullquote.statLabel}
-            barValue={chapter.pullquote.barValue}
-            barLabel={chapter.pullquote.barLabel}
-            outlet={story.outlet}
-            statColor={story.leadStat.color}
-            vizTemplate={chapter.pullquote.vizTemplate}
-          />
+          <div className="my-10">
+            <ScrollReveal>{renderPullquote(chapter, story)}</ScrollReveal>
+          </div>
         )}
       </div>
     </section>
   )
+}
+
+// ── Top-level dispatcher ──────────────────────────────────────────────────
+
+interface ChapterRenderProps {
+  chapter: StoryChapterDef
+  story: StoryDef
+  accentColor: string
+}
+
+function ChapterSection({
+  chapter,
+  story,
+  accentColor,
+  variant,
+}: ChapterRenderProps & { variant: ChapterVariant }) {
+  switch (variant) {
+    case 'hero':            return <HeroChapter            chapter={chapter} story={story} accentColor={accentColor} />
+    case 'feature':         return <FeatureChapter         chapter={chapter} story={story} accentColor={accentColor} />
+    case 'data-spotlight':  return <DataSpotlightChapter   chapter={chapter} story={story} accentColor={accentColor} />
+    case 'quote-spotlight': return <QuoteSpotlightChapter  chapter={chapter} story={story} accentColor={accentColor} />
+    case 'connective':      return <ConnectiveChapter      chapter={chapter} story={story} accentColor={accentColor} />
+    case 'closing':         return <ClosingChapter         chapter={chapter} story={story} accentColor={accentColor} />
+    case 'standard':
+    default:                return <StandardChapter        chapter={chapter} story={story} accentColor={accentColor} />
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -918,16 +1462,26 @@ export default function StoryNarrative() {
       <ChapterNav chapters={story.chapters} accentColor={accentColor} activeChapterId={activeChapterId} />
 
       {/* ── ACT I: THE INVESTIGATION ── */}
-      <main className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-16">
+      {/* Wider container so hero/feature/data-spotlight variants can breakout */}
+      <main className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-16">
         <Act number="I" label="THE INVESTIGATION" className="space-y-0">
-          {story.chapters.map((chapter) => (
-            <ChapterSection
-              key={chapter.id}
-              chapter={chapter}
-              story={story}
-              accentColor={accentColor}
-            />
-          ))}
+          {story.chapters.map((chapter, idx) => {
+            const variant = pickChapterVariant(chapter, idx, story.chapters.length)
+            return (
+              <div key={chapter.id}>
+                <ChapterSection
+                  chapter={chapter}
+                  story={story}
+                  accentColor={accentColor}
+                  variant={variant}
+                />
+                {/* Decorative divider between chapters (skip after last) */}
+                {idx < story.chapters.length - 1 && variant !== 'hero' && (
+                  <ChapterDivider accentColor={accentColor} />
+                )}
+              </div>
+            )
+          })}
         </Act>
       </main>
 

@@ -945,3 +945,31 @@
   .card { border: 1px solid #e5e7eb; background: white; }
   .stat-bomb-value::after { display: none; }
 }
+
+/* ── Editorial drop caps for /stories chapter variants ─────────────────────
+   Hero chapter — large drop cap, accent-colored, Playfair serif. The first
+   letter floats left and three lines tall. Falls back gracefully on small
+   screens where floating an enlarged glyph creates layout pressure. */
+.hero-dropcap::first-letter,
+.feature-dropcap::first-letter {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 800;
+  color: var(--dropcap-color, var(--color-accent));
+  float: left;
+  line-height: 0.85;
+  margin: 0.08em 0.12em 0 0;
+  padding-right: 0.04em;
+}
+.hero-dropcap::first-letter {
+  font-size: 5.4em;
+  margin-top: 0.05em;
+}
+.feature-dropcap::first-letter {
+  font-size: 3.6em;
+  margin-top: 0.06em;
+}
+@media (max-width: 640px) {
+  /* Smaller drop caps on phones to avoid wrapping problems */
+  .hero-dropcap::first-letter { font-size: 4em; }
+  .feature-dropcap::first-letter { font-size: 2.8em; }
+}
