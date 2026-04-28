@@ -28,6 +28,9 @@ import { analysisApi, ariaApi } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
+  buildPatternMeta,
+  buildSectorMeta,
+  buildSexenioMeta,
   type ConstellationMode,
   type ConstellationRiskRow,
   type ClusterMeta,
@@ -886,7 +889,7 @@ export default function Atlas() {
     if (!isPlaying) return
     const id = setInterval(() => {
       setYearIndex((y) => (y >= YEAR_SNAPSHOTS.length - 1 ? 0 : y + 1))
-    }, 1600)
+    }, 2400)
     return () => clearInterval(id)
   }, [isPlaying])
 
@@ -895,7 +898,7 @@ export default function Atlas() {
     if (!isPlayingB || !compareMode) return
     const id = setInterval(() => {
       setYearIndexB((y) => (y >= YEAR_SNAPSHOTS.length - 1 ? 0 : y + 1))
-    }, 1600)
+    }, 2400)
     return () => clearInterval(id)
   }, [isPlayingB, compareMode])
 
@@ -1093,30 +1096,28 @@ export default function Atlas() {
     return rows
   }, [dashboard, rows])
 
-  // Re-key the constellation per (mode, year) so each combination retriggers
-  // the cinematic dot reveal animation.
-  const constellationKey = `${mode}-${snapshot.year}`
+  // Re-key the constellation per MODE only — year changes within a mode
+  // smoothly interpolate dot positions via CSS transitions instead of
+  // full remount. Mode changes still unmount + retrigger the cinematic reveal
+  // because the meta arrays / attractor positions change entirely.
+  const constellationKey = mode
 
-  // Resolve selected cluster meta from the active meta set
+  // Resolve selected cluster meta from the active meta set — uses the same
+  // builders as the constellation so vendor/T1/risk numbers render correctly.
   const selectedMeta: ClusterMeta | null = useMemo(() => {
     if (!selectedClusterCode) return null
-    if (mode === 'categories' && atlasMeta) {
-      return atlasMeta.find((m) => m.code === selectedClusterCode) ?? null
+    const isEs = lang === 'es'
+    let metas: ClusterMeta[]
+    if (mode === 'categories') {
+      metas = atlasMeta ?? buildAtlasCategoriesMeta(isEs)
+    } else if (mode === 'sectors') {
+      metas = buildSectorMeta(isEs)
+    } else if (mode === 'sexenios') {
+      metas = buildSexenioMeta(isEs)
+    } else {
+      metas = buildPatternMeta(isEs)
     }
-    // For other modes the meta lives inside the constellation component;
-    // we intentionally don't replicate that lookup here. The panel still
-    // navigates correctly via mode + clusterCode.
-    return {
-      code: selectedClusterCode,
-      label: selectedClusterCode.toUpperCase(),
-      desc: lang === 'en' ? 'Open the dedicated page for full details.' : 'Abre la página dedicada para detalles completos.',
-      color: '#a06820',
-      vendors: 0,
-      t1: 0,
-      highRiskPct: 0,
-      fx: 0.5,
-      fy: 0.5,
-    }
+    return metas.find((m) => m.code === selectedClusterCode) ?? null
   }, [selectedClusterCode, mode, atlasMeta, lang])
 
   const handleClusterClick = (clusterCode: string) => {
@@ -1139,7 +1140,7 @@ export default function Atlas() {
         >
           {lang === 'en' ? <>El Atlas. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Atlas. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
         </h1>
-        <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch] text-pretty">
+        <p className="text-base leading-[1.7] text-text-secondary text-pretty">
           {lang === 'en'
             ? <>Each dot is a slice of Mexican federal procurement. Toggle the <strong className="text-text-primary">lens</strong> to re-organize them around patterns, sectors, categories, or presidential terms. Drag the <strong className="text-text-primary">year scrubber</strong> below — or hit autoplay — to watch the universe evolve through 18 years of contracts. Click any cluster to open its investigation surface.</>
             : <>Cada punto es una porción de la contratación federal mexicana. Cambia la <strong className="text-text-primary">lente</strong> para reorganizar el campo por patrones, sectores, categorías o sexenios. Arrastra el <strong className="text-text-primary">selector de año</strong> debajo — o pulsa reproducir — para ver el universo evolucionar a través de 18 años de contratos. Haz clic en cualquier cúmulo para abrir su superficie de investigación.</>
@@ -1483,7 +1484,10 @@ export default function Atlas() {
           totalContracts={totalContractsForYear}
           mode={mode}
           metaOverride={atlasMeta}
-          seedOverride={snapshot.year * 13 + (mode === 'patterns' ? 1 : mode === 'sectors' ? 2 : mode === 'categories' ? 3 : 4)}
+          /* Seed depends ONLY on mode — dots stay in place across years
+             so CSS transitions can morph their fill-opacity smoothly as the
+             critical/high/medium/low pcts shift per year. */
+          seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
           pinnedCode={pinnedCode}
           onClusterClick={handleClusterClick}
         />
@@ -1503,7 +1507,8 @@ export default function Atlas() {
         const snapshotB = effectiveSnapshot(yearIndexB)
         const rowsB = applyRiskFloor(snapshotToRows(snapshotB))
         const totalContractsB = snapshotB.totalContracts
-        const constellationKeyB = `B-${mode}-${snapshotB.year}`
+        // Same morph philosophy as canvas A — only re-key on mode changes
+        const constellationKeyB = `B-${mode}`
         return (
           <>
             <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
@@ -1518,7 +1523,10 @@ export default function Atlas() {
                 totalContracts={totalContractsB}
                 mode={mode}
                 metaOverride={atlasMeta}
-                seedOverride={snapshotB.year * 13 + 999 + (mode === 'patterns' ? 1 : mode === 'sectors' ? 2 : mode === 'categories' ? 3 : 4)}
+                /* Different seed than canvas A so the two views don't share
+                   dot positions even at identical years — but stable across
+                   year changes within compare mode. */
+                seedOverride={(mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180) + 999}
                 pinnedCode={pinnedCode}
                 onClusterClick={handleClusterClick}
               />
