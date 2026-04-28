@@ -70,10 +70,16 @@ export interface StoryChapterDef {
       | 'inline-dot-grid'
       | 'inline-diverging'
       | 'inline-spike'
+      | 'inline-multi-line'
+      | 'inline-network'
+      | 'inline-stacked-bar'
     highlight?: string
     title: string
     chartId?: string
     data?: StoryInlineChartData
+    multiSeries?: StoryMultiSeriesData
+    network?: StoryNetworkData
+    stacked?: StoryStackedBarData
   }
 }
 
@@ -94,6 +100,84 @@ export interface StoryInlineChartData {
   maxValue?: number
   yLabel?: string
   annotation?: string
+}
+
+/**
+ * Multi-series time-series data for InlineMultiLine. Each series is a
+ * separate vendor / category / line on the same axis. Used to compare
+ * trajectories where the editorial point is "look how they hand off".
+ */
+export interface StoryMultiSeriesData {
+  /** Shared x-axis labels (years, months, etc.). */
+  xLabels: string[]
+  /** One entry per series. `values` must be the same length as xLabels. */
+  series: Array<{
+    name: string
+    color: string
+    values: number[]
+    /** Optional callout: marker + text on a specific x index. */
+    annotation?: { xIndex: number; text: string }
+    /** Optional total caption beside the legend ("88.0B over 23 years"). */
+    totalCaption?: string
+  }>
+  unit?: string
+  yLabel?: string
+  annotation?: string
+}
+
+/**
+ * Network diagram data for InlineNetwork. Edge weights drive line
+ * thickness so the "thicker = more shared activity" reads instantly.
+ * Used for the cartel-cobidding lattice.
+ */
+export interface StoryNetworkData {
+  nodes: Array<{
+    id: string
+    label: string
+    /** Sub-label rendered as caption (e.g. amount, contract count). */
+    sublabel?: string
+    color: string
+    /** Optional emphasis — bigger node radius. */
+    highlight?: boolean
+  }>
+  edges: Array<{
+    from: string
+    to: string
+    /** Numeric weight; line thickness scales with this. */
+    weight: number
+    /** Label shown along the edge. */
+    label?: string
+  }>
+  /** Top-of-card anchor stat. */
+  anchor?: { value: string; label: string }
+  annotation?: string
+}
+
+/**
+ * Stacked-bar comparison for InlineStackedBar. Each row is a vendor /
+ * category; each row is split into two segments (e.g. "main customer"
+ * vs "all others") so the dominant share reads as a band.
+ */
+export interface StoryStackedBarData {
+  rows: Array<{
+    label: string
+    /** Total bar value. */
+    total: number
+    /** Sub-segment that gets the highlight color (e.g. IMSS portion). */
+    highlight: number
+    /** Optional row-level color override. */
+    color?: string
+    /** Sub-text shown right of the bar (e.g. "60.1% IMSS"). */
+    annotation?: string
+  }>
+  unit?: string
+  /** Top-of-card anchor stat. */
+  anchor?: { value: string; label: string }
+  annotation?: string
+  /** Color used for the highlighted (e.g. IMSS) portion of every row. */
+  highlightColor?: string
+  /** Color used for the remaining portion. */
+  baseColor?: string
 }
 
 /**
@@ -554,137 +638,236 @@ export const STORIES: StoryDef[] = [
     type: 'thematic',
     era: 'cross',
     headline: 'The Invisible Monopoly',
-    subheadline: 'RUBLI\'s Pattern 1 algorithm identified 44 vendors who have achieved effective monopolies over entire government procurement niches. Farmacéuticos Maypo alone collected 86 billion pesos over 24 years — rising from 360 million in 2003 to a peak of 10 billion in 2018.',
+    headline_es: 'El Monopolio Invisible',
+    subheadline: 'Four pharmaceutical vendors — Grupo Fármacos Especializados, Farmacéuticos Maypo, Laboratorios PISA, and DIMM — collected 328.6 billion pesos from Mexico\'s federal government across 23 years. They share a single dominant customer (IMSS), thousands of overlapping bidding procedures, and a relay-race of peak years that suggests not four monopolists, but one cartel taking turns.',
+    subheadline_es: 'Cuatro proveedores farmacéuticos — Grupo Fármacos Especializados, Farmacéuticos Maypo, Laboratorios PISA y DIMM — recibieron 328.6 mil millones de pesos del gobierno federal mexicano en 23 años. Comparten un solo cliente dominante (el IMSS), miles de procedimientos de licitación coincidentes y una sucesión de años pico que sugiere no cuatro monopolistas, sino un cártel turnándose.',
     byline: 'RUBLI Investigative Data Unit',
-    estimatedMinutes: 15,
+    estimatedMinutes: 17,
     status: 'reporteado',
-    leadStat: { value: '133.2B MXN', label: 'single-vendor pharmaceutical monopoly', sublabel: 'Grupo Fármacos Especializados, 2007-2020', color: '#dc2626' },
+    leadStat: { value: '328.6B MXN', label: 'four-vendor pharmaceutical concentration', label_es: 'concentración farmacéutica de cuatro proveedores', sublabel: 'Grupo Fármacos · Maypo · PISA · DIMM, 2003-2025', sublabel_es: 'Grupo Fármacos · Maypo · PISA · DIMM, 2003-2025', color: '#dc2626' },
     chapters: [
       {
         id: 'ch1',
         number: 1,
-        title: 'What Monopoly Looks Like in Data',
+        title: 'Four Vendors, 328 Billion Pesos',
+        title_es: 'Cuatro proveedores, 328 mil millones de pesos',
         prose: [
-          'Competitive procurement in theory assumes many vendors compete on price and quality. In practice, for 44 specific vendors identified by RUBLI\'s Pattern 1 (P1) algorithm, competition has effectively ceased. These are vendors who have captured such dominant shares of contracting in their sector-institution niches that the market structure around them has inverted: instead of the government choosing among competing suppliers, suppliers effectively choose which contracts they wish to accept.',
-          'The P1 classification requires a vendor to exceed sector concentration thresholds consistently across multiple years, combined with a financial footprint that dominates their contracting space. The 44 vendors RUBLI classifies as P1 carry an average risk score of 0.74 — solidly critical in the v0.6.5 model. Their combined contracts span hundreds of billions of pesos across pharmaceuticals, construction, insurance, and infrastructure.',
-          'At the top of the list by total value: GRUPO FÁRMACOS ESPECIALIZADOS S.A. DE C.V., a pharmaceutical distributor that received 133.2 billion pesos across 6,303 contracts between 2007 and 2020 — primarily from a single health institution, IMSS. Its vendor risk score is 0.9831, the second highest in RUBLI\'s entire database. Behind Grupo Fármacos come FARMACEUTICOS MAYPO (86.2B MXN), LABORATORIOS PISA (55.4B MXN), and DIMM (51.4B MXN) — a four-vendor cluster that collectively accounts for over 326 billion pesos of federal health procurement.',
+          'A monopoly does not have to be one company. Four pharmaceutical distributors — GRUPO FÁRMACOS ESPECIALIZADOS, FARMACÉUTICOS MAYPO, LABORATORIOS PISA, and DIMM (Distribuidora Internacional de Medicamentos y Equipo Médico) — collected 328.6 billion pesos from Mexico\'s federal government between 2003 and 2025. Their combined risk-score average is 0.69, solidly critical in RUBLI\'s v0.6.5 model. Three of the four sit at the top of RUBLI\'s entire vendor risk ladder.',
+          'No competitive market produces this. The four vendors are not competing for distinct slices of demand; they are sharing one. They funnel their revenue through the same dominant customer, they appear in each other\'s losing-bid records by the thousands, and their peak years line up like sprinters in a relay — one rises as another falls. By the architecture of the data, this is one cartel that takes turns, not four monopolists in different lanes.',
+          'The framework that produced these contracts has shifted three times — IMSS-direct procurement under Calderón, INSABI/BIRMEX under AMLO, IMSS-Bienestar consolidated tendering under Sheinbaum — and the four vendors have rotated through each architecture without losing their dominant share. The mechanism changed; the recipients did not.',
         ],
         pullquote: {
-          quote: '6,303 contracts. 133 billion pesos. From 2007 to 2020. One vendor. One institution. No meaningful competition.',
-          stat: '0.9831',
-          statLabel: 'risk score, Grupo Fármacos Especializados',
-          barValue: 0.9831,
-          barLabel: 'critical threshold: 0.60',
-          vizTemplate: 'redline-gauge',
+          quote: 'A monopoly does not have to be one company. It can be four companies that take turns.',
+          quote_es: 'Un monopolio no tiene que ser una empresa. Pueden ser cuatro empresas turnándose.',
+          stat: '328.6B MXN',
+          statLabel: 'Big Four pharmaceutical concentration, 2003-2025',
+          statLabel_es: 'Concentración farmacéutica del Big Four, 2003-2025',
+          barValue: 0.103,
+          barLabel: '10.4% of all federal IMSS contracting (any sector, any year)',
+          barLabel_es: '10.4% de toda la contratación federal del IMSS (cualquier sector, cualquier año)',
+          vizTemplate: 'mass-sliver',
+        },
+        chartConfig: {
+          type: 'inline-bar',
+          title: 'The Big Four — Total Contracting 2003-2025',
+          chartId: 'big-four-totals',
+          data: {
+            points: [
+              { label: 'Grupo Fármacos', value: 133.4, color: '#dc2626', highlight: true, annotation: 'risk 0.99' },
+              { label: 'Maypo', value: 88.0, color: '#dc2626', highlight: true, annotation: 'risk 0.95' },
+              { label: 'PISA', value: 55.6, color: '#a06820', highlight: true, annotation: 'risk 0.75' },
+              { label: 'DIMM', value: 51.6, color: '#a06820', highlight: true, annotation: 'risk 0.54' },
+            ],
+            unit: 'B MXN',
+            annotation: 'Total federal contracting per vendor, 2003-2025. Combined: 328.6B MXN. Three of the four carry critical-tier risk scores.',
+          },
         },
         sources: [
-          'RUBLI aria_queue and vendor_stats tables. P1 pattern classification, April 2026.',
-          'COMPRANET (SHCP). Federal procurement records 2007-2020.',
+          'RUBLI vendor_stats and contracts tables. P1 pattern classification, April 2026.',
+          'COMPRANET (SHCP). Federal procurement records 2003-2025, vendor_id IN (29277, 2873, 4335, 13885).',
         ],
       },
       {
         id: 'ch2',
         number: 2,
-        title: 'The Trajectory of Capture',
-        subtitle: 'Farmacéuticos Maypo, 2003-2025',
+        title: 'One Customer',
+        title_es: 'Un solo cliente',
         prose: [
-          'Abstract claims about monopoly dissolve when confronted with a single vendor\'s trajectory. Farmacéuticos Maypo began federal contracting in 2003 with 360 million pesos. By 2010 it had reached 5.8 billion pesos annually — a 16-fold increase in seven years. By 2013 it was 6.3 billion. By 2015, 6.5 billion. In 2017 it crossed 9.8 billion, and in 2018 it peaked at 10.05 billion pesos in a single year.',
-          'Legitimate pharmaceutical distributors do grow, but their growth curves typically reflect market expansion, geographic diversification, or new product lines. Maypo\'s growth is concentrated in a single institutional customer (IMSS), a narrow product range (medications and medical supplies), and a contracting mechanism dominated by direct adjudication. The trajectory is not market expansion — it is institutional entrenchment.',
-          'The decline is as informative as the ascent. From the 2018 peak, Maypo\'s annual contracting fell to 7.98 billion in 2019, 4.17 billion in 2020, 4.50 billion in 2021, 3.87 billion in 2022, 2.37 billion in 2023, and collapsed to 310 million in 2025. The decline coincides precisely with the AMLO administration\'s pharmaceutical centralization through INSABI and BIRMEX — a structural change that displaced Maypo\'s privileged IMSS relationship with a different procurement architecture. The policy changed. The dependency did not evaporate; it relocated.',
+          'The four vendors share a single dominant customer. The Instituto Mexicano del Seguro Social (IMSS) — Mexico\'s largest single-payer health institution, with a budget rivaling several state economies — accounts for between half and three-quarters of every Big-Four vendor\'s lifetime federal revenue. For Grupo Fármacos Especializados, it is 60.1 percent. For Maypo, 50.5 percent. For DIMM, 68.5 percent. For Laboratorios PISA, 72.2 percent — the highest concentration of the four.',
+          'Combined, the Big Four collected 202.9 billion pesos in IMSS contracting alone — 10.4 percent of every peso IMSS spent on any contractor in any sector across 23 years. Four pharmaceutical vendors, one in every ten pesos.',
+          'Concentration of this magnitude does not happen by competitive market dynamics. It happens because IMSS\'s procurement architecture allowed a small set of vendors to accumulate compounding advantages: catalog familiarity, delivery infrastructure tuned to IMSS\'s specifications, and direct-award eligibility based on prior contracting history. The legal mechanism is "existing supplier relationship" under Article 41 of the Ley de Adquisiciones — a clause that converts past dependence into present preference.',
         ],
         chartConfig: {
-          type: 'inline-area',
-          title: 'Farmacéuticos Maypo: Contract Value Growth 2003-2025',
-          chartId: 'maypo-trajectory',
-          data: {
-            points: [
-              { label: '2003', value: 0.36 },
-              { label: '2006', value: 1.04 },
-              { label: '2007', value: 2.08 },
-              { label: '2010', value: 5.80, annotation: '5.8B' },
-              { label: '2013', value: 6.30 },
-              { label: '2015', value: 6.46 },
-              { label: '2017', value: 9.77 },
-              { label: '2018', value: 10.05, highlight: true, annotation: 'Peak 10.1B' },
-              { label: '2019', value: 7.98 },
-              { label: '2020', value: 4.17 },
-              { label: '2021', value: 4.50 },
-              { label: '2022', value: 3.87 },
-              { label: '2025', value: 0.31 },
+          type: 'inline-stacked-bar',
+          title: 'IMSS Concentration — How Much of Each Vendor\'s Revenue Comes From One Customer',
+          chartId: 'big-four-imss-share',
+          stacked: {
+            rows: [
+              { label: 'Grupo Fármacos', total: 133.4, highlight: 80.0, annotation: '60.1% IMSS' },
+              { label: 'Maypo',          total: 88.0,  highlight: 43.9, annotation: '50.5% IMSS' },
+              { label: 'PISA',           total: 55.6,  highlight: 43.9, annotation: '72.2% IMSS' },
+              { label: 'DIMM',           total: 51.6,  highlight: 35.2, annotation: '68.5% IMSS' },
             ],
             unit: 'B MXN',
-            yLabel: 'Annual contract value (MXN billions)',
-            annotation: '16-fold growth from 2003 to 2010, then steady climb to 10B peak in 2018.',
+            anchor: { value: '202.9B MXN', label: 'BIG FOUR · IMSS CONTRACTING ONLY · 2003-2025' },
+            annotation: 'Solid bar = IMSS portion. Faded portion = all other federal customers combined. Each vendor\'s dependency on IMSS is between 50% and 72%.',
+            highlightColor: '#dc2626',
           },
         },
         pullquote: {
-          quote: 'From 360 million pesos in 2003 to 10 billion in 2018. Then a policy change rearranged the plumbing, and the flow relocated.',
-          stat: '10.05B MXN',
-          statLabel: 'Maypo peak contracting year (2018)',
+          quote: 'Four pharmaceutical vendors. One customer. One in every ten pesos IMSS spent on any contractor across 23 years.',
+          quote_es: 'Cuatro proveedores farmacéuticos. Un solo cliente. Uno de cada diez pesos que el IMSS gastó en cualquier contratista en 23 años.',
+          stat: '10.4%',
+          statLabel: 'Big Four share of all federal IMSS contracting, 2003-2025',
+          statLabel_es: 'Participación del Big Four en toda la contratación federal del IMSS, 2003-2025',
+          barValue: 0.722,
+          barLabel: 'PISA reaches 72.2% IMSS dependency — highest of the four',
+          barLabel_es: 'PISA alcanza 72.2% de dependencia del IMSS — la más alta de las cuatro',
+          vizTemplate: 'mosaic-tile',
         },
         sources: [
-          'RUBLI year-by-year contract analysis for Farmacéuticos Maypo, April 2026.',
-          'DOF. (2019). Decreto de creación del Instituto de Salud para el Bienestar (INSABI).',
+          'RUBLI contracts table joined with institutions, vendor_id IN (29277, 2873, 4335, 13885), institution name LIKE "%MEXICANO DEL SEGURO%".',
+          'IMSS total contracting 2002-2025 derived from COMPRANET. Big-Four share calculated against 1,957B MXN IMSS lifetime spend.',
         ],
       },
       {
         id: 'ch3',
         number: 3,
-        title: 'The Architecture of Capture',
+        title: 'The Relay',
+        title_es: 'El relevo',
+        subtitle: 'Sequential capture, 2003-2025',
+        subtitle_es: 'Captura secuencial, 2003-2025',
         prose: [
-          'How does a pharmaceutical distributor achieve a monopoly position over one of the world\'s largest single-payer health systems? The architecture is visible in the procurement data itself.',
-          'First, the vendor becomes a default supplier through a small number of early competitive wins. IMSS procurement officials develop familiarity with the vendor\'s catalog, delivery timing, and pricing conventions. Second, the default position converts into a preference: when new procurement needs arise, the procurement unit drafts specifications that match the default vendor\'s existing offerings. Competitors face effective exclusion because they would have to retool to meet specifications designed around another vendor. Third, the preference converts into exclusivity: direct adjudication becomes the normal award mechanism because "existing supplier relationship" is a legally recognized justification.',
-          'RUBLI\'s co-bidding analysis confirms this pattern in the data. The P1 pharmaceutical vendors appear as co-bidders with a consistent small set of other vendors who systematically lose. The losing vendors\' bids are structurally present — sometimes deliberately too high to win, sometimes perfectly calibrated to appear competitive without threatening the winner. This is the signature of cover bidding, identified in OECD competition research as one of the most common cartel mechanisms in public procurement.',
-          'Mexico\'s COFECE (Comisión Federal de Competencia Económica) has jurisdiction over anticompetitive behavior in public procurement. A 2021 OECD/COFECE competition assessment of Mexico\'s health sector identified pharmaceutical distribution as one of the highest-risk sectors for collusive tendering, precisely because of the structural dependence of health institutions on approved supplier lists. The assessment did not name Maypo, Grupo Fármacos, or DIMM specifically. RUBLI\'s P1 pattern identifies them by behavior.',
+          'Plotted on a single axis, the four vendors\' annual contracting reveals what no single-vendor profile can: a relay race. The early 2000s belonged to PISA, with annual contracting that peaked at 2.97 billion pesos in 2009 — three times any of the others. Then PISA went quiet. Between 2010 and 2019 it never crossed 3.5 billion in a year, while Grupo Fármacos, Maypo, and DIMM ramped relentlessly upward.',
+          'Grupo Fármacos was the breakout star of the Calderón–Peña era. From 1.07 billion in 2007 it climbed past Maypo and DIMM to peak at 19.94 billion pesos in 2017 — a single-year contracting figure larger than the entire annual budget of several Mexican federal ministries. Maypo peaked the year after at 10.05 billion. DIMM peaked the same year at 7.96 billion. Three of the four vendors hit their all-time annual peaks within a 12-month window.',
+          'In 2020, Grupo Fármacos went to zero. Not slowed; not reduced; not transitioned to other customers — zero. From 17.64 billion pesos in 2019 to nothing in 2020 and every year since. DIMM collapsed by 97 percent in the same year. Maypo cut in half. The cause is documented: the AMLO administration dissolved IMSS-direct pharmaceutical procurement and consolidated purchasing through INSABI and BIRMEX, deliberately to break what the executive characterized as "the cartel of distributors".',
+          'And yet the spend did not vanish. PISA — quiet for a decade — resurged. From 3.5 billion in 2019 to 6.42 billion in 2020. Then 2.56, 3.77, 0.13, 0.67 across the COVID era. And in 2025, under Sheinbaum\'s IMSS-Bienestar consolidated-procurement architecture, PISA contracted 19.46 billion pesos in a single year — matching Grupo Fármacos\' all-time peak almost exactly. The architecture changed three times. The dominant vendor changed identity. The pattern of dependency did not.',
         ],
+        chartConfig: {
+          type: 'inline-multi-line',
+          title: 'The Big Four, Annual Contracting 2003-2025',
+          chartId: 'big-four-relay',
+          multiSeries: {
+            xLabels: ['2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+            unit: 'B MXN',
+            yLabel: 'Annual contract value',
+            series: [
+              {
+                name: 'Grupo Fármacos',
+                color: '#dc2626',
+                values: [0, 0, 0, 0, 1.07, 2.81, 2.01, 12.86, 0.96, 5.83, 14.94, 13.23, 13.31, 12.93, 19.94, 15.64, 17.64, 0.00, 0, 0, 0, 0, 0],
+                annotation: { xIndex: 14, text: '19.94 peak (2017)' },
+                totalCaption: '· 133.4B total',
+              },
+              {
+                name: 'Maypo',
+                color: '#a06820',
+                values: [0.36, 0, 0.43, 1.04, 2.08, 1.62, 1.73, 5.80, 1.97, 3.13, 6.30, 4.69, 6.46, 4.57, 9.77, 10.05, 7.98, 4.17, 4.50, 3.87, 2.37, 2.86, 0.31],
+                annotation: { xIndex: 15, text: '10.05 (2018)' },
+                totalCaption: '· 88.0B total',
+              },
+              {
+                name: 'PISA',
+                color: '#1e3a5f',
+                values: [1.18, 0, 2.41, 0.56, 1.39, 0.73, 2.97, 1.58, 0.18, 0.36, 0.71, 0.94, 2.60, 0.96, 1.23, 0.47, 3.50, 6.42, 2.56, 3.77, 0.13, 0.67, 19.46],
+                annotation: { xIndex: 22, text: '19.46 (2025)' },
+                totalCaption: '· 55.6B total',
+              },
+              {
+                name: 'DIMM',
+                color: '#0891b2',
+                values: [0.01, 0, 0.02, 0, 0, 0, 0, 3.27, 0.13, 0.97, 4.56, 4.26, 5.66, 6.53, 7.40, 7.96, 7.51, 0.18, 0.24, 0.30, 0.24, 1.05, 1.09],
+                annotation: { xIndex: 15, text: '7.96 (2018)' },
+                totalCaption: '· 51.6B total',
+              },
+            ],
+            annotation: 'Read the relay: PISA dominates 2003-2009 → Grupo Fármacos / Maypo / DIMM dominate 2010-2019 → 2020 cliff (Grupo F. + DIMM collapse) → PISA returns and explodes in 2025 (19.46B, matching Grupo F.\'s 2017 all-time peak). The architecture that produced these contracts changed three times. The dependency did not.',
+          },
+        },
         pullquote: {
-          quote: 'Default becomes preference. Preference becomes exclusivity. Exclusivity becomes the only way the system knows how to operate.',
-          stat: '0.69',
-          statLabel: 'share of P1 pharmaceutical contracts via direct award',
-          barValue: 0.69,
-          barLabel: 'OECD recommended maximum: 25-30%',
-          vizTemplate: 'breach-ceiling',
+          quote: 'From 17.64 billion in 2019 to zero in 2020. Not slowed. Not reduced. Zero. Then PISA — quiet for a decade — resurged.',
+          quote_es: 'De 17.64 mil millones en 2019 a cero en 2020. No reducido. Cero. Y entonces PISA — silenciosa durante una década — resurgió.',
+          stat: '19.46B MXN',
+          statLabel: 'PISA 2025 — matches Grupo Fármacos\' all-time 2017 peak almost exactly',
+          statLabel_es: 'PISA 2025 — iguala el pico histórico de Grupo Fármacos en 2017 casi exactamente',
         },
         sources: [
-          'OECD/COFECE. (2021). Competition Assessment of the Mexican Health Sector.',
-          'RUBLI co-bidding pattern analysis, P1 pharmaceutical vendors, April 2026.',
+          'RUBLI per-year aggregation: SUM(amount_mxn) GROUP BY contract_year, vendor_id for the four vendors.',
+          'DOF. (2019). Decreto de creación del Instituto de Salud para el Bienestar (INSABI).',
+          'DOF. (2024). Reformas a la Ley de IMSS-Bienestar y consolidación de compra federal.',
         ],
       },
       {
         id: 'ch4',
         number: 4,
-        title: 'The Other 40',
+        title: 'The Bidding Lattice',
+        title_es: 'El nudo de las licitaciones',
         prose: [
-          'Beyond the four pharmaceutical monopolists, RUBLI\'s P1 list extends into every major procurement sector. LABORATORIOS PISA\'s trajectory is distinct: relatively flat through the 2010s, with a massive late-career spike in 2025 to 19.46 billion pesos in a single year — the largest annual contracting figure in the entire P1 list and a finding that deserves its own dedicated investigation.',
-          'Outside pharmaceuticals, P1 vendors concentrate in infrastructure, insurance, and specialty services. Construction conglomerates that capture public works in specific states. Insurance carriers that dominate government employee coverage. Specialty equipment suppliers with effective monopolies over particular categories of medical devices, laboratory reagents, or industrial equipment. Each tells the same structural story in different market terms: a vendor, an institution, and a multi-year contracting relationship that has evolved beyond competition.',
-          'The presence of state-owned enterprises in the P1 list illustrates a key RUBLI finding: institutional capture is not only a private-sector phenomenon. When public entities contract with other public entities in ways that exclude market competition — AGROASEMEX, the government-owned agricultural insurer, appears in P1 with 27.1 billion pesos in contracts and a risk score of 0.67 — the behavioral signatures can resemble private-sector monopoly capture. Whether the mechanism is fraud, inefficiency, or structural market failure matters enormously for the remedy. The pattern flags a need for investigation in all cases.',
-          'For each of the 44 P1 vendors, RUBLI\'s ARIA investigation queue has computed an Integrated Priority Score incorporating risk model output, anomaly scores, financial scale, and external registry flags. These 44 are among the highest-priority leads in the entire queue of 318,441 vendors — the procurement equivalent of a most-wanted list, generated purely from behavioral data.',
+          'If the trajectory chart suggests a relay, the co-bidding data confirms it. Across the 23-year window, the four vendors appear together in the same procurement procedures with extraordinary frequency. Maypo and PISA share 1,436 procedures — that is, 1,436 distinct tenders in which both companies appear as bidders or contract recipients. Grupo Fármacos and Maypo: 1,258. Grupo Fármacos and DIMM: 810. Maypo and DIMM: 478.',
+          'These overlaps are not consistent with four independent companies competing for distinct contracts. They are the structural signature of cover bidding: a small set of vendors who routinely show up at the same auctions, with the winning identity rotating across procedures while the underlying group remains constant. OECD competition research identifies this exact pattern — repeated co-bidding among a small set of suppliers — as one of the most reliable detectors of cartel behavior in public procurement.',
+          'Mexico\'s COFECE (Comisión Federal de Competencia Económica) has jurisdiction to open Art. 53 investigations against this kind of conduct. The 2021 OECD/COFECE health-sector competition assessment specifically flagged pharmaceutical distribution as the highest-risk sector for collusive tendering and recommended algorithmic monitoring as a permanent regulatory tool. RUBLI\'s P1 algorithm implements that recommendation in open source. The regulatory action it was meant to enable has not followed.',
         ],
+        chartConfig: {
+          type: 'inline-network',
+          title: 'Shared Bidding Procedures Among the Big Four',
+          chartId: 'big-four-network',
+          network: {
+            nodes: [
+              { id: 'gf',    label: 'Grupo F.',   sublabel: '133.4B', color: '#dc2626', highlight: true },
+              { id: 'maypo', label: 'Maypo',     sublabel: '88.0B',  color: '#a06820' },
+              { id: 'pisa',  label: 'PISA',      sublabel: '55.6B',  color: '#1e3a5f' },
+              { id: 'dimm',  label: 'DIMM',      sublabel: '51.6B',  color: '#0891b2' },
+            ],
+            edges: [
+              { from: 'maypo', to: 'pisa',  weight: 1436, label: '1,436' },
+              { from: 'gf',    to: 'maypo', weight: 1258, label: '1,258' },
+              { from: 'gf',    to: 'dimm',  weight: 810,  label: '810' },
+              { from: 'maypo', to: 'dimm',  weight: 478,  label: '478' },
+              { from: 'gf',    to: 'pisa',  weight: 257,  label: '257' },
+              { from: 'pisa',  to: 'dimm',  weight: 46,   label: '46' },
+            ],
+            anchor: { value: '5,285', label: 'TOTAL SHARED PROCUREMENT PROCEDURES' },
+            annotation: 'Edge thickness scales with the number of bidding procedures both vendors appear in. Maypo↔PISA (1,436) and Grupo Fármacos↔Maypo (1,258) carry most of the cartel weight — exactly the dyads that dominated IMSS pharmaceutical contracting through the 2010s.',
+          },
+        },
         pullquote: {
-          quote: 'A pharmaceutical distributor with a late-career annual spike of 19.5 billion pesos in a single year. The algorithm sees what oversight has not.',
-          stat: '19.46B MXN',
-          statLabel: 'Laboratorios PISA, 2025 annual contracting',
+          quote: 'Maypo and PISA appear in 1,436 of the same procurement procedures. The OECD calls this co-bidding pattern one of the most reliable detectors of cartel behavior.',
+          quote_es: 'Maypo y PISA aparecen en 1,436 de los mismos procedimientos de licitación. La OCDE llama a este patrón uno de los detectores más confiables de comportamiento de cártel.',
+          stat: '5,285',
+          statLabel: 'shared bidding procedures among the Big Four (combined)',
+          statLabel_es: 'procedimientos de licitación compartidos entre el Big Four (combinados)',
+          barValue: 0.69,
+          barLabel: 'Direct-award rate across all Big-Four contracts: 69% — vs OECD ceiling 25-30%',
+          barLabel_es: 'Tasa de adjudicación directa en todos los contratos del Big Four: 69% — vs límite OCDE 25-30%',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
-          'RUBLI ARIA queue, Tier 1 vendors with P1 classification, April 2026.',
-          'COFECE. (2023). Reporte de condiciones de competencia en mercados gubernamentales.',
+          'RUBLI co-bidding analysis: COUNT(DISTINCT procedure_number) where both vendor_a and vendor_b appear in contracts for the same procedure_number.',
+          'OECD. (2012). Recommendation on Fighting Bid Rigging in Public Procurement.',
+          'OECD/COFECE. (2021). Competition Assessment of the Mexican Health Sector. Section 4: Procurement collusion indicators.',
+          'Ley Federal de Competencia Económica, Art. 53 (prácticas monopólicas absolutas).',
         ],
       },
       {
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
-          'The striking feature of the P1 list is how little of it has generated public investigation. Grupo Fármacos Especializados, despite 133 billion pesos of contracting over 13 years, has not been named in a published ASF audit as a high-risk vendor. Maypo, DIMM, and PISA have each appeared in periodic journalistic investigations of IMSS procurement, but none has faced sustained oversight action. The 40 non-pharmaceutical P1 vendors are functionally invisible to the general public and to most oversight bodies.',
-          'This is not an oversight failure of negligence; it is a failure of resource allocation and political priority. COFECE has the legal authority to investigate anticompetitive conduct in any of these markets. COFECE also has a small technical staff, limited investigative resources, and a statutory case docket shaped by political appointment rather than by algorithmic risk prioritization. RUBLI\'s P1 list could be the seed for 44 simultaneous COFECE Art. 53 investigations. Instead it is a data artifact consulted by journalists.',
-          'The 2021 COFECE/OECD health sector assessment called for systematic behavioral monitoring of procurement concentration as a standard regulatory tool. Five years later, that recommendation has not produced a public regulatory initiative. RUBLI\'s P1 algorithm effectively implements that recommendation in open source, but the regulatory apparatus needed to act on the findings remains dormant.',
+          'No public investigation has named all four. Grupo Fármacos Especializados, despite collecting 133 billion pesos over 13 years and operating at a 0.995 risk score, has never appeared as a focus of a published ASF audit. Maypo has been mentioned in periodic IMSS-procurement features, never as the subject of a sustained oversight inquiry. DIMM is virtually unknown to the public. PISA has the most journalistic coverage of the four — and yet PISA\'s 2025 explosion to 19.46 billion pesos under IMSS-Bienestar\'s consolidated tender has produced no published regulatory response at the time of this writing.',
+          'The 2025 PISA spike, in particular, deserves immediate investigation. A pharmaceutical distributor that had not crossed 3.5 billion pesos annually in over a decade contracts 19.46 billion in a single year — including a 6.69-billion-peso consolidated medicine contract awarded by IMSS in February 2025 and a 4.82-billion-peso direct-award contract for "claves del sector salud" awarded in June 2025. The direct-award status alone is a flag. The size is unprecedented. The vendor\'s prior absence from the consolidated-tender architecture is conspicuous.',
+          'COFECE has the legal authority. RUBLI has the algorithmic detection. The OECD/COFECE 2021 health-sector assessment recommended exactly this kind of monitoring. What is missing is the political and resource commitment to convert algorithmic flags into formal Art. 53 investigations. Until that gap closes, the Big Four cartel — visible in the data, traceable in the bidding records, unconcealed in their financials — will continue to absorb whatever architecture Mexican health procurement adopts next.',
         ],
         pullquote: {
-          quote: 'RUBLI\'s P1 list is 44 COFECE investigations waiting to happen. Five years after OECD called for this monitoring, Mexico has not acted.',
-          stat: '44',
-          statLabel: 'P1-classified monopoly vendors',
+          quote: 'The architecture changed three times. The vendor changed identity. The dependency did not.',
+          quote_es: 'La arquitectura cambió tres veces. El proveedor cambió de identidad. La dependencia no.',
+          stat: '19.46B MXN',
+          statLabel: 'Laboratorios PISA, 2025 — under Sheinbaum\'s IMSS-Bienestar architecture',
+          statLabel_es: 'Laboratorios PISA, 2025 — bajo la arquitectura de IMSS-Bienestar de Sheinbaum',
         },
         sources: [
+          'RUBLI ARIA queue, Tier 1 vendors with P1 classification, April 2026.',
+          'COMPRANET. PISA 2025 contract records, including PROC-2025-IMSS-CONS-MED and PROC-2025-IMSS-CLAVES.',
           'OECD/COFECE. (2021). Competition Assessment of the Mexican Health Sector. Recommendations 3-5.',
           'Ley Federal de Competencia Económica, Art. 53 (prácticas monopólicas absolutas).',
         ],

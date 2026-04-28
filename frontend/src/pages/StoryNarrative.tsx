@@ -31,6 +31,9 @@ import {
   InlineAreaChart,
   InlineSpikeChart,
   InlineDivergingBar,
+  InlineMultiLine,
+  InlineNetwork,
+  InlineStackedBar,
 } from '@/components/stories/InlineCharts'
 import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -249,6 +252,29 @@ function renderChartBlock(
 ) {
   if (!chapter.chartConfig) return null
   const cfg = chapter.chartConfig
+  // Multi-series and network charts have their own data shapes — dispatch
+  // before the InlineChartMap which only handles StoryInlineChartData.
+  if (cfg.type === 'inline-multi-line' && cfg.multiSeries) {
+    return (
+      <ScrollReveal className={className}>
+        <InlineMultiLine data={cfg.multiSeries} title={cfg.title} />
+      </ScrollReveal>
+    )
+  }
+  if (cfg.type === 'inline-network' && cfg.network) {
+    return (
+      <ScrollReveal className={className}>
+        <InlineNetwork data={cfg.network} title={cfg.title} />
+      </ScrollReveal>
+    )
+  }
+  if (cfg.type === 'inline-stacked-bar' && cfg.stacked) {
+    return (
+      <ScrollReveal className={className}>
+        <InlineStackedBar data={cfg.stacked} title={cfg.title} />
+      </ScrollReveal>
+    )
+  }
   if (cfg.data) {
     const InlineChart = INLINE_CHART_MAP[cfg.type]
     return (
