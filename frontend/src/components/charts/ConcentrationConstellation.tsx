@@ -86,7 +86,7 @@ interface ClusterMeta {
 // ── MODE 1: PATRONES (ARIA patterns) ──────────────────────────────────────
 // 7 corruption patterns detected by ARIA v1.1. Positions hand-tuned so the
 // clusters distribute across the panel without overlap.
-function buildPatternMeta(isEs: boolean): ClusterMeta[] {
+export function buildPatternMeta(isEs: boolean): ClusterMeta[] {
   return [
     // P5 — center, largest cluster (180 T1)
     { code: 'P5', label: isEs ? 'Sobreprecio Sistemático' : 'Systematic Overpricing',   desc: isEs ? 'Precios 2σ sobre promedio sectorial — 180 proveedores T1' : 'Prices 2σ above sector average — 180 T1 vendors',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.40 },
@@ -108,7 +108,7 @@ function buildPatternMeta(isEs: boolean): ClusterMeta[] {
 // ── MODE 2: SECTORES (12 sectors in a 4×3 grid) ──────────────────────────
 // Grid positions (row, col): 4 columns × 3 rows. Values are fraction of
 // FIELD_W × FIELD_H. Attractor radii driven by sqrt(t1) as in PATRONES.
-function buildSectorMeta(isEs: boolean): ClusterMeta[] {
+export function buildSectorMeta(isEs: boolean): ClusterMeta[] {
   return [
     // Row 0 (top)
     { code: 'salud',           label: isEs ? 'Salud' : 'Health',           desc: isEs ? 'IMSS, ISSSTE, SSa — mayor concentración de casos documentados' : 'IMSS, ISSSTE, SSa — highest concentration of documented cases',  color: '#dc2626', vendors: 32000,  t1: 89, highRiskPct: 0.18, fx: 0.15, fy: 0.22 },
@@ -131,7 +131,7 @@ function buildSectorMeta(isEs: boolean): ClusterMeta[] {
 // ── MODE 3: SEXENIOS (6 presidential periods as timeline) ────────────────
 // Arranged chronologically left-to-right, Y centered at 0.50. AMLO cluster
 // is visibly larger (more vendors, higher risk) — crimson.
-function buildSexenioMeta(isEs: boolean): ClusterMeta[] {
+export function buildSexenioMeta(isEs: boolean): ClusterMeta[] {
   return [
     { code: 'zedillo',   label: 'Zedillo',    desc: isEs ? 'Datos pre-COMPRANET muy limitados (cobertura estructura A)' : 'Pre-COMPRANET data very limited (structure A coverage)',                 color: '#64748b', vendors: 15000,  t1:  6, highRiskPct: 0.06, fx: 0.08, fy: 0.50, kicker: '1994–2000' },
     { code: 'fox',       label: 'Fox',        desc: isEs ? 'Primera alternancia — datos estructura A, RFC <1%' : 'First political transition — structure A data, RFC <1%',                          color: '#16a34a', vendors: 25000,  t1: 12, highRiskPct: 0.07, fx: 0.22, fy: 0.50, kicker: '2000–2006' },
@@ -466,10 +466,25 @@ export function ConcentrationConstellation({
             }
             .atlas-dot {
               animation: atlas-fade-in 0.55s ease-out backwards;
+              /* Year-change interpolation: when cx/cy/fill-opacity update on
+                 the same dot (no re-mount), browser animates between values
+                 instead of snapping. Modern browsers (Chrome 77+, Firefox
+                 64+, Safari 16+) support transitions on SVG cx/cy. */
+              transition:
+                cx 0.9s cubic-bezier(0.4, 0.0, 0.2, 1),
+                cy 0.9s cubic-bezier(0.4, 0.0, 0.2, 1),
+                fill-opacity 0.6s ease-out,
+                r 0.7s ease-out;
             }
             .atlas-edge {
               stroke-dasharray: 280;
               animation: atlas-edge-draw 0.7s ease-out backwards;
+              transition:
+                stroke-opacity 0.6s ease-out,
+                x1 0.9s cubic-bezier(0.4, 0.0, 0.2, 1),
+                y1 0.9s cubic-bezier(0.4, 0.0, 0.2, 1),
+                x2 0.9s cubic-bezier(0.4, 0.0, 0.2, 1),
+                y2 0.9s cubic-bezier(0.4, 0.0, 0.2, 1);
             }
             .atlas-ring {
               transform-box: fill-box;
