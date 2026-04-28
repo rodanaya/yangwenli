@@ -152,15 +152,77 @@ Planning docs (read on demand, not auto-loaded):
 - `frontend/src/lib/entity/lede.ts` — `getLedeFor(type, ctx)` → 80-word synthesized lede.
 - `frontend/src/lib/entity/verdict.ts` — `getVerdictFor(type, ctx)` → 4-bucket classification.
 
-### Sidebar (5 sections / 14 items)
+### Sidebar (5 sections / 15 items)
 
 ```
-DESCUBRIR  Inteligencia Nacional · Sala de Redacción · Brief Ejecutivo
+DESCUBRIR  Dashboard · El Atlas · Sala de Redacción
 INVESTIGAR La Cola (ARIA) · Mi Espacio · Casos
-EXPLORAR   Categorías · Sectores · Instituciones · Patrones · Red
+EXPLORAR   Sectores · Institution Ranking · Networks
 ANÁLISIS   Captura · Administraciones · La Intersección
 PLATAFORMA Metodología
 ```
+
+El Atlas was promoted from PLATAFORMA to DESCUBRIR (centerpiece) on 2026-04-28.
+
+### `/atlas` — long-form storytelling surface (Apr 2026)
+
+Page: `frontend/src/pages/Atlas.tsx` · Stories data: `frontend/src/lib/atlas-stories.ts`
+
+The Atlas is a full-viewport constellation of 1,200 dots with four lenses
+(PATTERNS / SECTORS / CATEGORIES / TERMS) and a year scrubber 2008–2025.
+Critical-risk dots cluster around mode-specific attractors via weighted
+Halton draw; nearest-neighbor edges connect them.
+
+V6 (2026-04-28): brief tours replaced by **multi-chapter narratives**:
+- **The Pharmaceutical Cartel** (6 ch · ~55s)
+- **La Estafa Maestra** (6 ch · ~55s)
+- **The COVID Year** (5 ch · ~45s)
+
+Each chapter has Roman-numeral marker, year label, Playfair Display title,
+2–3 sentence editorial body, optional pull-stat (big number + caption),
+6–12s dwell. Reader can pause/skip/replay; chart is interactive during a
+chapter. End-of-story card with replay + try-another + investigate CTAs.
+
+Other Atlas features:
+- **Pin a cluster** — pulsing ring persists across mode/year changes
+- **Compare years** — second canvas + scrubber, shared lens + pin
+- **X-ray filter** — risk-floor: all / medium+ / high+ / critical
+- **Vendor search** — typeahead across 21 curated known vendors → auto-pin
+- **Personal notes** — localStorage-backed per-cluster
+- **URL state sharing** — `/atlas?lens=...&year=...&pin=...` shareable
+- **First-visit auto-tour** — launches "The Pharmaceutical Cartel" on first
+  load (rubli_atlas_visited_v1 flag)
+
+### `/stories/:slug` — variant-aware chapter rendering (Apr 2026)
+
+Page: `frontend/src/pages/StoryNarrative.tsx`
+
+Chapter layouts auto-pick from 7 variants based on content shape:
+`hero`, `feature`, `data-spotlight`, `quote-spotlight`, `connective`,
+`closing`, `standard`. See `pickChapterVariant()`.
+
+Each variant has its own typography + width + decorative chrome. Hero
+chapters get a constellation-style SVG artwork backdrop. Drop caps via
+CSS `::first-letter` (Playfair Display, accent-colored, 5.4em hero /
+3.6em feature). Decorative dividers between chapters.
+
+Atlas deep-link CTAs in chart chapters and closing chapters open `/atlas`
+with `?lens=...&year=...&pin=...` state — readers can manipulate the live
+constellation showing the same data the chapter discusses.
+
+### Spanish currency formatting (Mexican convention)
+
+`formatCompactMXN()` is locale-aware; Spanish output uses:
+- **≥10¹²**: "X.X billones MXN" (billón = trillion in Spanish)
+- **≥10⁹**: "X,XXX MDP" (mil millones de pesos, abbreviated MDP)
+- **≥10⁶**: "X.X MDP"
+- **<10⁶**: `formatMXN`
+
+`localizeAmount(string, lang)` runtime helper parses English-format stats
+(e.g. `"133.2B MXN"` → `"133,200 MDP"` on `es`) so legacy story-content.ts
+strings render correctly without bulk rewrites. Applied in DataPullquote,
+StoryHero, StoryCard. Mexican media convention: never use English-loaned
+"B MXN" in Spanish UI; always MDP / billones / mil millones.
 
 ### Honest pitch matrix (when describing the platform)
 

@@ -20,7 +20,7 @@ import ProseStat from '@/components/stories/ProseStat'
 import { StoryCard } from '@/components/stories/StoryCard'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
-import { cn } from '@/lib/utils'
+import { cn, localizeAmount } from '@/lib/utils'
 // Story charts are lazy-loaded — see CHART_REGISTRY below. Each story
 // page only renders ONE chart component, so eagerly importing all 41
 // would balloon the StoryNarrative page chunk for no benefit.
@@ -1102,8 +1102,14 @@ const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: 
 // ---------------------------------------------------------------------------
 
 function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: string }) {
-  const { t } = useTranslation('common')
-  const parsed = parseLeadStat(story.leadStat.value)
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  // Localize lead stat value to Mexican format on Spanish UI
+  const localizedValue = localizeAmount(story.leadStat.value, lang)
+  const localizedSublabel = story.leadStat.sublabel
+    ? localizeAmount(story.leadStat.sublabel, lang)
+    : undefined
+  const parsed = parseLeadStat(localizedValue)
 
   return (
     <header className="relative bg-background overflow-hidden border-b border-border" role="banner">
@@ -1274,12 +1280,12 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                 duration={2000}
               />
             ) : (
-              <span>{story.leadStat.value}</span>
+              <span>{localizedValue}</span>
             )}
           </div>
           <p className="text-text-secondary text-base mt-2">{story.leadStat.label}</p>
-          {story.leadStat.sublabel && (
-            <p className="text-text-muted text-sm mt-1">{story.leadStat.sublabel}</p>
+          {localizedSublabel && (
+            <p className="text-text-muted text-sm mt-1">{localizedSublabel}</p>
           )}
         </motion.div>
         )}

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { OutletBadge, type OutletType } from './OutletBadge'
-import { cn } from '@/lib/utils'
+import { cn, localizeAmount } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 14-template editorial visualization system. Each template tells one story
@@ -759,7 +760,7 @@ function renderViz(template: VizTemplate, props: VizProps) {
 export default function DataPullquote({
   quote,
   attribution,
-  stat,
+  stat: rawStat,
   statLabel,
   statColor = 'text-risk-critical',
   barValue,
@@ -768,6 +769,11 @@ export default function DataPullquote({
   className,
   vizTemplate,
 }: DataPullquoteProps) {
+  // Localize English-format MXN stats to Mexican Spanish convention
+  // (e.g. "133.2B MXN" → "133,200 MDP", "2.76T MXN" → "2.76 billones MXN")
+  const { i18n } = useTranslation()
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const stat = localizeAmount(rawStat, lang)
   const parsed = parseStatNumber(stat)
   const { ref: countRef, value: animatedValue } = useCountUp(
     parsed ? parsed.num : 0,
