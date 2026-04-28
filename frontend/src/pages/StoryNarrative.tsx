@@ -11,7 +11,7 @@ import { Suspense, lazy, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
-import { getStoryBySlug, getRelatedStories } from '@/lib/story-content'
+import { getStoryBySlug, getRelatedStories, localizeChapter, localizeStory } from '@/lib/story-content'
 import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content'
 import { OutletBadge } from '@/components/stories/OutletBadge'
 import ChapterBanner from '@/components/stories/ChapterBanner'
@@ -1071,15 +1071,30 @@ function ChapterSection({
   accentColor,
   variant,
 }: ChapterRenderProps & { variant: ChapterVariant }) {
+  // Build a language-localized projection of the chapter, with EN fallback when
+  // _es fields are absent. All variant components consume this object's
+  // resolved title/subtitle/prose/pullquote — they don't see the raw chapter.
+  const { i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const localized = localizeChapter(chapter, lang)
+  // Wire the resolved fields back onto a chapter-shaped object so existing
+  // variant code keeps working without per-variant edits.
+  const localizedChapter: StoryChapterDef = {
+    ...chapter,
+    title: localized.title,
+    subtitle: localized.subtitle,
+    prose: localized.prose,
+    pullquote: localized.pullquote,
+  }
   switch (variant) {
-    case 'hero':            return <HeroChapter            chapter={chapter} story={story} accentColor={accentColor} />
-    case 'feature':         return <FeatureChapter         chapter={chapter} story={story} accentColor={accentColor} />
-    case 'data-spotlight':  return <DataSpotlightChapter   chapter={chapter} story={story} accentColor={accentColor} />
-    case 'quote-spotlight': return <QuoteSpotlightChapter  chapter={chapter} story={story} accentColor={accentColor} />
-    case 'connective':      return <ConnectiveChapter      chapter={chapter} story={story} accentColor={accentColor} />
-    case 'closing':         return <ClosingChapter         chapter={chapter} story={story} accentColor={accentColor} />
+    case 'hero':            return <HeroChapter            chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'feature':         return <FeatureChapter         chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'data-spotlight':  return <DataSpotlightChapter   chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'quote-spotlight': return <QuoteSpotlightChapter  chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'connective':      return <ConnectiveChapter      chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'closing':         return <ClosingChapter         chapter={localizedChapter} story={story} accentColor={accentColor} />
     case 'standard':
-    default:                return <StandardChapter        chapter={chapter} story={story} accentColor={accentColor} />
+    default:                return <StandardChapter        chapter={localizedChapter} story={story} accentColor={accentColor} />
   }
 }
 
@@ -1104,10 +1119,13 @@ const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: 
 function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: string }) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
-  // Localize lead stat value to Mexican format on Spanish UI
+  // V7: pull bilingual headline / subheadline / leadStat label from the story's
+  // optional _es fields, falling back to English when missing.
+  const ls = localizeStory(story, lang)
+  // Then localize the lead stat VALUE itself to Mexican format
   const localizedValue = localizeAmount(story.leadStat.value, lang)
-  const localizedSublabel = story.leadStat.sublabel
-    ? localizeAmount(story.leadStat.sublabel, lang)
+  const localizedSublabel = ls.leadStatSublabel
+    ? localizeAmount(ls.leadStatSublabel, lang)
     : undefined
   const parsed = parseLeadStat(localizedValue)
 
@@ -1154,7 +1172,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             letterSpacing: '-0.03em',
           }}
         >
-          {story.headline}
+          {ls.headline}
         </motion.h1>
 
         {/* Subheadline (deck) */}
@@ -1168,7 +1186,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
             fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
           }}
         >
-          {story.subheadline}
+          {ls.subheadline}
         </motion.p>
 
         {/* Byline + read time + investigation status */}
@@ -1283,7 +1301,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               <span>{localizedValue}</span>
             )}
           </div>
-          <p className="text-text-secondary text-base mt-2">{story.leadStat.label}</p>
+          <p className="text-text-secondary text-base mt-2">{ls.leadStatLabel}</p>
           {localizedSublabel && (
             <p className="text-text-muted text-sm mt-1">{localizedSublabel}</p>
           )}
