@@ -28,7 +28,7 @@ export interface ConstellationRiskRow {
   pct: number // 0-100
 }
 
-export type ConstellationMode = 'patterns' | 'sectors' | 'sexenios'
+export type ConstellationMode = 'patterns' | 'sectors' | 'sexenios' | 'categories'
 
 interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
@@ -122,12 +122,38 @@ function buildSexenioMeta(isEs: boolean): ClusterMeta[] {
   ]
 }
 
+// ── MODE 4: CATEGORÍAS (top 12 spending categories around their parent sector) ──
+// Categories are positioned in 4 columns × 3 rows, jittered slightly toward
+// their sector affinity. Ring radius ∝ √(total spend), color = sector palette.
+// Critical-dot weight uses the avg_risk × log(spend) so high-risk + high-spend
+// categories pull the most critical mass.
+function buildCategoryMeta(isEs: boolean): ClusterMeta[] {
+  return [
+    // Row 0 (top) — biggest-spend categories
+    { code: 'medicamentos',   label: isEs ? 'Medicamentos' : 'Pharmaceuticals',    desc: isEs ? 'Salud · 1.1B MXN · 60% IMSS · capturas conocidas (Grupo Farmacos)' : 'Health · 1.1B MXN · 60% IMSS · known captures (Grupo Farmacos)',  color: '#dc2626', vendors: 8200,  t1: 42, highRiskPct: 0.55, fx: 0.18, fy: 0.22 },
+    { code: 'combustibles',   label: isEs ? 'Combustibles' : 'Fuel & Energy',       desc: isEs ? 'Energía · 980B MXN · PEMEX/CFE · monopolio estructural certificado' : 'Energy · 980B MXN · PEMEX/CFE · structural certified monopoly',  color: '#eab308', vendors: 1400,  t1: 18, highRiskPct: 0.42, fx: 0.42, fy: 0.22 },
+    { code: 'obra_publica',   label: isEs ? 'Obra Pública' : 'Public Works',        desc: isEs ? 'Infraestructura · 870B MXN · SCT/CONAGUA · fraude ejecución' : 'Infrastructure · 870B MXN · SCT/CONAGUA · execution fraud',  color: '#ea580c', vendors: 6800,  t1: 36, highRiskPct: 0.51, fx: 0.66, fy: 0.22 },
+    { code: 'tic',            label: isEs ? 'Tecnología (TIC)' : 'IT Services',     desc: isEs ? 'Tecnología · 620B MXN · Toka, Mainbit · monopolios IT documentados' : 'Technology · 620B MXN · Toka, Mainbit · documented IT monopolies',  color: '#8b5cf6', vendors: 3100,  t1: 29, highRiskPct: 0.68, fx: 0.88, fy: 0.22 },
+    // Row 1 (middle)
+    { code: 'serv_prof',      label: isEs ? 'Servicios Profesionales' : 'Professional Services', desc: isEs ? 'Gobernación · 540B MXN · Estafa Maestra origen' : 'Interior · 540B MXN · Estafa Maestra origin',                color: '#be123c', vendors: 12000, t1: 31, highRiskPct: 0.59, fx: 0.18, fy: 0.50 },
+    { code: 'vehiculos',      label: isEs ? 'Vehículos y Transporte' : 'Vehicles & Transport',   desc: isEs ? 'Infraestructura · 410B MXN · ambulancias, autobuses, camiones' : 'Infrastructure · 410B MXN · ambulances, buses, trucks',  color: '#ea580c', vendors: 2900,  t1: 14, highRiskPct: 0.46, fx: 0.42, fy: 0.50 },
+    { code: 'equipo_medico',  label: isEs ? 'Equipo Médico' : 'Medical Equipment',  desc: isEs ? 'Salud · 380B MXN · IMSS/ISSSTE · sobreprecio histórico' : 'Health · 380B MXN · IMSS/ISSSTE · historical overpricing',     color: '#dc2626', vendors: 4500,  t1: 22, highRiskPct: 0.52, fx: 0.66, fy: 0.50 },
+    { code: 'alimentos',      label: isEs ? 'Alimentos' : 'Food & Distribution',    desc: isEs ? 'Agricultura · 290B MXN · Segalmex/Liconsa · MX$15B desviados' : 'Agriculture · 290B MXN · Segalmex/Liconsa · MX$15B diverted',  color: '#22c55e', vendors: 1800,  t1: 17, highRiskPct: 0.66, fx: 0.88, fy: 0.50 },
+    // Row 2 (bottom)
+    { code: 'vales',          label: isEs ? 'Vales y Monederos' : 'Vouchers & E-cards', desc: isEs ? 'Hacienda · 240B MXN · Edenred 96.7% · monopolio confirmado' : 'Finance · 240B MXN · Edenred 96.7% · confirmed monopoly',  color: '#16a34a', vendors: 80,    t1: 6,  highRiskPct: 0.71, fx: 0.18, fy: 0.78 },
+    { code: 'telecom',        label: isEs ? 'Telecomunicaciones' : 'Telecommunications', desc: isEs ? 'Tecnología · 210B MXN · enlaces dedicados, internet' : 'Technology · 210B MXN · dedicated links, internet',           color: '#8b5cf6', vendors: 950,   t1: 9,  highRiskPct: 0.49, fx: 0.42, fy: 0.78 },
+    { code: 'limpieza',       label: isEs ? 'Limpieza y Vigilancia' : 'Cleaning & Security', desc: isEs ? 'Otros · 180B MXN · contratos de servicios de bajo escrutinio' : 'Other · 180B MXN · low-scrutiny service contracts',          color: '#64748b', vendors: 5600,  t1: 11, highRiskPct: 0.43, fx: 0.66, fy: 0.78 },
+    { code: 'papeleria',      label: isEs ? 'Papelería y Oficina' : 'Office Supplies',   desc: isEs ? 'Otros · 95B MXN · alta volumen, baja revisión' : 'Other · 95B MXN · high-volume, low-scrutiny',                                color: '#64748b', vendors: 7200,  t1: 8,  highRiskPct: 0.38, fx: 0.88, fy: 0.78 },
+  ]
+}
+
 // Meta label shown in tooltip kicker and caption
 function buildModeKickers(isEs: boolean): Record<ConstellationMode, { short: string; caption: string }> {
   return {
-    patterns: { short: isEs ? 'PATRÓN' : 'PATTERN',  caption: isEs ? '7 patrones ARIA (P1–P7) · click para abrir tipología' : '7 ARIA patterns (P1–P7) · click to open typology' },
-    sectors:  { short: isEs ? 'SECTOR' : 'SECTOR',  caption: isEs ? '12 sectores federales · click para abrir sector' : '12 federal sectors · click to open sector' },
-    sexenios: { short: isEs ? 'SEXENIO' : 'TERM', caption: isEs ? '6 periodos presidenciales · click para abrir sexenio' : '6 presidential terms · click to open term' },
+    patterns:   { short: isEs ? 'PATRÓN' : 'PATTERN',     caption: isEs ? '7 patrones ARIA (P1–P7) · click para abrir tipología' : '7 ARIA patterns (P1–P7) · click to open typology' },
+    sectors:    { short: isEs ? 'SECTOR' : 'SECTOR',      caption: isEs ? '12 sectores federales · click para abrir sector' : '12 federal sectors · click to open sector' },
+    sexenios:   { short: isEs ? 'SEXENIO' : 'TERM',       caption: isEs ? '6 periodos presidenciales · click para abrir sexenio' : '6 presidential terms · click to open term' },
+    categories: { short: isEs ? 'CATEGORÍA' : 'CATEGORY', caption: isEs ? '12 categorías de gasto · click para explorar' : '12 spending categories · click to explore' },
   }
 }
 
@@ -186,8 +212,9 @@ export function ConcentrationConstellation({
 
   // Pick the active meta array for the current mode
   const activeMeta: ClusterMeta[] = useMemo(() => {
-    if (mode === 'sectors')  return buildSectorMeta(isEs)
-    if (mode === 'sexenios') return buildSexenioMeta(isEs)
+    if (mode === 'sectors')    return buildSectorMeta(isEs)
+    if (mode === 'sexenios')   return buildSexenioMeta(isEs)
+    if (mode === 'categories') return buildCategoryMeta(isEs)
     return buildPatternMeta(isEs)
   }, [mode, isEs])
 
@@ -238,7 +265,10 @@ export function ConcentrationConstellation({
 
     // Seed varies by mode so dot positions change when user toggles — the
     // panel feels alive and re-organizing rather than frozen.
-    const seed = mode === 'sectors' ? 27182 : mode === 'sexenios' ? 16180 : 31415
+    const seed = mode === 'sectors' ? 27182
+      : mode === 'sexenios'   ? 16180
+      : mode === 'categories' ? 14142
+      : 31415
     const rng = mulberry32(seed)
     const built: DotPos[] = []
 

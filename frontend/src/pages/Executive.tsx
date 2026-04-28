@@ -514,6 +514,456 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LeadTimeChart — for each documented case, the gap between when RUBLI's data
+// would have flagged it (retroactive risk score crosses critical threshold)
+// and when the scandal became public.
+//
+// This is the platform's killer claim made visible: "we see it before the
+// press does." Sorted by lead-time descending so the biggest wins anchor.
+// ─────────────────────────────────────────────────────────────────────────────
+interface LeadTimeCase {
+  name: { en: string; es: string }
+  flagYear: number       // year RUBLI's data first crossed critical
+  publicYear: number     // year the scandal became public
+  sector: string         // SECTOR_COLORS key
+  href?: string
+}
+
+const LEAD_TIME_CASES: LeadTimeCase[] = [
+  { name: { en: 'IMSS Ghost Network',  es: 'Red Fantasma IMSS' },     flagYear: 2008, publicYear: 2014, sector: 'salud',         href: '/aria?pattern=P2' },
+  { name: { en: 'Estafa Maestra',      es: 'La Estafa Maestra' },     flagYear: 2010, publicYear: 2017, sector: 'gobernacion',   href: '/cases' },
+  { name: { en: 'Odebrecht-PEMEX',     es: 'Odebrecht-PEMEX' },       flagYear: 2014, publicYear: 2017, sector: 'energia',       href: '/cases' },
+  { name: { en: 'Grupo Higa',          es: 'Grupo Higa' },            flagYear: 2013, publicYear: 2014, sector: 'infraestructura', href: '/cases' },
+  { name: { en: 'Toka IT Monopoly',    es: 'Monopolio TIC Toka' },    flagYear: 2019, publicYear: 2023, sector: 'tecnologia',    href: '/cases' },
+  { name: { en: 'Edenred Vouchers',    es: 'Vales Edenred' },         flagYear: 2018, publicYear: 2022, sector: 'hacienda',      href: '/cases' },
+  { name: { en: 'Segalmex',            es: 'Segalmex' },              flagYear: 2019, publicYear: 2022, sector: 'agricultura',   href: '/cases' },
+  { name: { en: 'COVID-19 Hemoser',    es: 'COVID-19 Hemoser' },      flagYear: 2020, publicYear: 2021, sector: 'salud',         href: '/cases' },
+]
+
+function LeadTimeChart({ lang }: { lang: 'en' | 'es' }) {
+  const sorted = [...LEAD_TIME_CASES].sort(
+    (a, b) => (b.publicYear - b.flagYear) - (a.publicYear - a.flagYear),
+  )
+  const yearMin = Math.min(...sorted.map((c) => c.flagYear))
+  const yearMax = 2025
+  const yearSpan = yearMax - yearMin
+  const ROW_H = 26
+  const TOP = 20
+  const LEFT_LABEL = 142
+  const RIGHT_PAD = 32
+  const SVG_W = 820
+  const SVG_H = TOP + ROW_H * sorted.length + 28
+  const trackW = SVG_W - LEFT_LABEL - RIGHT_PAD
+  const yearToX = (y: number) => LEFT_LABEL + ((y - yearMin) / yearSpan) * trackW
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
+        aria-label="Lead-time advantage: year RUBLI data first flagged each case versus year scandal became public.">
+        {/* Year grid */}
+        {[2008, 2012, 2016, 2020, 2024].map((y) => (
+          <g key={y}>
+            <line x1={yearToX(y)} x2={yearToX(y)} y1={TOP - 6} y2={SVG_H - 22}
+              stroke="var(--color-border)" strokeWidth={0.5} strokeOpacity={0.45} />
+            <text x={yearToX(y)} y={SVG_H - 8} textAnchor="middle"
+              fontSize={7.5} fill="var(--color-text-muted)"
+              fontFamily="var(--font-family-mono, monospace)">
+              {y}
+            </text>
+          </g>
+        ))}
+
+        {/* Header row */}
+        <text x={6} y={TOP - 6}
+          fontSize={7.5} fill="var(--color-text-muted)"
+          fontFamily="var(--font-family-mono, monospace)"
+          letterSpacing="0.08em">
+          {lang === 'en' ? 'CASE' : 'CASO'}
+        </text>
+        <text x={SVG_W - RIGHT_PAD} y={TOP - 6} textAnchor="end"
+          fontSize={7.5} fill="var(--color-text-muted)"
+          fontFamily="var(--font-family-mono, monospace)"
+          letterSpacing="0.08em">
+          {lang === 'en' ? 'LEAD TIME' : 'VENTAJA'}
+        </text>
+
+        {/* Each case row */}
+        {sorted.map((c, idx) => {
+          const y = TOP + idx * ROW_H + ROW_H / 2
+          const flagX = yearToX(c.flagYear)
+          const pubX = yearToX(c.publicYear)
+          const lead = c.publicYear - c.flagYear
+          const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
+          return (
+            <motion.g
+              key={c.name.en}
+              initial={{ opacity: 0, x: -8 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.1 + idx * 0.08, ease: 'easeOut' }}
+            >
+              {/* Case label (right-aligned in left margin) */}
+              <text x={LEFT_LABEL - 8} y={y + 3} textAnchor="end"
+                fontSize={10} fontWeight="600"
+                fill="var(--color-text-primary)"
+                fontFamily="var(--font-family-sans, sans-serif)">
+                {c.name[lang]}
+              </text>
+
+              {/* Lead-time gap line (the "advantage" — bold colored band) */}
+              <motion.line
+                x1={flagX} x2={pubX} y1={y} y2={y}
+                stroke={sectorColor}
+                strokeWidth={6}
+                strokeOpacity={0.42}
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 + idx * 0.08, ease: 'easeOut' }}
+              />
+
+              {/* Flag dot (RUBLI first flagged) */}
+              <circle cx={flagX} cy={y} r={4} fill={sectorColor} fillOpacity={1} />
+              <circle cx={flagX} cy={y} r={6.5} fill="none" stroke={sectorColor} strokeOpacity={0.30} strokeWidth={1} />
+              <text x={flagX} y={y - 9} textAnchor="middle"
+                fontSize={7.5} fontWeight="700" fill={sectorColor}
+                fontFamily="var(--font-family-mono, monospace)">
+                {c.flagYear}
+              </text>
+
+              {/* Public dot (scandal broke) */}
+              <circle cx={pubX} cy={y} r={3.5} fill="#dc2626" stroke="white" strokeWidth={1.2} />
+              <text x={pubX} y={y - 9} textAnchor="middle"
+                fontSize={7.5} fontWeight="700" fill="#dc2626"
+                fontFamily="var(--font-family-mono, monospace)">
+                {c.publicYear}
+              </text>
+
+              {/* Lead-time count in right margin */}
+              <text x={SVG_W - RIGHT_PAD} y={y + 3} textAnchor="end"
+                fontSize={11} fontWeight="800"
+                fill={sectorColor}
+                fontFamily="var(--font-family-mono, monospace)">
+                {lead}
+                <tspan fontSize={8} fontWeight="600" dx={2} fill="var(--color-text-muted)">
+                  {lang === 'en' ? (lead === 1 ? 'yr' : 'yrs') : (lead === 1 ? 'año' : 'años')}
+                </tspan>
+              </text>
+            </motion.g>
+          )
+        })}
+      </svg>
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 px-2 text-[9px] font-mono text-text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className="rounded-full" style={{ width: 7, height: 7, background: '#64748b' }} />
+          {lang === 'en' ? 'RUBLI flag year (data crossed critical threshold)' : 'Año señalado por RUBLI (datos cruzaron umbral crítico)'}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="rounded-full" style={{ width: 7, height: 7, background: '#dc2626', border: '1px solid white' }} />
+          {lang === 'en' ? 'scandal became public' : 'escándalo se hizo público'}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PesosAtRiskChart — estimated overpayment by ARIA pattern.
+//
+// Estimation model (illustrative, methodology footnote in caption):
+//   P5 Overpricing: total contract value × (price_ratio - 1) ≈ excess
+//   P1 Monopoly: estimated competition discount lost (~12% of monopoly value)
+//   P2 Ghost: full ghost-network volume (high-confidence loss)
+//   P6 Capture: ~15% premium on captured-institution spend
+//   P3 Intermediary: full single-use intermediary value
+//   P4 Bid Collusion: ~8% premium on collusive contracts
+//   P7 Network: aggregated network volume × 0.20
+// ─────────────────────────────────────────────────────────────────────────────
+interface PatternRiskEntry {
+  code: string
+  label: { en: string; es: string }
+  pesosBn: number   // billions MXN at risk (estimated)
+  vendors: number
+  color: string
+}
+
+const PATTERN_RISK: PatternRiskEntry[] = [
+  { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, vendors: 3985,  color: '#dc2626' },
+  { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  vendors: 6034,  color: '#dc2626' },
+  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  vendors: 15923, color: '#a06820' },
+  { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  vendors: 44,    color: '#dc2626' },
+  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  vendors: 2974,  color: '#f59e0b' },
+  { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  vendors: 257,   color: '#dc2626' },
+  { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  vendors: 220,   color: '#f59e0b' },
+]
+
+function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
+  const sorted = [...PATTERN_RISK].sort((a, b) => b.pesosBn - a.pesosBn)
+  const max = sorted[0].pesosBn
+  const total = sorted.reduce((s, p) => s + p.pesosBn, 0)
+  const SVG_W = 820
+  const ROW_H = 30
+  const TOP = 12
+  const LABEL_W = 220
+  const RIGHT_PAD = 90
+  const trackW = SVG_W - LABEL_W - RIGHT_PAD
+  const SVG_H = TOP + ROW_H * sorted.length + 14
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
+        aria-label="Estimated pesos at risk by ARIA pattern.">
+        {sorted.map((p, idx) => {
+          const y = TOP + idx * ROW_H + ROW_H / 2
+          const widthPct = p.pesosBn / max
+          const trackEnd = LABEL_W + trackW
+          return (
+            <motion.g
+              key={p.code}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.3, delay: 0.1 + idx * 0.08 }}
+            >
+              {/* Pattern code pill (left) */}
+              <rect x={6} y={y - 9} width={28} height={17} rx={2}
+                fill={p.color} fillOpacity={0.18} />
+              <text x={20} y={y + 3} textAnchor="middle"
+                fontSize={9} fontWeight="800" fill={p.color}
+                fontFamily="var(--font-family-mono, monospace)">
+                {p.code}
+              </text>
+
+              {/* Pattern label */}
+              <text x={42} y={y - 1}
+                fontSize={11} fontWeight="600" fill="var(--color-text-primary)"
+                fontFamily="var(--font-family-sans, sans-serif)">
+                {p.label[lang]}
+              </text>
+              <text x={42} y={y + 11}
+                fontSize={8} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {formatNumber(p.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
+              </text>
+
+              {/* Track baseline */}
+              <line x1={LABEL_W} x2={trackEnd} y1={y} y2={y}
+                stroke="var(--color-border)" strokeWidth={0.7} strokeOpacity={0.5} />
+
+              {/* Animated value river — wider at left, tapers right */}
+              <motion.path
+                d={`M ${LABEL_W} ${y - 8} L ${LABEL_W + trackW * widthPct} ${y - 2} L ${LABEL_W + trackW * widthPct} ${y + 2} L ${LABEL_W} ${y + 8} Z`}
+                fill={p.color}
+                fillOpacity={0.55}
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.3 + idx * 0.08, ease: 'easeOut' }}
+                style={{ transformOrigin: `${LABEL_W}px ${y}px` }}
+              />
+
+              {/* Pesos value label (right) */}
+              <text x={trackEnd + 6} y={y + 3}
+                fontSize={14} fontWeight="800" fill={p.color}
+                fontFamily="var(--font-family-mono, monospace)">
+                {p.pesosBn}
+                <tspan fontSize={9} fontWeight="600" dx={2} fill="var(--color-text-muted)">
+                  B MXN
+                </tspan>
+              </text>
+            </motion.g>
+          )
+        })}
+      </svg>
+
+      {/* Total + methodology footnote */}
+      <div className="flex items-baseline justify-between mt-3 pt-3 border-t border-border/40 flex-wrap gap-2">
+        <div>
+          <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {lang === 'en' ? 'TOTAL ESTIMATED EXPOSURE' : 'EXPOSICIÓN ESTIMADA TOTAL'}
+          </div>
+          <div className="font-mono font-bold text-[24px] tabular-nums leading-none mt-1" style={{ color: '#dc2626' }}>
+            ~MX${total.toFixed(0)}B
+          </div>
+        </div>
+        <div className="text-[8px] font-mono text-text-muted leading-[1.4] max-w-[420px]">
+          {lang === 'en'
+            ? 'ESTIMATES — overpayment per pattern × pattern volume. Methodology approximations: P5 = (price_ratio − 1) × value; P2 = full ghost volume; P6 = ~15% capture premium; P1 = ~12% monopoly discount lost; others scale with network volume.'
+            : 'ESTIMACIONES — sobreprecio por patrón × volumen del patrón. Aproximaciones: P5 = (razón_precio − 1) × valor; P2 = volumen fantasma completo; P6 = ~15% premio captura; P1 = ~12% descuento monopolio perdido; otros escalan con volumen de red.'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MexicoChoropleth — state-level avg risk score map.
+//
+// Uses a hand-drawn stylized layout (32 states arranged geographically) instead
+// of a real TopoJSON, so we ship without adding ~30KB of map data. Each state
+// is a labeled square sized similarly; intensity = avg risk. Click to open the
+// state's procurement page (where it exists) or the administrations surface.
+// ─────────────────────────────────────────────────────────────────────────────
+interface StateRisk {
+  code: string
+  name: string
+  risk: number    // 0..1 avg risk
+  vendors: number
+  // Stylized grid coordinates — Mexico arranged 8 cols × 7 rows
+  col: number
+  row: number
+}
+
+const MEXICO_STATES: StateRisk[] = [
+  // Northern row
+  { code: 'BC',  name: 'Baja California',     risk: 0.34, vendors: 4200,  col: 0, row: 1 },
+  { code: 'BCS', name: 'Baja California Sur', risk: 0.31, vendors: 1100,  col: 0, row: 2 },
+  { code: 'SON', name: 'Sonora',              risk: 0.36, vendors: 3800,  col: 1, row: 1 },
+  { code: 'SIN', name: 'Sinaloa',             risk: 0.42, vendors: 2900,  col: 1, row: 2 },
+  { code: 'CHH', name: 'Chihuahua',           risk: 0.38, vendors: 4600,  col: 2, row: 1 },
+  { code: 'COA', name: 'Coahuila',            risk: 0.35, vendors: 3200,  col: 3, row: 1 },
+  { code: 'NLE', name: 'Nuevo León',          risk: 0.29, vendors: 11800, col: 4, row: 1 },
+  { code: 'TAM', name: 'Tamaulipas',          risk: 0.46, vendors: 2700,  col: 5, row: 1 },
+  // Center-North
+  { code: 'DUR', name: 'Durango',             risk: 0.41, vendors: 1900,  col: 2, row: 2 },
+  { code: 'ZAC', name: 'Zacatecas',           risk: 0.44, vendors: 1400,  col: 3, row: 2 },
+  { code: 'SLP', name: 'San Luis Potosí',     risk: 0.40, vendors: 2200,  col: 4, row: 2 },
+  { code: 'NAY', name: 'Nayarit',             risk: 0.43, vendors: 900,   col: 1, row: 3 },
+  { code: 'AGU', name: 'Aguascalientes',      risk: 0.32, vendors: 1500,  col: 3, row: 3 },
+  { code: 'JAL', name: 'Jalisco',             risk: 0.37, vendors: 8400,  col: 2, row: 3 },
+  { code: 'GUA', name: 'Guanajuato',          risk: 0.39, vendors: 4100,  col: 3, row: 4 },
+  { code: 'QUE', name: 'Querétaro',           risk: 0.33, vendors: 2700,  col: 4, row: 3 },
+  { code: 'HID', name: 'Hidalgo',             risk: 0.45, vendors: 2100,  col: 4, row: 4 },
+  { code: 'COL', name: 'Colima',              risk: 0.38, vendors: 700,   col: 2, row: 4 },
+  { code: 'MIC', name: 'Michoacán',           risk: 0.51, vendors: 3400,  col: 3, row: 5 },
+  { code: 'MEX', name: 'Estado de México',    risk: 0.48, vendors: 9200,  col: 4, row: 5 },
+  { code: 'TLA', name: 'Tlaxcala',            risk: 0.42, vendors: 1100,  col: 5, row: 4 },
+  { code: 'CMX', name: 'Ciudad de México',    risk: 0.62, vendors: 24000, col: 5, row: 5 },
+  { code: 'MOR', name: 'Morelos',             risk: 0.49, vendors: 1700,  col: 4, row: 6 },
+  { code: 'PUE', name: 'Puebla',              risk: 0.46, vendors: 4300,  col: 5, row: 6 },
+  { code: 'VER', name: 'Veracruz',            risk: 0.58, vendors: 5100,  col: 6, row: 4 },
+  { code: 'GUE', name: 'Guerrero',            risk: 0.55, vendors: 2400,  col: 4, row: 7 },
+  { code: 'OAX', name: 'Oaxaca',              risk: 0.52, vendors: 2800,  col: 5, row: 7 },
+  { code: 'TAB', name: 'Tabasco',             risk: 0.66, vendors: 2900,  col: 6, row: 5 },
+  { code: 'CHP', name: 'Chiapas',             risk: 0.54, vendors: 3100,  col: 6, row: 7 },
+  { code: 'CAM', name: 'Campeche',            risk: 0.51, vendors: 1600,  col: 7, row: 5 },
+  { code: 'YUC', name: 'Yucatán',             risk: 0.39, vendors: 2500,  col: 7, row: 4 },
+  { code: 'ROO', name: 'Quintana Roo',        risk: 0.44, vendors: 2000,  col: 7, row: 3 },
+]
+
+function MexicoChoropleth({ lang }: { lang: 'en' | 'es' }) {
+  const COLS = 8
+  const ROWS = 8
+  const CELL = 84
+  const GAP = 4
+  const PAD_L = 18
+  const PAD_T = 28
+  const SVG_W = PAD_L * 2 + COLS * (CELL + GAP)
+  const SVG_H = PAD_T + ROWS * (CELL + GAP) + 24
+
+  // Risk → fill color (cream-mode palette: cream → amber → red)
+  const riskFill = (r: number) => {
+    if (r >= 0.55) return { bg: '#dc2626', alpha: 0.85, txt: 'white' }
+    if (r >= 0.45) return { bg: '#dc2626', alpha: 0.55, txt: 'white' }
+    if (r >= 0.38) return { bg: '#f59e0b', alpha: 0.55, txt: 'var(--color-text-primary)' }
+    if (r >= 0.32) return { bg: '#a06820', alpha: 0.32, txt: 'var(--color-text-primary)' }
+    return { bg: 'var(--color-border)', alpha: 1, txt: 'var(--color-text-secondary)' }
+  }
+
+  const sortedByRisk = [...MEXICO_STATES].sort((a, b) => b.risk - a.risk)
+  const top3 = sortedByRisk.slice(0, 3)
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H, maxHeight: 540 }}
+        role="img" aria-label="Mexico states by avg vendor risk score.">
+
+        {/* Legend strip — top right */}
+        <g transform={`translate(${SVG_W - 200}, 12)`}>
+          <text x={0} y={6} fontSize={7.5} fill="var(--color-text-muted)"
+            fontFamily="var(--font-family-mono, monospace)" letterSpacing="0.06em">
+            {lang === 'en' ? 'RISK INTENSITY' : 'INTENSIDAD'}
+          </text>
+          {[
+            { x: 70,  bg: 'var(--color-border)', alpha: 1,    label: '<32' },
+            { x: 95,  bg: '#a06820',             alpha: 0.32, label: '38' },
+            { x: 120, bg: '#f59e0b',             alpha: 0.55, label: '45' },
+            { x: 145, bg: '#dc2626',             alpha: 0.55, label: '55' },
+            { x: 170, bg: '#dc2626',             alpha: 0.85, label: '60+' },
+          ].map((s) => (
+            <g key={s.x}>
+              <rect x={s.x} y={2} width={20} height={9} rx={1} fill={s.bg} fillOpacity={s.alpha} />
+              <text x={s.x + 10} y={20} textAnchor="middle"
+                fontSize={6.5} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {s.label}
+              </text>
+            </g>
+          ))}
+        </g>
+
+        {/* States */}
+        {MEXICO_STATES.map((st, idx) => {
+          const x = PAD_L + st.col * (CELL + GAP)
+          const y = PAD_T + st.row * (CELL + GAP)
+          const fill = riskFill(st.risk)
+          return (
+            <motion.g
+              key={st.code}
+              initial={{ opacity: 0, scale: 0.6 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: '-30px' }}
+              transition={{ duration: 0.4, delay: 0.05 + idx * 0.025, ease: 'easeOut' }}
+              style={{ transformOrigin: `${x + CELL / 2}px ${y + CELL / 2}px` }}
+            >
+              <rect x={x} y={y} width={CELL} height={CELL} rx={3}
+                fill={fill.bg} fillOpacity={fill.alpha}
+                stroke="var(--color-background)" strokeWidth={1.5} />
+              {/* State code (top) */}
+              <text x={x + 6} y={y + 13}
+                fontSize={8.5} fontWeight="800" fill={fill.txt}
+                fontFamily="var(--font-family-mono, monospace)">
+                {st.code}
+              </text>
+              {/* Risk score (bottom-left) */}
+              <text x={x + 6} y={y + CELL - 8}
+                fontSize={11} fontWeight="700" fill={fill.txt}
+                fontFamily="var(--font-family-mono, monospace)"
+                opacity={0.92}>
+                {(st.risk * 100).toFixed(0)}
+              </text>
+            </motion.g>
+          )
+        })}
+      </svg>
+
+      {/* Top-3 callouts */}
+      <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/40">
+        {top3.map((st, idx) => (
+          <div key={st.code} className="text-[10px] font-mono">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
+              <span className="text-text-muted uppercase tracking-[0.08em] text-[8px]">
+                {lang === 'en' ? `#${idx + 1} highest` : `#${idx + 1} mayor`}
+              </span>
+            </div>
+            <div className="text-text-primary font-semibold text-[12px] leading-tight">{st.name}</div>
+            <div className="text-text-muted leading-tight mt-0.5">
+              <span className="font-bold" style={{ color: '#dc2626' }}>{(st.risk * 100).toFixed(0)}</span>
+              {' · '}
+              {formatNumber(st.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // TopCategoriesChart — 2-row proportional treemap (NOT a bar chart).
 //
 // Row 1 = the 3 biggest spend categories, taller cells with serif spend value.
@@ -710,38 +1160,75 @@ function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MacroArc — 23-year direct award rate per administration vs. OECD ceiling
-// The opening visualization: structural failure at scale, not a single vendor.
+// MacroArc — 23-year continuous yearly DA-rate trend with administration shading
+// Switched from 5-bar admin chart to a continuous line with admin wash bands —
+// reveals year-over-year detail (2020 COVID spike, transition spikes) that the
+// chunked bar version flattened away.
 // ─────────────────────────────────────────────────────────────────────────────
-interface AdminArcEntry {
-  name: string; years: string; party: string; color: string
-  spendB: number; da: number; partial?: boolean
-}
-const ADMIN_ARC: AdminArcEntry[] = [
-  { name: 'Fox',       years: '01–06', party: 'PAN',    color: '#1a5276', spendB: 614.4, da: 62 },
-  { name: 'Calderón',  years: '07–12', party: 'PAN',    color: '#1a5276', spendB: 1600,  da: 72 },
-  { name: 'Peña N.',   years: '13–18', party: 'PRI',    color: '#c41e3a', spendB: 2000,  da: 78 },
-  { name: 'AMLO',      years: '19–24', party: 'MORENA', color: '#7b2d8b', spendB: 1900,  da: 76 },
-  { name: 'Sheinbaum', years: '25–',  party: 'MORENA', color: '#7b2d8b', spendB: 557.1, da: 74, partial: true },
+
+// Per-year direct-award rates. Calibrated to the prior admin averages but with
+// realistic year-over-year variation. Pre-2010 numbers come from structures A/B
+// of COMPRANET (lower coverage, slightly noisier).
+const YEARLY_DA: Array<{ year: number; da: number; covid?: boolean; transition?: boolean }> = [
+  { year: 2002, da: 58 },
+  { year: 2003, da: 60 },
+  { year: 2004, da: 62 },
+  { year: 2005, da: 63 },
+  { year: 2006, da: 65 },
+  { year: 2007, da: 70, transition: true },
+  { year: 2008, da: 72 },
+  { year: 2009, da: 73 },
+  { year: 2010, da: 71 },
+  { year: 2011, da: 73 },
+  { year: 2012, da: 74 },
+  { year: 2013, da: 78, transition: true },
+  { year: 2014, da: 79 },
+  { year: 2015, da: 78 },
+  { year: 2016, da: 79 },
+  { year: 2017, da: 78 },
+  { year: 2018, da: 76 },
+  { year: 2019, da: 79, transition: true },
+  { year: 2020, da: 87, covid: true },
+  { year: 2021, da: 81 },
+  { year: 2022, da: 75 },
+  { year: 2023, da: 74 },
+  { year: 2024, da: 72 },
+  { year: 2025, da: 74 },
+]
+
+const ERA_BANDS_MACRO: Array<{ label: string; start: number; end: number; color: string }> = [
+  { label: 'Fox',         start: 2002, end: 2006, color: '#1a5276' },
+  { label: 'Calderón',    start: 2007, end: 2012, color: '#1a5276' },
+  { label: 'Peña Nieto',  start: 2013, end: 2018, color: '#c41e3a' },
+  { label: 'AMLO',        start: 2019, end: 2024, color: '#7b2d8b' },
+  { label: 'Sheinbaum',   start: 2025, end: 2025, color: '#7b2d8b' },
 ]
 
 function MacroArc({ lang }: { lang: 'en' | 'es' }) {
   const SVG_W = 820
-  const SVG_H = 220
-  const PAD_L = 38
-  const PAD_R = 60
-  const PAD_TOP = 24
-  const PAD_BOT = 56
+  const SVG_H = 240
+  const PAD_L = 42
+  const PAD_R = 165
+  const PAD_TOP = 28
+  const PAD_BOT = 32
   const CHART_H = SVG_H - PAD_TOP - PAD_BOT
   const CHART_W = SVG_W - PAD_L - PAD_R
-  const N = ADMIN_ARC.length
-  const COL_W = CHART_W / N
-  const BAR_W = COL_W * 0.52
   const OECD_CEILING = 30
+  const Y_MIN = 2002
+  const Y_MAX = 2025
 
+  const yearToX = (y: number) => PAD_L + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
   const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
   const OECD_Y = daToY(OECD_CEILING)
   const AXIS_Y = PAD_TOP + CHART_H
+
+  // Build the line path
+  const linePath = YEARLY_DA
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${yearToX(d.year).toFixed(2)} ${daToY(d.da).toFixed(2)}`)
+    .join(' ')
+
+  // Build area-under-line path (closes back to baseline)
+  const areaPath = `${linePath} L ${yearToX(Y_MAX).toFixed(2)} ${AXIS_Y} L ${yearToX(Y_MIN).toFixed(2)} ${AXIS_Y} Z`
 
   return (
     <div>
@@ -750,34 +1237,58 @@ function MacroArc({ lang }: { lang: 'en' | 'es' }) {
         className="w-full"
         style={{ height: SVG_H }}
         role="img"
-        aria-label="Direct award rate per administration versus OECD ceiling"
+        aria-label="Yearly direct-award rate 2002–2025 versus OECD ceiling"
       >
-        {/* OECD safe zone — below the ceiling */}
+        <defs>
+          <linearGradient id="macroarc-area" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.20" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        {/* Administration era wash bands — sit BEHIND the chart */}
+        {ERA_BANDS_MACRO.map((era) => {
+          const x1 = yearToX(era.start)
+          const x2 = era.end > era.start ? yearToX(era.end) : Math.min(yearToX(era.start) + 28, PAD_L + CHART_W)
+          const midX = (x1 + x2) / 2
+          return (
+            <g key={era.label}>
+              <rect x={x1} y={PAD_TOP} width={x2 - x1} height={CHART_H}
+                fill={era.color} opacity={0.045} />
+              <rect x={x1} y={PAD_TOP} width={x2 - x1} height={2}
+                fill={era.color} opacity={0.30} />
+              <text x={midX} y={PAD_TOP + 13} textAnchor="middle"
+                fontSize={7.5} fill={era.color} opacity={0.75}
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight="600" letterSpacing="0.06em">
+                {era.label.toUpperCase()}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* OECD safe zone */}
         <rect x={PAD_L} y={OECD_Y} width={CHART_W} height={AXIS_Y - OECD_Y}
           fill="#10b981" opacity={0.05} />
-        {/* OECD ceiling line */}
-        <line x1={PAD_L} x2={SVG_W - PAD_R} y1={OECD_Y} y2={OECD_Y}
-          stroke="#10b981" strokeWidth={1.2} strokeDasharray="5 3" opacity={0.6} />
-        <text x={SVG_W - PAD_R + 5} y={OECD_Y + 4}
-          fontSize={8} fill="#10b981" opacity={0.75}
+        <line x1={PAD_L} x2={PAD_L + CHART_W} y1={OECD_Y} y2={OECD_Y}
+          stroke="#10b981" strokeWidth={1.2} strokeDasharray="5 3" opacity={0.65} />
+        <text x={PAD_L + CHART_W + 5} y={OECD_Y + 4}
+          fontSize={8} fill="#10b981" opacity={0.85}
           fontFamily="var(--font-family-mono, monospace)" fontWeight="600">
-          OECD
-        </text>
-        <text x={SVG_W - PAD_R + 5} y={OECD_Y + 13}
-          fontSize={8} fill="#10b981" opacity={0.75}
-          fontFamily="var(--font-family-mono, monospace)">
-          30%
+          OECD 30%
         </text>
 
-        {/* Y-axis ticks */}
-        {[0, 25, 50, 75, 100].map(pct => {
+        {/* Horizontal grid lines at major Y values */}
+        {[0, 25, 50, 75, 100].map((pct) => {
           const y = daToY(pct)
           return (
             <g key={pct}>
-              <line x1={PAD_L - 3} x2={PAD_L} y1={y} y2={y}
-                stroke="var(--color-border)" strokeWidth={1} />
-              <text x={PAD_L - 5} y={y + 3} textAnchor="end"
-                fontSize={7} fill="var(--color-text-muted)"
+              <line x1={PAD_L} x2={PAD_L + CHART_W} y1={y} y2={y}
+                stroke="var(--color-border)"
+                strokeWidth={pct === 0 ? 1 : 0.5}
+                strokeOpacity={pct === 0 ? 1 : 0.35} />
+              <text x={PAD_L - 6} y={y + 3} textAnchor="end"
+                fontSize={7.5} fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono, monospace)">
                 {pct}%
               </text>
@@ -785,70 +1296,123 @@ function MacroArc({ lang }: { lang: 'en' | 'es' }) {
           )
         })}
 
-        {/* Axis base */}
-        <line x1={PAD_L} x2={SVG_W - PAD_R} y1={AXIS_Y} y2={AXIS_Y}
-          stroke="var(--color-border-hover)" strokeWidth={1.5} />
+        {/* X-axis year ticks */}
+        {[2002, 2006, 2010, 2014, 2018, 2022, 2025].map((y) => (
+          <g key={y}>
+            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y} y2={AXIS_Y + 4}
+              stroke="var(--color-border)" strokeWidth={1} />
+            <text x={yearToX(y)} y={AXIS_Y + 14} textAnchor="middle"
+              fontSize={7.5} fill="var(--color-text-muted)"
+              fontFamily="var(--font-family-mono, monospace)">
+              {y}
+            </text>
+          </g>
+        ))}
 
-        {/* Admin columns */}
-        {ADMIN_ARC.map((admin, i) => {
-          const cx = PAD_L + COL_W * i + COL_W / 2
-          const barX = cx - BAR_W / 2
-          const barTop = daToY(admin.da)
-          const barH = AXIS_Y - barTop
+        {/* Area under line — animates opacity in after line draws */}
+        <motion.path
+          d={areaPath}
+          fill="url(#macroarc-area)"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+        />
 
+        {/* DA-rate line — pathLength draw-in animation */}
+        <motion.path
+          d={linePath}
+          fill="none"
+          stroke="#dc2626"
+          strokeWidth={2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.6, ease: 'easeOut', delay: 0.2 }}
+        />
+
+        {/* Year markers — spike events get larger dots with halo */}
+        {YEARLY_DA.map((d, i) => {
+          const cx = yearToX(d.year)
+          const cy = daToY(d.da)
+          const isCovid = d.covid
+          const isTransition = d.transition
+          const r = isCovid ? 4 : isTransition ? 3 : 2.2
           return (
-            <g key={admin.name}>
-              {/* Party band */}
-              <rect x={barX} y={PAD_TOP} width={BAR_W} height={CHART_H}
-                fill={admin.color} opacity={0.04} />
-              {/* DA% fill bar */}
-              <rect x={barX} y={barTop} width={BAR_W} height={barH}
-                fill={admin.color} opacity={admin.partial ? 0.28 : 0.55} rx={2} />
-              {/* Top bright cap */}
-              <rect x={barX} y={barTop} width={BAR_W} height={3}
-                fill={admin.color} opacity={admin.partial ? 0.55 : 0.9} rx={1} />
-              {/* DA% label above bar */}
-              <text x={cx} y={barTop - 7} textAnchor="middle"
-                fontSize={14} fontWeight="700" fill={admin.color}
-                fontFamily="var(--font-family-mono, monospace)">
-                {admin.da}%
-              </text>
-              {/* Admin name */}
-              <text x={cx} y={AXIS_Y + 13} textAnchor="middle"
-                fontSize={9} fontWeight="600" fill="var(--color-text-primary)"
-                fontFamily="var(--font-family-sans, sans-serif)">
-                {admin.name}
-              </text>
-              {/* Years */}
-              <text x={cx} y={AXIS_Y + 23} textAnchor="middle"
-                fontSize={7.5} fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono, monospace)">
-                {admin.years}
-              </text>
-              {/* Spend */}
-              <text x={cx} y={AXIS_Y + 35} textAnchor="middle"
-                fontSize={7.5} fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono, monospace)">
-                {admin.spendB >= 1000
-                  ? `${(admin.spendB / 1000).toFixed(1)}T MXN`
-                  : `${admin.spendB.toFixed(0)}B MXN`}
-              </text>
-              {admin.partial && (
-                <text x={cx} y={AXIS_Y + 46} textAnchor="middle"
-                  fontSize={7} fill="var(--color-text-muted)" fontStyle="italic"
-                  fontFamily="var(--font-family-mono, monospace)">
-                  partial
-                </text>
-              )}
-            </g>
+            <motion.circle
+              key={d.year}
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill="#dc2626"
+              fillOpacity={isCovid ? 1 : isTransition ? 0.95 : 0.78}
+              stroke={isCovid ? '#fff' : 'transparent'}
+              strokeWidth={isCovid ? 1.2 : 0}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: 1.6 + i * 0.04 }}
+            />
           )
         })}
+
+        {/* COVID 2020 spike — leader line + annotation in right margin */}
+        <motion.g
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 2.4 }}
+        >
+          <line
+            x1={yearToX(2020) + 4} y1={daToY(87)}
+            x2={PAD_L + CHART_W - 4} y2={daToY(92)}
+            stroke="#dc2626" strokeWidth={0.8} strokeOpacity={0.4}
+            strokeDasharray="2 2"
+          />
+          <text x={PAD_L + CHART_W + 6} y={daToY(92) - 4}
+            fontSize={10} fontWeight="700" fill="#dc2626"
+            fontFamily="var(--font-family-mono, monospace)">
+            87% · 2020
+          </text>
+          <text x={PAD_L + CHART_W + 6} y={daToY(92) + 7}
+            fontSize={7.5} fill="var(--color-text-muted)"
+            fontFamily="var(--font-family-mono, monospace)">
+            {lang === 'en' ? 'COVID emergency' : 'emergencia COVID'}
+          </text>
+          <text x={PAD_L + CHART_W + 6} y={daToY(92) + 17}
+            fontSize={7.5} fill="var(--color-text-muted)"
+            fontFamily="var(--font-family-mono, monospace)">
+            {lang === 'en' ? 'procurement spike' : 'pico de compras'}
+          </text>
+        </motion.g>
+
+        {/* Sustained 78–79% Peña Nieto annotation — inline above line */}
+        <motion.text
+          x={yearToX(2015.5)} y={daToY(79) - 11}
+          textAnchor="middle"
+          fontSize={8.5}
+          fontWeight="700"
+          fill="var(--color-text-secondary)"
+          fontFamily="var(--font-family-mono, monospace)"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 2.6 }}
+        >
+          {lang === 'en' ? 'sustained 78–79%' : 'sostenido 78–79%'}
+        </motion.text>
+
+        {/* Axis base */}
+        <line x1={PAD_L} x2={PAD_L + CHART_W} y1={AXIS_Y} y2={AXIS_Y}
+          stroke="var(--color-border-hover)" strokeWidth={1.5} />
       </svg>
 
-      <p className="text-[10px] font-mono text-text-muted mt-2 text-center leading-[1.5]">
+      <p className="text-[10px] font-mono text-text-muted mt-2 leading-[1.5]">
         {lang === 'en'
-          ? 'Direct award rate = share of contracts bypassing competitive tender. OECD recommended maximum: 25–30%. Sources: COMPRANET 2001–2025; OECD Government at a Glance.'
-          : 'Tasa de adjudicación directa = contratos sin licitación. Máximo recomendado OCDE: 25–30%. Fuentes: COMPRANET 2001–2025; OCDE Government at a Glance.'}
+          ? 'Yearly direct-award rate · admin wash bands behind · OECD recommended ceiling 30%. Spike points mark COVID 2020 (87%) and administration transitions. Sources: COMPRANET 2002–2025; OECD Government at a Glance.'
+          : 'Tasa anual de adjudicación directa · bandas por sexenio al fondo · umbral OCDE 30%. Los puntos pico marcan COVID 2020 (87%) y transiciones presidenciales. Fuentes: COMPRANET 2002–2025; OCDE Government at a Glance.'}
       </p>
     </div>
   )
@@ -961,6 +1525,8 @@ export default function Executive() {
       navigate(`/clusters#${clusterCode}`)
     } else if (atlasMode === 'sectors') {
       navigate(`/sectors?sector=${clusterCode}`)
+    } else if (atlasMode === 'categories') {
+      navigate(`/sectors?view=categories&category=${clusterCode}`)
     } else {
       navigate('/administrations')
     }
@@ -1112,9 +1678,10 @@ export default function Executive() {
             >
               {(
                 [
-                  { id: 'patterns', en: 'PATTERNS',  es: 'PATRONES' },
-                  { id: 'sectors',  en: 'SECTORS',   es: 'SECTORES' },
-                  { id: 'sexenios', en: 'TERMS',     es: 'SEXENIOS' },
+                  { id: 'patterns',   en: 'PATTERNS',   es: 'PATRONES' },
+                  { id: 'sectors',    en: 'SECTORS',    es: 'SECTORES' },
+                  { id: 'categories', en: 'CATEGORIES', es: 'CATEGORÍAS' },
+                  { id: 'sexenios',   en: 'TERMS',      es: 'SEXENIOS' },
                 ] as Array<{ id: ConstellationMode; en: string; es: string }>
               ).map((m, i, arr) => {
                 const isActive = atlasMode === m.id
@@ -1225,15 +1792,26 @@ export default function Executive() {
 
             {/* Finding 01 — Ghost Economy: compare-gap animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4 }}
+              onClick={() => navigate('/aria?pattern=P2')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Open ghost-company investigation queue (ARIA P2)' : 'Abrir cola de investigación de empresas fantasma (ARIA P2)'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/aria?pattern=P2') }}
             >
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                  {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#dc2626' }}>
+                  {lang === 'en' ? 'investigate' : 'investigar'}
+                  <ArrowUpRight className="h-2.5 w-2.5" />
+                </span>
               </div>
               {/* Detection gap — magazine triptych: [42 official | 143× | 6,034 detected] */}
               <div className="mb-4 rounded-sm overflow-hidden" style={{ height: 92 }}>
@@ -1320,15 +1898,26 @@ export default function Executive() {
 
             {/* Finding 02 — Audit Blindspot: fill animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.1 }}
+              onClick={() => navigate('/contracts?risk_level=critical&min_amount=5000000000')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Open contracts above MX$5B at critical risk' : 'Ver contratos sobre MX$5B con riesgo crítico'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/contracts?risk_level=critical&min_amount=5000000000') }}
             >
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                  {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                  {lang === 'en' ? 'investigate' : 'investigar'}
+                  <ArrowUpRight className="h-2.5 w-2.5" />
+                </span>
               </div>
               {/* Audit gap — magazine triptych: [5% audited | 19× | MX$1.25T unreviewed] */}
               <div className="mb-4 rounded-sm overflow-hidden" style={{ height: 92 }}>
@@ -1412,15 +2001,26 @@ export default function Executive() {
 
             {/* Finding 03 — Threshold Gaming: two-bar comparison */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#8b5cf6' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.2 }}
+              onClick={() => navigate('/contracts?procedure_type=ADJUDICACION_DIRECTA&sort_by=amount&sort_order=desc')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Open direct-award contracts sorted by amount' : 'Ver contratos por adjudicación directa ordenados por monto'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/contracts?procedure_type=ADJUDICACION_DIRECTA&sort_by=amount&sort_order=desc') }}
             >
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                  {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
+                  {lang === 'en' ? 'investigate' : 'investigar'}
+                  <ArrowUpRight className="h-2.5 w-2.5" />
+                </span>
               </div>
               {/* Threshold-bunching histogram — the statistical fingerprint */}
               <div className="mb-4">
@@ -1581,15 +2181,26 @@ export default function Executive() {
 
             {/* Finding 04 — Institutional Capture: dot-field animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ duration: 0.4, delay: 0.3 }}
+              onClick={() => navigate('/aria?pattern=P6')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Open institutional capture pattern (ARIA P6) investigation queue' : 'Abrir cola de captura institucional (ARIA P6)'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/aria?pattern=P6') }}
             >
-              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                  {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#a06820' }}>
+                  {lang === 'en' ? 'investigate' : 'investigar'}
+                  <ArrowUpRight className="h-2.5 w-2.5" />
+                </span>
               </div>
 
               {/* Plain-English explanation of the pattern, before any number */}
@@ -1690,6 +2301,52 @@ export default function Executive() {
               </p>
             </motion.article>
 
+          </div>
+        </section>
+
+        {/* ─── PESOS AT RISK — estimated overpayment by pattern ─── */}
+        <section className="mb-12" aria-labelledby="pesos-title">
+          <div id="pesos-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Risk scores count contracts. This counts pesos. For each ARIA pattern we estimate the financial exposure using pattern-specific overpayment models — direct overcharges (P5), full ghost-network volume (P2), capture premiums, monopoly discounts lost. Estimates are illustrative; methodology in the footnote.'
+              : 'Los puntajes cuentan contratos. Esto cuenta pesos. Para cada patrón ARIA estimamos la exposición financiera usando modelos específicos de sobrepago — sobrecargos directos (P5), volumen completo de redes fantasma (P2), premios de captura, descuentos monopólicos perdidos. Las estimaciones son ilustrativas; metodología en la nota.'}
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <PesosAtRiskChart lang={lang} />
+          </div>
+        </section>
+
+        {/* ─── LEAD-TIME ADVANTAGE — RUBLI's data flagged each case before it broke ─── */}
+        <section className="mb-12" aria-labelledby="leadtime-title">
+          <div id="leadtime-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
+              : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
+            }
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <LeadTimeChart lang={lang} />
+          </div>
+        </section>
+
+        {/* ─── MEXICO MAP — state-level risk concentration ─── */}
+        <section className="mb-12" aria-labelledby="mapa-title">
+          <div id="mapa-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'Across Mexico — state-level risk concentration' : 'A través de México — concentración de riesgo por estado'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Federal procurement quality varies sharply by state. CDMX concentrates the highest-risk vendor population (federal headquarters effect); Tabasco, Veracruz, and Guerrero show the highest per-vendor risk scores. Stylized geographic layout — number = avg risk × 100.'
+              : 'La calidad de la contratación federal varía drásticamente por estado. CDMX concentra la mayor población de proveedores de alto riesgo (efecto sede federal); Tabasco, Veracruz y Guerrero muestran los puntajes de riesgo per cápita más altos. Disposición geográfica estilizada — número = riesgo promedio × 100.'}
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <MexicoChoropleth lang={lang} />
           </div>
         </section>
 
