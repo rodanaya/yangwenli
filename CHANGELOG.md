@@ -2,6 +2,184 @@
 
 All notable changes to the RUBLI Procurement Analysis Platform.
 
+## [2.2.0] - 2026-04-28
+
+### Editorial story system + Observatory rename
+
+End-to-end audit of `/stories/*` against the dashboard's
+Playfair-Italic-800 + sector-palette tile rhythm. Three real bugs
+caught and fixed by walking all 10 published stories on production
+with puppeteer.
+
+#### Story graphics — DataPullquote redesign
+- Card chrome now leads with a mono dateline (`APR 28 · 2026`) +
+  section label (`FIGURE · COMPRANET`) + outlet badge + Playfair Italic
+  800 number + section eyebrow + viz + caption. Mirrors the dashboard's
+  "Headline Numbers" tile rhythm exactly.
+- Quote demoted to smaller Playfair italic so the number leads.
+- 14 viz templates → 6 disciplined families (proportion, threshold,
+  gauge, sliver, era, null) routed through a `TEMPLATE_FAMILY` map. Old
+  template names stay as a public-API alias so `story-content.ts`
+  doesn't change. Removes speedometer, paper-receipt, sine-wave,
+  hatching idioms that fell outside the editorial language.
+- **Container queries** (`container-type: inline-size`) adapt the
+  pullquote to its own rendered width — at <480px the chrome stacks
+  vertically, padding tightens, stat drops to 32px. The same component
+  now reads cleanly at 383 / 656 / 848 / 976px on the same page (the
+  three widths produced by FeatureChapter / StandardChapter /
+  ClosingChapter / data-spotlight chart variants).
+- Accent precedence corrected: `statColor` hex (the editorial color
+  set per-story in `leadStat.color`) wins over `outlet` (the journalism
+  category). Hero, all pullquote stats, all left-borders, and viz fills
+  now share one chromatic identity per story.
+
+#### Story graphics — InlineCharts redesign
+- New `ChartCard` chrome: mono eyebrow + Playfair serif title +
+  optional Playfair Italic 800 anchor stat with mono caption. Mirrors
+  the dashboard tile.
+- Sector palette only — replaced the random violet/emerald/cyan/pink/
+  lime grab-bag with sector tokens. Highlight rows route through
+  `HIGHLIGHT_COLOR` (sector-salud), reference lines through
+  `REFERENCE_COLOR` (sector-tecnologia), anchor stats through
+  `ANCHOR_COLOR` (dashboard amber).
+- All 6 chart types (DotGrid, Bar, Line, Area, Spike, DivergingBar)
+  expose an anchor stat at the top via a `pickAnchor` helper.
+
+#### Story hero
+- Lead-stat number now applies `leadStat.color` (a hex) via
+  `style={{ color }}` instead of `cn('font-bold', '#dc2626')` — the old
+  pattern silently stripped the hex as an invalid class, so every
+  story's hero number rendered in inherited link blue or accent amber
+  instead of the intended sector color.
+- Upgraded to Playfair Italic 800 to match the rest of the editorial
+  surface.
+
+#### Atlas → El Observatorio / The Observatory
+- User-visible rename. Sidebar item, page hero, dashboard § 1 heading,
+  story CTAs, lens-toggle aria-label all updated bilingually.
+- Canonical route stays `/atlas` — preserves shared URLs in the wild
+  and the `rubli_atlas_visited_v1` localStorage flag.
+- New `/observatorio` and `/observatory` routes redirect to `/atlas`
+  via `<Navigate replace>` so the new name is also a valid URL.
+- Internal symbol names (Atlas component, ATLAS_STORIES, atlasMode)
+  keep the legacy `atlas` prefix — renaming them is pure churn.
+
+#### Header breadcrumb fix
+- `/stories/:slug` paths now resolve to the canonical story headline
+  via `getStoryBySlug()` (e.g. `el-ejercito-fantasma` →
+  "El Ejército Fantasma"). Generic kebab-case fallback `slugToTitle()`
+  covers any other slug URL — the dash-as-title pattern is gone
+  platform-wide.
+
+#### Deploy pipeline
+- `deploy.yml`: `compose ps` now passes `--env-file .env.prod` to match
+  the preceding `compose up`. Without it, the second command failed
+  interpolation (`${RUBLI_WRITE_KEY:?...}`) and the entire deploy run
+  was marked failed even when the site updated correctly. Three prior
+  deploys had been red-but-shipping for the same reason; the badge is
+  now honest again.
+
+## [2.1.0] - 2026-04-07
+
+### v3.0 Dossiers release + Atlas (V1–V7) + bilingual story system
+
+Major frontend reset around the **dossier model**: 9 entity types each
+with a 10-section editorial template. Sidebar reorganized into 5
+sections (DESCUBRIR / INVESTIGAR / EXPLORAR / ANÁLISIS / PLATAFORMA).
+Trust-manifest invariants enforced via `<EntityIdentityChip>`,
+`getRiskLevelFromScore`, `formatVendorName`.
+
+#### El Atlas / The Observatory (V1–V7)
+- Full-viewport constellation page at `/atlas` — 1,200 dots, four
+  lenses (PATTERNS / SECTORS / CATEGORIES / SEXENIOS), year scrubber
+  2008–2025, smooth year morph via CSS transitions on cx/cy/fill-opacity.
+- V2: pin a cluster, compare years (second canvas), risk-floor filter.
+- V3: vendor typeahead across 21 curated vendors with auto-pin,
+  localStorage-backed personal notes, mobile polish.
+- V4: replay tours + URL state sharing (`?lens=&year=&pin=`) +
+  share-view button.
+- V5: first-visit auto-tour (rubli_atlas_visited_v1 flag), year-delta
+  badges in cluster panel.
+- V6: long-form multi-chapter narratives replace brief tours —
+  *The Pharmaceutical Cartel* (6 ch · ~55s), *La Estafa Maestra*
+  (6 ch · ~55s), *The COVID Year* (5 ch · ~45s). Each chapter has a
+  Roman-numeral marker, year label, Playfair display title, 2-3
+  sentence body, optional pull-stat, 6-12s dwell, pause/skip/replay
+  controls.
+- V7: Atlas promoted from PLATAFORMA to DESCUBRIR (centerpiece).
+
+#### `/stories/:slug` long-form surface
+- 10 original investigations derived from RUBLI data analysis
+  (1.3M words of editorial content + verified statistics).
+- Variant-aware chapter rendering: 7 layouts (`hero`, `feature`,
+  `data-spotlight`, `quote-spotlight`, `connective`, `closing`,
+  `standard`) auto-picked by `pickChapterVariant()` based on content
+  shape.
+- Hero artwork (cluster / grid / stamp variants) as decorative
+  backdrop. Drop caps via CSS `::first-letter` (Playfair, accent-colored,
+  5.4em hero / 3.6em feature).
+- Atlas deep-link CTAs in chart chapters and closing chapters open the
+  live constellation with prefilled `?lens=…&year=…&pin=…` state.
+- Bilingual story content infrastructure (`headline_es`, `prose_es[]`,
+  `pullquote.quote_es`, etc.) with English fallback. *El Ejército
+  Fantasma* fully translated as the reference implementation.
+
+#### `/journalists` newsroom
+- Tiered editorial hierarchy: Lead story + Editor's Picks + Dossier.
+- New components: `LeadStoryCard`, `EditorsPickCard`, `DataLeadsList`,
+  `SectionBreak`, `NewsroomArtwork` (3 SVG variants: cluster / grid /
+  spike).
+
+#### Dashboard (Executive page)
+- 4 redesigned headline-number tiles with Playfair Italic 800 numbers
+  and unique micro-vizzes (yearly cubes / 100-dot OECD field / stacked
+  100% bar / linear scale with marker).
+- MacroArc — 23-year direct-award trend with inline COVID 2020 marker.
+- § 1 The Observatory (was: The Atlas) at 220px as elevator pitch.
+
+#### Spanish currency conventions (Mexican media)
+- `formatCompactMXN()` locale-aware: ES uses MDP (millones de pesos)
+  and *billones* (= English trillion).
+- `localizeAmount(string, lang)` runtime parser converts legacy
+  English-format strings (`"133.2B MXN"` → `"133,200 MDP"`).
+
+#### Risk model v0.6.5
+- Per-sector calibrated logistic regression with PU correction.
+- Train AUC 0.798 / Test AUC 0.828 (vendor-stratified).
+- Distribution: critical 6.01% / high 7.48% / medium 26.84% /
+  low 59.39% — high-risk rate 13.49% (OECD 2-15% compliant).
+- 9 active features: price_volatility, institution_diversity,
+  vendor_concentration, price_ratio, network_member_count,
+  same_day_count, win_rate, ad_period_days, direct_award.
+- SHAP explanations table `vendor_shap_v52` with 456,266 rows.
+
+#### ARIA pipeline v1.1
+- Queue: 318,441 vendors — T1=320, T2=1,234, T3=5,016, T4=311,871.
+- Patterns: P1 Monopoly (44), P2 Ghost (6,034), P3 Intermediary
+  (2,974), P4 (220), P5 (3,985), P6 Capture (15,923), P7 (257).
+
+#### User authentication
+- JWT-based auth via python-jose + bcrypt (NOT passlib).
+- POST `/api/v1/auth/{register, login, me, logout}`.
+- Live on production from commit ce6ccaa (Apr 20 2026).
+
+#### Editorial UI primitives (Mar 2026 sprint)
+- `EditorialHeadline`, `HallazgoStat`, `FuentePill`, `MetodologiaTooltip`,
+  `ImpactoHumano`, `RedaccionWidget`, `InvestigationLede`,
+  `CronologiaVendor`, `CapturaHeatmap` (replaces /money-flow),
+  `RedesKnownDossier` (replaces /network).
+- Red Thread `/thread/:vendorId` — scroll-driven 6-chapter narrative.
+- Story chart registry (9 charts wired through CHART_REGISTRY in
+  StoryNarrative).
+
+#### Frontend hardening
+- Dot-chart consolidation: `DotBar` (single bar) + `DotStrip`
+  (multi-row matrix) as the only canonical primitives. 50+ inline
+  reimplementations across 25 files routed through these.
+- Token-lint CI gate (`npm run lint:tokens`) — fails on raw hex
+  literals or forbidden Tailwind classes (e.g. `text-red-400`,
+  `bg-emerald-*`) re-entering `src/pages` or `src/components`.
+
 ## [0.6.0] - 2026-01-20
 
 ### Phase 6: Frontend Dashboard & Docker Support
