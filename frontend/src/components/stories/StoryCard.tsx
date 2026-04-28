@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Clock } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import { cn, localizeAmount } from '@/lib/utils'
 import { type OutletType } from './OutletBadge'
 import { AnimatedNumber, AnimatedFill } from '@/hooks/useAnimations'
 import { staggerItem } from '@/lib/animations'
@@ -60,13 +61,16 @@ export function StoryCard(props: StoryCardProps) {
     type,
     headline,
     subheadline,
-    leadStatValue,
+    leadStatValue: rawLeadStatValue,
     leadStatLabel,
     leadStatColor,
     estimatedMinutes,
     era,
     onClick,
   } = props
+  const { i18n } = useTranslation()
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const leadStatValue = localizeAmount(rawLeadStatValue, lang)
   const accent = leadStatColor || OUTLET_ACCENT[outlet]
   const parsed = parseStatValue(leadStatValue)
 

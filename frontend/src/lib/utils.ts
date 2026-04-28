@@ -74,6 +74,51 @@ export function formatCompactMXN(amount: number): string {
 }
 
 /**
+ * Localize an amount string from English (B/T/M MXN) to Mexican Spanish at
+ * runtime. Used to intercept hardcoded English stats in legacy story content
+ * without rewriting story-content.ts.
+ *
+ * Examples (when isEs=true):
+ *   "133.2B MXN"     → "133,200 MDP"
+ *   "$2.5B MXN"      → "$2,500 MDP"
+ *   "1.25T MXN"      → "1.25 billones MXN"
+ *   "$2.76T MXN"     → "$2.76 billones MXN"
+ *   "526.8B MXN"     → "526,800 MDP"
+ *   "979 contracts"  → "979 contracts" (passed through, no MXN suffix)
+ *
+ * Mexican media convention: "billón" = 10¹² (= English trillion), MDP =
+ * "millones de pesos" used heavily in procurement journalism.
+ */
+export function localizeAmount(input: string, lang?: 'en' | 'es'): string {
+  const isEs = (lang ?? i18n.language ?? 'en').startsWith('es')
+  if (!isEs) return input
+  // Match optional $ prefix, number with optional decimals/commas, optional B/T/M suffix, "MXN"
+  const re = /^(\$\s*)?([0-9]+(?:[.,][0-9]+)?)\s*(B|T|M)\s*MXN\s*$/i
+  const m = input.trim().match(re)
+  if (!m) return input
+  const dollarPrefix = m[1] ? '$' : ''
+  const numStr = m[2].replace(',', '.')
+  const num = parseFloat(numStr)
+  if (Number.isNaN(num)) return input
+  const suffix = m[3].toUpperCase()
+  if (suffix === 'T') {
+    // "X.XT MXN" → "$X.X billones MXN" (billón = trillion in es)
+    return `${dollarPrefix}${num.toFixed(num < 10 ? 2 : 1)} billones MXN`
+  }
+  if (suffix === 'B') {
+    // "X.XB MXN" → "$X,XXX MDP" (English-billion = 10⁹ = mil millones)
+    const mdp = num * 1000
+    const formatted = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(Math.round(mdp))
+    return `${dollarPrefix}${formatted} MDP`
+  }
+  if (suffix === 'M') {
+    // "X.XM MXN" → "$X.X MDP"
+    return `${dollarPrefix}${num.toFixed(1)} MDP`
+  }
+  return input
+}
+
+/**
  * Format a number with thousands separators (locale-aware)
  */
 export function formatNumber(num: number): string {
