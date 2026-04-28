@@ -46,6 +46,11 @@ interface ConcentrationConstellationProps {
    * visibly re-shuffle on each combination.
    */
   seedOverride?: number
+  /**
+   * Code of a pinned cluster — its attractor ring will pulse continuously
+   * to mark it across mode/year changes. Used by /atlas pin feature.
+   */
+  pinnedCode?: string | null
   onClusterClick?: (clusterCode: string) => void
   className?: string
 }
@@ -220,6 +225,7 @@ export function ConcentrationConstellation({
   mode = 'patterns',
   metaOverride,
   seedOverride,
+  pinnedCode,
   onClusterClick,
   className,
 }: ConcentrationConstellationProps) {
@@ -449,6 +455,15 @@ export function ConcentrationConstellation({
               from { transform: scale(0.4); opacity: 0; }
               to { transform: scale(1); opacity: 1; }
             }
+            @keyframes atlas-pin-pulse {
+              0%, 100% { stroke-opacity: 0.95; r: 1; }
+              50% { stroke-opacity: 0.45; r: 1.25; }
+            }
+            .atlas-pin-ring {
+              transform-box: fill-box;
+              transform-origin: center;
+              animation: atlas-fade-in 0.5s ease-out backwards;
+            }
             .atlas-dot {
               animation: atlas-fade-in 0.55s ease-out backwards;
             }
@@ -569,6 +584,7 @@ export function ConcentrationConstellation({
         {attractors.map((a, idx) => {
           const isHovered = safeHover === idx
           const meta = activeMeta[idx]
+          const isPinned = pinnedCode === meta.code
           // Ring radius ∝ √T1 so high-t1 nodes read larger.
           // Floor at 4 so small clusters remain visible; cap at 16.
           const ringR = Math.max(4, Math.min(16, Math.sqrt(meta.t1)))
@@ -582,6 +598,36 @@ export function ConcentrationConstellation({
               className="atlas-ring"
               style={{ animationDelay: `${1300 + idx * 70}ms` }}
             >
+              {/* Pinned outer halo — pulsing ring around pinned cluster */}
+              {isPinned && (
+                <>
+                  <circle
+                    cx={a.x}
+                    cy={a.y}
+                    r={ringR + 8}
+                    fill="none"
+                    stroke={meta.color}
+                    strokeWidth={1.4}
+                    strokeOpacity={0.95}
+                    style={{
+                      transformBox: 'fill-box',
+                      transformOrigin: 'center',
+                      animation: 'atlas-pin-pulse 2.2s ease-in-out infinite',
+                    }}
+                  />
+                  <circle
+                    cx={a.x}
+                    cy={a.y}
+                    r={ringR + 14}
+                    fill="none"
+                    stroke={meta.color}
+                    strokeWidth={0.6}
+                    strokeOpacity={0.45}
+                    strokeDasharray="3 4"
+                  />
+                </>
+              )}
+
               {/* Outer ring — radius ∝ √T1 count */}
               <circle
                 cx={a.x}
@@ -589,9 +635,9 @@ export function ConcentrationConstellation({
                 r={ringR}
                 fill="none"
                 stroke={meta.color}
-                strokeOpacity={isHovered ? 0.75 : 0.30}
-                strokeWidth={1}
-                style={{ transition: 'stroke-opacity 160ms ease' }}
+                strokeOpacity={isHovered || isPinned ? 0.85 : 0.30}
+                strokeWidth={isPinned ? 1.4 : 1}
+                style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
               />
 
               {/* Cluster label */}

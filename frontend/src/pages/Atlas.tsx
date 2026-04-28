@@ -22,7 +22,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers } from 'lucide-react'
 import { analysisApi, ariaApi } from '@/api/client'
 import type { RiskDistribution } from '@/api/types'
 import {
@@ -154,12 +154,15 @@ function snapshotToRows(s: YearSnapshot): ConstellationRiskRow[] {
 interface ClusterDetailPanelProps {
   meta: ClusterMeta | null
   mode: ConstellationMode
+  pinnedCode: string | null
+  onTogglePin: () => void
   onClose: () => void
   lang: 'en' | 'es'
 }
 
-function ClusterDetailPanel({ meta, mode, onClose, lang }: ClusterDetailPanelProps) {
+function ClusterDetailPanel({ meta, mode, pinnedCode, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
   const navigate = useNavigate()
+  const isPinned = !!meta && pinnedCode === meta.code
 
   const investigateLink = useMemo(() => {
     if (!meta) return '/aria'
@@ -200,13 +203,26 @@ function ClusterDetailPanel({ meta, mode, onClose, lang }: ClusterDetailPanelPro
                 <div className="text-[11px] font-mono text-text-muted mt-1">{meta.kicker}</div>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors flex-shrink-0"
-              aria-label={lang === 'en' ? 'Close cluster details' : 'Cerrar detalles'}
-            >
-              <X className="h-4 w-4 text-text-muted" />
-            </button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={onTogglePin}
+                className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                aria-label={isPinned ? (lang === 'en' ? 'Unpin cluster' : 'Despinear cúmulo') : (lang === 'en' ? 'Pin cluster' : 'Pinear cúmulo')}
+                title={isPinned ? (lang === 'en' ? 'Pinned — click to unpin' : 'Pineado — clic para despinear') : (lang === 'en' ? 'Pin to keep highlighted across modes' : 'Pinear para destacar entre modos')}
+              >
+                {isPinned
+                  ? <PinOff className="h-4 w-4" style={{ color: meta.color }} />
+                  : <Pin className="h-4 w-4 text-text-muted" />
+                }
+              </button>
+              <button
+                onClick={onClose}
+                className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                aria-label={lang === 'en' ? 'Close cluster details' : 'Cerrar detalles'}
+              >
+                <X className="h-4 w-4 text-text-muted" />
+              </button>
+            </div>
           </div>
 
           {/* Body — scrollable */}
@@ -467,6 +483,18 @@ export default function Atlas() {
   const [yearIndex, setYearIndex] = useState<number>(YEAR_SNAPSHOTS.length - 1) // default to most recent
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [selectedClusterCode, setSelectedClusterCode] = useState<string | null>(null)
+  const [pinnedCode, setPinnedCode] = useState<string | null>(null)
+  // Risk-floor filter — when set, dots below the floor are dropped from the
+  // population; remaining levels redistribute proportionally so the field
+  // re-densifies around the focused band.
+  const [riskFloor, setRiskFloor] = useState<'all' | 'medium' | 'high' | 'critical'>('all')
+  // Compare mode — when true, render a second constellation card with its own year
+  const [compareMode, setCompareMode] = useState<boolean>(false)
+  // Year B defaults to a contrasting year vs year A — Peña 2014 vs COVID 2020
+  const [yearIndexB, setYearIndexB] = useState<number>(
+    YEAR_SNAPSHOTS.findIndex((s) => s.year === 2014),
+  )
+  const [isPlayingB, setIsPlayingB] = useState<boolean>(false)
 
   // Auto-play loop — advance year every 1.6s
   useEffect(() => {
@@ -477,6 +505,15 @@ export default function Atlas() {
     return () => clearInterval(id)
   }, [isPlaying])
 
+  // Auto-play loop for compare mode's second canvas
+  useEffect(() => {
+    if (!isPlayingB || !compareMode) return
+    const id = setInterval(() => {
+      setYearIndexB((y) => (y >= YEAR_SNAPSHOTS.length - 1 ? 0 : y + 1))
+    }, 1600)
+    return () => clearInterval(id)
+  }, [isPlayingB, compareMode])
+
   // Live ARIA stats — used to show current T1 count in the toolbar
   const { data: ariaStats } = useQuery({
     queryKey: ['atlas', 'aria-stats'],
@@ -485,9 +522,27 @@ export default function Atlas() {
     retry: 0,
   })
 
+  // Apply the risk floor by suppressing levels below the threshold and
+  // proportionally redistributing the remaining percentages to sum to 100.
+  // Counts stay as-is (informational); pcts are renormalized so the
+  // constellation re-densifies around the focused band.
+  const applyRiskFloor = (rs: ConstellationRiskRow[]): ConstellationRiskRow[] => {
+    if (riskFloor === 'all') return rs
+    const ORDER: ConstellationRiskRow['level'][] = ['critical', 'high', 'medium', 'low']
+    const floorIdx = ORDER.indexOf(riskFloor as ConstellationRiskRow['level'])
+    const allowed = new Set(ORDER.slice(0, floorIdx + 1))
+    const filtered = rs.filter((r) => allowed.has(r.level))
+    const totalPct = filtered.reduce((s, r) => s + r.pct, 0) || 1
+    return filtered.map((r) => ({
+      level: r.level,
+      count: r.count,
+      pct: (r.pct / totalPct) * 100,
+    }))
+  }
+
   // Current year's snapshot → constellation data
   const snapshot = YEAR_SNAPSHOTS[yearIndex]
-  const rows = useMemo(() => snapshotToRows(snapshot), [snapshot])
+  const rows = useMemo(() => applyRiskFloor(snapshotToRows(snapshot)), [snapshot, riskFloor])
 
   // Atlas-density category meta (32 entries) — only used in categories mode
   const atlasMeta: ClusterMeta[] | undefined = useMemo(() => {
@@ -561,7 +616,7 @@ export default function Atlas() {
         >
           {lang === 'en' ? <>El Atlas. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Atlas. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
         </h1>
-        <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
+        <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch] text-pretty">
           {lang === 'en'
             ? <>Each dot is a slice of Mexican federal procurement. Toggle the <strong className="text-text-primary">lens</strong> to re-organize them around patterns, sectors, categories, or presidential terms. Drag the <strong className="text-text-primary">year scrubber</strong> below — or hit autoplay — to watch the universe evolve through 18 years of contracts. Click any cluster to open its investigation surface.</>
             : <>Cada punto es una porción de la contratación federal mexicana. Cambia la <strong className="text-text-primary">lente</strong> para reorganizar el campo por patrones, sectores, categorías o sexenios. Arrastra el <strong className="text-text-primary">selector de año</strong> debajo — o pulsa reproducir — para ver el universo evolucionar a través de 18 años de contratos. Haz clic en cualquier cúmulo para abrir su superficie de investigación.</>
@@ -606,15 +661,103 @@ export default function Atlas() {
           })}
         </div>
 
-        {/* Live T1 count */}
-        <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
-          <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
-          <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 320)}</span>
-          <span className="opacity-70">{lang === 'en' ? 'T1 leads · live' : 'T1 · en vivo'}</span>
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Pinned cluster badge */}
+          {pinnedCode && (
+            <button
+              onClick={() => setPinnedCode(null)}
+              className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm transition-opacity hover:opacity-80"
+              style={{ background: 'rgba(160,104,32,0.18)', color: '#a06820' }}
+              title={lang === 'en' ? 'Click to unpin' : 'Clic para despinear'}
+            >
+              <Pin className="h-3 w-3" />
+              <span className="font-bold uppercase tracking-[0.1em]">{lang === 'en' ? 'Pinned' : 'Pineado'}</span>
+              <span className="opacity-90">{pinnedCode.slice(0, 14)}</span>
+            </button>
+          )}
+
+          {/* Compare-mode toggle */}
+          <button
+            onClick={() => setCompareMode(!compareMode)}
+            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
+            style={{
+              background: compareMode ? '#a06820' : 'transparent',
+              color: compareMode ? 'var(--color-background)' : 'var(--color-text-muted)',
+              border: '1px solid var(--color-border)',
+            }}
+            aria-pressed={compareMode}
+          >
+            <Layers className="h-3 w-3" />
+            {lang === 'en' ? 'Compare years' : 'Comparar años'}
+          </button>
+
+          {/* Live T1 count */}
+          <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
+            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
+            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 320)}</span>
+            <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Constellation canvas ──────────────────────────────────────── */}
+      {/* ── Risk-floor filter row ─────────────────────────────────────── */}
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
+        <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+          {lang === 'en' ? 'X-RAY' : 'RAYOS X'}
+        </span>
+        <div
+          className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden"
+          role="group"
+          aria-label={lang === 'en' ? 'Risk floor filter' : 'Filtro mínimo de riesgo'}
+          style={{ border: '1px solid var(--color-border)' }}
+        >
+          {(
+            [
+              { id: 'all',      en: 'all',         es: 'todos',     color: 'var(--color-text-muted)' },
+              { id: 'medium',   en: 'medium+',     es: 'medio+',    color: '#a06820' },
+              { id: 'high',     en: 'high+',       es: 'alto+',     color: '#f59e0b' },
+              { id: 'critical', en: 'critical',    es: 'crítico',   color: '#dc2626' },
+            ] as Array<{ id: typeof riskFloor; en: string; es: string; color: string }>
+          ).map((f, i, arr) => {
+            const isActive = riskFloor === f.id
+            return (
+              <button
+                key={f.id}
+                onClick={() => setRiskFloor(f.id)}
+                className="px-2.5 py-1 transition-colors flex items-center gap-1.5"
+                style={{
+                  background: isActive ? f.color : 'transparent',
+                  color: isActive ? (f.id === 'all' ? 'var(--color-background)' : 'white') : 'var(--color-text-muted)',
+                  borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
+                  fontWeight: isActive ? 700 : 500,
+                }}
+                aria-pressed={isActive}
+              >
+                {!isActive && (
+                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} />
+                )}
+                {lang === 'en' ? f.en : f.es}
+              </button>
+            )
+          })}
+        </div>
+        {riskFloor !== 'all' && (
+          <span className="text-[9px] font-mono text-text-muted">
+            {lang === 'en'
+              ? 'showing only this band — dots redistribute to fill the field'
+              : 'mostrando solo esta banda — puntos se redistribuyen'}
+          </span>
+        )}
+      </div>
+
+      {/* ── Constellation canvas A (always shown) ──────────────────────── */}
+      {compareMode && (
+        <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
+          <span className="font-bold" style={{ color: '#a06820' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
+          <span>·</span>
+          <span>{snapshot.year}</span>
+        </div>
+      )}
       <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
         <ConcentrationConstellation
           key={constellationKey}
@@ -623,11 +766,12 @@ export default function Atlas() {
           mode={mode}
           metaOverride={atlasMeta}
           seedOverride={snapshot.year * 13 + (mode === 'patterns' ? 1 : mode === 'sectors' ? 2 : mode === 'categories' ? 3 : 4)}
+          pinnedCode={pinnedCode}
           onClusterClick={handleClusterClick}
         />
       </div>
 
-      {/* ── Year scrubber ────────────────────────────────────────────── */}
+      {/* ── Year scrubber A ─────────────────────────────────────────── */}
       <YearScrubber
         yearIndex={yearIndex}
         setYearIndex={setYearIndex}
@@ -635,6 +779,42 @@ export default function Atlas() {
         setIsPlaying={setIsPlaying}
         lang={lang}
       />
+
+      {/* ── COMPARE MODE: second canvas + scrubber ─────────────────── */}
+      {compareMode && (() => {
+        const snapshotB = YEAR_SNAPSHOTS[yearIndexB]
+        const rowsB = applyRiskFloor(snapshotToRows(snapshotB))
+        const totalContractsB = snapshotB.totalContracts
+        const constellationKeyB = `B-${mode}-${snapshotB.year}`
+        return (
+          <>
+            <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
+              <span className="font-bold" style={{ color: '#dc2626' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
+              <span>·</span>
+              <span>{snapshotB.year}</span>
+            </div>
+            <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
+              <ConcentrationConstellation
+                key={constellationKeyB}
+                rows={rowsB}
+                totalContracts={totalContractsB}
+                mode={mode}
+                metaOverride={atlasMeta}
+                seedOverride={snapshotB.year * 13 + 999 + (mode === 'patterns' ? 1 : mode === 'sectors' ? 2 : mode === 'categories' ? 3 : 4)}
+                pinnedCode={pinnedCode}
+                onClusterClick={handleClusterClick}
+              />
+            </div>
+            <YearScrubber
+              yearIndex={yearIndexB}
+              setYearIndex={setYearIndexB}
+              isPlaying={isPlayingB}
+              setIsPlaying={setIsPlayingB}
+              lang={lang}
+            />
+          </>
+        )
+      })()}
 
       {/* ── Editorial footer / methodology footnote ──────────────────── */}
       <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
@@ -648,6 +828,11 @@ export default function Atlas() {
       <ClusterDetailPanel
         meta={selectedMeta}
         mode={mode}
+        pinnedCode={pinnedCode}
+        onTogglePin={() => {
+          if (!selectedMeta) return
+          setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))
+        }}
         onClose={() => setSelectedClusterCode(null)}
         lang={lang}
       />
