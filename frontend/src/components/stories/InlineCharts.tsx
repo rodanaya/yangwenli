@@ -19,7 +19,13 @@
  * the anchor.
  */
 
-import type { StoryInlineChartData, StoryChartPoint } from '@/lib/story-content'
+import type {
+  StoryInlineChartData,
+  StoryChartPoint,
+  StoryMultiSeriesData,
+  StoryNetworkData,
+  StoryStackedBarData,
+} from '@/lib/story-content'
 
 // ---------------------------------------------------------------------------
 // Sector-only palette. Replaces the prior random-hex grab-bag.
@@ -1082,6 +1088,495 @@ export function InlineDivergingBar({
           )
         })}
       </svg>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 7. InlineMultiLine — multiple time series on one axis. The "relay race"
+// chart for the Invisible Monopoly (Apr 2026): four pharma vendors each
+// peak at a different moment, hand off the spend over 23 years.
+// ---------------------------------------------------------------------------
+
+export function InlineMultiLine({
+  data,
+  title,
+}: {
+  data: StoryMultiSeriesData
+  title: string
+}) {
+  const { xLabels, series, unit, yLabel, annotation } = data
+  // Compute global y-max
+  const allValues = series.flatMap((s) => s.values)
+  const yMax = Math.max(...allValues, 1)
+
+  const W = 720
+  const H = 280
+  const PAD = { top: 24, right: 24, bottom: 60, left: 50 }
+  const plotW = W - PAD.left - PAD.right
+  const plotH = H - PAD.top - PAD.bottom
+
+  const plotX = (i: number) =>
+    PAD.left + (xLabels.length > 1 ? (i / (xLabels.length - 1)) * plotW : plotW / 2)
+  const plotY = (v: number) =>
+    PAD.top + plotH - (v / yMax) * plotH
+
+  const showLabels = xLabels.length > 12 ? 3 : 1 // skip-every for tick labels
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow={`MULTI-SERIES · ${series.length} VENDORS`}
+      annotation={annotation}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Y-axis ticks (3 lines) */}
+        {[0, 0.5, 1].map((t, i) => {
+          const v = yMax * t
+          const y = plotY(v)
+          return (
+            <g key={i}>
+              <line
+                x1={PAD.left}
+                y1={y}
+                x2={W - PAD.right}
+                y2={y}
+                stroke="var(--color-border)"
+                strokeWidth={0.5}
+                strokeDasharray={t === 0 ? 'none' : '2 4'}
+              />
+              <text
+                x={PAD.left - 6}
+                y={y + 3}
+                textAnchor="end"
+                fontSize={10}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-muted)"
+              >
+                {v.toFixed(v >= 10 ? 0 : 1)}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Each series — line + dots */}
+        {series.map((s, sIdx) => {
+          const linePts = s.values
+            .map((v, i) => `${plotX(i)},${plotY(v)}`)
+            .join(' ')
+          return (
+            <g key={sIdx}>
+              <polyline
+                points={linePts}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                opacity={0.92}
+              />
+              {/* End-of-line label so the eye can attach color → name without
+                  scanning the legend */}
+              {(() => {
+                const lastIdx = s.values.length - 1
+                const lastV = s.values[lastIdx]
+                if (lastV <= 0) return null
+                return (
+                  <text
+                    x={plotX(lastIdx) + 4}
+                    y={plotY(lastV) + 3}
+                    fontSize={10}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill={s.color}
+                    fontWeight={700}
+                  >
+                    {s.name}
+                  </text>
+                )
+              })()}
+              {/* Dots — small for context, larger at annotation point */}
+              {s.values.map((v, i) => {
+                const isAnno = s.annotation?.xIndex === i
+                return (
+                  <circle
+                    key={i}
+                    cx={plotX(i)}
+                    cy={plotY(v)}
+                    r={isAnno ? 4.5 : 2}
+                    fill={s.color}
+                    stroke={isAnno ? 'var(--color-background)' : 'none'}
+                    strokeWidth={isAnno ? 2 : 0}
+                  />
+                )
+              })}
+              {/* Per-series annotation callout */}
+              {s.annotation && (
+                <text
+                  x={plotX(s.annotation.xIndex)}
+                  y={plotY(s.values[s.annotation.xIndex]) - 10}
+                  textAnchor="middle"
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill={s.color}
+                  fontWeight={700}
+                >
+                  {s.annotation.text}
+                </text>
+              )}
+            </g>
+          )
+        })}
+
+        {/* X-axis labels (rotated when crowded) */}
+        {xLabels.map((lbl, i) => {
+          if (i % showLabels !== 0 && i !== xLabels.length - 1) return null
+          return (
+            <text
+              key={i}
+              x={plotX(i)}
+              y={H - 28}
+              textAnchor="middle"
+              fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="var(--color-text-muted)"
+            >
+              {lbl}
+            </text>
+          )
+        })}
+
+        {yLabel && (
+          <text
+            x={6}
+            y={PAD.top + plotH / 2}
+            textAnchor="middle"
+            fontSize={10}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+            transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
+          >
+            {yLabel}{unit ? ` (${unit})` : ''}
+          </text>
+        )}
+      </svg>
+
+      {/* Legend with totals — color swatch + name + total caption */}
+      <div className="flex flex-wrap gap-x-6 gap-y-2 px-2 pt-2 pb-1">
+        {series.map((s, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span
+              className="inline-block rounded-sm"
+              style={{ width: 14, height: 3, backgroundColor: s.color }}
+            />
+            <span
+              className="font-mono"
+              style={{
+                fontSize: 11,
+                color: 'var(--color-text-secondary)',
+                fontWeight: 600,
+              }}
+            >
+              {s.name}
+            </span>
+            {s.totalCaption && (
+              <span
+                className="font-mono tabular-nums"
+                style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
+              >
+                {s.totalCaption}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 8. InlineNetwork — node-link diagram with edge thickness scaled by weight.
+// Built for the cobidding-cartel lattice in Invisible Monopoly: 4 vendors
+// arranged on a diamond, edges sized by shared-procedure count.
+// ---------------------------------------------------------------------------
+
+export function InlineNetwork({
+  data,
+  title,
+}: {
+  data: StoryNetworkData
+  title: string
+}) {
+  const { nodes, edges, anchor, annotation } = data
+  const W = 560
+  const H = 340
+  const cx = W / 2
+  const cy = H / 2
+
+  // Position nodes around a circle. With 4 nodes you get a diamond,
+  // with 6 a hexagon — a clean default that works without force layout.
+  const radius = Math.min(W, H) * 0.34
+  const positions = nodes.map((n, i) => {
+    const angle = (i / nodes.length) * 2 * Math.PI - Math.PI / 2
+    return {
+      id: n.id,
+      x: cx + Math.cos(angle) * radius,
+      y: cy + Math.sin(angle) * radius,
+      node: n,
+    }
+  })
+  const posById = new Map(positions.map((p) => [p.id, p]))
+
+  // Edge weight scaling
+  const maxW = Math.max(...edges.map((e) => e.weight), 1)
+  const edgeStroke = (w: number) => 1 + (w / maxW) * 7 // 1px..8px
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow={`NETWORK · ${nodes.length} NODES · ${edges.length} TIES`}
+      anchor={anchor}
+      annotation={annotation}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Edges first so nodes stack on top */}
+        {edges.map((e, i) => {
+          const a = posById.get(e.from)
+          const b = posById.get(e.to)
+          if (!a || !b) return null
+          const mx = (a.x + b.x) / 2
+          const my = (a.y + b.y) / 2
+          return (
+            <g key={i}>
+              <line
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                stroke={ANCHOR_COLOR}
+                strokeWidth={edgeStroke(e.weight)}
+                strokeLinecap="round"
+                opacity={0.45}
+              />
+              {e.label && (
+                <g>
+                  <rect
+                    x={mx - 24}
+                    y={my - 9}
+                    width={48}
+                    height={16}
+                    rx={2}
+                    fill="var(--color-background-card)"
+                    stroke="var(--color-border)"
+                    strokeWidth={0.5}
+                  />
+                  <text
+                    x={mx}
+                    y={my + 3}
+                    textAnchor="middle"
+                    fontSize={10}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill="var(--color-text-secondary)"
+                    fontWeight={700}
+                  >
+                    {e.label}
+                  </text>
+                </g>
+              )}
+            </g>
+          )
+        })}
+
+        {/* Nodes */}
+        {positions.map((p, i) => {
+          const r = p.node.highlight ? 36 : 30
+          return (
+            <g key={i}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={r + 3}
+                fill="var(--color-background)"
+                stroke="none"
+              />
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={r}
+                fill={p.node.color}
+                opacity={0.92}
+              />
+              <text
+                x={p.x}
+                y={p.y - 2}
+                textAnchor="middle"
+                fontSize={11}
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight={800}
+                fill="var(--color-background)"
+              >
+                {p.node.label}
+              </text>
+              {p.node.sublabel && (
+                <text
+                  x={p.x}
+                  y={p.y + 11}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontWeight={400}
+                  fill="var(--color-background)"
+                  opacity={0.85}
+                >
+                  {p.node.sublabel}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 9. InlineStackedBar — horizontal rows split into "highlight" + remainder.
+// Built for the IMSS-dependency chapter: each vendor's bar is dominated
+// by its IMSS portion in a single accent color, the rest muted.
+// ---------------------------------------------------------------------------
+
+export function InlineStackedBar({
+  data,
+  title,
+}: {
+  data: StoryStackedBarData
+  title: string
+}) {
+  const { rows, unit, anchor, annotation, highlightColor, baseColor } = data
+  const hi = highlightColor ?? HIGHLIGHT_COLOR
+  const base = baseColor ?? 'var(--color-text-muted)'
+
+  const ROW_H = 26
+  const ROW_GAP = 14
+  const LABEL_W = 132
+  const VALUE_W = 110
+  const BAR_AREA = 380
+  const W = LABEL_W + BAR_AREA + VALUE_W + 12
+  const H = rows.length * (ROW_H + ROW_GAP) + 4
+
+  const maxTotal = Math.max(...rows.map((r) => r.total), 1)
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow={`SHARE · ${rows.length} ROWS`}
+      anchor={anchor}
+      annotation={annotation}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMinYMin meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {rows.map((r, i) => {
+          const y = i * (ROW_H + ROW_GAP) + 2
+          const totalW = (r.total / maxTotal) * BAR_AREA
+          const hiW = (r.highlight / Math.max(r.total, 0.001)) * totalW
+
+          return (
+            <g key={i}>
+              {/* Row label */}
+              <text
+                x={LABEL_W - 8}
+                y={y + ROW_H / 2 + 1}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize={11.5}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-secondary)"
+                fontWeight={700}
+              >
+                {r.label}
+              </text>
+
+              {/* Base bar (full total) */}
+              <rect
+                x={LABEL_W}
+                y={y}
+                width={totalW}
+                height={ROW_H}
+                fill={base}
+                opacity={0.22}
+                rx={1}
+              />
+              {/* Highlight portion */}
+              <rect
+                x={LABEL_W}
+                y={y}
+                width={hiW}
+                height={ROW_H}
+                fill={r.color ?? hi}
+                opacity={0.92}
+                rx={1}
+              />
+              {/* Bar-end value (always shown, after the bar) */}
+              <text
+                x={LABEL_W + totalW + 8}
+                y={y + ROW_H / 2 + 1}
+                textAnchor="start"
+                dominantBaseline="middle"
+                fontSize={11}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-primary)"
+                fontWeight={700}
+              >
+                {r.total.toLocaleString(undefined, {
+                  minimumFractionDigits: r.total < 10 ? 1 : 0,
+                  maximumFractionDigits: r.total < 10 ? 1 : 0,
+                })}
+                {unit ? ` ${unit}` : ''}
+              </text>
+              {/* Annotation (e.g. "60.1% IMSS") below the value */}
+              {r.annotation && (
+                <text
+                  x={LABEL_W + totalW + 8}
+                  y={y + ROW_H / 2 + 14}
+                  textAnchor="start"
+                  dominantBaseline="middle"
+                  fontSize={9.5}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill={r.color ?? hi}
+                >
+                  {r.annotation}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Compact legend explaining the two segments */}
+      <div className="flex items-center gap-5 px-2 pt-3 pb-1 font-mono"
+        style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-2 rounded-sm" style={{ background: hi, opacity: 0.92 }} />
+          <span>concentrated portion</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-2 rounded-sm" style={{ background: base, opacity: 0.22 }} />
+          <span>remainder</span>
+        </div>
+      </div>
     </ChartCard>
   )
 }
