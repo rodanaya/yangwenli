@@ -1280,13 +1280,25 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
           className="mb-8"
         >
+          {/*
+            Lead-stat color comes from story-content.ts as a hex string
+            (e.g. "#dc2626"). The previous version applied it via cn() as if
+            it were a Tailwind class — `cn('...', '#dc2626')` produces the
+            literal class name "#dc2626", which the runtime ignores, so the
+            number inherited link blue or accent amber from a parent. Apply
+            it as an inline style instead. Match the dashboard tile rhythm:
+            Playfair Italic 800 instead of plain bold serif.
+          */}
           <div
-            className={cn('font-bold tabular-nums', story.leadStat.color)}
+            className="tabular-nums"
             style={{
-              fontFamily: 'var(--font-family-serif)',
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 800,
               fontSize: 'clamp(2rem, 4vw, 3rem)',
               letterSpacing: '-0.02em',
               lineHeight: 1.1,
+              color: story.leadStat.color,
             }}
           >
             {parsed ? (

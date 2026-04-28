@@ -542,8 +542,26 @@ export default function DataPullquote({
 
   return (
     <ScrollReveal className={cn('my-12', className)}>
+      {/* Container queries scope adaptations to the figure's *own* width
+          (not the viewport). FeatureChapter places this in a 5-of-12
+          sidebar grid where rendered width drops to ~380px on desktop;
+          DataSpotlight gives it 656px; closing chapters give 848px. The
+          rules below let one component look right at all three.
+
+          Browser support: 95%+ Baseline 2023 — safe for prod. */}
+      <style>{`
+        .dpq-fig { container-type: inline-size; container-name: dpq; }
+        @container dpq (max-width: 480px) {
+          .dpq-pad     { padding-left: 16px; padding-right: 16px; }
+          .dpq-pad-top { padding-top: 12px; padding-bottom: 8px; }
+          .dpq-pad-bot { padding-bottom: 16px; }
+          .dpq-chrome  { flex-direction: column; align-items: flex-start; gap: 4px; }
+          .dpq-stat    { font-size: 2rem !important; }
+          .dpq-quote   { font-size: 0.92rem !important; line-height: 1.5; }
+        }
+      `}</style>
       <figure
-        className="relative bg-background-card overflow-hidden"
+        className="dpq-fig relative bg-background-card overflow-hidden"
         style={{
           borderLeft: `3px solid ${accent}`,
           borderTop: '1px solid var(--color-border)',
@@ -556,7 +574,7 @@ export default function DataPullquote({
       >
         {/* ─── Top chrome: dateline + section label ─── */}
         <div
-          className="flex items-center justify-between px-5 pt-4 pb-3 font-mono uppercase"
+          className="dpq-chrome dpq-pad dpq-pad-top flex items-center justify-between px-5 pt-4 pb-3 font-mono uppercase"
           style={{
             fontSize: 9,
             letterSpacing: '0.18em',
@@ -567,7 +585,7 @@ export default function DataPullquote({
           <span aria-hidden>{dateline}</span>
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="dpq-pad dpq-pad-bot px-5 pb-5">
           {/* ─── Outlet badge ─── */}
           {outlet && (
             <div className="mb-3">
@@ -577,7 +595,7 @@ export default function DataPullquote({
 
           {/* ─── Quote (demoted: smaller, secondary) ─── */}
           <blockquote
-            className="text-text-secondary mb-2"
+            className="dpq-quote text-text-secondary mb-2"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: 'italic',
@@ -606,7 +624,7 @@ export default function DataPullquote({
           <div className="flex items-baseline gap-3 mb-1">
             <span
               ref={countRef}
-              className="tabular-nums"
+              className="dpq-stat tabular-nums"
               style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontStyle: 'italic',
