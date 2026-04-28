@@ -1632,7 +1632,7 @@ export default function Executive() {
               : 'POR RUBLI · DATOS: COMPRANET 2002–2025 · ACTUALIZADO ABR 2026 · MODELO v0.6.5'}
           </p>
 
-          <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
+          <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch] text-pretty">
             {lang === 'en'
               ? <>
                   Every administration since 2001 has bypassed competitive procurement at
@@ -1706,7 +1706,7 @@ export default function Executive() {
             </div>
           </div>
 
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Every dot below represents about 2,500 federal contracts. Critical-risk contracts cluster around their dominant pattern, sector, or presidential term — toggle the mode to re-organize the same population around a different lens. Click any cluster to investigate.'
               : 'Cada punto representa aproximadamente 2,500 contratos federales. Los contratos de riesgo crítico se agrupan en torno a su patrón, sector o sexenio dominante — alterna el modo para reorganizar la misma población bajo otra lente. Haz clic en cualquier cúmulo para investigar.'}
@@ -1733,7 +1733,7 @@ export default function Executive() {
           <div id="macro-arc-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-2">
             {lang === 'en' ? 'Five administrations · one structural failure' : 'Cinco administraciones · una falla estructural'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Direct award rate — share of contracts awarded without competitive bidding — has remained 2–3× the OECD ceiling under every Mexican administration since 2001. The AI model trained on this systemic pattern now detects its variants automatically.'
               : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
@@ -1783,7 +1783,7 @@ export default function Executive() {
           <div id="findings-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-5 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-5 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Four findings that only became visible at scale — impossible to see by auditing contracts one by one.'
               : 'Cuatro hallazgos que solo se volvieron visibles a escala — imposibles de detectar auditando contrato por contrato.'}
@@ -2309,7 +2309,7 @@ export default function Executive() {
           <div id="pesos-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Risk scores count contracts. This counts pesos. For each ARIA pattern we estimate the financial exposure using pattern-specific overpayment models — direct overcharges (P5), full ghost-network volume (P2), capture premiums, monopoly discounts lost. Estimates are illustrative; methodology in the footnote.'
               : 'Los puntajes cuentan contratos. Esto cuenta pesos. Para cada patrón ARIA estimamos la exposición financiera usando modelos específicos de sobrepago — sobrecargos directos (P5), volumen completo de redes fantasma (P2), premios de captura, descuentos monopólicos perdidos. Las estimaciones son ilustrativas; metodología en la nota.'}
@@ -2324,7 +2324,7 @@ export default function Executive() {
           <div id="leadtime-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
               : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
@@ -2340,7 +2340,7 @@ export default function Executive() {
           <div id="mapa-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Across Mexico — state-level risk concentration' : 'A través de México — concentración de riesgo por estado'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Federal procurement quality varies sharply by state. CDMX concentrates the highest-risk vendor population (federal headquarters effect); Tabasco, Veracruz, and Guerrero show the highest per-vendor risk scores. Stylized geographic layout — number = avg risk × 100.'
               : 'La calidad de la contratación federal varía drásticamente por estado. CDMX concentra la mayor población de proveedores de alto riesgo (efecto sede federal); Tabasco, Veracruz y Guerrero muestran los puntajes de riesgo per cápita más altos. Disposición geográfica estilizada — número = riesgo promedio × 100.'}
@@ -2364,7 +2364,7 @@ export default function Executive() {
               <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Every peso in COMPRANET classified into one of 91 spending categories — automatically, at 99.7% coverage. The top 8 account for the majority of federal spend. Risk scores vary sharply by category, revealing where irregularities concentrate.'
               : 'Cada peso en COMPRANET clasificado en una de 91 categorías de gasto — automáticamente, con 99.7% de cobertura. Las 8 principales concentran la mayoría del gasto federal. Los puntajes de riesgo varían considerablemente por categoría, revelando dónde se concentran las irregularidades.'}
@@ -2379,7 +2379,7 @@ export default function Executive() {
           <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 320' : '§ 2 · La Lente — de 3.1M a 320'}
           </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Each ring is a layer of focus. The platform reads every COMPRANET row, then narrows by risk, then by ARIA pattern, then by ground-truth match — until what remains is a small set of contracts that can actually be investigated by hand.'
               : 'Cada anillo es una capa de enfoque. La plataforma lee cada registro de COMPRANET, luego filtra por riesgo, después por patrón ARIA, y finalmente por coincidencia con casos documentados — hasta que solo queda un conjunto pequeño que puede investigarse a mano.'}
@@ -2537,7 +2537,7 @@ export default function Executive() {
             <Clock className="h-3 w-3" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
           </div>
-          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
             {lang === 'en'
               ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
               : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
@@ -2595,7 +2595,7 @@ export default function Executive() {
                 <ArrowUpRight className="h-3 w-3" />
               </button>
             </div>
-            <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch] text-pretty">
               {lang === 'en'
                 ? 'Five contracts most recently flagged at critical risk by the live model. Each is an investigation signal — not a verdict.'
                 : 'Los cinco contratos marcados más recientemente en riesgo crítico por el modelo. Cada uno es una señal de investigación — no un veredicto.'}
