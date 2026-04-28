@@ -75,6 +75,8 @@ export interface StoryChapterDef {
       | 'inline-stacked-bar'
     highlight?: string
     title: string
+    /** Optional Spanish translation of `title`. */
+    title_es?: string
     chartId?: string
     data?: StoryInlineChartData
     multiSeries?: StoryMultiSeriesData
@@ -85,21 +87,29 @@ export interface StoryChapterDef {
 
 export interface StoryChartPoint {
   label: string
+  /** Optional Spanish translation of `label`. */
+  label_es?: string
   value: number
   value2?: number
   color?: string
   highlight?: boolean
   annotation?: string
+  /** Optional Spanish translation of `annotation`. */
+  annotation_es?: string
 }
 
 export interface StoryInlineChartData {
   points: StoryChartPoint[]
-  referenceLine?: { value: number; label: string; color?: string }
-  referenceLine2?: { value: number; label: string; color?: string }
+  referenceLine?: { value: number; label: string; label_es?: string; color?: string }
+  referenceLine2?: { value: number; label: string; label_es?: string; color?: string }
   unit?: string
   maxValue?: number
   yLabel?: string
+  /** Optional Spanish translation of `yLabel`. */
+  yLabel_es?: string
   annotation?: string
+  /** Optional Spanish translation of `annotation`. */
+  annotation_es?: string
 }
 
 /**
@@ -113,16 +123,22 @@ export interface StoryMultiSeriesData {
   /** One entry per series. `values` must be the same length as xLabels. */
   series: Array<{
     name: string
+    /** Optional Spanish translation of `name`. */
+    name_es?: string
     color: string
     values: number[]
     /** Optional callout: marker + text on a specific x index. */
-    annotation?: { xIndex: number; text: string }
+    annotation?: { xIndex: number; text: string; text_es?: string }
     /** Optional total caption beside the legend ("88.0B over 23 years"). */
     totalCaption?: string
+    /** Optional Spanish translation of `totalCaption`. */
+    totalCaption_es?: string
   }>
   unit?: string
   yLabel?: string
+  yLabel_es?: string
   annotation?: string
+  annotation_es?: string
 }
 
 /**
@@ -136,6 +152,7 @@ export interface StoryNetworkData {
     label: string
     /** Sub-label rendered as caption (e.g. amount, contract count). */
     sublabel?: string
+    sublabel_es?: string
     color: string
     /** Optional emphasis — bigger node radius. */
     highlight?: boolean
@@ -149,8 +166,9 @@ export interface StoryNetworkData {
     label?: string
   }>
   /** Top-of-card anchor stat. */
-  anchor?: { value: string; label: string }
+  anchor?: { value: string; label: string; label_es?: string }
   annotation?: string
+  annotation_es?: string
 }
 
 /**
@@ -161,6 +179,7 @@ export interface StoryNetworkData {
 export interface StoryStackedBarData {
   rows: Array<{
     label: string
+    label_es?: string
     /** Total bar value. */
     total: number
     /** Sub-segment that gets the highlight color (e.g. IMSS portion). */
@@ -169,11 +188,13 @@ export interface StoryStackedBarData {
     color?: string
     /** Sub-text shown right of the bar (e.g. "60.1% IMSS"). */
     annotation?: string
+    annotation_es?: string
   }>
   unit?: string
   /** Top-of-card anchor stat. */
-  anchor?: { value: string; label: string }
+  anchor?: { value: string; label: string; label_es?: string }
   annotation?: string
+  annotation_es?: string
   /** Color used for the highlighted (e.g. IMSS) portion of every row. */
   highlightColor?: string
   /** Color used for the remaining portion. */
@@ -2164,6 +2185,89 @@ export function pickLang<T extends string | string[]>(
   return en
 }
 
+/**
+ * Localize a chartConfig for the given language. Walks every translatable
+ * text field (title, axis labels, annotations, point labels, multi-series
+ * names, network anchors, stacked-bar rows) and swaps in the `_es` value
+ * when present and lang is es. Falls back to English otherwise.
+ *
+ * This is what makes Spanish-mode story pages render charts in Spanish
+ * — without it, chart titles and captions stay English even when the
+ * surrounding prose translates correctly. (Bug discovered and fixed
+ * April 2026.)
+ */
+function localizeChartConfig(
+  cfg: StoryChapterDef['chartConfig'],
+  lang: 'en' | 'es',
+): StoryChapterDef['chartConfig'] {
+  if (!cfg) return cfg
+  const title = pickLang(cfg.title, cfg.title_es, lang) as string
+  return {
+    ...cfg,
+    title,
+    data: cfg.data
+      ? {
+          ...cfg.data,
+          yLabel: pickLang(cfg.data.yLabel, cfg.data.yLabel_es, lang),
+          annotation: pickLang(cfg.data.annotation, cfg.data.annotation_es, lang),
+          referenceLine: cfg.data.referenceLine
+            ? { ...cfg.data.referenceLine, label: pickLang(cfg.data.referenceLine.label, cfg.data.referenceLine.label_es, lang) as string }
+            : cfg.data.referenceLine,
+          referenceLine2: cfg.data.referenceLine2
+            ? { ...cfg.data.referenceLine2, label: pickLang(cfg.data.referenceLine2.label, cfg.data.referenceLine2.label_es, lang) as string }
+            : cfg.data.referenceLine2,
+          points: cfg.data.points.map((p) => ({
+            ...p,
+            label: pickLang(p.label, p.label_es, lang) as string,
+            annotation: pickLang(p.annotation, p.annotation_es, lang),
+          })),
+        }
+      : cfg.data,
+    multiSeries: cfg.multiSeries
+      ? {
+          ...cfg.multiSeries,
+          yLabel: pickLang(cfg.multiSeries.yLabel, cfg.multiSeries.yLabel_es, lang),
+          annotation: pickLang(cfg.multiSeries.annotation, cfg.multiSeries.annotation_es, lang),
+          series: cfg.multiSeries.series.map((s) => ({
+            ...s,
+            name: pickLang(s.name, s.name_es, lang) as string,
+            totalCaption: pickLang(s.totalCaption, s.totalCaption_es, lang),
+            annotation: s.annotation
+              ? { ...s.annotation, text: pickLang(s.annotation.text, s.annotation.text_es, lang) as string }
+              : s.annotation,
+          })),
+        }
+      : cfg.multiSeries,
+    network: cfg.network
+      ? {
+          ...cfg.network,
+          annotation: pickLang(cfg.network.annotation, cfg.network.annotation_es, lang),
+          anchor: cfg.network.anchor
+            ? { ...cfg.network.anchor, label: pickLang(cfg.network.anchor.label, cfg.network.anchor.label_es, lang) as string }
+            : cfg.network.anchor,
+          nodes: cfg.network.nodes.map((n) => ({
+            ...n,
+            sublabel: pickLang(n.sublabel, n.sublabel_es, lang),
+          })),
+        }
+      : cfg.network,
+    stacked: cfg.stacked
+      ? {
+          ...cfg.stacked,
+          annotation: pickLang(cfg.stacked.annotation, cfg.stacked.annotation_es, lang),
+          anchor: cfg.stacked.anchor
+            ? { ...cfg.stacked.anchor, label: pickLang(cfg.stacked.anchor.label, cfg.stacked.anchor.label_es, lang) as string }
+            : cfg.stacked.anchor,
+          rows: cfg.stacked.rows.map((r) => ({
+            ...r,
+            label: pickLang(r.label, r.label_es, lang) as string,
+            annotation: pickLang(r.annotation, r.annotation_es, lang),
+          })),
+        }
+      : cfg.stacked,
+  }
+}
+
 /** Resolve a chapter's display fields per language, with EN fallback. */
 export function localizeChapter(
   chapter: StoryChapterDef,
@@ -2173,6 +2277,7 @@ export function localizeChapter(
   subtitle: string | undefined
   prose: string[]
   pullquote: StoryChapterDef['pullquote']
+  chartConfig: StoryChapterDef['chartConfig']
 } {
   return {
     title: pickLang(chapter.title, chapter.title_es, lang) as string,
@@ -2186,6 +2291,7 @@ export function localizeChapter(
           barLabel: pickLang(chapter.pullquote.barLabel, chapter.pullquote.barLabel_es, lang),
         }
       : undefined,
+    chartConfig: localizeChartConfig(chapter.chartConfig, lang),
   }
 }
 

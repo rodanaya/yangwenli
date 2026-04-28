@@ -1104,13 +1104,17 @@ function ChapterSection({
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const localized = localizeChapter(chapter, lang)
   // Wire the resolved fields back onto a chapter-shaped object so existing
-  // variant code keeps working without per-variant edits.
+  // variant code keeps working without per-variant edits. ChartConfig is
+  // now also localized — title, axis labels, point labels, annotations,
+  // multi-series names, network anchors, stacked-bar rows all respect
+  // the lang setting (April 2026 fix for the chart-translation bug).
   const localizedChapter: StoryChapterDef = {
     ...chapter,
     title: localized.title,
     subtitle: localized.subtitle,
     prose: localized.prose,
     pullquote: localized.pullquote,
+    chartConfig: localized.chartConfig,
   }
   switch (variant) {
     case 'hero':            return <HeroChapter            chapter={localizedChapter} story={story} accentColor={accentColor} />
