@@ -1112,7 +1112,9 @@ export function InlineMultiLine({
 
   const W = 720
   const H = 280
-  const PAD = { top: 24, right: 24, bottom: 60, left: 50 }
+  // Right padding leaves room for end-of-line vendor labels (rendered at
+  // plotX(lastIdx)+4) — without this they get truncated at the SVG edge.
+  const PAD = { top: 24, right: 88, bottom: 60, left: 50 }
   const plotW = W - PAD.left - PAD.right
   const plotH = H - PAD.top - PAD.bottom
 
@@ -1348,13 +1350,20 @@ export function InlineNetwork({
         className="w-full"
         aria-hidden="true"
       >
-        {/* Edges first so nodes stack on top */}
+        {/* Edges first so nodes stack on top.
+            Place each label at 35% of the way from one endpoint to the
+            other (alternating per edge index) instead of the dead center.
+            This prevents label collision on diametrically-opposite edges
+            (e.g. on a 4-node diamond, Grupo F.↔PISA and Maypo↔DIMM both
+            cross at the center; if we used midpoints the second label
+            would render under the first). */}
         {edges.map((e, i) => {
           const a = posById.get(e.from)
           const b = posById.get(e.to)
           if (!a || !b) return null
-          const mx = (a.x + b.x) / 2
-          const my = (a.y + b.y) / 2
+          const t = i % 2 === 0 ? 0.35 : 0.62
+          const mx = a.x + (b.x - a.x) * t
+          const my = a.y + (b.y - a.y) * t
           return (
             <g key={i}>
               <line
