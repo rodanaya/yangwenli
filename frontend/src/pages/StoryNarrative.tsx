@@ -310,6 +310,201 @@ function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = 
   )
 }
 
+// ── Editorial artwork — abstract procurement-themed SVG.
+//   Used as a hero accent. Pure CSS, no external image. Style: stamps,
+//   document grid, contract redaction marks, cluster pattern. Looks like
+//   the kind of decorative element NYT/FT use behind hero headlines. ────
+
+function HeroArtwork({ accentColor, variant = 'cluster' }: { accentColor: string; variant?: 'cluster' | 'grid' | 'stamp' }) {
+  if (variant === 'cluster') {
+    // Constellation-style cluster suggesting the Atlas
+    return (
+      <svg
+        viewBox="0 0 560 200"
+        className="w-full h-full"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <defs>
+          <radialGradient id="cluster-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={accentColor} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={accentColor} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        {/* Background dot grid */}
+        {Array.from({ length: 14 * 5 }).map((_, i) => {
+          const cols = 14
+          const col = i % cols
+          const row = Math.floor(i / cols)
+          const cx = 30 + col * 38
+          const cy = 28 + row * 36
+          return (
+            <circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={1.4}
+              fill={accentColor}
+              opacity={0.18}
+            />
+          )
+        })}
+        {/* Cluster glow */}
+        <circle cx={280} cy={100} r={75} fill="url(#cluster-glow)" />
+        {/* Critical cluster — hand-positioned bright dots with edges */}
+        {[
+          [260, 92], [275, 85], [285, 100], [295, 88], [302, 102], [288, 115], [270, 110],
+        ].map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={2.6} fill={accentColor} opacity={0.85} />
+        ))}
+        {/* Connecting hairlines */}
+        {[
+          [260, 92, 275, 85], [275, 85, 285, 100], [285, 100, 295, 88], [285, 100, 288, 115],
+          [288, 115, 270, 110], [295, 88, 302, 102], [302, 102, 288, 115],
+        ].map(([x1, y1, x2, y2], i) => (
+          <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accentColor} strokeWidth={0.6} opacity={0.45} />
+        ))}
+        {/* A few outlier specks scattered */}
+        {[[80, 50], [120, 150], [450, 60], [490, 145], [410, 140], [70, 130], [50, 80]].map(([x, y], i) => (
+          <circle key={`o-${i}`} cx={x} cy={y} r={1.8} fill={accentColor} opacity={0.5} />
+        ))}
+      </svg>
+    )
+  }
+  if (variant === 'grid') {
+    // Document grid suggesting contract pages
+    return (
+      <svg viewBox="0 0 560 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {Array.from({ length: 6 }).map((_, row) =>
+          Array.from({ length: 12 }).map((_, col) => (
+            <rect
+              key={`${row}-${col}`}
+              x={20 + col * 44}
+              y={16 + row * 30}
+              width={36}
+              height={22}
+              fill={accentColor}
+              opacity={0.05 + Math.random() * 0.18}
+              rx={1}
+            />
+          ))
+        )}
+      </svg>
+    )
+  }
+  // 'stamp' — official rubber-stamp circle marks
+  return (
+    <svg viewBox="0 0 560 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {[[140, 100, 56], [350, 70, 42], [430, 130, 48]].map(([cx, cy, r], i) => (
+        <g key={i} opacity={0.18}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={accentColor} strokeWidth={2.2} />
+          <circle cx={cx} cy={cy} r={r as number - 8} fill="none" stroke={accentColor} strokeWidth={1} strokeDasharray="3 4" />
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+// ── KeyFactsStrip — inline mini-infographic, 3 facts in a row.
+//   A visual breakout that summarizes the chapter's key numbers. Designed
+//   to appear MID-CHAPTER as a moment of revelation (vs the existing
+//   pullquote which is more text+stat). ─────────────────────────────────
+
+export function KeyFactsStrip({ accentColor, facts }: {
+  accentColor: string
+  facts: Array<{ value: string; label: string; sublabel?: string }>
+}) {
+  return (
+    <ScrollReveal className="my-10">
+      <div
+        className="rounded-lg overflow-hidden"
+        style={{
+          border: `1px solid var(--color-border)`,
+          background: `linear-gradient(135deg, ${accentColor}06, transparent 70%)`,
+        }}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border">
+          {facts.map((f, i) => (
+            <div key={i} className="px-5 py-5 sm:py-6">
+              <div
+                className="font-extrabold tabular-nums leading-[0.95] tracking-[-0.02em] mb-1"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  color: accentColor,
+                  fontSize: 'clamp(28px, 4vw, 36px)',
+                }}
+              >
+                {f.value}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mb-0.5">
+                {f.label}
+              </div>
+              {f.sublabel && (
+                <div className="text-[11px] text-text-secondary leading-[1.45]">
+                  {f.sublabel}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </ScrollReveal>
+  )
+}
+
+// ── AtlasLink — CTA that opens /atlas with prefilled state matching the
+//   story chapter. Lets readers jump from a story chapter to the live
+//   constellation showing the same pattern/year/cluster. ───────────────
+
+function AtlasLink({
+  accentColor,
+  lens,
+  year,
+  pin,
+  caption,
+  lang,
+}: {
+  accentColor: string
+  lens?: 'patterns' | 'sectors' | 'categories' | 'sexenios'
+  year?: number
+  pin?: string
+  caption: { en: string; es: string }
+  lang: 'en' | 'es'
+}) {
+  const params = new URLSearchParams()
+  if (lens) params.set('lens', lens)
+  if (year) params.set('year', String(year))
+  if (pin) params.set('pin', pin)
+  const href = `/atlas${params.toString() ? '?' + params.toString() : ''}`
+  return (
+    <ScrollReveal className="my-8">
+      <Link
+        to={href}
+        className="block rounded-lg p-5 transition-opacity hover:opacity-90"
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}10, ${accentColor}03 60%)`,
+          border: `1px solid ${accentColor}40`,
+        }}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div
+              className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
+              style={{ color: accentColor }}
+            >
+              ◆ {lang === 'en' ? 'OPEN IN EL ATLAS' : 'ABRIR EN EL ATLAS'}
+            </div>
+            <p className="text-[13px] text-text-primary leading-[1.55]">
+              {caption[lang]}
+            </p>
+          </div>
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} />
+        </div>
+      </Link>
+    </ScrollReveal>
+  )
+}
+
 // ── Decorative chapter divider (sits between chapters) ────────────────────
 
 function ChapterDivider({ accentColor }: { accentColor: string }) {
@@ -344,11 +539,16 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
     >
       {/* Editorial backdrop — soft accent gradient */}
       <div
-        className="absolute inset-x-0 top-0 h-[420px] -z-10 pointer-events-none rounded-lg"
+        className="absolute inset-x-0 top-0 h-[460px] -z-10 pointer-events-none rounded-lg overflow-hidden"
         style={{
-          background: `linear-gradient(180deg, ${accentColor}10 0%, transparent 100%)`,
+          background: `linear-gradient(180deg, ${accentColor}12 0%, transparent 100%)`,
         }}
-      />
+      >
+        {/* Decorative procurement-themed SVG artwork — sits faintly behind the title */}
+        <div className="absolute inset-0 opacity-60">
+          <HeroArtwork accentColor={accentColor} variant="cluster" />
+        </div>
+      </div>
 
       <ScrollReveal>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-10 relative">
@@ -499,7 +699,8 @@ function FeatureChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 // ── Variant: DATA-SPOTLIGHT (chart-driven chapter) ────────────────────────
 
 function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -557,6 +758,19 @@ function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProp
           </ScrollReveal>
         </div>
       )}
+
+      {/* Connect to live Atlas — readers can manipulate the data themselves */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0">
+        <AtlasLink
+          accentColor={accentColor}
+          lens="patterns"
+          lang={lang}
+          caption={{
+            en: 'Explore this chart\'s data live in El Atlas — toggle lenses, scrub years.',
+            es: 'Explora los datos de este gráfico en vivo en El Atlas — alterna lentes, desplaza años.',
+          }}
+        />
+      </div>
     </section>
   )
 }
@@ -708,7 +922,8 @@ function ConnectiveChapter({ chapter, story, accentColor }: ChapterRenderProps) 
 // ── Variant: CLOSING (final chapter) ──────────────────────────────────────
 
 function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -776,6 +991,20 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           {renderChartBlock(chapter, '')}
         </div>
       )}
+
+      {/* Closing CTA — link to live Atlas. The story has named patterns / years
+          / clusters; the Atlas is where readers can manipulate them live. */}
+      <div className="max-w-prose mx-auto px-4 sm:px-0">
+        <AtlasLink
+          accentColor={accentColor}
+          lens="patterns"
+          lang={lang}
+          caption={{
+            en: 'Open this story\'s patterns live in the Atlas — scrub years, pin clusters, run your own investigation.',
+            es: 'Abre los patrones de esta historia en vivo en El Atlas — desplaza años, fija cúmulos, lleva tu propia investigación.',
+          }}
+        />
+      </div>
     </section>
   )
 }
