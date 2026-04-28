@@ -1016,6 +1016,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'The Invisible Hand That Never Competed',
+        title_es: 'La mano invisible que nunca compitió',
         prose: [
           'A competitive procurement procedure is, by legal design, an open invitation: any qualified vendor may submit a bid. The theory holds that competition drives down prices, elevates quality, and reveals the true market value of what the government is buying. The theory requires multiple bidders.',
           'RUBLI\'s analysis of 23 years of Mexican federal procurement data shows that the theory has been failing continuously since at least 2010. Between 2010 and 2024, the annual single-bid rate — competitive procedures that received exactly one submission — ranged between 46 and 65 percent. In 2011 it peaked at 64.4 percent. In 2014 it reached 65.6 percent. In 2016, 62.5 percent. In 2023, the most recent complete year, it stood at 49.4 percent.',
@@ -1024,10 +1025,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Fourteen years. Every year above 45 percent. In a system where "competitive" means a single bidder showed up, the word has lost its meaning.',
+          quote_es: 'Catorce años. Cada año por encima del 45 por ciento. En un sistema donde "competitivo" significa que se presentó un solo oferente, la palabra ha perdido su sentido.',
           stat: '64.4%',
           statLabel: 'peak single-bid rate (2011)',
+          statLabel_es: 'pico de tasa de oferta única (2011)',
           barValue: 0.644,
           barLabel: 'OECD warning threshold: 15%',
+          barLabel_es: 'umbral de advertencia OCDE: 15%',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1040,7 +1044,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'The Shape of the Failure',
+        title_es: 'La forma de la falla',
         subtitle: 'Single-bid rates across every year, compared to the international threshold',
+        subtitle_es: 'Tasas de oferta única año por año, comparadas con el umbral internacional',
         prose: [
           'A plot of single-bid rates across 2002-2024 reveals the structural nature of the failure. The rate starts around 27-37 percent in the early 2000s — already above OECD\'s warning threshold, though the underlying data for that period is less reliable. In 2010-2011 the rate jumps sharply to 51-64 percent, coinciding with the introduction of electronic bidding via CompraNet. The jump is counterintuitive: digitization should have expanded access and lowered the single-bid rate. Instead it codified the pattern.',
           'From 2011 through 2018, the rate remains stubbornly in the 58-66 percent range across four different presidential administrations. In 2019, coinciding with the AMLO administration\'s initial reforms and the centralization of pharmaceutical procurement, the single-bid rate drops to 46.5 percent. But the drop does not represent a return to real competition — it reflects the movement of contracts out of competitive procedures entirely, into direct adjudication, where the single-bid question does not arise because no bidding is conducted.',
@@ -1080,8 +1086,10 @@ export const STORIES: StoryDef[] = [
         },
         pullquote: {
           quote: 'Electronic bidding in 2010 should have lowered the single-bid rate. It raised it. The digital transition codified the pattern rather than breaking it.',
+          quote_es: 'La licitación electrónica en 2010 debió bajar la tasa de oferta única. La subió. La transición digital codificó el patrón en vez de romperlo.',
           stat: '2010',
           statLabel: 'year CompraNet became mandatory',
+          statLabel_es: 'año en que CompraNet se volvió obligatorio',
         },
         sources: [
           'DOF. (2012). Reformas a la Ley de Adquisiciones para la obligatoriedad de CompraNet.',
@@ -1091,51 +1099,122 @@ export const STORIES: StoryDef[] = [
       {
         id: 'ch3',
         number: 3,
-        title: 'Cover Bidding and Market Allocation',
+        title: 'The Voucher Cluster',
+        title_es: 'El cluster de vales',
+        subtitle: 'Who actually wins the "competitive" tenders that have only one bidder',
+        subtitle_es: 'Quién realmente gana las licitaciones "competitivas" con un solo oferente',
         prose: [
-          'A single-bid competitive procedure can have innocent explanations. Specialized industrial equipment may have only one qualified supplier in Mexico. Emergency procurement may have time constraints that realistically exclude new bidders. Some municipal contracts are too small to attract national vendors. Each of these is a legitimate pathway to a single-bid outcome.',
-          'But when the rate is structural — persistent at 45-65 percent across decades, sectors, and administrations — the innocent explanations stop scaling. The pattern at that scale is consistent not with incidental lack of competition, but with two specific forms of coordination identified in international fraud research.',
-          'The first is cover bidding: a predetermined winner coordinates with potential competitors, who submit bids deliberately set too high to win, creating the procedural appearance of competition while ensuring a predetermined outcome. The practice is legally prohibited under Mexican competition law and under OECD anti-cartel principles, but it requires proof of coordination that is difficult to obtain without financial records or informant testimony. RUBLI\'s co-bidding analysis — the pattern of which vendors appear together in the same procedures — identifies 3,985 vendors in the P5 pattern who systematically co-bid but rarely compete against each other.',
-          'The second mechanism is market allocation: vendors informally divide the procurement universe by region, by institution, by product category, simply not bidding against each other in their respective territories. Unlike cover bidding, market allocation does not require coordinated communication on individual tenders. It requires only a stable understanding of who claims which market segment. The stability of Mexico\'s single-bid rate over 14 years is consistent with exactly this kind of long-term market partitioning.',
+          'Naming the winners makes the abstract pattern concrete. RUBLI ranked every vendor in the federal database by the number of "competitive" procedures they have won as a single bidder. The top of the list is dominated by a coherent industry cluster: welfare-program voucher operators. EDENRED MEXICO, S.A. DE C.V. tops the list with 1,679 single-bid wins worth 23.78 billion pesos. TOKA INTERNACIONAL — already named in The Era of Risk as the dominant AMLO-era food-voucher vendor — sits at 1,290 wins and 36.99 billion pesos. EFECTIVALE collectively wins 2,210 procedures across two related corporate identities.',
+          'The voucher cluster operates a structural monopoly that the single-bid statistic exposes. Mexican federal procurement awards food, gas, and gift-card programs through a small set of operators (Edenred, TOKA, Efectivale, Sodexo) that have built incompatible payment networks. Once a federal program adopts one of these vendors, switching costs effectively exclude competitors from the next tender. The procurement procedure runs as competitive on paper; in practice the existing vendor is the only bidder who can make the transition work.',
+          'Beneath the voucher cluster, the single-bid winner list extends into specialized markets where the same dynamic operates with different mechanics. Industrial gas (PRAXAIR, INFRA — note INFRA is a structural false-positive: industrial gas to hospitals genuinely has limited suppliers). Telecommunications (TELÉFONOS DE MÉXICO at 459 wins). Postal logistics (Servicio Postal Mexicano, Estafeta). Specific medical supply categories (Productos Hospitalarios with 511 wins). Each is a market where customer-vendor relationships have hardened into structural single-source procurement.',
+          'The combined single-bid universe is sizable: 504,903 contracts and 5.4 trillion pesos across 23 years. That is more than three times the entire AMLO-era federal procurement spend, awarded under nominally competitive procedures that actually had no competition. The average risk score in this universe is 0.28 — well below the high-risk threshold, because the model recognizes that not every single-bid contract is fraudulent. But the size of the universe is the editorial point: this is not exception territory. This is the standard operating mode of Mexican federal procurement.',
         ],
+        chartConfig: {
+          type: 'inline-bar',
+          title: 'Top 12 Vendors by Single-Bid Wins (in "competitive" procedures)',
+          title_es: 'Top 12 proveedores por victorias en oferta única (en procedimientos "competitivos")',
+          chartId: 'sb-top-vendors',
+          data: {
+            points: [
+              { label: 'Edenred México',          value: 1679, color: '#dc2626', highlight: true, annotation: '23.8B · vouchers',          annotation_es: '23.8B · vales' },
+              { label: 'INFRA',                   value: 1423, color: '#a06820',                  annotation: '20.1B · gas (FP)',         annotation_es: '20.1B · gas (FP)' },
+              { label: 'TOKA Internacional',      value: 1290, color: '#dc2626', highlight: true, annotation: '37.0B · vouchers',          annotation_es: '37.0B · vales' },
+              { label: 'Efectivale (RL)',         value: 1155, color: '#dc2626', highlight: true, annotation: '6.1B · vouchers',           annotation_es: '6.1B · vales' },
+              { label: 'Efectivale (S.A.)',       value: 1055, color: '#dc2626', highlight: true, annotation: '13.5B · vouchers',          annotation_es: '13.5B · vales' },
+              { label: 'Seg. Alim. Mex (Segalmex)',value: 1014, color: '#dc2626', highlight: true, annotation: '5.3B · risk 0.94',          annotation_es: '5.3B · riesgo 0.94' },
+              { label: 'Liconsa',                 value: 998,  color: '#a06820',                  annotation: '0.7B · gov-owned',           annotation_es: '0.7B · paraestatal' },
+              { label: 'Sodexo',                  value: 658,  color: '#dc2626', highlight: true, annotation: '5.2B · vouchers',           annotation_es: '5.2B · vales' },
+              { label: 'PRAXAIR México',          value: 585,  color: '#a06820',                  annotation: '9.5B · gas',                 annotation_es: '9.5B · gas' },
+              { label: 'Servicio Postal',         value: 551,  color: '#a06820',                  annotation: '1.4B · gov-owned',           annotation_es: '1.4B · paraestatal' },
+              { label: 'Productos Hospitalarios', value: 511,  color: '#a06820',                  annotation: '8.0B · medical supply',      annotation_es: '8.0B · insumos médicos' },
+              { label: 'Estafeta Mexicana',       value: 475,  color: '#a06820',                  annotation: '0.8B · logistics',           annotation_es: '0.8B · logística' },
+            ],
+            unit: 'wins',
+            annotation: 'Each row counts "competitive" procedures the vendor won as the only bidder. Red rows = the welfare-voucher cluster (Edenred + TOKA + Efectivale + Sodexo + Segalmex), which collectively wins 6,851 single-bid procedures totaling 91.7B MXN.',
+            annotation_es: 'Cada fila cuenta procedimientos "competitivos" que el proveedor ganó como único oferente. Filas rojas = el cluster de vales del bienestar (Edenred + TOKA + Efectivale + Sodexo + Segalmex), que ganan colectivamente 6,851 procedimientos de oferta única por un total de 91.7 mil millones de pesos.',
+          },
+        },
         pullquote: {
-          quote: 'When half of all "competitive" procedures have one bidder, year after year, decade after decade, the word "competitive" has lost its meaning.',
-          stat: '3,985',
-          statLabel: 'vendors in P5 systematic co-bidding pattern',
+          quote: 'Six related vendors. 6,851 "competitive" procurement procedures won as the only bidder. 91.7 billion pesos. The welfare-voucher market is structurally non-competitive.',
+          quote_es: 'Seis proveedores relacionados. 6,851 procedimientos de contratación "competitivos" ganados como único oferente. 91.7 mil millones de pesos. El mercado de vales del bienestar es estructuralmente no competitivo.',
+          stat: '6,851',
+          statLabel: 'single-bid wins by the welfare-voucher cluster',
+          statLabel_es: 'victorias en oferta única del cluster de vales del bienestar',
+          barValue: 0.917,
+          barLabel: '91.7B MXN routed through the cluster across 23 years',
+          barLabel_es: '91.7 mil millones de pesos canalizados por el cluster en 23 años',
+          vizTemplate: 'mosaic-tile',
         },
         sources: [
-          'Conley, T., & Decarolis, F. (2016). Detecting Bidders Groups in Collusive Auctions. American Economic Journal: Microeconomics.',
-          'RUBLI co-bidding pattern analysis, aria_queue P5 pattern (3,985 vendors), April 2026.',
+          'RUBLI vendor ranking by SUM(is_single_bid=1 AND is_direct_award=0) GROUP BY vendor. April 2026.',
           'OECD. (2009). Guidelines for Fighting Bid Rigging in Public Procurement.',
+          'COFECE. (2022). Investigación sobre el mercado de monederos electrónicos para programas sociales.',
         ],
       },
       {
         id: 'ch4',
         number: 4,
-        title: 'What Reform Has Not Fixed',
+        title: 'The 89% Sector',
+        title_es: 'El sector del 89%',
+        subtitle: 'Civilian infrastructure has the highest single-bid rate in Mexican procurement',
+        subtitle_es: 'La infraestructura civil tiene la tasa más alta de oferta única en la contratación mexicana',
         prose: [
-          'Mexico has pursued multiple procurement reform waves across the 14 years of high single-bid rates, and RUBLI\'s data allows precise measurement of each wave\'s effect. The 2012 reform of the Ley de Adquisiciones introduced mandatory electronic bidding via CompraNet; the single-bid rate held at 60-65 percent in the years following. The 2019 pharmaceutical centralization under INSABI promised to aggregate purchasing power and attract broader competitive participation; the single-bid rate dropped to 46-49 percent not because more bidders appeared, but because procurement volume shifted into direct adjudication. The 2023 simplification reforms emphasized procedural speed; the single-bid rate held at 49 percent.',
-          'None of the three reforms moved the underlying structural condition. This is because none of them addressed the specific mechanisms — cover bidding and market allocation — that produce artificially high single-bid rates. Reforms to procedural rules do not prevent coordination. Reforms to electronic systems do not produce new bidders. Only enforcement action against coordinated bidders, combined with active market development to attract genuine competitors, can change the underlying numbers.',
-          'The 2022 OECD/COFECE Joint Assessment of Mexican Procurement explicitly recommended that COFECE open systematic investigations of high single-bid sectors. Four years later, COFECE\'s public enforcement docket in procurement does not reflect that recommendation: the competition authority continues to focus its limited investigative capacity on private-sector cartels in retail, banking, and telecommunications, not on public procurement cartels. This is a resource allocation decision, not a legal or technical impossibility.',
+          'Single-bid rates vary dramatically by sector. The headline national rate of 47-49 percent in recent years is an average across 12 sectors with very different competitive dynamics. The variation across sectors is the editorial story.',
+          'Civilian Infrastructure leads the ranking with a structurally astonishing rate: 89.2 percent of "competitive" infraestructura procedures are won by a single bidder. Out of 189,855 competitive infrastructure tenders in the dataset, 169,434 had only one bid. Public roads, water systems, drainage, urban infrastructure — these are not specialized industrial equipment with single suppliers. They are sectors with hundreds of qualified Mexican construction firms. The 89.2 percent rate is not market scarcity; it is market allocation.',
+          'Medio Ambiente follows at 82.3 percent, Trabajo at 74.9 percent, Otros at 70.7 percent, Hacienda at 59.0 percent (the voucher cluster pulling the rate up), Energía at 56.7 percent (Pemex/CFE specialty equipment with genuinely thin supplier markets). On the other end of the distribution, Salud sits at only 19.3 percent, Defensa at 22.8 percent, and Educación at 44.1 percent. The contrast is informative: in sectors where the procurement is concentrated in a small number of large institutional buyers (IMSS, SEDENA), single-bid rates are low because the buyers force competition through aggregated tenders. In sectors where the procurement is fragmented across many smaller institutional units (state-level infrastructure, rural water systems, federal districts), single-bid rates are dramatically higher because each unit operates on its own established vendor relationships.',
+          'Infrastructure at 89.2 percent is the most consequential of these findings. The COVID-era stimulus, the AMLO-era national projects, the post-Sheinbaum decentralized water and roads programs all flow through civilian infrastructure procurement. The 89.2 percent rate means that across more than a decade of stimulus and major projects, the vast majority of "competitively" awarded contracts had no competition at all.',
         ],
+        chartConfig: {
+          type: 'inline-bar',
+          title: 'Single-Bid Rate by Sector (in "competitive" procedures only)',
+          title_es: 'Tasa de oferta única por sector (solo en procedimientos "competitivos")',
+          chartId: 'sb-by-sector',
+          data: {
+            points: [
+              { label: 'Infraestructura', value: 89.2, color: '#dc2626', highlight: true, annotation: '169,434 of 189,855',  annotation_es: '169,434 de 189,855' },
+              { label: 'Medio Ambiente',  value: 82.3, color: '#dc2626', highlight: true, annotation: '52,559 of 63,885',    annotation_es: '52,559 de 63,885' },
+              { label: 'Trabajo',         value: 74.9, color: '#a06820', annotation: '11,818 of 15,784',      annotation_es: '11,818 de 15,784' },
+              { label: 'Otros',           value: 70.7, color: '#a06820', annotation: '3,570 of 5,052',         annotation_es: '3,570 de 5,052' },
+              { label: 'Hacienda',        value: 59.0, color: '#a06820', annotation: '20,454 of 34,659',      annotation_es: '20,454 de 34,659' },
+              { label: 'Energía',         value: 56.7, color: '#a06820', annotation: '76,028 of 134,052',     annotation_es: '76,028 de 134,052' },
+              { label: 'Tecnología',      value: 49.1, color: '#a06820', annotation: '3,700 of 7,535',         annotation_es: '3,700 de 7,535' },
+              { label: 'Gobernación',     value: 48.2, color: '#a06820', annotation: '30,390 of 63,014',      annotation_es: '30,390 de 63,014' },
+              { label: 'Agricultura',     value: 47.5, color: '#a06820', annotation: '15,429 of 32,449',      annotation_es: '15,429 de 32,449' },
+              { label: 'Educación',       value: 44.1, color: '#a06820', annotation: '38,143 of 86,456',      annotation_es: '38,143 de 86,456' },
+              { label: 'Defensa',         value: 22.8, color: '#1e3a5f', annotation: '7,511 of 32,923',        annotation_es: '7,511 de 32,923' },
+              { label: 'Salud',           value: 19.3, color: '#1e3a5f', annotation: '75,867 of 394,009',     annotation_es: '75,867 de 394,009' },
+            ],
+            referenceLine: { value: 15, label: 'OECD red flag >15%', label_es: 'Bandera roja OCDE >15%', color: '#3b82f6' },
+            unit: '%',
+            maxValue: 100,
+            yLabel: 'Single-bid share of competitive procedures',
+            yLabel_es: 'Tasa de oferta única en procedimientos competitivos',
+            annotation: 'Civilian infrastructure at 89.2 percent is six times the OECD red-flag threshold. Salud and Defensa stay low (~20%) because aggregated institutional buyers (IMSS, SEDENA) force competition through bigger tenders.',
+            annotation_es: 'La infraestructura civil al 89.2 por ciento es seis veces el umbral de bandera roja OCDE. Salud y Defensa se mantienen bajos (~20%) porque los compradores institucionales agregados (IMSS, SEDENA) fuerzan la competencia mediante licitaciones más grandes.',
+          },
+        },
         pullquote: {
-          quote: 'Three reforms in a decade. Three types of procedural change. Zero structural impact on the single-bid rate.',
-          stat: '14 years',
-          statLabel: 'consecutive years with single-bid rate above OECD ceiling',
-          barValue: 0.49,
-          barLabel: 'most recent (2023) single-bid rate',
-          vizTemplate: 'horizon',
+          quote: 'Civilian infrastructure runs at 89 percent single-bid. Out of every ten "competitive" tenders for roads, water, drainage, and urban works, nine arrive with only one bidder.',
+          quote_es: 'La infraestructura civil opera al 89 por ciento de oferta única. De cada diez licitaciones "competitivas" para carreteras, agua, drenaje y obra urbana, nueve llegan con un solo oferente.',
+          stat: '89.2%',
+          statLabel: 'Infraestructura sector single-bid rate',
+          statLabel_es: 'Tasa de oferta única en el sector Infraestructura',
+          barValue: 0.892,
+          barLabel: 'six times the OECD red-flag threshold (15%)',
+          barLabel_es: 'seis veces el umbral de bandera roja OCDE (15%)',
+          vizTemplate: 'breach-ceiling',
         },
         sources: [
-          'Transparencia Mexicana. (2023). Índice Nacional de Corrupción y Buen Gobierno.',
-          'DOF. (2012). Reformas a la Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público.',
+          'RUBLI sector × is_single_bid aggregation, contracts with is_direct_award=0. April 2026.',
           'OECD/COFECE. (2022). Joint Assessment of Mexican Public Procurement Competition.',
+          'IMCO. (2024). Concentración en la contratación de obra pública estatal y municipal.',
         ],
       },
       {
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
           'The institutional failure underlying Mexico\'s single-bid rate is subtler than straightforward corruption. Nobody in the procurement process is explicitly breaking the rules when only one bidder shows up. The procuring official ran the tender. The bidder submitted a bid. The award was made according to procedure. Each individual action is defensible. The corruption lies in the pattern across 800,000 procedures, not in any single transaction.',
           'This is why traditional accountability institutions struggle with the problem. ASF audits individual contracts; it does not produce systemic findings about aggregated bidding patterns. SFP investigates individual officials; it does not investigate industry-wide cartels. COFECE investigates anticompetitive conduct but limits its public procurement cases to clear-cut cartel documentation, not to behavioral pattern evidence. The thing that RUBLI\'s data shows — a system-level structural failure — has no institution of accountability.',
@@ -1144,8 +1223,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Nobody is individually breaking the rules. The corruption lies in the pattern across 800,000 procedures, not in any single transaction.',
+          quote_es: 'Nadie rompe individualmente las reglas. La corrupción reside en el patrón a lo largo de 800,000 procedimientos, no en una sola transacción.',
           stat: '800,000+',
           statLabel: 'single-bid competitive procedures 2010-2024',
+          statLabel_es: 'procedimientos competitivos de oferta única 2010-2024',
         },
         sources: [
           'IMCO. (2024). Índice de Riesgos de Corrupción en Compras Públicas.',
@@ -1185,6 +1266,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'The Mechanics of Capture',
+        title_es: 'La mecánica de la captura',
         prose: [
           'Institutional capture in procurement is distinct from simple corruption. It is not a one-time bribe — it is a relationship structure that embeds a vendor into an institution\'s procurement workflows so thoroughly that alternatives become invisible or impractical. Officials stop looking for competing vendors because the "reliable" vendor always delivers. The vendor\'s prices slowly rise because there is no pressure to compete. The relationship becomes self-reinforcing, and over years it becomes indistinguishable from policy.',
           'RUBLI\'s Pattern 6 (P6) algorithm identifies capture signatures by analyzing the concentration of a vendor\'s contracts at a single institution, the evolution of that concentration over time, and the degree to which that institution has ceased awarding to competitors in the relevant category. P6 is RUBLI\'s largest pattern: 15,923 vendors in the queue, representing the broadest category of structural procurement risk in the entire dataset.',
@@ -1192,8 +1274,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: '15,923 vendors in the capture pattern. 2,974 in the intermediary pattern. 526 billion pesos of federal spending running through these two structures alone.',
+          quote_es: '15,923 proveedores con patrón de captura. 2,974 con patrón de intermediario. 526 mil millones de pesos de gasto federal corriendo solo por estas dos estructuras.',
           stat: '526.8B MXN',
           statLabel: 'P3 intermediary contracts, eight sectors',
+          statLabel_es: 'contratos intermediarios P3, ocho sectores',
         },
         sources: [
           'RUBLI ARIA P6 and P3 pattern analysis, run ID 28d5c453, March 25 2026.',
@@ -1204,7 +1288,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'The Sectoral Map of Intermediation',
+        title_es: 'El mapa sectorial de la intermediación',
         subtitle: 'Where the intermediary chains run deepest',
+        subtitle_es: 'Dónde corren más profundas las cadenas de intermediarios',
         prose: [
           'The P3 intermediary pattern is not evenly distributed across Mexican procurement. It concentrates dramatically in the three sectors where contracts are largest, oversight is thinnest, and technical complexity provides cover: infrastructure, energy, and health.',
           'Infrastructure leads by a wide margin. 1,128 P3-classified vendors moved 179.5 billion pesos through intermediary structures in construction and public works between 2002 and 2025. Energy follows with 463 P3 vendors and 130.6 billion pesos, concentrated in the PEMEX and CFE ecosystems. Health is third with 476 vendors moving 104.2 billion pesos. Hacienda, education, agriculture, gobernación, and defense round out the top eight, each with tens of billions of pesos in P3-pattern contracting.',
@@ -1234,8 +1320,10 @@ export const STORIES: StoryDef[] = [
         },
         pullquote: {
           quote: 'Infrastructure alone moves 179 billion pesos through intermediary structures. The overhead cost — if OECD research applies — is 27 to 54 billion pesos.',
+          quote_es: 'Solo en infraestructura se mueven 179 mil millones de pesos por estructuras de intermediación. El sobrecosto — si aplica la investigación OCDE — es de 27 a 54 mil millones de pesos.',
           stat: '179.5B MXN',
           statLabel: 'P3 intermediary contracts in infraestructura',
+          statLabel_es: 'contratos intermediarios P3 en infraestructura',
         },
         sources: [
           'RUBLI P3 sector analysis, April 2026.',
@@ -1246,6 +1334,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch3',
         number: 3,
         title: 'How Capture Develops Over Time',
+        title_es: 'Cómo se desarrolla la captura con el tiempo',
         prose: [
           'P6 capture is typically not instantaneous. RUBLI\'s temporal analysis shows that vendors classified as P6 typically begin as legitimate competitive winners — they earn an initial contract, deliver adequately, and build a relationship with an institutional contact. The risk metrics worsen gradually: year one shows normal competitive behavior; by year three, direct-award frequency is rising; by year five, the vendor is receiving 70-90 percent of the relevant category via direct adjudication at the same institution.',
           'This graduation from legitimate to captured is precisely what makes P6 difficult to catch through traditional audit methods. Each individual contract decision may appear defensible: the vendor has a track record, the official can cite past performance, and the administrative burden of running a new competitive process is real. The corruption is not in any single contract — it is in the pattern across hundreds of contracts over years.',
@@ -1254,10 +1343,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Each individual contract appears defensible. The corruption is in the pattern across hundreds of contracts, across years, across entire institutions.',
+          quote_es: 'Cada contrato individual parece defendible. La corrupción está en el patrón a lo largo de cientos de contratos, a lo largo de años, a lo largo de instituciones enteras.',
           stat: '972B MXN',
           statLabel: 'P6 contracting at IMSS + CFE + PEMEX + SCT + CONAGUA',
+          statLabel_es: 'contratación P6 en IMSS + CFE + PEMEX + SCT + CONAGUA',
           barValue: 0.78,
           barLabel: 'share via direct adjudication',
+          barLabel_es: 'porción vía adjudicación directa',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1269,6 +1361,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch4',
         number: 4,
         title: 'The La Estafa Maestra Echo',
+        title_es: 'El eco de La Estafa Maestra',
         prose: [
           'The largest documented case of intermediary fraud in Mexican procurement history is La Estafa Maestra — a scheme in which federal agencies contracted with public universities, which then subcontracted to phantom companies, which effectively returned money to the original agencies\' officials. The Parliamentary investigation of 2017 and the MCCI/Animal Político journalistic investigation of the same year found 7.67 billion pesos moved through this structure between 2013 and 2014 alone.',
           'La Estafa Maestra was possible because Mexico\'s procurement law had a carve-out for contracts with public universities, treating them as exempt from competitive bidding requirements under the legal fiction that universities are trusted public institutions. The universities became intermediaries between the procurement law and the shadow market, and the intermediaries within that chain were phantom companies whose RFCs matched nothing in the Registro Federal de Contribuyentes.',
@@ -1277,8 +1370,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'La Estafa Maestra moved 7.67 billion pesos through an intermediary structure in two years. RUBLI\'s current P3 population is running 526 billion.',
+          quote_es: 'La Estafa Maestra movió 7.67 mil millones de pesos por una estructura de intermediación en dos años. La población P3 actual de RUBLI corre con 526 mil millones.',
           stat: '79-158B MXN',
           statLabel: 'estimated annual overhead cost of P3 intermediation',
+          statLabel_es: 'costo anual estimado de sobrecarga de la intermediación P3',
         },
         sources: [
           'ASF. (2017). Auditoría de Desempeño 2016-0-06100-07-0161. La Estafa Maestra.',
@@ -1290,6 +1385,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
           'Capture and intermediation are difficult to prosecute for a fundamental reason: both rely on legal procurement actions whose aggregate effect is harmful even when each individual action is defensible. Subcontracting is legal. Recurring vendor relationships are legal. Direct adjudication of specialized procurement is legal. A prosecutor cannot easily build a case against an individual contract; what the evidence demands is a case against a pattern, and Mexican procurement law does not provide the legal vehicle for pattern-based prosecution.',
           'The SFP has authority to audit procurement unit performance and can theoretically sanction officials whose patterns of award indicate favoritism. SFP\'s actual sanctions docket, however, focuses overwhelmingly on documented individual misconduct — bribery, conflict-of-interest failures, procedural violations. Pattern-based sanctions are rare and politically controversial because they require oversight bodies to second-guess cumulative professional judgment.',
@@ -1298,10 +1394,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Mexico has the statutes, the oversight bodies, and the analytical capacity. What is missing is the political decision to use them.',
+          quote_es: 'México tiene las leyes, los órganos de fiscalización y la capacidad analítica. Lo que falta es la decisión política de usarlos.',
           stat: '18,897',
           statLabel: 'total P3 + P6 vendors awaiting pattern-based investigation',
+          statLabel_es: 'total de proveedores P3 + P6 a la espera de investigación basada en patrones',
           barValue: 0.62,
           barLabel: 'share in direct-award contracts',
+          barLabel_es: 'porción en contratos por adjudicación directa',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1343,6 +1442,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'The Upward Slope That Never Reversed',
+        title_es: 'La pendiente que nunca se invirtió',
         prose: [
           'Every Mexican government since 2010 has promised procurement transparency. Every government has also used more direct awards than the previous one. RUBLI\'s data on direct award rates — contracts awarded without competitive bidding — documents this gap between rhetoric and reality with the clarity of a single ascending line.',
           'In 2010, the first year of reliable COMPRANET data (Structure B), 62.7 percent of all federal contracts were direct awards. By 2013 the rate had climbed to 68.4 percent. In 2015 it reached 73.0 percent under Peña Nieto. In 2019, AMLO\'s first year, it hit 77.8 percent. In 2021 it reached 80.0 percent. In 2023 it climbed to 82.2 percent — the highest rate in the 23 years RUBLI can analyze. In 2024 it remained at 79.3 percent.',
@@ -1351,10 +1451,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'In Mexico\'s federal procurement, competitive bidding is the exception. Direct awards are the rule, by a ratio of four to one.',
+          quote_es: 'En la contratación federal mexicana, la licitación competitiva es la excepción. La adjudicación directa es la regla, con razón de cuatro a uno.',
           stat: '82.2%',
           statLabel: 'direct award rate 2023',
+          statLabel_es: 'tasa de adjudicación directa 2023',
           barValue: 0.822,
           barLabel: 'OECD recommended maximum: ~25-30%',
+          barLabel_es: 'máximo recomendado OCDE: ~25-30%',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1366,7 +1469,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'Fourteen Years Above the Line',
+        title_es: 'Catorce años por encima de la línea',
         subtitle: 'Direct award rate 2010-2024, compared to the OECD recommended ceiling',
+        subtitle_es: 'Tasa de adjudicación directa 2010-2024, comparada con el techo recomendado OCDE',
         prose: [
           'Charted year by year, the direct award rate traces a structural diagnosis of Mexican procurement. The line starts in 2010 at 62.7 percent — already more than twice the OECD ceiling — and climbs almost every year for the next 13. There is no single administration\'s fault here, and no single policy reform caused the trajectory. The ratchet operates continuously across partisan transitions.',
           'The 2020 COVID pandemic did produce a local spike in emergency direct awards, which RUBLI captures in the 78.1 percent figure for that year. But the overall trend was already climbing before the pandemic and continued climbing after it. The pandemic was not the cause of Mexico\'s direct-award culture; it was an accelerant applied to a pre-existing structural condition.',
@@ -1403,8 +1508,10 @@ export const STORIES: StoryDef[] = [
         },
         pullquote: {
           quote: 'The OECD ceiling is 30 percent. Mexico\'s floor is 60 percent. The distance between them is where competitive procurement used to live.',
+          quote_es: 'El techo OCDE es del 30 por ciento. El piso mexicano es del 60. La distancia entre ambos es donde solía vivir la contratación competitiva.',
           stat: '14 years',
           statLabel: 'consecutive years above 60% direct-award rate',
+          statLabel_es: 'años consecutivos con tasa de adjudicación directa por encima del 60%',
         },
         sources: [
           'RUBLI year-over-year direct award analysis, 2018-2022, April 2026.',
@@ -1415,6 +1522,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch3',
         number: 3,
         title: 'Emergency as Habit',
+        title_es: 'La emergencia como hábito',
         prose: [
           'Direct award procedures exist for legitimate reasons. Mexico\'s Ley de Adquisiciones, Art. 41, enumerates them: genuine emergencies, single-source situations, continuity of services with existing contractors, small-value contracts below threshold, and specific enumerated exceptions including national security procurement and force majeure. Each of these exceptions was drafted to address a specific legitimate need that competitive bidding cannot accommodate.',
           'The problem RUBLI identifies is that "exception" has become "default." When 82 percent of contracts invoke one or another exception, the statute\'s architecture has been inverted. The exception clauses in Art. 41 are now the normal operating procedure, and open competitive bidding under Art. 26 is the exception.',
@@ -1423,10 +1531,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'The pandemic did not create Mexico\'s direct-award culture. It was an accelerant applied to a pre-existing structural condition.',
+          quote_es: 'La pandemia no creó la cultura de adjudicación directa en México. Fue un acelerante aplicado a una condición estructural preexistente.',
           stat: '78.1%',
           statLabel: 'direct award rate in 2020 (pandemic year)',
+          statLabel_es: 'tasa de adjudicación directa en 2020 (año pandémico)',
           barValue: 0.781,
           barLabel: 'was already 77.8% in 2019 pre-pandemic',
+          barLabel_es: 'ya era 77.8% en 2019 prepandemia',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1438,6 +1549,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch4',
         number: 4,
         title: 'What 82% Really Costs',
+        title_es: 'Lo que realmente cuesta el 82%',
         prose: [
           'OECD research across 40 countries has quantified the premium paid in non-competitive procurement. A 2019 meta-analysis found that eliminating competition in public procurement increases contract prices by 15 to 30 percent on average, with higher premiums in concentrated markets and for recurring vendors. The premium is larger still — 25 to 40 percent — for infrastructure and specialized technical procurement.',
           'Applied conservatively to Mexican federal procurement: in 2023, direct-award contracts totaled approximately 720 billion pesos in face value. At a 15 percent competitive distortion premium — the low end of the OECD range — the competitive distortion cost is approximately 108 billion pesos annually. That figure is equivalent to roughly 40 percent of the entire federal education budget for that year, or 60 percent of the health infrastructure budget.',
@@ -1446,8 +1558,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'A 15 percent competitive premium on 720 billion pesos in direct awards equals roughly 108 billion pesos annually — the cost of competition foregone.',
+          quote_es: 'Una prima competitiva del 15 por ciento sobre 720 mil millones de pesos en adjudicaciones directas equivale aproximadamente a 108 mil millones de pesos anuales — el costo de la competencia que no hubo.',
           stat: '~108B MXN',
           statLabel: 'estimated annual cost of non-competitive procurement premium',
+          statLabel_es: 'costo anual estimado de la prima por contratación no competitiva',
         },
         sources: [
           'Decarolis, F., & Giuffrida, L. (2019). Civil Servants and Cartels: The Revolving Door and Corruption in Procurement. American Economic Review.',
@@ -1458,6 +1572,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
           'The institutional architecture to oversee direct awards exists. Every direct award under Art. 41 requires a written justification stating the specific legal basis (emergency, sole source, continuity, et cetera), the vendor selected, and the rationale. Those justifications are theoretically public under transparency law. SFP is theoretically empowered to audit the pattern of justifications at each procurement unit. ASF is theoretically empowered to review individual high-value direct awards during Cuenta Pública audits.',
           'In practice, the justification documents are published inconsistently, the SFP pattern-audit function operates at a small fraction of its legal capacity, and ASF individual-contract reviews cover a tiny fraction of high-value direct awards. The oversight mechanism that Mexico built in law has not been built in practice. The rate of 82 percent is not the outcome of a system that tried to constrain direct awards and failed; it is the outcome of a system that accepted direct awards as normal and built no constraining architecture at all.',
@@ -1466,10 +1581,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Mexico built an oversight architecture in law and never built it in practice. The 82% direct-award rate is the visible shape of that absence.',
+          quote_es: 'México construyó una arquitectura de fiscalización en la ley y nunca la construyó en la práctica. La tasa de adjudicación directa del 82% es la forma visible de esa ausencia.',
           stat: '~720B MXN',
           statLabel: '2023 direct-award contracts by face value',
+          statLabel_es: 'contratos de adjudicación directa 2023 por valor nominal',
           barValue: 0.82,
           barLabel: 'share of federal procurement in 2023',
+          barLabel_es: 'porción de la contratación federal en 2023',
           vizTemplate: 'mosaic-tile',
         },
         sources: [
@@ -1753,6 +1871,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'The Shadow Supply Chain',
+        title_es: 'La cadena de suministro en la sombra',
         prose: [
           'In legitimate procurement, an intermediary can add value. A distributor with established supply chains may deliver goods more cheaply than direct manufacturer sourcing. A general contractor coordinating dozens of specialized trades on a construction project provides project management value that a government procurement unit cannot easily replicate internally. These are legitimate, necessary functions.',
           'The fraud variant occurs when intermediaries systematically win government contracts at inflated prices, subcontract at market prices, and pocket the spread. The key diagnostic: the intermediary adds no operational value beyond contracting, and the price paid by the government exceeds what the government would have paid if it had contracted directly with the actual delivery entity. The mechanism is subtle enough to evade individual-contract audit and persistent enough to operate at scale across decades.',
@@ -1761,10 +1880,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Infrastructure, energy, health. The three sectors where intermediary structures are largest are also the three with Mexico\'s most documented corruption history.',
+          quote_es: 'Infraestructura, energía, salud. Los tres sectores donde las estructuras de intermediación son más grandes son también los tres con la historia de corrupción mejor documentada de México.',
           stat: '414B MXN',
           statLabel: 'P3 contracts in infrastructure + energy + health',
+          statLabel_es: 'contratos P3 en infraestructura + energía + salud',
           barValue: 0.79,
           barLabel: 'share of all P3-pattern contracting',
+          barLabel_es: 'porción de toda la contratación con patrón P3',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1776,7 +1898,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'The Sectoral Distribution',
+        title_es: 'La distribución sectorial',
         subtitle: 'Where the intermediary pattern concentrates',
+        subtitle_es: 'Dónde se concentra el patrón de intermediario',
         prose: [
           'The P3 pattern is not evenly distributed across Mexican procurement. It follows contract value, technical complexity, and oversight thinness. These three factors combine to make infrastructure the dominant P3 sector and to concentrate intermediary structures in a small number of specific procurement categories.',
           'Infrastructure\'s 179.5 billion pesos of P3 contracting breaks down primarily into civil works (roads, water projects, urban infrastructure), construction services (demolition, earthworks, specialized trades), and project management intermediation. SCT / SICT and CONAGUA are the largest procuring entities, with regional infrastructure funds distributing significant additional contracting at state and municipal levels. Pemex\'s infrastructure needs — offshore platforms, refinery upgrades, pipeline construction — are also substantial sources of P3-pattern intermediation.',
@@ -1806,8 +1930,10 @@ export const STORIES: StoryDef[] = [
         },
         pullquote: {
           quote: '1,128 intermediary-pattern vendors in infrastructure alone. The pass-through industry is larger than Mexico\'s annual federal education budget.',
+          quote_es: '1,128 proveedores con patrón de intermediario solo en infraestructura. La industria del paso es más grande que el presupuesto federal anual de educación de México.',
           stat: '1,128',
           statLabel: 'P3 vendors in infraestructura',
+          statLabel_es: 'proveedores P3 en infraestructura',
         },
         sources: [
           'RUBLI P3 sector analysis, April 2026.',
@@ -1818,6 +1944,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch3',
         number: 3,
         title: 'The La Estafa Maestra Prototype',
+        title_es: 'El prototipo La Estafa Maestra',
         prose: [
           'The largest documented case of intermediary fraud in Mexican procurement history is La Estafa Maestra — a scheme in which federal agencies contracted with public universities, which then subcontracted to phantom companies, which effectively returned money to the original agencies\' officials. The Parliamentary investigation of 2017 and the MCCI/Animal Político journalistic investigation of the same year found 7.67 billion pesos moved through this structure between 2013 and 2014 alone.',
           'La Estafa Maestra was possible because Mexico\'s procurement law has a carve-out for university contracts, treating them as exempt from competitive bidding requirements under Art. 1, penultimate paragraph of the Ley de Adquisiciones. The universities became intermediaries between the procurement law and the shadow market. RUBLI\'s ground truth database includes this case; the vendors directly linked to it have risk scores averaging 0.55 to 0.65.',
@@ -1826,8 +1953,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'La Estafa Maestra moved 7.67 billion pesos in two years. RUBLI\'s current P3 population moves 526 billion pesos across 23 years.',
+          quote_es: 'La Estafa Maestra movió 7.67 mil millones de pesos en dos años. La población P3 actual de RUBLI mueve 526 mil millones de pesos a lo largo de 23 años.',
           stat: '7.67B MXN',
           statLabel: 'La Estafa Maestra — the documented prototype',
+          statLabel_es: 'La Estafa Maestra — el prototipo documentado',
         },
         sources: [
           'ASF. (2017). Auditoría de Desempeño 2016-0-06100-07-0161. La Estafa Maestra.',
@@ -1838,6 +1967,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch4',
         number: 4,
         title: 'Why This Is Hard to Prosecute',
+        title_es: 'Por qué es difícil de procesar',
         prose: [
           'Intermediary structures are difficult to prosecute for a fundamental reason: subcontracting is legal. A company that wins a government contract and subcontracts the work is not committing a crime unless the subcontracting is used to inflate prices, launder money, or circumvent competitive requirements. Proving which of those three occurred requires following the money through multiple corporate structures and bank accounts — forensic accounting work that Mexican enforcement agencies rarely complete at scale.',
           'Mexico\'s UIF (Unidad de Inteligencia Financiera) has jurisdiction over financial flows that may constitute money laundering. The UNCAC (UN Convention Against Corruption), which Mexico ratified in 2004, requires state parties to criminalize "abuse of functions" in procurement — a category broad enough to cover systematic overpriced intermediation. Both legal frameworks exist. Neither has been publicly applied to procurement intermediary structures at scale.',
@@ -1846,8 +1976,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Subcontracting is legal. Overpriced subcontracting that enriches a middleman at public expense is not. The line between them runs through bank records UIF has not subpoenaed.',
+          quote_es: 'Subcontratar es legal. Subcontratar con sobreprecio que enriquece a un intermediario a costa del erario no lo es. La línea entre ambos pasa por registros bancarios que la UIF no ha solicitado.',
           stat: '2,974',
           statLabel: 'P3 intermediary-pattern vendors in RUBLI queue',
+          statLabel_es: 'proveedores con patrón de intermediario P3 en la cola de RUBLI',
         },
         sources: [
           'UNODC. (2020). UN Convention Against Corruption: Implementation Guide. Article 19 (abuse of functions).',
@@ -1858,6 +1990,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
           'The enforcement deficit has a specific institutional shape. Three agencies hold authority over the intermediary structures RUBLI identifies, and none of the three has operationalized that authority at scale. UIF can trace financial flows but does not systematically monitor procurement payment chains. SFP can audit procurement unit behavior but focuses on individual officials rather than on vendor-level patterns. ASF can audit individual contracts but does not run aggregate investigations of sectoral intermediary density.',
           'The one institution that could take up the task directly is COFECE, which has explicit jurisdiction over anticompetitive practices in public procurement under the Ley Federal de Competencia Económica. COFECE investigations of public procurement cartels have been rare in the last decade, despite OECD\'s repeated recommendations that Mexico develop such a practice. COFECE\'s public docket emphasizes private-sector cartels in telecommunications, banking, and retail — not the intermediary structures in public works.',
@@ -1866,10 +1999,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Mexico\'s legal architecture targets one contract at a time. The intermediary industry RUBLI documents operates at pattern scale — 2,974 vendors, 526 billion pesos.',
+          quote_es: 'La arquitectura legal mexicana ataca un contrato a la vez. La industria del intermediario que RUBLI documenta opera a escala de patrón — 2,974 proveedores, 526 mil millones de pesos.',
           stat: '0',
           statLabel: 'major COFECE procurement cartel cases, last 5 years',
+          statLabel_es: 'casos COFECE de cártel de contratación, últimos 5 años',
           barValue: 0.00,
           barLabel: 'despite OECD recommendations',
+          barLabel_es: 'a pesar de las recomendaciones OCDE',
           vizTemplate: 'zero-bar',
         },
         sources: [
@@ -1910,6 +2046,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'The Math of Suspicious Clustering',
+        title_es: 'La matemática del agrupamiento sospechoso',
         prose: [
           'In a hypothetical random pricing universe, contract values would distribute smoothly across all possible amounts. A vendor delivering 300,000 pesos worth of goods would be no more likely to invoice exactly 300,000 than exactly 297,000 or 303,000. The probability mass would spread across the continuous range, with small peaks only at values where underlying real-world pricing genuinely clusters — UMA multiples, round numbers used in catalog pricing, specific regulatory fee structures.',
           'Mexican federal procurement does not follow a random pricing universe. RUBLI\'s distribution analysis of contract amounts between 200,000 and 400,000 pesos reveals sharp statistical spikes at specific values that cannot be explained by legitimate pricing mechanics. The largest anomaly sits at 210,000 pesos, where 28,264 contracts cluster — 76 percent above the baseline count of contracts at 200,000 pesos just below it. Similar spikes appear at 250,000 (24,966 contracts) and 300,000 (22,064 contracts).',
@@ -1917,10 +2054,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: '28,264 contracts at exactly 210,000 pesos. The baseline immediately below is 16,075. This is not a pricing pattern. It is a procedural escape.',
+          quote_es: '28,264 contratos exactamente en 210,000 pesos. La línea base inmediatamente debajo es 16,075. No es un patrón de precio. Es un escape procedimental.',
           stat: '28,264',
           statLabel: 'contracts at exactly 210K MXN',
+          statLabel_es: 'contratos exactamente en 210 mil pesos',
           barValue: 0.76,
           barLabel: 'excess above baseline',
+          barLabel_es: 'exceso sobre la línea base',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -1932,7 +2072,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'The Shape of Manipulation',
+        title_es: 'La forma de la manipulación',
         subtitle: 'Contract volume from 200K to 400K pesos, in 10K buckets',
+        subtitle_es: 'Volumen de contratos de 200K a 400K pesos, en cubos de 10K',
         prose: [
           'A histogram of contract counts in 10,000-peso buckets from 200,000 to 400,000 pesos makes the anomaly unmistakable. The baseline trend descends smoothly from around 16,000 contracts at 200K down to roughly 12,000 at 400K — what you would expect in a distribution where larger contracts are somewhat rarer than smaller ones. Against that baseline, three buckets spike dramatically upward.',
           'The 210K bucket shows 28,264 contracts — a 76 percent increase over the baseline at 200K. The 250K bucket shows 24,966 contracts, a substantial spike above the nearby 240K (23,331) and 260K (24,841) values. The 300K bucket shows 22,064 contracts, noticeably elevated above 290K (18,925) and 310K (16,024). Between these three primary spikes, a secondary plateau extends through 220K-260K at elevated levels, suggesting additional threshold effects at values close to the primary triggers.',
@@ -1989,6 +2131,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch3',
         number: 3,
         title: 'Splitting as System',
+        title_es: 'La división como sistema',
         prose: [
           'Threshold splitting — fragmenting a larger procurement need into multiple contracts each below the competitive threshold — is one of the oldest procurement fraud techniques. Mexico\'s procurement law explicitly prohibits it in Art. 17 of the Ley de Adquisiciones, which states that the procurement of the same good or service shall not be fragmented to evade the procedures required by the statute. The prohibition exists. RUBLI\'s data shows it is widely ignored.',
           'The spike at exactly 300,000 pesos is just the most visible single-point cluster. RUBLI\'s z-score analysis of "same-day count" — the number of contracts awarded to the same vendor on the same day by the same institution — identifies thousands of cases where procurement was split into multiple same-day awards, each below threshold, to what appear to be structured package purchases. In extreme cases, the same procurement unit awards 10 to 20 contracts on the same day to the same vendor, each exactly at or just below threshold, for what is clearly a single underlying procurement need.',
@@ -1997,8 +2140,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Article 17 explicitly prohibits splitting contracts to avoid competitive thresholds. Tens of thousands of contracts at exactly threshold values suggest the prohibition is widely ignored.',
+          quote_es: 'El Artículo 17 prohíbe expresamente fragmentar contratos para evadir umbrales competitivos. Decenas de miles de contratos exactamente en valores umbral sugieren que la prohibición es ampliamente ignorada.',
           stat: 'Art. 17 LAASSP',
           statLabel: 'prohibits threshold splitting',
+          statLabel_es: 'prohíbe la fragmentación por umbral',
         },
         sources: [
           'World Bank. (2019). Procurement Fraud Indicators: Threshold Manipulation in Public Contracting.',
@@ -2009,6 +2154,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch4',
         number: 4,
         title: 'The Detection and the Fix',
+        title_es: 'La detección y el remedio',
         prose: [
           'Threshold manipulation is among the easiest procurement fraud patterns to detect algorithmically. It requires counting contracts at specific values and comparing to baseline expected distributions — a statistical operation that runs in seconds on the full COMPRANET dataset. It is also, paradoxically, among the hardest to prosecute: each individual contract is for a legitimate purchase, each is documented, each can be justified on its individual merits. The fraud is in the aggregate decision to fragment, not in any single transaction.',
           'RUBLI\'s same-day analysis and threshold-clustering detection provide a ready-made list of cases for investigation. The algorithm can identify institutions with systematic threshold avoidance — the same procurement unit awarding 20 contracts of exactly 300,000 pesos in one week — and vendors that appear exclusively in threshold-adjacent contracts. These are the investigative targets where prosecution is most likely to succeed, because the aggregate pattern provides evidence that individual contracts alone would not.',
@@ -2017,10 +2163,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'CompraNet already has the data to flag threshold manipulation automatically. The question is why it has never been required to do so.',
+          quote_es: 'CompraNet ya tiene los datos para marcar la manipulación de umbrales automáticamente. La pregunta es por qué nunca se le ha exigido hacerlo.',
           stat: '75%',
           statLabel: 'of threshold-cluster contracts are direct awards — no competition, no public tender',
+          statLabel_es: 'de los contratos en cluster de umbral son adjudicación directa — sin competencia, sin licitación pública',
           barValue: 0.75,
           barLabel: 'OECD ceiling for non-competitive procedures: 30%',
+          barLabel_es: 'techo OCDE para procedimientos no competitivos: 30%',
           vizTemplate: 'breach-ceiling',
         },
         sources: [
@@ -2032,6 +2181,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch5',
         number: 5,
         title: 'The Accountability Gap',
+        title_es: 'El vacío de fiscalización',
         prose: [
           'The accountability failure at the 300K threshold has a specific institutional geography. Small-value contracts below threshold fall outside the default federal audit scope; ASF focuses its limited capacity on larger contracts. SFP\'s pattern audits, when they occur, tend to examine high-profile procurement units rather than the diffuse population of municipal offices and decentralized agencies where threshold splitting concentrates. The contracts structured at 210K or 300K operate in a zone that the oversight architecture was designed not to scrutinize.',
           'This is the institutional opposite of the accountability gap at the high end. There, 5-billion-peso contracts escape audit because they are politically dangerous to investigate. Here, 210,000-peso contracts escape audit because they are individually too small to be worth the resource cost of investigation. At opposite ends of the contract-value spectrum, different failure modes produce the same result: procurement proceeds without meaningful oversight.',
@@ -2040,10 +2190,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'At both ends of the value spectrum, oversight fails. Large contracts are politically dangerous to investigate. Small contracts are individually too small to justify the cost.',
+          quote_es: 'En ambos extremos del espectro de valor, la fiscalización falla. Los contratos grandes son políticamente peligrosos de investigar. Los pequeños son individualmente demasiado chicos para justificar el costo.',
           stat: '~40K',
           statLabel: 'excess contracts structured at threshold values',
+          statLabel_es: 'contratos en exceso estructurados en valores umbral',
           barValue: 0.75,
           barLabel: 'share awarded by direct adjudication',
+          barLabel_es: 'porción adjudicada por adjudicación directa',
         },
         sources: [
           'Transparencia Mexicana. (2024). Diagnóstico de la Corrupción en Compras Municipales y Estatales.',
@@ -2083,6 +2236,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch1',
         number: 1,
         title: 'What the Model Learned',
+        title_es: 'Lo que aprendió el modelo',
         prose: [
           'RUBLI\'s v0.6.5 risk model was calibrated against 748 documented corruption cases — contracts from IMSS ghost company networks, Segalmex food distribution fraud, COVID emergency procurement irregularities, La Estafa Maestra university subcontracting, and a dozen other verified scandals spanning multiple administrations. The model\'s training task was specific: learn which procurement characteristics predict similarity to these known-bad cases.',
           'The calibration process used ElasticNet logistic regression with Optuna Bayesian hyperparameter optimization across 150 trials. The search explored 16 candidate features: single-bid status, direct-award mechanism, network membership, institution diversity, ad period length, year-end timing, industry mismatch, institution risk, same-day contract count, vendor concentration, win rate, price ratio, co-bidding rate, price hypothesis confidence, sector spread, and price volatility. The model was free to weight these features however the data supported.',
@@ -2091,8 +2245,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Of 16 risk features, price volatility emerged as the strongest predictor — a coefficient 43 percent higher than the next-strongest feature.',
+          quote_es: 'De 16 variables de riesgo, la volatilidad de precios emergió como el predictor más fuerte — un coeficiente 43 por ciento mayor que la siguiente variable más fuerte.',
           stat: '+0.5343',
           statLabel: 'price_volatility coefficient in v0.6.5 model',
+          statLabel_es: 'coeficiente de volatilidad de precios en el modelo v0.6.5',
         },
         sources: [
           'RUBLI v0.6.5 model calibration results. Run ID CAL-v6.1-202603251039. AUC test: 0.828.',
@@ -2103,7 +2259,9 @@ export const STORIES: StoryDef[] = [
         id: 'ch2',
         number: 2,
         title: 'The Diverging Ladder',
+        title_es: 'La escalera divergente',
         subtitle: 'What predicts risk, and what protects against it',
+        subtitle_es: 'Qué predice riesgo y qué protege contra él',
         prose: [
           'Visualized as a horizontal bar chart with positive values extending right and negative values extending left from a central axis, the full coefficient structure of v0.6.5 is informative. Price volatility\'s +0.5343 extends farthest to the right. Vendor concentration (+0.3749), price ratio (+0.2345), network member count (+0.1811), and same-day contract count (+0.0945) follow in descending order on the positive side. Win rate (+0.0488), ad period (+0.0423), and direct award (+0.0306) contribute small positive weights.',
           'On the negative side — features whose presence decreases risk — only one feature survived regularization: institution diversity at -0.3821. Vendors who serve many different institutions rather than concentrating their business with a single customer are structurally less suspicious. This is intuitive: a vendor with broad reach across the federal government is behaving like a legitimate market participant, while a vendor concentrated at one institution resembles the capture patterns that dominate the ground-truth set.',
@@ -2148,6 +2306,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch3',
         number: 3,
         title: 'What Price Volatility Looks Like',
+        title_es: 'Cómo se ve la volatilidad de precios',
         prose: [
           'Abstract coefficients become concrete when applied to real contracting data. GRUPO FÁRMACOS ESPECIALIZADOS — the pharmaceutical monopolist in RUBLI\'s P1 pattern with 133.2 billion pesos across 6,303 contracts — shows price volatility as its dominant risk driver. A pharmaceutical distributor serving a single institution should charge relatively consistent per-unit prices for consistent products. Instead, RUBLI\'s z-score analysis shows this vendor\'s contract amounts varying by factors of 5 to 10 times within the same year for the same institution for structurally similar procurement categories.',
           'The IMSS Ghost Company Network — one of the 748 ground-truth cases the model learned from — also showed price volatility as a defining feature. Phantom companies charging 3 million pesos for one delivery and 27 million pesos for a similar delivery three months later, with no obvious change in scope, produce the statistical fingerprint the model was trained to recognize. Segalmex food distribution fraud showed the same pattern: food delivery contracts varying by orders of magnitude for what should have been comparable operations.',
@@ -2156,10 +2315,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'When price is negotiated rather than competed, the price is whatever the signing official will approve — and inconsistency is the forensic trace.',
+          quote_es: 'Cuando el precio se negocia en vez de competirse, el precio es lo que el funcionario firmante esté dispuesto a aprobar — y la inconsistencia es la huella forense.',
           stat: '5-10x',
           statLabel: 'within-year price variation for top P1 monopoly vendor',
+          statLabel_es: 'variación de precios dentro del año para el principal proveedor monopolista P1',
           barValue: 0.70,
           barLabel: 'avg risk score for high-volatility vendor contracts',
+          barLabel_es: 'riesgo promedio en contratos de proveedores de alta volatilidad',
         },
         sources: [
           'OECD. (2022). OECD Principles for Integrity in Public Procurement.',
@@ -2170,6 +2332,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch4',
         number: 4,
         title: 'Why This Holds Up Across Sectors',
+        title_es: 'Por qué se sostiene a través de sectores',
         prose: [
           'The v0.6.5 model was calibrated at two levels: a global model across all sectors and 12 per-sector models tuned to each sector\'s specific patterns. Price volatility\'s dominance is remarkably consistent across this multilevel structure. In the global model it leads with +0.5343. In the sector-specific models for salud, infrastructura, and energia — the three largest procurement sectors — it remains the strongest or second-strongest positive coefficient.',
           'The consistency matters because it rules out one plausible alternative hypothesis: that price volatility is simply a proxy for sector or vendor type and does not independently predict corruption. If that were true, the global coefficient would collapse when sector-specific models are fit. Instead the coefficient remains strong across sector models. Price volatility is capturing something structural about how corrupt procurement operates, not merely something categorical about which sectors are risky.',
@@ -2178,10 +2341,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Two independent analytical approaches — supervised risk scoring and unsupervised anomaly detection — converge on the same high-price-volatility contracts.',
+          quote_es: 'Dos enfoques analíticos independientes — calificación de riesgo supervisada y detección de anomalías no supervisada — convergen en los mismos contratos de alta volatilidad de precios.',
           stat: '0.828',
           statLabel: 'test AUC on vendor-stratified hold-out',
+          statLabel_es: 'AUC de prueba en hold-out estratificado por proveedor',
           barValue: 0.828,
           barLabel: 'blind test on held-out vendor set',
+          barLabel_es: 'prueba ciega sobre conjunto de proveedores reservado',
         },
         sources: [
           'Elkan, C., & Noto, K. (2008). Learning classifiers from only positive and unlabeled data. ACM SIGKDD.',
@@ -2192,6 +2358,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch5',
         number: 5,
         title: 'Using Price Volatility as an Investigation Tool',
+        title_es: 'Usar la volatilidad de precios como herramienta de investigación',
         prose: [
           'The strength of price volatility as a predictor creates a practical investigative tool. For any vendor-institution pair, RUBLI can compute the coefficient of variation in contract amounts over time and identify cases where that variation is statistically anomalous relative to the sector baseline. These cases are the highest-yield targets for price investigation because the model has already isolated the specific signal most predictive of documented corruption.',
           'What makes this more actionable than generic risk scores is the combination with physical evidence. A vendor with high price volatility can be investigated by comparing contract invoices against market prices for the same goods in the same period. If an IT vendor charged the government 3 million pesos in February and 27 million pesos in July for comparable hardware configurations, the July invoice should be scrutinized: was there a genuinely different scope, a legitimate change in specifications, or was the price inflated? The answer can be determined from contract documents — which exist, which are theoretically public under transparency law, and which RUBLI can tell an investigator exactly which to request.',
@@ -2200,10 +2367,13 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'RUBLI has identified which vendor-institution pairs show the highest price anomaly. Each one is a price investigation waiting to happen.',
+          quote_es: 'RUBLI ha identificado cuáles parejas de proveedor-institución muestran la mayor anomalía de precios. Cada una es una investigación de precios esperando suceder.',
           stat: 'AUC 0.828',
           statLabel: 'test accuracy of v0.6.5 model (vendor-stratified)',
+          statLabel_es: 'precisión de prueba del modelo v0.6.5 (estratificada por proveedor)',
           barValue: 0.828,
           barLabel: 'blind test on held-out vendor set',
+          barLabel_es: 'prueba ciega sobre conjunto de proveedores reservado',
         },
         sources: [
           'Elkan, C., & Noto, K. (2008). Learning classifiers from only positive and unlabeled data. ACM SIGKDD.',
@@ -2215,6 +2385,7 @@ export const STORIES: StoryDef[] = [
         id: 'ch6',
         number: 6,
         title: 'The Investigation Path',
+        title_es: 'El camino de la investigación',
         prose: [
           'For any journalist or oversight investigator seeking to act on RUBLI\'s price volatility finding, the investigation path has three stages. First, select a target vendor-institution pair from the top of the price-volatility ranking. Second, file INAI transparency requests for the full text of the highest-variance contracts — specification, quantities, unit prices, delivery terms. Third, benchmark those unit prices against either domestic market comparators (other Mexican contracts for the same goods) or international reference prices (the same products sold to governments in Brazil, Colombia, Chile).',
           'Each stage is operationally feasible. INAI requests for contract documents are routine and typically produce responses within 20 business days. Market price benchmarking can be performed using CompraNet itself for domestic comparators and using open international procurement databases (OECD\'s Open Contracting Partnership, the EU\'s TED database) for international comparators. A single well-chosen investigation can produce publishable findings within one to two months.',
