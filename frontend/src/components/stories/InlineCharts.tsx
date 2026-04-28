@@ -19,6 +19,7 @@
  * the anchor.
  */
 
+import { useTranslation } from 'react-i18next'
 import type {
   StoryInlineChartData,
   StoryChartPoint,
@@ -26,6 +27,30 @@ import type {
   StoryNetworkData,
   StoryStackedBarData,
 } from '@/lib/story-content'
+
+// Eyebrow translation map. The structural labels at the top of each
+// chart card ("HORIZONTAL · RANKED", "MULTI-SERIES · 4 VENDORS", etc.)
+// are component-internal text rather than data, so they are translated
+// here against an EN→ES table instead of through the chartConfig
+// schema. Numeric tokens (counts, points, vendors) interpolate.
+function useEyebrow(): (en: string) => string {
+  const { i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
+  if (lang !== 'es') return (en: string) => en
+  return (en: string) => {
+    return en
+      .replace(/^DOT FIELD/, 'CAMPO DE PUNTOS')
+      .replace(/^HORIZONTAL · RANKED/, 'HORIZONTAL · RANKING')
+      .replace(/^TIME SERIES · (\d+) POINTS/, 'SERIE TEMPORAL · $1 PUNTOS')
+      .replace(/^AREA · (\d+) POINTS/, 'ÁREA · $1 PUNTOS')
+      .replace(/^HISTOGRAM · (\d+) BARS/, 'HISTOGRAMA · $1 BARRAS')
+      .replace(/^DIVERGING · CENTERED AT 0/, 'DIVERGENTE · CENTRADO EN 0')
+      .replace(/^MULTI-SERIES · (\d+) VENDORS/, 'MULTI-SERIES · $1 PROVEEDORES')
+      .replace(/^NETWORK · (\d+) NODES · (\d+) TIES/, 'RED · $1 NODOS · $2 LAZOS')
+      .replace(/^SHARE · (\d+) ROWS/, 'PROPORCIÓN · $1 FILAS')
+      .replace(/^CHART · COMPRANET/, 'GRÁFICO · COMPRANET')
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Sector-only palette. Replaces the prior random-hex grab-bag.
@@ -73,6 +98,10 @@ function ChartCard({
   annotation?: string
   children: React.ReactNode
 }) {
+  // Translate structural eyebrow text per language. Numeric tokens
+  // (point/bar/vendor counts) interpolate via regex capture.
+  const translateEyebrow = useEyebrow()
+  const localizedEyebrow = translateEyebrow(eyebrow ?? 'CHART · COMPRANET')
   return (
     <figure
       className="w-full bg-background-card overflow-hidden my-8"
@@ -94,7 +123,7 @@ function ChartCard({
           color: 'var(--color-text-muted)',
         }}
       >
-        <span>{eyebrow ?? 'CHART · COMPRANET'}</span>
+        <span>{localizedEyebrow}</span>
         <span aria-hidden>v0.6.5</span>
       </div>
       <figcaption className="px-5 pb-2">
