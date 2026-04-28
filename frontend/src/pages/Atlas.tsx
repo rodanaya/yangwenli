@@ -310,13 +310,16 @@ interface ClusterDetailPanelProps {
   mode: ConstellationMode
   pinnedCode: string | null
   note: string
+  yearLabel?: number
+  yearDeltaT1?: number   // change in cluster T1 vs previous year (illustrative)
+  yearDeltaPct?: number  // change in high-risk % vs previous year
   onNoteChange: (text: string) => void
   onTogglePin: () => void
   onClose: () => void
   lang: 'en' | 'es'
 }
 
-function ClusterDetailPanel({ meta, mode, pinnedCode, note, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
+function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
   const navigate = useNavigate()
   const isPinned = !!meta && pinnedCode === meta.code
 
@@ -431,6 +434,32 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, onNoteChange, onTogg
                 />
               </div>
             </div>
+
+            {/* Year-delta indicator (V5) — shown when scrubbing years */}
+            {yearLabel !== undefined && (yearDeltaT1 !== undefined || yearDeltaPct !== undefined) && (
+              <div className="rounded-sm p-3 flex items-center gap-3" style={{ background: 'rgba(160,104,32,0.08)' }}>
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
+                  {lang === 'en' ? 'VS PREV. YEAR' : 'VS AÑO ANT.'}
+                </div>
+                <div className="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
+                  {yearDeltaT1 !== undefined && (
+                    <span className="font-mono text-[12px] font-bold tabular-nums inline-flex items-center gap-1"
+                      style={{ color: yearDeltaT1 >= 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
+                      {yearDeltaT1 >= 0 ? '↑' : '↓'} {Math.abs(yearDeltaT1)}
+                      <span className="text-[8px] font-normal opacity-70 uppercase tracking-[0.08em]">T1</span>
+                    </span>
+                  )}
+                  {yearDeltaPct !== undefined && (
+                    <span className="font-mono text-[12px] font-bold tabular-nums inline-flex items-center gap-1"
+                      style={{ color: yearDeltaPct >= 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
+                      {yearDeltaPct >= 0 ? '↑' : '↓'} {Math.abs(yearDeltaPct).toFixed(1)}
+                      <span className="text-[8px] font-normal opacity-70">{lang === 'en' ? 'pp' : 'pp'}</span>
+                      <span className="text-[8px] font-normal opacity-70 uppercase tracking-[0.08em]">{lang === 'en' ? 'risk' : 'riesgo'}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Why it matters / what to look for */}
             <div className="rounded-sm p-3" style={{ background: 'var(--color-border)' }}>
@@ -984,6 +1013,27 @@ export default function Atlas() {
     }, 250)
     return () => clearTimeout(id)
   }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, setSearchParams])
+
+  // V5: first-visit auto-tour. Launch "The COVID Spike" automatically the
+  // first time a user lands on /atlas with no URL state. Subsequent visits
+  // skip auto-tour. Set `rubli_atlas_visited` localStorage flag once played.
+  useEffect(() => {
+    const VISITED_KEY = 'rubli_atlas_visited_v1'
+    const hasUrlState = searchParams.toString().length > 0
+    let visited = false
+    try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
+    if (!visited && !hasUrlState) {
+      // Wait briefly for the page to settle before launching
+      const id = setTimeout(() => {
+        setActiveTour(ATLAS_TOURS[0])
+        setActiveStep(0)
+        try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
+      }, 1200)
+      return () => clearTimeout(id)
+    }
+    // intentionally only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Live ARIA stats — used to show current T1 count in the toolbar
   const { data: ariaStats } = useQuery({
@@ -1570,21 +1620,44 @@ export default function Atlas() {
       </div>
 
       {/* ── Cluster detail side panel ────────────────────────────────── */}
-      <ClusterDetailPanel
-        meta={selectedMeta}
-        mode={mode}
-        pinnedCode={pinnedCode}
-        note={selectedMeta ? (notes[selectedMeta.code] ?? '') : ''}
-        onNoteChange={(text) => {
-          if (selectedMeta) setNote(selectedMeta.code, text)
-        }}
-        onTogglePin={() => {
-          if (!selectedMeta) return
-          setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))
-        }}
-        onClose={() => setSelectedClusterCode(null)}
-        lang={lang}
-      />
+      {(() => {
+        // V5: compute year-delta vs previous year using yearly_trends + scaled
+        // critical/high pcts. Best-effort, illustrative when live data missing.
+        let deltaT1: number | undefined = undefined
+        let deltaPct: number | undefined = undefined
+        if (selectedMeta && yearIndex > 0) {
+          const prevSnap = effectiveSnapshot(yearIndex - 1)
+          const curSnap = snapshot
+          // T1 scales with critical+high pct vs the v0.6.5 baseline (13.49%)
+          const BASELINE = 13.49
+          const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
+          const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
+          const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
+          const t1Prev = Math.round(selectedMeta.t1 * ratioPrev)
+          deltaT1 = t1Cur - t1Prev
+          deltaPct = (curSnap.criticalPct + curSnap.highPct) - (prevSnap.criticalPct + prevSnap.highPct)
+        }
+        return (
+          <ClusterDetailPanel
+            meta={selectedMeta}
+            mode={mode}
+            pinnedCode={pinnedCode}
+            note={selectedMeta ? (notes[selectedMeta.code] ?? '') : ''}
+            yearLabel={snapshot.year}
+            yearDeltaT1={deltaT1}
+            yearDeltaPct={deltaPct}
+            onNoteChange={(text) => {
+              if (selectedMeta) setNote(selectedMeta.code, text)
+            }}
+            onTogglePin={() => {
+              if (!selectedMeta) return
+              setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))
+            }}
+            onClose={() => setSelectedClusterCode(null)}
+            lang={lang}
+          />
+        )
+      })()}
     </div>
   )
 }

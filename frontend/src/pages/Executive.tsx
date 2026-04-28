@@ -248,11 +248,11 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 29277,
     name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
     risk: 0.99, tier: 1, flags: ['gt'],
-    contracts: '6,303', value: '$133.2B MXN',
+    contracts: '6,303', value: '$133.2B MXN · 133,200 MDP',
     kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
     lede: {
       en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
-      es: '$133.2B MXN en medicamentos al IMSS en 14 años — 60% de toda la categoría farmacéutica. Un solo distribuidor con la mayoría del suministro de medicamentos públicos de México, 79% sin licitación.',
+      es: '133,200 MDP en medicamentos al IMSS en 14 años — 60% de toda la categoría farmacéutica. Un solo distribuidor con la mayoría del suministro de medicamentos públicos de México, 79% sin licitación.',
     },
     detected: {
       en: 'ARIA Tier 1 · P6 institutional capture · price volatility critical · 6,303 contracts all above sector median',
@@ -271,7 +271,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
     lede: {
       en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
-      es: 'Paraestatal al centro de un escándalo de MX$15B en distribución de alimentos. Fondos desviados de un programa que alimenta a los hogares más pobres de México — tortillas, leche y frijoles que nunca llegaron.',
+      es: 'Paraestatal al centro de un escándalo de 15,000 MDP en distribución de alimentos. Fondos desviados de un programa que alimenta a los hogares más pobres de México — tortillas, leche y frijoles que nunca llegaron.',
     },
     detected: {
       en: 'Anchor GT case · avg risk score 0.66 · P6 capture pattern · 90%+ direct-award rate · network links to shell intermediaries',
@@ -279,18 +279,18 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     },
     outcome: {
       en: 'MX$15B diverted from food subsidies · FGR criminal investigation ongoing since 2022 · parastatal placed under federal intervention',
-      es: 'MX$15B desviados de subsidios alimentarios · investigación penal FGR en curso desde 2022 · paraestatal sometida a intervención federal',
+      es: '15,000 MDP desviados de subsidios alimentarios · investigación penal FGR en curso desde 2022 · paraestatal sometida a intervención federal',
     },
   },
   {
     vendorId: 6038,
     name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
-    contracts: '~400', value: '$17.2B MXN',
+    contracts: '~400', value: '$17.2B MXN · 17,200 MDP',
     kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
       en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
-      es: '$17.2B MXN en insumos médicos al IMSS adjudicados durante la emergencia COVID — muchos contratos firmados y cumplidos el mismo día, un patrón físicamente imposible en contratación normal.',
+      es: '17,200 MDP en insumos médicos al IMSS adjudicados durante la emergencia COVID — muchos contratos firmados y cumplidos el mismo día, un patrón físicamente imposible en contratación normal.',
     },
     detected: {
       en: 'ARIA Tier 1 · same-day-award spike pattern · COVID emergency bracket · risk score 0.85 · price ratio above sector by 2.4×',
@@ -1153,7 +1153,7 @@ function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
       <div className="mt-1 text-[9px] font-mono text-text-muted">
         {lang === 'en'
           ? `top 8 = ${formatCompactMXN(grandTotal)} of MX$9.9T total${usingFallback ? ' · illustrative figures (precompute pending)' : ''}`
-          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9B${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
+          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9 billones${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
       </div>
     </div>
   )
@@ -1208,8 +1208,8 @@ function MacroArc({ lang }: { lang: 'en' | 'es' }) {
   const SVG_W = 820
   const SVG_H = 240
   const PAD_L = 42
-  const PAD_R = 165
-  const PAD_TOP = 28
+  const PAD_R = 60
+  const PAD_TOP = 38 // extra room for the COVID 2020 label above the line
   const PAD_BOT = 32
   const CHART_H = SVG_H - PAD_TOP - PAD_BOT
   const CHART_W = SVG_W - PAD_L - PAD_R
@@ -1358,33 +1358,33 @@ function MacroArc({ lang }: { lang: 'en' | 'es' }) {
           )
         })}
 
-        {/* COVID 2020 spike — leader line + annotation in right margin */}
+        {/* COVID 2020 spike — short vertical leader + label ABOVE the spike,
+            kept inside chart bounds so it doesn't collide with the right-edge
+            era band (Sheinbaum). */}
         <motion.g
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 2.4 }}
         >
+          {/* Short vertical leader from peak upward */}
           <line
-            x1={yearToX(2020) + 4} y1={daToY(87)}
-            x2={PAD_L + CHART_W - 4} y2={daToY(92)}
-            stroke="#dc2626" strokeWidth={0.8} strokeOpacity={0.4}
-            strokeDasharray="2 2"
+            x1={yearToX(2020)} y1={daToY(87) - 4}
+            x2={yearToX(2020)} y2={daToY(87) - 18}
+            stroke="#dc2626" strokeWidth={0.8} strokeOpacity={0.55}
           />
-          <text x={PAD_L + CHART_W + 6} y={daToY(92) - 4}
+          {/* Label sits above 2020's spike, centered horizontally */}
+          <text x={yearToX(2020)} y={daToY(87) - 22}
+            textAnchor="middle"
             fontSize={10} fontWeight="700" fill="#dc2626"
             fontFamily="var(--font-family-mono, monospace)">
             87% · 2020
           </text>
-          <text x={PAD_L + CHART_W + 6} y={daToY(92) + 7}
+          <text x={yearToX(2020)} y={daToY(87) - 33}
+            textAnchor="middle"
             fontSize={7.5} fill="var(--color-text-muted)"
             fontFamily="var(--font-family-mono, monospace)">
-            {lang === 'en' ? 'COVID emergency' : 'emergencia COVID'}
-          </text>
-          <text x={PAD_L + CHART_W + 6} y={daToY(92) + 17}
-            fontSize={7.5} fill="var(--color-text-muted)"
-            fontFamily="var(--font-family-mono, monospace)">
-            {lang === 'en' ? 'procurement spike' : 'pico de compras'}
+            {lang === 'en' ? 'COVID emergency procurement' : 'compras emergencia COVID'}
           </text>
         </motion.g>
 
@@ -1532,33 +1532,12 @@ export default function Executive() {
     }
   }
 
-  // ─── KPI tiles (2x2 grid) ──────────────────────────────────────────────────
-  const kpis = [
-    {
-      value: '9.9T MXN',
-      label: lang === 'en' ? 'TOTAL ANALYZED SPEND' : 'GASTO TOTAL ANALIZADO',
-      context: lang === 'en' ? 'COMPRANET 2002–2025 · post-outlier exclusion' : 'COMPRANET 2002–2025 · excluyendo valores atípicos',
-      color: '#a06820',
-    },
-    {
-      value: '~75%',
-      label: lang === 'en' ? 'DIRECT AWARD RATE' : 'TASA ADJ. DIRECTA',
-      context: lang === 'en' ? 'OECD maximum: 25–30%  ·  2.5× the ceiling' : 'Máximo OCDE: 25–30%  ·  2.5× el umbral',
-      color: '#dc2626',
-    },
-    {
-      value: formatNumber(stats.highCriticalCount),
-      label: lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO',
-      context: lang === 'en' ? 'Contracts flagged for priority review' : 'Contratos señalados para revisión prioritaria',
-      color: '#f59e0b',
-    },
-    {
-      value: '0.828',
-      label: lang === 'en' ? 'MODEL AUC' : 'AUC DEL MODELO',
-      context: lang === 'en' ? 'Vendor-stratified · v0.6.5' : 'Estratif. por vendor · v0.6.5',
-      color: 'var(--color-text-muted)',
-    },
-  ]
+  // ─── Headline numbers — each tile has a unique editorial micro-viz ──────
+  // Localized: Spanish uses "billones" for 10¹² and "MDP" for millions.
+  const headlineSpend = lang === 'es' ? '9.9 billones' : '9.9T'
+  const spendCurrencyLabel = 'MXN'
+  // Per-tile descriptors below are inlined into the editorial cards JSX
+  // so they can each have a distinctive micro-visualization and layout.
 
   // ─── Recommendations (3-column audience grid) ──────────────────────────────
   const audiences: Array<{ key: 'a1' | 'a2' | 'a3' }> = [
@@ -1746,35 +1725,194 @@ export default function Executive() {
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
 
-        {/* ─── KPI Grid (2x2) ─── */}
+        {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
+            micro-visualization. Replaces the bland mono-stat tile grid. ─── */}
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
             {lang === 'en' ? 'Headline Numbers' : 'Cifras Clave'}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {kpis.map((k, idx) => (
-              <motion.div
-                key={k.label}
-                className="surface-card p-5 border-l-2 rounded-sm"
-                style={{ borderLeftColor: k.color }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 + idx * 0.06 }}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+            {/* Tile 1 — Total Spend with comparison to Mexico's federal budget */}
+            <motion.div
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              style={{ borderLeftColor: '#a06820' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <div
+                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 36,
+                  color: '#a06820',
+                }}
               >
+                {headlineSpend}
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
+              </div>
+              {/* Mini-viz: stacked yearly cubes scaled by spend */}
+              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                {Array.from({ length: 23 }).map((_, i) => {
+                  const w = 7
+                  const gap = 1.5
+                  const x = i * (w + gap)
+                  // Variable height to suggest 23 yearly chunks
+                  const heights = [10, 11, 12, 13, 14, 15, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20, 20, 20, 19, 22, 21, 19, 14]
+                  const h = heights[i] ?? 14
+                  return <rect key={i} x={x} y={22 - h} width={w} height={h} fill="#a06820" fillOpacity={0.55} rx={1} />
+                })}
+              </svg>
+              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
+                {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
+              </div>
+            </motion.div>
+
+            {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip */}
+            <motion.div
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              style={{ borderLeftColor: '#dc2626' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.11 }}
+            >
+              <div
+                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 44,
+                  color: '#dc2626',
+                }}
+              >
+                75<span className="text-[24px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
+              </div>
+              {/* Mini-viz: 100 dots, 75 red (DA), 25 muted (competitive) — with green ceiling marker at 30 */}
+              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                {Array.from({ length: 100 }).map((_, i) => {
+                  const cols = 25
+                  const col = i % cols
+                  const row = Math.floor(i / cols)
+                  const cx = 4 + col * 7.5
+                  const cy = 4 + row * 5
+                  const isDA = i < 75
+                  return (
+                    <circle key={i} cx={cx} cy={cy} r={1.6}
+                      fill={isDA ? '#dc2626' : 'var(--color-border-hover)'}
+                      fillOpacity={isDA ? 0.85 : 0.55} />
+                  )
+                })}
+                {/* OECD ceiling marker — vertical green line at the 30% mark */}
+                <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
+                  stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
+              </svg>
+              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
+                {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
+              </div>
+            </motion.div>
+
+            {/* Tile 3 — High+Critical with risk distribution bar */}
+            <motion.div
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              style={{ borderLeftColor: '#f59e0b' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.17 }}
+            >
+              <div
+                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 36,
+                  color: '#f59e0b',
+                }}
+              >
+                {formatNumber(stats.highCriticalCount)}
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                {lang === 'en' ? '· 13.5% of all flagged' : '· 13.5% del total marcado'}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
+              </div>
+              {/* Mini-viz: stacked 100% bar showing risk distribution */}
+              <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
+                <div style={{ width: '6.01%', background: '#dc2626', opacity: 0.85 }} />
+                <div style={{ width: '7.48%', background: '#f59e0b', opacity: 0.85 }} />
+                <div style={{ width: '26.84%', background: '#a06820', opacity: 0.40 }} />
+                <div style={{ width: '59.39%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
+              </div>
+              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
+                <span style={{ color: '#dc2626' }}>● {lang === 'en' ? 'crit' : 'crít'} 6%</span>
+                <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 7.5%</span>
+                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'med' : 'med'} 27%</span>
+              </div>
+            </motion.div>
+
+            {/* Tile 4 — Model AUC with quality scale (vs random=0.5, perfect=1.0) */}
+            <motion.div
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              style={{ borderLeftColor: 'var(--color-text-muted)' }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.23 }}
+            >
+              <div
+                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 44,
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                0.828
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
+              </div>
+              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
+              </div>
+              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.828 */}
+              <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                {/* Filled portion from 0.5 to 0.828 — that's 65.6% of the scale */}
                 <div
-                  className="font-mono font-bold text-[32px] leading-none tabular-nums"
-                  style={{ color: k.color }}
-                >
-                  {k.value}
-                </div>
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3">
-                  {k.label}
-                </div>
-                <div className="text-xs text-text-muted mt-1 leading-[1.5]">
-                  {k.context}
-                </div>
-              </motion.div>
-            ))}
+                  className="absolute inset-y-0 rounded-sm"
+                  style={{
+                    left: '0%',
+                    width: '65.6%',
+                    background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
+                    opacity: 0.65,
+                  }}
+                />
+                {/* Tick marker at exactly 0.828 (=65.6%) */}
+                <div
+                  className="absolute top-0 bottom-0 w-[2px]"
+                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                />
+                <div
+                  className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
+                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
+                <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
+                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'v0.6.5' : 'v0.6.5'}</span>
+                <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
+              </div>
+            </motion.div>
+
           </div>
         </section>
 
@@ -1976,13 +2114,13 @@ export default function Executive() {
                         className="font-mono font-bold text-[36px] leading-none tabular-nums"
                         style={{ color: '#f59e0b' }}
                       >
-                        MX$1.25T
+                        {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 bln'}
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
                         style={{ color: '#f59e0b', opacity: 0.7 }}
                       >
-                        {lang === 'en' ? '95% never audited' : '95% sin auditar'}
+                        {lang === 'en' ? '95% never audited' : '95% sin auditar · billones'}
                       </span>
                     </motion.div>
                   </div>
@@ -1990,12 +2128,12 @@ export default function Executive() {
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
-                {lang === 'en' ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.' : 'MX$1.25 billones sobre 5B MXN — sin cobertura de auditoría.'}
+                {lang === 'en' ? 'MX$1.25 trillion above 5B MXN — zero audit coverage.' : 'MX$1.25 billones sobre 5,000 MDP — sin cobertura de auditoría.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
                   ? 'ASF reviews ~5% of contracts above MX$5B annually. At that rate, a high-value contract waits ~25 years for review — long after the money is gone and the vendor dissolved.'
-                  : 'La ASF revisa ~5% de contratos sobre MX$5B al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció.'}
+                  : 'La ASF revisa ~5% de contratos sobre 5,000 MDP al año. A ese ritmo, un contrato de alto valor espera ~25 años para ser revisado — mucho después de que el dinero desapareció.'}
               </p>
             </motion.article>
 
