@@ -268,6 +268,12 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* Public name is now "El Observatorio" / "The Observatory".
+                  Both new spellings redirect to the canonical /atlas route
+                  so shared URLs and the rubli_atlas_visited_v1 flag keep
+                  working unchanged. */}
+              <Route path="observatorio" element={<Navigate to="/atlas" replace />} />
+              <Route path="observatory"  element={<Navigate to="/atlas" replace />} />
               <Route
                 path="sectors"
                 element={

@@ -155,23 +155,29 @@ Planning docs (read on demand, not auto-loaded):
 ### Sidebar (5 sections / 15 items)
 
 ```
-DESCUBRIR  Dashboard · El Atlas · Sala de Redacción
+DESCUBRIR  Dashboard · El Observatorio · Sala de Redacción
 INVESTIGAR La Cola (ARIA) · Mi Espacio · Casos
 EXPLORAR   Sectores · Institution Ranking · Networks
 ANÁLISIS   Captura · Administraciones · La Intersección
 PLATAFORMA Metodología
 ```
 
-El Atlas was promoted from PLATAFORMA to DESCUBRIR (centerpiece) on 2026-04-28.
+El Observatorio (formerly "El Atlas") was promoted from PLATAFORMA to
+DESCUBRIR (centerpiece) on 2026-04-28 and renamed on the same day. The
+canonical route stays `/atlas` to preserve URL identity and the
+`rubli_atlas_visited_v1` localStorage flag; `/observatorio` and
+`/observatory` redirect to it. Internal symbol names (Atlas component,
+ATLAS_STORIES, atlasMode state) keep the legacy `atlas` prefix —
+renaming them is pure churn.
 
 ### `/atlas` — long-form storytelling surface (Apr 2026)
 
 Page: `frontend/src/pages/Atlas.tsx` · Stories data: `frontend/src/lib/atlas-stories.ts`
 
-The Atlas is a full-viewport constellation of 1,200 dots with four lenses
-(PATTERNS / SECTORS / CATEGORIES / TERMS) and a year scrubber 2008–2025.
-Critical-risk dots cluster around mode-specific attractors via weighted
-Halton draw; nearest-neighbor edges connect them.
+The Observatory is a full-viewport constellation of 1,200 dots with four
+lenses (PATTERNS / SECTORS / CATEGORIES / TERMS) and a year scrubber
+2008–2025. Critical-risk dots cluster around mode-specific attractors via
+weighted Halton draw; nearest-neighbor edges connect them.
 
 V6 (2026-04-28): brief tours replaced by **multi-chapter narratives**:
 - **The Pharmaceutical Cartel** (6 ch · ~55s)
@@ -183,7 +189,7 @@ Each chapter has Roman-numeral marker, year label, Playfair Display title,
 6–12s dwell. Reader can pause/skip/replay; chart is interactive during a
 chapter. End-of-story card with replay + try-another + investigate CTAs.
 
-Other Atlas features:
+Other Observatory features:
 - **Pin a cluster** — pulsing ring persists across mode/year changes
 - **Compare years** — second canvas + scrubber, shared lens + pin
 - **X-ray filter** — risk-floor: all / medium+ / high+ / critical
@@ -206,9 +212,9 @@ chapters get a constellation-style SVG artwork backdrop. Drop caps via
 CSS `::first-letter` (Playfair Display, accent-colored, 5.4em hero /
 3.6em feature). Decorative dividers between chapters.
 
-Atlas deep-link CTAs in chart chapters and closing chapters open `/atlas`
-with `?lens=...&year=...&pin=...` state — readers can manipulate the live
-constellation showing the same data the chapter discusses.
+Observatory deep-link CTAs in chart chapters and closing chapters open
+`/atlas` with `?lens=...&year=...&pin=...` state — readers can manipulate
+the live constellation showing the same data the chapter discusses.
 
 ### Spanish currency formatting (Mexican convention)
 

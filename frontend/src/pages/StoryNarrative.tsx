@@ -492,7 +492,7 @@ function AtlasLink({
               className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
               style={{ color: accentColor }}
             >
-              ◆ {lang === 'en' ? 'OPEN IN EL ATLAS' : 'ABRIR EN EL ATLAS'}
+              ◆ {lang === 'en' ? 'OPEN THE OBSERVATORY' : 'ABRIR EL OBSERVATORIO'}
             </div>
             <p className="text-[13px] text-text-primary leading-[1.55]">
               {caption[lang]}
@@ -766,8 +766,8 @@ function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProp
           lens="patterns"
           lang={lang}
           caption={{
-            en: 'Explore this chart\'s data live in El Atlas — toggle lenses, scrub years.',
-            es: 'Explora los datos de este gráfico en vivo en El Atlas — alterna lentes, desplaza años.',
+            en: 'Explore this chart\'s data live in The Observatory — toggle lenses, scrub years.',
+            es: 'Explora los datos de este gráfico en vivo en El Observatorio — alterna lentes, desplaza años.',
           }}
         />
       </div>
@@ -1000,8 +1000,8 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
           lens="patterns"
           lang={lang}
           caption={{
-            en: 'Open this story\'s patterns live in the Atlas — scrub years, pin clusters, run your own investigation.',
-            es: 'Abre los patrones de esta historia en vivo en El Atlas — desplaza años, fija cúmulos, lleva tu propia investigación.',
+            en: 'Open this story\'s patterns live in The Observatory — scrub years, pin clusters, run your own investigation.',
+            es: 'Abre los patrones de esta historia en vivo en El Observatorio — desplaza años, fija cúmulos, lleva tu propia investigación.',
           }}
         />
       </div>

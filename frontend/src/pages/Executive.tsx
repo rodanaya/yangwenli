@@ -1645,14 +1645,14 @@ export default function Executive() {
         >
           <div className="flex items-start justify-between mb-1 gap-3 flex-wrap">
             <div id="atlas-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? '§ 1 · The Atlas — every contract in one view' : '§ 1 · El Atlas — cada contrato en una vista'}
+              {lang === 'en' ? '§ 1 · The Observatory — every contract in one view' : '§ 1 · El Observatorio — cada contrato en una vista'}
             </div>
 
             {/* Mode toggle */}
             <div
               className="flex items-center text-[9px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
               role="tablist"
-              aria-label={lang === 'en' ? 'Constellation mode' : 'Modo del Atlas'}
+              aria-label={lang === 'en' ? 'Constellation mode' : 'Modo del Observatorio'}
               style={{ border: '1px solid var(--color-border)' }}
             >
               {(
