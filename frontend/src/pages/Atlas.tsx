@@ -22,7 +22,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, Film, Square, Link2, Check } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import { analysisApi, ariaApi } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
@@ -150,6 +151,77 @@ const YEAR_SNAPSHOTS: YearSnapshot[] = [
   { year: 2023, totalContracts: 202_000, criticalPct: 6.5, highPct: 7.4, mediumPct: 27.0, lowPct: 59.1, highlight: { en: 'Toka IT monopoly investigation', es: 'investigación monopolio TIC Toka' } },
   { year: 2024, totalContracts: 195_000, criticalPct: 6.0, highPct: 7.4, mediumPct: 26.8, lowPct: 59.8, highlight: { en: 'AMLO → Sheinbaum transition', es: 'transición AMLO → Sheinbaum' } },
   { year: 2025, totalContracts:  85_000, criticalPct: 5.8, highPct: 7.2, mediumPct: 26.5, lowPct: 60.5, highlight: { en: 'Sheinbaum year 1 (partial year)', es: 'Año 1 Sheinbaum (año parcial)' } },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REPLAY TOURS — preset narrated sequences through (mode, year, pin) states.
+// Each tour is a story that the page tells itself, with a narration line that
+// updates per step. Click a tour, watch the universe re-form to match.
+// ─────────────────────────────────────────────────────────────────────────────
+interface TourStep {
+  mode: ConstellationMode
+  year: number               // actual year value (we resolve to index at runtime)
+  pinnedCode: string | null
+  narration: { en: string; es: string }
+  durationMs: number
+}
+interface Tour {
+  id: string
+  title: { en: string; es: string }
+  blurb: { en: string; es: string }
+  accent: string
+  steps: TourStep[]
+}
+
+const ATLAS_TOURS: Tour[] = [
+  {
+    id: 'covid_spike',
+    title: { en: 'The COVID Spike', es: 'El Pico COVID' },
+    blurb: { en: 'Watch the critical-risk bloom in 2020', es: 'Observa el bloom crítico de 2020' },
+    accent: '#dc2626',
+    steps: [
+      { mode: 'patterns', year: 2019, pinnedCode: null,  narration: { en: 'Pre-pandemic — the field looks like every other year. AMLO\'s first full year.', es: 'Pre-pandemia — el campo se ve como cualquier otro año. Primer año pleno de AMLO.' }, durationMs: 3200 },
+      { mode: 'patterns', year: 2020, pinnedCode: 'P5',  narration: { en: 'COVID emergency procurement. Direct-award rate jumps to 87%. P5 (Systematic Overpricing) blooms.', es: 'Compras COVID. Adjudicación directa salta a 87%. P5 (Sobreprecio) florece.' }, durationMs: 4500 },
+      { mode: 'patterns', year: 2021, pinnedCode: 'P5',  narration: { en: '2021 stays elevated. The "emergency" never fully ended.', es: '2021 sigue elevado. La "emergencia" nunca terminó del todo.' }, durationMs: 3500 },
+      { mode: 'patterns', year: 2022, pinnedCode: 'P5',  narration: { en: 'Levels begin to recede — but the new baseline is higher than 2018.', es: 'Niveles bajan — pero la nueva base es mayor que 2018.' }, durationMs: 3500 },
+    ],
+  },
+  {
+    id: 'pharma_cartel',
+    title: { en: 'The Pharma Cartel', es: 'El Cártel Farmacéutico' },
+    blurb: { en: 'COFECE 2018 → AMLO veto 2019', es: 'COFECE 2018 → veto AMLO 2019' },
+    accent: '#dc2626',
+    steps: [
+      { mode: 'categories', year: 2017, pinnedCode: 'medicamentos', narration: { en: 'Medicamentos category — IMSS pharma supply at full opacity.', es: 'Categoría Medicamentos — suministro IMSS a opacidad plena.' }, durationMs: 3500 },
+      { mode: 'categories', year: 2018, pinnedCode: 'medicamentos', narration: { en: 'COFECE opens cartel investigation against the pharma distributors.', es: 'COFECE abre investigación de cártel contra distribuidores.' }, durationMs: 3500 },
+      { mode: 'patterns',   year: 2019, pinnedCode: 'P5',           narration: { en: 'Switch lens: P5 (Systematic Overpricing) — where Grupo Farmacos lives. AMLO publicly vetoes the cartel.', es: 'Cambio de lente: P5 (Sobreprecio) — donde vive Grupo Farmacos. AMLO veta públicamente al cártel.' }, durationMs: 4500 },
+      { mode: 'patterns',   year: 2020, pinnedCode: 'P5',           narration: { en: 'COVID emergency procurement keeps pharma channels active despite the veto.', es: 'Compras COVID mantienen canales farmacéuticos activos pese al veto.' }, durationMs: 3500 },
+    ],
+  },
+  {
+    id: 'edenred',
+    title: { en: 'The Voucher Cartel', es: 'El Cártel de Vales' },
+    blurb: { en: 'Edenred 96.7% T1 across federal vouchers', es: 'Edenred 96.7% T1 en vales federales' },
+    accent: '#16a34a',
+    steps: [
+      { mode: 'categories', year: 2018, pinnedCode: 'vales',        narration: { en: 'Vouchers (Vales y Monederos) — small category, high concentration even in 2018.', es: 'Vales y Monederos — categoría pequeña, alta concentración ya en 2018.' }, durationMs: 3500 },
+      { mode: 'categories', year: 2020, pinnedCode: 'vales',        narration: { en: 'COVID-era voucher disbursement scales — the captured channel runs hot.', es: 'Vales en pandemia escalan — el canal capturado se calienta.' }, durationMs: 3500 },
+      { mode: 'patterns',   year: 2022, pinnedCode: 'P1',           narration: { en: 'P1 (Concentrated Monopoly) lens — Edenred cartel surfaces in the press.', es: 'Lente P1 (Monopolio Concentrado) — cartel Edenred sale a la prensa.' }, durationMs: 4500 },
+      { mode: 'patterns',   year: 2023, pinnedCode: 'P1',           narration: { en: 'Investigations open. The cluster doesn\'t shrink — it just becomes documented.', es: 'Se abren investigaciones. El cúmulo no se encoge — solo se vuelve documentado.' }, durationMs: 3500 },
+    ],
+  },
+  {
+    id: 'sexenios',
+    title: { en: 'Five Administrations', es: 'Cinco Sexenios' },
+    blurb: { en: 'Constellation evolves through 5 presidents', es: 'Constelación a través de 5 presidentes' },
+    accent: '#a06820',
+    steps: [
+      { mode: 'sexenios', year: 2010, pinnedCode: 'calderon',  narration: { en: 'Calderón era — drug war, SEDENA contracts escalate. Critical clusters small.', es: 'Sexenio Calderón — narco-guerra, contratos SEDENA escalan. Cúmulos críticos pequeños.' }, durationMs: 3500 },
+      { mode: 'sexenios', year: 2014, pinnedCode: 'pena',      narration: { en: 'Peña Nieto — Estafa Maestra origins, Casa Blanca, Oceanografía-PEMEX. Constellation thickens.', es: 'Peña Nieto — orígenes Estafa Maestra, Casa Blanca, Oceanografía. La constelación se espesa.' }, durationMs: 4000 },
+      { mode: 'sexenios', year: 2020, pinnedCode: 'amlo',      narration: { en: 'AMLO — Segalmex, Tren Maya, COVID emergency. Highest sustained T1 concentration.', es: 'AMLO — Segalmex, Tren Maya, emergencia COVID. Mayor concentración T1 sostenida.' }, durationMs: 4000 },
+      { mode: 'sexenios', year: 2025, pinnedCode: 'sheinbaum', narration: { en: 'Sheinbaum year 1 — partial. Early signs of continuity in direct-award practice.', es: 'Año 1 Sheinbaum — parcial. Señales tempranas de continuidad en adjudicación directa.' }, durationMs: 3500 },
+    ],
+  },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -790,6 +862,13 @@ export default function Atlas() {
   const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
   // Personal notes per cluster — localStorage-backed
   const { notes, setNote, notesCount } = useClusterNotes()
+  // Replay tours
+  const [activeTour, setActiveTour] = useState<Tour | null>(null)
+  const [activeStep, setActiveStep] = useState<number>(0)
+  const [toursMenuOpen, setToursMenuOpen] = useState<boolean>(false)
+  // URL-state sharing
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [shareJustCopied, setShareJustCopied] = useState<boolean>(false)
   // Risk-floor filter — when set, dots below the floor are dropped from the
   // population; remaining levels redistribute proportionally so the field
   // re-densifies around the focused band.
@@ -819,6 +898,89 @@ export default function Atlas() {
     }, 1600)
     return () => clearInterval(id)
   }, [isPlayingB, compareMode])
+
+  // ─── REPLAY TOUR autoplay ──────────────────────────────────────────────
+  // Each step applies (mode, year, pin) and waits its durationMs before
+  // advancing. End of tour clears state.
+  useEffect(() => {
+    if (!activeTour) return
+    const step = activeTour.steps[activeStep]
+    if (!step) {
+      setActiveTour(null)
+      setActiveStep(0)
+      return
+    }
+    // Apply step state
+    setMode(step.mode)
+    const yi = YEAR_SNAPSHOTS.findIndex((s) => s.year === step.year)
+    if (yi >= 0) setYearIndex(yi)
+    setPinnedCode(step.pinnedCode)
+    setIsPlaying(false) // pause normal autoplay during a tour
+    setSelectedClusterCode(null)
+
+    const id = setTimeout(() => {
+      if (activeStep + 1 < activeTour.steps.length) {
+        setActiveStep(activeStep + 1)
+      } else {
+        setActiveTour(null)
+        setActiveStep(0)
+      }
+    }, step.durationMs)
+    return () => clearTimeout(id)
+  }, [activeTour, activeStep])
+
+  // ─── URL STATE: read params on mount, push state on change ──────────────
+  // This lets users share a link to a specific atlas view.
+  // ?lens=patterns&year=2020&pin=P5&compare=2014&floor=critical
+  useEffect(() => {
+    const lens = searchParams.get('lens') as ConstellationMode | null
+    const year = searchParams.get('year')
+    const pin = searchParams.get('pin')
+    const compare = searchParams.get('compare')
+    const floor = searchParams.get('floor') as typeof riskFloor | null
+
+    if (lens && ['patterns', 'sectors', 'categories', 'sexenios'].includes(lens)) {
+      setMode(lens)
+    }
+    if (year) {
+      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === year)
+      if (yi >= 0) setYearIndex(yi)
+    }
+    if (pin) {
+      setPinnedCode(pin)
+    }
+    if (compare) {
+      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === compare)
+      if (yi >= 0) {
+        setYearIndexB(yi)
+        setCompareMode(true)
+      }
+    }
+    if (floor && ['all', 'medium', 'high', 'critical'].includes(floor)) {
+      setRiskFloor(floor)
+    }
+    // intentionally only on mount — searchParams reads should not loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Sync URL when state changes (debounced — avoids history spam during scrub)
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (mode !== 'patterns') params.set('lens', mode)
+      const curYear = YEAR_SNAPSHOTS[yearIndex]?.year
+      if (curYear && curYear !== YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year) {
+        params.set('year', String(curYear))
+      }
+      if (pinnedCode) params.set('pin', pinnedCode)
+      if (compareMode && YEAR_SNAPSHOTS[yearIndexB]) {
+        params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
+      }
+      if (riskFloor !== 'all') params.set('floor', riskFloor)
+      setSearchParams(params, { replace: true })
+    }, 250)
+    return () => clearTimeout(id)
+  }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, setSearchParams])
 
   // Live ARIA stats — used to show current T1 count in the toolbar
   const { data: ariaStats } = useQuery({
@@ -999,6 +1161,92 @@ export default function Atlas() {
             setSelectedClusterCode(code)
           }}
         />
+
+        {/* Tours menu */}
+        <div className="relative">
+          <button
+            onClick={() => setToursMenuOpen(!toursMenuOpen)}
+            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
+            style={{
+              background: activeTour ? '#dc2626' : 'transparent',
+              color: activeTour ? 'white' : 'var(--color-text-muted)',
+              border: '1px solid var(--color-border)',
+            }}
+            aria-expanded={toursMenuOpen}
+            aria-label={lang === 'en' ? 'Replay tours' : 'Tours guiados'}
+          >
+            <Film className="h-3 w-3" />
+            {activeTour
+              ? (lang === 'en' ? `Tour: ${activeTour.title.en}` : `Tour: ${activeTour.title.es}`)
+              : (lang === 'en' ? 'Tours' : 'Tours')
+            }
+          </button>
+          {toursMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-[calc(100%+4px)] left-0 surface-card rounded-sm shadow-xl overflow-hidden z-30"
+              style={{ border: '1px solid var(--color-border-hover)', minWidth: 280 }}
+              onMouseLeave={() => setToursMenuOpen(false)}
+            >
+              {ATLAS_TOURS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setActiveTour(t)
+                    setActiveStep(0)
+                    setToursMenuOpen(false)
+                  }}
+                  className="w-full text-left px-3 py-2.5 transition-colors block hover:bg-background-elevated/40"
+                  style={{ borderBottom: '1px solid var(--color-border)', borderLeft: `2px solid ${t.accent}` }}
+                >
+                  <div className="font-mono font-bold text-[11px] text-text-primary mb-0.5">
+                    {t.title[lang]}
+                  </div>
+                  <div className="text-[9px] font-mono text-text-muted">
+                    {t.blurb[lang]} · {t.steps.length} {lang === 'en' ? 'steps' : 'pasos'}
+                  </div>
+                </button>
+              ))}
+              {activeTour && (
+                <button
+                  onClick={() => { setActiveTour(null); setActiveStep(0); setToursMenuOpen(false) }}
+                  className="w-full text-left px-3 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
+                  style={{ background: 'var(--color-border)', color: '#dc2626' }}
+                >
+                  <Square className="h-3 w-3 inline mr-1.5" />
+                  {lang === 'en' ? 'Stop current tour' : 'Detener tour'}
+                </button>
+              )}
+            </motion.div>
+          )}
+        </div>
+
+        {/* Share link */}
+        <button
+          onClick={() => {
+            const url = window.location.href
+            navigator.clipboard?.writeText(url).then(() => {
+              setShareJustCopied(true)
+              setTimeout(() => setShareJustCopied(false), 2000)
+            }).catch(() => {})
+          }}
+          className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
+          style={{
+            background: shareJustCopied ? '#16a34a' : 'transparent',
+            color: shareJustCopied ? 'white' : 'var(--color-text-muted)',
+            border: '1px solid var(--color-border)',
+          }}
+          aria-label={lang === 'en' ? 'Copy share link' : 'Copiar enlace'}
+          title={lang === 'en' ? 'Copy a link to this exact view' : 'Copiar enlace a esta vista'}
+        >
+          {shareJustCopied
+            ? <><Check className="h-3 w-3" /> {lang === 'en' ? 'Copied' : 'Copiado'}</>
+            : <><Link2 className="h-3 w-3" /> {lang === 'en' ? 'Share view' : 'Compartir'}</>
+          }
+        </button>
+
         {foundVendor && (
           <motion.div
             initial={{ opacity: 0, x: -6 }}
@@ -1161,6 +1409,64 @@ export default function Atlas() {
           </span>
         )}
       </div>
+
+      {/* ── Tour narration overlay ─────────────────────────────────────── */}
+      <AnimatePresence mode="wait">
+        {activeTour && activeTour.steps[activeStep] && (
+          <motion.div
+            key={`tour-${activeTour.id}-${activeStep}`}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            className="surface-card rounded-sm p-3 mb-3 border-l-2"
+            style={{ borderLeftColor: activeTour.accent }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span
+                    className="text-[8px] font-mono font-bold uppercase tracking-[0.14em]"
+                    style={{ color: activeTour.accent }}
+                  >
+                    ◆ {lang === 'en' ? 'TOUR' : 'TOUR'} · {activeTour.title[lang]}
+                  </span>
+                  <span className="text-[8px] font-mono text-text-muted">
+                    {activeStep + 1} / {activeTour.steps.length} · {YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.findIndex((s) => s.year === activeTour.steps[activeStep].year)]?.year}
+                  </span>
+                </div>
+                <p className="text-[12px] text-text-primary leading-[1.55] text-pretty">
+                  {activeTour.steps[activeStep].narration[lang]}
+                </p>
+              </div>
+              {/* Step progress dots + stop */}
+              <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+                <div className="flex items-center gap-1">
+                  {activeTour.steps.map((_, i) => (
+                    <span
+                      key={i}
+                      className="rounded-full transition-all"
+                      style={{
+                        width: i === activeStep ? 14 : 6,
+                        height: 4,
+                        background: i <= activeStep ? activeTour.accent : 'var(--color-border-hover)',
+                      }}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => { setActiveTour(null); setActiveStep(0) }}
+                  className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                  aria-label={lang === 'en' ? 'Stop tour' : 'Detener tour'}
+                  title={lang === 'en' ? 'Stop tour' : 'Detener'}
+                >
+                  <Square className="h-3 w-3" style={{ color: activeTour.accent }} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Constellation canvas A (always shown) ──────────────────────── */}
       {compareMode && (
