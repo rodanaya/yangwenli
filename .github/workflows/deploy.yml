@@ -48,7 +48,10 @@ jobs:
           script: |
             cd /opt/rubli
             docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
-            docker compose -f docker-compose.prod.yml ps
+            # Pass --env-file to ps too — without it, compose re-interpolates the
+            # file and ${RUBLI_WRITE_KEY:?...} aborts with a non-zero exit, marking
+            # the whole deploy as failed even though the containers came up fine.
+            docker compose -f docker-compose.prod.yml --env-file .env.prod ps
 
       - name: Health check
         run: |
