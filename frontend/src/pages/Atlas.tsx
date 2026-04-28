@@ -22,8 +22,9 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, Film, Square, Link2, Check } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, BookOpen, Square, Link2, Check, RotateCcw, SkipForward } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
+import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
 import { analysisApi, ariaApi } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
@@ -157,84 +158,11 @@ const YEAR_SNAPSHOTS: YearSnapshot[] = [
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
-// REPLAY TOURS — preset narrated sequences through (mode, year, pin) states.
-// Each tour is a story that the page tells itself, with a narration line that
-// updates per step. Click a tour, watch the universe re-form to match.
-// ─────────────────────────────────────────────────────────────────────────────
-interface TourStep {
-  mode: ConstellationMode
-  year: number               // actual year value (we resolve to index at runtime)
-  pinnedCode: string | null
-  narration: { en: string; es: string }
-  durationMs: number
-}
-interface Tour {
-  id: string
-  title: { en: string; es: string }
-  blurb: { en: string; es: string }
-  accent: string
-  steps: TourStep[]
-}
-
-const ATLAS_TOURS: Tour[] = [
-  {
-    id: 'covid_spike',
-    title: { en: 'The COVID Spike', es: 'El Pico COVID' },
-    blurb: { en: 'Watch the critical-risk bloom in 2020', es: 'Observa el bloom crítico de 2020' },
-    accent: '#dc2626',
-    steps: [
-      { mode: 'patterns', year: 2019, pinnedCode: null,  narration: { en: 'Pre-pandemic — the field looks like every other year. AMLO\'s first full year.', es: 'Pre-pandemia — el campo se ve como cualquier otro año. Primer año pleno de AMLO.' }, durationMs: 3200 },
-      { mode: 'patterns', year: 2020, pinnedCode: 'P5',  narration: { en: 'COVID emergency procurement. Direct-award rate jumps to 87%. P5 (Systematic Overpricing) blooms.', es: 'Compras COVID. Adjudicación directa salta a 87%. P5 (Sobreprecio) florece.' }, durationMs: 4500 },
-      { mode: 'patterns', year: 2021, pinnedCode: 'P5',  narration: { en: '2021 stays elevated. The "emergency" never fully ended.', es: '2021 sigue elevado. La "emergencia" nunca terminó del todo.' }, durationMs: 3500 },
-      { mode: 'patterns', year: 2022, pinnedCode: 'P5',  narration: { en: 'Levels begin to recede — but the new baseline is higher than 2018.', es: 'Niveles bajan — pero la nueva base es mayor que 2018.' }, durationMs: 3500 },
-    ],
-  },
-  {
-    id: 'pharma_cartel',
-    title: { en: 'The Pharma Cartel', es: 'El Cártel Farmacéutico' },
-    blurb: { en: 'COFECE 2018 → AMLO veto 2019', es: 'COFECE 2018 → veto AMLO 2019' },
-    accent: '#dc2626',
-    steps: [
-      { mode: 'categories', year: 2017, pinnedCode: 'medicamentos', narration: { en: 'Medicamentos category — IMSS pharma supply at full opacity.', es: 'Categoría Medicamentos — suministro IMSS a opacidad plena.' }, durationMs: 3500 },
-      { mode: 'categories', year: 2018, pinnedCode: 'medicamentos', narration: { en: 'COFECE opens cartel investigation against the pharma distributors.', es: 'COFECE abre investigación de cártel contra distribuidores.' }, durationMs: 3500 },
-      { mode: 'patterns',   year: 2019, pinnedCode: 'P5',           narration: { en: 'Switch lens: P5 (Systematic Overpricing) — where Grupo Farmacos lives. AMLO publicly vetoes the cartel.', es: 'Cambio de lente: P5 (Sobreprecio) — donde vive Grupo Farmacos. AMLO veta públicamente al cártel.' }, durationMs: 4500 },
-      { mode: 'patterns',   year: 2020, pinnedCode: 'P5',           narration: { en: 'COVID emergency procurement keeps pharma channels active despite the veto.', es: 'Compras COVID mantienen canales farmacéuticos activos pese al veto.' }, durationMs: 3500 },
-    ],
-  },
-  {
-    id: 'edenred',
-    title: { en: 'The Voucher Cartel', es: 'El Cártel de Vales' },
-    blurb: { en: 'Edenred 96.7% T1 across federal vouchers', es: 'Edenred 96.7% T1 en vales federales' },
-    accent: '#16a34a',
-    steps: [
-      { mode: 'categories', year: 2018, pinnedCode: 'vales',        narration: { en: 'Vouchers (Vales y Monederos) — small category, high concentration even in 2018.', es: 'Vales y Monederos — categoría pequeña, alta concentración ya en 2018.' }, durationMs: 3500 },
-      { mode: 'categories', year: 2020, pinnedCode: 'vales',        narration: { en: 'COVID-era voucher disbursement scales — the captured channel runs hot.', es: 'Vales en pandemia escalan — el canal capturado se calienta.' }, durationMs: 3500 },
-      { mode: 'patterns',   year: 2022, pinnedCode: 'P1',           narration: { en: 'P1 (Concentrated Monopoly) lens — Edenred cartel surfaces in the press.', es: 'Lente P1 (Monopolio Concentrado) — cartel Edenred sale a la prensa.' }, durationMs: 4500 },
-      { mode: 'patterns',   year: 2023, pinnedCode: 'P1',           narration: { en: 'Investigations open. The cluster doesn\'t shrink — it just becomes documented.', es: 'Se abren investigaciones. El cúmulo no se encoge — solo se vuelve documentado.' }, durationMs: 3500 },
-    ],
-  },
-  {
-    id: 'sexenios',
-    title: { en: 'Five Administrations', es: 'Cinco Sexenios' },
-    blurb: { en: 'Constellation evolves through 5 presidents', es: 'Constelación a través de 5 presidentes' },
-    accent: '#a06820',
-    steps: [
-      { mode: 'sexenios', year: 2010, pinnedCode: 'calderon',  narration: { en: 'Calderón era — drug war, SEDENA contracts escalate. Critical clusters small.', es: 'Sexenio Calderón — narco-guerra, contratos SEDENA escalan. Cúmulos críticos pequeños.' }, durationMs: 3500 },
-      { mode: 'sexenios', year: 2014, pinnedCode: 'pena',      narration: { en: 'Peña Nieto — Estafa Maestra origins, Casa Blanca, Oceanografía-PEMEX. Constellation thickens.', es: 'Peña Nieto — orígenes Estafa Maestra, Casa Blanca, Oceanografía. La constelación se espesa.' }, durationMs: 4000 },
-      { mode: 'sexenios', year: 2020, pinnedCode: 'amlo',      narration: { en: 'AMLO — Segalmex, Tren Maya, COVID emergency. Highest sustained T1 concentration.', es: 'AMLO — Segalmex, Tren Maya, emergencia COVID. Mayor concentración T1 sostenida.' }, durationMs: 4000 },
-      { mode: 'sexenios', year: 2025, pinnedCode: 'sheinbaum', narration: { en: 'Sheinbaum year 1 — partial. Early signs of continuity in direct-award practice.', es: 'Año 1 Sheinbaum — parcial. Señales tempranas de continuidad en adjudicación directa.' }, durationMs: 3500 },
-    ],
-  },
-]
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Atlas-density category meta — 32 categories. Positions are hand-tuned in a
 // 6×6-ish field so they distribute without overlap. T1 weighting is calibrated
 // against ARIA pattern memberships per category.
 // ─────────────────────────────────────────────────────────────────────────────
 function buildAtlasCategoriesMeta(isEs: boolean): ClusterMeta[] {
-  // Category positions: spread across (fx, fy) in [0..1]². Grouped loosely by
-  // sector to give the constellation natural sector "neighborhoods".
   return [
     // Health (top-left cluster)
     { code: 'medicamentos',   label: isEs ? 'Medicamentos' : 'Pharmaceuticals',     desc: isEs ? '1.1B MXN · IMSS captura · Grupo Farmacos cartel' : '1.1B MXN · IMSS capture · Grupo Farmacos cartel',          color: '#dc2626', vendors: 8200,  t1: 42, highRiskPct: 0.55, fx: 0.10, fy: 0.16 },
@@ -894,10 +822,13 @@ export default function Atlas() {
   const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
   // Personal notes per cluster — localStorage-backed
   const { notes, setNote, notesCount } = useClusterNotes()
-  // Replay tours
-  const [activeTour, setActiveTour] = useState<Tour | null>(null)
-  const [activeStep, setActiveStep] = useState<number>(0)
-  const [toursMenuOpen, setToursMenuOpen] = useState<boolean>(false)
+  // V6: long-form stories (replaces brief tours). A story is paused by
+  // default when the user opens it; pressing Play autoplays through chapters.
+  const [activeStory, setActiveStory] = useState<Story | null>(null)
+  const [activeChapter, setActiveChapter] = useState<number>(0)
+  const [storyPlaying, setStoryPlaying] = useState<boolean>(false)
+  const [storyEnded, setStoryEnded] = useState<boolean>(false)
+  const [storiesMenuOpen, setStoriesMenuOpen] = useState<boolean>(false)
   // URL-state sharing
   const [searchParams, setSearchParams] = useSearchParams()
   const [shareJustCopied, setShareJustCopied] = useState<boolean>(false)
@@ -931,35 +862,40 @@ export default function Atlas() {
     return () => clearInterval(id)
   }, [isPlayingB, compareMode])
 
-  // ─── REPLAY TOUR autoplay ──────────────────────────────────────────────
-  // Each step applies (mode, year, pin) and waits its durationMs before
-  // advancing. End of tour clears state.
+  // ─── STORY playback ──────────────────────────────────────────────────────
+  // Each chapter applies (mode, year, pin) and either auto-advances after
+  // its dwellMs (when storyPlaying) or waits for the user to hit Continue.
+  // The chart is interactive during a chapter — clicking clusters opens the
+  // side panel without breaking the story.
   useEffect(() => {
-    if (!activeTour) return
-    const step = activeTour.steps[activeStep]
-    if (!step) {
-      setActiveTour(null)
-      setActiveStep(0)
-      return
-    }
-    // Apply step state
-    setMode(step.mode)
-    const yi = YEAR_SNAPSHOTS.findIndex((s) => s.year === step.year)
+    if (!activeStory) return
+    const chapter = activeStory.chapters[activeChapter]
+    if (!chapter) return
+    // Apply chapter state
+    setMode(chapter.state.mode)
+    const yi = YEAR_SNAPSHOTS.findIndex((s) => s.year === chapter.state.year)
     if (yi >= 0) setYearIndex(yi)
-    setPinnedCode(step.pinnedCode)
-    setIsPlaying(false) // pause normal autoplay during a tour
-    setSelectedClusterCode(null)
+    setPinnedCode(chapter.state.pinnedCode)
+    setIsPlaying(false) // pause normal year-autoplay during a story
+    setStoryEnded(false)
+    // Don't auto-clear selectedClusterCode — let reader keep panel open.
+  }, [activeStory, activeChapter])
 
+  // Auto-advance chapters when storyPlaying is true
+  useEffect(() => {
+    if (!activeStory || !storyPlaying) return
+    const chapter = activeStory.chapters[activeChapter]
+    if (!chapter) return
     const id = setTimeout(() => {
-      if (activeStep + 1 < activeTour.steps.length) {
-        setActiveStep(activeStep + 1)
+      if (activeChapter + 1 < activeStory.chapters.length) {
+        setActiveChapter(activeChapter + 1)
       } else {
-        setActiveTour(null)
-        setActiveStep(0)
+        setStoryPlaying(false)
+        setStoryEnded(true)
       }
-    }, step.durationMs)
+    }, chapter.dwellMs)
     return () => clearTimeout(id)
-  }, [activeTour, activeStep])
+  }, [activeStory, activeChapter, storyPlaying])
 
   // ─── URL STATE: read params on mount, push state on change ──────────────
   // This lets users share a link to a specific atlas view.
@@ -1025,8 +961,10 @@ export default function Atlas() {
     if (!visited && !hasUrlState) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
-        setActiveTour(ATLAS_TOURS[0])
-        setActiveStep(0)
+        // V6: launch a long-form story for first-time visitors
+        setActiveStory(ATLAS_STORIES[0])
+        setActiveChapter(0)
+        setStoryPlaying(true)
         try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
       }, 1200)
       return () => clearTimeout(id)
@@ -1213,61 +1151,87 @@ export default function Atlas() {
           }}
         />
 
-        {/* Tours menu */}
+        {/* Stories menu — replaces brief tours with long-form chapter narratives */}
         <div className="relative">
           <button
-            onClick={() => setToursMenuOpen(!toursMenuOpen)}
-            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
+            onClick={() => setStoriesMenuOpen(!storiesMenuOpen)}
+            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
             style={{
-              background: activeTour ? '#dc2626' : 'transparent',
-              color: activeTour ? 'white' : 'var(--color-text-muted)',
+              background: activeStory ? (activeStory.accent) : 'transparent',
+              color: activeStory ? 'white' : 'var(--color-text-muted)',
               border: '1px solid var(--color-border)',
             }}
-            aria-expanded={toursMenuOpen}
-            aria-label={lang === 'en' ? 'Replay tours' : 'Tours guiados'}
+            aria-expanded={storiesMenuOpen}
+            aria-label={lang === 'en' ? 'Open stories menu' : 'Abrir menú de historias'}
           >
-            <Film className="h-3 w-3" />
-            {activeTour
-              ? (lang === 'en' ? `Tour: ${activeTour.title.en}` : `Tour: ${activeTour.title.es}`)
-              : (lang === 'en' ? 'Tours' : 'Tours')
+            <BookOpen className="h-3 w-3" />
+            {activeStory
+              ? (lang === 'en' ? `${activeStory.title.en}` : `${activeStory.title.es}`)
+              : (lang === 'en' ? 'Stories' : 'Historias')
             }
           </button>
-          {toursMenuOpen && (
+          {storiesMenuOpen && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-[calc(100%+4px)] left-0 surface-card rounded-sm shadow-xl overflow-hidden z-30"
-              style={{ border: '1px solid var(--color-border-hover)', minWidth: 280 }}
-              onMouseLeave={() => setToursMenuOpen(false)}
+              className="absolute top-[calc(100%+6px)] left-0 surface-card rounded-sm shadow-2xl overflow-hidden z-30"
+              style={{ border: '1px solid var(--color-border-hover)', width: 380, maxWidth: '90vw' }}
+              onMouseLeave={() => setStoriesMenuOpen(false)}
             >
-              {ATLAS_TOURS.map((t) => (
+              <div className="px-4 py-3 border-b border-border/50" style={{ background: 'var(--color-border)' }}>
+                <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
+                  {lang === 'en' ? 'INVESTIGATIVE STORIES' : 'HISTORIAS DE INVESTIGACIÓN'}
+                </div>
+                <div className="text-[11px] text-text-secondary leading-[1.5]">
+                  {lang === 'en'
+                    ? 'Multi-chapter narratives told by the constellation. Pause, explore, resume.'
+                    : 'Narrativas de varios capítulos contadas por la constelación. Pausa, explora, reanuda.'}
+                </div>
+              </div>
+              {ATLAS_STORIES.map((s) => (
                 <button
-                  key={t.id}
+                  key={s.id}
                   onClick={() => {
-                    setActiveTour(t)
-                    setActiveStep(0)
-                    setToursMenuOpen(false)
+                    setActiveStory(s)
+                    setActiveChapter(0)
+                    setStoryPlaying(true)
+                    setStoriesMenuOpen(false)
+                    setStoryEnded(false)
                   }}
-                  className="w-full text-left px-3 py-2.5 transition-colors block hover:bg-background-elevated/40"
-                  style={{ borderBottom: '1px solid var(--color-border)', borderLeft: `2px solid ${t.accent}` }}
+                  className="w-full text-left px-4 py-3 transition-colors block hover:bg-background-elevated/40"
+                  style={{ borderBottom: '1px solid var(--color-border)', borderLeft: `3px solid ${s.accent}` }}
                 >
-                  <div className="font-mono font-bold text-[11px] text-text-primary mb-0.5">
-                    {t.title[lang]}
+                  <div
+                    className="font-extrabold text-[16px] leading-[1.15] text-text-primary mb-1"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    {s.title[lang]}
                   </div>
-                  <div className="text-[9px] font-mono text-text-muted">
-                    {t.blurb[lang]} · {t.steps.length} {lang === 'en' ? 'steps' : 'pasos'}
+                  <div className="text-[10px] text-text-secondary leading-[1.5] mb-1.5">
+                    {s.subtitle[lang]}
+                  </div>
+                  <div className="text-[9px] font-mono uppercase tracking-[0.08em] flex items-center gap-2" style={{ color: s.accent }}>
+                    <span>{s.chapters.length} {lang === 'en' ? 'chapters' : 'capítulos'}</span>
+                    <span className="text-text-muted">·</span>
+                    <span className="text-text-muted">{s.duration}</span>
                   </div>
                 </button>
               ))}
-              {activeTour && (
+              {activeStory && (
                 <button
-                  onClick={() => { setActiveTour(null); setActiveStep(0); setToursMenuOpen(false) }}
-                  className="w-full text-left px-3 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
+                  onClick={() => {
+                    setActiveStory(null)
+                    setActiveChapter(0)
+                    setStoryPlaying(false)
+                    setStoryEnded(false)
+                    setStoriesMenuOpen(false)
+                  }}
+                  className="w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
                   style={{ background: 'var(--color-border)', color: '#dc2626' }}
                 >
                   <Square className="h-3 w-3 inline mr-1.5" />
-                  {lang === 'en' ? 'Stop current tour' : 'Detener tour'}
+                  {lang === 'en' ? 'Close story' : 'Cerrar historia'}
                 </button>
               )}
             </motion.div>
@@ -1461,57 +1425,228 @@ export default function Atlas() {
         )}
       </div>
 
-      {/* ── Tour narration overlay ─────────────────────────────────────── */}
+      {/* ── STORY READER — replaces brief tour narration with rich chapter UI ─── */}
       <AnimatePresence mode="wait">
-        {activeTour && activeTour.steps[activeStep] && (
-          <motion.div
-            key={`tour-${activeTour.id}-${activeStep}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="surface-card rounded-sm p-3 mb-3 border-l-2"
-            style={{ borderLeftColor: activeTour.accent }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+        {activeStory && !storyEnded && activeStory.chapters[activeChapter] && (() => {
+          const chapter: StoryChapter = activeStory.chapters[activeChapter]
+          const isLastChapter = activeChapter === activeStory.chapters.length - 1
+          const romanNumerals = ['I','II','III','IV','V','VI','VII','VIII','IX','X']
+          const romanCh = romanNumerals[activeChapter] ?? `${activeChapter + 1}`
+          return (
+            <motion.div
+              key={`story-${activeStory.id}-${activeChapter}`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="surface-card rounded-sm mb-4 overflow-hidden"
+              style={{ borderLeft: `3px solid ${activeStory.accent}` }}
+            >
+              {/* ── Story banner (story-level chrome) ── */}
+              <div
+                className="px-5 py-2.5 flex items-center justify-between gap-3"
+                style={{ background: 'var(--color-border)' }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
                   <span
-                    className="text-[8px] font-mono font-bold uppercase tracking-[0.14em]"
-                    style={{ color: activeTour.accent }}
+                    className="text-[8px] font-mono font-bold uppercase tracking-[0.16em] flex-shrink-0"
+                    style={{ color: activeStory.accent }}
                   >
-                    ◆ {lang === 'en' ? 'TOUR' : 'TOUR'} · {activeTour.title[lang]}
+                    ◆ {lang === 'en' ? 'STORY' : 'HISTORIA'}
                   </span>
-                  <span className="text-[8px] font-mono text-text-muted">
-                    {activeStep + 1} / {activeTour.steps.length} · {YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.findIndex((s) => s.year === activeTour.steps[activeStep].year)]?.year}
+                  <span className="font-mono text-[11px] text-text-primary truncate font-semibold">
+                    {activeStory.title[lang]}
                   </span>
                 </div>
-                <p className="text-[12px] text-text-primary leading-[1.55] text-pretty">
-                  {activeTour.steps[activeStep].narration[lang]}
-                </p>
-              </div>
-              {/* Step progress dots + stop */}
-              <div className="flex items-center gap-2 flex-shrink-0 pt-1">
-                <div className="flex items-center gap-1">
-                  {activeTour.steps.map((_, i) => (
-                    <span
+                {/* Chapter progress dots */}
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {activeStory.chapters.map((_, i) => (
+                    <button
                       key={i}
-                      className="rounded-full transition-all"
+                      onClick={() => setActiveChapter(i)}
+                      className="rounded-full transition-all hover:opacity-90"
                       style={{
-                        width: i === activeStep ? 14 : 6,
-                        height: 4,
-                        background: i <= activeStep ? activeTour.accent : 'var(--color-border-hover)',
+                        width: i === activeChapter ? 16 : 6,
+                        height: 5,
+                        background: i <= activeChapter ? activeStory.accent : 'var(--color-border-hover)',
+                        cursor: 'pointer',
                       }}
+                      aria-label={`${lang === 'en' ? 'Go to chapter' : 'Ir al capítulo'} ${i + 1}`}
                     />
                   ))}
                 </div>
-                <button
-                  onClick={() => { setActiveTour(null); setActiveStep(0) }}
-                  className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
-                  aria-label={lang === 'en' ? 'Stop tour' : 'Detener tour'}
-                  title={lang === 'en' ? 'Stop tour' : 'Detener'}
+                {/* Story controls */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => setStoryPlaying(!storyPlaying)}
+                    className="p-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                    aria-label={storyPlaying ? (lang === 'en' ? 'Pause story' : 'Pausar historia') : (lang === 'en' ? 'Play story' : 'Reproducir historia')}
+                    title={storyPlaying ? (lang === 'en' ? 'Pause' : 'Pausar') : (lang === 'en' ? 'Play' : 'Reproducir')}
+                  >
+                    {storyPlaying
+                      ? <Pause className="h-3.5 w-3.5" style={{ color: activeStory.accent }} />
+                      : <Play className="h-3.5 w-3.5" style={{ color: activeStory.accent }} />
+                    }
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (isLastChapter) { setStoryPlaying(false); setStoryEnded(true) }
+                      else setActiveChapter(activeChapter + 1)
+                    }}
+                    className="p-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                    aria-label={lang === 'en' ? 'Next chapter' : 'Siguiente capítulo'}
+                    title={lang === 'en' ? 'Next' : 'Siguiente'}
+                  >
+                    <SkipForward className="h-3.5 w-3.5 text-text-muted" />
+                  </button>
+                  <button
+                    onClick={() => { setActiveStory(null); setActiveChapter(0); setStoryPlaying(false); setStoryEnded(false) }}
+                    className="p-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                    aria-label={lang === 'en' ? 'Close story' : 'Cerrar historia'}
+                    title={lang === 'en' ? 'Close' : 'Cerrar'}
+                  >
+                    <X className="h-3.5 w-3.5 text-text-muted" />
+                  </button>
+                </div>
+              </div>
+
+              {/* ── Chapter content ── */}
+              <div className="px-5 py-5 md:px-7 md:py-6">
+                <div className="flex items-baseline gap-3 mb-2">
+                  <span
+                    className="font-mono font-bold uppercase tracking-[0.14em] text-[10px]"
+                    style={{ color: activeStory.accent }}
+                  >
+                    {lang === 'en' ? 'CHAPTER' : 'CAPÍTULO'} {romanCh}
+                  </span>
+                  <span className="font-mono text-[10px] text-text-muted">
+                    {chapter.yearLabel[lang]}
+                  </span>
+                </div>
+                <h2
+                  className="font-extrabold text-[24px] md:text-[28px] leading-[1.1] tracking-[-0.01em] text-text-primary mb-3 text-balance"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
-                  <Square className="h-3 w-3" style={{ color: activeTour.accent }} />
+                  {chapter.title[lang]}
+                </h2>
+                <p
+                  className="text-[14px] md:text-[15px] leading-[1.7] text-text-secondary text-pretty"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  {chapter.body[lang]}
+                </p>
+
+                {/* Optional pull-stat callout */}
+                {chapter.pull && (
+                  <div
+                    className="mt-4 pt-4 border-t flex items-baseline gap-4"
+                    style={{ borderColor: 'var(--color-border)' }}
+                  >
+                    <div
+                      className="font-extrabold tabular-nums leading-none flex-shrink-0"
+                      style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        color: activeStory.accent,
+                        fontSize: 32,
+                      }}
+                    >
+                      {chapter.pull.value[lang]}
+                    </div>
+                    <div className="text-[11px] font-mono text-text-muted leading-[1.5] uppercase tracking-[0.06em]">
+                      {chapter.pull.caption[lang]}
+                    </div>
+                  </div>
+                )}
+
+                {/* Continue / autoplay hint footer */}
+                <div className="mt-5 pt-3 border-t border-border/50 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="text-[10px] font-mono text-text-muted">
+                    {storyPlaying
+                      ? (lang === 'en' ? `auto-advancing in ${(chapter.dwellMs / 1000).toFixed(0)}s · pause to read & explore` : `avanza en ${(chapter.dwellMs / 1000).toFixed(0)}s · pausa para leer y explorar`)
+                      : (lang === 'en' ? 'paused · click ▶ to resume or use → to advance' : 'pausado · clic ▶ para reanudar o → para avanzar')
+                    }
+                  </div>
+                  {!isLastChapter && (
+                    <button
+                      onClick={() => setActiveChapter(activeChapter + 1)}
+                      className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                      style={{ background: activeStory.accent, color: 'white' }}
+                    >
+                      {lang === 'en' ? 'Continue' : 'Continuar'}
+                      <ArrowUpRight className="h-3 w-3 rotate-45" />
+                    </button>
+                  )}
+                  {isLastChapter && (
+                    <button
+                      onClick={() => { setStoryPlaying(false); setStoryEnded(true) }}
+                      className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                      style={{ background: activeStory.accent, color: 'white' }}
+                    >
+                      {lang === 'en' ? 'End of story' : 'Fin de la historia'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })()}
+
+        {/* End-of-story closing card */}
+        {activeStory && storyEnded && (
+          <motion.div
+            key={`story-end-${activeStory.id}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.45 }}
+            className="surface-card rounded-sm mb-4 overflow-hidden"
+            style={{ borderLeft: `3px solid ${activeStory.accent}` }}
+          >
+            <div className="px-5 py-2.5" style={{ background: 'var(--color-border)' }}>
+              <span className="text-[8px] font-mono font-bold uppercase tracking-[0.16em]" style={{ color: activeStory.accent }}>
+                ◆ {lang === 'en' ? 'FIN' : 'FIN'} · {activeStory.title[lang]}
+              </span>
+            </div>
+            <div className="px-5 py-6 md:px-7 md:py-7">
+              <h2
+                className="font-extrabold text-[26px] md:text-[34px] leading-[1.05] tracking-[-0.015em] text-text-primary mb-3 text-balance"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                {activeStory.closing.headline[lang]}
+              </h2>
+              <p
+                className="text-[14px] md:text-[15px] leading-[1.7] text-text-secondary text-pretty mb-5"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              >
+                {activeStory.closing.body[lang]}
+              </p>
+              <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/50">
+                <button
+                  onClick={() => { setActiveChapter(0); setStoryPlaying(true); setStoryEnded(false) }}
+                  className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                  style={{ background: activeStory.accent, color: 'white' }}
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {lang === 'en' ? 'Replay' : 'Repetir'}
+                </button>
+                {ATLAS_STORIES.filter((s) => s.id !== activeStory.id).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { setActiveStory(s); setActiveChapter(0); setStoryPlaying(true); setStoryEnded(false) }}
+                    className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5"
+                    style={{ border: '1px solid var(--color-border)', color: s.accent }}
+                  >
+                    <BookOpen className="h-3 w-3" />
+                    {s.title[lang]}
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setActiveStory(null); setActiveChapter(0); setStoryPlaying(false); setStoryEnded(false) }}
+                  className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5 text-text-muted ml-auto"
+                  style={{ border: '1px solid var(--color-border)' }}
+                >
+                  <X className="h-3 w-3" />
+                  {lang === 'en' ? 'Continue exploring' : 'Seguir explorando'}
                 </button>
               </div>
             </div>
