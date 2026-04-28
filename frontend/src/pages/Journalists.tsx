@@ -212,10 +212,424 @@ function formatBillions(amount: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Featured Investigation — full-width hero
+// Editorial decorative SVG artwork — used in lead + section breaks.
+// Procurement-themed abstract patterns. Never a stock photo.
 // ---------------------------------------------------------------------------
 
-function FeaturedCard({ item }: { item: Investigation }) {
+function NewsroomArtwork({
+  accent,
+  variant = 'cluster',
+}: { accent: string; variant?: 'cluster' | 'grid' | 'spike' }) {
+  if (variant === 'spike') {
+    // Vertical risk-spike pattern — like a seismograph
+    return (
+      <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {Array.from({ length: 40 }).map((_, i) => {
+          const x = 10 + i * 9.5
+          // Pseudo-random heights with a critical spike near middle
+          const heights = [40, 35, 50, 45, 60, 55, 70, 65, 80, 75, 90, 100, 120, 140, 160, 220, 200, 180, 160, 140, 120, 100, 90, 80, 75, 70, 65, 60, 55, 50, 45, 50, 60, 55, 50, 45, 40, 45, 40, 35]
+          const h = heights[i] ?? 60
+          return (
+            <rect key={i} x={x} y={260 - h} width={5} height={h} fill={accent} opacity={0.3 + (h / 280) * 0.5} rx={1} />
+          )
+        })}
+      </svg>
+    )
+  }
+  if (variant === 'grid') {
+    return (
+      <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {Array.from({ length: 7 }).map((_, row) =>
+          Array.from({ length: 12 }).map((_, col) => (
+            <rect
+              key={`${row}-${col}`}
+              x={20 + col * 32}
+              y={20 + row * 32}
+              width={28}
+              height={20}
+              fill={accent}
+              opacity={0.06 + Math.random() * 0.18}
+              rx={1.5}
+            />
+          ))
+        )}
+      </svg>
+    )
+  }
+  // 'cluster' — constellation
+  return (
+    <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="newsroom-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={accent} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={accent} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      {Array.from({ length: 12 * 8 }).map((_, i) => {
+        const cols = 12
+        const col = i % cols
+        const row = Math.floor(i / cols)
+        return (
+          <circle
+            key={i}
+            cx={20 + col * 32}
+            cy={20 + row * 32}
+            r={1.4}
+            fill={accent}
+            opacity={0.15}
+          />
+        )
+      })}
+      {/* Cluster glow */}
+      <circle cx={210} cy={140} r={60} fill="url(#newsroom-glow)" />
+      {/* Bright critical dots */}
+      {[
+        [195, 130], [210, 122], [218, 138], [228, 128], [232, 142], [220, 152], [205, 148],
+      ].map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={2.4} fill={accent} opacity={0.85} />
+      ))}
+      {/* Hairline edges */}
+      {[
+        [195, 130, 210, 122], [210, 122, 218, 138], [218, 138, 228, 128], [218, 138, 220, 152],
+        [220, 152, 205, 148], [228, 128, 232, 142], [232, 142, 220, 152],
+      ].map(([x1, y1, x2, y2], i) => (
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={0.6} opacity={0.45} />
+      ))}
+      {/* Outliers */}
+      {[[60, 50], [340, 60], [360, 220], [50, 220], [60, 130]].map(([x, y], i) => (
+        <circle key={`o-${i}`} cx={x} cy={y} r={1.8} fill={accent} opacity={0.5} />
+      ))}
+    </svg>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// LEAD STORY — top of page, full-bleed hero with artwork backdrop
+// ---------------------------------------------------------------------------
+
+function LeadStoryCard({ item }: { item: Investigation }) {
+  const navigate = useNavigate()
+  const { t } = useTranslation('journalists')
+  const status = STATUS_META[item.status]
+  const accent = FRAUD_COLOR[item.type]
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
+  return (
+    <article
+      onClick={() => navigate(`/stories/${item.slug}`)}
+      className="group relative block w-full text-left bg-background-card rounded-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-2xl"
+      style={{ border: '1px solid var(--color-border)' }}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/stories/${item.slug}`) }}
+      aria-label={headline}
+    >
+      {/* Top accent bar */}
+      <div className="absolute inset-x-0 top-0 h-[3px] z-10" style={{ background: accent }} />
+
+      {/* Decorative artwork backdrop — sits in the right portion */}
+      <div className="absolute right-0 top-0 bottom-0 w-[55%] opacity-50 pointer-events-none hidden md:block">
+        <NewsroomArtwork accent={accent} variant="cluster" />
+      </div>
+      <div
+        className="absolute right-0 top-0 bottom-0 w-[55%] hidden md:block pointer-events-none"
+        style={{ background: `linear-gradient(90deg, var(--color-background-card) 0%, transparent 30%, transparent 100%)` }}
+      />
+
+      <div className="relative z-10 grid lg:grid-cols-12 gap-x-10 gap-y-6 p-8 sm:p-10 md:p-14">
+        {/* LEFT COLUMN — editorial */}
+        <div className="lg:col-span-7">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]" style={{ color: accent }}>
+              ◆ {t('featuredLabel', { defaultValue: 'LEAD INVESTIGATION' })}
+            </span>
+            <span className="h-px flex-1 max-w-12" style={{ background: accent, opacity: 0.45 }} />
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+              {FRAUD_LABEL[item.type]}
+            </span>
+          </div>
+
+          <h2
+            className="text-text-primary leading-[1.04] mb-6 text-balance"
+            style={{
+              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            {headline}
+          </h2>
+
+          <p
+            className="text-text-secondary leading-[1.55] mb-7 text-pretty max-w-2xl italic"
+            style={{
+              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+              fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
+            }}
+          >
+            {item.brief}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2.5 mb-7">
+            <span
+              className={cn(
+                'inline-flex items-center px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.14em] border rounded-sm',
+                status.color, status.border, status.bg,
+              )}
+            >
+              [{status.label}]
+            </span>
+            <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.14em] text-text-secondary border border-border bg-background rounded-sm">
+              {ERA_LABEL[item.era]}
+            </span>
+          </div>
+
+          <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] transition-colors" style={{ color: accent }}>
+            {t('cards.readInvestigation', { defaultValue: 'Read the full investigation' })}
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1.5">→</span>
+          </span>
+        </div>
+
+        {/* RIGHT COLUMN — stat block (sits over artwork backdrop) */}
+        <div className="lg:col-span-5 flex flex-col justify-between gap-6 lg:border-l lg:border-border lg:pl-10">
+          <div>
+            <div
+              className="font-extrabold text-text-primary leading-[0.9] tracking-[-0.04em] tabular-nums"
+              style={{
+                fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                fontSize: 'clamp(2.5rem, 6.5vw, 5rem)',
+              }}
+            >
+              {formatBillions(item.amount)}
+            </div>
+            <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted mt-3">
+              {t('lead.statTotal', { defaultValue: 'Validated contract spend' })}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div className="border-l-2 pl-3" style={{ borderColor: accent }}>
+              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums leading-none">
+                {item.contracts.toLocaleString('en-US')}
+              </div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {t('lead.statContracts', { defaultValue: 'Contracts' })}
+              </p>
+            </div>
+            <div className="border-l-2 border-border-hover pl-3">
+              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums leading-none">
+                {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
+              </div>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {t('lead.statSpan', { defaultValue: 'Time span' })}
+              </p>
+            </div>
+          </div>
+
+          {/* Sub copy */}
+          <div className="pt-4 border-t border-border/60">
+            <p className="text-[11px] font-mono text-text-muted leading-[1.5] tabular-nums">
+              {sub}
+            </p>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// EDITORS PICK card — tier 2, 2-up side by side
+// ---------------------------------------------------------------------------
+
+function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'grid' | 'cluster' }) {
+  const { t } = useTranslation('journalists')
+  const accent = FRAUD_COLOR[item.type]
+  const status = STATUS_META[item.status]
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  return (
+    <Link
+      to={`/stories/${item.slug}`}
+      className="group relative flex flex-col bg-background-card rounded-sm overflow-hidden transition-shadow hover:shadow-xl"
+      style={{ border: '1px solid var(--color-border)' }}
+      aria-label={headline}
+    >
+      {/* Top accent */}
+      <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: accent }} />
+      {/* Small decoration in corner */}
+      <div
+        className="absolute right-0 top-0 w-[160px] h-[110px] opacity-35 pointer-events-none"
+        style={{ background: `linear-gradient(180deg, transparent 70%, var(--color-background-card) 100%)` }}
+      >
+        <NewsroomArtwork accent={accent} variant={art} />
+      </div>
+
+      <div className="relative p-6 sm:p-7 flex flex-col flex-1">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
+            {FRAUD_LABEL[item.type]}
+          </span>
+          <span className="text-[9px] font-mono text-text-muted">·</span>
+          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {ERA_LABEL[item.era]}
+          </span>
+        </div>
+
+        <h3
+          className="text-text-primary leading-[1.12] mb-4 text-balance"
+          style={{
+            fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+            fontSize: 'clamp(1.4rem, 2.3vw, 1.85rem)',
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {headline}
+        </h3>
+
+        <p className="text-[14px] leading-[1.6] text-text-secondary mb-5 flex-1 text-pretty">
+          {item.brief}
+        </p>
+
+        {/* Stat row */}
+        <div className="flex items-center gap-6 mb-4 pt-4 border-t border-border/60">
+          <div>
+            <div
+              className="font-extrabold tabular-nums leading-none"
+              style={{
+                fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                color: accent,
+                fontSize: 24,
+              }}
+            >
+              {formatBillions(item.amount)}
+            </div>
+            <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
+              {t('lead.statTotal', { defaultValue: 'Validated spend' })}
+            </p>
+          </div>
+          {item.contracts > 0 && (
+            <div className="border-l border-border/60 pl-5">
+              <div className="text-lg font-mono font-bold text-text-primary tabular-nums leading-none">
+                {item.contracts.toLocaleString('en-US')}
+              </div>
+              <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
+                {t('lead.statContracts', { defaultValue: 'Contracts' })}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between">
+          <span
+            className={cn(
+              'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
+              status.color, status.border, status.bg,
+            )}
+          >
+            [{status.label}]
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold transition-transform" style={{ color: accent }}>
+            {t('cards.readStory', { defaultValue: 'Read story' })}
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// DATA LEADS — compact numbered list of solo_datos investigations
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function DataLeadsList({ items }: { items: Investigation[] }) {
+  const { t } = useTranslation('journalists')
+  return (
+    <div className="space-y-1.5">
+      {items.map((item, idx) => {
+        const accent = FRAUD_COLOR[item.type]
+        const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+        return (
+          <Link
+            key={item.slug}
+            to={`/stories/${item.slug}`}
+            className="group block py-3 px-1 transition-colors"
+            style={{ borderBottom: '1px solid var(--color-border)' }}
+            aria-label={headline}
+          >
+            <div className="flex items-baseline gap-4 sm:gap-6">
+              {/* Number */}
+              <span
+                className="font-mono font-bold text-text-muted tabular-nums leading-none flex-shrink-0"
+                style={{ fontSize: 'clamp(20px, 2.4vw, 28px)', minWidth: 44 }}
+              >
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              {/* Body */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-[0.16em]" style={{ color: accent }}>
+                    {FRAUD_LABEL[item.type]}
+                  </span>
+                  <span className="text-[9px] font-mono text-text-muted">·</span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted">
+                    {ERA_LABEL[item.era]}
+                  </span>
+                </div>
+                <h4
+                  className="text-text-primary leading-[1.25] group-hover:opacity-80 transition-opacity"
+                  style={{
+                    fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                    fontSize: 'clamp(15px, 1.7vw, 18px)',
+                    fontWeight: 600,
+                  }}
+                >
+                  {headline}
+                </h4>
+                {item.sub && (
+                  <p className="text-[12px] font-mono text-text-muted mt-1 truncate tabular-nums">
+                    {item.sub}
+                  </p>
+                )}
+              </div>
+              {/* Arrow */}
+              <span
+                className="font-mono text-text-muted flex-shrink-0 transition-transform group-hover:translate-x-1 group-hover:text-text-primary"
+                style={{ fontSize: 18 }}
+              >→</span>
+            </div>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Section break — decorative divider with accent dot
+// ---------------------------------------------------------------------------
+
+function SectionBreak() {
+  return (
+    <div className="my-12 sm:my-14 flex items-center justify-center" aria-hidden="true">
+      <span className="block h-px w-16 bg-border" />
+      <span className="mx-3 h-1.5 w-1.5 rounded-full bg-text-muted opacity-60" />
+      <span className="block h-px w-16 bg-border" />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// (Legacy) Featured Investigation — full-width hero (kept for back-compat,
+// no longer rendered from main page)
+// ---------------------------------------------------------------------------
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function FeaturedCard({ item }: { item: Investigation }) {
   const navigate = useNavigate()
   const { t } = useTranslation('journalists')
   const status = STATUS_META[item.status]
@@ -630,17 +1044,30 @@ export default function Journalists() {
   const { t } = useTranslation('journalists')
   const [active, setActive] = useState<FilterKey>('all')
 
-  // Featured = biggest amount
-  const featured = useMemo(
-    () =>
-      [...INVESTIGATIONS].sort((a, b) => b.amount - a.amount)[0],
-    []
+  // Editorial weighting: lead = top by amount; editor's picks = next 2 by
+  // amount. Both are pulled out of the filterable dossier so they don't
+  // duplicate. Dossier = the remaining 7 stories — that's what the filter
+  // strip operates on.
+  const editorialRanked = useMemo(
+    () => [...INVESTIGATIONS].sort((a, b) => b.amount - a.amount),
+    [],
+  )
+  const lead = editorialRanked[0]
+  const editorsPicks = editorialRanked.slice(1, 3)
+  const tierTwoSlugSet = useMemo(
+    () => new Set([lead.slug, ...editorsPicks.map((i) => i.slug)]),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+  const dossier = useMemo(
+    () => INVESTIGATIONS.filter((i) => !tierTwoSlugSet.has(i.slug)),
+    [tierTwoSlugSet],
   )
 
-  const remaining = useMemo(
-    () => INVESTIGATIONS.filter((i) => i.slug !== featured.slug),
-    [featured]
-  )
+  // Backward-compat alias — legacy filter logic still references `remaining`
+  const remaining = dossier
+  // suppress unused-var: kept for narrative parity with previous version
+  void lead
 
   // Filter definitions (duplicated here for counts — keeps filter UI self-contained)
   const counts = useMemo<Record<FilterKey, number>>(() => {
@@ -777,20 +1204,64 @@ export default function Journalists() {
         </header>
 
         {/* =================================================================
-            FEATURED
-        ================================================================= */}
-        <section className="mb-14">
-          <FeaturedCard item={featured} />
+            TIER 1 — LEAD STORY
+            ================================================================= */}
+        <section className="mb-14 sm:mb-16">
+          <LeadStoryCard item={lead} />
         </section>
 
         {/* =================================================================
-            FILTER STRIP
-        ================================================================= */}
+            TIER 2 — EDITOR'S PICKS (2 stories side-by-side)
+            ================================================================= */}
+        {editorsPicks.length === 2 && (
+          <>
+            <SectionBreak />
+            <section className="mb-14 sm:mb-16">
+              <div className="flex items-end justify-between gap-6 mb-6">
+                <div>
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mb-1.5">
+                    ◆ {t('picks.kicker', { defaultValue: 'Editor\'s Picks' })}
+                  </p>
+                  <h2
+                    className="text-text-primary"
+                    style={{
+                      fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                      fontSize: 'clamp(1.5rem, 2.4vw, 2rem)',
+                      fontWeight: 700,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {t('picks.title', { defaultValue: 'Investigations of consequence' })}
+                  </h2>
+                </div>
+                <p className="text-[10px] font-mono text-text-muted leading-[1.45] max-w-xs hidden sm:block">
+                  {t('picks.dek', {
+                    defaultValue: 'Two stories where data, dollars, and documentation align.',
+                  })}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
+                {editorsPicks.map((item, i) => (
+                  <EditorsPickCard
+                    key={item.slug}
+                    item={item}
+                    art={i === 0 ? 'spike' : 'grid'}
+                  />
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* =================================================================
+            TIER 3 — THE FULL DOSSIER (filterable grid)
+            ================================================================= */}
+        <SectionBreak />
         <section className="mb-8">
           <div className="flex items-end justify-between gap-6 mb-5">
             <div>
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted mb-1.5">
-                {t('grid.kicker', { defaultValue: 'The Full Dossier' })}
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mb-1.5">
+                ◆ {t('grid.kicker', { defaultValue: 'The Full Dossier' })}
               </p>
               <h2
                 className="text-text-primary"
@@ -802,7 +1273,7 @@ export default function Journalists() {
                   letterSpacing: '-0.02em',
                 }}
               >
-                {t('grid.title', { defaultValue: 'All investigations' })}
+                {t('grid.title', { defaultValue: 'Every investigation in the desk' })}
               </h2>
             </div>
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums pb-2">
@@ -814,9 +1285,6 @@ export default function Journalists() {
           <FilterStrip active={active} onChange={setActive} counts={counts} />
         </section>
 
-        {/* =================================================================
-            INVESTIGATION GRID
-        ================================================================= */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {filtered.map((item) => (
             <GridCard key={item.slug} item={item} />
