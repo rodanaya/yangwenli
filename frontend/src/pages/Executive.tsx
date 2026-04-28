@@ -1076,49 +1076,74 @@ export default function Executive() {
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
               </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#f59e0b' }}>95%</span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'of high-value contracts\nnever audited' : 'de contratos de alto valor\nnunca auditados'}</span>
-              </div>
-              {/* Animated fill strip */}
-              <div className="mb-4">
-                <div className="relative h-[28px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                  {/* 95% unaudited fills from left */}
-                  <motion.div
-                    className="absolute inset-y-0 left-0 flex items-center"
-                    style={{ background: 'rgba(245,158,11,0.22)', transformOrigin: 'left' }}
-                    initial={{ scaleX: 0 }}
-                    whileInView={{ scaleX: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.4, delay: 0.3, ease: 'easeOut' }}
+              {/* Audit gap — magazine triptych: [5% audited | 19× | MX$1.25T unreviewed] */}
+              <div className="mb-4 rounded-sm overflow-hidden" style={{ height: 92 }}>
+                <div className="flex h-full">
+
+                  {/* Left: tiny audit slice */}
+                  <div
+                    className="flex flex-col items-center justify-center flex-shrink-0 gap-0.5"
+                    style={{
+                      width: 74,
+                      background: 'rgba(100,116,139,0.09)',
+                      borderRight: '1px solid var(--color-border)',
+                    }}
                   >
-                    <div style={{ width: 'calc(95vw)' }} />
-                  </motion.div>
-                  <motion.div
-                    className="absolute inset-y-0 left-0 rounded-sm"
-                    style={{ width: '95%', transformOrigin: 'left' }}
-                    initial={{ scaleX: 0 }}
-                    whileInView={{ scaleX: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.4, delay: 0.3, ease: 'easeOut' }}
-                  >
-                    <div className="h-full rounded-sm" style={{ background: 'rgba(245,158,11,0.28)' }} />
-                  </motion.div>
-                  {/* 5% audited — bright strip at right */}
-                  <motion.div
-                    className="absolute inset-y-0 right-0 rounded-sm"
-                    style={{ width: '5%', background: '#10b981', opacity: 0.7 }}
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 0.7 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 1.6 }}
-                  />
-                  <div className="absolute inset-0 flex items-center px-2">
-                    <span className="text-[9px] font-mono font-bold" style={{ color: '#f59e0b' }}>
-                      {lang === 'en' ? '95% NEVER REVIEWED' : '95% NUNCA REVISADO'}
+                    <span
+                      className="font-mono font-bold text-[28px] leading-none tabular-nums"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      5%
                     </span>
-                    <span className="ml-auto text-[8px] font-mono" style={{ color: '#10b981' }}>5% ✓</span>
+                    <span className="text-[7px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
+                      ASF<br />audits
+                    </span>
                   </div>
+
+                  {/* Bridge: gap multiplier */}
+                  <div
+                    className="flex flex-col items-center justify-center flex-shrink-0"
+                    style={{ width: 50, background: 'var(--color-background)' }}
+                  >
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#f59e0b' }}>
+                      19×
+                    </span>
+                    <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                  </div>
+
+                  {/* Right: massive value-at-risk panel */}
+                  <div className="flex-1 relative overflow-hidden">
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{ background: '#f59e0b', transformOrigin: 'left' }}
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      whileInView={{ scaleX: 1, opacity: 0.12 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.85, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                    <div className="absolute inset-y-0 left-0" style={{ width: 3, background: '#f59e0b', opacity: 0.7 }} />
+                    <motion.div
+                      className="absolute inset-0 flex flex-col items-center justify-center"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.35, delay: 0.92 }}
+                    >
+                      <span
+                        className="font-mono font-bold text-[36px] leading-none tabular-nums"
+                        style={{ color: '#f59e0b' }}
+                      >
+                        MX$1.25T
+                      </span>
+                      <span
+                        className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
+                        style={{ color: '#f59e0b', opacity: 0.7 }}
+                      >
+                        {lang === 'en' ? '95% never audited' : '95% sin auditar'}
+                      </span>
+                    </motion.div>
+                  </div>
+
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
@@ -1143,56 +1168,151 @@ export default function Executive() {
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 03 · THRESHOLD GAMING' : 'HALLAZGO 03 · JUEGO DE UMBRALES'}
               </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#8b5cf6' }}>75%</span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'DA rate near\ntender thresholds' : 'tasa adjudicación\ncerca de umbrales'}</span>
-              </div>
-              {/* Two-bar vertical comparison */}
-              <div className="flex items-end gap-4 mb-4" style={{ height: 64 }}>
-                <div className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-[9px] font-mono font-bold" style={{ color: '#8b5cf6' }}>75%</span>
-                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
-                      style={{ background: '#8b5cf6', opacity: 0.65, transformOrigin: 'bottom' }}
-                      initial={{ scaleY: 0 }}
-                      whileInView={{ scaleY: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '75%', background: '#8b5cf6', opacity: 0.65 }} />
-                  </div>
-                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">{lang === 'en' ? 'near\nthreshold' : 'cerca\numbral'}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-[9px] font-mono text-text-muted">30%</span>
-                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
-                      style={{ background: '#10b981', opacity: 0.5, transformOrigin: 'bottom' }}
-                      initial={{ scaleY: 0 }}
-                      whileInView={{ scaleY: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '30%', background: '#10b981', opacity: 0.5 }} />
-                  </div>
-                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">OECD {lang === 'en' ? 'ceiling' : 'umbral'}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-[9px] font-mono text-text-muted">~28%</span>
-                  <div className="w-full rounded-t-sm overflow-hidden relative" style={{ height: 44, background: 'var(--color-border)' }}>
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 rounded-t-sm"
-                      style={{ background: '#64748b', opacity: 0.4, transformOrigin: 'bottom' }}
-                      initial={{ scaleY: 0 }}
-                      whileInView={{ scaleY: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.8, ease: 'easeOut' }}
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 rounded-t-sm" style={{ height: '28%', background: '#64748b', opacity: 0.4 }} />
-                  </div>
-                  <span className="text-[8px] font-mono text-text-muted text-center leading-[1.2]">{lang === 'en' ? 'far from\nthreshold' : 'lejos del\numbral'}</span>
+              {/* Threshold-bunching histogram — the statistical fingerprint */}
+              <div className="mb-4">
+                {(() => {
+                  // Bars before threshold ramp toward a peak just below the legal limit
+                  const PRE = [22, 24, 27, 30, 34, 40, 50, 64, 80]
+                  // Bars after threshold drop sharply to normal market rate
+                  const POST = [30, 28, 32, 30]
+                  const BAR_W = 18
+                  const GAP = 3
+                  const X0 = 6
+                  const THRESH_GAP = 18
+                  const Y_BASE = 92
+                  const threshX = X0 + PRE.length * (BAR_W + GAP) + 7
+                  return (
+                    <svg viewBox="0 0 320 110" className="w-full" style={{ height: 110 }} aria-hidden>
+                      {/* Y baseline */}
+                      <line x1={4} x2={316} y1={Y_BASE} y2={Y_BASE} stroke="var(--color-border)" strokeWidth={0.8} />
+
+                      {/* Pre-threshold bars: full violet at the spike, faded for normal */}
+                      {PRE.map((h, i) => {
+                        const x = X0 + i * (BAR_W + GAP)
+                        const isPeak = i >= PRE.length - 3
+                        return (
+                          <motion.rect
+                            key={`pre-${i}`}
+                            x={x}
+                            width={BAR_W}
+                            rx={1}
+                            fill={isPeak ? '#8b5cf6' : 'rgba(139,92,246,0.30)'}
+                            initial={{ y: Y_BASE, height: 0 }}
+                            whileInView={{ y: Y_BASE - h, height: h }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.2 + i * 0.05, ease: 'easeOut' }}
+                          />
+                        )
+                      })}
+
+                      {/* Threshold line — vertical red dashed */}
+                      <motion.line
+                        x1={threshX}
+                        x2={threshX}
+                        y1={4}
+                        y2={Y_BASE}
+                        stroke="#dc2626"
+                        strokeWidth={1.4}
+                        strokeDasharray="3 3"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 0.85 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.85 }}
+                      />
+
+                      {/* Threshold label */}
+                      <motion.text
+                        x={threshX + 4}
+                        y={11}
+                        fontSize={8}
+                        fill="#dc2626"
+                        fontFamily="var(--font-family-mono, monospace)"
+                        fontWeight="700"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: 1.05 }}
+                      >
+                        {lang === 'en' ? 'TENDER THRESHOLD' : 'UMBRAL LICITACIÓN'}
+                      </motion.text>
+
+                      {/* Post-threshold bars: muted gray = normal market */}
+                      {POST.map((h, i) => {
+                        const x = X0 + PRE.length * (BAR_W + GAP) + THRESH_GAP + i * (BAR_W + GAP)
+                        return (
+                          <motion.rect
+                            key={`post-${i}`}
+                            x={x}
+                            width={BAR_W}
+                            rx={1}
+                            fill="rgba(100,116,139,0.32)"
+                            initial={{ y: Y_BASE, height: 0 }}
+                            whileInView={{ y: Y_BASE - h, height: h }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.7 + i * 0.05, ease: 'easeOut' }}
+                          />
+                        )
+                      })}
+
+                      {/* Spike annotation (over the peak) */}
+                      <motion.text
+                        x={X0 + (PRE.length - 2) * (BAR_W + GAP) - 28}
+                        y={20}
+                        fontSize={9}
+                        fontWeight="700"
+                        fill="#8b5cf6"
+                        fontFamily="var(--font-family-mono, monospace)"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: 1.1 }}
+                      >
+                        ↘ 75% DA
+                      </motion.text>
+
+                      {/* Post-threshold annotation */}
+                      <motion.text
+                        x={threshX + THRESH_GAP + 26}
+                        y={56}
+                        fontSize={9}
+                        fontWeight="700"
+                        fill="var(--color-text-muted)"
+                        fontFamily="var(--font-family-mono, monospace)"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: 1.2 }}
+                      >
+                        ~28% DA
+                      </motion.text>
+
+                      {/* X-axis caption */}
+                      <text
+                        x={4}
+                        y={106}
+                        fontSize={7}
+                        fill="var(--color-text-muted)"
+                        fontFamily="var(--font-family-mono, monospace)"
+                      >
+                        {lang === 'en' ? '← smaller contracts' : '← contratos menores'}
+                      </text>
+                      <text
+                        x={316}
+                        y={106}
+                        fontSize={7}
+                        fill="var(--color-text-muted)"
+                        fontFamily="var(--font-family-mono, monospace)"
+                        textAnchor="end"
+                      >
+                        {lang === 'en' ? 'larger →' : 'mayores →'}
+                      </text>
+                    </svg>
+                  )
+                })()}
+                <div className="text-[8px] font-mono text-text-muted leading-[1.4] mt-1">
+                  {lang === 'en'
+                    ? 'Bar height = contract count by amount · spike just below threshold = artificial bunching to avoid public tender'
+                    : 'Altura barra = número de contratos · pico justo bajo umbral = agrupamiento artificial para evitar licitación'}
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
