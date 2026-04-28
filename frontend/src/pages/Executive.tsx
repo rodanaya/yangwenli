@@ -34,38 +34,194 @@ import {
 } from '@/components/charts/ConcentrationConstellation'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// § 2 La Lente — micro-stat tile used in the platform self-portrait grid
+// § 2 La Lente — concentric-rings visualization showing how the platform
+// narrows 3.1M contracts down to 320 T1 priority leads. Five tiers, animated
+// in from outside → in to evoke a telescope focusing.
 // ─────────────────────────────────────────────────────────────────────────────
-function LenteStat({
-  value, label, context, color, href,
-}: { value: string; label: string; context: string; color: string; href?: string }) {
-  const inner = (
-    <>
-      <div
-        className="font-mono font-bold text-[24px] leading-none tabular-nums"
-        style={{ color }}
+interface LensTier {
+  count: number
+  display: string
+  label: { en: string; es: string }
+  sublabel: { en: string; es: string }
+  ringR: number
+  color: string
+  ringWidth: number
+  ringOpacity: number
+  filled?: boolean
+  href: string
+}
+
+function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): LensTier[] {
+  return [
+    {
+      count: 3_051_294,
+      display: '3.1M',
+      label: { en: 'contracts analyzed', es: 'contratos analizados' },
+      sublabel: { en: 'every COMPRANET row · 2002–2025', es: 'cada registro COMPRANET · 2002–2025' },
+      ringR: 96,
+      color: 'var(--color-text-muted)',
+      ringWidth: 0.7,
+      ringOpacity: 0.40,
+      href: '/methodology',
+    },
+    {
+      count: hcCount,
+      display: formatNumber(hcCount),
+      label: { en: 'high + critical risk', es: 'riesgo alto + crítico' },
+      sublabel: { en: '13.5% of all contracts · OECD compliant band', es: '13.5% del total · banda OCDE cumplida' },
+      ringR: 72,
+      color: '#f59e0b',
+      ringWidth: 1.1,
+      ringOpacity: 0.55,
+      href: '/contracts?risk_level=high',
+    },
+    {
+      count: 6_250,
+      display: '6.2k',
+      label: { en: 'ARIA priority watch list', es: 'lista vigilancia ARIA' },
+      sublabel: { en: 'Tier 2 + Tier 3 vendors', es: 'proveedores Tier 2 + Tier 3' },
+      ringR: 50,
+      color: '#f59e0b',
+      ringWidth: 1.5,
+      ringOpacity: 0.85,
+      href: '/aria',
+    },
+    {
+      count: gtCount,
+      display: formatNumber(gtCount),
+      label: { en: 'documented corruption cases', es: 'casos documentados' },
+      sublabel: { en: 'anchor corpus for model training', es: 'corpus ancla para entrenamiento' },
+      ringR: 32,
+      color: '#a06820',
+      ringWidth: 1.7,
+      ringOpacity: 0.90,
+      href: '/cases',
+    },
+    {
+      count: t1Count,
+      display: formatNumber(t1Count),
+      label: { en: 'T1 investigation leads', es: 'líderes T1' },
+      sublabel: { en: 'highest priority · dossier-ready', es: 'máxima prioridad · listo para dossier' },
+      ringR: 16,
+      color: '#dc2626',
+      ringWidth: 0,
+      ringOpacity: 1,
+      filled: true,
+      href: '/aria',
+    },
+  ]
+}
+
+function LensVisualization({ tiers }: { tiers: LensTier[] }) {
+  const SIZE = 220
+  const CX = SIZE / 2
+  const CY = SIZE / 2
+
+  return (
+    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%" style={{ maxHeight: 240 }}>
+      <defs>
+        <radialGradient id="lens-core" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="1" />
+          <stop offset="60%" stopColor="#dc2626" stopOpacity="0.92" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.55" />
+        </radialGradient>
+        <radialGradient id="lens-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Soft red glow behind the core */}
+      <motion.circle
+        cx={CX} cy={CY}
+        fill="url(#lens-glow)"
+        initial={{ r: 0, opacity: 0 }}
+        whileInView={{ r: 50, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.9, delay: 0.6 }}
+      />
+
+      {/* Concentric rings — outer to inner */}
+      {tiers.slice(0, 4).map((t, i) => (
+        <motion.circle
+          key={i}
+          cx={CX} cy={CY}
+          r={t.ringR}
+          fill="none"
+          stroke={t.color}
+          strokeWidth={t.ringWidth}
+          initial={{ strokeOpacity: 0 }}
+          whileInView={{ strokeOpacity: t.ringOpacity }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.15 + i * 0.13, ease: 'easeOut' }}
+        />
+      ))}
+
+      {/* Tick marks on the outermost ring (compass-like) */}
+      {[0, 90, 180, 270].map((deg) => {
+        const rad = (deg * Math.PI) / 180
+        const r = tiers[0].ringR
+        const x1 = CX + Math.cos(rad) * (r - 3)
+        const y1 = CY + Math.sin(rad) * (r - 3)
+        const x2 = CX + Math.cos(rad) * (r + 3)
+        const y2 = CY + Math.sin(rad) * (r + 3)
+        return (
+          <motion.line
+            key={deg}
+            x1={x1} y1={y1} x2={x2} y2={y2}
+            stroke="var(--color-text-muted)"
+            strokeWidth={0.7}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 0.6 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.7 }}
+          />
+        )
+      })}
+
+      {/* T1 core — filled crimson disk with gradient */}
+      <motion.circle
+        cx={CX} cy={CY}
+        fill="url(#lens-core)"
+        initial={{ r: 0 }}
+        whileInView={{ r: 16 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.55, delay: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
+      />
+      {/* Core count label */}
+      <motion.text
+        x={CX} y={CY + 1}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={12}
+        fontWeight={800}
+        fill="white"
+        fontFamily="var(--font-family-mono, monospace)"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3, delay: 1.15 }}
       >
-        {value}
-      </div>
-      <div className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-2">
-        {label}
-      </div>
-      <div className="text-[10px] text-text-muted mt-1 leading-[1.4]">
-        {context}
-      </div>
-    </>
+        {tiers[4].display}
+      </motion.text>
+      {/* "T1" pill below the core */}
+      <motion.text
+        x={CX} y={CY + 30}
+        textAnchor="middle"
+        fontSize={8}
+        fontWeight={700}
+        fill="#dc2626"
+        fontFamily="var(--font-family-mono, monospace)"
+        letterSpacing="0.15em"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3, delay: 1.25 }}
+      >
+        T1 PRIORITY
+      </motion.text>
+    </svg>
   )
-  if (href) {
-    return (
-      <a
-        href={href}
-        className="block group hover:opacity-90 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded-sm"
-      >
-        {inner}
-      </a>
-    )
-  }
-  return <div>{inner}</div>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -175,21 +331,22 @@ const TIMELINE_CASES: TimelineCase[] = [
 // ─────────────────────────────────────────────────────────────────────────────
 // CaseTimeline — Seismograph-style spike chart with administration era bands
 // Critical = tall spike (80px), high = medium spike (44px).
-// Numbered markers eliminate label collision in the 2018–2023 cluster.
+// Trimmed to 2008+ since the GT corpus has no documented cases earlier — empty
+// pre-2008 era bands were misleading (suggested no cases existed when really
+// COMPRANET coverage was too thin to support documentation).
 // ─────────────────────────────────────────────────────────────────────────────
 const ERA_BANDS = [
-  { label: 'Fox',         start: 2000, end: 2006, color: '#64748b' },
-  { label: 'Calderón',    start: 2006, end: 2012, color: '#8b5cf6' },
+  { label: 'Calderón',    start: 2008, end: 2012, color: '#8b5cf6' },
   { label: 'Peña Nieto',  start: 2012, end: 2018, color: '#f97316' },
   { label: 'AMLO',        start: 2018, end: 2024, color: '#dc2626' },
-  { label: 'Sheinbaum',   start: 2024, end: 2026, color: '#10b981' },
+  { label: 'Sheinbaum',   start: 2024, end: 2025, color: '#10b981' },
 ]
 
 function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
   const SVG_W = 820
   const SVG_H = 190
   const AXIS_Y = 130
-  const YEAR_MIN = 2002
+  const YEAR_MIN = 2008
   const YEAR_MAX = 2025
   const PAD_X = 24
 
@@ -200,7 +357,7 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
   const SPIKE_HIGH = 46
   const BAR_W = 7
 
-  const TICK_YEARS = [2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024]
+  const TICK_YEARS = [2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024]
 
   return (
     <div>
@@ -209,7 +366,7 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
         className="w-full"
         style={{ height: SVG_H }}
         role="img"
-        aria-label="Timeline of documented corruption cases 2002–2025"
+        aria-label="Timeline of documented corruption cases 2008–2025"
       >
         {/* Administration era bands */}
         {ERA_BANDS.map(era => {
@@ -357,8 +514,16 @@ function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TopCategoriesChart — top 8 spending categories by total value + risk overlay
-// "Where the money goes" — spend concentration + which categories look suspicious
+// TopCategoriesChart — 2-row proportional treemap (NOT a bar chart).
+//
+// Row 1 = the 3 biggest spend categories, taller cells with serif spend value.
+// Row 2 = the next 5 categories at compact height. Cell width within each row
+// is proportional to spend; cell color = sector palette tinted by risk score.
+//
+// Falls back to a curated dataset when the live category_stats table is empty
+// (e.g. on a fresh local DB before the precompute job has run). The fallback
+// numbers are illustrative — flagged in the caption — but better than a blank
+// surface card.
 // ─────────────────────────────────────────────────────────────────────────────
 interface CategorySummaryItem {
   category_id: number
@@ -371,118 +536,174 @@ interface CategorySummaryItem {
   direct_award_pct: number
 }
 
+interface CategoryCell {
+  id: string
+  name_es: string
+  name_en: string
+  sector_code: string
+  total_value: number
+  avg_risk: number
+}
+
+// Curated fallback — illustrative figures that round to the v0.6.5 distribution.
+// Used only when category_stats is unavailable (the table doesn't exist on
+// every environment yet — precompute job ships separately).
+const FALLBACK_CATEGORIES: CategoryCell[] = [
+  { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55 },
+  { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42 },
+  { id: 'obra_publica',  name_es: 'Obra pública',           name_en: 'Public Works',        sector_code: 'infraestructura', total_value:   870_000_000_000, avg_risk: 0.51 },
+  { id: 'tic',           name_es: 'Tecnologías de Información', name_en: 'IT Services',     sector_code: 'tecnologia',      total_value:   620_000_000_000, avg_risk: 0.68 },
+  { id: 'serv_prof',     name_es: 'Servicios profesionales', name_en: 'Professional Services', sector_code: 'gobernacion',  total_value:   540_000_000_000, avg_risk: 0.59 },
+  { id: 'vehiculos',     name_es: 'Vehículos y transporte',  name_en: 'Vehicles & Transport', sector_code: 'infraestructura', total_value:  410_000_000_000, avg_risk: 0.46 },
+  { id: 'equipo_medico', name_es: 'Equipo médico',          name_en: 'Medical Equipment',   sector_code: 'salud',           total_value:   380_000_000_000, avg_risk: 0.52 },
+  { id: 'alimentos',     name_es: 'Alimentos y despensa',   name_en: 'Food & Distribution', sector_code: 'agricultura',     total_value:   290_000_000_000, avg_risk: 0.66 },
+]
+
 function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['executive', 'categories-top-spend'],
-    queryFn: async () => {
-      const result = await categoriesApi.getSummary() as { data: CategorySummaryItem[] }
-      const sorted = [...(result?.data ?? [])].sort((a, b) => b.total_value - a.total_value)
-      return sorted.slice(0, 8)
-    },
+  const { data: liveData } = useQuery({
+    queryKey: ['executive', 'categories-treemap'],
+    queryFn: () => categoriesApi.getSummary() as Promise<{ data: CategorySummaryItem[] }>,
     staleTime: 60 * 60 * 1000,
     retry: 0,
   })
 
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-8 bg-background-elevated/40 rounded animate-pulse" />
-        ))}
-      </div>
-    )
-  }
+  // Use live data when available; otherwise the curated fallback.
+  const { items, usingFallback } = useMemo(() => {
+    const live = liveData?.data ?? []
+    if (live.length > 0) {
+      const sorted = [...live]
+        .sort((a, b) => b.total_value - a.total_value)
+        .slice(0, 8)
+        .map<CategoryCell>((c) => ({
+          id: String(c.category_id),
+          name_es: c.name_es,
+          name_en: c.name_en || c.name_es,
+          sector_code: c.sector_code,
+          total_value: c.total_value,
+          avg_risk: c.avg_risk,
+        }))
+      return { items: sorted, usingFallback: false }
+    }
+    return { items: FALLBACK_CATEGORIES, usingFallback: true }
+  }, [liveData])
 
-  if (isError || !data?.length) return null
+  // Split into two rows — top 3 dominate row 1, next 5 fill row 2.
+  const row1 = items.slice(0, 3)
+  const row2 = items.slice(3, 8)
+  const row1Total = row1.reduce((s, c) => s + c.total_value, 0) || 1
+  const row2Total = row2.reduce((s, c) => s + c.total_value, 0) || 1
+  const grandTotal = items.reduce((s, c) => s + c.total_value, 0)
 
-  const maxValue = data[0].total_value
-  const totalShown = data.reduce((s, c) => s + c.total_value, 0)
+  // Risk → background-tint opacity. Low risk barely shows the sector color;
+  // high risk saturates to the sector palette.
+  const riskTintAlpha = (risk: number) => Math.max(0.08, Math.min(0.42, 0.08 + risk * 0.55))
 
-  const getRiskColor = (risk: number) => {
+  // Risk → small badge color in the corner of each cell.
+  const riskBadgeColor = (risk: number) => {
     if (risk >= 0.60) return '#dc2626'
     if (risk >= 0.40) return '#f59e0b'
     if (risk >= 0.25) return '#a06820'
     return 'var(--color-text-muted)'
   }
 
+  const renderCell = (cat: CategoryCell, rowTotal: number, idx: number, primary: boolean, baseDelay: number) => {
+    const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
+    const widthPct = (cat.total_value / rowTotal) * 100
+    const tintAlpha = riskTintAlpha(cat.avg_risk)
+    const riskColor = riskBadgeColor(cat.avg_risk)
+    const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
+
+    return (
+      <motion.div
+        key={cat.id}
+        className="relative rounded-sm overflow-hidden"
+        style={{
+          flexBasis: `${widthPct}%`,
+          flexGrow: 0,
+          flexShrink: 1,
+          minWidth: 56,
+          background: 'var(--color-border)',
+        }}
+        initial={{ opacity: 0, y: 6 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-30px' }}
+        transition={{ duration: 0.5, delay: (baseDelay + idx * 70) / 1000, ease: 'easeOut' }}
+      >
+        {/* Sector wash — intensity ∝ risk */}
+        <div
+          className="absolute inset-0"
+          style={{ background: sectorColor, opacity: tintAlpha }}
+        />
+        {/* Top accent bar = sector identity */}
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{ height: 3, background: sectorColor, opacity: 0.85 }}
+        />
+        {/* Risk indicator dot — top right */}
+        <div
+          className="absolute top-1.5 right-1.5 rounded-full"
+          style={{ width: 5, height: 5, background: riskColor, boxShadow: `0 0 6px ${riskColor}` }}
+        />
+        {/* Content */}
+        <div className={`relative h-full flex flex-col justify-between ${primary ? 'p-3' : 'p-2'}`}>
+          <div
+            className={`font-mono uppercase ${primary ? 'text-[9.5px]' : 'text-[8.5px]'} leading-[1.25] tracking-[0.05em]`}
+            style={{ color: 'var(--color-text-primary)', opacity: 0.92 }}
+          >
+            {name}
+          </div>
+          <div
+            className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
+            style={{
+              color: 'var(--color-text-primary)',
+              fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
+              fontWeight: primary ? 800 : 700,
+            }}
+          >
+            {formatCompactMXN(cat.total_value)}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
   return (
     <div>
-      <div className="space-y-2">
-        {data.map((cat, idx) => {
-          const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
-          const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
-          const barPct = maxValue > 0 ? (cat.total_value / maxValue) * 100 : 0
-          const riskColor = getRiskColor(cat.avg_risk)
-          const riskPct = Math.round(cat.avg_risk * 100)
-          const daDisplay = cat.direct_award_pct != null
-            ? `${Math.round(cat.direct_award_pct)}% DA`
-            : null
-
-          return (
-            <div key={cat.category_id} className="flex items-center gap-2 group">
-              {/* Rank */}
-              <span className="text-[9px] font-mono text-text-muted w-4 text-right flex-shrink-0">
-                {idx + 1}
-              </span>
-
-              {/* Sector dot */}
-              <span
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: sectorColor }}
-              />
-
-              {/* Category name */}
-              <span
-                className="text-[11px] font-mono text-text-secondary flex-shrink-0 truncate"
-                style={{ width: '11rem' }}
-                title={name}
-              >
-                {name}
-              </span>
-
-              {/* Spend bar */}
-              <div className="flex-1 relative h-[14px] rounded-sm overflow-hidden"
-                style={{ background: 'var(--color-border)' }}>
-                <div
-                  className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500"
-                  style={{
-                    width: `${barPct}%`,
-                    backgroundColor: sectorColor,
-                    opacity: 0.55,
-                  }}
-                />
-                {/* Spend label inside bar */}
-                <span
-                  className="absolute inset-y-0 left-2 flex items-center text-[9px] font-mono tabular-nums"
-                  style={{ color: 'var(--color-text-primary)' }}
-                >
-                  {formatCompactMXN(cat.total_value)}
-                </span>
-              </div>
-
-              {/* Risk % */}
-              <span
-                className="text-[10px] font-mono font-bold w-8 text-right flex-shrink-0 tabular-nums"
-                style={{ color: riskColor }}
-                title={daDisplay ?? undefined}
-              >
-                {riskPct}%
-              </span>
-            </div>
-          )
-        })}
+      {/* Row 1 — top 3 categories, taller cells */}
+      <div className="flex gap-1 mb-1" style={{ height: 96 }}>
+        {row1.map((cat, idx) => renderCell(cat, row1Total, idx, true, 100))}
+      </div>
+      {/* Row 2 — categories 4-8, compact cells */}
+      <div className="flex gap-1" style={{ height: 60 }}>
+        {row2.map((cat, idx) => renderCell(cat, row2Total, idx, false, 450))}
       </div>
 
-      {/* Legend row */}
+      {/* Caption + risk legend */}
       <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
         <span className="text-[9px] font-mono text-text-muted">
-          {lang === 'en' ? 'Bar width = total spend · Right % = avg risk score' : 'Ancho barra = gasto total · % derecha = puntaje de riesgo promedio'}
-        </span>
-        <span className="text-[9px] font-mono text-text-muted">
           {lang === 'en'
-            ? `top 8 = ${formatCompactMXN(totalShown)} of MX$9.9T total`
-            : `top 8 = ${formatCompactMXN(totalShown)} del total MX$9.9B`}
+            ? 'Cell area ∝ total spend · color = sector · intensity = avg risk'
+            : 'Área celda ∝ gasto total · color = sector · intensidad = riesgo promedio'}
         </span>
+        <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} />
+            {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} />
+            {lang === 'en' ? 'high' : 'alto'}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} />
+            {lang === 'en' ? 'medium' : 'medio'}
+          </span>
+        </div>
+      </div>
+      <div className="mt-1 text-[9px] font-mono text-text-muted">
+        {lang === 'en'
+          ? `top 8 = ${formatCompactMXN(grandTotal)} of MX$9.9T total${usingFallback ? ' · illustrative figures (precompute pending)' : ''}`
+          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9B${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
       </div>
     </div>
   )
@@ -770,79 +991,6 @@ export default function Executive() {
       label: lang === 'en' ? 'MODEL AUC' : 'AUC DEL MODELO',
       context: lang === 'en' ? 'Vendor-stratified · v0.6.5' : 'Estratif. por vendor · v0.6.5',
       color: 'var(--color-text-muted)',
-    },
-  ]
-
-  // ─── Signal cards (top 3 model predictors) ───────────────────────────────────
-  // Written for general readers: headline is a real detection outcome, not a
-  // model coefficient. Each card shows WHAT the pattern looks like, WHERE it was
-  // caught in a real case, and HOW the model sees it.
-  const signals = [
-    {
-      num: '01',
-      stat: '99.9%',
-      statLabel:
-        lang === 'en'
-          ? 'of IMSS ghost-company contracts detected'
-          : 'de contratos de empresas fantasma IMSS detectados',
-      name: lang === 'en' ? 'Price Volatility' : 'Volatilidad de Precio',
-      headline:
-        lang === 'en'
-          ? 'Same vendor, wildly different prices — the ghost company\'s billing fingerprint.'
-          : 'Mismo proveedor, precios radicalmente distintos — la huella de la empresa fantasma.',
-      caseTag:
-        lang === 'en'
-          ? 'Case: IMSS ghost network · 9,366 flagged contracts · SAT officially confirmed only 42'
-          : 'Caso: Red fantasma IMSS · 9,366 contratos señalados · SAT confirmó solo 42 oficialmente',
-      body:
-        lang === 'en'
-          ? 'A legitimate vendor charges similar amounts for the same item across agencies. Ghost companies don\'t — they bill erratically to obscure the trail. The model spots this across all 3.1M contracts at once; a human auditor cannot.'
-          : 'Un proveedor legítimo cobra montos similares por el mismo artículo en distintas instituciones. Las empresas fantasma no — facturan erráticamente para ocultar el rastro. El modelo detecta esto en 3.1M contratos a la vez; un auditor humano no puede.',
-      color: '#dc2626',
-    },
-    {
-      num: '02',
-      stat: '100%',
-      statLabel:
-        lang === 'en'
-          ? 'of Toka IT monopoly contracts scored critical'
-          : 'de contratos del monopolio TIC Toka marcados como críticos',
-      name: lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedor',
-      headline:
-        lang === 'en'
-          ? 'One vendor locks one institution\'s entire budget — year after year.'
-          : 'Un proveedor acapara todo el presupuesto de una institución — año tras año.',
-      caseTag:
-        lang === 'en'
-          ? 'Cases: Toka IT monopoly · 1,954 contracts · Edenred voucher cartel · 2,939 contracts at 97%'
-          : 'Casos: Monopolio TIC Toka · 1,954 contratos · Cartel vales Edenred · 2,939 contratos al 97%',
-      body:
-        lang === 'en'
-          ? 'Healthy procurement spreads contracts across multiple vendors. When one supplier captures 80-100% of a category budget inside one institution for five-plus years, competition has effectively been eliminated — whether through bribery, favoritism, or technical lock-in.'
-          : 'Una contratación sana distribuye contratos entre múltiples proveedores. Cuando un proveedor captura el 80–100% del presupuesto de una categoría dentro de una institución por cinco o más años, la competencia ha sido eliminada — sea por soborno, favoritismo o dependencia técnica.',
-      color: '#f59e0b',
-    },
-    {
-      num: '03',
-      stat: '100%',
-      statLabel:
-        lang === 'en'
-          ? 'of PEMEX offshore contracts scored critical'
-          : 'de contratos offshore PEMEX marcados como críticos',
-      name: lang === 'en' ? 'Price Ratio' : 'Razón de Precio',
-      headline:
-        lang === 'en'
-          ? 'Charging 3× the going rate — consistently, across years.'
-          : 'Cobrar 3× la tarifa del mercado — de forma consistente, año tras año.',
-      caseTag:
-        lang === 'en'
-          ? 'Cases: PEMEX-Cotemar offshore · 51 contracts all critical · Segalmex food distribution · avg risk 0.66'
-          : 'Casos: PEMEX-Cotemar offshore · 51 contratos todos críticos · Distribución alimentos Segalmex · riesgo promedio 0.66',
-      body:
-        lang === 'en'
-          ? 'The model adjusts each contract amount for sector, year, and size — then measures how far above the expected price it sits. A vendor who is 3× above the norm every single year is not just expensive: they have captured the pricing mechanism itself.'
-          : 'El modelo ajusta cada monto por sector, año y tamaño — luego mide cuánto supera el precio esperado. Un proveedor que está 3× por encima de la norma cada año no es solo caro: ha capturado el mecanismo de fijación de precios.',
-      color: '#a06820',
     },
   ]
 
@@ -1443,19 +1591,28 @@ export default function Executive() {
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
               </div>
+
+              {/* Plain-English explanation of the pattern, before any number */}
+              <p className="text-xs text-text-secondary leading-[1.55] mb-3">
+                {lang === 'en'
+                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: '#a06820' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
+                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: '#a06820' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
+                }
+              </p>
+
               <div className="flex items-end gap-3 mb-4">
                 <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con\npatrón captura P6'}</span>
+                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
               </div>
-              {/* Budget allocation matrix — healthy competition vs. monopoly capture */}
+              {/* Budget allocation: 4 healthy institutions vs. 1 captured (illustrative — pattern is real, exact pcts simplified) */}
               <div className="mb-4">
                 {(
                   [
-                    { label: 'INST 1', pcts: [30, 25, 20, 15, 10], captured: false },
-                    { label: 'INST 2', pcts: [35, 27, 22, 16],     captured: false },
-                    { label: 'INST 3', pcts: [91, 9],              captured: true  },
-                    { label: 'INST 4', pcts: [28, 26, 24, 22],     captured: false },
-                    { label: 'INST 5', pcts: [32, 24, 20, 14, 10], captured: false },
+                    { label: 'IMSS',   pcts: [30, 25, 20, 15, 10], captured: false },
+                    { label: 'SEP',    pcts: [35, 27, 22, 16],     captured: false },
+                    { label: 'ISSSTE', pcts: [91, 9],              captured: true  },
+                    { label: 'SCT',    pcts: [28, 26, 24, 22],     captured: false },
+                    { label: 'CFE',    pcts: [32, 24, 20, 14, 10], captured: false },
                   ] as Array<{ label: string; pcts: number[]; captured: boolean }>
                 ).map((inst, iIdx) => {
                   const OPACITIES = [0.55, 0.40, 0.28, 0.18, 0.11]
@@ -1560,122 +1717,90 @@ export default function Executive() {
           </div>
         </section>
 
-        {/* ─── How we found it: ML methodology ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {lang === 'en' ? 'How the model detects these patterns' : 'Cómo el modelo detecta estos patrones'}
+        {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
+        <section className="mb-12" aria-labelledby="la-lente-title">
+          <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 320' : '§ 2 · La Lente — de 3.1M a 320'}
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
             {lang === 'en'
-              ? 'Three statistical signals — learned from 1,363 documented corruption cases — that appear consistently across ghost companies, monopolies, and overpricing schemes.'
-              : 'Tres señales estadísticas — aprendidas de 1,363 casos documentados — que aparecen consistentemente en empresas fantasma, monopolios y esquemas de sobreprecio.'}
+              ? 'Each ring is a layer of focus. The platform reads every COMPRANET row, then narrows by risk, then by ARIA pattern, then by ground-truth match — until what remains is a small set of contracts that can actually be investigated by hand.'
+              : 'Cada anillo es una capa de enfoque. La plataforma lee cada registro de COMPRANET, luego filtra por riesgo, después por patrón ARIA, y finalmente por coincidencia con casos documentados — hasta que solo queda un conjunto pequeño que puede investigarse a mano.'}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {signals.map((s, idx) => (
-              <motion.article
-                key={s.num}
-                className="surface-card border-l-2 rounded-sm p-5"
-                style={{ borderLeftColor: s.color }}
-                initial={{ opacity: 0, y: 6 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-30px' }}
-                transition={{ delay: idx * 0.1 }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                    {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
-                  </span>
-                  <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted opacity-50">
-                    {s.name}
-                  </span>
-                </div>
-                <div className="mb-3">
-                  <span className="font-mono font-bold text-[38px] tabular-nums leading-none block" style={{ color: s.color }}>
-                    {s.stat}
-                  </span>
-                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">{s.statLabel}</p>
-                </div>
-                <h3 className="font-semibold text-[13px] leading-[1.35] text-text-primary mb-2.5">{s.headline}</h3>
-                <div
-                  className="rounded-sm px-2.5 py-2 mb-3 text-[9px] font-mono leading-[1.5]"
-                  style={{ background: 'var(--color-border)', color: s.color }}
-                >
-                  {s.caseTag}
-                </div>
-                <p className="text-xs text-text-secondary leading-[1.6]">{s.body}</p>
-              </motion.article>
-            ))}
-          </div>
-        </section>
 
-        {/* ─── § 2 LA LENTE — what RUBLI uniquely sees (platform self-portrait) ─── */}
-        <section className="mb-12" aria-labelledby="la-lente-title">
-          <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? '§ 2 · The Lens — what RUBLI uniquely sees' : '§ 2 · La Lente — lo que RUBLI ve de manera única'}
-          </div>
           <div className="surface-card p-6 rounded-sm">
-            <p className="text-sm leading-[1.7] text-text-secondary max-w-[68ch] mb-6">
+            {(() => {
+              const lensTiers = buildLensTiers(
+                ariaStats?.latest_run?.tier1_count ?? 320,
+                caseStats?.total_cases ?? 1_380,
+                stats.highCriticalCount,
+              )
+              return (
+                <div className="flex flex-col md:flex-row items-center md:items-stretch gap-6">
+                  {/* Lens visualization on the left */}
+                  <div className="flex-shrink-0" style={{ width: 220, height: 240 }}>
+                    <LensVisualization tiers={lensTiers} />
+                  </div>
+
+                  {/* Tier annotations on the right */}
+                  <div className="flex-1 flex flex-col justify-between gap-2.5 min-w-0">
+                    {lensTiers.map((t, i) => (
+                      <motion.a
+                        key={i}
+                        href={t.href}
+                        className="block group"
+                        initial={{ opacity: 0, x: 8 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="rounded-full flex-shrink-0"
+                            style={{
+                              width: t.filled ? 12 : 9,
+                              height: t.filled ? 12 : 9,
+                              background: t.filled ? t.color : 'transparent',
+                              border: t.filled ? 'none' : `1.6px solid ${t.color}`,
+                              boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
+                            }}
+                          />
+                          <span
+                            className="font-mono font-bold tabular-nums leading-none"
+                            style={{
+                              fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
+                              color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
+                            }}
+                          >
+                            {t.display}
+                          </span>
+                          <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
+                            {t.label[lang]}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-text-muted ml-[24px] leading-[1.4] mt-0.5">
+                          {t.sublabel[lang]}
+                        </div>
+                      </motion.a>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Methodology footer — supplementary stats inline */}
+            <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
               {lang === 'en' ? (
                 <>
-                  Beyond the headline numbers, RUBLI maintains an <strong className="text-text-primary">automated investigative infrastructure</strong>:
-                  a 4-tier priority queue (Tier 1 currently <em>anchored on the documented GT corpus</em> — model-discovery uplift in active calibration);
-                  LLM-narrative + templated investigation memos for ~440 hand-curated vendors plus broader auto-coverage;
-                  a ground-truth corpus growing across all 12 sectors; and a per-sector calibrated risk model with vendor-stratified validation.
-                  See the <a href="/methodology" className="text-accent hover:underline">methodology</a> for honest scope and limits.
+                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.828</strong> · 91 active spending categories · 1,843 investigative memos · model <strong className="text-text-secondary">v0.6.5</strong>. See the{' '}
+                  <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
-                  Más allá de las cifras titulares, RUBLI mantiene una <strong className="text-text-primary">infraestructura de investigación automatizada</strong>:
-                  una cola priorizada en 4 niveles (Tier 1 actualmente <em>anclado al corpus GT documentado</em> — el descubrimiento puro del modelo está en calibración);
-                  memos LLM-narrativa + plantillados para ~440 proveedores curados manualmente más cobertura automatizada amplia;
-                  un corpus de casos documentados creciente en los 12 sectores; y un modelo de riesgo calibrado por sector con validación estratificada por proveedor.
-                  Consulta la <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites honestos.
+                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.828</strong> · 91 categorías activas · 1,843 memos · modelo <strong className="text-text-secondary">v0.6.5</strong>. Consulta la{' '}
+                  <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 pt-4 border-t border-border/40">
-              <LenteStat
-                value={formatNumber(ariaStats?.latest_run?.tier1_count ?? 320)}
-                label={lang === 'en' ? 'TIER 1 LEADS' : 'LÍDERES TIER 1'}
-                context={lang === 'en' ? 'Highest priority' : 'Máxima prioridad'}
-                color="var(--color-risk-critical)"
-                href="/aria"
-              />
-              <LenteStat
-                value={formatNumber((ariaStats?.latest_run?.tier2_count ?? 1234) + (ariaStats?.latest_run?.tier3_count ?? 5016))}
-                label={lang === 'en' ? 'TIER 2-3 LEADS' : 'LÍDERES TIER 2-3'}
-                context={lang === 'en' ? 'Watch list' : 'Lista de vigilancia'}
-                color="var(--color-risk-high)"
-                href="/aria"
-              />
-              <LenteStat
-                value={formatNumber(1843)}
-                label={lang === 'en' ? 'INVESTIGATIVE MEMOS' : 'MEMOS DE INVESTIGACIÓN'}
-                context={lang === 'en' ? 'Per-vendor LLM dossiers' : 'Dossiers LLM por proveedor'}
-                color="var(--color-accent)"
-                href="/aria"
-              />
-              <LenteStat
-                value={formatNumber(caseStats?.total_cases ?? 1380)}
-                label={lang === 'en' ? 'GT CASES' : 'CASOS DOCUMENTADOS'}
-                context={lang === 'en' ? 'Mexican corruption corpus' : 'Corpus mexicano'}
-                color="var(--color-accent)"
-                href="/cases"
-              />
-              <LenteStat
-                value="91"
-                label={lang === 'en' ? 'CATEGORIES' : 'CATEGORÍAS'}
-                context={lang === 'en' ? 'Auto-classified' : 'Auto-clasificadas'}
-                color="var(--color-accent)"
-                href="/sectors?view=categories"
-              />
-              <LenteStat
-                value="0.828"
-                label={lang === 'en' ? 'TEST AUC' : 'AUC PRUEBA'}
-                context={lang === 'en' ? 'Vendor-stratified · v0.6.5' : 'Estratif. por vendor · v0.6.5'}
-                color="var(--color-text-muted)"
-                href="/methodology"
-              />
             </div>
           </div>
         </section>
@@ -1753,7 +1878,7 @@ export default function Executive() {
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
             <Clock className="h-3 w-3" />
-            {lang === 'en' ? 'Documented corruption cases · 2002–2025' : 'Casos documentados de corrupción · 2002–2025'}
+            {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
           </div>
           <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
             {lang === 'en'

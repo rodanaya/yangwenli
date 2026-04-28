@@ -381,6 +381,42 @@ export function ConcentrationConstellation({
         role="img"
         aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts. ${modeAriaHint} Hover or click a cluster to open its page.`}
       >
+        {/* ── Animation keyframes — scoped to this SVG ─────────────────────── */}
+        <defs>
+          <style>{`
+            @keyframes atlas-fade-in {
+              from { opacity: 0; }
+            }
+            @keyframes atlas-halo-pulse {
+              0%, 100% { opacity: 0.10; }
+              50% { opacity: 0.20; }
+            }
+            @keyframes atlas-edge-draw {
+              from { stroke-dashoffset: 280; opacity: 0; }
+              to { stroke-dashoffset: 0; opacity: 1; }
+            }
+            @keyframes atlas-ring-emerge {
+              from { transform: scale(0.4); opacity: 0; }
+              to { transform: scale(1); opacity: 1; }
+            }
+            .atlas-dot {
+              animation: atlas-fade-in 0.55s ease-out backwards;
+            }
+            .atlas-edge {
+              stroke-dasharray: 280;
+              animation: atlas-edge-draw 0.7s ease-out backwards;
+            }
+            .atlas-ring {
+              transform-box: fill-box;
+              transform-origin: center;
+              animation: atlas-ring-emerge 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+            }
+            .atlas-anno {
+              animation: atlas-fade-in 0.5s ease-out backwards;
+            }
+          `}</style>
+        </defs>
+
         {/* ── Field border (hairline) ──────────────────────────────────────── */}
         <rect
           x={PAD_L - 4}
@@ -407,6 +443,9 @@ export function ConcentrationConstellation({
           />
         )}
 
+        {/* ─── Animated payload — re-keyed on mode so toggles retrigger reveal ─── */}
+        <g key={`atlas-${mode}`}>
+
         {/* ── Edges (drawn first, under the dots) ──────────────────────────── */}
         {criticalEdges.map((e, idx) => (
           <line
@@ -418,6 +457,8 @@ export function ConcentrationConstellation({
             stroke="#ef4444"
             strokeOpacity={e.primary ? 0.32 : 0.16}
             strokeWidth={e.primary ? 0.7 : 0.5}
+            className="atlas-edge"
+            style={{ animationDelay: `${1100 + idx * 4}ms` }}
           />
         ))}
 
@@ -425,6 +466,9 @@ export function ConcentrationConstellation({
         {dots.map((d, idx) => {
           if (d.level !== 'critical') return null
           const s = DOT_STYLE.critical
+          // Critical halo: fade in around 700-1000ms, then pulse infinitely
+          const fadeDelay = 700 + (idx % 80) * 4
+          const pulseDelay = fadeDelay + 600
           return (
             <circle
               key={`halo-${idx}`}
@@ -433,6 +477,11 @@ export function ConcentrationConstellation({
               r={(s.halo ?? 3) * 1.0}
               fill={s.fill}
               fillOpacity={0.10}
+              style={{
+                animation:
+                  `atlas-fade-in 0.6s ease-out ${fadeDelay}ms backwards, ` +
+                  `atlas-halo-pulse 3.5s ease-in-out ${pulseDelay}ms infinite`,
+              }}
             />
           )
         })}
@@ -442,6 +491,15 @@ export function ConcentrationConstellation({
           dots.map((d, idx) => {
             if (d.level !== paintLevel) return null
             const s = DOT_STYLE[d.level]
+            // Stagger by Halton index within risk-level bands so the field
+            // forms gas → background stars → bright stars in a clear cascade.
+            const levelOffset =
+              paintLevel === 'low' ? 0
+              : paintLevel === 'medium' ? 120
+              : paintLevel === 'high' ? 280
+              : 600 // critical
+            const indexJitter = (idx / N_DOTS) * 380
+            const delay = levelOffset + indexJitter
             return (
               <circle
                 key={`dot-${paintLevel}-${idx}`}
@@ -450,6 +508,8 @@ export function ConcentrationConstellation({
                 r={s.r}
                 fill={s.fill}
                 fillOpacity={s.alpha}
+                className="atlas-dot"
+                style={{ animationDelay: `${delay}ms` }}
               />
             )
           })
@@ -467,7 +527,11 @@ export function ConcentrationConstellation({
           const shortLabel =
             mode === 'patterns' ? meta.code : meta.label.slice(0, 3).toUpperCase()
           return (
-            <g key={`attractor-${meta.code}-${idx}`}>
+            <g
+              key={`attractor-${meta.code}-${idx}`}
+              className="atlas-ring"
+              style={{ animationDelay: `${1300 + idx * 70}ms` }}
+            >
               {/* Outer ring — radius ∝ √T1 count */}
               <circle
                 cx={a.x}
@@ -517,9 +581,13 @@ export function ConcentrationConstellation({
         })}
 
         {/* ── Margin annotations: count + label, with leader to a real dot ─── */}
-        {annoLines.map((a) =>
+        {annoLines.map((a, annoIdx) =>
           a.anchor && a.row ? (
-            <g key={`anno-${a.label}`}>
+            <g
+              key={`anno-${a.label}`}
+              className="atlas-anno"
+              style={{ animationDelay: `${1700 + annoIdx * 110}ms` }}
+            >
               {/* Leader from anchor dot to label */}
               <line
                 x1={a.anchor.x + 4}
@@ -567,9 +635,14 @@ export function ConcentrationConstellation({
           fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
+          className="atlas-anno"
+          style={{ animationDelay: '2000ms' }}
         >
           1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} {isEs ? 'contratos' : 'contracts'} · {kickerLabel.caption}
         </text>
+
+        {/* close animated payload group */}
+        </g>
       </svg>
 
       {/* ── Floating cluster tooltip (DOM, positioned over SVG) ──────────── */}
