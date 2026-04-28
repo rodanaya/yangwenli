@@ -981,43 +981,77 @@ export default function Executive() {
               <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                 {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
               </div>
-              <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#dc2626' }}>6,034</span>
-                <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'probable ghost\ncompanies detected' : 'empresas fantasma\ndetectadas'}</span>
-              </div>
-              {/* Animated compare-gap bars */}
-              <div className="space-y-2 mb-4">
-                <div>
-                  <div className="text-[8px] font-mono text-text-muted mb-1 uppercase tracking-[0.08em]">
-                    {lang === 'en' ? 'SAT officially confirmed — 42' : 'SAT confirmados oficialmente — 42'}
+              {/* Detection gap — magazine triptych: [42 official | 143× | 6,034 detected] */}
+              <div className="mb-4 rounded-sm overflow-hidden" style={{ height: 92 }}>
+                <div className="flex h-full">
+
+                  {/* Left panel: SAT official count — small, dim, de-emphasized */}
+                  <div
+                    className="flex flex-col items-center justify-center flex-shrink-0 gap-0.5"
+                    style={{
+                      width: 74,
+                      background: 'rgba(100,116,139,0.09)',
+                      borderRight: '1px solid var(--color-border)',
+                    }}
+                  >
+                    <span
+                      className="font-mono font-bold text-[28px] leading-none tabular-nums"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      42
+                    </span>
+                    <span className="text-[7px] font-mono text-text-muted uppercase tracking-[0.06em] text-center leading-[1.25]">
+                      SAT<br />official
+                    </span>
                   </div>
-                  <div className="relative h-[10px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+
+                  {/* Center bridge: the multiplier */}
+                  <div
+                    className="flex flex-col items-center justify-center flex-shrink-0"
+                    style={{ width: 50, background: 'var(--color-background)' }}
+                  >
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#dc2626' }}>
+                      143×
+                    </span>
+                    <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
+                  </div>
+
+                  {/* Right panel: RUBLI detection — large, dramatic, animated */}
+                  <div className="flex-1 relative overflow-hidden">
+                    {/* Background wash slides in from left */}
                     <motion.div
-                      className="absolute inset-y-0 left-0 rounded-sm"
-                      style={{ background: '#dc2626', opacity: 0.4, transformOrigin: 'left' }}
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
+                      className="absolute inset-0"
+                      style={{ background: '#dc2626', transformOrigin: 'left' }}
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      whileInView={{ scaleX: 1, opacity: 0.10 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
+                      transition={{ duration: 0.85, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     />
-                    {/* 42 / 6034 ≈ 0.7% — show minimum visible 3px */}
-                    <div className="absolute inset-y-0 left-0 rounded-sm" style={{ width: 3, background: '#dc2626', opacity: 0.6 }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[8px] font-mono mb-1 uppercase tracking-[0.08em]" style={{ color: '#dc2626' }}>
-                    {lang === 'en' ? 'RUBLI P2 detection — 6,034' : 'Detección RUBLI P2 — 6,034'}
-                  </div>
-                  <div className="relative h-[10px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                    {/* Vivid left edge accent */}
+                    <div className="absolute inset-y-0 left-0" style={{ width: 3, background: '#dc2626', opacity: 0.65 }} />
+                    {/* Number + label — fade in after wash */}
                     <motion.div
-                      className="absolute inset-y-0 left-0 rounded-sm"
-                      style={{ background: '#dc2626', width: '100%', transformOrigin: 'left' }}
-                      initial={{ scaleX: 0 }}
-                      whileInView={{ scaleX: 1 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 1.1, delay: 0.7, ease: 'easeOut' }}
-                    />
+                      transition={{ duration: 0.35, delay: 0.92 }}
+                    >
+                      <span
+                        className="font-mono font-bold text-[42px] leading-none tabular-nums"
+                        style={{ color: '#dc2626' }}
+                      >
+                        6,034
+                      </span>
+                      <span
+                        className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"
+                        style={{ color: '#dc2626', opacity: 0.65 }}
+                      >
+                        {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
+                      </span>
+                    </motion.div>
                   </div>
+
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
@@ -1187,36 +1221,80 @@ export default function Executive() {
                 <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
                 <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors show P6\ncapture pattern' : 'proveedores con\npatrón captura P6'}</span>
               </div>
-              {/* Dot-field: 8×5 = 40 dots, ~12 highlighted as captured */}
+              {/* Budget allocation matrix — healthy competition vs. monopoly capture */}
               <div className="mb-4">
-                <svg viewBox="0 0 200 56" className="w-full" style={{ height: 56 }} aria-hidden>
-                  {Array.from({ length: 8 }).map((_, col) =>
-                    Array.from({ length: 5 }).map((_, row) => {
-                      const cx = 12 + col * 25
-                      const cy = 8 + row * 10
-                      const isCapture = (col === 2 && row <= 3) || (col === 5 && row <= 2) || (col === 7 && row <= 1)
-                      const delayMs = (col * 5 + row) * 40
-                      return (
-                        <motion.circle
-                          key={`${col}-${row}`}
-                          cx={cx} cy={cy} r={isCapture ? 3.5 : 2.5}
-                          fill={isCapture ? '#a06820' : 'var(--color-border-hover)'}
-                          opacity={isCapture ? 0.85 : 0.4}
-                          initial={{ scale: 0, opacity: 0 }}
-                          whileInView={{ scale: 1, opacity: isCapture ? 0.85 : 0.4 }}
+                {(
+                  [
+                    { label: 'INST 1', pcts: [30, 25, 20, 15, 10], captured: false },
+                    { label: 'INST 2', pcts: [35, 27, 22, 16],     captured: false },
+                    { label: 'INST 3', pcts: [91, 9],              captured: true  },
+                    { label: 'INST 4', pcts: [28, 26, 24, 22],     captured: false },
+                    { label: 'INST 5', pcts: [32, 24, 20, 14, 10], captured: false },
+                  ] as Array<{ label: string; pcts: number[]; captured: boolean }>
+                ).map((inst, iIdx) => {
+                  const OPACITIES = [0.55, 0.40, 0.28, 0.18, 0.11]
+                  return (
+                    <div key={inst.label} className="flex items-center gap-2 mb-[5px]">
+                      {/* Institution label */}
+                      <span
+                        className="text-[8px] font-mono flex-shrink-0 text-right"
+                        style={{
+                          width: 46,
+                          color: inst.captured ? '#a06820' : 'var(--color-text-muted)',
+                          fontWeight: inst.captured ? 700 : 400,
+                        }}
+                      >
+                        {inst.captured ? '▶ ' : ''}{inst.label}
+                      </span>
+
+                      {/* Allocation bar */}
+                      <div
+                        className="flex-1 relative rounded-sm overflow-hidden"
+                        style={{ height: 18, background: 'var(--color-border)' }}
+                      >
+                        {/* Vendor slices revealed left-to-right via clipPath — no SVG transform issues */}
+                        <motion.div
+                          className="absolute inset-0 flex"
+                          initial={{ clipPath: 'inset(0 100% 0 0)' }}
+                          whileInView={{ clipPath: 'inset(0 0% 0 0)' }}
                           viewport={{ once: true }}
-                          transition={{ duration: 0.3, delay: 0.5 + delayMs / 1000 }}
-                        />
-                      )
-                    })
-                  )}
-                  {/* Label arrows showing "capture" columns */}
-                  <text x={62} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
-                  <text x={137} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
-                  <text x={187} y={54} fontSize={7} fill="#a06820" fontFamily="var(--font-family-mono, monospace)" opacity={0.7}>▲</text>
-                </svg>
-                <div className="text-[8px] font-mono text-text-muted mt-1">
-                  {lang === 'en' ? 'amber = vendor captured to one institution · dots = vendor-institution pairs' : 'ámbar = proveedor capturado a una institución · puntos = pares proveedor-institución'}
+                          transition={{ duration: 0.62, delay: 0.1 + iIdx * 0.09, ease: 'easeOut' }}
+                        >
+                          {inst.pcts.map((p, sIdx) => (
+                            <div
+                              key={sIdx}
+                              style={{
+                                width: `${p}%`,
+                                flexShrink: 0,
+                                background: inst.captured
+                                  ? sIdx === 0 ? '#a06820' : 'rgba(160,104,32,0.15)'
+                                  : `rgba(100,116,139,${OPACITIES[sIdx] ?? 0.08})`,
+                                marginRight: !inst.captured && sIdx < inst.pcts.length - 1 ? 1 : 0,
+                              }}
+                            />
+                          ))}
+                        </motion.div>
+
+                        {/* Label inside the captured bar */}
+                        {inst.captured && (
+                          <div className="absolute inset-0 flex items-center px-2.5 pointer-events-none">
+                            <span
+                              className="text-[8px] font-mono font-bold"
+                              style={{ color: 'rgba(255,255,255,0.92)' }}
+                            >
+                              91% {lang === 'en' ? '— single vendor' : '— un proveedor'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                <div className="text-[8px] font-mono text-text-muted mt-1.5 leading-[1.4]">
+                  {lang === 'en'
+                    ? 'each row = one institution · segments = different vendors · amber bar = monopoly capture'
+                    : 'cada fila = una institución · segmentos = distintos proveedores · barra ámbar = captura monopolio'}
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
