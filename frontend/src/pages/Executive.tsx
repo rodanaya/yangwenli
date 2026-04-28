@@ -16,17 +16,22 @@
  *   9. Print button (hides sidebar)
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from '@/api/client'
-import type { ContractListItem, ContractListResponse } from '@/api/types'
+import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import {
+  ConcentrationConstellation,
+  type ConstellationMode,
+  type ConstellationRiskRow,
+} from '@/components/charts/ConcentrationConstellation'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // § 2 La Lente — micro-stat tile used in the platform self-portrait grid
@@ -636,6 +641,9 @@ export default function Executive() {
   const navigate = useNavigate()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
 
+  // § 1 The Atlas — constellation mode (PATRONES / SECTORES / SEXENIOS)
+  const [atlasMode, setAtlasMode] = useState<ConstellationMode>('patterns')
+
   // Fetch live dashboard data for accurate stats
   const { data: dashboard } = useQuery({
     queryKey: ['executive', 'fastDashboard'],
@@ -703,6 +711,39 @@ export default function Executive() {
   }, [dashboard])
 
   const handlePrint = () => window.print()
+
+  // § 1 The Atlas — risk distribution rows for the constellation field
+  // Falls back to the v0.6.5 calibrated proportions if the live API is empty
+  const atlasRows: ConstellationRiskRow[] = useMemo(() => {
+    const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
+      ? (dashboard!.risk_distribution as RiskDistribution[])
+      : []
+    if (rd.length >= 4) {
+      return rd.map((r) => ({
+        level: r.risk_level as ConstellationRiskRow['level'],
+        count: r.count,
+        pct: r.percentage,
+      }))
+    }
+    // v0.6.5 calibrated fallback (Mar 25 2026)
+    return [
+      { level: 'critical', count: 184_031, pct: 6.01 },
+      { level: 'high',     count: 228_814, pct: 7.48 },
+      { level: 'medium',   count: 821_251, pct: 26.84 },
+      { level: 'low',      count: 1_817_198, pct: 59.39 },
+    ]
+  }, [dashboard])
+
+  // § 1 The Atlas — click navigation: each mode opens the right page
+  const handleAtlasClusterClick = (clusterCode: string) => {
+    if (atlasMode === 'patterns') {
+      navigate(`/clusters#${clusterCode}`)
+    } else if (atlasMode === 'sectors') {
+      navigate(`/sectors?sector=${clusterCode}`)
+    } else {
+      navigate('/administrations')
+    }
+  }
 
   // ─── KPI tiles (2x2 grid) ──────────────────────────────────────────────────
   const kpis = [
@@ -900,6 +941,71 @@ export default function Executive() {
             }
           </p>
         </motion.header>
+
+        {/* ─── § 1 The Atlas — every contract clustered into one view ─── */}
+        <motion.section
+          className="mb-10"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          aria-labelledby="atlas-title"
+        >
+          <div className="flex items-start justify-between mb-1 gap-3 flex-wrap">
+            <div id="atlas-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? '§ 1 · The Atlas — every contract in one view' : '§ 1 · El Atlas — cada contrato en una vista'}
+            </div>
+
+            {/* Mode toggle */}
+            <div
+              className="flex items-center text-[9px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
+              role="tablist"
+              aria-label={lang === 'en' ? 'Constellation mode' : 'Modo del Atlas'}
+              style={{ border: '1px solid var(--color-border)' }}
+            >
+              {(
+                [
+                  { id: 'patterns', en: 'PATTERNS',  es: 'PATRONES' },
+                  { id: 'sectors',  en: 'SECTORS',   es: 'SECTORES' },
+                  { id: 'sexenios', en: 'TERMS',     es: 'SEXENIOS' },
+                ] as Array<{ id: ConstellationMode; en: string; es: string }>
+              ).map((m, i, arr) => {
+                const isActive = atlasMode === m.id
+                return (
+                  <button
+                    key={m.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setAtlasMode(m.id)}
+                    className="px-3 py-1.5 transition-colors"
+                    style={{
+                      background: isActive ? '#a06820' : 'transparent',
+                      color: isActive ? 'var(--color-background)' : 'var(--color-text-muted)',
+                      borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
+                      fontWeight: isActive ? 700 : 500,
+                    }}
+                  >
+                    {lang === 'en' ? m.en : m.es}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Every dot below represents about 2,500 federal contracts. Critical-risk contracts cluster around their dominant pattern, sector, or presidential term — toggle the mode to re-organize the same population around a different lens. Click any cluster to investigate.'
+              : 'Cada punto representa aproximadamente 2,500 contratos federales. Los contratos de riesgo crítico se agrupan en torno a su patrón, sector o sexenio dominante — alterna el modo para reorganizar la misma población bajo otra lente. Haz clic en cualquier cúmulo para investigar.'}
+          </p>
+
+          <div className="surface-card rounded-sm p-4 md:p-5">
+            <ConcentrationConstellation
+              rows={atlasRows}
+              totalContracts={stats.totalContracts}
+              mode={atlasMode}
+              onClusterClick={handleAtlasClusterClick}
+            />
+          </div>
+        </motion.section>
 
         {/* ─── MacroArc — 23-year direct award trend ─── */}
         <motion.section

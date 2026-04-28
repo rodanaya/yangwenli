@@ -388,7 +388,8 @@ export function ConcentrationConstellation({
           width={FIELD_W + 8}
           height={FIELD_H + 8}
           fill="none"
-          stroke="rgba(255,255,255,0.04)"
+          stroke="var(--color-border)"
+          strokeOpacity={0.6}
           strokeWidth={1}
         />
 
@@ -399,7 +400,8 @@ export function ConcentrationConstellation({
             y1={PAD_T + FIELD_H * 0.50}
             x2={PAD_L + FIELD_W * 0.96}
             y2={PAD_T + FIELD_H * 0.50}
-            stroke="rgba(255,255,255,0.05)"
+            stroke="var(--color-border-hover)"
+            strokeOpacity={0.5}
             strokeWidth={1}
             strokeDasharray="2 4"
           />
@@ -524,7 +526,8 @@ export function ConcentrationConstellation({
                 y1={a.anchor.y}
                 x2={annoX - 6}
                 y2={a.y + 4}
-                stroke="rgba(255,255,255,0.10)"
+                stroke="var(--color-border-hover)"
+                strokeOpacity={0.7}
                 strokeWidth={1}
                 strokeDasharray="2 3"
               />
@@ -546,7 +549,7 @@ export function ConcentrationConstellation({
               <text
                 x={annoX}
                 y={a.y + 12}
-                fill="#71717a"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
@@ -561,7 +564,7 @@ export function ConcentrationConstellation({
         <text
           x={PAD_L}
           y={SVG_H - 10}
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
