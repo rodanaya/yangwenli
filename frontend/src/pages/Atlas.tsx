@@ -22,9 +22,9 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen } from 'lucide-react'
 import { analysisApi, ariaApi } from '@/api/client'
-import type { RiskDistribution } from '@/api/types'
+import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
   type ConstellationMode,
@@ -32,6 +32,85 @@ import {
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber } from '@/lib/utils'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VENDOR LOOKUP — known-vendor → cluster mappings across modes.
+//
+// Curated list of well-known Mexican federal vendors with their dominant
+// pattern (P1-P7), sector, and category. Used by the vendor search bar to
+// auto-pin the matching cluster when a user types a known name.
+//
+// V4 will replace this with a backend endpoint that resolves any vendor name
+// to its cluster memberships from the live ARIA queue. For now: 30 hand-
+// curated entries covering every documented GT case + the most-flagged T1
+// vendors. Search is case-insensitive substring.
+// ─────────────────────────────────────────────────────────────────────────────
+interface VendorLookup {
+  query: string                  // normalized search key (uppercase)
+  displayName: string             // canonical display name
+  pattern: string                 // P1..P7
+  sector: string                  // 12-sector code
+  category: string                // category code (matches buildAtlasCategoriesMeta)
+  blurb: { en: string; es: string }
+}
+
+const KNOWN_VENDORS: VendorLookup[] = [
+  // GT-anchored cases
+  { query: 'GRUPO FARMACOS',       displayName: 'Grupo Farmacos Especializados', pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '$133.2B IMSS · COFECE 2018', es: '$133.2B IMSS · COFECE 2018' } },
+  { query: 'LICONSA',              displayName: 'LICONSA',                       pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: 'Segalmex anchor case · MX$15B', es: 'Caso ancla Segalmex · MX$15B' } },
+  { query: 'HEMOSER',              displayName: 'HEMOSER',                       pattern: 'P2', sector: 'salud',           category: 'consumibles',   blurb: { en: '$17.2B COVID same-day awards', es: '$17.2B COVID adjudicación mismo-día' } },
+  { query: 'TOKA',                 displayName: 'Toka Internacional',            pattern: 'P1', sector: 'tecnologia',      category: 'tic',           blurb: { en: 'IT monopoly · 1,954 contracts at 100% T1', es: 'Monopolio TIC · 1,954 contratos al 100% T1' } },
+  { query: 'EDENRED',              displayName: 'Edenred',                       pattern: 'P1', sector: 'hacienda',        category: 'vales',         blurb: { en: 'Voucher cartel · 96.7% T1', es: 'Cartel de vales · 96.7% T1' } },
+  { query: 'COTEMAR',              displayName: 'COTEMAR',                       pattern: 'P5', sector: 'energia',         category: 'serv_petroleros', blurb: { en: 'PEMEX offshore · 51 contracts all critical', es: 'PEMEX offshore · 51 contratos todos críticos' } },
+  { query: 'ODEBRECHT',            displayName: 'Odebrecht',                     pattern: 'P7', sector: 'energia',         category: 'obra_publica',  blurb: { en: 'PEMEX bribery · MX$10.5M documented', es: 'Sobornos PEMEX · MX$10.5M documentados' } },
+  { query: 'OCEANOGRAFIA',         displayName: 'Oceanografía',                  pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: 'PEMEX 2014 fraud', es: 'Fraude PEMEX 2014' } },
+  { query: 'GRUPO HIGA',           displayName: 'Grupo Higa',                    pattern: 'P6', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Casa Blanca scandal', es: 'Escándalo Casa Blanca' } },
+  // Pharma cartel cluster
+  { query: 'PISA',                 displayName: 'Laboratorios PiSA',             pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel member', es: 'Miembro del cártel farmacéutico' } },
+  { query: 'BIRMEX',               displayName: 'BIRMEX',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma supplier', es: 'Proveedor farmacéutico IMSS' } },
+  { query: 'COMPHARMA',            displayName: 'COMPHARMA',                     pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS DA capture (GT case)', es: 'Captura DA IMSS (caso GT)' } },
+  { query: 'PIHCSA',               displayName: 'PIHCSA',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma capture', es: 'Captura farmacéutica IMSS' } },
+  // Infrastructure
+  { query: 'CICSA',                displayName: 'CICSA · Grupo Carso',           pattern: 'P1', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Slim infrastructure conglomerate', es: 'Grupo Slim infraestructura' } },
+  { query: 'CONDUMEX',             displayName: 'Condumex · Grupo Carso',        pattern: 'P1', sector: 'energia',         category: 'electricidad',  blurb: { en: 'Cables monopoly', es: 'Monopolio de cables' } },
+  // Health/IMSS T1 vendors
+  { query: 'BAXTER',               displayName: 'Baxter',                        pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
+  { query: 'FRESENIUS',            displayName: 'Fresenius',                     pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
+  // CFE / energy
+  { query: 'CFE SUMINISTRADOR',    displayName: 'CFE Suministrador',             pattern: 'P1', sector: 'energia',         category: 'combustibles',  blurb: { en: 'Self-supplier (natural skip)', es: 'Auto-proveedor (omisión natural)' } },
+  // Misc T1
+  { query: 'MERP',                 displayName: 'MERP',                          pattern: 'P3', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: 'Single-bid arrangement', es: 'Arreglo de licitación única' } },
+  { query: 'TRENA',                displayName: 'TRENA',                         pattern: 'P1', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: 'Documented monopoly', es: 'Monopolio documentado' } },
+  // Education
+  { query: 'CONALITEG',            displayName: 'CONALITEG',                     pattern: 'P6', sector: 'educacion',       category: 'libros',        blurb: { en: 'SEP textbooks (parastatal)', es: 'Libros SEP (paraestatal)' } },
+]
+
+interface VendorMatch extends VendorLookup {
+  matchScore: number
+}
+
+function searchKnownVendors(query: string, limit = 6): VendorMatch[] {
+  const q = query.trim().toUpperCase()
+  if (q.length < 2) return []
+  return KNOWN_VENDORS
+    .map((v) => {
+      const idx = v.query.indexOf(q)
+      if (idx === -1) return null
+      // Score: lower is better. Prefer prefix matches and short labels.
+      return { ...v, matchScore: idx + (v.query.length - q.length) * 0.1 }
+    })
+    .filter((v): v is VendorMatch => v !== null)
+    .sort((a, b) => a.matchScore - b.matchScore)
+    .slice(0, limit)
+}
+
+// Resolve a vendor's cluster code given the active mode.
+function vendorToClusterCode(v: VendorLookup, mode: ConstellationMode): string {
+  if (mode === 'patterns')   return v.pattern
+  if (mode === 'sectors')    return v.sector
+  if (mode === 'categories') return v.category
+  return 'amlo' // sexenios mode falls back to AMLO since most cases are recent
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Yearly snapshots — illustrative time series of risk distribution.
@@ -155,12 +234,14 @@ interface ClusterDetailPanelProps {
   meta: ClusterMeta | null
   mode: ConstellationMode
   pinnedCode: string | null
+  note: string
+  onNoteChange: (text: string) => void
   onTogglePin: () => void
   onClose: () => void
   lang: 'en' | 'es'
 }
 
-function ClusterDetailPanel({ meta, mode, pinnedCode, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
+function ClusterDetailPanel({ meta, mode, pinnedCode, note, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
   const navigate = useNavigate()
   const isPinned = !!meta && pinnedCode === meta.code
 
@@ -288,6 +369,38 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, onTogglePin, onClose, lang
                 }
               </p>
             </div>
+
+            {/* Personal notes (localStorage) */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5">
+                  <NotebookPen className="h-3 w-3" />
+                  {lang === 'en' ? 'YOUR NOTES' : 'TUS NOTAS'}
+                </div>
+                {note && (
+                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: '#a06820' }}>
+                    {lang === 'en' ? 'saved locally' : 'guardado local'}
+                  </span>
+                )}
+              </div>
+              <textarea
+                value={note}
+                onChange={(e) => onNoteChange(e.target.value)}
+                placeholder={lang === 'en'
+                  ? 'What did you find when you investigated this cluster? Notes save automatically to your browser.'
+                  : '¿Qué encontraste al investigar este cúmulo? Las notas se guardan automáticamente en tu navegador.'
+                }
+                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none transition-colors"
+                style={{
+                  background: 'var(--color-background)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-primary)',
+                  minHeight: 70,
+                  maxHeight: 200,
+                }}
+                aria-label={lang === 'en' ? 'Personal notes for this cluster' : 'Notas personales para este cúmulo'}
+              />
+            </div>
           </div>
 
           {/* Footer CTA */}
@@ -324,43 +437,12 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
   const maxYear = YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year
 
   return (
-    <div className="surface-card rounded-sm p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <button
-          onClick={() => setYearIndex(Math.max(0, yearIndex - 1))}
-          disabled={yearIndex === 0}
-          className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
-          aria-label={lang === 'en' ? 'Previous year' : 'Año anterior'}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
+    <div className="surface-card rounded-sm p-3 sm:p-4">
+      {/* Mobile: stack year-display + slider above the controls. Desktop: single row. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
 
-        <button
-          onClick={() => setIsPlaying(!isPlaying)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[10px] font-bold transition-colors"
-          style={{
-            background: isPlaying ? '#dc2626' : 'var(--color-border)',
-            color: isPlaying ? 'white' : 'var(--color-text-primary)',
-          }}
-          aria-label={isPlaying ? (lang === 'en' ? 'Pause' : 'Pausar') : (lang === 'en' ? 'Play' : 'Reproducir')}
-        >
-          {isPlaying
-            ? <><Pause className="h-3 w-3" /> {lang === 'en' ? 'Pause' : 'Pausar'}</>
-            : <><Play className="h-3 w-3" /> {lang === 'en' ? 'Autoplay' : 'Reproducir'}</>
-          }
-        </button>
-
-        <button
-          onClick={() => setYearIndex(Math.min(YEAR_SNAPSHOTS.length - 1, yearIndex + 1))}
-          disabled={yearIndex === YEAR_SNAPSHOTS.length - 1}
-          className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
-          aria-label={lang === 'en' ? 'Next year' : 'Siguiente año'}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-
-        {/* Year display + slider */}
-        <div className="flex-1 flex items-center gap-3 min-w-0">
+        {/* Year + slider — first on mobile, in middle on desktop */}
+        <div className="flex items-center gap-3 min-w-0 sm:flex-1 sm:order-2">
           <div
             className="font-mono font-extrabold text-[22px] leading-none tabular-nums flex-shrink-0"
             style={{ color: '#a06820', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
@@ -382,10 +464,55 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
               <span>{maxYear}</span>
             </div>
           </div>
+          {/* Contracts pill — beside slider on mobile, separate column on desktop */}
+          <div className="text-right flex-shrink-0 sm:hidden">
+            <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
+              {lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}
+            </div>
+            <div className="font-mono font-bold text-[14px] leading-none mt-1 tabular-nums text-text-primary">
+              {formatNumber(snapshot.totalContracts)}
+            </div>
+          </div>
         </div>
 
-        {/* Total contracts pill */}
-        <div className="text-right flex-shrink-0">
+        {/* Controls row — second on mobile, first on desktop */}
+        <div className="flex items-center gap-2 sm:order-1">
+          <button
+            onClick={() => setYearIndex(Math.max(0, yearIndex - 1))}
+            disabled={yearIndex === 0}
+            className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
+            aria-label={lang === 'en' ? 'Previous year' : 'Año anterior'}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[10px] font-bold transition-colors"
+            style={{
+              background: isPlaying ? '#dc2626' : 'var(--color-border)',
+              color: isPlaying ? 'white' : 'var(--color-text-primary)',
+            }}
+            aria-label={isPlaying ? (lang === 'en' ? 'Pause' : 'Pausar') : (lang === 'en' ? 'Play' : 'Reproducir')}
+          >
+            {isPlaying
+              ? <><Pause className="h-3 w-3" /> {lang === 'en' ? 'Pause' : 'Pausar'}</>
+              : <><Play className="h-3 w-3" /> {lang === 'en' ? 'Autoplay' : 'Reproducir'}</>
+            }
+          </button>
+
+          <button
+            onClick={() => setYearIndex(Math.min(YEAR_SNAPSHOTS.length - 1, yearIndex + 1))}
+            disabled={yearIndex === YEAR_SNAPSHOTS.length - 1}
+            className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
+            aria-label={lang === 'en' ? 'Next year' : 'Siguiente año'}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Total contracts pill — desktop only (mobile shows it next to slider) */}
+        <div className="text-right flex-shrink-0 hidden sm:block sm:order-3">
           <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
             {lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}
           </div>
@@ -473,6 +600,181 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// useClusterNotes — localStorage-backed personal notes, keyed by cluster code.
+// V3 lite annotation layer. V4 will move this to a backend table with per-user
+// auth so notes can be shared across the team.
+// ─────────────────────────────────────────────────────────────────────────────
+const NOTES_STORAGE_KEY = 'rubli_atlas_notes_v1'
+
+function loadNotes(): Record<string, string> {
+  try {
+    const raw = window.localStorage.getItem(NOTES_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function saveNotes(notes: Record<string, string>) {
+  try {
+    window.localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes))
+  } catch {
+    // localStorage full or blocked — silently degrade
+  }
+}
+
+function useClusterNotes(): {
+  notes: Record<string, string>
+  setNote: (code: string, text: string) => void
+  deleteNote: (code: string) => void
+  notesCount: number
+} {
+  const [notes, setNotes] = useState<Record<string, string>>(() => loadNotes())
+
+  const setNote = (code: string, text: string) => {
+    setNotes((cur) => {
+      const next = { ...cur }
+      const trimmed = text.trim()
+      if (trimmed) next[code] = trimmed
+      else delete next[code]
+      saveNotes(next)
+      return next
+    })
+  }
+
+  const deleteNote = (code: string) => {
+    setNotes((cur) => {
+      const next = { ...cur }
+      delete next[code]
+      saveNotes(next)
+      return next
+    })
+  }
+
+  const notesCount = Object.keys(notes).length
+
+  return { notes, setNote, deleteNote, notesCount }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VendorSearchBox — fuzzy typeahead across the curated KNOWN_VENDORS list.
+// On select, calls onPick(vendor) which auto-pins the vendor's cluster code
+// in the active mode.
+// ─────────────────────────────────────────────────────────────────────────────
+interface VendorSearchBoxProps {
+  onPick: (v: VendorLookup) => void
+  lang: 'en' | 'es'
+}
+
+function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [activeIdx, setActiveIdx] = useState(0)
+
+  const matches = useMemo(() => searchKnownVendors(query), [query])
+
+  useEffect(() => {
+    setActiveIdx(0)
+  }, [query])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActiveIdx((i) => Math.min(matches.length - 1, i + 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActiveIdx((i) => Math.max(0, i - 1))
+    } else if (e.key === 'Enter' && matches[activeIdx]) {
+      e.preventDefault()
+      onPick(matches[activeIdx])
+      setQuery('')
+      setOpen(false)
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div className="relative" style={{ minWidth: 220 }}>
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 180)}
+          onKeyDown={handleKeyDown}
+          placeholder={lang === 'en' ? 'Find a vendor (Toka, Edenred, IMSS…)' : 'Buscar proveedor (Toka, Edenred…)'}
+          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none"
+          style={{
+            background: 'var(--color-background-elevated, var(--color-border))',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-primary)',
+          }}
+          aria-label={lang === 'en' ? 'Vendor search' : 'Buscar proveedor'}
+        />
+      </div>
+
+      {open && matches.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15 }}
+          className="absolute top-[calc(100%+4px)] left-0 right-0 surface-card rounded-sm shadow-xl overflow-hidden z-30"
+          style={{ border: '1px solid var(--color-border-hover)' }}
+          role="listbox"
+        >
+          {matches.map((v, i) => {
+            const isActive = i === activeIdx
+            return (
+              <button
+                key={v.query}
+                onMouseDown={(e) => { e.preventDefault(); onPick(v); setQuery(''); setOpen(false) }}
+                onMouseEnter={() => setActiveIdx(i)}
+                className="w-full text-left px-3 py-2 transition-colors block"
+                style={{
+                  background: isActive ? 'rgba(160,104,32,0.10)' : 'transparent',
+                  borderBottom: i < matches.length - 1 ? '1px solid var(--color-border)' : 'none',
+                }}
+                role="option"
+                aria-selected={isActive}
+              >
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <span className="font-mono font-bold text-[11px] text-text-primary truncate">
+                    {v.displayName}
+                  </span>
+                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: '#a06820' }}>
+                    {v.pattern} · {v.sector}
+                  </span>
+                </div>
+                <div className="text-[9px] font-mono text-text-muted truncate">
+                  {v.blurb[lang]}
+                </div>
+              </button>
+            )
+          })}
+          <div className="px-3 py-1.5 text-[8px] font-mono text-text-muted uppercase tracking-[0.1em]" style={{ background: 'var(--color-border)' }}>
+            {lang === 'en' ? '↑↓ navigate · ↵ select · curated set of 21 vendors' : '↑↓ navegar · ↵ seleccionar · 21 proveedores curados'}
+          </div>
+        </motion.div>
+      )}
+
+      {open && query.length >= 2 && matches.length === 0 && (
+        <div
+          className="absolute top-[calc(100%+4px)] left-0 right-0 surface-card rounded-sm shadow-xl px-3 py-2 z-30"
+          style={{ border: '1px solid var(--color-border-hover)' }}
+        >
+          <div className="text-[10px] font-mono text-text-muted">
+            {lang === 'en' ? `No curated match for "${query}". V4 will search all 320k vendors.` : `Sin coincidencias curadas para "${query}". V4 buscará en los 320k proveedores.`}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main Atlas page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Atlas() {
@@ -484,6 +786,10 @@ export default function Atlas() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [selectedClusterCode, setSelectedClusterCode] = useState<string | null>(null)
   const [pinnedCode, setPinnedCode] = useState<string | null>(null)
+  // Most recently picked vendor — shown as a "Found X" badge near the toolbar.
+  const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
+  // Personal notes per cluster — localStorage-backed
+  const { notes, setNote, notesCount } = useClusterNotes()
   // Risk-floor filter — when set, dots below the floor are dropped from the
   // population; remaining levels redistribute proportionally so the field
   // re-densifies around the focused band.
@@ -522,6 +828,65 @@ export default function Atlas() {
     retry: 0,
   })
 
+  // Pull live dashboard data — feeds yearly_trends overrides and risk fallback
+  const { data: dashboard } = useQuery({
+    queryKey: ['atlas', 'dashboard'],
+    queryFn: () => analysisApi.getFastDashboard(),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  // Look up live yearly aggregates by year (when dashboard.yearly_trends is
+  // present). When a real entry exists we use real contract counts AND scale
+  // the snapshot's risk distribution by the real high_risk_pct — closer to
+  // honest data, with snapshot pcts as the prior.
+  const liveYearMap = useMemo(() => {
+    const trends = (dashboard?.yearly_trends ?? []) as YearOverYearChange[]
+    const m: Record<number, YearOverYearChange> = {}
+    for (const t of trends) {
+      if (t && typeof t.year === 'number') m[t.year] = t
+    }
+    return m
+  }, [dashboard])
+
+  // Track whether the current visible year has real data behind it (for caption).
+  const usingLiveData = useMemo(() => {
+    return liveYearMap[YEAR_SNAPSHOTS[yearIndex].year] !== undefined
+  }, [liveYearMap, yearIndex])
+
+  // Build effective snapshot for a given year — overrides totalContracts and
+  // (when available) reshapes pcts using real high_risk_pct.
+  const effectiveSnapshot = (yi: number): YearSnapshot => {
+    const base = YEAR_SNAPSHOTS[yi]
+    const live = liveYearMap[base.year]
+    if (!live) return base
+
+    const total = live.contracts && live.contracts > 0 ? live.contracts : base.totalContracts
+
+    // If live high_risk_pct is provided, rescale critical+high pcts so their sum
+    // matches it, while preserving the snapshot's critical:high ratio.
+    let { criticalPct, highPct, mediumPct, lowPct } = base
+    if (typeof live.high_risk_pct === 'number' && live.high_risk_pct > 0 && live.high_risk_pct < 100) {
+      const baseHigh = base.criticalPct + base.highPct || 1
+      const ratio = live.high_risk_pct / baseHigh
+      criticalPct = base.criticalPct * ratio
+      highPct = base.highPct * ratio
+      const remaining = Math.max(0, 100 - criticalPct - highPct)
+      const baseLow = base.mediumPct + base.lowPct || 1
+      mediumPct = remaining * (base.mediumPct / baseLow)
+      lowPct = remaining * (base.lowPct / baseLow)
+    }
+
+    return {
+      year: base.year,
+      totalContracts: total,
+      criticalPct,
+      highPct,
+      mediumPct,
+      lowPct,
+      highlight: base.highlight,
+    }
+  }
+
   // Apply the risk floor by suppressing levels below the threshold and
   // proportionally redistributing the remaining percentages to sum to 100.
   // Counts stay as-is (informational); pcts are renormalized so the
@@ -540,8 +905,8 @@ export default function Atlas() {
     }))
   }
 
-  // Current year's snapshot → constellation data
-  const snapshot = YEAR_SNAPSHOTS[yearIndex]
+  // Current year's snapshot → constellation data (with live overrides if available)
+  const snapshot = effectiveSnapshot(yearIndex)
   const rows = useMemo(() => applyRiskFloor(snapshotToRows(snapshot)), [snapshot, riskFloor])
 
   // Atlas-density category meta (32 entries) — only used in categories mode
@@ -550,12 +915,8 @@ export default function Atlas() {
     return buildAtlasCategoriesMeta(lang === 'es')
   }, [mode, lang])
 
-  // Pull live dashboard data so we can fall back gracefully if rows is empty
-  const { data: dashboard } = useQuery({
-    queryKey: ['atlas', 'dashboard'],
-    queryFn: () => analysisApi.getFastDashboard(),
-    staleTime: 5 * 60 * 1000,
-  })
+  // Fallback rows from /stats/dashboard/fast risk_distribution (already
+  // fetched above for yearly_trends — reuse the same query).
   const fallbackRows: ConstellationRiskRow[] = useMemo(() => {
     const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
       ? (dashboard!.risk_distribution as RiskDistribution[])
@@ -603,7 +964,7 @@ export default function Atlas() {
   const totalContractsForYear = snapshot.totalContracts
 
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-8">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* ── Hero header ─────────────────────────────────────────────────── */}
       <header className="mb-6">
         <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 inline-flex items-center gap-1.5">
@@ -611,7 +972,7 @@ export default function Atlas() {
           {lang === 'en' ? 'PLATFORM · EXPLORATION' : 'PLATAFORMA · EXPLORACIÓN'}
         </div>
         <h1
-          className="font-serif font-extrabold text-[44px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3"
+          className="font-serif font-extrabold text-[32px] sm:text-[44px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3 text-balance"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           {lang === 'en' ? <>El Atlas. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Atlas. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
@@ -623,6 +984,44 @@ export default function Atlas() {
           }
         </p>
       </header>
+
+      {/* ── Vendor search row ──────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 mb-3 flex-wrap">
+        <VendorSearchBox
+          lang={lang}
+          onPick={(v) => {
+            // If active mode is sexenios, switch to patterns since most known
+            // vendors map cleanly to a pattern code.
+            if (mode === 'sexenios') setMode('patterns')
+            const code = vendorToClusterCode(v, mode === 'sexenios' ? 'patterns' : mode)
+            setPinnedCode(code)
+            setFoundVendor(v)
+            setSelectedClusterCode(code)
+          }}
+        />
+        {foundVendor && (
+          <motion.div
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm"
+            style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+          >
+            <Sparkles className="h-3 w-3" />
+            <span className="opacity-80 uppercase tracking-[0.1em]">
+              {lang === 'en' ? 'Found' : 'Encontrado'}:
+            </span>
+            <span className="font-bold">{foundVendor.displayName}</span>
+            <span className="opacity-70">→ {foundVendor.pattern}</span>
+            <button
+              onClick={() => setFoundVendor(null)}
+              className="ml-1 hover:opacity-70 transition-opacity"
+              aria-label={lang === 'en' ? 'Clear' : 'Limpiar'}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </motion.div>
+        )}
+      </div>
 
       {/* ── Toolbar: mode toggle + active stats ─────────────────────────── */}
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -690,6 +1089,19 @@ export default function Atlas() {
             <Layers className="h-3 w-3" />
             {lang === 'en' ? 'Compare years' : 'Comparar años'}
           </button>
+
+          {/* Notes count badge */}
+          {notesCount > 0 && (
+            <div
+              className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-sm"
+              style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+              title={lang === 'en' ? 'Personal notes — saved in your browser' : 'Notas personales — guardadas en tu navegador'}
+            >
+              <NotebookPen className="h-3 w-3" />
+              <span className="font-bold">{notesCount}</span>
+              <span className="opacity-70">{lang === 'en' ? (notesCount === 1 ? 'note' : 'notes') : 'notas'}</span>
+            </div>
+          )}
 
           {/* Live T1 count */}
           <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
@@ -782,7 +1194,7 @@ export default function Atlas() {
 
       {/* ── COMPARE MODE: second canvas + scrubber ─────────────────── */}
       {compareMode && (() => {
-        const snapshotB = YEAR_SNAPSHOTS[yearIndexB]
+        const snapshotB = effectiveSnapshot(yearIndexB)
         const rowsB = applyRiskFloor(snapshotToRows(snapshotB))
         const totalContractsB = snapshotB.totalContracts
         const constellationKeyB = `B-${mode}-${snapshotB.year}`
@@ -817,10 +1229,29 @@ export default function Atlas() {
       })()}
 
       {/* ── Editorial footer / methodology footnote ──────────────────── */}
-      <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
+      <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6] text-pretty">
+        <span
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm mr-2 align-middle"
+          style={{
+            background: usingLiveData ? 'rgba(160,104,32,0.12)' : 'var(--color-border)',
+            color: usingLiveData ? '#a06820' : 'var(--color-text-muted)',
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          <span
+            className="rounded-full"
+            style={{ width: 5, height: 5, background: usingLiveData ? '#16a34a' : 'var(--color-text-muted)' }}
+          />
+          {usingLiveData
+            ? (lang === 'en' ? 'live · contracts + risk-pct from yearly_trends' : 'en vivo · contratos + riesgo desde yearly_trends')
+            : (lang === 'en' ? 'illustrative snapshot' : 'instantánea ilustrativa')}
+        </span>
         {lang === 'en'
-          ? <>Yearly snapshots are calibrated illustrations — true per-year aggregates depend on a backend precompute job tracked in <span className="text-text-secondary">.claude/ACTIVE_WORK.md</span>. Total contracts for 2025 are partial. Categories lens shows 32 of 91 active spending categories — covers ~80% of federal spend by value. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
-          : <>Las instantáneas anuales son ilustraciones calibradas — los agregados anuales reales dependen de un precómputo de backend rastreado en <span className="text-text-secondary">.claude/ACTIVE_WORK.md</span>. Los contratos de 2025 son parciales. La lente de categorías muestra 32 de 91 categorías activas — cubre ~80% del gasto federal por valor. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
+          ? <>Categories lens shows 32 of 91 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 21 known cases (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
+          : <>La lente de categorías muestra 32 de 91 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 21 casos (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
         }
       </div>
 
@@ -829,6 +1260,10 @@ export default function Atlas() {
         meta={selectedMeta}
         mode={mode}
         pinnedCode={pinnedCode}
+        note={selectedMeta ? (notes[selectedMeta.code] ?? '') : ''}
+        onNoteChange={(text) => {
+          if (selectedMeta) setNote(selectedMeta.code, text)
+        }}
         onTogglePin={() => {
           if (!selectedMeta) return
           setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))
