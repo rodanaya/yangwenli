@@ -236,7 +236,9 @@ interface ExampleDossier {
   tier: 1 | 2 | 3 | 4
   flags: DossierFlag[]
   contracts: string
-  value: string
+  /** Bilingual stat string. EN uses "$133.2B MXN" / ES uses "133,200 MDP"
+   *  per Mexican press convention (avoids the billón/billion 10⁹↔10¹² trap). */
+  value: { en: string; es: string }
   kicker: { en: string; es: string }
   lede: { en: string; es: string }
   detected: { en: string; es: string }
@@ -248,7 +250,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 29277,
     name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
     risk: 0.99, tier: 1, flags: ['gt'],
-    contracts: '6,303', value: '$133.2B MXN · 133,200 MDP',
+    contracts: '6,303', value: { en: '$133.2B MXN', es: '133,200 MDP' },
     kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
     lede: {
       en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
@@ -267,7 +269,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 31655,
     name: 'LICONSA S.A. DE C.V.',
     risk: 0.92, tier: 1, flags: ['gt'],
-    contracts: '~3,000', value: 'multi-billion MXN',
+    contracts: '~3,000', value: { en: 'multi-billion MXN', es: 'multimillonario en MXN' },
     kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
     lede: {
       en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
@@ -286,7 +288,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 6038,
     name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
-    contracts: '~400', value: '$17.2B MXN · 17,200 MDP',
+    contracts: '~400', value: { en: '$17.2B MXN', es: '17,200 MDP' },
     kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
       en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
@@ -711,6 +713,25 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
   const RIGHT_PAD = 90
   const trackW = SVG_W - LABEL_W - RIGHT_PAD
   const SVG_H = TOP + ROW_H * sorted.length + 14
+  // Locale-aware split for the per-row value glyph: bold number + muted unit.
+  // pesosBn is "billion MXN" (10⁹) — multiply to recover the raw amount and
+  // hand to formatCompactMXN which renders Mexican-spec MDP/billones in ES.
+  // Crucially: in Spanish "B" reads as "billón" = 10¹² (English "trillion"),
+  // so suffixing a 10⁹ figure with "B MXN" was off by 3 orders of magnitude.
+  const splitMXN = (bn: number): { value: string; unit: string } => {
+    const formatted = formatCompactMXN(bn * 1_000_000_000)
+    const lastSpace = formatted.lastIndexOf(' ')
+    if (lang === 'en' && lastSpace !== -1) {
+      // EN: "240.0B MXN" → split before " MXN" to keep "240.0B" as the bold token
+      const idx = formatted.lastIndexOf(' MXN')
+      return idx !== -1
+        ? { value: formatted.slice(0, idx), unit: 'MXN' }
+        : { value: formatted.slice(0, lastSpace), unit: formatted.slice(lastSpace + 1) }
+    }
+    return lastSpace !== -1
+      ? { value: formatted.slice(0, lastSpace), unit: formatted.slice(lastSpace + 1) }
+      : { value: formatted, unit: '' }
+  }
 
   return (
     <div>
@@ -765,15 +786,24 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
                 style={{ transformOrigin: `${LABEL_W}px ${y}px` }}
               />
 
-              {/* Pesos value label (right) */}
-              <text x={trackEnd + 6} y={y + 3}
-                fontSize={14} fontWeight="800" fill={p.color}
-                fontFamily="var(--font-family-mono, monospace)">
-                {p.pesosBn}
-                <tspan fontSize={9} fontWeight="600" dx={2} fill="var(--color-text-muted)">
-                  B MXN
-                </tspan>
-              </text>
+              {/* Pesos value label (right) — locale-aware. EN bold token is
+                  "240.0B" with "MXN" muted; ES bold token is "240,000" with
+                  "MDP" muted (≥10⁹ → MDP, ≥10¹² → "billones MXN"). */}
+              {(() => {
+                const { value, unit } = splitMXN(p.pesosBn)
+                return (
+                  <text x={trackEnd + 6} y={y + 3}
+                    fontSize={14} fontWeight="800" fill={p.color}
+                    fontFamily="var(--font-family-mono, monospace)">
+                    {value}
+                    {unit && (
+                      <tspan fontSize={9} fontWeight="600" dx={2} fill="var(--color-text-muted)">
+                        {' '}{unit}
+                      </tspan>
+                    )}
+                  </text>
+                )
+              })()}
             </motion.g>
           )
         })}
@@ -786,7 +816,7 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
             {lang === 'en' ? 'TOTAL ESTIMATED EXPOSURE' : 'EXPOSICIÓN ESTIMADA TOTAL'}
           </div>
           <div className="font-mono font-bold text-[24px] tabular-nums leading-none mt-1" style={{ color: '#dc2626' }}>
-            ~MX${total.toFixed(0)}B
+            ~{formatCompactMXN(total * 1_000_000_000)}
           </div>
         </div>
         <div className="text-[8px] font-mono text-text-muted leading-[1.4] max-w-[420px]">
@@ -2694,7 +2724,7 @@ export default function Executive() {
                 <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
                   <span>{d.contracts} {lang === 'en' ? 'contracts' : 'contratos'}</span>
                   <span aria-hidden="true">·</span>
-                  <span>{d.value}</span>
+                  <span>{d.value[lang]}</span>
                 </div>
               </article>
             ))}

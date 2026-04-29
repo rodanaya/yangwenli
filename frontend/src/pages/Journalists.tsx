@@ -208,8 +208,20 @@ const ERA_LABEL: Record<Era, string> = {
 
 // Map MX$ billion amount → 0..1 intensity, log-scaled.
 // Linear scaling was useless: amounts span 0–6240 (3 orders of magnitude),
-function formatBillions(amount: number): string {
+//
+// Locale-aware (Apr 2026 fix): the bare "B" suffix collides with the Spanish
+// "billón" (= 10¹², English trillion). Spanish output now follows Mexican
+// press convention: MDP for ≥10⁹, "billones MXN" for ≥10¹². The `amount`
+// input is in billion-MXN units (e.g. 133.2 == 133.2B) and is rescaled
+// to raw pesos before formatting.
+function formatBillions(amount: number, lang: 'en' | 'es' = 'en'): string {
   if (amount === 0) return 'DATA LEAD'
+  if (lang === 'es') {
+    if (amount >= 1000) return `${(amount / 1000).toFixed(2)} billones MXN`
+    // Mexican convention: 133.2B → "133,200 MDP"
+    const mdp = Math.round(amount * 1000)
+    return `${new Intl.NumberFormat('es-MX').format(mdp)} MDP`
+  }
   if (amount >= 1000) return `MX$${(amount / 1000).toFixed(2)}T`
   return `MX$${amount.toFixed(1)}B`
 }
@@ -435,7 +447,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
                 fontSize: 'clamp(2.5rem, 6.5vw, 5rem)',
               }}
             >
-              {formatBillions(item.amount)}
+              {formatBillions(item.amount, lang)}
             </div>
             <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted mt-3">
               {t('lead.statTotal', { defaultValue: 'Validated contract spend' })}
@@ -538,7 +550,7 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
                 fontSize: 24,
               }}
             >
-              {formatBillions(item.amount)}
+              {formatBillions(item.amount, lang)}
             </div>
             <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
               {t('lead.statTotal', { defaultValue: 'Validated spend' })}
@@ -764,7 +776,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
                 letterSpacing: '-0.04em',
               }}
             >
-              {formatBillions(item.amount)}
+              {formatBillions(item.amount, lang)}
             </div>
             <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3">
               Validated contract spend
