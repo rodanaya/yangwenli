@@ -27,11 +27,8 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorNameEN, SECTORS } from '@/lib/constants'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import {
   Search,
-  ChevronRight,
   AlertTriangle,
   FileText,
   ArrowRight,
@@ -145,78 +142,9 @@ function TierFilterPill({
   )
 }
 
-// ============================================================================
-// Tier navigation row — horizontal clickable band replaces bulky tier cards
-// ============================================================================
-
-function TierNavigationRow({
-  tier,
-  count,
-  avgRisk,
-  valueAtRisk,
-  isActive,
-  onClick,
-}: {
-  tier: TierConfig
-  count: number
-  avgRisk: number | null
-  valueAtRisk: number | null
-  isActive: boolean
-  onClick: () => void
-}) {
-  const { t } = useTranslation('aria')
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'w-full text-left flex items-center gap-4 px-4 py-3 rounded-sm border border-border border-l-4 transition-all',
-        tier.accent,
-        isActive
-          ? 'bg-background-elevated border-opacity-100'
-          : 'bg-background-card/40 hover:bg-background-card/80'
-      )}
-      aria-pressed={isActive}
-    >
-      <div className="shrink-0 w-20">
-        <div className={cn('text-[10px] font-mono font-bold uppercase tracking-[0.15em]', tier.textColor)}>
-          {t(tier.labelKey)}
-        </div>
-        <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
-          {t(tier.nameKey)}
-        </div>
-      </div>
-
-      <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div>
-          <div className={cn('stat-sm tabular-nums', tier.textColor)}>
-            {formatNumber(count)}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
-            {t('leads.vendorCount')}
-          </div>
-        </div>
-        <div>
-          <div className="stat-sm font-mono tabular-nums text-text-secondary">
-            {avgRisk != null ? `${(avgRisk * 100).toFixed(0)}%` : '—'}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
-            {t('tierCard.avgRisk')}
-          </div>
-        </div>
-        <div className="hidden sm:block">
-          <div className="stat-sm font-mono tabular-nums text-text-secondary">
-            {valueAtRisk != null && valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
-            {t('tierCard.valueAtRisk')}
-          </div>
-        </div>
-      </div>
-
-      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isActive ? 'text-risk-high translate-x-0.5' : 'text-text-muted')} />
-    </button>
-  )
-}
+// (TierNavigationRow component removed in the AriaQueue redesign — tier
+//  selection is now a compact pill row inside the unified filter bar
+//  via TierFilterPill above.)
 
 // ============================================================================
 // Pattern chip — compact filter chip
@@ -561,14 +489,6 @@ export default function AriaPage() {
     refetchOnWindowFocus: true,
   })
 
-  // Tier 1 preview data used to compute T1 avg risk
-  const { data: tier1PreviewData } = useQuery({
-    queryKey: ['aria-tier1-preview'],
-    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 12 }),
-    staleTime: 5 * 60_000,
-    refetchOnWindowFocus: true,
-  })
-
   const totalLeads = leadsData?.pagination?.total ?? 0
   const totalPages = Math.ceil(totalLeads / PER_PAGE)
 
@@ -576,7 +496,6 @@ export default function AriaPage() {
   const elevatedValue = stats?.elevated_value_mxn ?? 0
 
   const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
-  const tier1Items: AriaQueueItem[] = tier1PreviewData?.data ?? []
 
   const tierCounts: Record<number, number> = {
     1: stats?.latest_run?.tier1_count ?? 0,
@@ -584,10 +503,6 @@ export default function AriaPage() {
     3: stats?.latest_run?.tier3_count ?? 0,
     4: stats?.latest_run?.tier4_count ?? 0,
   }
-
-  const tier1AvgRisk = tier1Items.length > 0
-    ? tier1Items.reduce((s, x) => s + (x.avg_risk_score ?? 0), 0) / tier1Items.length
-    : null
 
   const isEs = i18n.language === 'es'
   const locale = isEs ? 'es-MX' : 'en-US'
@@ -675,151 +590,77 @@ export default function AriaPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <EditorialPageShell
-          kicker={isEs
-            ? `COLA ARIA · BURÓ DE INVESTIGACIÓN ACTIVA${lastRunAt ? ` · SINCRONIZADO ${lastRunAt.toUpperCase()}` : ''}`
-            : `ARIA QUEUE · ACTIVE INVESTIGATION BUREAU${lastRunAt ? ` · SYNCED ${lastRunAt.toUpperCase()}` : ''}`
-          }
-          headline={
-            statsLoading ? (isEs ? 'Cargando cola...' : 'Loading queue...') : (
-              <>
-                {formatNumber(tierCounts[1])}{' '}
-                {isEs ? 'proveedores activan cada' : 'vendors trip every'}{' '}
-                <span style={{ color: 'var(--color-risk-critical)' }}>
-                  {isEs ? 'patrón de corrupción' : 'corruption pattern'}
-                </span>{' '}
-                {isEs ? 'en nuestro modelo.' : 'in our model.'}
-              </>
-            )
-          }
-          paragraph={
-            statsLoading
-              ? (isEs ? 'Cargando...' : 'Loading...')
-              : isEs
-                ? `Estos son los ${formatNumber(tierCounts[1])} proveedores de mayor riesgo en la contratación pública federal mexicana. Cada uno coincide con la huella estructural de al menos tres casos documentados de corrupción.${elevatedValue > 0 ? ' ' + formatCompactMXN(elevatedValue) + ' fluyen a través de sus contratos.' : ''}`
-                : `These are the ${formatNumber(tierCounts[1])} highest-risk vendors in Mexican federal procurement. Each one matches the structural fingerprint of at least three documented corruption cases.${elevatedValue > 0 ? ' ' + formatCompactMXN(elevatedValue) + ' flows through their contracts.' : ''}`
-          }
-          stats={statsLoading ? undefined : [
-            { value: formatNumber(tierCounts[1]), label: isEs ? 'T1 Crítico' : 'T1 Critical', color: 'var(--color-risk-critical)' },
-            { value: formatNumber(tierCounts[2]), label: isEs ? 'T2 Alto' : 'T2 High', color: 'var(--color-risk-high)' },
-            { value: formatNumber(tierCounts[3]), label: isEs ? 'T3 Medio' : 'T3 Medium' },
-            { value: elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—', label: isEs ? 'Valor en riesgo' : 'Value at risk', color: 'var(--color-accent)' },
-          ]}
-          loading={statsLoading}
-          severity="critical"
-          meta={
-            <span className="flex items-center gap-1.5">
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-background-elevated" />
-              v0.6.5
-              <MetodologiaTooltip
-                title={t('methodology.title')}
-                body={t('methodology.body')}
-                link="/methodology"
-              />
-            </span>
-          }
-          actions={
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
-                <input
-                  type="text"
-                  placeholder={t('leads.searchPlaceholder')}
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-background-card border border-border rounded-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:border-accent font-mono"
+        {/* ════════════════════════════════════════════════════════════════
+            UTILITY HEADER — replaces EditorialPageShell.
+            The page is a working surface for investigators, not a
+            magazine cover. One title row, one dateline, two anchor
+            stats, plus a methodology popover. No serif headline,
+            no kicker, no editorial paragraph competing with the data.
+           ════════════════════════════════════════════════════════════════ */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">
+                {lastRunAt && (
+                  <>
+                    <span>{isEs ? `Sincronizado ${lastRunAt}` : `Synced ${lastRunAt}`}</span>
+                    <span aria-hidden>·</span>
+                  </>
+                )}
+                <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
+                <span>{isEs ? 'proveedores procesados' : 'vendors processed'}</span>
+                <span aria-hidden>·</span>
+                <span>v0.6.5</span>
+                <MetodologiaTooltip
+                  title={t('methodology.title')}
+                  body={t('methodology.body')}
+                  link="/methodology"
                 />
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <button
-                  onClick={() => { setTierFilter(null); setPage(1) }}
-                  className={cn(
-                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-                    tierFilter == null
-                      ? 'bg-background-elevated text-text-primary border-border'
-                      : 'bg-background-card text-text-muted border-border hover:border-border'
-                  )}
-                >
-                  {t('filters.all')}
-                </button>
-                {TIER_CONFIG.map((cfg) => (
-                  <TierFilterPill
-                    key={cfg.tier}
-                    tier={cfg}
-                    count={tierCounts[cfg.tier]}
-                    isActive={tierFilter === cfg.tier}
-                    loading={statsLoading}
-                    onClick={() => {
-                      setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
-                      setPage(1)
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          }
-        >
-
-        <Act number="I" label="THE QUEUE">
-
-        {/* ============================================================== */}
-        {/* TIER NAVIGATION ROWS — horizontal bands, clickable              */}
-        {/* ============================================================== */}
-        <section aria-label={t('threatLevels')}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-                {t('threatLevels')}
-              </p>
-              <span className="text-[10px] text-text-muted font-mono">·</span>
-              <p className="text-[10px] text-text-muted font-mono uppercase tracking-[0.15em]">
-                {t('tierCard.clickFilter')}
               </p>
             </div>
+            {!statsLoading && (
+              <div className="flex items-baseline gap-5">
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-risk-critical tabular-nums leading-none">
+                    {formatNumber(tierCounts[1])}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {isEs ? 'T1 prioridad' : 'T1 priority'}
+                  </div>
+                </div>
+                {elevatedValue > 0 && (
+                  <div className="text-right">
+                    <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                      {formatCompactMXN(elevatedValue)}
+                    </div>
+                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                      {isEs ? 'en riesgo' : 'at risk'}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+        </header>
 
-          {statsLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-sm" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {TIER_CONFIG.map((cfg) => (
-                <TierNavigationRow
-                  key={cfg.tier}
-                  tier={cfg}
-                  count={tierCounts[cfg.tier]}
-                  avgRisk={cfg.tier === 1 ? tier1AvgRisk : null}
-                  valueAtRisk={cfg.tier === 1 ? elevatedValue : null}
-                  isActive={tierFilter === cfg.tier}
-                  onClick={() => {
-                    setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
-                    setPatternFilter(null)
-                    setPage(1)
-                    setTimeout(() => {
-                      document.getElementById('aria-investigation-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                    }, 80)
-                  }}
-                />
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* ============================================================== */}
-        {/* 4. PATTERN FILTER CHIPS — compact, one line, optional           */}
-        {/* ============================================================== */}
-        {Object.keys(patternCounts).length > 0 && (
-          <section aria-label={t('patternSection.title')}>
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-                {t('patternSection.title')}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
+        {/* ════════════════════════════════════════════════════════════════
+            UNIFIED FILTER BAR
+            Patterns first (most discriminative), then tiers, then sector
+            + flag toggles + search. Replaces three separate sections
+            (TierNavigationRow stack, pattern chips, EditorialPageShell
+            actions slot) that fought for vertical space.
+           ════════════════════════════════════════════════════════════════ */}
+        <div className="mb-5 space-y-2.5">
+          {/* Pattern chips — promoted to the top per the design ask. */}
+          {Object.keys(patternCounts).length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0 inline-flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 text-orange-400" />
+                {isEs ? 'Patrón' : 'Pattern'}
+              </span>
               {Object.entries(patternCounts).map(([pattern, count]) => (
                 <PatternChip
                   key={pattern}
@@ -832,78 +673,105 @@ export default function AriaPage() {
                   }}
                 />
               ))}
-              <button
-                onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
-                  newVendorOnly
-                    ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                    : 'bg-background-card text-text-secondary border-border hover:border-border'
-                )}
-              >
-                {t('filters.newVendorOnly')}
-                {stats?.new_vendor_count != null && (
-                  <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
-                )}
-              </button>
-              <button
-                onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
-                className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
-                  novelOnly
-                    ? 'bg-background-elevated text-text-secondary border-border'
-                    : 'bg-background-card text-text-secondary border-border hover:border-border'
-                )}
-                title={t('filters.novelOnlyTooltip')}
-              >
-                {t('filters.novelOnly')}
-              </button>
-              <select
-                value={sectorFilter ?? ''}
-                onChange={(e) => {
-                  const v = e.target.value
-                  setSectorFilter(v === '' ? null : Number(v))
+            </div>
+          )}
+          {/* Tier pills + flags + sector + search — single row. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+              {isEs ? 'Nivel' : 'Tier'}
+            </span>
+            <button
+              onClick={() => { setTierFilter(null); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
+                tierFilter == null
+                  ? 'bg-background-elevated text-text-primary border-border'
+                  : 'bg-background-card text-text-muted border-border hover:border-border'
+              )}
+            >
+              {t('filters.all')}
+            </button>
+            {TIER_CONFIG.map((cfg) => (
+              <TierFilterPill
+                key={cfg.tier}
+                tier={cfg}
+                count={tierCounts[cfg.tier]}
+                isActive={tierFilter === cfg.tier}
+                loading={statsLoading}
+                onClick={() => {
+                  setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
                   setPage(1)
                 }}
-                className={cn(
-                  'inline-flex items-center px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors cursor-pointer',
-                  sectorFilter != null
-                    ? 'bg-background-elevated text-text-primary border-border'
-                    : 'bg-background-card text-text-secondary border-border hover:border-border'
-                )}
-                aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}
-              >
-                <option value="">{isEs ? 'Todos los sectores' : 'All sectors'}</option>
-                {SECTORS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {isEs ? s.name : s.nameEN}
-                  </option>
-                ))}
-              </select>
+              />
+            ))}
+            <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+            <button
+              onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
+                newVendorOnly
+                  ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+            >
+              {t('filters.newVendorOnly')}
+              {stats?.new_vendor_count != null && (
+                <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
+              )}
+            </button>
+            <button
+              onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
+                novelOnly
+                  ? 'bg-background-elevated text-text-secondary border-border'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title={t('filters.novelOnlyTooltip')}
+            >
+              {t('filters.novelOnly')}
+            </button>
+            <select
+              value={sectorFilter ?? ''}
+              onChange={(e) => {
+                const v = e.target.value
+                setSectorFilter(v === '' ? null : Number(v))
+                setPage(1)
+              }}
+              className={cn(
+                'inline-flex items-center px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors cursor-pointer',
+                sectorFilter != null
+                  ? 'bg-background-elevated text-text-primary border-border'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}
+            >
+              <option value="">{isEs ? 'Todos los sectores' : 'All sectors'}</option>
+              {SECTORS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {isEs ? s.name : s.nameEN}
+                </option>
+              ))}
+            </select>
+            <span className="mx-1 h-4 w-px bg-border hidden sm:inline-block" aria-hidden />
+            {/* Search — flexes to fill remaining width on the same row. */}
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
+              <input
+                type="text"
+                placeholder={t('leads.searchPlaceholder')}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                className="w-full pl-7 pr-3 py-1 text-xs bg-background-card border border-border rounded-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:border-accent font-mono"
+              />
             </div>
-          </section>
-        )}
+          </div>
+        </div>
 
-        {/* ============================================================== */}
-        {/* GHOST SUSPECTS — P2 confidence panel (shown when P2 active)    */}
-        {/* ============================================================== */}
+        {/* GhostSuspectsPanel — only renders when P2 pattern is active. */}
         {patternFilter === 'P2' && (
           <GhostSuspectsPanel isEs={isEs} />
         )}
-
-        {/* ============================================================== */}
-        {/* HOW TO READ THIS QUEUE — methodology explainer                 */}
-        {/* ============================================================== */}
-        <div className="surface-card--evidence surface-card p-4 mb-4">
-          <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
-            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-accent block mb-1">
-              {isEs ? 'Cómo leer esta cola' : 'How to read this queue'}
-            </span>
-            {isEs
-              ? 'Cada fila es un proveedor ordenado por IPS — el Índice de Prioridad de Investigación. IPS combina puntaje de riesgo, señales de anomalía, centralidad de red y coincidencias en registros externos (EFOS, SFP, RUPC). Los proveedores T1 deben investigarse de inmediato. Haga clic en cualquier fila para abrir el dossier completo.'
-              : 'Each row is a vendor ranked by IPS — the Investigation Priority Score. IPS combines risk score, anomaly signals, network centrality, and external registry matches (EFOS, SFP, RUPC). T1 vendors should be investigated immediately. Click any row to open the full dossier.'}
-          </p>
-        </div>
 
         {/* ============================================================== */}
         {/* INVESTIGATION LIST — one row per vendor, one action            */}
@@ -1061,8 +929,6 @@ export default function AriaPage() {
           </div>
         </section>
 
-        </Act>
-        </EditorialPageShell>
       </div>
     </div>
   )
