@@ -51,8 +51,6 @@ import {
   ClipboardList,
 } from 'lucide-react'
 import { formatDate, formatNumber } from '@/lib/utils'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 
 // ============================================================================
 // Helper utilities
@@ -613,17 +611,44 @@ export function Watchlist() {
   }
 
   return (
-    <EditorialPageShell
-      kicker="WORKSPACE · INVESTIGATION DOSSIERS"
-      headline="Your active investigation files."
-      paragraph="Saved vendors, contracts, and case leads. Build dossiers by adding items from any page in the platform. Share dossiers with colleagues or export for reporting."
-      stats={[
-        { value: formatNumber(items.length), label: 'Items saved' },
-        { value: formatNumber(dossiers?.length ?? 0), label: 'Dossiers' },
-      ]}
-      loading={statsLoading}
-    >
-    <Act number="I" label="YOUR DOSSIERS">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+        {/* Utility header — same treatment as /aria. Workspace is a working
+            surface (saved vendors, dossier-building) not an editorial spread. */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                {t('title', { defaultValue: 'Workspace' })}
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {t('subtitle', { defaultValue: 'Your saved vendors, contracts, and case leads — organized into dossiers.' })}
+              </p>
+            </div>
+            {!statsLoading && (
+              <div className="flex items-baseline gap-5">
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatNumber(items.length)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('headerStats.items', { defaultValue: 'Items saved' })}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatNumber(dossiers?.length ?? 0)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('headerStats.dossiers', { defaultValue: 'Dossiers' })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+
     <div className="flex flex-col md:flex-row gap-4">
       {/* Folder sidebar */}
       <div className="w-full md:w-[200px] md:shrink-0 space-y-3">
@@ -1086,8 +1111,8 @@ export function Watchlist() {
         />
       )}
     </div>
-    </Act>
-    </EditorialPageShell>
+      </div>
+    </div>
   )
 }
 
