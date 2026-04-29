@@ -26,7 +26,6 @@ import {
 } from '@/lib/tiers'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import {
   ArrowUp,
@@ -908,28 +907,57 @@ export default function InstitutionLeague() {
     <div className="min-h-screen bg-background text-text-primary">
       <TabBar activeTab={activeTab} setTab={setTab} />
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
-        <EditorialPageShell
-          kicker={t('kicker')}
-          headline={
-            <>{t('headline.before')}{' '}
-              <span className="text-accent">{t('headline.accent')}</span>
-            </>
-          }
-          paragraph={
-            totalInstitutions > 0
-              ? t('lede', { total: formatNumber(totalInstitutions) })
-              : t('lede_none')
-          }
-          stats={isLoading ? undefined : [
-            { value: formatNumber(totalInstitutions), label: t('stats.evaluated') },
-            { value: formatNumber(highRiskInstitutions), label: t('stats.critical'), color: 'var(--color-risk-critical)' },
-            { value: statsData?.median_score?.toFixed(1) ?? '—', label: t('stats.median'), sub: t('stats.outOfHundred') },
-            { value: '5', label: t('stats.tiers'), sub: t('stats.tiersRange') },
-          ]}
-          meta={t('meta')}
-          severity={failingCount > 0 ? 'critical' : 'high'}
-          loading={isLoading}
-        >
+        {/* Utility header — same pattern as /aria, /workspace, /cases,
+            /sectors. Institution Ranking is a working surface
+            (compare 100+ institutions, drill into one). */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                {t('headline.before')}{' '}
+                <span className="text-accent">{t('headline.accent')}</span>
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {t('kicker')}
+                <span className="mx-1.5" aria-hidden>·</span>
+                {t('meta')}
+              </p>
+            </div>
+            {!isLoading && (
+              <div className="flex items-baseline gap-5">
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatNumber(totalInstitutions)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('stats.evaluated')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-risk-critical tabular-nums leading-none">
+                    {formatNumber(highRiskInstitutions)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('stats.critical')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {statsData?.median_score?.toFixed(1) ?? '—'}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('stats.median')}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          {totalInstitutions > 0 && (
+            <p className="text-xs text-text-muted mt-2 max-w-2xl">
+              {t('lede', { total: formatNumber(totalInstitutions) })}
+            </p>
+          )}
+        </header>
       {/* Editorial finding headline — bible §2 cream-mode callout: tint stays
           subtle so the card doesn't read as alarm on a cream page. */}
       {editorialHeadline && (
@@ -1403,7 +1431,6 @@ export default function InstitutionLeague() {
           {t('methodologyFootnote')}
         </p>
       </div>
-        </EditorialPageShell>
       </div>
     </div>
   )
