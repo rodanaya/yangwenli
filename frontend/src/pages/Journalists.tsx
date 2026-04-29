@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -304,12 +305,42 @@ function NewsroomArtwork({
 }
 
 // ---------------------------------------------------------------------------
+// ObservatoryTourBadge — small chip that surfaces the matching atlas tour
+// for a story slug. Renders nothing if the slug has no paired tour. Click
+// stops propagation (so it doesn't trigger the card's outer navigate).
+// ---------------------------------------------------------------------------
+
+function ObservatoryTourBadge({ slug, accent, lang }: { slug: string; accent: string; lang: 'en' | 'es' }) {
+  const navigate = useNavigate()
+  const tour = findStoryByLongformSlug(slug)
+  if (!tour) return null
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        navigate(`/atlas?story=${tour.id}`)
+      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); navigate(`/atlas?story=${tour.id}`) } }}
+      className="inline-flex items-center gap-1.5 px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] rounded-sm border transition-opacity hover:opacity-80"
+      style={{ borderColor: `${accent}55`, color: accent, background: `${accent}0d` }}
+      aria-label={lang === 'en' ? `${tour.duration} Observatory tour: ${tour.title.en}` : `Tour de ${tour.duration} en El Observatorio: ${tour.title.es}`}
+    >
+      <span>◆</span>
+      <span>{lang === 'en' ? `${tour.duration} TOUR · OBSERVATORY` : `TOUR ${tour.duration} · OBSERVATORIO`}</span>
+    </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // LEAD STORY — top of page, full-bleed hero with artwork backdrop
 // ---------------------------------------------------------------------------
 
 function LeadStoryCard({ item }: { item: Investigation }) {
   const navigate = useNavigate()
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
@@ -383,6 +414,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
             <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.14em] text-text-secondary border border-border bg-background rounded-sm">
               {ERA_LABEL[item.era]}
             </span>
+            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
 
           <span className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] transition-colors" style={{ color: accent }}>
@@ -444,7 +476,8 @@ function LeadStoryCard({ item }: { item: Investigation }) {
 // ---------------------------------------------------------------------------
 
 function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'grid' | 'cluster' }) {
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
@@ -522,15 +555,18 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between">
-          <span
-            className={cn(
-              'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
-              status.color, status.border, status.bg,
-            )}
-          >
-            [{status.label}]
-          </span>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={cn(
+                'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
+                status.color, status.border, status.bg,
+              )}
+            >
+              [{status.label}]
+            </span>
+            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
+          </div>
           <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold transition-transform" style={{ color: accent }}>
             {t('cards.readStory', { defaultValue: 'Read story' })}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
@@ -631,7 +667,8 @@ function SectionBreak() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function FeaturedCard({ item }: { item: Investigation }) {
   const navigate = useNavigate()
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
 
@@ -704,6 +741,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
             <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-border bg-background-card rounded-sm">
               {ERA_LABEL[item.era]}
             </span>
+            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
 
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-risk-critical group-hover:text-risk-critical transition-colors">
@@ -763,7 +801,8 @@ export function FeaturedCard({ item }: { item: Investigation }) {
 // ---------------------------------------------------------------------------
 
 function GridCard({ item }: { item: Investigation }) {
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
@@ -816,15 +855,18 @@ function GridCard({ item }: { item: Investigation }) {
         </p>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-border flex items-center justify-between">
-          <span
-            className={cn(
-              'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
-              status.color, status.border, status.bg
-            )}
-          >
-            [{status.label}]
-          </span>
+        <div className="pt-3 border-t border-border flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span
+              className={cn(
+                'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
+                status.color, status.border, status.bg
+              )}
+            >
+              [{status.label}]
+            </span>
+            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
+          </div>
           <span className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-text-muted group-hover:text-text-primary transition-colors">
             {t('cards.readStory')}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">→</span>

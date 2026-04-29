@@ -68,6 +68,14 @@ export interface Story {
     headline: { en: string; es: string }
     body: { en: string; es: string }
   }
+  /**
+   * Slug of the long-form `/stories/:slug` page that this Observatory tour
+   * is the visual trailer for. When set, the closing card surfaces a
+   * "Read the full investigation" CTA, and the corresponding /stories page
+   * surfaces a reverse "View in the Observatory" affordance. Leave
+   * undefined for orphan tours that have no long-form counterpart yet.
+   */
+  longformSlug?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -191,6 +199,7 @@ const PHARMA_CARTEL: Story = {
       es: 'El cártel farmacéutico fue visible en los datos de contratación federal desde 2014. La COFECE actuó en 2018. AMLO vetó en 2019. El patrón persiste en 2025. RUBLI existe para que el próximo patrón no requiera cuatro años de sufrimiento antes de que alguien actúe.',
     },
   },
+  longformSlug: 'el-monopolio-invisible',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -303,6 +312,7 @@ const ESTAFA_MAESTRA: Story = {
       es: 'P3 fue visible en COMPRANET desde 2010. La Estafa Maestra se nombró públicamente en 2017. La plataforma que estás leyendo existe para que la brecha entre "visible" y "nombrado" pase de siete años a siete días.',
     },
   },
+  longformSlug: 'la-industria-del-intermediario',
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -410,6 +420,16 @@ export const ATLAS_STORIES: Story[] = [PHARMA_CARTEL, ESTAFA_MAESTRA, COVID_YEAR
 /** Look up a story by id, or null if not found. */
 export function findStory(id: string): Story | null {
   return ATLAS_STORIES.find((s) => s.id === id) ?? null
+}
+
+/**
+ * Reverse lookup: given a /stories/:slug long-form slug, return the
+ * Observatory tour that is the visual trailer for it (or null if no tour
+ * exists for this slug). Used by the long-form story page to surface a
+ * "View in the Observatory" affordance.
+ */
+export function findStoryByLongformSlug(slug: string): Story | null {
+  return ATLAS_STORIES.find((s) => s.longformSlug === slug) ?? null
 }
 
 /** Total chapters across all stories — used for analytics / progress hints. */

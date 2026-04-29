@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, BookOpen, Square, Link2, Check, RotateCcw, SkipForward } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, BookOpen, Square, Link2, Check, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
 import { analysisApi, ariaApi } from '@/api/client'
@@ -41,7 +41,7 @@ import {
   type ConstellationRiskRow,
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
-import { formatNumber } from '@/lib/utils'
+import { formatNumber, cn } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -817,6 +817,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
 export default function Atlas() {
   const { i18n } = useTranslation()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
+  const navigate = useNavigate()
 
   const [mode, setMode] = useState<ConstellationMode>('patterns')
   const [yearIndex, setYearIndex] = useState<number>(YEAR_SNAPSHOTS.length - 1) // default to most recent
@@ -932,6 +933,19 @@ export default function Atlas() {
     if (floor && ['all', 'medium', 'high', 'critical'].includes(floor)) {
       setRiskFloor(floor)
     }
+    // ?story=<id> auto-launches an Observatory tour. Used by the long-form
+    // /stories pages to deep-link readers from the analytical article into
+    // the visual trailer. Suppresses the first-visit auto-tour if present.
+    const storyId = searchParams.get('story')
+    if (storyId) {
+      const story = ATLAS_STORIES.find((s) => s.id === storyId)
+      if (story) {
+        setActiveStory(story)
+        setActiveChapter(0)
+        setStoryPlaying(true)
+        setStoryEnded(false)
+      }
+    }
     // intentionally only on mount — searchParams reads should not loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -958,6 +972,9 @@ export default function Atlas() {
   // V5: first-visit auto-tour. Launch "The COVID Spike" automatically the
   // first time a user lands on /atlas with no URL state. Subsequent visits
   // skip auto-tour. Set `rubli_atlas_visited` localStorage flag once played.
+  // ?story=<id> arrivals also count as "visited" — the explicit story param
+  // means the reader is being deep-linked from a long-form page and the
+  // auto-tour would compete with their intended story.
   useEffect(() => {
     const VISITED_KEY = 'rubli_atlas_visited_v1'
     const hasUrlState = searchParams.toString().length > 0
@@ -973,6 +990,11 @@ export default function Atlas() {
         try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
       }, 1200)
       return () => clearTimeout(id)
+    }
+    // Mark as visited if arriving via ?story= (the deep-linker handles the
+    // launch above; we just need to suppress the auto-tour on next visit).
+    if (searchParams.get('story')) {
+      try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
     }
     // intentionally only on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1626,10 +1648,32 @@ export default function Atlas() {
                 {activeStory.closing.body[lang]}
               </p>
               <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-border/50">
+                {/* Primary CTA: read the full long-form investigation. Only
+                    rendered when the tour has a paired /stories slug —
+                    orphan tours (e.g. covid_year) skip this affordance. */}
+                {activeStory.longformSlug && (
+                  <button
+                    onClick={() => navigate(`/stories/${activeStory.longformSlug}`)}
+                    className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
+                    style={{ background: activeStory.accent, color: 'white' }}
+                  >
+                    <FileText className="h-3 w-3" />
+                    {lang === 'en' ? 'Read the full investigation' : 'Leer la investigación completa'}
+                  </button>
+                )}
                 <button
                   onClick={() => { setActiveChapter(0); setStoryPlaying(true); setStoryEnded(false) }}
-                  className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
-                  style={{ background: activeStory.accent, color: 'white' }}
+                  className={cn(
+                    'text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors inline-flex items-center gap-1.5',
+                    activeStory.longformSlug
+                      ? 'hover:bg-background-elevated/40'
+                      : 'hover:opacity-90',
+                  )}
+                  style={
+                    activeStory.longformSlug
+                      ? { border: '1px solid var(--color-border)', color: activeStory.accent }
+                      : { background: activeStory.accent, color: 'white' }
+                  }
                 >
                   <RotateCcw className="h-3 w-3" />
                   {lang === 'en' ? 'Replay' : 'Repetir'}

@@ -13,6 +13,7 @@ import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
 import { getStoryBySlug, getRelatedStories, localizeChapter, localizeStory } from '@/lib/story-content'
 import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content'
+import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { OutletBadge } from '@/components/stories/OutletBadge'
 import ChapterBanner from '@/components/stories/ChapterBanner'
 import DataPullquote from '@/components/stories/DataPullquote'
@@ -525,6 +526,56 @@ function AtlasLink({
             </p>
           </div>
           <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} />
+        </div>
+      </Link>
+    </ScrollReveal>
+  )
+}
+
+// ── ObservatoryTrailerCTA — surfaces the matching atlas-tour for stories
+//   that have one. Renders inside Act III so the reader, having finished
+//   the analytical article, can opt into the 55-second visual trailer of
+//   the same investigation. Hidden when no atlas tour is paired. ────────
+
+function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; lang: 'en' | 'es' }) {
+  const tour = findStoryByLongformSlug(longformSlug)
+  if (!tour) return null
+  const href = `/atlas?story=${tour.id}`
+  const headline = lang === 'en'
+    ? 'Watch this investigation in the Observatory'
+    : 'Mira esta investigación en El Observatorio'
+  const body = lang === 'en'
+    ? `${tour.duration} · ${tour.chapters.length} chapters · the visual trailer for the article you just read.`
+    : `${tour.duration} · ${tour.chapters.length} capítulos · el tráiler visual del artículo que acabas de leer.`
+  return (
+    <ScrollReveal className="my-2">
+      <Link
+        to={href}
+        className="block rounded-sm p-5 transition-opacity hover:opacity-90"
+        style={{
+          background: `linear-gradient(135deg, ${tour.accent}10, ${tour.accent}03 60%)`,
+          border: `1px solid ${tour.accent}40`,
+        }}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div
+              className="text-[10px] font-mono font-bold uppercase tracking-[0.16em] mb-1.5"
+              style={{ color: tour.accent }}
+            >
+              ◆ {lang === 'en' ? 'OBSERVATORY TOUR' : 'TOUR DEL OBSERVATORIO'}
+            </div>
+            <h4
+              className="text-[18px] md:text-[20px] font-bold text-text-primary leading-[1.2] mb-1"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              {headline}
+            </h4>
+            <p className="text-[12px] font-mono text-text-muted leading-[1.5]">
+              {body}
+            </p>
+          </div>
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: tour.accent }} />
         </div>
       </Link>
     </ScrollReveal>
@@ -1636,7 +1687,8 @@ function ShareBar({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 export default function StoryNarrative() {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const [scrollPct, setScrollPct] = useState(0)
@@ -1791,6 +1843,7 @@ export default function StoryNarrative() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
         <Act number="III" label="FURTHER INQUIRY" className="space-y-4">
           <ShareBar story={story} />
+          <ObservatoryTrailerCTA longformSlug={story.slug} lang={lang} />
           <PlatformLinks story={story} />
         </Act>
       </div>
