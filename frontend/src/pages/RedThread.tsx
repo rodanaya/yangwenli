@@ -16,6 +16,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
@@ -1094,23 +1095,44 @@ export default function RedThread() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [handleScroll])
 
-  // Queries
-  const { data: vendor, isLoading: vendorLoading, isError: vendorError } = useQuery({
+  // Queries — all share three resilience flags:
+  //   • staleTime keeps data fresh through transient deploy windows
+  //   • refetchOnWindowFocus auto-recovers when the user comes back to a
+  //     stale tab after a backend hiccup
+  //   • retry on the root vendor query stays at default (3 attempts) so a
+  //     single-packet network blip doesn't fail the whole page
+  // Sub-resource queries that may legitimately 404 (ARIA queue, co-bidders)
+  // keep retry: false — those are "expected absence" cases, not failures.
+  const COMMON_QUERY_OPTS = {
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
+  } as const
+
+  const {
+    data: vendor,
+    isLoading: vendorLoading,
+    isError: vendorError,
+    error: vendorErrorObj,
+    refetch: refetchVendor,
+  } = useQuery({
     queryKey: ['vendor', id],
     queryFn: () => vendorApi.getById(id),
     enabled: !!id && !isNaN(id),
+    ...COMMON_QUERY_OPTS,
   })
 
   const { data: waterfall } = useQuery({
     queryKey: ['vendor-waterfall', id],
     queryFn: () => vendorApi.getRiskWaterfall(id),
     enabled: !!id && !isNaN(id),
+    ...COMMON_QUERY_OPTS,
   })
 
   const { data: timeline } = useQuery({
     queryKey: ['vendor-timeline', id],
     queryFn: () => vendorApi.getRiskTimeline(id),
     enabled: !!id && !isNaN(id),
+    ...COMMON_QUERY_OPTS,
   })
 
   const { data: aria } = useQuery({
@@ -1118,6 +1140,7 @@ export default function RedThread() {
     queryFn: () => ariaApi.getVendorDetail(id),
     enabled: !!id && !isNaN(id),
     retry: false, // vendor may not be in ARIA queue — that's OK
+    ...COMMON_QUERY_OPTS,
   })
 
   const { data: coBidders } = useQuery({
@@ -1125,7 +1148,15 @@ export default function RedThread() {
     queryFn: () => networkApi.getCoBidders(id, 10, 5),
     enabled: !!id && !isNaN(id) && activeChapter >= 3,
     retry: false,
+    ...COMMON_QUERY_OPTS,
   })
+
+  // Distinguish "vendor doesn't exist" (404) from "backend unreachable" so
+  // the UI can give the reader an actionable message instead of the same
+  // generic "Could not load" for every failure mode. Was a single early-
+  // return that produced indistinguishable error states for 404, 5xx, and
+  // network-down.
+  const vendorErrorStatus = (vendorErrorObj as AxiosError | undefined)?.response?.status
 
   // scroll progress for the thread line (page-level)
   const [scrollPct, setScrollPct] = useState(0)
@@ -1140,20 +1171,62 @@ export default function RedThread() {
   }
 
   if (vendorLoading) return <ThreadSkeleton label={t('loading')} />
-  if (vendorError) {
+
+  // 404 — vendor genuinely does not exist. Distinct UI from network failure
+  // so the reader knows retrying won't help and they should pick a different
+  // vendor. (Was: same generic "Could not load" UI as 5xx/network errors.)
+  if (vendorError && vendorErrorStatus === 404) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <AlertTriangle className="h-8 w-8 text-destructive" />
-        <p className="text-text-muted">{t('errors.loadFailed')}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+        <AlertTriangle className="h-8 w-8 text-text-muted" />
+        <div>
+          <p className="text-text-primary font-medium mb-1">
+            {t('errors.vendorNotFound')}
+          </p>
+          <p className="text-text-muted text-sm">
+            {t('errors.vendorNotFoundHint', { defaultValue: 'Vendor #' + id + ' is not in the procurement database. It may have been deduplicated, or the ID is wrong.' })}
+          </p>
+        </div>
         <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
     )
   }
-  if (!vendor) {
+
+  // 5xx, network, or other transient — give the reader a Retry button
+  // instead of forcing them to navigate away and back. The page often comes
+  // back on its own once the deploy window or network blip clears.
+  if (vendorError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <div>
+          <p className="text-text-primary font-medium mb-1">{t('errors.loadFailed')}</p>
+          <p className="text-text-muted text-sm">
+            {t('errors.loadFailedHint', { defaultValue: 'Backend returned ' + (vendorErrorStatus ?? 'no response') + '. This usually clears within a minute.' })}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => refetchVendor()}
+            className="text-sm font-medium px-3 py-1.5 rounded-sm border border-border hover:bg-background-elevated/40 transition-colors inline-flex items-center gap-1.5"
+          >
+            {t('errors.retry', { defaultValue: 'Retry' })}
+          </button>
+          <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+            {t('errors.goBack')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+  if (!vendor) {
+    // Defensive — useQuery returned success but no payload. Treated as
+    // "vendor not found" since that's the only realistic shape that gets
+    // here (ID mismatch, race, etc.).
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
         <p className="text-text-muted">{t('errors.vendorNotFound')}</p>
         <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
           {t('errors.goBack')}
