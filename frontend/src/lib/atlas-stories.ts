@@ -79,13 +79,16 @@ export interface Story {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// THE PHARMACEUTICAL CARTEL — 6 chapters, ~50s
+// THE INVISIBLE MONOPOLY — 6 chapters, ~50s
+// (Brand-aligned with the /stories/el-monopolio-invisible long-form. Atlas
+//  tour is the visual trailer; long-form is the deep dive. April 2026
+//  rename — was "The Pharmaceutical Cartel" / "El Cártel Farmacéutico".)
 // ─────────────────────────────────────────────────────────────────────────────
 const PHARMA_CARTEL: Story = {
   id: 'pharma_cartel',
   title: {
-    en: 'The Pharmaceutical Cartel',
-    es: 'El Cártel Farmacéutico',
+    en: 'The Invisible Monopoly',
+    es: 'El Monopolio Invisible',
   },
   subtitle: {
     en: 'How three distributors captured Mexico\'s public drug supply — and how the data saw them years before COFECE did.',
