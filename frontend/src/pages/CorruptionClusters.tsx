@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { ArrowUpRight, AlertTriangle, ExternalLink } from 'lucide-react'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { networkApi, type PatternSpotlight } from '@/api/client'
@@ -1048,38 +1047,47 @@ export default function CorruptionClusters() {
   const totalT1 = patternsFull.reduce((s, p) => s + p.t1, 0)
 
   return (
-    <EditorialPageShell
-      kicker={isEs ? 'ANÁLISIS · ARIA v1.1' : 'ANALYSIS · ARIA v1.1'}
-      headline={
-        <>
-          7 <span style={{ color: '#dc2626' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
-        </>
-      }
-      paragraph={
-        isEs
-          ? `ARIA detectó ${formatNumber(totalVendors)} proveedores en 7 patrones de irregularidad. Cada patrón representa una arquitectura distinta de desvío — desde monopolios sectoriales hasta redes de empresas fantasma. Juntos cubren 6.5T MXN en contratos de riesgo.`
-          : `ARIA detected ${formatNumber(totalVendors)} vendors across 7 irregularity patterns. Each pattern represents a distinct diversion architecture — from sector monopolies to ghost company networks. Together they cover MXN 6.5T in risk contracts.`
-      }
-      stats={[
-        {
-          value: formatNumber(totalVendors),
-          label: isEs ? 'PROVEEDORES EN PATRONES' : 'VENDORS IN PATTERNS',
-          sub: isEs ? 'Total clasificado por ARIA' : 'Total classified by ARIA',
-        },
-        {
-          value: formatNumber(totalT1),
-          label: isEs ? 'EN TIER 1 CRÍTICO' : 'IN CRITICAL TIER 1',
-          color: '#dc2626',
-          sub: isEs ? 'IPS ≥ 0.60 · investigación inmediata' : 'IPS ≥ 0.60 · immediate investigation',
-        },
-        {
-          value: AVG_T1_IPS.toFixed(3),
-          label: isEs ? 'IPS PROMEDIO T1' : 'AVG T1 IPS',
-          sub: isEs ? 'Promedio ponderado del Tier 1' : 'Weighted average of Tier 1',
-        },
-      ]}
-      severity="critical"
-    >
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Utility header — same pattern as /aria, /workspace, etc. */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                7 <span style={{ color: '#dc2626' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {isEs ? 'ANÁLISIS · ARIA v1.1' : 'ANALYSIS · ARIA v1.1'}
+              </p>
+            </div>
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                  {formatNumber(totalVendors)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {isEs ? 'Proveedores' : 'Vendors'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#dc2626' }}>
+                  {formatNumber(totalT1)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {isEs ? 'En Tier 1' : 'In Tier 1'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                  {AVG_T1_IPS.toFixed(3)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {isEs ? 'IPS T1 promedio' : 'Avg T1 IPS'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
       {/* ================================================================ */}
       {/* ACT I — LA HUELLA / THE FINGERPRINT                              */}
       {/* ================================================================ */}
@@ -1351,6 +1359,7 @@ export default function CorruptionClusters() {
           </div>
         </Act>
       )}
-    </EditorialPageShell>
+      </div>
+    </div>
   )
 }

@@ -19,7 +19,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 
 function RegistryBadges({ v }: { v: IntersectionVendor }) {
@@ -223,63 +222,54 @@ export default function Intersection() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <EditorialPageShell
-        kicker={lang === 'es' ? 'RUBLI · LA INTERSECCIÓN' : 'RUBLI · THE INTERSECTION'}
-        headline={
-          isLoading ? (
-            lang === 'es' ? 'Modelo contra reguladores' : 'Model versus regulators'
-          ) : data ? (
-            <>
-              {lang === 'es' ? 'RUBLI señala ' : 'RUBLI flags '}
-              <span style={{ color: 'var(--color-risk-critical)' }}>
-                {formatNumber(data.counts.novelty)}
-              </span>
-              {lang === 'es' ? ' proveedores que los reguladores aún no.' : ' vendors regulators haven\'t.'}
-            </>
-          ) : (
-            lang === 'es' ? 'Modelo contra reguladores' : 'Model versus regulators'
-          )
-        }
-        paragraph={
-          lang === 'es' ? (
-            <>
-              Cruzamos nuestra puntuación de patrón con tres registros externos: <strong className="text-text-primary">SAT EFOS definitivo</strong> (empresas fantasma art. 69-B), <strong className="text-text-primary">sanciones SFP</strong>, y nuestro corpus de <strong className="text-text-primary">casos documentados</strong>. Los cuatro cuadrantes revelan qué vio nuestro modelo antes que los reguladores (novedad), qué confirman ambos (triangulación), y qué los reguladores atraparon que nuestro modelo no (punto ciego).
-            </>
-          ) : (
-            <>
-              We cross our pattern-match score against three external registries: <strong className="text-text-primary">SAT EFOS definitive</strong> (Art. 69-B ghost companies), <strong className="text-text-primary">SFP sanctions</strong>, and our corpus of <strong className="text-text-primary">documented cases</strong>. The four quadrants reveal what our model saw before regulators did (novelty), what both confirm (triangulation), and what regulators caught that our model didn't (blind spot).
-            </>
-          )
-        }
-        stats={
-          isLoading || !data ? undefined : [
-            {
-              value: formatNumber(data.counts.novelty),
-              label: lang === 'es' ? 'Novedad' : 'Novelty',
-              color: 'var(--color-risk-critical)',
-              sub: lang === 'es' ? 'modelo único' : 'model-only',
-            },
-            {
-              value: formatNumber(data.counts.confirmed),
-              label: lang === 'es' ? 'Confirmado' : 'Confirmed',
-              color: 'var(--color-accent)',
-              sub: lang === 'es' ? 'ambos señalan' : 'both flag',
-            },
-            {
-              value: formatNumber(data.counts.blindspot),
-              label: lang === 'es' ? 'Punto ciego' : 'Blind spot',
-              sub: lang === 'es' ? 'regulador único' : 'regulator-only',
-            },
-            {
-              value: `${data.registry_breakdown.efos_definitivo} / ${data.registry_breakdown.sfp_sanctioned} / ${data.registry_breakdown.in_ground_truth}`,
-              label: lang === 'es' ? 'EFOS / SFP / GT' : 'EFOS / SFP / GT',
-              sub: lang === 'es' ? 'fuentes' : 'sources',
-            },
-          ]
-        }
-        severity="high"
-        loading={isLoading}
-      >
+      {/* Utility header — same pattern as the rest of the redesign sweep. */}
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {data && !isLoading ? (
+                <>
+                  {lang === 'es' ? 'RUBLI señala ' : 'RUBLI flags '}
+                  <span style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(data.counts.novelty)}</span>
+                  {lang === 'es' ? ' proveedores que los reguladores aún no.' : ' vendors regulators haven\'t.'}
+                </>
+              ) : (lang === 'es' ? 'Modelo contra reguladores' : 'Model versus regulators')}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              {lang === 'es' ? 'RUBLI · LA INTERSECCIÓN' : 'RUBLI · THE INTERSECTION'}
+            </p>
+          </div>
+          {!isLoading && data && (
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
+                  {formatNumber(data.counts.novelty)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {lang === 'es' ? 'Novedad' : 'Novelty'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>
+                  {formatNumber(data.counts.confirmed)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {lang === 'es' ? 'Confirmado' : 'Confirmed'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                  {formatNumber(data.counts.blindspot)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {lang === 'es' ? 'Punto ciego' : 'Blind spot'}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+      <div>
         {isLoading ? (
           <div className="space-y-6">
             {[1, 2, 3].map((i) => (
@@ -400,7 +390,7 @@ export default function Intersection() {
             </div>
           </div>
         )}
-      </EditorialPageShell>
+      </div>
     </div>
   )
 }

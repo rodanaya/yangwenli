@@ -20,8 +20,6 @@ import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { Info } from 'lucide-react'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
@@ -627,41 +625,52 @@ export default function CapturaHeatmap() {
   // ---------------------------------------------------------------------------
 
   const severeCount = topCaptured.filter(r => r.pct >= 0.5).length
-  const heroPct = topCaptured.length > 0 ? topCaptured[0].pct : 0
   const valueAtRisk = topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0)
 
   return (
-    <div className="max-w-7xl mx-auto">
-    <EditorialPageShell
-      kicker="INSTITUTIONAL CAPTURE · CONCENTRATION ANALYSIS"
-      headline={<>Some institutions never diversify. <em>That's by design.</em></>}
-      paragraph="Institutional capture occurs when a single vendor dominates one agency's contracts over years — a structural red flag invisible in contract-by-contract analysis."
-      severity="critical"
-      loading={isLoading}
-      stats={[
-        {
-          value: topCaptured.length > 0 ? severeCount : '—',
-          label: 'severe captures (≥50%)',
-          color: '#f87171',
-        },
-        {
-          value: valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—',
-          label: 'value under capture',
-          color: '#fb923c',
-        },
-        {
-          value: heroPct > 0 ? `${(heroPct * 100).toFixed(1)}%` : '—',
-          label: topCaptured[0] ? `peak: ${truncName(topCaptured[0].institution, 22)}` : 'peak concentration',
-          color: '#fbbf24',
-        },
-        {
-          value: institutions.length > 0 ? formatNumber(institutions.length) : '—',
-          label: 'institutions analyzed',
-          color: '#a78bfa',
-        },
-      ]}
-    >
-      <Act number="I" label="THE CAPTURE FIELD">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      {/* Utility header — same pattern as the rest of the redesign sweep. */}
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Institutional Capture
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              CONCENTRATION ANALYSIS · WHEN ONE VENDOR DOMINATES ONE AGENCY
+            </p>
+          </div>
+          {!isLoading && (
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>
+                  {topCaptured.length > 0 ? severeCount : '—'}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  Severe captures
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>
+                  {valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  Under capture
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                  {institutions.length > 0 ? formatNumber(institutions.length) : '—'}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  Institutions
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+      <div>
     <div className="space-y-6">
 
       {/* ===== Editorial header ===== */}
@@ -1109,8 +1118,7 @@ export default function CapturaHeatmap() {
         <p>{t('methodology.content')}</p>
       </div>
     </div>
-      </Act>
-    </EditorialPageShell>
+      </div>
     </div>
   )
 }

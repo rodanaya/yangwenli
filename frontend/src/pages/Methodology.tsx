@@ -1,6 +1,4 @@
 import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -668,18 +666,35 @@ function TableOfContents() {
 export function Methodology() {
   const { t } = useTranslation('methodology')
   return (
-    <EditorialPageShell
-      kicker="METHODOLOGY · TRANSPARENCY REPORT"
-      headline="How we score corruption risk."
-      paragraph="RUBLI v0.6.5 uses a logistic regression model trained on 1,363 documented corruption cases to score 3.1 million procurement contracts. This page explains the methodology, limitations, and how to interpret scores for investigative purposes."
-      stats={[
-        { value: 'v0.6.5', label: 'Model version' },
-        { value: '0.828', label: 'Test AUC' },
-        { value: '13.49%', label: 'High-risk rate' },
-        { value: '1,363', label: 'Ground truth cases' },
-      ]}
-    >
-    <Act number="I" label="THE MODEL">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Utility header — same redesign sweep. */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                How we score corruption risk.
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                METHODOLOGY · TRANSPARENCY REPORT · v0.6.5
+              </p>
+            </div>
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.828</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Test AUC</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">13.49%</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk rate</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,363</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">GT cases</div>
+              </div>
+            </div>
+          </div>
+        </header>
     <div className="space-y-5">
       {/* Editorial Hero */}
       <header className="relative pt-4 pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1595,8 +1610,8 @@ export function Methodology() {
 
       <CitationBlock context="RUBLI methodology — v0.6.5 risk model" className="mt-2" />
     </div>
-    </Act>
-    </EditorialPageShell>
+      </div>
+    </div>
   )
 }
 
