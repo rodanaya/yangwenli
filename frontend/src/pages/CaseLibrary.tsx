@@ -379,128 +379,72 @@ export default function CaseLibrary() {
       }}
     >
       <div className="max-w-[1100px] mx-auto px-6 py-10">
-        {/* ─────────── Section header ─────────── */}
-        <header
-          className="flex items-start justify-between gap-6 pb-6 mb-8"
-          style={{ borderBottom: `1px solid ${BORDER_STRONG}` }}
-        >
-          <div className="max-w-[780px]">
-            <p
-              className="text-[10px] font-semibold tracking-[0.2em] uppercase mb-3"
-              style={{ fontFamily: 'var(--font-family-mono)', color: '#8a8a86' }}
-            >
-              {i18n.language === 'es' ? 'RUBLI · ARCHIVO DE CASOS · IMPUNIDAD' : 'RUBLI · CASE ARCHIVE · IMPUNITY'}
-            </p>
-            <h1
-              className="text-[32px] md:text-[42px] leading-[1.05] text-text-primary mb-4"
-              style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 700, letterSpacing: '-0.015em' }}
-            >
-              {i18n.language === 'es' ? (
-                <>
-                  <span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos de contratación pública en México siguen sin enjuiciarse.
-                </>
-              ) : (
-                <>
-                  <span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} out of {totalCases}</span> Mexican procurement scandals remain unprosecuted.
-                </>
+        {/* Utility header — same pattern as /aria + /workspace. The
+            archive is a working surface (filter, search, export, scan)
+            not a magazine cover; the impact-statement that lived in the
+            42px serif headline is now compressed into the dateline so it
+            still reads but doesn't crowd the data. */}
+        <header className="mb-5 pb-4 border-b" style={{ borderColor: BORDER_STRONG }}>
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                {i18n.language === 'es' ? 'Archivo de Casos' : 'Case Archive'}
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {i18n.language === 'es'
+                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · ${formatMXNHero(totalLoss)} MXN documentados</>
+                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · ${formatMXNHero(totalLoss)} MXN documented</>
+                }
+              </p>
+            </div>
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                  {totalCases}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {i18n.language === 'es' ? 'Casos' : 'Cases'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#a06820' }}>
+                  {totalLoss > 0 ? formatMXNHero(totalLoss) : '—'}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {i18n.language === 'es' ? 'Pérdidas MXN' : 'Losses MXN'}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#22d3ee' }}>
+                  {prosecutedCount}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  {i18n.language === 'es' ? 'Procesados' : 'Prosecuted'}
+                </div>
+              </div>
+              {data && data.length > 0 && (
+                <div className="self-center">
+                  <TableExportButton
+                    data={data.map((c) => ({
+                      case_name_en: c.name_en,
+                      case_name_es: c.name_es,
+                      fraud_type: c.fraud_type,
+                      administration: c.administration,
+                      year_start: c.contract_year_start ?? '',
+                      year_end: c.contract_year_end ?? '',
+                      amount_mxn_low: c.amount_mxn_low ?? '',
+                      amount_mxn_high: c.amount_mxn_high ?? '',
+                      severity: c.severity,
+                      legal_status: c.legal_status,
+                      ground_truth_case_id: c.ground_truth_case_id ?? '',
+                    }))}
+                    filename="rubli-case-archive"
+                  />
+                </div>
               )}
-            </h1>
-            <p
-              className="text-[14px] text-text-secondary leading-[1.6] max-w-[64ch]"
-              style={{ fontFamily: 'var(--font-family-sans)' }}
-            >
-              {i18n.language === 'es' ? (
-                <>
-                  De Odebrecht (10 años, cero condenas en México) a Segalmex (15.4 mil millones robados) y Línea 12 (26 muertos, cero cargos).
-                  Este archivo documenta <strong className="text-text-primary">${formatMXNHero(totalLoss)} MXN</strong> en pérdidas conocidas a lo largo del período {yearSpan}.
-                  Solo <strong className="text-text-primary">{prosecutedCount}</strong> ha producido una condena firme.
-                </>
-              ) : (
-                <>
-                  From Odebrecht (10 years, zero Mexican convictions) to Segalmex (15.4B MXN stolen) to Línea 12 (26 dead, zero charges filed).
-                  This archive documents <strong className="text-text-primary">${formatMXNHero(totalLoss)} MXN</strong> in known losses between {yearSpan}.
-                  Only <strong className="text-text-primary">{prosecutedCount}</strong> has produced a final conviction.
-                </>
-              )}
-            </p>
-          </div>
-          <div className="flex-shrink-0">
-            {data && data.length > 0 && (
-              <TableExportButton
-                data={data.map((c) => ({
-                  case_name_en: c.name_en,
-                  case_name_es: c.name_es,
-                  fraud_type: c.fraud_type,
-                  administration: c.administration,
-                  year_start: c.contract_year_start ?? '',
-                  year_end: c.contract_year_end ?? '',
-                  amount_mxn_low: c.amount_mxn_low ?? '',
-                  amount_mxn_high: c.amount_mxn_high ?? '',
-                  severity: c.severity,
-                  legal_status: c.legal_status,
-                  ground_truth_case_id: c.ground_truth_case_id ?? '',
-                }))}
-                filename="rubli-case-archive"
-              />
-            )}
+            </div>
           </div>
         </header>
-
-        {/* ─────────── Stats row (3 numbers) ─────────── */}
-        <div
-          className="grid grid-cols-1 sm:grid-cols-3 mb-10"
-          style={{ borderBottom: `1px solid ${BORDER}` }}
-        >
-          {[
-            {
-              value: totalCases.toString(),
-              label: i18n.language === 'es' ? 'CASOS TOTALES' : 'TOTAL CASES',
-              accent: '#e5e5e3',
-            },
-            {
-              value: totalLoss > 0 ? formatMXNHero(totalLoss) : '—',
-              sub: totalLoss > 0 ? 'MXN' : '',
-              label: i18n.language === 'es' ? 'PÉRDIDAS DOCUMENTADAS' : 'DOCUMENTED LOSSES',
-              // Bible §2: red = critical RISK only. Documented losses total is
-              // a historical number, not a risk signal. Amber-gold = editorial
-              // accent for notable figures.
-              accent: '#a06820',
-            },
-            {
-              value: prosecutedCount.toString(),
-              label: i18n.language === 'es' ? 'PROCESADOS O CONDENADOS' : 'PROSECUTED OR CONVICTED',
-              accent: '#22d3ee',
-            },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="py-5 px-5"
-              style={{ borderRight: `1px solid ${BORDER}` }}
-            >
-              <div
-                className="text-[28px] leading-none tabular-nums"
-                style={{
-                  fontFamily: 'var(--font-family-mono)',
-                  fontWeight: 700,
-                  color: s.accent,
-                }}
-              >
-                {s.value}
-                {s.sub && (
-                  <span className="text-[14px] text-text-muted ml-1.5">
-                    {s.sub}
-                  </span>
-                )}
-              </div>
-              <div
-                className="text-[10px] tracking-[0.15em] uppercase text-text-muted mt-2"
-                style={{ fontFamily: 'var(--font-family-mono)' }}
-              >
-                {s.label}
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* ─────────── Filter strip ─────────── */}
         <section className="mb-6 space-y-3">
