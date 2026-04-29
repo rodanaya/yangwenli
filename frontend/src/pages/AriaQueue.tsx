@@ -324,12 +324,6 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
   const contracts = item.total_contracts ?? 0
   const sector = item.primary_sector_name ?? null
 
-  // Single-line subline: value · contracts · sector
-  const sublineParts: string[] = []
-  if (value > 0) sublineParts.push(formatCompactMXN(value))
-  if (contracts > 0) sublineParts.push(`${formatNumber(contracts)} ${t('card.contracts', { defaultValue: 'contracts' })}`)
-  if (sector) sublineParts.push(getSectorNameEN(sector))
-
   const handleClick = () => {
     navigate(`/thread/${item.vendor_id}`)
   }
@@ -347,80 +341,95 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-sm border border-border border-l-4 bg-background-card hover:bg-background-card hover:border-border transition-all cursor-pointer',
+          'group relative flex items-center gap-3 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
           tierCfg.accent
         )}
       >
-        {/* Tier badge */}
-        <div className="shrink-0 w-10 sm:w-12 text-center">
-          <div className={cn(
-            'inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em]',
+        {/* Tier — fixed-width column, smaller chip */}
+        <div className="shrink-0 w-8 text-center">
+          <span className={cn(
+            'inline-block px-1 py-0.5 rounded-sm text-[9px] font-mono font-bold uppercase tracking-[0.12em]',
             tierCfg.pillBg,
             tierCfg.pillText
           )}>
             T{tier}
-          </div>
+          </span>
         </div>
 
-        {/* Vendor name + subline — the editorial anchor */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-text-primary truncate leading-tight" title={item.vendor_name}>
-              {formatVendorName(item.vendor_name, 48)}
-            </h3>
-            {item.new_vendor_risk && (
-              <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
-                NEW
-              </span>
-            )}
-          </div>
-          {sublineParts.length > 0 && (
-            <p className="text-xs text-text-muted truncate mt-0.5">
-              {sublineParts.join(' · ')}
-            </p>
+        {/* Vendor name — single line, truncated. Was: name + subline (2 rows). */}
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          <span className="text-sm font-semibold text-text-primary truncate leading-tight" title={item.vendor_name}>
+            {formatVendorName(item.vendor_name, 48)}
+          </span>
+          {item.new_vendor_risk && (
+            <span className="shrink-0 font-mono text-[8px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1 py-0.5 rounded-sm">
+              NEW
+            </span>
           )}
         </div>
 
-        {/* Primary pattern — ONE badge only */}
-        {item.primary_pattern && patternMeta && (
-          <div
-            className={cn(
-              'hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[11px] font-medium shrink-0',
-              patternMeta.bg,
-              patternMeta.text,
-              patternMeta.border
-            )}
-          >
-            <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
-            {t(`patterns.${item.primary_pattern}`)}
-          </div>
-        )}
-
-        {/* IPS pill — single compact number */}
-        <div className="shrink-0 flex items-center gap-2">
-          <div
-            className={cn(
-              'inline-flex items-baseline gap-0.5 px-2 py-1 rounded-sm border tabular-nums',
-              IPS_BG_COLOR(ips)
-            )}
-            title={t('ipsBreakdown.title')}
-          >
-            <span className={cn('font-mono font-bold text-base leading-none', IPS_TEXT_COLOR(ips))}>
-              {ipsPct}
+        {/* Pattern + sector + value — inline metadata, hidden on smaller widths */}
+        <div className="hidden lg:flex items-center gap-3 shrink-0 text-[11px] font-mono text-text-muted">
+          {item.primary_pattern && patternMeta && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium',
+                patternMeta.bg,
+                patternMeta.text,
+                patternMeta.border
+              )}
+            >
+              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
+              {item.primary_pattern}
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted">IPS</span>
-          </div>
+          )}
+          {sector && (
+            <span className="truncate max-w-[110px]" title={getSectorNameEN(sector)}>
+              {getSectorNameEN(sector)}
+            </span>
+          )}
+          {contracts > 0 && (
+            <span className="tabular-nums">{formatNumber(contracts)} ct</span>
+          )}
+          {value > 0 && (
+            <span className="tabular-nums font-bold text-text-secondary">{formatCompactMXN(value)}</span>
+          )}
         </div>
 
-        {/* Review + arrow actions */}
-        <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Compact metadata for sm/md — just value + pattern code */}
+        <div className="lg:hidden flex items-center gap-2 shrink-0 text-[10px] font-mono text-text-muted">
+          {item.primary_pattern && patternMeta && (
+            <span className={cn('font-bold', patternMeta.text)}>{item.primary_pattern}</span>
+          )}
+          {value > 0 && (
+            <span className="tabular-nums">{formatCompactMXN(value)}</span>
+          )}
+        </div>
+
+        {/* IPS — number + mini horizontal bar. The bar visually anchors the
+            score against the 0–100 range so scanners distinguish "barely T1"
+            from "deeply T1" without reading the digits. */}
+        <div className="shrink-0 flex items-center gap-1.5">
+          <div className="hidden sm:block w-12 h-1.5 rounded-full bg-background-elevated overflow-hidden" aria-hidden>
+            <div
+              className={cn('h-full rounded-full', IPS_BG_COLOR(ips))}
+              style={{ width: `${Math.min(100, Math.max(2, ipsPct))}%` }}
+            />
+          </div>
+          <span className={cn('font-mono font-bold text-sm tabular-nums leading-none', IPS_TEXT_COLOR(ips))} title={`IPS ${ipsPct}`}>
+            {ipsPct}
+          </span>
+        </div>
+
+        {/* Review + arrow */}
+        <div className="relative flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setReviewOpen((v) => !v)}
-            className="hidden sm:inline-flex p-1.5 rounded text-text-muted hover:text-risk-high hover:bg-risk-high/10 transition-colors"
+            className="hidden sm:inline-flex p-1 rounded text-text-muted hover:text-risk-high hover:bg-risk-high/10 transition-colors"
             aria-label={t('reviewPopover.updateTitle')}
             title={t('reviewPopover.updateTitle')}
           >
-            <ClipboardEdit className="h-3.5 w-3.5" />
+            <ClipboardEdit className="h-3 w-3" />
           </button>
           {reviewOpen && (
             <ReviewPopover
@@ -430,7 +439,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               onClose={() => setReviewOpen(false)}
             />
           )}
-          <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </motion.div>
