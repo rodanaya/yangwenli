@@ -526,10 +526,21 @@ export default function AriaPage() {
 
   const PER_PAGE = 50
 
-  const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<AriaStatsResponse>({
+  // refetchOnWindowFocus auto-recovers from transient deploy windows /
+  // backend restarts — when the user tabs back to the page, react-query
+  // refetches in the background and replaces the stale data. Without it
+  // a 30-second deploy blip strands the user on a broken page until they
+  // manually reload. Same pattern applied to RedThread (see 41c500b).
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useQuery<AriaStatsResponse>({
     queryKey: ['aria-stats'],
     queryFn: () => ariaApi.getStats(),
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
   })
 
   const { data: leadsData, isLoading: leadsLoading, isError: leadsError } = useQuery({
@@ -547,6 +558,7 @@ export default function AriaPage() {
         sector_id: sectorFilter ?? undefined,
       }),
     staleTime: 2 * 60_000,
+    refetchOnWindowFocus: true,
   })
 
   // Tier 1 preview data used to compute T1 avg risk
@@ -554,6 +566,7 @@ export default function AriaPage() {
     queryKey: ['aria-tier1-preview'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 12 }),
     staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
   })
 
   const totalLeads = leadsData?.pagination?.total ?? 0
@@ -612,10 +625,47 @@ export default function AriaPage() {
           <p className="text-lg font-bold text-text-primary mb-2">{t('connectionError.headline')}</p>
           <p className="text-sm text-text-muted">{t('connectionError.body')}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => refetchStats()}
             className="mt-4 px-4 py-2 rounded bg-background-elevated text-text-secondary text-xs font-mono hover:bg-background-elevated transition-colors"
           >
             {t('connectionError.retry')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty-pipeline state — distinct from a network error. The query
+  // succeeded, but ARIA hasn't been run on this DB yet (latest_run is
+  // null) or the run produced zero queue rows. Without this branch the
+  // page rendered "0 vendors trip every corruption pattern in our
+  // model" — grammatically broken nonsense that looked identical to a
+  // backend failure (which is what the user reported as the bug).
+  // Same architectural pattern as RedThread's 404-vs-network split: a
+  // genuine zero-state needs its own UI, not a forced rendering of the
+  // happy path with zero values.
+  if (!statsLoading && stats && (!stats.latest_run || stats.queue_total === 0)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <p className="text-xs font-mono uppercase tracking-widest text-text-muted mb-3">
+            {isEs ? 'COLA ARIA · SIN DATOS' : 'ARIA QUEUE · NO DATA'}
+          </p>
+          <p className="text-lg font-bold text-text-primary mb-2">
+            {isEs
+              ? 'El pipeline ARIA aún no se ha ejecutado contra esta base de datos.'
+              : 'The ARIA pipeline has not run against this database yet.'}
+          </p>
+          <p className="text-sm text-text-muted mb-4">
+            {isEs
+              ? 'Una vez que se complete una corrida de ARIA, esta cola se llenará con los proveedores prioritarios. La producción se actualiza alrededor de la fecha de corrida del modelo.'
+              : 'Once an ARIA run completes, this queue will populate with priority vendors. Production refreshes around the model rescore date.'}
+          </p>
+          <button
+            onClick={() => refetchStats()}
+            className="px-3 py-1.5 rounded-sm border border-border text-text-secondary text-xs font-mono hover:bg-background-elevated/40 transition-colors"
+          >
+            {isEs ? 'Reintentar' : 'Retry'}
           </button>
         </div>
       </div>
