@@ -18,7 +18,7 @@
 
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from '@/api/client'
@@ -1698,6 +1698,17 @@ export default function Executive() {
               mode={atlasMode}
               onClusterClick={handleAtlasClusterClick}
             />
+          </div>
+          {/* Footer link into the full /atlas surface — preserves the
+              current lens by passing it through as ?lens=<atlasMode>. */}
+          <div className="mt-3 flex items-center justify-end">
+            <Link
+              to={`/atlas${atlasMode !== 'patterns' ? `?lens=${atlasMode}` : ''}`}
+              className="text-[10px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
+            >
+              {lang === 'en' ? 'Open full Observatory' : 'Abrir Observatorio completo'}
+              <ArrowUpRight className="h-3 w-3" />
+            </Link>
           </div>
         </motion.section>
 

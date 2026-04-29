@@ -24,7 +24,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, BookOpen, Square, Link2, Check, RotateCcw, SkipForward, FileText } from 'lucide-react'
@@ -1440,9 +1440,12 @@ export default function Atlas() {
       </div>
 
       {/* ── Risk-floor filter row ─────────────────────────────────────── */}
+      {/* Apr 2026: relabeled "X-RAY" → "RISK FLOOR / RIESGO MÍNIMO" — the
+          original label was niche jargon; the new label reads as plain
+          editorial English/Spanish and matches the aria-label below. */}
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-          {lang === 'en' ? 'X-RAY' : 'RAYOS X'}
+          {lang === 'en' ? 'RISK FLOOR' : 'RIESGO MÍNIMO'}
         </span>
         <div
           className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden"
@@ -1521,6 +1524,29 @@ export default function Atlas() {
                   <span className="font-mono text-[11px] text-text-primary truncate font-semibold">
                     {activeStory.title[lang]}
                   </span>
+                  {/* Long-form deep-link — only when the tour has a paired
+                      /stories slug. Lets the reader jump from the playing
+                      tour to the analytical article without waiting for
+                      the end-card. New tab so the tour state persists. */}
+                  {activeStory.longformSlug && (
+                    <Link
+                      to={`/stories/${activeStory.longformSlug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm text-[8px] font-mono font-bold uppercase tracking-[0.12em] hover:opacity-80 transition-opacity"
+                      style={{
+                        color: activeStory.accent,
+                        border: `1px solid ${activeStory.accent}55`,
+                        background: `${activeStory.accent}0d`,
+                      }}
+                      aria-label={lang === 'en' ? 'Read the full long-form investigation in a new tab' : 'Leer la investigación completa en una pestaña nueva'}
+                      title={lang === 'en' ? 'Read full investigation' : 'Leer investigación completa'}
+                    >
+                      <FileText className="h-2.5 w-2.5" />
+                      <span className="hidden sm:inline">{lang === 'en' ? 'FULL' : 'COMPLETA'}</span>
+                    </Link>
+                  )}
                 </div>
                 {/* Chapter progress dots */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
