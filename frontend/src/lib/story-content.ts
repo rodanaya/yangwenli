@@ -254,7 +254,43 @@ export interface StoryDef {
   caseIds?: number[]
   status?: StoryStatus
   nextSteps?: string[]
+  /**
+   * Cross-surface filter tags. These let Newsroom filter stories by ARIA
+   * pattern / sector / year that match the active Observatory lens, and
+   * let Observatory list "stories matching this view" for the current
+   * lens+year+pin. Tags name the central editorial concern of the story,
+   * not exhaustive coverage; one story may legitimately tag 1–3 patterns
+   * and 1–3 sectors.
+   */
+  lensTags?: {
+    /** ARIA patterns this story illuminates ('P1' through 'P7'). */
+    patterns?: AriaPattern[]
+    /** Sector codes from constants.ts SECTOR_COLORS keys. */
+    sectors?: SectorCode[]
+    /** Years the story's analysis centers on (representative, not range). */
+    years?: number[]
+    /** Free-text terms surfaced in the constellation TERMS lens. */
+    terms?: string[]
+  }
 }
+
+/** ARIA pattern codes from the queue typology (P1–P7). */
+export type AriaPattern = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
+
+/** 12-sector taxonomy keys — kept in sync with constants.ts SECTOR_COLORS. */
+export type SectorCode =
+  | 'salud'
+  | 'educacion'
+  | 'infraestructura'
+  | 'energia'
+  | 'defensa'
+  | 'tecnologia'
+  | 'hacienda'
+  | 'gobernacion'
+  | 'agricultura'
+  | 'ambiente'
+  | 'trabajo'
+  | 'otros'
 
 // ---------------------------------------------------------------------------
 // Stories — derived from RUBLI data analysis
@@ -476,6 +512,10 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-umbral-de-los-300k', 'la-industria-del-intermediario', 'captura-institucional'],
+    lensTags: {
+      patterns: ['P2'],
+      terms: ['fantasma', 'ghost', 'SAT', 'Art. 69-B'],
+    },
     nextSteps: [
       'File freedom-of-information requests to SFP for the complete vendor investigation queue — do any of RUBLI\'s 5,992 P2 vendors appear?',
       'Cross-reference the top 50 P2-pattern vendors by value against RUPC (Registro Único de Proveedores y Contratistas) to verify business registration and physical address.',
@@ -709,6 +749,10 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-monopolio-invisible', 'marea-de-adjudicaciones', 'el-sexenio-del-riesgo'],
+    lensTags: {
+      patterns: ['P5'],
+      terms: ['sobreprecio', 'overpricing', 'large contracts'],
+    },
     nextSteps: [
       'Request from SFP the complete list of contracts above 100M MXN awarded via direct adjudication in 2023-2025; cross-reference against RUBLI\'s P2 and P6 vendor lists.',
       'File ASF audit requests for the top 20 contracts above 500M MXN that RUBLI flags as critical-risk, naming the specific contract IDs.',
@@ -985,6 +1029,12 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['captura-institucional', 'el-gran-precio', 'la-ilusion-competitiva'],
+    lensTags: {
+      patterns: ['P1', 'P5', 'P6'],
+      sectors: ['salud'],
+      years: [2014, 2018, 2024],
+      terms: ['monopolio', 'farmacéutico', 'IMSS', 'PISA', 'Maypo'],
+    },
     nextSteps: [
       'File formal COFECE complaint under Art. 53 of the Ley Federal de Competencia Económica for investigation of Grupo Fármacos Especializados, Maypo, PISA, and DIMM as a potential cartel in IMSS pharmaceutical procurement.',
       'Request from IMSS a complete breakdown of pharmaceutical procurement contracts 2007-2020, including competing bidders at each tender — how many genuinely competitive procedures were there?',
@@ -1264,6 +1314,11 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['marea-de-adjudicaciones', 'el-monopolio-invisible', 'captura-institucional'],
+    lensTags: {
+      patterns: ['P5', 'P7'],
+      sectors: ['infraestructura', 'hacienda'],
+      terms: ['oferta única', 'single-bid', 'vales', 'voucher'],
+    },
     nextSteps: [
       'Request from SFP the official single-bid statistics for 2020-2025 and compare against RUBLI\'s independent calculation from COMPRANET microdata.',
       'Identify the 100 procedures with the highest contract values that had a single bidder in 2023 and request full bid evaluation records.',
@@ -1489,6 +1544,11 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-monopolio-invisible', 'marea-de-adjudicaciones', 'el-ejercito-fantasma'],
+    lensTags: {
+      patterns: ['P3', 'P6'],
+      sectors: ['salud', 'energia', 'infraestructura'],
+      terms: ['captura', 'IMSS', 'CFE', 'PEMEX'],
+    },
     nextSteps: [
       'Request from SFP the results of any audits of IMSS pharmaceutical procurement in 2023-2025 involving recurring direct-award vendors.',
       'File UIF financial intelligence request for bank transaction data on the top 20 P3-classified intermediary vendors in infrastructure by contract value.',
@@ -1758,6 +1818,11 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['la-ilusion-competitiva', 'el-sexenio-del-riesgo', 'captura-institucional'],
+    lensTags: {
+      patterns: ['P5'],
+      years: [2010, 2019, 2023],
+      terms: ['adjudicación directa', 'direct award', 'Art. 41'],
+    },
     nextSteps: [
       'Request from SFP the official justification categories used for direct awards in 2023 — what fraction cite "emergency," "sole source," or "small value"?',
       'Analyze whether BIRMEX\'s post-2019 procurement shows competitive pricing versus pre-reform IMSS pharmaceutical prices for the same drug categories.',
@@ -2001,6 +2066,12 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['marea-de-adjudicaciones', 'la-ilusion-competitiva', 'el-gran-precio'],
+    lensTags: {
+      patterns: ['P3', 'P5', 'P6'],
+      sectors: ['salud', 'defensa'],
+      years: [2019, 2020, 2024],
+      terms: ['AMLO', 'SEDENA', 'Tren Maya', 'TOKA', 'Segalmex'],
+    },
     nextSteps: [
       'Request from ASF the audit coverage rate for AMLO-era emergency procurement contracts in health and infrastructure.',
       'Analyze BIRMEX and INSABI contracts 2019-2022 for vendor overlap with RUBLI\'s P1 and P6 pattern vendors.',
@@ -2234,6 +2305,11 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-ejercito-fantasma', 'captura-institucional', 'el-umbral-de-los-300k'],
+    lensTags: {
+      patterns: ['P3'],
+      sectors: ['infraestructura', 'energia', 'salud'],
+      terms: ['intermediario', 'La Estafa Maestra', 'subcontratación'],
+    },
     nextSteps: [
       'File UIF intelligence request for bank transaction data on the top 20 P3-classified vendors in infrastructure by contract value.',
       'Identify which public universities continue to be used as procurement intermediaries after La Estafa Maestra — cross-reference with COMPRANET university contracts 2018-2025.',
@@ -2481,6 +2557,11 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-ejercito-fantasma', 'la-ilusion-competitiva', 'la-industria-del-intermediario'],
+    lensTags: {
+      patterns: ['P5'],
+      sectors: ['salud'],
+      terms: ['umbral', 'threshold', 'fragmentación', 'Art. 17', 'DICONSA'],
+    },
     nextSteps: [
       'File INAI information request for SFP\'s records of any Art. 17 LAASSP investigations for contract fragmentation in the last 5 years.',
       'Identify the top 20 institutions with the highest concentration of exactly-300K and exactly-210K contracts and request their procurement records for those awards.',
@@ -2708,6 +2789,10 @@ export const STORIES: StoryDef[] = [
       },
     ],
     relatedSlugs: ['el-monopolio-invisible', 'el-gran-precio', 'captura-institucional'],
+    lensTags: {
+      patterns: ['P5'],
+      terms: ['volatilidad', 'price volatility', 'coefficient', 'ElasticNet'],
+    },
     nextSteps: [
       'Request from ASF the methodology and vendor list for their pharmaceutical price benchmark audits — do they overlap with RUBLI\'s high price_volatility vendors?',
       'File INAI requests for invoice records on the 20 highest price_volatility vendors in RUBLI\'s T1 ARIA queue — compare against market price databases for the same goods.',
@@ -2726,6 +2811,31 @@ export const STORIES: StoryDef[] = [
 
 export function getStoryBySlug(slug: string): StoryDef | undefined {
   return STORIES.find(s => s.slug === slug)
+}
+
+/**
+ * Filter stories by Observatory lens tags. Used by both Newsroom (when
+ * arriving from /atlas with lens/year/pin URL state) and by an inline
+ * "stories matching this view" panel on /atlas itself.
+ *
+ * Match semantics: a story matches if ANY of its lensTags overlap with the
+ * provided filter. Partial filters (only patterns, only sectors) are
+ * supported. An empty filter returns all stories.
+ */
+export function getStoriesByLensTag(filter: {
+  pattern?: AriaPattern
+  sector?: SectorCode
+  year?: number
+}): StoryDef[] {
+  if (!filter.pattern && !filter.sector && filter.year == null) return STORIES
+  return STORIES.filter((s) => {
+    const tags = s.lensTags
+    if (!tags) return false
+    if (filter.pattern && !(tags.patterns ?? []).includes(filter.pattern)) return false
+    if (filter.sector && !(tags.sectors ?? []).includes(filter.sector)) return false
+    if (filter.year != null && !(tags.years ?? []).includes(filter.year)) return false
+    return true
+  })
 }
 
 /**

@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
+import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
+import { SECTOR_NAMES_EN } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -1085,6 +1087,14 @@ function AriaLiveTicker() {
 export default function Journalists() {
   const { t } = useTranslation('journalists')
   const [active, setActive] = useState<FilterKey>('all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Cross-surface lens filter — when readers arrive from /atlas with a
+  // pattern or sector lens active, pre-filter the dossier to stories
+  // matching that lens tag. URL takes precedence; clearing the badge
+  // strips the param and restores the local FilterStrip predicate.
+  const lensPattern = searchParams.get('pattern') as AriaPattern | null
+  const lensSector = searchParams.get('sector') as SectorCode | null
+  const lensFilterActive = !!(lensPattern || lensSector)
 
   // Editorial weighting: lead = top by amount; editor's picks = next 2 by
   // amount. Both are pulled out of the filterable dossier so they don't
@@ -1153,6 +1163,26 @@ export default function Journalists() {
         return remaining
     }
   }, [active, remaining])
+
+  // Apply the cross-surface lens filter on top of the local filter strip.
+  // When ?pattern= or ?sector= is in the URL (typically arriving from
+  // /atlas with that lens active), narrow the visible dossier to stories
+  // tagged for that lens. Both filters can stack — e.g. ?pattern=P5 +
+  // local filter "monopoly" yields the intersection.
+  const lensFilteredSlugs = useMemo(() => {
+    if (!lensFilterActive) return null
+    return new Set(
+      getStoriesByLensTag({
+        pattern: lensPattern ?? undefined,
+        sector: lensSector ?? undefined,
+      }).map((s) => s.slug),
+    )
+  }, [lensPattern, lensSector, lensFilterActive])
+
+  const dossierFiltered = useMemo(() => {
+    if (!lensFilteredSlugs) return filtered
+    return filtered.filter((i) => lensFilteredSlugs.has(i.slug))
+  }, [filtered, lensFilteredSlugs])
 
   // Summary stats for the masthead
   const totalCount = INVESTIGATIONS.length
@@ -1319,19 +1349,45 @@ export default function Journalists() {
               </h2>
             </div>
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums pb-2">
-              {filtered.length} / {remaining.length}{' '}
+              {dossierFiltered.length} / {remaining.length}{' '}
               {t('grid.showing', { defaultValue: 'showing' })}
             </span>
           </div>
 
           <FilterStrip active={active} onChange={setActive} counts={counts} />
+
+          {/* Cross-surface lens-filter pill — only visible when arriving
+              from /atlas with ?pattern= or ?sector= active. Click clears
+              the URL param and restores the local filter alone. */}
+          {lensFilterActive && (
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                ◆ {t('grid.fromObservatory', { defaultValue: 'From the Observatory:' })}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = new URLSearchParams(searchParams)
+                  next.delete('pattern')
+                  next.delete('sector')
+                  setSearchParams(next, { replace: true })
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.12em] rounded-sm border border-risk-high/40 text-risk-high bg-risk-high/[0.06] hover:bg-risk-high/[0.12] transition-colors"
+              >
+                {lensPattern && <span>PATTERN · {lensPattern}</span>}
+                {lensSector && <span>SECTOR · {SECTOR_NAMES_EN[lensSector]?.toUpperCase() ?? lensSector.toUpperCase()}</span>}
+                <span className="opacity-60">·</span>
+                <span className="opacity-80">{t('grid.clear', { defaultValue: 'CLEAR' })} ✕</span>
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {filtered.map((item) => (
+          {dossierFiltered.map((item) => (
             <GridCard key={item.slug} item={item} />
           ))}
-          {filtered.length === 0 && (
+          {dossierFiltered.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-border rounded-sm">
               <p className="text-sm font-mono text-text-muted">
                 {t('grid.empty', {
