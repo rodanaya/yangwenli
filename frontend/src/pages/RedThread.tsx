@@ -148,7 +148,7 @@ function ChapterSubject({ vendor, aria, t }: {
   const riskColor = RISK_DOT_COLORS[riskLevel]
 
   return (
-    <section id="chapter-subject" className="min-h-screen flex flex-col justify-center py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-subject" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.subject')}</ChapterLabel>
 
       <motion.h1
@@ -283,7 +283,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
 
   return (
-    <section id="chapter-timeline" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-timeline" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter
         label={t('chapters.headings.timeline')}
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
@@ -293,38 +293,47 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
       </p>
 
       <div ref={ref} className="relative">
-        {/* Year axis */}
-        <div className="flex justify-between text-xs text-text-muted mb-3 px-1">
-          {years.filter((_, i) => i % 3 === 0 || i === years.length - 1).map((y) => (
-            <span key={y}>{y}</span>
-          ))}
+        {/* Year axis — left/right anchored, evenly spaced labels */}
+        <div className="flex justify-between text-[10px] font-mono text-text-muted mb-2 px-1">
+          {(() => {
+            // Sample 5 evenly-spaced years across the range
+            const yearLabels: number[] = []
+            const span = maxYear - minYear
+            for (let i = 0; i < 5; i++) {
+              yearLabels.push(Math.round(minYear + (span * i) / 4))
+            }
+            return yearLabels.map((y) => <span key={y}>{y}</span>)
+          })()}
         </div>
 
-        {/* Dot field — one dot per year, spread across timeline */}
-        <div className="relative h-48 bg-background-card border border-border rounded-sm overflow-hidden px-4 py-2">
+        {/* Horizontal dot strip — one row, all dots on the same Y baseline.
+            Was: h-48 scatter with deterministic-but-unreadable Y jitter; the
+            random vertical positioning made the time series look noisy
+            instead of clear. Now dots sit on a single horizontal axis,
+            positioned by year, sized by log(value), colored by risk. */}
+        <div className="relative h-14 bg-background-card border border-border rounded-sm overflow-hidden px-4">
+          {/* Center baseline */}
+          <div className="absolute left-4 right-4 top-1/2 h-px bg-border/60" aria-hidden />
           {sortedTimeline.map((item, idx) => {
             const xPct = maxYear > minYear ? ((item.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
             const risk = item.avg_risk_score ?? 0
             const level = getRiskLevel(risk)
-            const size = Math.max(10, Math.min(44, 10 + (Math.log(item.total_value + 1) / Math.log(maxValue + 1)) * 34))
-            // Deterministic y jitter by year index
-            const sinVal = Math.sin(idx * 137.508 + 1.618) * 10000
-            const yPct = 15 + (sinVal - Math.floor(sinVal)) * 70
+            const size = Math.max(8, Math.min(28, 8 + (Math.log(item.total_value + 1) / Math.log(maxValue + 1)) * 20))
             return (
               <motion.div
                 key={item.year}
                 initial={{ opacity: 0, scale: 0 }}
-                animate={inView ? { opacity: 0.9, scale: 1 } : {}}
+                animate={inView ? { opacity: 0.95, scale: 1 } : {}}
                 transition={{ delay: idx * 0.04, duration: 0.35, ease: 'backOut' }}
-                className="absolute rounded-full cursor-pointer hover:opacity-100 hover:scale-125 transition-transform"
+                className="absolute rounded-full cursor-pointer hover:opacity-100 hover:scale-110 transition-transform"
                 style={{
                   left: `${xPct}%`,
-                  top: `${yPct}%`,
+                  top: '50%',
                   width: size,
                   height: size,
                   backgroundColor: RISK_DOT_COLORS[level],
                   transform: 'translate(-50%, -50%)',
-                  boxShadow: risk > 0.6 ? `0 0 8px 2px ${RISK_DOT_COLORS[level]}55` : 'none',
+                  boxShadow: risk > 0.6 ? `0 0 6px 1px ${RISK_DOT_COLORS[level]}66` : 'none',
                   zIndex: Math.round(size),
                 }}
                 title={`${item.year} · ${formatCompactMXN(item.total_value)} · ${item.contract_count} contracts · avg risk ${(risk * 100).toFixed(0)}%`}
@@ -334,14 +343,14 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 mt-4">
+        <div className="flex items-center gap-5 mt-3 flex-wrap">
           {Object.entries(RISK_DOT_COLORS).map(([level, color]) => (
-            <div key={level} className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-xs text-text-muted capitalize">{level}</span>
+            <div key={level} className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+              <span className="text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">{level}</span>
             </div>
           ))}
-          <div className="ml-auto text-xs text-text-muted">
+          <div className="ml-auto text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
             {t('timeline.legend.sizeLabel')}
           </div>
         </div>
@@ -392,7 +401,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
   const maxAbs = Math.max(...sorted.map((f) => Math.abs(f.contribution)), 0.01)
 
   return (
-    <section id="chapter-pattern" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-pattern" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.pattern')} title={t('pattern.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('pattern.description')}
@@ -509,7 +518,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   t: TFunction
 }) {
   return (
-    <section id="chapter-network" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-network" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('network.description')}
@@ -646,7 +655,7 @@ function ChapterMoney({ timeline, t }: {
   const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
 
   return (
-    <section id="chapter-money" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-money" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter
         label={t('chapters.headings.money')}
         title={t('money.heading', { value: formatCompactMXN(totalValue) })}
@@ -844,7 +853,7 @@ function ChapterVerdict({
   const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
 
   return (
-    <section id="chapter-verdict" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-verdict" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('verdict.description')}
