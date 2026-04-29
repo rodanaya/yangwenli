@@ -110,7 +110,7 @@ ssh "$REMOTE" "
   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
   echo ''
   echo 'Container status:'
-  docker compose -f docker-compose.prod.yml ps
+  docker compose -f docker-compose.prod.yml --env-file .env.prod ps
 "
 
 echo ""
