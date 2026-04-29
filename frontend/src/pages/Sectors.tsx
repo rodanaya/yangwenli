@@ -606,85 +606,58 @@ export function Sectors() {
   return (
     <div className="min-h-screen">
 
-      {/* ── DARK HEADER ──────────────────────────────────────────────────────── */}
-      <header className="relative bg-background border-b border-border overflow-hidden">
-        {/* Subtle grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 40px,
-              rgba(255,255,255,0.5) 40px,
-              rgba(255,255,255,0.5) 41px
-            ), repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 40px,
-              rgba(255,255,255,0.5) 40px,
-              rgba(255,255,255,0.5) 41px
-            )`,
-          }}
-          aria-hidden="true"
-        />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-          {/* Dateline strip */}
-          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-text-secondary">RUBLI</span>
-            </span>
-            <span className="text-text-primary">·</span>
-            <span>Sectores</span>
-            <span className="text-text-primary">·</span>
-            <span className="font-mono tabular-nums">COMPRANET 2002–2025</span>
-            <span className="text-text-primary">·</span>
-            <span className="font-mono tabular-nums">v0.6.5</span>
-          </div>
-          <p className="text-kicker text-kicker--investigation mb-3">
-            {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
-          </p>
-          <h1
-            className="text-text-primary leading-[1.02]"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.035em',
-            }}
-          >
-            {t('page.title')}
-          </h1>
-          <p
-            className="mt-4 max-w-2xl text-text-secondary"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontStyle: 'italic',
-              fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
-              lineHeight: 1.55,
-            }}
-          >
-            {subtitleText}
-          </p>
-
-          {/* Summary row: "12 sectors · 9.9T MXN · 3.1M contracts" */}
-          <div className="mt-5">
-            {isLoading ? (
-              <Skeleton className="h-6 w-64" />
-            ) : (
-              <p className="text-sm font-semibold text-text-secondary tracking-wide">
-                <span className="text-text-primary font-black">12</span>{' '}
-                <span className="text-text-muted">{t('statCards.sectorsTracked').toLowerCase()}</span>
-                <span className="mx-2 text-text-primary" aria-hidden="true">·</span>
-                <span className="text-text-primary font-black font-mono tabular-nums">{formatSpend(totalValue)}</span>
-                <span className="mx-2 text-text-primary" aria-hidden="true">·</span>
-                <span className="text-text-primary font-black font-mono tabular-nums">{formatNumber(totalContracts)}</span>{' '}
-                <span className="text-text-muted">{t('statCards.totalContracts').toLowerCase()}</span>
+      {/* Utility header — same pattern as /aria, /workspace, /cases.
+          Sectores is an exploration surface (12-sector breakdown,
+          comparison, drill-down) used by both readers and analysts.
+          The magazine spread (grid background + 60px serif headline
+          + italic subtitle) was eating the entire fold; condensed to
+          one title row + dateline + 3 anchor stats. */}
+      <header className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                {t('page.title')}
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
+                <span className="mx-1.5" aria-hidden>·</span>
+                COMPRANET 2002–2025
+                <span className="mx-1.5" aria-hidden>·</span>
+                v0.6.5
               </p>
+            </div>
+            {!isLoading && (
+              <div className="flex items-baseline gap-5">
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">12</div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('statCards.sectorsTracked')}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatSpend(totalValue)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('statCards.totalSpend', { defaultValue: 'Total spend' })}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatNumber(totalContracts)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {t('statCards.totalContracts')}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
+          {/* Subtitle — kept as a single muted line below for context. */}
+          <p className="text-xs text-text-muted mt-2 max-w-2xl">
+            {subtitleText}
+          </p>
         </div>
       </header>
 
