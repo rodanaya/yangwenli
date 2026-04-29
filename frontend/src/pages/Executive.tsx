@@ -1733,13 +1733,19 @@ export default function Executive() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-            {/* Tile 1 — Total Spend with comparison to Mexico's federal budget */}
+            {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
+                Click anchors to el-gran-precio (the big-contract risk story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
+              onClick={() => navigate('/stories/el-gran-precio')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Read: The Bigger the Contract the Higher the Risk' : 'Leer: A Mayor Contrato, Mayor Riesgo'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-gran-precio') }}
             >
               <div
                 className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
@@ -1774,13 +1780,19 @@ export default function Executive() {
               </div>
             </motion.div>
 
-            {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip */}
+            {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip
+                Click anchors to marea-de-adjudicaciones (canonical DA story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#dc2626] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.11 }}
+              onClick={() => navigate('/stories/marea-de-adjudicaciones')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Read: The Direct Award Tide' : 'Leer: La Marea de las Adjudicaciones'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/marea-de-adjudicaciones') }}
             >
               <div
                 className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
@@ -1822,13 +1834,19 @@ export default function Executive() {
               </div>
             </motion.div>
 
-            {/* Tile 3 — High+Critical with risk distribution bar */}
+            {/* Tile 3 — High+Critical with risk distribution bar
+                Click anchors to el-sexenio-del-riesgo (the riskiest era). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#f59e0b] focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.17 }}
+              onClick={() => navigate('/stories/el-sexenio-del-riesgo')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Read: The Era of Risk' : 'Leer: El Sexenio del Riesgo'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-sexenio-del-riesgo') }}
             >
               <div
                 className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
@@ -1860,13 +1878,19 @@ export default function Executive() {
               </div>
             </motion.div>
 
-            {/* Tile 4 — Model AUC with quality scale (vs random=0.5, perfect=1.0) */}
+            {/* Tile 4 — Model AUC with quality scale (vs random=0.5, perfect=1.0)
+                Click anchors to volatilidad (the model methodology story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[color:var(--color-text-muted)] focus-visible:outline-offset-2"
               style={{ borderLeftColor: 'var(--color-text-muted)' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.23 }}
+              onClick={() => navigate('/stories/volatilidad-el-precio-del-riesgo')}
+              tabIndex={0}
+              role="link"
+              aria-label={lang === 'en' ? 'Read: Price Volatility — The Algorithm\'s Smoking Gun' : 'Leer: Volatilidad — El Precio del Riesgo'}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/volatilidad-el-precio-del-riesgo') }}
             >
               <div
                 className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
