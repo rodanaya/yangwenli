@@ -1261,6 +1261,43 @@ export default function Atlas() {
                   {lang === 'en' ? 'Close story' : 'Cerrar historia'}
                 </button>
               )}
+              {/* Cross-surface link into Newsroom — context-aware. When the
+                  Observatory has a pattern (P1–P7) or sector pinned, deep-
+                  links the Newsroom dossier with that lens pre-filtered. */}
+              <button
+                onClick={() => {
+                  setStoriesMenuOpen(false)
+                  const params = new URLSearchParams()
+                  if (mode === 'patterns' && pinnedCode && /^P[1-7]$/.test(pinnedCode)) {
+                    params.set('pattern', pinnedCode)
+                  } else if (mode === 'sectors' && pinnedCode) {
+                    params.set('sector', pinnedCode)
+                  }
+                  const qs = params.toString()
+                  navigate(`/journalists${qs ? '?' + qs : ''}`)
+                }}
+                className="w-full text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.1em] font-bold text-text-secondary hover:bg-background-elevated/40 transition-colors flex items-center justify-between border-t border-border/50"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <FileText className="h-3 w-3" />
+                  {(() => {
+                    if (mode === 'patterns' && pinnedCode && /^P[1-7]$/.test(pinnedCode)) {
+                      return lang === 'en'
+                        ? `Long-form investigations · ${pinnedCode}`
+                        : `Investigaciones de fondo · ${pinnedCode}`
+                    }
+                    if (mode === 'sectors' && pinnedCode) {
+                      return lang === 'en'
+                        ? `Long-form investigations · ${pinnedCode}`
+                        : `Investigaciones de fondo · ${pinnedCode}`
+                    }
+                    return lang === 'en'
+                      ? 'All long-form investigations'
+                      : 'Todas las investigaciones'
+                  })()}
+                </span>
+                <ArrowUpRight className="h-3 w-3" />
+              </button>
             </motion.div>
           )}
         </div>
