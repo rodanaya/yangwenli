@@ -1,18 +1,26 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
 import checker from 'vite-plugin-checker'
 import { compression } from 'vite-plugin-compression2'
 
-// API target: use env var for Docker, default to localhost
-// Use 127.0.0.1 instead of localhost to avoid Windows DNS resolution delay (~2s)
-const API_TARGET = process.env.VITE_API_URL || 'http://127.0.0.1:8001'
-
 const isProduction = process.env.NODE_ENV === 'production'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // loadEnv reads .env, .env.local, .env.<mode>, .env.<mode>.local from
+  // the project root and returns the merged set. process.env alone misses
+  // .env.local, which is the gitignored file devs use to override the API
+  // proxy target (e.g. point local frontend at https://rubli.xyz when the
+  // local uvicorn is empty or unavailable).
+  const env = loadEnv(mode, process.cwd(), '')
+
+  // API target: env var for Docker / .env.local override, fall back to
+  // localhost. 127.0.0.1 avoids the ~2s Windows DNS delay vs "localhost".
+  const API_TARGET = env.VITE_API_URL || process.env.VITE_API_URL || 'http://127.0.0.1:8001'
+
+  return {
   plugins: [
     // SWC-based React transform — ~10x faster HMR than Babel
     react(),
@@ -130,4 +138,5 @@ export default defineConfig({
       'lucide-react',
     ],
   },
+  }
 })
