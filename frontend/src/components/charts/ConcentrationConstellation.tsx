@@ -682,10 +682,21 @@ export function ConcentrationConstellation({
                 onMouseLeave={() => setHoveredCluster(null)}
                 onFocus={() => setHoveredCluster(idx)}
                 onBlur={() => setHoveredCluster(null)}
-                onClick={() => onClusterClick?.(meta.code)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onClusterClick?.(meta.code)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onClusterClick?.(meta.code)
+                  }
+                }}
                 tabIndex={onClusterClick ? 0 : -1}
                 role={onClusterClick ? 'button' : undefined}
-                aria-label={onClusterClick ? `${meta.label}. ${meta.desc}. Open page.` : undefined}
+                aria-label={onClusterClick ? `${meta.label}. ${meta.desc}. Open details.` : undefined}
               />
             </g>
           )
