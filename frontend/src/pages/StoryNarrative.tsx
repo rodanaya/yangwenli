@@ -1297,6 +1297,20 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           <span className="text-[11px] text-text-primary font-mono">
             {story.chapters.length} {story.chapters.length === 1 ? 'chapter' : 'chapters'}
           </span>
+          {/* Analysis-as-of timestamp — editorial honesty about freshness.
+              These pieces are not "live" — the underlying analysis was
+              performed on a frozen snapshot of COMPRANET data. The
+              timestamp matches the most recent v0.6.5 model rescore +
+              ARIA pipeline run (March 25 2026). */}
+          <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
+          <span
+            className="text-[11px] text-text-muted font-mono"
+            title={lang === 'en'
+              ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Observatory and ARIA queue, not in the story body.'
+              : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Observatorio y la cola ARIA, no en el cuerpo del artículo.'}
+          >
+            {lang === 'en' ? 'Analysis as of April 2026' : 'Análisis a abril de 2026'}
+          </span>
         </motion.div>
 
         {/* Kicker stats — per-story 3-row punchline. Falls through to leadStat

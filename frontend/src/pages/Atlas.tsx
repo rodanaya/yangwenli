@@ -77,12 +77,37 @@ const KNOWN_VENDORS: VendorLookup[] = [
   { query: 'GRUPO HIGA',           displayName: 'Grupo Higa',                    pattern: 'P6', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Casa Blanca scandal', es: 'Escándalo Casa Blanca' } },
   // Pharma cartel cluster
   { query: 'PISA',                 displayName: 'Laboratorios PiSA',             pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel member', es: 'Miembro del cártel farmacéutico' } },
+  { query: 'MAYPO',                displayName: 'Farmacéuticos Maypo',           pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel · 4-vendor 328.6B concentration', es: 'Cártel farmacéutico · concentración 4 proveedores 328.6B' } },
+  { query: 'DIMM',                 displayName: 'DIMM',                          pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'Pharma cartel member · IMSS supplier', es: 'Miembro del cártel · proveedor IMSS' } },
   { query: 'BIRMEX',               displayName: 'BIRMEX',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma supplier', es: 'Proveedor farmacéutico IMSS' } },
   { query: 'COMPHARMA',            displayName: 'COMPHARMA',                     pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS DA capture (GT case)', es: 'Captura DA IMSS (caso GT)' } },
   { query: 'PIHCSA',               displayName: 'PIHCSA',                        pattern: 'P6', sector: 'salud',           category: 'medicamentos',  blurb: { en: 'IMSS pharma capture', es: 'Captura farmacéutica IMSS' } },
+  // P3 intermediaries — pass-through signatures (5.3B avg ticket each)
+  { query: 'ARHNOS',               displayName: 'Constructora ARHNOS',           pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '32B / 6 contracts · 5.3B avg ticket', es: '32 mil M / 6 contratos · 5.3 mil M ticket promedio' } },
+  { query: 'PROMOTORA',            displayName: 'Promotora y Desarrolladora MX', pattern: 'P3', sector: 'salud',           category: 'obra_publica',  blurb: { en: '21.1B / 3 IMSS contracts · 7B avg ticket', es: '21.1 mil M / 3 contratos IMSS · 7 mil M ticket' } },
+  { query: 'CAABSA',               displayName: 'CAABSA Constructora',           pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '9.2B / 3 CDMX contracts · pass-through', es: '9.2 mil M / 3 contratos CDMX · firma de paso' } },
+  { query: 'GX2',                  displayName: 'GX2 Desarrollos',               pattern: 'P3', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '5.9B / 2 Sinaloa contracts · risk 0.84', es: '5.9 mil M / 2 contratos Sinaloa · riesgo 0.84' } },
+  { query: 'TECNICAS REUNIDAS',    displayName: 'Técnicas Reunidas (ES)',        pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: '7.2B / 2 PEMEX · legitimate sole-source', es: '7.2 mil M / 2 PEMEX · única fuente legítima' } },
+  { query: 'PRIDE INTERNATIONAL',  displayName: 'Pride International (US)',      pattern: 'P3', sector: 'energia',         category: 'serv_petroleros', blurb: { en: '5.5B PEMEX offshore · sole-source spec', es: '5.5 mil M PEMEX costa afuera · única fuente' } },
+  // Tech license direct-award cluster (≥95% DA, defensible sole-source)
+  { query: 'MICROSOFT',            displayName: 'Microsoft (Corp / Licensing / Mexico)', pattern: 'P5', sector: 'tecnologia',     category: 'tic',           blurb: { en: '24.1B · 97-99% DA · proprietary tech', es: '24.1 mil M · 97-99% AD · tech propietaria' } },
+  { query: 'ORACLE',               displayName: 'Oracle México',                 pattern: 'P5', sector: 'tecnologia',      category: 'tic',           blurb: { en: '8.3B · 98.4% DA · DB licensing', es: '8.3 mil M · 98.4% AD · licencia BD' } },
+  { query: 'IBM',                  displayName: 'IBM México',                    pattern: 'P5', sector: 'tecnologia',      category: 'tic',           blurb: { en: '8.0B · 95.4% DA · enterprise license', es: '8.0 mil M · 95.4% AD · licencia empresarial' } },
+  // Government media buys (red — routed without competition)
+  { query: 'TELEVISA',             displayName: 'Televisa',                      pattern: 'P5', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: '7.1B · 99.7% DA · gov media buy', es: '7.1 mil M · 99.7% AD · gasto en medios' } },
+  { query: 'AZTECA',               displayName: 'Estudios Azteca',               pattern: 'P5', sector: 'gobernacion',     category: 'serv_prof',     blurb: { en: '5.8B · 99.8% DA · gov media buy', es: '5.8 mil M · 99.8% AD · gasto en medios' } },
+  // DICONSA staple-commodity supply chain
+  { query: 'MOLINOS AZTECA',       displayName: 'Molinos Azteca',                pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: '7.6B · 99.9% DA · DICONSA flour', es: '7.6 mil M · 99.9% AD · harina DICONSA' } },
+  { query: 'NESTLE',               displayName: 'Marcas Nestlé',                 pattern: 'P5', sector: 'agricultura',     category: 'alimentos',     blurb: { en: '4.4B · 99.9% DA · DICONSA dairy', es: '4.4 mil M · 99.9% AD · lácteos DICONSA' } },
+  // Voucher cluster (welfare-program payment-card monopolies)
+  { query: 'EFECTIVALE',           displayName: 'Efectivale',                    pattern: 'P5', sector: 'hacienda',        category: 'vales',         blurb: { en: '2,210 single-bid wins · 19.6B', es: '2,210 victorias oferta única · 19.6 mil M' } },
+  { query: 'SODEXO',               displayName: 'Sodexo',                        pattern: 'P5', sector: 'hacienda',        category: 'vales',         blurb: { en: '658 single-bid wins · 5.2B', es: '658 victorias oferta única · 5.2 mil M' } },
+  { query: 'SEGALMEX',             displayName: 'Seguridad Alimentaria Mexicana', pattern: 'P5', sector: 'agricultura',    category: 'alimentos',     blurb: { en: '1,014 single-bid · 5.3B at risk 0.94', es: '1,014 oferta única · 5.3 mil M riesgo 0.94' } },
   // Infrastructure
   { query: 'CICSA',                displayName: 'CICSA · Grupo Carso',           pattern: 'P1', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: 'Slim infrastructure conglomerate', es: 'Grupo Slim infraestructura' } },
   { query: 'CONDUMEX',             displayName: 'Condumex · Grupo Carso',        pattern: 'P1', sector: 'energia',         category: 'electricidad',  blurb: { en: 'Cables monopoly', es: 'Monopolio de cables' } },
+  { query: 'ICA',                  displayName: 'ICA Constructora',              pattern: 'P5', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '41.8B · 3 contracts · Tren Maya', es: '41.8 mil M · 3 contratos · Tren Maya' } },
+  { query: 'ALSTOM',               displayName: 'Alstom Transport',              pattern: 'P5', sector: 'infraestructura', category: 'obra_publica',  blurb: { en: '37.9B · 2 contracts · Tren Maya · risk 0.92', es: '37.9 mil M · 2 contratos · Tren Maya · riesgo 0.92' } },
   // Health/IMSS T1 vendors
   { query: 'BAXTER',               displayName: 'Baxter',                        pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
   { query: 'FRESENIUS',            displayName: 'Fresenius',                     pattern: 'P5', sector: 'salud',           category: 'medicamentos',  blurb: { en: '⚠ structural FP · multinational', es: '⚠ FP estructural · multinacional' } },
@@ -1402,7 +1427,8 @@ export default function Atlas() {
             </button>
           )}
 
-          {/* Compare-mode toggle */}
+          {/* Compare-mode toggle — title attr provides discoverability hint
+              (the function isn't obvious from the label alone). */}
           <button
             onClick={() => setCompareMode(!compareMode)}
             className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
@@ -1412,6 +1438,12 @@ export default function Atlas() {
               border: '1px solid var(--color-border)',
             }}
             aria-pressed={compareMode}
+            aria-label={lang === 'en'
+              ? 'Toggle compare-years mode — render two constellations side by side'
+              : 'Activar modo comparar años — dos constelaciones lado a lado'}
+            title={lang === 'en'
+              ? 'Render a second constellation alongside this one. Pick a year for each canvas to see the same lens at two moments in time — e.g. Peña 2014 vs COVID 2020.'
+              : 'Renderiza una segunda constelación junto a la actual. Elige un año para cada lienzo para ver la misma lente en dos momentos — ej. Peña 2014 vs COVID 2020.'}
           >
             <Layers className="h-3 w-3" />
             {lang === 'en' ? 'Compare years' : 'Comparar años'}
@@ -1861,8 +1893,8 @@ export default function Atlas() {
             : (lang === 'en' ? 'illustrative snapshot' : 'instantánea ilustrativa')}
         </span>
         {lang === 'en'
-          ? <>Categories lens shows 32 of 91 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 21 known cases (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
-          : <>La lente de categorías muestra 32 de 91 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 21 casos (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
+          ? <>Categories lens shows 32 of 91 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
+          : <>La lente de categorías muestra 32 de 91 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
         }
       </div>
 
