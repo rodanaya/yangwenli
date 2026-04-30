@@ -344,6 +344,42 @@ function TenureRibbon({
   )
 }
 
+/**
+ * FilterChip — small removable pill for the Active-filter summary bar.
+ * Shows the filter label + an X to clear that one filter without
+ * resetting the rest of the active combination.
+ */
+function FilterChip({
+  children,
+  onClear,
+  accent,
+}: {
+  children: React.ReactNode
+  onClear: () => void
+  accent?: string
+}) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[10px] font-mono font-medium"
+      style={
+        accent
+          ? { color: accent, backgroundColor: `${accent}10`, borderColor: `${accent}33` }
+          : { backgroundColor: 'var(--color-background-elevated)', color: 'var(--color-text-secondary)', borderColor: 'var(--color-border)' }
+      }
+    >
+      <span>{children}</span>
+      <button
+        onClick={onClear}
+        className="inline-flex items-center justify-center w-3 h-3 rounded-full hover:bg-background-card transition-colors"
+        aria-label="Clear filter"
+        type="button"
+      >
+        <XIcon className="w-2.5 h-2.5" />
+      </button>
+    </span>
+  )
+}
+
 const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; title: string }> = {
   pending:    { char: '○', color: 'var(--color-text-muted)',     title: 'Pending review' },
   reviewing:  { char: '◐', color: 'var(--color-risk-high)',      title: 'Under review' },
@@ -580,6 +616,19 @@ export default function AriaPage() {
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
 
+  // Administration overlap filter — Mexican sexenio chips. Client-side
+  // computed against last_contract_year + years_active (we derive
+  // first_year = last_year - years_active + 1 and check whether the
+  // vendor's [first, last] range overlaps the sexenio's [start, end].
+  type AdminKey = 'sheinbaum' | 'amlo' | 'pena' | 'calderon' | 'fox'
+  const [adminFilter, setAdminFilter] = useState<AdminKey | null>(null)
+
+  // External flag filters — client-side OR drives api param when supported.
+  // gtOnly + sfpOnly are client-side; efosOnly hits the existing API param.
+  const [gtOnly, setGtOnly] = useState(false)
+  const [efosOnly, setEfosOnly] = useState(false)
+  const [sfpOnly, setSfpOnly] = useState(false)
+
   // Client-side sort within the current page. Server returns IPS-ordered;
   // user can re-sort by what's actually meaningful for their triage. The
   // 'ips' sort key is server-default so picking it preserves backend order.
@@ -606,7 +655,7 @@ export default function AriaPage() {
   })
 
   const { data: leadsData, isLoading: leadsLoading, isError: leadsError } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter }],
+    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter, efosOnly }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
@@ -618,6 +667,7 @@ export default function AriaPage() {
         status: reviewStatusFilter ?? undefined,
         tier: tierFilter ?? undefined,
         sector_id: sectorFilter ?? undefined,
+        efos_only: efosOnly || undefined,
       }),
     staleTime: 2 * 60_000,
     refetchOnWindowFocus: true,
@@ -631,11 +681,36 @@ export default function AriaPage() {
 
   const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
 
-  // Client-side sort for the visible page. IPS is the server default —
-  // returning leadsItemsRaw unchanged preserves the original ordering.
+  // Sexenio definitions — Mexican federal administrations. We check
+  // [first_year, last_year] overlap with each window. Sheinbaum is
+  // 2024-present; we use 2025+ as a hard right edge.
+  const ADMIN_RANGES: Record<AdminKey, [number, number]> = {
+    sheinbaum: [2024, 2030],
+    amlo:      [2018, 2024],
+    pena:      [2012, 2018],
+    calderon:  [2006, 2012],
+    fox:       [2000, 2006],
+  }
+
+  // Client-side filters applied to the visible page after the API call.
+  // These are paired in the same pipeline as sort so the user can stack
+  // (e.g. P5 + AMLO + GT-only).
   const leadsItems: AriaQueueItem[] = (() => {
-    if (sortKey === 'ips') return leadsItemsRaw
-    const arr = [...leadsItemsRaw]
+    let arr = [...leadsItemsRaw]
+    if (gtOnly) arr = arr.filter((it) => it.in_ground_truth)
+    if (sfpOnly) arr = arr.filter((it) => it.is_sfp_sanctioned)
+    if (adminFilter) {
+      const [adminStart, adminEnd] = ADMIN_RANGES[adminFilter]
+      arr = arr.filter((it) => {
+        const last = it.last_contract_year ?? 0
+        const yrs = it.years_active ?? 1
+        const first = last > 0 ? last - yrs + 1 : 0
+        if (last === 0 || first === 0) return false
+        // Overlap test: [first, last] ∩ [adminStart, adminEnd] != ∅
+        return first <= adminEnd && last >= adminStart
+      })
+    }
+    if (sortKey === 'ips') return arr
     if (sortKey === 'value') {
       arr.sort((a, b) => (b.total_value_mxn ?? 0) - (a.total_value_mxn ?? 0))
     } else if (sortKey === 'recency') {
@@ -670,6 +745,10 @@ export default function AriaPage() {
     setNovelOnly(false)
     setSectorFilter(null)
     setReviewStatusFilter(null)
+    setAdminFilter(null)
+    setGtOnly(false)
+    setEfosOnly(false)
+    setSfpOnly(false)
     setSearch('')
     setPage(1)
   }
@@ -679,9 +758,24 @@ export default function AriaPage() {
     tierFilter != null ? tierFilter : null,
     newVendorOnly || null,
     novelOnly || null,
+    sectorFilter != null ? sectorFilter : null,
     reviewStatusFilter,
+    adminFilter,
+    gtOnly || null,
+    efosOnly || null,
+    sfpOnly || null,
     search || null,
   ].filter(Boolean).length
+
+  // Sexenio metadata — labels + risk-style accent palette so the chips
+  // read as time-coded slicers, not generic toggles.
+  const ADMIN_META: Record<AdminKey, { label: string; range: string; color: string }> = {
+    sheinbaum: { label: isEs ? 'Sheinbaum' : 'Sheinbaum', range: '2024–', color: 'var(--color-risk-critical)' },
+    amlo:      { label: isEs ? 'AMLO' : 'AMLO',           range: '2018–24', color: 'var(--color-risk-high)' },
+    pena:      { label: isEs ? 'Peña Nieto' : 'Peña Nieto', range: '2012–18', color: 'var(--color-accent)' },
+    calderon:  { label: isEs ? 'Calderón' : 'Calderón',   range: '2006–12', color: 'var(--color-text-secondary)' },
+    fox:       { label: isEs ? 'Fox' : 'Fox',             range: '2000–06', color: 'var(--color-text-muted)' },
+  }
 
   if (statsError || leadsError) {
     return (
@@ -920,6 +1014,93 @@ export default function AriaPage() {
               />
             </div>
           </div>
+
+          {/* Administration (sexenio) chips + external-flag toggles.
+              Sexenio chips are client-side filters that match the vendor's
+              [first_year, last_year] overlap with the administration's
+              window. Mexican-context labels = journalistic-meaningful. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+              {isEs ? 'Sexenio' : 'Admin'}
+            </span>
+            <button
+              onClick={() => { setAdminFilter(null); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                adminFilter == null
+                  ? 'bg-background-elevated text-text-primary border-border'
+                  : 'bg-background-card text-text-muted border-border hover:border-border'
+              )}
+            >
+              {t('filters.all')}
+            </button>
+            {(['sheinbaum', 'amlo', 'pena', 'calderon', 'fox'] as const).map((key) => {
+              const meta = ADMIN_META[key]
+              const isActive = adminFilter === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => { setAdminFilter(isActive ? null : key); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-baseline gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    isActive
+                      ? 'border-current'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  style={isActive ? { color: meta.color, backgroundColor: `${meta.color}10` } : undefined}
+                  title={`${meta.label} (${meta.range})`}
+                >
+                  <span>{meta.label}</span>
+                  <span className="font-mono text-[9px] text-text-muted tabular-nums">{meta.range}</span>
+                </button>
+              )
+            })}
+
+            <span className="mx-1 h-3 w-px bg-border" aria-hidden />
+
+            {/* External-flag toggles. EFOS uses the existing API param;
+                GT and SFP filter client-side. Visible inline so the user
+                can pair them with sexenio + pattern + sector. */}
+            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+              {isEs ? 'Banderas' : 'Flags'}
+            </span>
+            <button
+              onClick={() => { setGtOnly(!gtOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                gtOnly
+                  ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border-[color:var(--color-accent)]/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}
+            >
+              GT
+            </button>
+            <button
+              onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                efosOnly
+                  ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title="SAT EFOS Definitivo"
+            >
+              EFOS
+            </button>
+            <button
+              onClick={() => { setSfpOnly(!sfpOnly); setPage(1) }}
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                sfpOnly
+                  ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
+              )}
+              title={isEs ? 'Sancionado por SFP' : 'Sanctioned by SFP'}
+            >
+              SFP
+            </button>
+          </div>
         </div>
 
         {/* GhostSuspectsPanel — only renders when P2 pattern is active. */}
@@ -931,6 +1112,84 @@ export default function AriaPage() {
         {/* INVESTIGATION LIST — one row per vendor, one action            */}
         {/* ============================================================== */}
         <section id="aria-investigation-list" aria-label={t('queueSection.title')}>
+          {/* Active-filter summary bar — when 2+ filters are active, render
+              the combination as removable chips above the list. Without
+              this, an investigator who applied "T1 + P5 + AMLO + GT" 30
+              seconds ago can't tell what's currently filtering the view —
+              the chips are scattered across the filter bar above. This
+              makes the *combination* visible. */}
+          {activeFilterCount >= 2 && (
+            <div className="flex items-center gap-1.5 flex-wrap mb-3 px-3 py-2 rounded-sm border border-border bg-background-card/60">
+              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted shrink-0">
+                {isEs ? 'Filtros activos' : 'Active filters'}
+              </span>
+              {tierFilter != null && (
+                <FilterChip onClear={() => { setTierFilter(null); setPage(1) }}>
+                  T{tierFilter}
+                </FilterChip>
+              )}
+              {patternFilter && (
+                <FilterChip onClear={() => { setPatternFilter(null); setPage(1) }}>
+                  {patternFilter} {t(`patterns.${patternFilter}`)}
+                </FilterChip>
+              )}
+              {sectorFilter != null && (
+                <FilterChip onClear={() => { setSectorFilter(null); setPage(1) }}>
+                  {(() => {
+                    const s = SECTORS.find((x) => x.id === sectorFilter)
+                    return s ? (isEs ? s.name : s.nameEN) : `Sector ${sectorFilter}`
+                  })()}
+                </FilterChip>
+              )}
+              {adminFilter && (
+                <FilterChip onClear={() => { setAdminFilter(null); setPage(1) }} accent={ADMIN_META[adminFilter].color}>
+                  {ADMIN_META[adminFilter].label} {ADMIN_META[adminFilter].range}
+                </FilterChip>
+              )}
+              {gtOnly && (
+                <FilterChip onClear={() => { setGtOnly(false); setPage(1) }} accent="var(--color-accent)">
+                  GT only
+                </FilterChip>
+              )}
+              {efosOnly && (
+                <FilterChip onClear={() => { setEfosOnly(false); setPage(1) }} accent="var(--color-risk-critical)">
+                  EFOS only
+                </FilterChip>
+              )}
+              {sfpOnly && (
+                <FilterChip onClear={() => { setSfpOnly(false); setPage(1) }} accent="var(--color-risk-high)">
+                  SFP only
+                </FilterChip>
+              )}
+              {newVendorOnly && (
+                <FilterChip onClear={() => { setNewVendorOnly(false); setPage(1) }}>
+                  {t('filters.newVendorOnly')}
+                </FilterChip>
+              )}
+              {novelOnly && (
+                <FilterChip onClear={() => { setNovelOnly(false); setPage(1) }}>
+                  {t('filters.novelOnly')}
+                </FilterChip>
+              )}
+              {reviewStatusFilter && (
+                <FilterChip onClear={() => { setReviewStatusFilter(null); setPage(1) }}>
+                  {t(`status.${reviewStatusFilter}`)}
+                </FilterChip>
+              )}
+              {search && (
+                <FilterChip onClear={() => { setSearch(''); setPage(1) }}>
+                  "{search}"
+                </FilterChip>
+              )}
+              <button
+                onClick={clearAll}
+                className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors shrink-0"
+              >
+                {t('filterBar.clearAll')}
+              </button>
+            </div>
+          )}
+
           {/* List header strip — single dense row. Combines the previous
               orphan title block + review filter chips + export button.
               Was: 3 stacked sections (title row → vendor count → review
