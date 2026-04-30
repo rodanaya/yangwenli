@@ -107,7 +107,7 @@ ssh "$REMOTE" "cd ${REMOTE_DIR} && tr -d '\0' < .env.prod > .env.prod.clean && m
 echo "[6/6] Building and starting containers on server..."
 ssh "$REMOTE" "
   cd ${REMOTE_DIR}
-  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
   echo ''
   echo 'Container status:'
   docker compose -f docker-compose.prod.yml --env-file .env.prod ps

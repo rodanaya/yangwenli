@@ -2780,8 +2780,27 @@ export default function RedThread() {
         />
       </div>
 
+      {/* Honest "what's missing" footnote — Phase 3 trust-building.
+          Acknowledging what the data CAN'T tell is journalistic
+          accountability. Never let the reader walk away thinking
+          this was a complete picture. */}
+      <section
+        id="chapter-disclosure"
+        className="py-6 px-4 sm:px-8 max-w-4xl mx-auto border-t border-border mt-8"
+      >
+        <p className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+          {t('disclosure.label', { defaultValue: "What this thread can't tell you" })}
+        </p>
+        <p className="text-xs text-text-muted leading-relaxed max-w-2xl">
+          {t('disclosure.body', {
+            defaultValue:
+              "The COMPRANET dataset has known structural gaps. RFC (vendor tax ID) coverage is uneven across periods (0.1% in 2002–2010, 47% in 2023+). Beneficial-ownership data is not tracked. Contract documents (the actual scope of work, deliverables, modifications) are not in this dataset. Subcontracting relationships are not exposed. The risk score measures statistical similarity to documented corruption patterns — not proof of wrongdoing. Treat every flag as a hypothesis to verify, not a verdict.",
+          })}
+        </p>
+      </section>
+
       {/* Bottom padding */}
-      <div className="h-32" />
+      <div className="h-24" />
     </div>
   )
 }

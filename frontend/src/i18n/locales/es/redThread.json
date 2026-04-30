@@ -213,6 +213,10 @@
     "methodologyNote": "Las puntuaciones de riesgo miden la similitud con patrones de corrupción documentados en 3.05M contratos federales mexicanos (2002–2025). Las puntuaciones son indicadores estadísticos para la clasificación de investigaciones — no son prueba de irregularidades. Modelo v0.6.5, validación estratificada por proveedor, AUC 0.798 (entrenamiento) / 0.828 (prueba). Ver",
     "methodologyLink": "metodología completa"
   },
+  "disclosure": {
+    "label": "Lo que este hilo no puede decirle",
+    "body": "El conjunto de datos COMPRANET tiene vacíos estructurales conocidos. La cobertura de RFC (identificación fiscal del proveedor) es desigual entre períodos (0.1% en 2002–2010, 47% en 2023+). Los datos de beneficiario controlador no se rastrean. Los documentos contractuales (alcance real del trabajo, entregables, modificaciones) no están en este conjunto. Las relaciones de subcontratación no están expuestas. La puntuación de riesgo mide similitud estadística con patrones de corrupción documentados — no es prueba de irregularidades. Trate cada bandera como una hipótesis a verificar, no como un veredicto."
+  },
   "nav": {
     "back": "Atrás",
     "redThread": "Hilo Rojo",

@@ -213,6 +213,10 @@
     "methodologyNote": "Risk scores measure similarity to documented corruption patterns in 3.05M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v0.6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See",
     "methodologyLink": "full methodology"
   },
+  "disclosure": {
+    "label": "What this thread can't tell you",
+    "body": "The COMPRANET dataset has known structural gaps. RFC (vendor tax ID) coverage is uneven across periods (0.1% in 2002–2010, 47% in 2023+). Beneficial-ownership data is not tracked. Contract documents (the actual scope of work, deliverables, modifications) are not in this dataset. Subcontracting relationships are not exposed. The risk score measures statistical similarity to documented corruption patterns — not proof of wrongdoing. Treat every flag as a hypothesis to verify, not a verdict."
+  },
   "nav": {
     "back": "Back",
     "redThread": "Red Thread",

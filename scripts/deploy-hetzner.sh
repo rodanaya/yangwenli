@@ -111,7 +111,7 @@ scp .env.prod "${REMOTE}:${REMOTE_DIR}/.env.prod"
 echo "[6/6] Building and starting containers on server..."
 ssh "$REMOTE" "
   cd ${REMOTE_DIR}
-  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
   echo ''
   echo 'Container status:'
   docker compose -f docker-compose.prod.yml ps
