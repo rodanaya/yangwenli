@@ -109,8 +109,13 @@ rm /tmp/rubli-deploy.tar.gz
 scp .env.prod "${REMOTE}:${REMOTE_DIR}/.env.prod"
 
 echo "[6/6] Building and starting containers on server..."
+# Pre-cleanup: remove any renamed-conflict containers (see deploy.sh
+# for the full explanation — this kills the recurring "Container is
+# already in use" deploy failures from compose's rename-on-failure).
 ssh "$REMOTE" "
   cd ${REMOTE_DIR}
+  echo '  cleaning up any orphaned/renamed rubli containers...'
+  docker ps -aq --filter 'name=_rubli-' | xargs -r docker rm -f 2>/dev/null || true
   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
   echo ''
   echo 'Container status:'

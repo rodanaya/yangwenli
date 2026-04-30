@@ -105,8 +105,15 @@ scp .env.prod "${REMOTE}:${REMOTE_DIR}/.env.prod"
 ssh "$REMOTE" "cd ${REMOTE_DIR} && tr -d '\0' < .env.prod > .env.prod.clean && mv .env.prod.clean .env.prod && sed -i 's/\r//' .env.prod"
 
 echo "[6/6] Building and starting containers on server..."
+# Pre-cleanup: remove any renamed-conflict containers (leftover from
+# failed recreates — docker compose renames containers with a hash
+# prefix when it can't recreate, then complains they're already taken
+# on the next attempt). This eats the entire class of "Container
+# /<hash>_rubli-X is already in use" deploy failures we hit for weeks.
 ssh "$REMOTE" "
   cd ${REMOTE_DIR}
+  echo '  cleaning up any orphaned/renamed rubli containers...'
+  docker ps -aq --filter 'name=_rubli-' | xargs -r docker rm -f 2>/dev/null || true
   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
   echo ''
   echo 'Container status:'
