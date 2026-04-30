@@ -20,17 +20,6 @@ import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { motion, useScroll, useInView } from 'framer-motion'
-import {
-  ResponsiveContainer,
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ReferenceLine,
-} from 'recharts'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -47,8 +36,6 @@ import {
   Gavel,
   FileText,
   Clock,
-  Zap,
-  Shield,
 } from 'lucide-react'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -177,6 +164,51 @@ function StakesPullquote({ totalMxn }: { totalMxn: number }) {
   )
 }
 
+/**
+ * CompactDotBar — tiny inline dot strip for byline comparisons. Used
+ * in the editorial stat block to encode "vendor's value vs benchmark"
+ * inside the typography, not in a separate card. Optionally renders a
+ * faint reference range (referenceMin..referenceMax) as a colored
+ * underlay so the reader sees the OECD/sector benchmark visually.
+ */
+function CompactDotBar({
+  value,
+  dots = 18,
+  color,
+  referenceMin,
+  referenceMax,
+}: {
+  value: number          // 0..1
+  dots?: number
+  color: string
+  referenceMin?: number
+  referenceMax?: number
+}) {
+  const filled = Math.max(0, Math.min(dots, Math.round(value * dots)))
+  const refStart = referenceMin != null ? Math.round(referenceMin * dots) : null
+  const refEnd = referenceMax != null ? Math.round(referenceMax * dots) : null
+  return (
+    <span className="inline-flex items-baseline gap-[2px] align-middle" aria-hidden>
+      {Array.from({ length: dots }).map((_, i) => {
+        const inRef = refStart != null && refEnd != null && i >= refStart && i < refEnd
+        const isFilled = i < filled
+        return (
+          <span
+            key={i}
+            className="rounded-full"
+            style={{
+              width: 3,
+              height: 3,
+              backgroundColor: isFilled ? color : (inRef ? 'rgba(0,0,0,0.18)' : 'transparent'),
+              border: isFilled || inRef ? 'none' : '1px solid var(--color-border-hover)',
+            }}
+          />
+        )
+      })}
+    </span>
+  )
+}
+
 // ─── Chapter 1: The Subject ─────────────────────────────────────────────────
 
 function ChapterSubject({ vendor, aria, t }: {
@@ -243,41 +275,79 @@ function ChapterSubject({ vendor, aria, t }: {
         )}
       </motion.div>
 
-      {/* Key stats — tighter cards, smaller anchor numbers, more density. */}
+      {/* Editorial stat block — replaces the 4-card grid with a hero
+          number set in Playfair Italic 800 plus a byline strip of
+          comparative secondary stats. NYT / FT broadsheet aesthetic.
+          The hero number now actually LANDS instead of being one of
+          four flat numbers in equal-weight boxes. */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6"
+        className="mb-6"
       >
-        {[
-          {
-            label: t('kpi.totalValue'),
-            value: formatCompactMXN(vendor.total_value_mxn),
-            note: t('notes.allContracts'),
-          },
-          {
-            label: t('kpi.contracts'),
-            value: formatNumber(vendor.total_contracts),
-            note: `${vendor.first_contract_year ?? '?'} – ${vendor.last_contract_year ?? '?'}`,
-          },
-          {
-            label: t('kpi.directAwards'),
-            value: `${Math.round(vendor.direct_award_pct)}%`,
-            note: t('notes.vsNational'),
-          },
-          {
-            label: t('kpi.highRisk'),
-            value: `${Math.round(vendor.high_risk_pct)}%`,
-            note: t('notes.oecdBenchmark'),
-          },
-        ].map((s) => (
-          <div key={s.label} className="bg-background-card border border-border rounded-sm px-3 py-2.5">
-            <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">{s.label}</p>
-            <p className="text-lg font-bold text-text-primary font-mono tabular-nums leading-none">{s.value}</p>
-            <p className="text-[10px] text-text-muted mt-1.5 leading-tight">{s.note}</p>
+        {/* Hero — total value in editorial display type */}
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span
+            className="font-serif italic font-extrabold tabular-nums leading-[0.95]"
+            style={{
+              fontSize: 'clamp(2.5rem, 5vw, 3.75rem)',
+              color: sectorColor,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            {formatCompactMXN(vendor.total_value_mxn)}
+          </span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted self-end pb-2">
+            {t('kpi.totalValue')} · {vendor.first_contract_year ?? '?'}–{vendor.last_contract_year ?? '?'}
+          </span>
+        </div>
+
+        {/* Sector accent line — anchors the hero number visually */}
+        <div className="h-px w-12 my-3" style={{ backgroundColor: sectorColor, opacity: 0.65 }} />
+
+        {/* Byline strip — three secondary stats, each with an inline
+            comparison sliver (vendor vs benchmark) baked into the
+            typography. No bordered cards. Reads as one editorial unit. */}
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3 text-sm">
+          <div className="flex items-baseline gap-2">
+            <span className="font-bold text-text-primary tabular-nums text-base">
+              {formatNumber(vendor.total_contracts)}
+            </span>
+            <span className="text-text-muted text-xs">{t('kpi.contracts').toLowerCase()}</span>
           </div>
-        ))}
+
+          <div className="flex items-baseline gap-2">
+            <span className="font-bold text-text-primary tabular-nums text-base">
+              {Math.round(vendor.direct_award_pct)}%
+            </span>
+            <span className="text-text-muted text-xs">direct</span>
+            <CompactDotBar
+              value={vendor.direct_award_pct / 100}
+              dots={18}
+              color="var(--color-text-secondary)"
+            />
+            <span className="text-text-muted text-[10px] font-mono">vs ~48% nat'l</span>
+          </div>
+
+          <div className="flex items-baseline gap-2">
+            <span
+              className="font-bold tabular-nums text-base"
+              style={{ color: vendor.high_risk_pct > 15 ? 'var(--color-risk-high)' : 'var(--color-text-primary)' }}
+            >
+              {Math.round(vendor.high_risk_pct)}%
+            </span>
+            <span className="text-text-muted text-xs">high-risk</span>
+            <CompactDotBar
+              value={vendor.high_risk_pct / 100}
+              dots={18}
+              color={vendor.high_risk_pct > 15 ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'}
+              referenceMin={0.02}
+              referenceMax={0.15}
+            />
+            <span className="text-text-muted text-[10px] font-mono">OECD 2–15%</span>
+          </div>
+        </div>
       </motion.div>
 
       <motion.p
@@ -958,144 +1028,227 @@ function classifyRole(coBidder: { win_count: number; co_bid_count: number }, t: 
 }
 
 /**
- * NetworkMiniGraph — embedded radial layout of the subject vendor + top
- * co-bidders. Replaces the "tease the network behind a CTA" anti-pattern
- * with the actual graph rendered inline at 280px height. Click any node
- * navigates to that vendor's thread.
+ * ConcentricConstellation — vendor reach topology, three rings.
+ *
+ *   • OUTER RING (always present): N institutional dots evenly placed.
+ *     Anonymous because we don't have per-institution detail at this
+ *     resolution, but the *count* and the *radial spread* communicate
+ *     reach. Sector palette tints the dots.
+ *   • INNER RING (when present): up to 8 co-bidder nodes sized by
+ *     co_bid_count, colored by inferred role, edges to the vendor.
+ *     Click any node → that vendor's thread.
+ *   • CENTER: pulsing vendor node.
+ *   • BACKGROUND: faint radial gradient in the primary sector color
+ *     creates atmosphere without dominating.
+ *
+ * Critical innovation: this composition WORKS even when co-bidders=0,
+ * because the institutional ring is always there. A single-source
+ * vendor with no co-bidders still has a meaningful "constellation" —
+ * just one with empty negative space at the inner ring, which BECOMES
+ * the story ("no coordinated bidding detected").
  */
-function NetworkMiniGraph({
+function ConcentricConstellation({
   subjectName,
+  sectorName,
+  totalInstitutions,
+  sectorsCount,
   coBidders,
   t,
 }: {
   subjectName: string
-  coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number }>
+  sectorName: string | null
+  totalInstitutions: number
+  sectorsCount: number
+  coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }>
   t: TFunction
 }) {
   const W = 720
-  const H = 280
+  const H = 320
   const cx = W / 2
-  const cy = H / 2
-  const top = coBidders.slice(0, 8)
+  const cy = H / 2 + 4
+  const innerR = 70
+  const outerR = 132
+
+  const sectorColor = sectorName ? (SECTOR_COLORS[sectorName.toLowerCase()] ?? '#a06820') : '#a06820'
+
+  // Outer ring: place totalInstitutions anonymous dots, capped at 24 for
+  // visual legibility — beyond that the ring becomes a continuous line.
+  const visibleInst = Math.min(totalInstitutions, 24)
+
+  // Inner ring: top 8 co-bidders by co_bid_count.
+  const top = [...coBidders].sort((a, b) => b.co_bid_count - a.co_bid_count).slice(0, 8)
   const maxCoBids = Math.max(...top.map((c) => c.co_bid_count), 1)
+  const hasCoBidders = top.length > 0
+
+  // Gradient ID — unique-ish per vendor name; fine for a single instance per page.
+  const gradId = 'constellation-bg-' + (subjectName.length % 999)
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Co-bidder network mini-graph">
-      {/* Edges — colored by role, thickness by co_bid_count */}
-      {top.map((cb, i) => {
-        const angle = (i / top.length) * Math.PI * 2 - Math.PI / 2
-        const r = 100
-        const x = cx + Math.cos(angle) * r
-        const y = cy + Math.sin(angle) * r
-        const role = classifyRole(cb, t)
-        const strokeW = 0.8 + (cb.co_bid_count / maxCoBids) * 2.4
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Vendor reach constellation">
+      <defs>
+        <radialGradient id={gradId} cx="50%" cy="50%" r="55%">
+          <stop offset="0%" stopColor={sectorColor} stopOpacity={0.10} />
+          <stop offset="60%" stopColor={sectorColor} stopOpacity={0.04} />
+          <stop offset="100%" stopColor={sectorColor} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+
+      {/* Sector tint background */}
+      <rect x={0} y={0} width={W} height={H} fill={`url(#${gradId})`} />
+
+      {/* Outer ring guide — faint dashed circle */}
+      <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="var(--color-border)" strokeWidth={0.6} strokeDasharray="2 4" opacity={0.4} />
+
+      {/* Outer ring nodes — institutions */}
+      {Array.from({ length: visibleInst }).map((_, i) => {
+        const angle = (i / visibleInst) * Math.PI * 2 - Math.PI / 2
+        const x = cx + Math.cos(angle) * outerR
+        const y = cy + Math.sin(angle) * outerR
         return (
-          <line
-            key={`edge-${cb.vendor_id}`}
-            x1={cx}
-            y1={cy}
-            x2={x}
-            y2={y}
-            stroke={role.color}
-            strokeWidth={strokeW}
-            opacity={0.45}
+          <circle
+            key={`inst-${i}`}
+            cx={x}
+            cy={y}
+            r={3.2}
+            fill={sectorColor}
+            stroke="var(--color-background)"
+            strokeWidth={0.8}
+            opacity={0.85}
           />
         )
       })}
 
-      {/* Subject vendor — pulsing center node */}
-      <circle cx={cx} cy={cy} r={18} fill="var(--color-risk-critical)" opacity={0.18}>
-        <animate attributeName="r" values="18;22;18" dur="2.4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.18;0.30;0.18" dur="2.4s" repeatCount="indefinite" />
-      </circle>
-      <circle cx={cx} cy={cy} r={9} fill="var(--color-risk-critical)" />
-      <text x={cx} y={cy + 32} textAnchor="middle" fontSize={11} fontFamily="var(--font-family-mono)" fill="var(--color-text-primary)" fontWeight="700">
-        {formatVendorName(subjectName, 22)}
-      </text>
+      {/* Inner ring guide — solid when co-bidders present, dashed-ghost when empty */}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={innerR}
+        fill="none"
+        stroke="var(--color-border)"
+        strokeWidth={hasCoBidders ? 0.8 : 1}
+        strokeDasharray={hasCoBidders ? '0' : '3 5'}
+        opacity={hasCoBidders ? 0.45 : 0.55}
+      />
 
-      {/* Co-bidder nodes */}
-      {top.map((cb, i) => {
-        const angle = (i / top.length) * Math.PI * 2 - Math.PI / 2
-        const r = 100
-        const x = cx + Math.cos(angle) * r
-        const y = cy + Math.sin(angle) * r
+      {/* Inner ring: co-bidder nodes + edges */}
+      {hasCoBidders && top.map((cb, i) => {
+        const angle = (i / top.length) * Math.PI * 2 - Math.PI / 2 + Math.PI / 8
+        const x = cx + Math.cos(angle) * innerR
+        const y = cy + Math.sin(angle) * innerR
         const role = classifyRole(cb, t)
-        const nodeR = 5 + (cb.co_bid_count / maxCoBids) * 4
-        const labelOffset = 14
-        // Position label outward from center
-        const lx = cx + Math.cos(angle) * (r + labelOffset)
-        const ly = cy + Math.sin(angle) * (r + labelOffset)
-        const anchor = Math.cos(angle) > 0.3 ? 'start' : Math.cos(angle) < -0.3 ? 'end' : 'middle'
+        const strokeW = 0.6 + (cb.co_bid_count / maxCoBids) * 2.2
+        const nodeR = 4 + (cb.co_bid_count / maxCoBids) * 4
+        // Label outside the inner ring, inside the outer ring
+        const labelR = innerR + 16
+        const lx = cx + Math.cos(angle) * labelR
+        const ly = cy + Math.sin(angle) * labelR + 3
+        const anchor: 'start' | 'middle' | 'end' = Math.cos(angle) > 0.3 ? 'start' : Math.cos(angle) < -0.3 ? 'end' : 'middle'
         return (
-          <g key={cb.vendor_id} className="cursor-pointer">
+          <g key={`cb-${cb.vendor_id}`}>
+            <line x1={cx} y1={cy} x2={x} y2={y} stroke={role.color} strokeWidth={strokeW} opacity={0.45} />
             <Link to={`/thread/${cb.vendor_id}`}>
               <title>{cb.vendor_name} · {cb.co_bid_count} co-bids · {role.label}</title>
               <circle cx={x} cy={y} r={nodeR + 6} fill="transparent" />
               <circle cx={x} cy={y} r={nodeR} fill={role.color} stroke="var(--color-background)" strokeWidth={1.2} />
-              <text
-                x={lx}
-                y={ly + 3}
-                textAnchor={anchor}
-                fontSize={9}
-                fontFamily="var(--font-family-mono)"
-                fill="var(--color-text-secondary)"
-              >
-                {formatVendorName(cb.vendor_name, 18)}
+              <text x={lx} y={ly} textAnchor={anchor} fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-secondary)">
+                {formatVendorName(cb.vendor_name, 16)}
               </text>
             </Link>
           </g>
         )
       })}
+
+      {/* Empty inner-ring annotation — for vendors with 0 co-bidders */}
+      {!hasCoBidders && (
+        <g>
+          <text x={cx} y={cy - innerR + 14} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" letterSpacing={1.2}>
+            ── NO COORDINATED BIDDING ──
+          </text>
+          <text x={cx} y={cy - innerR + 26} textAnchor="middle" fontSize={8} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.6}>
+            single-source / direct-award dominant
+          </text>
+        </g>
+      )}
+
+      {/* Subject — pulsing red node at center */}
+      <circle cx={cx} cy={cy} r={20} fill="var(--color-risk-critical)" opacity={0.16}>
+        <animate attributeName="r" values="20;26;20" dur="2.4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.16;0.28;0.16" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={cx} cy={cy} r={9} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.5} />
+      <text x={cx} y={cy + 30} textAnchor="middle" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
+        {formatVendorName(subjectName, 24)}
+      </text>
+
+      {/* Ring labels — annotate counts */}
+      <text x={W - 14} y={28} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill="var(--color-text-muted)">
+        {totalInstitutions} INSTITUTIONS
+        {totalInstitutions > visibleInst && ` (${visibleInst} SHOWN)`}
+      </text>
+      <text x={W - 14} y={42} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill="var(--color-text-muted)">
+        {sectorsCount} {sectorsCount === 1 ? 'SECTOR' : 'SECTORS'}{sectorName ? ` · ${sectorName.toUpperCase()}` : ''}
+      </text>
+      <text x={14} y={28} textAnchor="start" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill={hasCoBidders ? 'var(--color-text-secondary)' : 'var(--color-text-muted)'}>
+        {coBidders.length} CO-BIDDER{coBidders.length === 1 ? '' : 'S'}
+      </text>
     </svg>
   )
 }
 
 function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   vendorId: number
-  vendor: { name: string; total_institutions: number; sectors_count: number }
+  vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
   t: TFunction
 }) {
   const totalCoBidders = coBidders?.length ?? 0
   const topCoBidder = coBidders?.[0] ?? null
+  const sectorName = vendor.primary_sector_name ?? null
+
+  // Topology read — interprets the constellation in plain language
+  const topologyRead =
+    totalCoBidders === 0 && vendor.total_institutions <= 5
+      ? t('network.topology.tightSingleSource', { defaultValue: 'Tight single-source profile. No co-bidders, narrow institutional reach — typical of capture or sole-source contracts.' })
+      : totalCoBidders === 0
+      ? t('network.topology.broadSingleSource', { defaultValue: 'Broad single-source profile. No coordinated co-bidding, but contracts spread across many institutions — possible direct-award dominance.' })
+      : totalCoBidders <= 3
+      ? t('network.topology.thinNetwork', { defaultValue: 'Thin co-bidding network. The vendor occasionally bids alongside a small set of others.' })
+      : t('network.topology.denseNetwork', { defaultValue: 'Dense co-bidding network. The vendor consistently bids alongside the same group — review for rotation or decoy patterns.' })
 
   return (
     <ChapterShell id="chapter-network">
       <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
-      <p className="text-text-muted mb-5 max-w-xl text-sm">
-        {t('network.description')}
+      <p className="text-text-secondary mb-3 max-w-2xl text-sm leading-relaxed">
+        {t('network.constellationDescription', {
+          defaultValue: 'A reach topology. The outer ring marks the institutions this vendor served; the inner ring marks the vendors who bid alongside them. The shape exposes whether this vendor operates inside a network or as a single source.',
+        })}
       </p>
 
-      {/* Compact stat row — 3 inline anchors instead of two 6-padding cards */}
-      <div className="flex items-baseline gap-6 mb-5 flex-wrap">
-        <div>
-          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('network.institutionsServed')}</span>
-        </div>
-        <div>
-          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{vendor.sectors_count}</span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('network.sectorsActive')}</span>
-        </div>
-        <div>
-          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{formatNumber(totalCoBidders)}</span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">co-bidders</span>
-        </div>
-      </div>
-
-      {/* Embedded mini-graph — 280px tall, click any node → that thread */}
-      <div className="bg-background-card border border-border rounded-sm p-4 mb-4">
+      {/* The constellation — always renders, even with 0 co-bidders */}
+      <div className="bg-background-card border border-border rounded-sm p-4 mb-3">
         {coBidders === null ? (
-          <div className="h-[280px] rounded bg-background-elevated animate-pulse" />
-        ) : coBidders.length === 0 ? (
-          <p className="text-text-muted text-sm italic py-12 text-center">{t('network.noCoBidders')}</p>
+          <div className="h-[320px] rounded bg-background-elevated animate-pulse" />
         ) : (
-          <NetworkMiniGraph subjectName={vendor.name} coBidders={coBidders} t={t} />
+          <ConcentricConstellation
+            subjectName={vendor.name}
+            sectorName={sectorName}
+            totalInstitutions={vendor.total_institutions}
+            sectorsCount={vendor.sectors_count}
+            coBidders={coBidders}
+            t={t}
+          />
         )}
       </div>
 
-      {/* Top co-bidder callout — narrative pull instead of a list of 5 boxes */}
+      {/* Topology read — plain-language interpretation */}
+      <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
+        <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">Read</span>
+        {' '}— {topologyRead}
+      </p>
+
+      {/* Top co-bidder callout — only when present */}
       {topCoBidder && (
-        <p className="text-xs text-text-secondary mb-4 max-w-2xl leading-relaxed">
+        <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
           <span className="text-text-muted">Most-frequent co-bidder:</span>{' '}
           <Link
             to={`/thread/${topCoBidder.vendor_id}`}
@@ -1107,7 +1260,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
         </p>
       )}
 
-      {/* Single CTA — open full force-directed graph */}
+      {/* CTA */}
       <Link
         to={`/network?vendor=${vendorId}`}
         className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
@@ -1122,21 +1275,184 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
 
 // ─── Chapter 5: The Money ───────────────────────────────────────────────────
 
+/**
+ * MoneyStaircase — cumulative MXN as a stepped path. Replaces the
+ * generic dual-axis bar+line with a "journey" visualization.
+ *
+ * The cumulative line tells the time-as-drama story that a year-by-year
+ * bar chart can't. Each step's color is graduated by the avg risk in
+ * that year, so the reader sees not just "money grew" but "money grew
+ * during high-risk years." The three largest single-year jumps get
+ * pinned annotations with year + delta. A final "$N by YEAR" callout
+ * anchors the right edge.
+ *
+ * What Chapter II covered (year-by-year activity) is intentionally NOT
+ * repeated here. This chapter is about the journey, not the snapshots.
+ */
+function MoneyStaircase({
+  timeline,
+}: {
+  timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+}) {
+  if (timeline.length === 0) return null
+
+  const sorted = [...timeline].sort((a, b) => a.year - b.year)
+  let cum = 0
+  const points = sorted.map((item) => {
+    const start = cum
+    cum += item.total_value
+    return {
+      year: item.year,
+      start,
+      end: cum,
+      delta: item.total_value,
+      risk: item.avg_risk_score ?? 0,
+      count: item.contract_count,
+    }
+  })
+
+  const minYear = points[0].year
+  const maxYear = points[points.length - 1].year
+  const yearSpan = Math.max(1, maxYear - minYear + 1)
+  const totalCum = cum
+  if (totalCum === 0) return null
+
+  // Top 3 single-year jumps for annotation pins
+  const top3Jumps = [...points].sort((a, b) => b.delta - a.delta).slice(0, 3).map((p) => p.year)
+
+  // Layout
+  const W = 720
+  const H = 300
+  const PAD = { top: 36, right: 12, bottom: 36, left: 56 }
+  const innerH = H - PAD.top - PAD.bottom
+  const innerW = W - PAD.left - PAD.right
+
+  const xOf = (year: number) => PAD.left + ((year - minYear) / yearSpan) * innerW
+  const xOfNext = (year: number) => PAD.left + ((year + 1 - minYear) / yearSpan) * innerW
+  const yOf = (cum: number) => PAD.top + innerH - (cum / totalCum) * innerH
+
+  const colorOfRisk = (r: number) => RISK_DOT_COLORS[getRiskLevel(r)]
+
+  // Y axis ticks at 0, 25%, 50%, 75%, 100% of cumulative
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({ frac: f, value: totalCum * f }))
+
+  // Path: stepped — for each year, horizontal segment at start, then vertical step up to end
+  // We render as a series of <line> segments so each can be color-tinted by risk.
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Cumulative procurement money over time">
+      {/* Y grid lines + labels */}
+      {yTicks.map((t) => (
+        <g key={t.frac}>
+          <line x1={PAD.left} x2={W - PAD.right} y1={yOf(t.value)} y2={yOf(t.value)} stroke="var(--color-border)" strokeDasharray="2 4" strokeWidth={0.5} opacity={0.5} />
+          <text x={PAD.left - 6} y={yOf(t.value) + 3} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)">
+            {formatCompactMXN(t.value)}
+          </text>
+        </g>
+      ))}
+
+      {/* Faint area fill under the staircase — gives the "journey" weight */}
+      <path
+        d={(() => {
+          let d = `M ${xOf(points[0].year)} ${yOf(points[0].start)}`
+          for (const p of points) {
+            d += ` L ${xOf(p.year)} ${yOf(p.start)} L ${xOf(p.year)} ${yOf(p.end)} L ${xOfNext(p.year)} ${yOf(p.end)}`
+          }
+          d += ` L ${xOfNext(points[points.length - 1].year)} ${yOf(0)} L ${xOf(points[0].year)} ${yOf(0)} Z`
+          return d
+        })()}
+        fill="var(--color-risk-critical)"
+        fillOpacity={0.05}
+      />
+
+      {/* Stepped path — each year's segment colored by its avg risk */}
+      {points.map((p) => {
+        const x1 = xOf(p.year)
+        const xMid = x1 // step rises at year boundary
+        const xEnd = xOfNext(p.year)
+        const yStart = yOf(p.start)
+        const yEnd = yOf(p.end)
+        const stepColor = colorOfRisk(p.risk)
+        return (
+          <g key={`step-${p.year}`}>
+            {/* Vertical riser (the jump) */}
+            <line x1={xMid} y1={yStart} x2={xMid} y2={yEnd} stroke={stepColor} strokeWidth={2.4} strokeLinecap="square" />
+            {/* Horizontal tread (across the year) */}
+            <line x1={xMid} y1={yEnd} x2={xEnd} y2={yEnd} stroke={stepColor} strokeWidth={2.4} strokeLinecap="square" />
+            <title>{p.year} · +{formatCompactMXN(p.delta)} → {formatCompactMXN(p.end)} cumulative · {Math.round(p.risk * 100)}% risk · {p.count} contract{p.count !== 1 ? 's' : ''}</title>
+          </g>
+        )
+      })}
+
+      {/* Annotation pins — top 3 jumps */}
+      {points.filter((p) => top3Jumps.includes(p.year)).map((p, idx) => {
+        const x = xOf(p.year)
+        const yTop = yOf(p.end)
+        const stepColor = colorOfRisk(p.risk)
+        // Stagger pin Y to avoid overlap
+        const pinY = Math.max(PAD.top + 6, yTop - 18 - idx * 4)
+        return (
+          <g key={`pin-${p.year}`}>
+            <line x1={x} y1={yTop} x2={x} y2={pinY + 6} stroke={stepColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.6} />
+            <circle cx={x} cy={yTop} r={3.2} fill={stepColor} stroke="var(--color-background)" strokeWidth={1} />
+            <text x={x} y={pinY} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={700} fill={stepColor}>
+              +{formatCompactMXN(p.delta)}
+            </text>
+            <text x={x} y={pinY + 9} textAnchor="middle" fontSize={8} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)">
+              {p.year}
+            </text>
+          </g>
+        )
+      })}
+
+      {/* Final cumulative callout — right edge */}
+      {(() => {
+        const last = points[points.length - 1]
+        const x = xOfNext(last.year)
+        const y = yOf(last.end)
+        return (
+          <g>
+            <circle cx={x} cy={y} r={4} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.5} />
+            <text x={x - 6} y={y - 8} textAnchor="end" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
+              {formatCompactMXN(last.end)}
+            </text>
+            <text x={x - 6} y={y + 4} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)">
+              by {last.year}
+            </text>
+          </g>
+        )
+      })()}
+
+      {/* X axis — first / hero / last */}
+      <line x1={PAD.left} x2={W - PAD.right} y1={H - PAD.bottom} y2={H - PAD.bottom} stroke="var(--color-border)" strokeWidth={0.7} />
+      {[minYear, Math.round((minYear + maxYear) / 2), maxYear].map((y, i) => {
+        const x = xOf(y)
+        return (
+          <text
+            key={y}
+            x={x}
+            y={H - PAD.bottom + 14}
+            textAnchor={i === 0 ? 'start' : i === 2 ? 'end' : 'middle'}
+            fontSize={10}
+            fontFamily="var(--font-family-mono)"
+            fill="var(--color-text-muted)"
+          >
+            {y}
+          </text>
+        )
+      })}
+    </svg>
+  )
+}
+
 function ChapterMoney({ timeline, t }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   t: TFunction
 }) {
-  const chartData = timeline.map((item) => ({
-    year: item.year,
-    value: item.total_value,
-    valueM: item.total_value / 1_000_000, // bars in millions for axis legibility
-    risk: (item.avg_risk_score ?? 0) * 100,
-    contracts: item.contract_count,
-  }))
-
   const totalValue = timeline.reduce((s, item) => s + item.total_value, 0)
   const peakYear = timeline.reduce((max, item) => item.total_value > (max.total_value ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
   const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
+  // Concentration ratio — what % of all money flowed in the peak year alone
+  const peakShare = totalValue > 0 ? (peakYear.total_value / totalValue) * 100 : 0
 
   return (
     <ChapterShell id="chapter-money">
@@ -1144,93 +1460,33 @@ function ChapterMoney({ timeline, t }: {
         label={t('chapters.headings.money')}
         title={t('money.heading', { value: formatCompactMXN(totalValue) })}
       />
-      <p className="text-text-muted mb-4 max-w-xl text-sm">
-        {t('money.description')}
+      <p className="text-text-secondary mb-4 max-w-2xl text-sm leading-relaxed">
+        {t('money.staircaseDescription', {
+          defaultValue: 'The journey of money. Each step is a year. Step color is the average risk that year. The taller the step, the larger the year-over-year jump — pinned annotations mark the three largest. The final number is the cumulative total.',
+        })}
       </p>
 
-      {/* Inline anchor stats — replaces two boxed cards (~140px) with a row */}
+      {/* Inline anchor stats — concentration + peak risk year */}
       {peakYear && (
         <div className="flex items-baseline gap-6 mb-4 flex-wrap">
           <div>
-            <span className="text-base font-bold text-text-primary font-mono tabular-nums">{peakYear.year}</span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakByValue')}</span>
-            <span className="text-xs text-text-secondary ml-2 font-mono tabular-nums">{formatCompactMXN(peakYear.total_value)}</span>
+            <span className="text-base font-bold text-text-primary font-mono tabular-nums">{peakShare.toFixed(0)}%</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">flowed in {peakYear.year}</span>
           </div>
           {peakRiskYear && (
             <div>
-              <span className="text-base font-bold font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{peakRiskYear.year}</span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakByRisk')}</span>
-              <span className="text-xs ml-2 font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1)}%</span>
+              <span className="text-base font-bold font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(0)}%</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">peak risk year</span>
+              <span className="text-xs ml-2 font-mono tabular-nums text-text-muted">{peakRiskYear.year}</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Single dual-axis chart: bars = MXN value, line = avg risk %.
-          Replaces the two stacked charts (area + dot-matrix, ~600px total)
-          with one 280px ComposedChart. Same x-axis. Reads in one image. */}
+      {/* Cumulative staircase — replaces the dual-axis ComposedChart with a
+          journey visualization. Each step colored by year's risk. */}
       <div className="bg-background-card border border-border rounded-sm p-4">
-        <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
-          <p className="editorial-label text-text-muted">{t('money.chartValueLabel')} <span className="text-text-muted/60">·</span> {t('money.chartRiskLabel')}</p>
-          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
-            <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--color-risk-critical)', opacity: 0.7 }} />Value (MDP)</span>
-            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ backgroundColor: 'var(--color-accent)' }} />Avg risk %</span>
-          </div>
-        </div>
-        <div style={{ height: 280 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
-              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.35} vertical={false} />
-              <XAxis
-                dataKey="year"
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                axisLine={{ stroke: 'var(--color-border)' }}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="value"
-                orientation="left"
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}B` : `${v.toFixed(0)}M`}
-                width={48}
-              />
-              <YAxis
-                yAxisId="risk"
-                orientation="right"
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v: number) => `${v}%`}
-                domain={[0, 100]}
-                width={36}
-              />
-              {/* OECD high-risk benchmark band */}
-              <ReferenceLine yAxisId="risk" y={15} stroke="var(--color-risk-medium)" strokeDasharray="2 2" strokeWidth={0.8} opacity={0.4} />
-              <ReferenceLine yAxisId="risk" y={40} stroke="var(--color-risk-high)" strokeDasharray="2 2" strokeWidth={0.8} opacity={0.4} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'var(--color-background-card)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 2,
-                  fontSize: 11,
-                  fontFamily: 'var(--font-family-mono)',
-                  color: 'var(--color-text-primary)',
-                }}
-                formatter={(value, name) => {
-                  const v = typeof value === 'number' ? value : Number(value)
-                  if (name === 'valueM') return [formatCompactMXN(v * 1_000_000), 'Value']
-                  if (name === 'risk') return [`${v.toFixed(1)}%`, 'Risk']
-                  return [String(v), String(name)]
-                }}
-                cursor={{ fill: 'var(--color-background-elevated)', opacity: 0.4 }}
-              />
-              <Bar yAxisId="value" dataKey="valueM" fill="var(--color-risk-critical)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
-              <Line yAxisId="risk" type="monotone" dataKey="risk" stroke="var(--color-accent)" strokeWidth={2} dot={{ r: 2.5, fill: 'var(--color-accent)' }} activeDot={{ r: 4 }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+        <MoneyStaircase timeline={timeline} />
         <p className="text-[10px] text-text-muted italic mt-2 leading-relaxed">
           {t('money.riskNote')}
         </p>
@@ -1241,14 +1497,87 @@ function ChapterMoney({ timeline, t }: {
 
 // ─── Chapter 6: The Verdict ─────────────────────────────────────────────────
 
+/**
+ * VerdictGauge — semicircular dial showing the risk score on a 0-100
+ * arc segmented by the four risk levels. The needle pulses subtly to
+ * draw the eye. Compact (160×96) so it floats next to the chapter
+ * heading instead of dominating the layout.
+ */
+function VerdictGauge({ score, color }: { score: number; color: string }) {
+  // score is 0..100
+  const W = 160
+  const H = 92
+  const cx = W / 2
+  const cy = H - 6
+  const R = 64
+  // Convert score to angle (-180° → 0°)
+  const angleRad = ((score / 100) * 180 - 180) * (Math.PI / 180)
+  const needleLen = R - 6
+  const nx = cx + Math.cos(angleRad) * needleLen
+  const ny = cy + Math.sin(angleRad) * needleLen
+
+  // Risk-level arc segments: 0-25 (low), 25-40 (medium), 40-60 (high), 60-100 (critical)
+  const segments = [
+    { from: 0,  to: 25, color: 'var(--color-text-muted)' },
+    { from: 25, to: 40, color: 'var(--color-risk-medium)' },
+    { from: 40, to: 60, color: 'var(--color-risk-high)' },
+    { from: 60, to: 100, color: 'var(--color-risk-critical)' },
+  ]
+
+  // Convert pct to (x,y) on the arc
+  const arcPoint = (pct: number) => {
+    const a = (pct / 100) * 180 - 180
+    const r = a * (Math.PI / 180)
+    return { x: cx + Math.cos(r) * R, y: cy + Math.sin(r) * R }
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-[160px] h-auto" role="img" aria-label={`Risk score gauge: ${score.toFixed(0)} out of 100`}>
+      {/* Arc segments */}
+      {segments.map((s) => {
+        const p1 = arcPoint(s.from)
+        const p2 = arcPoint(s.to)
+        const largeArc = s.to - s.from > 50 ? 1 : 0
+        return (
+          <path
+            key={`seg-${s.from}`}
+            d={`M ${p1.x} ${p1.y} A ${R} ${R} 0 ${largeArc} 1 ${p2.x} ${p2.y}`}
+            stroke={s.color}
+            strokeWidth={6}
+            fill="none"
+            opacity={0.85}
+            strokeLinecap="butt"
+          />
+        )
+      })}
+      {/* Needle */}
+      <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth={2.4} strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={5} fill="var(--color-background-card)" stroke={color} strokeWidth={2} />
+      {/* Score value */}
+      <text x={cx} y={cy - R - 8} textAnchor="middle" fontSize={20} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} fill={color}>
+        {score.toFixed(0)}
+      </text>
+    </svg>
+  )
+}
+
 function ChapterVerdict({
   vendorId,
   vendor,
+  coBidderCount,
   aria,
   t,
 }: {
   vendorId: number
-  vendor: { name: string; avg_risk_score?: number; in_ground_truth?: boolean }
+  vendor: {
+    name: string
+    avg_risk_score?: number
+    in_ground_truth?: boolean
+    total_institutions: number
+    sectors_count: number
+    total_contracts: number
+  }
+  coBidderCount: number
   aria: {
     ips_final: number
     ips_tier: number
@@ -1266,77 +1595,126 @@ function ChapterVerdict({
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const riskColor = RISK_DOT_COLORS[riskLevel]
   const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
+  const score100 = (vendor.avg_risk_score ?? 0) * 100
 
-  // Memo: clamp to first 220 words via CSS line-clamp + expandable disclosure.
-  // Was rendering full memo (700–1500 words) inline → 2,400+px chapter height.
   const [memoExpanded, setMemoExpanded] = useState(false)
+
+  // The Finding — declarative italic Playfair pullquote, level-dependent
+  const finding =
+    riskLevel === 'critical' ? t('verdict.finding.critical', { defaultValue: 'The data warrants urgent investigation.' })
+    : riskLevel === 'high'   ? t('verdict.finding.high',     { defaultValue: 'Statistical signals warrant scrutiny.' })
+    : riskLevel === 'medium' ? t('verdict.finding.medium',   { defaultValue: 'Anomalies present. Verification recommended.' })
+    : t('verdict.finding.low', { defaultValue: 'No standout signals against sector baseline.' })
+
+  // Evidence rows — assemble the case
+  type EvidenceRow = { label: string; value: React.ReactNode; weight: 'high' | 'medium' | 'low' }
+  const evidence: EvidenceRow[] = [
+    {
+      label: t('verdict.evidence.signal', { defaultValue: 'Statistical signal' }),
+      value: <span><span className="font-mono tabular-nums" style={{ color: riskColor }}>{score100.toFixed(1)} / 100</span> <span className="text-text-muted">({riskLevel})</span></span>,
+      weight: riskLevel === 'critical' || riskLevel === 'high' ? 'high' : 'medium',
+    },
+  ]
+  if (patternMeta && aria?.primary_pattern) {
+    evidence.push({
+      label: t('verdict.evidence.pattern', { defaultValue: 'Pattern detected' }),
+      value: <span style={{ color: patternMeta.color }}>{aria.primary_pattern} · <span className="text-text-primary">{patternMeta.label}</span></span>,
+      weight: 'high',
+    })
+  }
+  if (aria) {
+    evidence.push({
+      label: t('verdict.evidence.aria', { defaultValue: 'ARIA classification' }),
+      value: <span className="text-text-primary">Tier {aria.ips_tier} · IPS {(aria.ips_final * 100).toFixed(0)}</span>,
+      weight: aria.ips_tier <= 2 ? 'high' : 'medium',
+    })
+  }
+  if (aria?.is_efos_definitivo || aria?.is_sfp_sanctioned || aria?.in_ground_truth) {
+    const flags: string[] = []
+    if (aria.is_efos_definitivo) flags.push('EFOS')
+    if (aria.is_sfp_sanctioned) flags.push('SFP')
+    if (aria.in_ground_truth) flags.push(t('verdict.groundTruthLabel', { defaultValue: 'GT' }))
+    evidence.push({
+      label: t('verdict.evidence.external', { defaultValue: 'External validation' }),
+      value: <span className="text-[color:var(--color-accent)]">{flags.join(' · ')}</span>,
+      weight: 'high',
+    })
+  }
+  evidence.push({
+    label: t('verdict.evidence.network', { defaultValue: 'Network' }),
+    value: <span className="text-text-primary">{coBidderCount} co-bidder{coBidderCount === 1 ? '' : 's'} · {vendor.total_institutions} inst. · {vendor.sectors_count} sector{vendor.sectors_count === 1 ? '' : 's'}</span>,
+    weight: 'low',
+  })
 
   return (
     <ChapterShell id="chapter-verdict">
       <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
-      <p className="text-text-muted mb-4 max-w-xl text-sm">
-        {t('verdict.description')}
-      </p>
 
-      {/* Inline verdict header — score + level + ARIA, no oversized score card */}
-      <div className="flex items-baseline justify-between gap-4 flex-wrap mb-4 pb-3 border-b border-border">
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <span className="font-mono text-2xl font-bold tabular-nums" style={{ color: riskColor }}>
-            {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
-          </span>
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('verdict.riskIndicatorScore')}</span>
-          <span
-            className="inline-block px-2.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest"
-            style={{ backgroundColor: riskColor + '22', color: riskColor, border: `1px solid ${riskColor}44` }}
-          >
-            {riskLevel}
-          </span>
+      {/* Verdict header — gauge anchored top-right, question on the left.
+          Closing-argument format: opens with the question being asked. */}
+      <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
+        <div className="flex-1 min-w-[280px]">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
+            {t('verdict.theQuestion', { defaultValue: 'The Question' })}
+          </p>
+          <p className="text-text-primary text-base leading-snug max-w-md">
+            {t('verdict.questionText', {
+              defaultValue: "Does this vendor's procurement record warrant investigation?",
+            })}
+          </p>
         </div>
-        {aria && (
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {t('verdict.ariaIps', { ips: (aria.ips_final * 100).toFixed(0), tier: aria.ips_tier })}
-          </span>
-        )}
+        <div className="flex-shrink-0">
+          <VerdictGauge score={score100} color={riskColor} />
+        </div>
       </div>
 
-      {/* External flags — single inline row */}
-      {aria && (aria.is_efos_definitivo || aria.is_sfp_sanctioned || aria.in_ground_truth) && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {aria.is_efos_definitivo && (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30 flex items-center gap-1">
-              <Shield className="w-2.5 h-2.5" /> {t('verdict.efosLabel')}
-            </span>
-          )}
-          {aria.is_sfp_sanctioned && (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-risk-high)]/10 text-[color:var(--color-risk-high)] border border-[color:var(--color-risk-high)]/30 flex items-center gap-1">
-              <Gavel className="w-2.5 h-2.5" /> {t('verdict.sfpLabel')}
-            </span>
-          )}
-          {aria.in_ground_truth && (
-            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30 flex items-center gap-1">
-              <Zap className="w-2.5 h-2.5" /> {t('verdict.groundTruthLabel')}
-            </span>
-          )}
-        </div>
-      )}
+      {/* The Evidence — prosecutorial bullet list */}
+      <div className="mb-5">
+        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+          {t('verdict.theEvidence', { defaultValue: 'The Evidence' })}
+        </p>
+        <ul className="space-y-1.5">
+          {evidence.map((row, i) => (
+            <li
+              key={i}
+              className="grid grid-cols-[150px_1fr] gap-3 items-baseline border-l-2 pl-3 py-1"
+              style={{
+                borderLeftColor: row.weight === 'high' ? riskColor + '99' : row.weight === 'medium' ? 'var(--color-border)' : 'transparent',
+              }}
+            >
+              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">{row.label}</span>
+              <span className="text-xs">{row.value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      {/* Pattern card — compact one-liner */}
-      {patternMeta && aria?.primary_pattern && (
-        <div className="rounded-sm border px-3 py-2 mb-4 flex items-center gap-3 flex-wrap" style={{ backgroundColor: patternMeta.bg, borderColor: patternMeta.color + '44' }}>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: patternMeta.color }}>
-            {aria.primary_pattern}
-          </span>
-          <span className="text-sm font-bold text-text-primary">{patternMeta.label}</span>
-          <span className="text-text-muted">·</span>
-          <span className="text-text-secondary text-xs leading-relaxed flex-1 min-w-[280px]">{patternMeta.description}</span>
-        </div>
-      )}
+      {/* The Finding — declarative italic pullquote, the chapter's emotional anchor */}
+      <div className="mb-5">
+        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+          {t('verdict.theFinding', { defaultValue: 'The Finding' })}
+        </p>
+        <p
+          className="text-text-primary leading-snug max-w-2xl"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(1.1rem, 1.8vw, 1.35rem)',
+            borderLeft: `2px solid ${riskColor}`,
+            paddingLeft: '0.85rem',
+          }}
+        >
+          {finding}
+        </p>
+      </div>
 
-      {/* ARIA memo — clamped with disclosure (was unbounded full render) */}
+      {/* ARIA memo — clamped with disclosure */}
       {aria?.memo_text && (
-        <div className="border-l-2 border-[var(--color-accent)] pl-3 mb-4">
-          <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
-            <p className="editorial-label text-text-muted">{t('verdict.ariaMemoTitle')}</p>
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+              {t('verdict.ariaMemoTitle', { defaultValue: 'ARIA Intelligence Memo' })}
+            </p>
             <button
               onClick={() => setMemoExpanded((v) => !v)}
               className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
@@ -1344,80 +1722,84 @@ function ChapterVerdict({
               {memoExpanded ? '— Collapse' : '+ Read full memo'}
             </button>
           </div>
-          <div
-            className={cn(
-              'text-text-secondary text-xs leading-relaxed',
-              !memoExpanded && 'line-clamp-4'
-            )}
-            style={!memoExpanded ? { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
-          >
-            {memoExpanded ? (
-              aria.memo_text.split('\n').map((line, i) => {
-                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-xs mt-2">{line.slice(4)}</h4>
-                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-sm mt-3">{line.slice(3)}</h3>
-                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-base mt-3">{line.slice(2)}</h2>
-                if (line.trim() === '') return <div key={i} className="h-1" />
-                if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-                  const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
-                  const isSeparator = cells.every((c) => /^[-: ]+$/.test(c))
-                  if (isSeparator) return null
+          <div className="border-l-2 border-[var(--color-accent)] pl-3">
+            <div
+              className={cn('text-text-secondary text-xs leading-relaxed', !memoExpanded && 'line-clamp-4')}
+              style={!memoExpanded ? { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
+            >
+              {memoExpanded ? (
+                aria.memo_text.split('\n').map((line, i) => {
+                  if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-xs mt-2">{line.slice(4)}</h4>
+                  if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-sm mt-3">{line.slice(3)}</h3>
+                  if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-base mt-3">{line.slice(2)}</h2>
+                  if (line.trim() === '') return <div key={i} className="h-1" />
+                  if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+                    const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
+                    const isSeparator = cells.every((c) => /^[-: ]+$/.test(c))
+                    if (isSeparator) return null
+                    return (
+                      <div key={i} className="flex gap-2 text-[11px] my-1">
+                        {cells.map((cell, ci) => (
+                          <span key={ci} className={cn('flex-1 px-2 py-0.5 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>{cell.trim()}</span>
+                        ))}
+                      </div>
+                    )
+                  }
+                  const parts = line.split(/\*\*(.+?)\*\*/g)
                   return (
-                    <div key={i} className="flex gap-2 text-[11px] my-1">
-                      {cells.map((cell, ci) => (
-                        <span key={ci} className={cn('flex-1 px-2 py-0.5 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>{cell.trim()}</span>
-                      ))}
-                    </div>
+                    <p key={i} className="my-0.5">
+                      {parts.map((part, j) => (j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part))}
+                    </p>
                   )
-                }
-                const parts = line.split(/\*\*(.+?)\*\*/g)
-                return (
-                  <p key={i} className="my-0.5">
-                    {parts.map((part, j) => (j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part))}
-                  </p>
-                )
-              })
-            ) : (
-              aria.memo_text.replace(/[#*]/g, '').slice(0, 380)
-            )}
+                })
+              ) : (
+                aria.memo_text.replace(/[#*]/g, '').slice(0, 380)
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Compact action row — was 3 large stacked buttons */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          onClick={() => navigate(`/vendors/${vendorId}`)}
-          className="inline-flex items-center gap-1.5 bg-[var(--color-risk-critical)] hover:opacity-90 text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-opacity"
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          {t('verdict.fullVendorProfile')}
-        </button>
-        <Link
-          to="/workspace"
-          className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
-        >
-          <BookmarkPlus className="w-3.5 h-3.5" />
-          {t('verdict.addToWorkspace')}
-        </Link>
-        <button
-          onClick={() => {
-            const prev = document.title
-            document.title = `RUBLI — ${vendor.name} — Investigation Thread`
-            window.print()
-            window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
-          }}
-          className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
-        >
-          <Download className="w-3.5 h-3.5" />
-          {t('verdict.exportPdf')}
-        </button>
-        <Link
-          to="/methodology"
-          className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
-        >
-          <FileText className="w-3 h-3" />
-          {t('verdict.methodologyLink')}
-        </Link>
+      {/* The Next Step — action row, framed prosecutorially */}
+      <div>
+        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+          {t('verdict.theNextStep', { defaultValue: 'The Next Step' })}
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => navigate(`/vendors/${vendorId}`)}
+            className="inline-flex items-center gap-1.5 bg-[var(--color-risk-critical)] hover:opacity-90 text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-opacity"
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            {t('verdict.fullVendorProfile')}
+          </button>
+          <Link
+            to="/workspace"
+            className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
+          >
+            <BookmarkPlus className="w-3.5 h-3.5" />
+            {t('verdict.addToWorkspace')}
+          </Link>
+          <button
+            onClick={() => {
+              const prev = document.title
+              document.title = `RUBLI — ${vendor.name} — Investigation Thread`
+              window.print()
+              window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
+            }}
+            className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
+          >
+            <Download className="w-3.5 h-3.5" />
+            {t('verdict.exportPdf')}
+          </button>
+          <Link
+            to="/methodology"
+            className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
+          >
+            <FileText className="w-3 h-3" />
+            {t('verdict.methodologyLink')}
+          </Link>
+        </div>
       </div>
     </ChapterShell>
   )
@@ -1733,6 +2115,7 @@ export default function RedThread() {
             name: vendor.name,
             total_institutions: vendor.total_institutions,
             sectors_count: vendor.sectors_count,
+            primary_sector_name: vendor.primary_sector_name ?? aria?.primary_sector_name ?? null,
           }}
           coBidders={coBidders?.co_bidders ?? null}
           t={t}
@@ -1758,7 +2141,11 @@ export default function RedThread() {
             name: vendor.name,
             avg_risk_score: vendor.avg_risk_score,
             in_ground_truth: aria?.in_ground_truth,
+            total_institutions: vendor.total_institutions,
+            sectors_count: vendor.sectors_count,
+            total_contracts: vendor.total_contracts,
           }}
+          coBidderCount={coBidders?.co_bidders?.length ?? 0}
           aria={aria ? {
             ips_final: aria.ips_final,
             ips_tier: aria.ips_tier,
