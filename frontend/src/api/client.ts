@@ -229,6 +229,24 @@ if (WRITE_KEY) {
   })
 }
 
+// JWT auth interceptor — attaches the user's JWT (rubli_jwt in localStorage)
+// to every request as `Authorization: Bearer <token>`. Backend endpoints that
+// accept JWT (workspace_dossier, watchlist after the require_user_or_write_key
+// switch) will now authenticate signed-in users transparently. Without this,
+// signed-in users hit 401 on every personal-data endpoint because the api
+// client never sent their token.
+api.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem('rubli_jwt')
+    if (token && !config.headers['Authorization']) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+  } catch {
+    // localStorage unavailable (SSR / private mode) — skip silently.
+  }
+  return config
+})
+
 // Name-field normaliser — converts ALL-CAPS vendor/institution names to title case.
 // Applied once here so every component gets properly cased strings automatically.
 const NAME_FIELDS = new Set(['vendor_name', 'institution_name'])

@@ -41,6 +41,42 @@ def require_write_key(x_rubli_key: str = Header(default="")) -> None:
             detail="Invalid or missing API key. Set X-Rubli-Key header.",
         )
 
+
+def require_user_or_write_key(
+    x_rubli_key: str = Header(default=""),
+    authorization: str = Header(default=""),
+) -> None:
+    """Accept either a valid X-Rubli-Key (admin/legacy) OR a valid JWT
+    Bearer token (signed-in user). Used by /watchlist endpoints which
+    were originally admin-only but now back the per-user Workspace UI.
+
+    The watchlist_items table is currently global (no user_id column),
+    so any signed-in user gets shared access. A future migration would
+    scope by user; for now, JWT auth at least lets the Workspace page
+    function for authenticated visitors instead of returning 401 they
+    can't satisfy.
+    """
+    # Path 1 — admin/legacy via X-Rubli-Key
+    if WRITE_API_KEY and x_rubli_key == WRITE_API_KEY:
+        return
+    if not WRITE_API_KEY and _IS_DEV:
+        return  # Dev mode: bypass
+
+    # Path 2 — valid JWT
+    if authorization.startswith("Bearer "):
+        token = authorization[len("Bearer "):]
+        try:
+            from .middleware.auth_jwt import _decode_token
+            _decode_token(token)
+            return
+        except HTTPException:
+            pass  # fall through to 401
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Authentication required. Sign in or provide an X-Rubli-Key.",
+    )
+
 # Database path - configurable via env var, defaults to RUBLI_NORMALIZED.db
 DB_PATH = Path(os.environ.get("DATABASE_PATH", str(Path(__file__).parent.parent / "RUBLI_NORMALIZED.db")))
 

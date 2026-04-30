@@ -12,7 +12,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic import BaseModel, Field
 
-from ..dependencies import get_db, require_write_key
+from ..dependencies import get_db, require_user_or_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +132,7 @@ def _ensure_tables(conn: sqlite3.Connection):
 # =============================================================================
 
 @router.get("", response_model=List[FolderResponse])
-def list_folders(_: None = Depends(require_write_key)):
+def list_folders(_: None = Depends(require_user_or_write_key)):
     """List all investigation folders."""
     with get_db() as conn:
         _ensure_tables(conn)
@@ -158,7 +158,7 @@ def list_folders(_: None = Depends(require_write_key)):
 
 
 @router.post("", response_model=FolderResponse, status_code=201)
-def create_folder(body: FolderCreate, _: None = Depends(require_write_key)):
+def create_folder(body: FolderCreate, _: None = Depends(require_user_or_write_key)):
     """Create a new investigation folder."""
     with get_db() as conn:
         _ensure_tables(conn)
@@ -183,7 +183,7 @@ def create_folder(body: FolderCreate, _: None = Depends(require_write_key)):
 def update_folder(
     body: FolderUpdate,
     folder_id: int = Path(..., description="Folder ID"),
-    _: None = Depends(require_write_key),
+    _: None = Depends(require_user_or_write_key),
 ):
     """Update an investigation folder."""
     with get_db() as conn:
@@ -229,7 +229,7 @@ def update_folder(
 
 
 @router.delete("/{folder_id}")
-def delete_folder(folder_id: int = Path(..., description="Folder ID"), _: None = Depends(require_write_key)):
+def delete_folder(folder_id: int = Path(..., description="Folder ID"), _: None = Depends(require_user_or_write_key)):
     """Delete an investigation folder (items are unlinked, not deleted)."""
     with get_db() as conn:
         _ensure_tables(conn)
@@ -244,7 +244,7 @@ def delete_folder(folder_id: int = Path(..., description="Folder ID"), _: None =
 
 
 @router.get("/export/{folder_id}", response_model=FolderExportResponse)
-def export_folder(folder_id: int = Path(..., description="Folder ID"), _: None = Depends(require_write_key)):
+def export_folder(folder_id: int = Path(..., description="Folder ID"), _: None = Depends(require_user_or_write_key)):
     """Export folder watchlist items as a JSON dossier."""
     with get_db() as conn:
         _ensure_tables(conn)

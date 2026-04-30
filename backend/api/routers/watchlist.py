@@ -12,7 +12,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 
-from ..dependencies import get_db, require_write_key
+from ..dependencies import get_db, require_user_or_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -216,7 +216,7 @@ def list_watchlist_items(
     item_type: Optional[str] = Query(None, description="Filter by type"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     folder_id: Optional[int] = Query(None, description="Filter by investigation folder ID"),
-    _: None = Depends(require_write_key),
+    _: None = Depends(require_user_or_write_key),
 ):
     """
     List all watchlist items.
@@ -335,7 +335,7 @@ def list_watchlist_items(
 
 
 @router.post("", response_model=WatchlistItem)
-def add_watchlist_item(item: WatchlistItemCreate, _: None = Depends(require_write_key)):
+def add_watchlist_item(item: WatchlistItemCreate, _: None = Depends(require_user_or_write_key)):
     """
     Add an item to the watchlist.
 
@@ -432,7 +432,7 @@ def _invalidate_watchlist_stats_cache():
 
 
 @router.get("/stats", response_model=WatchlistStatsResponse)
-def get_watchlist_stats(_: None = Depends(require_write_key)):
+def get_watchlist_stats(_: None = Depends(require_user_or_write_key)):
     """Get watchlist statistics."""
     global _watchlist_stats_cache, _watchlist_stats_cache_ts
 
@@ -476,7 +476,7 @@ def get_watchlist_stats(_: None = Depends(require_write_key)):
 
 
 @router.get("/alerts/check")
-def check_alerts(_: None = Depends(require_write_key)):
+def check_alerts(_: None = Depends(require_user_or_write_key)):
     """
     Return watchlist items whose current risk score has reached or exceeded
     their configured alert threshold (4.3C Alert System).
@@ -534,7 +534,7 @@ def check_alerts(_: None = Depends(require_write_key)):
 
 
 @router.get("/{watchlist_id}", response_model=WatchlistItem)
-def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
+def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_user_or_write_key)):
     """Get a specific watchlist item."""
     try:
         with get_db() as conn:
@@ -573,7 +573,7 @@ def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item
 
 
 @router.get("/{watchlist_id}/changes")
-def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
+def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_user_or_write_key)):
     """
     Returns current risk score vs score at creation, and recent contract activity.
 
@@ -640,7 +640,7 @@ def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist i
 def update_watchlist_item(
     watchlist_id: int = Path(..., description="Watchlist item ID"),
     update: WatchlistItemUpdate = None,
-    _: None = Depends(require_write_key),
+    _: None = Depends(require_user_or_write_key),
 ):
     """Update a watchlist item."""
     try:
@@ -725,7 +725,7 @@ def update_watchlist_item(
 
 
 @router.delete("/{watchlist_id}")
-def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
+def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_user_or_write_key)):
     """Remove an item from the watchlist."""
     try:
         with get_db() as conn:
