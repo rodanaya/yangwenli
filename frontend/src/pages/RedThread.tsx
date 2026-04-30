@@ -123,22 +123,23 @@ function RedThreadChapter({ label, title, id }: { label: string; title: React.Re
 
 function ChapterDivider() {
   return (
-    <div className="flex items-center gap-4 my-8">
+    <div className="flex items-center gap-3 my-3">
       <div className="h-px flex-1 bg-background-elevated" />
-      <div className="w-1 h-1 rounded-full bg-[var(--color-accent)] opacity-60" />
+      <div className="w-0.5 h-0.5 rounded-full bg-[var(--color-accent)] opacity-50" />
       <div className="h-px flex-1 bg-background-elevated" />
     </div>
   )
 }
 
 /**
- * RedThreadShell — chapter rhythm primitive (Phase 1 redesign).
- * Every chapter conforms to ≤640px total height: header + 280px viz + support.
- * Eliminates the inconsistent py-10/py-12 + max-w-4xl/3xl drift across chapters.
+ * ChapterShell — chapter rhythm primitive. Tightened to py-5 from py-8
+ * after user feedback ("a lot of spaces between chapters still"). With
+ * ChapterDivider at my-3 the inter-chapter gap is now ~64px content-edge
+ * to content-edge (was ~128px).
  */
 function ChapterShell({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="py-8 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id={id} className="py-5 px-4 sm:px-8 max-w-4xl mx-auto">
       {children}
     </section>
   )
@@ -327,29 +328,33 @@ function bucketOfRisk(r: number): EraBucket {
 }
 
 /**
- * TimelineSkyline — single-canvas chronology. Replaces the prior
- * dot-strip + year-box duplication with one SVG that surfaces THREE
- * things at once: chronology (bar X-position), value (bar height,
- * log scale), and risk (bar color + auto-detected era backgrounds).
+ * TimelineHourglass — dual-channel mirror through the year axis.
  *
- * Innovation:
- *   • ERA SEGMENTATION — running-bucket partitioning of the timeline
- *     into stable / watch / alert eras, rendered as faint background
- *     bands with type labels overhead. Surfaces "regime change" as
- *     visual structure, not an inferred reading.
- *   • HERO CALLOUT — argmax(value × risk) gets a flag floating above
- *     its bar with year / value / risk / contract count inline.
- *   • SINGLE CANVAS — bars replace both dots and year-cards. Numerical
- *     detail surfaces via tooltip (mouseover) or via the hero flag for
- *     the year that matters most.
+ * ABOVE the centerline: contract-count waveform (neutral, muted).
+ * BELOW the centerline: log(value) waveform (colored by risk).
+ *
+ * The two channels DELIBERATELY share an x-axis so a year with one
+ * mega-contract creates a pinch (tiny count above, huge value bar
+ * below) — exposing the volume/value mismatch that's the signature
+ * of threshold-busting and ghost-vendor patterns. A boring vendor
+ * shows two roughly proportional channels; a suspect vendor's
+ * channels diverge dramatically at the anomaly years.
+ *
+ * Era backgrounds extend across the full height (count + value)
+ * so risk regimes are visible in both channels. Hero year (max
+ * value × risk) gets a callout flag with full inline data.
  */
-function TimelineSkyline({
+function TimelineHourglass({
   timeline,
   eraLabels,
+  countLabel,
+  valueLabel,
   className,
 }: {
   timeline: TimelineItem[]
   eraLabels: { stable: string; watch: string; alert: string }
+  countLabel: string
+  valueLabel: string
   className?: string
 }) {
   if (timeline.length === 0) return null
@@ -359,54 +364,57 @@ function TimelineSkyline({
   const maxYear = sorted[sorted.length - 1].year
   const yearSpan = Math.max(1, maxYear - minYear)
   const maxValue = Math.max(...sorted.map((t) => t.total_value), 1)
-  const logMax = Math.log(maxValue + 1)
+  const maxCount = Math.max(...sorted.map((t) => t.contract_count), 1)
+  const logMaxValue = Math.log(maxValue + 1)
+  const logMaxCount = Math.log(maxCount + 1)
 
-  // Hero year — argmax(value × risk). Falls back to argmax(value) if
-  // every year has zero risk (defensive — shouldn't happen for ARIA leads).
+  // Hero year — argmax(value × risk)
   const hero = sorted.reduce((max, item) => {
     const score = item.total_value * (item.avg_risk_score ?? 0)
     const maxScore = max.total_value * (max.avg_risk_score ?? 0)
     return score > maxScore ? item : max
   }, sorted[0])
 
-  // Era partitioning — greedy run-length over risk bucket
-  type Era = { startYear: number; endYear: number; bucket: EraBucket; n: number; totalValue: number }
+  // Era partitioning — same algorithm as before but bands now span
+  // count + value channels instead of just one chart area.
+  type Era = { startYear: number; endYear: number; bucket: EraBucket }
   const eras: Era[] = []
   for (const item of sorted) {
     const b = bucketOfRisk(item.avg_risk_score ?? 0)
     const last = eras[eras.length - 1]
     if (last && last.bucket === b) {
       last.endYear = item.year
-      last.n += item.contract_count
-      last.totalValue += item.total_value
     } else {
-      eras.push({ startYear: item.year, endYear: item.year, bucket: b, n: item.contract_count, totalValue: item.total_value })
+      eras.push({ startYear: item.year, endYear: item.year, bucket: b })
     }
   }
 
   // Layout
   const W = 720
-  const H = 220
-  const PAD = { top: 44, bottom: 28, left: 8, right: 8 }
-  const innerH = H - PAD.top - PAD.bottom
+  const H = 240
+  const PAD = { left: 8, right: 8 }
+  // Asymmetric channels: count gets ~38% (less story), value gets ~62%
+  const COUNT_AREA = 76
+  const VALUE_AREA = 124
+  const CENTER_BAND = 18 // for axis ticks/labels
+  const Y_TOP = 8
+  const Y_CENTER = Y_TOP + COUNT_AREA + CENTER_BAND / 2
+  const Y_BASE_VALUE = Y_CENTER + CENTER_BAND / 2
   const innerW = W - PAD.left - PAD.right
 
   const xOf = (year: number) => PAD.left + ((year - minYear) / yearSpan) * innerW
-  const heightOf = (value: number) => Math.max(2, (Math.log(value + 1) / logMax) * innerH * 0.88)
-  const colorOf = (risk: number) => {
-    const level = getRiskLevel(risk)
-    return RISK_DOT_COLORS[level]
-  }
+  const countH = (n: number) => Math.max(2, (Math.log(n + 1) / logMaxCount) * (COUNT_AREA - 12))
+  const valueH = (v: number) => Math.max(2, (Math.log(v + 1) / logMaxValue) * (VALUE_AREA - 12))
+  const colorOf = (risk: number) => RISK_DOT_COLORS[getRiskLevel(risk)]
 
-  // Each year column gets a half-step buffer so era bands tile cleanly
   const halfStep = innerW / yearSpan / 2
 
-  // Year axis: first, hero, last (deduplicated)
+  // Year axis: minYear / hero / maxYear
   const axisYears = Array.from(new Set([minYear, hero.year, maxYear])).sort((a, b) => a - b)
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={className ?? 'w-full h-auto'} role="img" aria-label="Timeline skyline">
-      {/* Era background bands */}
+    <svg viewBox={`0 0 ${W} ${H}`} className={className ?? 'w-full h-auto'} role="img" aria-label="Timeline hourglass — count and value channels">
+      {/* Era background bands — span full height across both channels */}
       {eras.map((era, i) => {
         const isFirst = i === 0
         const isLast = i === eras.length - 1
@@ -416,24 +424,48 @@ function TimelineSkyline({
           <rect
             key={`era-bg-${i}`}
             x={x1}
-            y={PAD.top}
+            y={Y_TOP - 4}
             width={x2 - x1}
-            height={innerH}
+            height={H - Y_TOP}
             fill={ERA_BG[era.bucket]}
           />
         )
       })}
 
-      {/* Era labels at top — only label runs of 2+ years to avoid clutter */}
+      {/* Channel labels — left margin, vertical writing axes */}
+      <text
+        x={PAD.left + 4}
+        y={Y_TOP + 10}
+        fontSize={8.5}
+        fontFamily="var(--font-family-mono)"
+        fill="var(--color-text-muted)"
+        opacity={0.7}
+        letterSpacing={0.5}
+      >
+        ▲ {countLabel.toUpperCase()}
+      </text>
+      <text
+        x={PAD.left + 4}
+        y={Y_BASE_VALUE + 10}
+        fontSize={8.5}
+        fontFamily="var(--font-family-mono)"
+        fill="var(--color-text-muted)"
+        opacity={0.7}
+        letterSpacing={0.5}
+      >
+        ▼ {valueLabel.toUpperCase()}
+      </text>
+
+      {/* Era ticks at the top edge */}
       {eras.filter((e) => e.endYear - e.startYear >= 1 || eras.length <= 3).map((era, i) => {
         const cx = (xOf(era.startYear) + xOf(era.endYear)) / 2
         return (
           <text
             key={`era-lbl-${i}`}
             x={cx}
-            y={PAD.top - 18}
+            y={Y_TOP - 1}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={8}
             fontFamily="var(--font-family-mono)"
             fill={ERA_LABEL_COLOR[era.bucket]}
             fontWeight={600}
@@ -444,125 +476,97 @@ function TimelineSkyline({
         )
       })}
 
-      {/* Era extent ticks */}
-      {eras.map((era, i) => {
-        const cx = (xOf(era.startYear) + xOf(era.endYear)) / 2
-        const w = Math.max(20, xOf(era.endYear) - xOf(era.startYear))
-        return (
-          <line
-            key={`era-tick-${i}`}
-            x1={cx - w / 2}
-            x2={cx + w / 2}
-            y1={PAD.top - 8}
-            y2={PAD.top - 8}
-            stroke={ERA_LABEL_COLOR[era.bucket]}
-            strokeWidth={1.2}
-            opacity={0.55}
-          />
-        )
-      })}
+      {/* Centerline + year axis ticks */}
+      <line x1={0} x2={W} y1={Y_CENTER} y2={Y_CENTER} stroke="var(--color-border)" strokeWidth={0.7} />
 
-      {/* Baseline */}
-      <line
-        x1={0}
-        x2={W}
-        y1={PAD.top + innerH}
-        y2={PAD.top + innerH}
-        stroke="var(--color-border)"
-        strokeWidth={0.8}
-      />
-
-      {/* Skyscraper bars */}
+      {/* Bars — count above, value below */}
       {sorted.map((item) => {
         const x = xOf(item.year)
-        const h = heightOf(item.total_value)
-        const y = PAD.top + innerH - h
         const isHero = item.year === hero.year
-        const barW = isHero ? 9 : 5
+        const barW = isHero ? 8 : 5
+        const cH = countH(item.contract_count)
+        const vH = valueH(item.total_value)
         const risk = item.avg_risk_score ?? 0
-        const color = colorOf(risk)
+        const valueColor = colorOf(risk)
         return (
           <g key={item.year}>
+            {/* Count bar (above, muted gray) */}
             <rect
               x={x - barW / 2}
-              y={y}
+              y={Y_CENTER - CENTER_BAND / 2 - cH}
               width={barW}
-              height={h}
+              height={cH}
               rx={1}
-              fill={color}
-              opacity={isHero ? 1 : 0.78}
-              style={isHero ? { filter: `drop-shadow(0 0 4px ${color}aa)` } : undefined}
-            />
-            {/* Contract-count tick under the bar */}
-            <circle
-              cx={x}
-              cy={PAD.top + innerH + 4}
-              r={Math.min(3.2, 1.2 + Math.log(item.contract_count + 1) * 0.7)}
               fill="var(--color-text-muted)"
-              opacity={0.55}
+              opacity={isHero ? 0.85 : 0.55}
+            />
+            {/* Value bar (below, risk-colored) */}
+            <rect
+              x={x - barW / 2}
+              y={Y_BASE_VALUE}
+              width={barW}
+              height={vH}
+              rx={1}
+              fill={valueColor}
+              opacity={isHero ? 1 : 0.82}
+              style={isHero ? { filter: `drop-shadow(0 0 5px ${valueColor}aa)` } : undefined}
             />
             <title>
-              {item.year} · {formatCompactMXN(item.total_value)} · {item.contract_count} contract{item.contract_count !== 1 ? 's' : ''} · {Math.round(risk * 100)}% risk
+              {item.year} · {item.contract_count} contract{item.contract_count !== 1 ? 's' : ''} · {formatCompactMXN(item.total_value)} · {Math.round(risk * 100)}% risk
             </title>
           </g>
         )
       })}
 
-      {/* Hero callout flag */}
+      {/* Hero callout flag — anchored to the bottom of the value bar */}
       {(() => {
         const x = xOf(hero.year)
-        const h = heightOf(hero.total_value)
-        const barTop = PAD.top + innerH - h
-        const flagW = 152
+        const vH = valueH(hero.total_value)
+        const flagW = 156
         const flagH = 34
         const flagX = Math.min(W - flagW - 4, Math.max(4, x - flagW / 2))
+        const flagY = Y_BASE_VALUE + vH + 6
         const heroColor = colorOf(hero.avg_risk_score ?? 0)
+        // If the flag overflows the SVG, anchor it above the count bar instead
+        if (flagY + flagH > H - 4) {
+          const cH = countH(hero.contract_count)
+          const altY = Y_CENTER - CENTER_BAND / 2 - cH - flagH - 6
+          return (
+            <g>
+              <line
+                x1={x} y1={Y_CENTER - CENTER_BAND / 2 - cH}
+                x2={x} y2={altY + flagH}
+                stroke={heroColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.55}
+              />
+              <rect x={flagX} y={altY} width={flagW} height={flagH} rx={2} fill="var(--color-background-card)" stroke={heroColor} strokeWidth={1} />
+              <text x={flagX + 8} y={altY + 14} fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
+                {hero.year} · {formatCompactMXN(hero.total_value)}
+              </text>
+              <text x={flagX + 8} y={altY + 26} fontSize={9} fontFamily="var(--font-family-mono)" fill={heroColor}>
+                {Math.round((hero.avg_risk_score ?? 0) * 100)}% risk · {hero.contract_count} contract{hero.contract_count !== 1 ? 's' : ''}
+              </text>
+            </g>
+          )
+        }
         return (
           <g>
             <line
-              x1={x}
-              y1={barTop}
-              x2={x}
-              y2={4 + flagH}
-              stroke={heroColor}
-              strokeWidth={0.6}
-              strokeDasharray="2 2"
-              opacity={0.55}
+              x1={x} y1={Y_BASE_VALUE + vH}
+              x2={x} y2={flagY}
+              stroke={heroColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.55}
             />
-            <rect
-              x={flagX}
-              y={4}
-              width={flagW}
-              height={flagH}
-              rx={2}
-              fill="var(--color-background-card)"
-              stroke={heroColor}
-              strokeWidth={1}
-            />
-            <text
-              x={flagX + 8}
-              y={18}
-              fontSize={11}
-              fontFamily="var(--font-family-mono)"
-              fontWeight={700}
-              fill="var(--color-text-primary)"
-            >
+            <rect x={flagX} y={flagY} width={flagW} height={flagH} rx={2} fill="var(--color-background-card)" stroke={heroColor} strokeWidth={1} />
+            <text x={flagX + 8} y={flagY + 14} fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
               {hero.year} · {formatCompactMXN(hero.total_value)}
             </text>
-            <text
-              x={flagX + 8}
-              y={30}
-              fontSize={9}
-              fontFamily="var(--font-family-mono)"
-              fill={heroColor}
-            >
+            <text x={flagX + 8} y={flagY + 26} fontSize={9} fontFamily="var(--font-family-mono)" fill={heroColor}>
               {Math.round((hero.avg_risk_score ?? 0) * 100)}% risk · {hero.contract_count} contract{hero.contract_count !== 1 ? 's' : ''}
             </text>
           </g>
         )
       })()}
 
-      {/* Year axis */}
+      {/* Year axis labels — sit on the centerline */}
       {axisYears.map((y, i) => {
         const cx = xOf(y)
         const anchor: 'start' | 'middle' | 'end' = i === 0 ? 'start' : i === axisYears.length - 1 ? 'end' : 'middle'
@@ -571,7 +575,7 @@ function TimelineSkyline({
           <text
             key={y}
             x={cx}
-            y={H - 6}
+            y={Y_CENTER + 4}
             textAnchor={anchor}
             fontSize={10}
             fontFamily="var(--font-family-mono)"
@@ -582,10 +586,6 @@ function TimelineSkyline({
           </text>
         )
       })}
-
-      {/* No SVG legend — the lede paragraph above the chart explains the
-          encoding (bar height / color / count tick). Trying to render it
-          inside the SVG fights the year axis or the era labels. */}
     </svg>
   )
 }
@@ -618,24 +618,28 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       />
       <p className="text-text-secondary mb-1 max-w-2xl text-sm leading-relaxed">
-        {t('timeline.skylineDescription', {
-          defaultValue: 'Each bar is a year. Height encodes total value (log scale); color encodes average risk; the dot beneath encodes contract count. Background bands segment the timeline into stable, watch, and alert eras based on the prevailing risk regime.',
+        {t('timeline.hourglassDescription', {
+          defaultValue: 'A two-channel reading. Above the year axis: how many contracts each year produced. Below: how much money flowed. When one channel diverges from the other — a single contract worth billions, or a swarm of small contracts adding to nothing — the mismatch is the signal.',
         })}
       </p>
-      <p className="text-text-muted mb-6 max-w-2xl text-[11px] font-mono leading-relaxed">
-        {t('timeline.skylineLegend', {
-          defaultValue: 'BAR HEIGHT = LOG(VALUE) · BAR COLOR = AVG RISK · ● = CONTRACT COUNT',
+      <p className="text-text-muted mb-3 max-w-2xl text-[11px] font-mono leading-relaxed">
+        {t('timeline.hourglassLegend', {
+          defaultValue: '▲ ABOVE = CONTRACT COUNT · ▼ BELOW = LOG(VALUE) · COLOR = AVG RISK',
         })}
       </p>
 
-      {/* Single skyline canvas — replaces the dot-strip + year-card duplication */}
-      <TimelineSkyline
+      {/* Dual-channel hourglass — count above the axis, value below.
+          Replaces the prior skyline + year-card duplication with a
+          mirror chart that exposes volume/value mismatch visually. */}
+      <TimelineHourglass
         timeline={sortedTimeline}
         eraLabels={{
           stable: t('timeline.era.stable', { defaultValue: 'Stable era' }),
           watch:  t('timeline.era.watch',  { defaultValue: 'Watch era' }),
           alert:  t('timeline.era.alert',  { defaultValue: 'Alert era' }),
         }}
+        countLabel={t('timeline.countAxis', { defaultValue: 'contracts' })}
+        valueLabel={t('timeline.valueAxis', { defaultValue: 'log(value)' })}
       />
 
       {/* Auto-generated era narrative — inline, no card-in-card */}
@@ -676,10 +680,8 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
     .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
     .slice(0, 10)
 
-  const maxAbs = Math.max(...sorted.map((f) => Math.abs(f.contribution)), 0.01)
-
-  // Cap waterfall at 6 rows (was 10). Below 6 the contributions are <0.05
-  // and add noise without explaining the pattern.
+  // Cap diagnostic panel at 6 rows. Below 6 the contributions are <0.05
+  // and add visual noise without explaining the pattern.
   const sortedSix = sorted.slice(0, 6)
 
   return (
@@ -706,69 +708,238 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
         </motion.div>
       )}
 
-      {/* Waterfall bars — compacted: 28px row height (was 60px), 6 rows max
-          (was 10). Bar fill renders as a horizontal sliver inside the row,
-          not a separate decorative DotBar layer below text. */}
-      <div ref={ref} className="space-y-1">
-        {sortedSix.map((f, idx) => {
-          const isPositive = f.contribution > 0
-          const width = (Math.abs(f.contribution) / maxAbs) * 100
-          const color = isPositive ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'
-          return (
-            <motion.div
-              key={f.feature}
-              initial={{ opacity: 0, x: -20 }}
-              animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: idx * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="relative rounded-sm border border-border overflow-hidden"
-            >
-              {/* Inline horizontal fill — the bar IS the row. */}
-              <div
-                className="absolute inset-y-0 left-0 pointer-events-none"
-                style={{
-                  width: `${width}%`,
-                  backgroundColor: color,
-                  opacity: 0.10,
-                }}
-              />
-              <div className="relative flex items-center justify-between px-3 py-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-xs text-text-secondary">{f.label_en}</span>
-                  {f.z_score !== 0 && (
-                    <span className="text-[10px] text-text-muted font-mono tabular-nums">
-                      z={f.z_score.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-[10px] text-text-muted">
-                    {isPositive ? t('pattern.raisesRisk') : t('pattern.lowersRisk')}
-                  </span>
-                  <span
-                    className="text-xs font-mono font-bold tabular-nums"
-                    style={{ color }}
-                  >
-                    {isPositive ? '+' : ''}{f.contribution.toFixed(3)}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          )
-        })}
+      {/* Diagnostic panel — replaces the SHAP waterfall with a medical
+          lab-report layout. Each row shows the feature on a -3σ to +3σ
+          axis with sector p25-p75 reference band, vendor's marker dot,
+          and contribution value. Reader sees instantly which "lab values"
+          are out of normal range vs within the population. */}
+      <div ref={ref}>
+        <PatternDiagnostic
+          features={sortedSix}
+          inView={inView}
+          raisesLabel={t('pattern.raisesRisk', { defaultValue: 'raises' })}
+          lowersLabel={t('pattern.lowersRisk', { defaultValue: 'lowers' })}
+          referenceLabel={t('pattern.sectorReference', { defaultValue: 'sector p25–p75' })}
+          diagnosisLabel={t('pattern.diagnosis', {
+            defaultValue: '{{anomalous}} of {{total}} lab values outside sector reference range',
+            anomalous: sortedSix.filter((f) => Math.abs(f.z_score) >= 1).length,
+            total: sortedSix.length,
+          })}
+        />
       </div>
 
       {safeWaterfall.length === 0 && (
         <div className="text-text-secondary text-sm italic">{t('pattern.noData')}</div>
       )}
 
-      <p className="text-[10px] text-text-muted italic mt-3 leading-relaxed">
+      <p className="text-[10px] text-text-muted italic mt-2 leading-relaxed">
         {t('pattern.shapNote')}
       </p>
     </ChapterShell>
+  )
+}
+
+/**
+ * PatternDiagnostic — medical lab-report layout for SHAP-style risk
+ * decomposition. Each row is one feature ("test"), rendered as:
+ *
+ *   FEATURE LABEL ┃ -3σ ─── [p25══p75] ───●─── +3σ ┃ +0.248
+ *
+ * Where:
+ *   • The horizontal scale spans -3σ to +3σ (sector standardized)
+ *   • The lighter band marks the sector p25-p75 reference range
+ *     (assumed roughly ±0.674σ for a normal distribution)
+ *   • The marker is the vendor's z-score, colored red if it pushes
+ *     risk up and the sample is in the tail (|z| ≥ 1)
+ *   • The contribution badge shows the SHAP-style risk contribution
+ *
+ * The layout reads like a CBC or metabolic panel — designers in the
+ * journalism world (FT, NYT) lean on the lab-report metaphor because
+ * it inherits credibility from medicine. The same metaphor works
+ * here: this is a *diagnosis*, not an opinion.
+ */
+function PatternDiagnostic({
+  features,
+  inView,
+  raisesLabel,
+  lowersLabel,
+  referenceLabel,
+  diagnosisLabel,
+}: {
+  features: Array<{ feature: string; contribution: number; z_score: number; label_en: string }>
+  inView: boolean
+  raisesLabel: string
+  lowersLabel: string
+  referenceLabel: string
+  diagnosisLabel: string
+}) {
+  // Chart dimensions per row (SVG, scales to container width)
+  const SCALE_W = 380
+  const ROW_H = 30
+  const Z_RANGE = 3 // axis spans -3σ to +3σ
+
+  // For each row, compute marker position and color
+  const xOf = (z: number) => {
+    const clamped = Math.max(-Z_RANGE, Math.min(Z_RANGE, z))
+    return ((clamped + Z_RANGE) / (2 * Z_RANGE)) * SCALE_W
+  }
+
+  return (
+    <div>
+      {/* Diagnosis line — auto-summarizes the panel */}
+      <div className="flex items-baseline gap-2 mb-3 pb-2 border-b border-border">
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">Diagnosis</span>
+        <span className="text-xs text-text-secondary">{diagnosisLabel}</span>
+      </div>
+
+      {/* Header row — column titles */}
+      <div className="grid grid-cols-[140px_1fr_64px] gap-3 items-center mb-1.5 pb-1 text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted opacity-70">
+        <div>Feature</div>
+        <div className="flex items-center justify-between">
+          <span>−3σ</span>
+          <span className="opacity-50">sector mean</span>
+          <span>+3σ</span>
+        </div>
+        <div className="text-right">SHAP</div>
+      </div>
+
+      {/* Lab rows */}
+      <div className="space-y-0.5">
+        {features.map((f, idx) => {
+          const isPositive = f.contribution > 0
+          const isAnomalous = Math.abs(f.z_score) >= 1
+          const markerColor = isPositive
+            ? (isAnomalous ? 'var(--color-risk-critical)' : 'var(--color-risk-medium)')
+            : 'var(--color-text-muted)'
+          const contribColor = isPositive
+            ? (isAnomalous ? 'var(--color-risk-critical)' : 'var(--color-risk-high)')
+            : 'var(--color-text-muted)'
+          const markerX = xOf(f.z_score)
+          // Slide-in delay creates a "rolling" reveal
+          const delay = inView ? `${idx * 60}ms` : '0ms'
+          return (
+            <div
+              key={f.feature}
+              className={cn(
+                'grid grid-cols-[140px_1fr_64px] gap-3 items-center px-1 py-1 rounded-sm border-l-2 transition-opacity',
+                isAnomalous && isPositive ? 'bg-[color:var(--color-risk-critical)]/[0.04]' : ''
+              )}
+              style={{
+                borderLeftColor: isAnomalous && isPositive ? markerColor : 'transparent',
+                opacity: inView ? 1 : 0,
+                transition: `opacity 0.4s ease ${delay}`,
+              }}
+            >
+              {/* Feature name */}
+              <div className="min-w-0">
+                <div className="text-[12px] text-text-primary leading-tight truncate" title={f.label_en}>
+                  {f.label_en}
+                </div>
+                <div className="text-[9px] font-mono tabular-nums text-text-muted">
+                  z={f.z_score.toFixed(2)}σ · {isPositive ? raisesLabel : lowersLabel}
+                </div>
+              </div>
+
+              {/* Lab scale */}
+              <svg
+                viewBox={`0 0 ${SCALE_W} ${ROW_H}`}
+                className="w-full"
+                preserveAspectRatio="none"
+                style={{ height: ROW_H }}
+                role="img"
+                aria-label={`${f.label_en} z-score lab scale`}
+              >
+                {/* Background scale rail */}
+                <line
+                  x1={0} x2={SCALE_W}
+                  y1={ROW_H / 2} y2={ROW_H / 2}
+                  stroke="var(--color-border)"
+                  strokeWidth={1}
+                />
+                {/* Sector reference band p25-p75 ≈ ±0.674σ */}
+                <rect
+                  x={xOf(-0.674)}
+                  y={ROW_H / 2 - 5}
+                  width={xOf(0.674) - xOf(-0.674)}
+                  height={10}
+                  fill="var(--color-text-muted)"
+                  fillOpacity={0.08}
+                  stroke="var(--color-border)"
+                  strokeWidth={0.5}
+                  strokeDasharray="2 2"
+                />
+                {/* Center tick — sector mean */}
+                <line
+                  x1={xOf(0)} x2={xOf(0)}
+                  y1={ROW_H / 2 - 6} y2={ROW_H / 2 + 6}
+                  stroke="var(--color-text-muted)"
+                  strokeWidth={0.6}
+                  opacity={0.5}
+                />
+                {/* ±2σ tail markers */}
+                {[-2, 2].map((z) => (
+                  <line
+                    key={z}
+                    x1={xOf(z)} x2={xOf(z)}
+                    y1={ROW_H / 2 - 3} y2={ROW_H / 2 + 3}
+                    stroke="var(--color-text-muted)"
+                    strokeWidth={0.5}
+                    opacity={0.35}
+                  />
+                ))}
+                {/* Out-of-range tail tinting (only when in tail) */}
+                {Math.abs(f.z_score) >= 2 && (
+                  <rect
+                    x={f.z_score > 0 ? xOf(2) : 0}
+                    y={ROW_H / 2 - 5}
+                    width={f.z_score > 0 ? SCALE_W - xOf(2) : xOf(-2)}
+                    height={10}
+                    fill={markerColor}
+                    fillOpacity={0.10}
+                  />
+                )}
+                {/* Vendor marker dot */}
+                <circle
+                  cx={markerX}
+                  cy={ROW_H / 2}
+                  r={5}
+                  fill={markerColor}
+                  stroke="var(--color-background)"
+                  strokeWidth={1.5}
+                  style={isAnomalous ? { filter: `drop-shadow(0 0 3px ${markerColor}aa)` } : undefined}
+                />
+              </svg>
+
+              {/* SHAP contribution */}
+              <div className="text-right">
+                <span
+                  className="text-[12px] font-mono font-bold tabular-nums"
+                  style={{ color: contribColor }}
+                >
+                  {isPositive ? '+' : ''}{f.contribution.toFixed(3)}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Reference legend — explains the band */}
+      <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted opacity-70">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-4 h-2 rounded-sm border border-dashed" style={{ borderColor: 'var(--color-border)', backgroundColor: 'rgba(115,115,115,0.08)' }} />
+          {referenceLabel}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-risk-critical)' }} />
+          tail (|z| ≥ 1) raises risk
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-text-muted)' }} />
+          within range or protective
+        </span>
+      </div>
+    </div>
   )
 }
 
