@@ -72,6 +72,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+
+    // Stale-chunk fallback — if the boundary catches a dynamic-import
+    // failure (post-deploy chunk-hash mismatch), auto-reload the page
+    // to pull a fresh index.html. Guarded by sessionStorage so a real
+    // failure doesn't loop. Same guard key as main.tsx — they share
+    // the 30-second window.
+    const msg = String(error?.message ?? '')
+    if (
+      /Failed to fetch dynamically imported module/i.test(msg) ||
+      /Loading chunk \d+ failed/i.test(msg) ||
+      /Importing a module script failed/i.test(msg)
+    ) {
+      const RELOAD_GUARD_KEY = 'rubli_chunk_reload_at'
+      const last = Number(sessionStorage.getItem(RELOAD_GUARD_KEY) ?? '0')
+      if (Date.now() - last >= 30_000) {
+        sessionStorage.setItem(RELOAD_GUARD_KEY, String(Date.now()))
+        console.warn('[chunk-recovery] ErrorBoundary auto-reloading')
+        window.location.reload()
+      }
+    }
   }
 
   handleReset = () => {
