@@ -1766,8 +1766,18 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
  */
 function MoneyStaircase({
   timeline,
+  selectedYear,
+  hoverYear,
+  onHoverYear,
+  onSelectYear,
+  byYearLabel,
 }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  selectedYear: number | null
+  hoverYear: number | null
+  onHoverYear: (y: number | null) => void
+  onSelectYear: (y: number | null) => void
+  byYearLabel: string
 }) {
   if (timeline.length === 0) return null
 
@@ -1792,10 +1802,8 @@ function MoneyStaircase({
   const totalCum = cum
   if (totalCum === 0) return null
 
-  // Top 3 single-year jumps for annotation pins
   const top3Jumps = [...points].sort((a, b) => b.delta - a.delta).slice(0, 3).map((p) => p.year)
 
-  // Layout
   const W = 720
   const H = 300
   const PAD = { top: 36, right: 12, bottom: 36, left: 56 }
@@ -1807,14 +1815,19 @@ function MoneyStaircase({
   const yOf = (cum: number) => PAD.top + innerH - (cum / totalCum) * innerH
 
   const colorOfRisk = (r: number) => RISK_DOT_COLORS[getRiskLevel(r)]
-
-  // Y axis ticks at 0, 25%, 50%, 75%, 100% of cumulative
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({ frac: f, value: totalCum * f }))
 
-  // Path: stepped — for each year, horizontal segment at start, then vertical step up to end
-  // We render as a series of <line> segments so each can be color-tinted by risk.
+  const activeYear = hoverYear ?? selectedYear
+  const hitW = innerW / yearSpan
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Cumulative procurement money over time">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="w-full h-auto cursor-crosshair"
+      role="img"
+      aria-label="Cumulative procurement money over time"
+      onMouseLeave={() => onHoverYear(null)}
+    >
       {/* Y grid lines + labels */}
       {yTicks.map((t) => (
         <g key={t.frac}>
@@ -1825,7 +1838,22 @@ function MoneyStaircase({
         </g>
       ))}
 
-      {/* Faint area fill under the staircase — gives the "journey" weight */}
+      {/* Active-year highlight column */}
+      {activeYear != null && (
+        <rect
+          x={xOf(activeYear)}
+          y={PAD.top}
+          width={hitW}
+          height={innerH}
+          fill="var(--color-text-primary)"
+          fillOpacity={0.05}
+          stroke="var(--color-text-primary)"
+          strokeOpacity={0.18}
+          strokeWidth={0.6}
+        />
+      )}
+
+      {/* Area fill under the staircase */}
       <path
         d={(() => {
           let d = `M ${xOf(points[0].year)} ${yOf(points[0].start)}`
@@ -1839,34 +1867,35 @@ function MoneyStaircase({
         fillOpacity={0.05}
       />
 
-      {/* Stepped path — each year's segment colored by its avg risk */}
+      {/* Stepped path */}
       {points.map((p) => {
-        const x1 = xOf(p.year)
-        const xMid = x1 // step rises at year boundary
+        const xMid = xOf(p.year)
         const xEnd = xOfNext(p.year)
         const yStart = yOf(p.start)
         const yEnd = yOf(p.end)
         const stepColor = colorOfRisk(p.risk)
+        const isActive = p.year === activeYear
+        const baseW = isActive ? 3.6 : 2.4
         return (
-          <g key={`step-${p.year}`}>
-            {/* Vertical riser (the jump) */}
-            <line x1={xMid} y1={yStart} x2={xMid} y2={yEnd} stroke={stepColor} strokeWidth={2.4} strokeLinecap="square" />
-            {/* Horizontal tread (across the year) */}
-            <line x1={xMid} y1={yEnd} x2={xEnd} y2={yEnd} stroke={stepColor} strokeWidth={2.4} strokeLinecap="square" />
-            <title>{p.year} · +{formatCompactMXN(p.delta)} → {formatCompactMXN(p.end)} cumulative · {Math.round(p.risk * 100)}% risk · {p.count} contract{p.count !== 1 ? 's' : ''}</title>
+          <g key={`step-${p.year}`} style={{ pointerEvents: 'none' }}>
+            <line x1={xMid} y1={yStart} x2={xMid} y2={yEnd} stroke={stepColor} strokeWidth={baseW} strokeLinecap="square" style={isActive ? { filter: `drop-shadow(0 0 4px ${stepColor}aa)` } : undefined} />
+            <line x1={xMid} y1={yEnd} x2={xEnd} y2={yEnd} stroke={stepColor} strokeWidth={baseW} strokeLinecap="square" />
+            {isActive && (
+              <circle cx={xMid} cy={yEnd} r={4.5} fill={stepColor} stroke="var(--color-background)" strokeWidth={1.6} />
+            )}
           </g>
         )
       })}
 
-      {/* Annotation pins — top 3 jumps */}
-      {points.filter((p) => top3Jumps.includes(p.year)).map((p, idx) => {
+      {/* Annotation pins — top 3 jumps. Hidden when the user is actively
+          inspecting a year (their hover/pin cursor takes precedence). */}
+      {activeYear == null && points.filter((p) => top3Jumps.includes(p.year)).map((p, idx) => {
         const x = xOf(p.year)
         const yTop = yOf(p.end)
         const stepColor = colorOfRisk(p.risk)
-        // Stagger pin Y to avoid overlap
         const pinY = Math.max(PAD.top + 6, yTop - 18 - idx * 4)
         return (
-          <g key={`pin-${p.year}`}>
+          <g key={`pin-${p.year}`} style={{ pointerEvents: 'none' }}>
             <line x1={x} y1={yTop} x2={x} y2={pinY + 6} stroke={stepColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.6} />
             <circle cx={x} cy={yTop} r={3.2} fill={stepColor} stroke="var(--color-background)" strokeWidth={1} />
             <text x={x} y={pinY} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={700} fill={stepColor}>
@@ -1879,25 +1908,30 @@ function MoneyStaircase({
         )
       })}
 
-      {/* Final cumulative callout — right edge */}
+      {/* Pinned-year marker (small dot above) */}
+      {selectedYear != null && (
+        <circle cx={xOf(selectedYear)} cy={PAD.top - 4} r={2.6} fill="var(--color-text-primary)" style={{ pointerEvents: 'none' }} />
+      )}
+
+      {/* Final cumulative callout */}
       {(() => {
         const last = points[points.length - 1]
         const x = xOfNext(last.year)
         const y = yOf(last.end)
         return (
-          <g>
+          <g style={{ pointerEvents: 'none' }}>
             <circle cx={x} cy={y} r={4} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.5} />
             <text x={x - 6} y={y - 8} textAnchor="end" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
               {formatCompactMXN(last.end)}
             </text>
             <text x={x - 6} y={y + 4} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)">
-              by {last.year}
+              {byYearLabel.replace('{{year}}', String(last.year))}
             </text>
           </g>
         )
       })()}
 
-      {/* X axis — first / hero / last */}
+      {/* X axis */}
       <line x1={PAD.left} x2={W - PAD.right} y1={H - PAD.bottom} y2={H - PAD.bottom} stroke="var(--color-border)" strokeWidth={0.7} />
       {[minYear, Math.round((minYear + maxYear) / 2), maxYear].map((y, i) => {
         const x = xOf(y)
@@ -1910,9 +1944,29 @@ function MoneyStaircase({
             fontSize={10}
             fontFamily="var(--font-family-mono)"
             fill="var(--color-text-muted)"
+            fontWeight={y === activeYear ? 700 : 400}
           >
             {y}
           </text>
+        )
+      })}
+
+      {/* Hit-areas — full-height rects per year column for hover/click.
+          Rendered LAST so they overlay everything else. */}
+      {points.map((p) => {
+        const x = xOf(p.year)
+        return (
+          <rect
+            key={`hit-${p.year}`}
+            x={x}
+            y={PAD.top}
+            width={hitW}
+            height={innerH}
+            fill="transparent"
+            style={{ cursor: 'pointer' }}
+            onMouseEnter={() => onHoverYear(p.year)}
+            onClick={() => onSelectYear(p.year === selectedYear ? null : p.year)}
+          />
         )
       })}
     </svg>
@@ -1923,11 +1977,34 @@ function ChapterMoney({ timeline, t }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   t: TFunction
 }) {
+  const [hoverYear, setHoverYear] = useState<number | null>(null)
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
+
   const totalValue = timeline.reduce((s, item) => s + item.total_value, 0)
   const peakYear = timeline.reduce((max, item) => item.total_value > (max.total_value ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
   const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
-  // Concentration ratio — what % of all money flowed in the peak year alone
   const peakShare = totalValue > 0 ? (peakYear.total_value / totalValue) * 100 : 0
+
+  // Active year for the detail panel — hover wins, then pinned, else peak by value
+  const sorted = [...timeline].sort((a, b) => a.year - b.year)
+  let runningCum = 0
+  const cumByYear = new Map<number, { cum: number; share: number; deltaShare: number }>()
+  for (const item of sorted) {
+    runningCum += item.total_value
+    cumByYear.set(item.year, {
+      cum: runningCum,
+      share: totalValue > 0 ? (runningCum / totalValue) * 100 : 0,
+      deltaShare: totalValue > 0 ? (item.total_value / totalValue) * 100 : 0,
+    })
+  }
+  const detailYear = hoverYear ?? selectedYear
+  const detailItem =
+    detailYear != null
+      ? sorted.find((item) => item.year === detailYear) ?? peakYear
+      : peakYear
+  const detailRisk = detailItem.avg_risk_score ?? 0
+  const detailColor = RISK_DOT_COLORS[getRiskLevel(detailRisk)]
+  const detailCum = cumByYear.get(detailItem.year) ?? { cum: 0, share: 0, deltaShare: 0 }
 
   return (
     <ChapterShell id="chapter-money">
@@ -1936,36 +2013,82 @@ function ChapterMoney({ timeline, t }: {
         title={t('money.heading', { value: formatCompactMXN(totalValue) })}
       />
       <p className="text-text-secondary mb-4 max-w-2xl text-sm leading-relaxed">
-        {t('money.staircaseDescription', {
-          defaultValue: 'The journey of money. Each step is a year. Step color is the average risk that year. The taller the step, the larger the year-over-year jump — pinned annotations mark the three largest. The final number is the cumulative total.',
-        })}
+        {t('money.staircaseDescription')}
       </p>
 
       {/* Inline anchor stats — concentration + peak risk year */}
       {peakYear && (
-        <div className="flex items-baseline gap-6 mb-4 flex-wrap">
+        <div className="flex items-baseline gap-6 mb-3 flex-wrap">
           <div>
             <span className="text-base font-bold text-text-primary font-mono tabular-nums">{peakShare.toFixed(0)}%</span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">flowed in {peakYear.year}</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.flowedIn', { year: peakYear.year })}</span>
           </div>
           {peakRiskYear && (
             <div>
               <span className="text-base font-bold font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(0)}%</span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">peak risk year</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakRiskYearShort')}</span>
               <span className="text-xs ml-2 font-mono tabular-nums text-text-muted">{peakRiskYear.year}</span>
             </div>
+          )}
+          {selectedYear != null && (
+            <button
+              type="button"
+              onClick={() => setSelectedYear(null)}
+              className="ml-auto text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted hover:text-text-primary transition-colors"
+            >
+              {t('timeline.unpin')}
+            </button>
           )}
         </div>
       )}
 
-      {/* Cumulative staircase — replaces the dual-axis ComposedChart with a
-          journey visualization. Each step colored by year's risk. */}
       <div className="bg-background-card border border-border rounded-sm p-4">
-        <MoneyStaircase timeline={timeline} />
-        <p className="text-[10px] text-text-muted italic mt-2 leading-relaxed">
-          {t('money.riskNote')}
-        </p>
+        <MoneyStaircase
+          timeline={timeline}
+          selectedYear={selectedYear}
+          hoverYear={hoverYear}
+          onHoverYear={setHoverYear}
+          onSelectYear={setSelectedYear}
+          byYearLabel={t('money.byYear')}
+        />
       </div>
+
+      {/* Detail panel — mirrors Chapter II's interactivity. Hover any
+          year column or click to pin; the panel updates to show the
+          jump for that year + the cumulative share to date. */}
+      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 px-3 py-2.5 rounded-sm border border-border bg-background-card/40">
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {hoverYear != null
+              ? t('timeline.detail.hovering')
+              : selectedYear != null
+              ? t('timeline.detail.pinned')
+              : t('money.peakByValue')}
+          </p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{detailItem.year}</p>
+          <p className="text-[10px] font-mono uppercase tracking-[0.12em]" style={{ color: detailColor }}>
+            {Math.round(detailRisk * 100)}% {t('timeline.detail.avgRisk').toLowerCase()}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('money.detail.delta')}</p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">+{formatCompactMXN(detailItem.total_value)}</p>
+          <p className="text-[10px] font-mono tabular-nums text-text-muted">{detailCum.deltaShare.toFixed(1)}% {t('timeline.detail.ofTotal')}</p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('money.detail.cumulative')}</p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatCompactMXN(detailCum.cum)}</p>
+          <p className="text-[10px] font-mono tabular-nums text-text-muted">{detailCum.share.toFixed(0)}% {t('money.detail.toDate')}</p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('timeline.detail.contracts')}</p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatNumber(detailItem.contract_count)}</p>
+        </div>
+      </div>
+
+      <p className="text-[10px] text-text-muted italic mt-3 leading-relaxed">
+        {t('money.riskNote')}
+      </p>
     </ChapterShell>
   )
 }

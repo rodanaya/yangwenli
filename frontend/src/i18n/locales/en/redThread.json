@@ -161,6 +161,11 @@
     "flowedIn": "flowed in {{year}}",
     "peakRiskYearShort": "peak risk year",
     "byYear": "by {{year}}",
+    "detail": {
+      "delta": "Year contribution",
+      "cumulative": "Cumulative",
+      "toDate": "to date"
+    },
     "peakByValue": "Peak Year by Value",
     "peakByRisk": "Peak Year by Risk",
     "peakValueLabel": "{{year}} — {{value}}",

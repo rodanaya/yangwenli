@@ -161,6 +161,11 @@
     "flowedIn": "fluyó en {{year}}",
     "peakRiskYearShort": "año pico de riesgo",
     "byYear": "para {{year}}",
+    "detail": {
+      "delta": "Aporte del año",
+      "cumulative": "Acumulado",
+      "toDate": "hasta la fecha"
+    },
     "peakByValue": "Año Pico por Valor",
     "peakByRisk": "Año Pico por Riesgo",
     "peakValueLabel": "{{year}} — {{value}}",
