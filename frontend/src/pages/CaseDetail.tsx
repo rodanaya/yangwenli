@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { caseLibraryApi } from '@/api/client'
+import { caseLibraryApi, ariaApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { ArrowLeft, ExternalLink, ArrowUpRight } from 'lucide-react'
@@ -854,6 +854,119 @@ function ModelProvenancePanel({
           )}
         </p>
       </div>
+
+      {/* What the model NOW flags because of this pattern — the platform's
+          actual value-add. Queries the live ARIA queue for vendors with
+          the same primary_pattern as this case's mapped Px code, and
+          surfaces the top 3 by IPS. Closes the loop: case → label →
+          model → live flagging on new vendors. */}
+      <SimilarPatternsTeaser ariaPatternCode={ariaPattern.code} lang={lang} />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUAL — Similar patterns teaser
+// Queries /aria/queue for vendors with the same primary_pattern as this
+// case's mapped ARIA code. Closes the data-flow loop: documented case
+// → pattern label → model trained → vendors NOW flagged. Top 3 by IPS,
+// each linkable to /thread.
+// ─────────────────────────────────────────────────────────────────────────────
+function SimilarPatternsTeaser({
+  ariaPatternCode,
+  lang,
+}: {
+  ariaPatternCode: string
+  lang: string
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['aria-similar', ariaPatternCode],
+    queryFn: () => ariaApi.getQueue({ pattern: ariaPatternCode, tier: 1, per_page: 3 }),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+
+  const items = (data?.data ?? []).slice(0, 3)
+  const totalForPattern = data?.pagination?.total ?? 0
+
+  return (
+    <div style={{ paddingTop: 4 }}>
+      <div style={{ ...OVERLINE, color: TEXT_FAINT, letterSpacing: '0.18em', marginBottom: 10 }}>
+        {lang === 'es' ? 'Lo que el modelo ahora detecta' : 'What the model now flags'}
+      </div>
+      <p style={{ fontSize: 12, color: TEXT_MUTED, lineHeight: 1.6, marginBottom: 12, maxWidth: 720 }}>
+        {lang === 'es' ? (
+          <>Habiendo aprendido el patrón <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPatternCode}</strong> de este caso (y otros similares), ARIA marca actualmente <strong style={{ color: TEXT_PRIMARY }}>{totalForPattern.toLocaleString()}</strong> proveedores T1 con la misma firma de patrón. Tres ejemplos:</>
+        ) : (
+          <>Having learned the <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPatternCode}</strong> pattern from this and similar cases, ARIA currently flags <strong style={{ color: TEXT_PRIMARY }}>{totalForPattern.toLocaleString()}</strong> Tier-1 vendors with the same pattern signature. Three examples:</>
+        )}
+      </p>
+      {isLoading ? (
+        <div style={{ height: 60, background: 'var(--color-background-elevated)', borderRadius: 2, opacity: 0.4 }} />
+      ) : items.length === 0 ? (
+        <p style={{ fontSize: 12, color: TEXT_MUTED, fontStyle: 'italic', margin: 0 }}>
+          {lang === 'es' ? 'Sin proveedores T1 con este patrón actualmente.' : 'No Tier-1 vendors with this pattern currently.'}
+        </p>
+      ) : (
+        <div style={{ display: 'grid', gap: 6 }}>
+          {items.map((v) => {
+            const ips = Math.round((v.ips_final ?? 0) * 100)
+            const lastYear = (v as { last_contract_year?: number | null }).last_contract_year ?? null
+            return (
+              <Link
+                key={v.vendor_id}
+                to={`/thread/${v.vendor_id}`}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto auto',
+                  gap: 12,
+                  alignItems: 'baseline',
+                  padding: '10px 14px',
+                  background: 'var(--color-background-card)',
+                  border: `1px solid ${BORDER}`,
+                  borderRadius: 2,
+                  textDecoration: 'none',
+                  transition: 'border-color 0.12s ease',
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-risk-critical)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = BORDER)}
+              >
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {titleCase(v.vendor_name.toLowerCase())}
+                  </div>
+                  <div style={{ fontSize: 10, ...MONO, color: TEXT_MUTED, marginTop: 2, letterSpacing: '0.04em' }}>
+                    {v.primary_sector_name ? titleCase(v.primary_sector_name) + ' · ' : ''}
+                    {v.total_contracts.toLocaleString()} {lang === 'es' ? 'contratos' : 'contracts'}
+                    {lastYear ? ` · ${lang === 'es' ? 'última' : 'last'} ${lastYear}` : ''}
+                  </div>
+                </div>
+                <div style={{ ...MONO, fontSize: 13, fontWeight: 700, color: 'var(--color-risk-critical)', fontVariantNumeric: 'tabular-nums' }}>
+                  {ips}
+                </div>
+                <span style={{ fontSize: 10, ...MONO, color: TEXT_FAINT, letterSpacing: '0.12em' }}>→</span>
+              </Link>
+            )
+          })}
+          <Link
+            to={`/aria?pattern=${ariaPatternCode}&tier=1`}
+            style={{
+              fontSize: 10,
+              ...MONO,
+              color: TEXT_MUTED,
+              textDecoration: 'none',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              padding: '6px 0',
+              alignSelf: 'flex-start',
+            }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = CRIMSON_HI)}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = TEXT_MUTED)}
+          >
+            {lang === 'es' ? `Ver los ${totalForPattern.toLocaleString()} proveedores →` : `See all ${totalForPattern.toLocaleString()} vendors →`}
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
