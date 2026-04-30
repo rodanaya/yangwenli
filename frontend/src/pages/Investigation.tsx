@@ -8,8 +8,6 @@
  */
 
 import { useState, useMemo } from 'react'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
@@ -552,26 +550,38 @@ export function Investigation() {
   const totalCases = allCases.length
 
   return (
-    <EditorialPageShell
-      kicker="INVESTIGATION DOSSIER · THE ARCHIVE"
-      headline={
-        <>
-          {casesLoading ? 'Compiling the docket' : formatNumber(totalCases)}{' '}
-          open files. <span style={{ color: 'var(--color-risk-high)' }}>The paper trail doesn't lie.</span>
-        </>
-      }
-      paragraph="Every case below emerged from the same forensic pipeline: an algorithm flagged a vendor whose procurement fingerprint matches documented corruption; an analyst corroborated or refuted against external registries; the verdict was logged. These are not accusations. They are anomalies the data refuses to explain away — waiting for a journalist to ask the next question."
-      stats={casesLoading ? undefined : [
-        { value: formatNumber(totalCases), label: 'Open cases' },
-        { value: formatNumber(pendingCount), label: 'Awaiting review', color: 'var(--color-risk-high)' },
-        { value: formatNumber(corroboratedCount), label: 'Corroborated', color: '#3fb950' },
-        { value: formatNumber(refutedCount), label: 'Refuted' },
-      ]}
-      loading={casesLoading}
-      severity="high"
-      meta={<>RUBLI v0.6.5 &middot; pipeline live</>}
-    >
-      <Act number="I" label="THE DOCKET" title="Filter the investigation queue.">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {t('title') || 'Investigation Dossier'}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              CASE ARCHIVE · RUBLI v0.6.5 · PIPELINE LIVE
+            </p>
+          </div>
+          <div className="flex items-baseline gap-5">
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{casesLoading ? '—' : formatNumber(totalCases)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Open cases</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-high)' }}>{casesLoading ? '—' : formatNumber(pendingCount)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Awaiting review</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{casesLoading ? '—' : formatNumber(corroboratedCount)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Corroborated</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-muted">{casesLoading ? '—' : formatNumber(refutedCount)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Refuted</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
 
       {/* ================================================================
           FILTROS DE INVESTIGACION
@@ -703,11 +713,7 @@ export function Investigation() {
         </div>
       </div>
 
-      </Act>
-
       <div className="h-10" />
-
-      <Act number="II" label="CASE FILES" title={cases.length === 0 ? 'The archive is empty under these filters.' : 'Each row is a vendor the data can\u2019t explain away.'}>
 
       {/* ================================================================
           CASE LIST
@@ -785,8 +791,7 @@ export function Investigation() {
       )}
       </div>
 
-      </Act>
-    </EditorialPageShell>
+    </div>
   )
 }
 

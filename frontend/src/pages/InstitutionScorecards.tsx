@@ -44,8 +44,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { scorecardApi } from '@/api/client'
 import { formatNumber } from '@/lib/utils'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -576,93 +574,80 @@ export default function InstitutionScorecards() {
     setPage(1)
   }
 
-  const topName = stats?.top_institution_name ?? '--'
+  const _topName = stats?.top_institution_name ?? '--'
+  void _topName
   const topScore = stats?.top_institution_score
-  const worstName = stats?.worst_institution_name ?? '--'
+  const _worstName = stats?.worst_institution_name ?? '--'
+  void _worstName
   const worstScore = stats?.worst_institution_score
 
   const totalScored = stats?.total_scored ?? 2563
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <EditorialPageShell
-        kicker="INSTITUTION SCORECARDS · ACCOUNTABILITY INDEX"
-        headline={<>Who governs Mexico&rsquo;s money?</>}
-        paragraph={
-          <>
-            {t('description')}{' '}
-            <span className="text-text-muted">
-              {formatNumber(totalScored)} institutions evaluated across five transparency pillars:
-              apertura, precio, proveedores, proceso y se&ntilde;ales externas.
-            </span>
-          </>
-        }
-        stats={statsLoading ? undefined : [
-          {
-            value: formatNumber(totalScored),
-            label: t('stats.evaluated'),
-            color: '#6366f1',
-            sub: t('stats.federal'),
-          },
-          {
-            value: topScore != null ? topScore.toFixed(1) : '--',
-            label: t('stats.best'),
-            color: '#34d399',
-            sub: topName.length > 32 ? topName.slice(0, 32) + '...' : topName,
-          },
-          {
-            value: worstScore != null ? worstScore.toFixed(1) : '--',
-            label: t('stats.weakest'),
-            color: '#dc2626',
-            sub: worstName.length > 32 ? worstName.slice(0, 32) + '...' : worstName,
-          },
-          {
-            value: stats?.median_score != null ? stats.median_score.toFixed(1) : '--',
-            label: t('stats.median'),
-            color: '#fbbf24',
-            sub: t('stats.outOf100'),
-          },
-        ]}
-        severity="high"
-        loading={statsLoading}
-      >
-
-        {/* ── ACT I: THE GRADES ── */}
-        <Act number="I" label="THE GRADES" className="space-y-6">
-
-          {/* Explainer context */}
-          <div className="rounded-sm border border-violet-500/20 bg-violet-500/5 px-4 py-3">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-sector-tecnologia)] mb-1">
-              HALLAZGO
-            </p>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              {t('note')}
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {t('title') || 'Institution Scorecards'}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              ACCOUNTABILITY INDEX · {formatNumber(totalScored).toUpperCase()} EVALUATED · 5 PILLARS
             </p>
           </div>
+          <div className="flex items-baseline gap-5">
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatNumber(totalScored)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{t('stats.evaluated')}</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{topScore != null ? topScore.toFixed(1) : '--'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{t('stats.best')}</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{worstScore != null ? worstScore.toFixed(1) : '--'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{t('stats.weakest')}</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{stats?.median_score != null ? stats.median_score.toFixed(1) : '--'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{t('stats.median')}</div>
+            </div>
+          </div>
+        </div>
+      </header>
 
-          {/* Tier distribution bar */}
-          <section
-            className="rounded-sm border border-border bg-background-card p-5"
-            aria-label={t('aria.distributionSection')}
-          >
-            {statsLoading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-2.5 w-48" />
-                <Skeleton className="h-7 w-full rounded-sm" />
-                <div className="flex gap-4 flex-wrap">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-3 w-24" />
-                  ))}
-                </div>
+      <div className="space-y-6">
+        {/* Explainer context */}
+        <div className="rounded-sm border border-violet-500/20 bg-violet-500/5 px-4 py-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-sector-tecnologia)] mb-1">
+            HALLAZGO
+          </p>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {t('note')}
+          </p>
+        </div>
+
+        {/* Tier distribution bar */}
+        <section
+          className="rounded-sm border border-border bg-background-card p-5"
+          aria-label={t('aria.distributionSection')}
+        >
+          {statsLoading ? (
+            <div className="space-y-3">
+              <Skeleton className="h-2.5 w-48" />
+              <Skeleton className="h-7 w-full rounded-sm" />
+              <div className="flex gap-4 flex-wrap">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-3 w-24" />
+                ))}
               </div>
-            ) : (
-              <TierDistributionBar distribution={gradeDistribution} t={t} />
-            )}
-          </section>
-        </Act>
+            </div>
+          ) : (
+            <TierDistributionBar distribution={gradeDistribution} t={t} />
+          )}
+        </section>
 
-        {/* ── ACT II: THE COMPARISON ── */}
-        <Act number="II" label="THE COMPARISON" className="space-y-4 mt-10">
+        <div className="space-y-4 mt-10">
 
         {/* -- FILTER BAR ------------------------------------------------- */}
         <section className="space-y-4" aria-label={t('aria.filters')}>
@@ -828,10 +813,9 @@ export default function InstitutionScorecards() {
           )}
         </section>
 
-        </Act>
+        </div>
 
-        {/* ── ACT III: THE DEEPER RECORD ── */}
-        <Act number="III" label="THE DEEPER RECORD" className="space-y-4 mt-10">
+        <div className="space-y-4 mt-10">
 
         {/* -- PAGINATION ------------------------------------------------- */}
         {totalPages > 1 && (
@@ -905,9 +889,9 @@ export default function InstitutionScorecards() {
           </p>
         </div>
 
-        </Act>
+        </div>
 
-      </EditorialPageShell>
+      </div>
     </div>
   )
 }

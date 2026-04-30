@@ -67,7 +67,6 @@ import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 
 // =============================================================================
@@ -563,17 +562,34 @@ export function Contracts() {
   // --- Render ---
 
   return (
-    <EditorialPageShell
-      kicker="CONTRACTS · THE FEDERAL LEDGER"
-      headline="Every contract awarded since 2002, scored."
-      paragraph="Mexico's complete federal procurement record — 3.1 million contracts spanning 23 years, 12 sectors, and hundreds of institutions. Each contract is scored by the RUBLI v0.6.5 risk model trained on documented corruption cases."
-      stats={[
-        { value: formatNumber(3_051_294), label: 'Contracts indexed' },
-        { value: formatNumber(412_845), label: 'High-risk flagged', color: 'var(--color-risk-high)' },
-        { value: '13.5%', label: 'HR rate — OECD limit 15%' },
-        { value: '9.9T MXN', label: 'Total validated spend' },
-      ]}
-    >
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                Contracts
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                THE FEDERAL LEDGER · 2002–2025 · v0.6.5
+              </p>
+            </div>
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatNumber(3_051_294)}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Indexed</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-risk-high tabular-nums leading-none">{formatNumber(412_845)}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">9.9T MXN</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+              </div>
+            </div>
+          </div>
+        </header>
       {/* Investigation preset shelf removed — same 9 presets render inline
           inside the filter bar below (L~693). Two visual styles for the
           identical control was the noisiest finding from Batch C critique. */}
@@ -1228,7 +1244,8 @@ export function Contracts() {
       />
 
       </Act>
-    </EditorialPageShell>
+      </div>
+    </div>
   )
 }
 

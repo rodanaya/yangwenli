@@ -15,7 +15,6 @@ import { analysisApi } from '@/api/client'
 import { cn, formatNumber } from '@/lib/utils'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 
 // =============================================================================
@@ -621,37 +620,34 @@ export default function ProcurementCalendar() {
   return (
     <div className="min-h-screen bg-background text-text-secondary">
       <div className="max-w-6xl mx-auto px-6 py-8">
-      <EditorialPageShell
-        kicker="PROCUREMENT CALENDAR · TEMPORAL PATTERNS"
-        headline={<>Year-end spending reveals the <em>budget dump</em> pattern.</>}
-        paragraph="December concentrates an anomalous share of federal contracts — a pattern consistent with fiscal year-end pressure and reduced oversight."
-        severity="medium"
-        loading={isLoading}
-        stats={[
-          {
-            value: stats.totalContracts > 0 ? formatNumber(stats.totalContracts) : '—',
-            label: `contracts in ${year}`,
-            color: '#60a5fa',
-          },
-          {
-            value: stats.highRiskContracts > 0 ? formatNumber(stats.highRiskContracts) : '—',
-            label: 'high-risk contracts',
-            color: '#f87171',
-            sub: stats.totalContracts > 0 ? `${(stats.highRiskRate * 100).toFixed(1)}% of total` : undefined,
-          },
-          {
-            value: stats.hasDecemberData ? formatNumber(stats.decemberContracts) : '—',
-            label: 'december contracts',
-            color: '#fb923c',
-            sub: stats.decemberJanuaryRatio ? `${stats.decemberJanuaryRatio.toFixed(1)}x vs january` : undefined,
-          },
-          {
-            value: stats.hasDecemberData ? `${(stats.decemberRiskRate * 100).toFixed(1)}%` : '—',
-            label: 'december risk rate',
-            color: '#fbbf24',
-          },
-        ]}
-      >
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Procurement Calendar
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              TEMPORAL PATTERNS · YEAR-END BUDGET-DUMP DETECTION
+            </p>
+          </div>
+          {!isLoading && (
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{stats.totalContracts > 0 ? formatNumber(stats.totalContracts) : '—'}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{year} contracts</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>{stats.highRiskContracts > 0 ? formatNumber(stats.highRiskContracts) : '—'}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>{stats.hasDecemberData ? formatNumber(stats.decemberContracts) : '—'}</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">December</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
         <Act number="I" label="THE CALENDAR">
       <div className="space-y-8">
         {/* Existing in-page header (kept for sub-sections) */}
@@ -954,7 +950,6 @@ export default function ProcurementCalendar() {
         </div>
       </div>
         </Act>
-      </EditorialPageShell>
       </div>
 
       {/* Tooltip rendered at root level to avoid clipping */}

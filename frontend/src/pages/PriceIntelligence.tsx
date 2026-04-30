@@ -22,7 +22,6 @@ import { TableExportButton } from '@/components/TableExportButton'
 import { CitationBlock } from '@/components/CitationBlock'
 import { ShareButton } from '@/components/ShareButton'
 // Recharts removed — replaced with pure SVG field visualizations
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
@@ -1591,39 +1590,45 @@ export default function PriceIntelligence() {
   }
 
   const heroAvgZ = summary?.avg_z_score ?? 0
-  const heroEstSavings = heroAvgZ > 1 ? (summary?.total_value_mxn ?? 0) * (1 - 1 / heroAvgZ) : 0
+  const _heroEstSavings = heroAvgZ > 1 ? (summary?.total_value_mxn ?? 0) * (1 - 1 / heroAvgZ) : 0
+  void _heroEstSavings
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
-      <EditorialPageShell
-        kicker="PRICE INTELLIGENCE · MARKET ANOMALY DETECTION"
-        headline={<>When prices deviate, <em>corruption follows.</em></>}
-        paragraph="Price intelligence tracks statistical outliers across Mexico's federal procurement market — contracts priced beyond sector norms are investigated first."
-        severity="high"
-        loading={loading}
-        stats={[
-          {
-            value: summary ? formatNumber(summary.total_outliers) : '—',
-            label: 'anomalous contracts',
-            color: '#fb923c',
-          },
-          {
-            value: summary ? formatCompactMXN(summary.total_value_mxn) : '—',
-            label: 'value at risk',
-            color: '#f87171',
-          },
-          {
-            value: summary ? `+${(summary.avg_z_score ?? 0).toFixed(1)}σ` : '—',
-            label: 'avg deviation',
-            color: '#fbbf24',
-          },
-          {
-            value: heroEstSavings > 0 ? formatCompactMXN(heroEstSavings) : '—',
-            label: 'est. overpricing',
-            color: '#a78bfa',
-          },
-        ]}
-      >
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              Price Intelligence
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              MARKET ANOMALY DETECTION · v0.6.5
+            </p>
+          </div>
+          {!loading && summary && (
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>
+                  {formatNumber(summary.total_outliers)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Anomalies</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>
+                  {formatCompactMXN(summary.total_value_mxn)}
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">At risk</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fbbf24' }}>
+                  +{(summary.avg_z_score ?? 0).toFixed(1)}σ
+                </div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg deviation</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
         <Act number="I" label="THE ANOMALIES">
       {/* ================================================================== */}
       {/* SECTION 1: Hero Lede + KPI Strip                                   */}
@@ -2161,7 +2166,6 @@ export default function PriceIntelligence() {
 
       <CitationBlock context="Price anomaly analysis — 7,090 anomalies" className="mt-2" />
         </Act>
-      </EditorialPageShell>
     </div>
   )
 }

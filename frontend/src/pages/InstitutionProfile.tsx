@@ -22,8 +22,6 @@ import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
 import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
 import { RISK_COLORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
@@ -470,7 +468,8 @@ export function InstitutionProfile() {
   const highRiskPct = institution.high_risk_percentage ?? institution.high_risk_pct
   const _vendorCount = institution.vendor_count ?? vendors?.total ?? 0
   void _vendorCount
-  const daPct = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
+  const _daPct = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
+  void _daPct
   const topVendor = vendors?.data?.[0]
   const topVendorPct = topVendor && totalValue > 0
     ? (topVendor.total_value_mxn / totalValue) * 100
@@ -631,62 +630,42 @@ export function InstitutionProfile() {
         </Suspense>
       )}
 
-      <EditorialPageShell
-        kicker="PERFIL INSTITUCIONAL · MÉXICO"
-        headline={toTitleCase(institution.name)}
-        paragraph={
-          <>
-            This institution's procurement record spans 2002&ndash;2025 across {formatNumber(totalContracts)} contracts.
-            {' '}{getInstitutionTypeLabel(institution.institution_type)}
-            {sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}.
-            {' '}Patterns below reveal vendor concentration, direct-award rates, and risk signals
-            measured against documented corruption signatures.
-          </>
-        }
-        stats={[
-          {
-            value: formatNumber(totalContracts),
-            label: t('profile.hallazgoLabels.contractsAnalyzed'),
-            sub: '2002-2025, COMPRANET',
-          },
-          {
-            value: formatCompactMXN(totalValue),
-            label: t('profile.hallazgoLabels.totalAccumulatedSpend'),
-            color: 'var(--color-accent)',
-            sub: formatCompactUSD(totalValue),
-          },
-          {
-            value: `${(riskScore * 100).toFixed(1)}%`,
-            label: t('profile.hallazgoLabels.avgRiskIndex'),
-            color: riskLevel === 'critical' ? 'var(--color-risk-critical)' :
-                   riskLevel === 'high' ? 'var(--color-risk-high)' :
-                   riskLevel === 'medium' ? 'var(--color-risk-medium)' :
-                   'var(--color-risk-low)',
-            sub: 'OECD: 2-15%',
-          },
-          {
-            value: `${daPct.toFixed(0)}%`,
-            label: t('profile.hallazgoLabels.directAward'),
-            color: daPct > 80 ? 'var(--color-risk-critical)' : daPct > 60 ? 'var(--color-risk-high)' : undefined,
-            sub: 'OECD max: 25%',
-          },
-        ]}
-        meta={<>RUBLI · v0.6.5</>}
-        severity="medium"
-        actions={
-          /* Dossier export — reporter-ready ZIP (HTML brief + CSV +
-             JSON manifest + README). Addresses the investigative-editor
-             review's #1 missing feature. */
-          <a
-            href={`/api/v1/dossier/institution/${institutionId}`}
-            download
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border transition-colors"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
-            Dossier (ZIP)
-          </a>
-        }
-      >
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {toTitleCase(institution.name)}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              PERFIL INSTITUCIONAL · {getInstitutionTypeLabel(institution.institution_type).toUpperCase()}{sectorName ? ` · ${sectorName.toUpperCase()}` : ''}
+            </p>
+          </div>
+          <div className="flex items-baseline gap-5">
+            <a
+              href={`/api/v1/dossier/institution/${institutionId}`}
+              download
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border transition-colors self-center"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
+              Dossier (ZIP)
+            </a>
+            <div className="text-right">
+              <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">{formatNumber(totalContracts)}</div>
+              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatCompactMXN(totalValue)}</div>
+              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: riskLevel === 'critical' ? 'var(--color-risk-critical)' : riskLevel === 'high' ? 'var(--color-risk-high)' : riskLevel === 'medium' ? 'var(--color-risk-medium)' : 'var(--color-risk-low)' }}>
+                {(riskScore * 100).toFixed(1)}%
+              </div>
+              <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Avg risk</div>
+            </div>
+          </div>
+        </div>
+      </header>
 
       {/* ---- HIDDEN HEADLINE (kept for backward i18n / a11y links) ---- */}
       <div className="sr-only">
@@ -751,7 +730,6 @@ export function InstitutionProfile() {
       )}
 
       {/* ---- TABBED CONTENT ---- */}
-      <Act number="I" label="EVIDENCIA · EXPEDIENTE INSTITUCIONAL">
       <SimpleTabs
         defaultTab="overview"
         onTabChange={setActiveTab}
@@ -1651,8 +1629,6 @@ export function InstitutionProfile() {
         </TabPanel>
 
       </SimpleTabs>
-      </Act>
-      </EditorialPageShell>
 
       {isDetailOpen && (
         <Suspense fallback={null}>

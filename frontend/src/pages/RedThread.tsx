@@ -294,7 +294,7 @@ function ChapterSubject({ vendor, aria, t }: {
         {/* Hero — total value in editorial display type */}
         <div className="flex items-baseline gap-3 flex-wrap">
           <span
-            className="font-serif italic font-extrabold tabular-nums leading-[0.95]"
+            className="font-serif font-extrabold tabular-nums leading-[0.95]"
             style={{
               fontSize: 'clamp(2.5rem, 5vw, 3.75rem)',
               color: sectorColor,

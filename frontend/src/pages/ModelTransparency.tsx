@@ -7,8 +7,6 @@
 
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { analysisApi } from '@/api/client'
@@ -791,84 +789,43 @@ export default function ModelTransparency() {
 
   const isLoading = !modelMeta
 
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+        <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+      </div>
+    )
+  }
+
   return (
-    <EditorialPageShell
-      kicker="MODEL TRANSPARENCY · GROUND TRUTH"
-      headline="The cases that teach the model what corruption looks like."
-      paragraph="The RUBLI risk model is trained on 1,363 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
-      stats={[
-        { value: '1,363', label: 'GT cases' },
-        { value: '603', label: 'Vendors' },
-        { value: '~288K', label: 'Contracts' },
-        { value: 'v0.6.5', label: 'Active model' },
-      ]}
-      loading={isLoading}
-    >
-    <Act number="I" label="GROUND TRUTH">
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-10">
-      {/* ============================================================== */}
-      {/* Editorial hero                                                  */}
-      {/* ============================================================== */}
-      <header className="pb-8" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-border">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-text-secondary">RUBLI</span>
-          </span>
-          <span className="text-text-primary">·</span>
-          <span>{t('hero.breadcrumb')}</span>
-          <span className="text-text-primary">·</span>
-          <span className="font-mono tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
-          <span className="text-text-primary">·</span>
-          <span>{t('hero.modelType')}</span>
-        </div>
-        <p className="text-kicker text-kicker--investigation mb-3">{t('hero.kicker')}</p>
-        <h1
-          className="text-text-primary leading-[1.05]"
-          style={{
-            fontFamily: 'var(--font-family-serif)',
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            fontWeight: 700,
-            letterSpacing: '-0.025em',
-          }}
-        >
-          {t('hero.headline')}
-        </h1>
-        <p
-          className="mt-3 max-w-3xl text-text-secondary"
-          style={{
-            fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
-            fontSize: 'clamp(1rem, 1.3vw, 1.2rem)',
-            lineHeight: 1.55,
-          }}
-        >
-          {t('hero.subtitle', { n: formatNumber(nContracts) })}
-        </p>
-        <div className="flex flex-wrap items-center gap-4 mt-5">
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono"
-            style={{
-              backgroundColor: `${ACCENT}1a`,
-              color: ACCENT,
-              border: `1px solid ${ACCENT}33`,
-            }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full animate-pulse"
-              style={{ backgroundColor: ACCENT }}
-            />
-            Live · AUC {auc.toFixed(3)}
-          </span>
-          <span className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
-            Trained {modelMeta?.trained_at ?? '2026-03-25'}
-          </span>
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {t('hero.headline')}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              MODEL TRANSPARENCY · {(modelMeta?.version ?? CURRENT_MODEL_VERSION).toUpperCase()} · TRAINED {modelMeta?.trained_at ?? '2026-03-25'}
+            </p>
+          </div>
+          <div className="flex items-baseline gap-5">
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">1,363</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">GT cases</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatNumber(nContracts)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts scored</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: ACCENT }}>AUC {auc.toFixed(3)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Test (vendor-stratified)</div>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* ============================================================== */}
-      {/* Tabs                                                            */}
-      {/* ============================================================== */}
       <SimpleTabs tabs={tabs} defaultTab="summary">
         <TabPanel tabKey="summary">
           <SummaryTab auc={auc} nContracts={nContracts} />
@@ -881,7 +838,5 @@ export default function ModelTransparency() {
         </TabPanel>
       </SimpleTabs>
     </div>
-    </Act>
-    </EditorialPageShell>
   )
 }

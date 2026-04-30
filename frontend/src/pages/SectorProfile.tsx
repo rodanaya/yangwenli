@@ -17,7 +17,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import {
   cn,
@@ -41,7 +40,6 @@ import {
   SECTORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import { getSectorDescription } from '@/lib/sector-descriptions'
 import {
   Building2,
   Users,
@@ -1067,11 +1065,12 @@ export function SectorProfile() {
     { id: 'risk', label: t('profile.riskTab') },
   ]
 
-  // Editorial shell severity from sector risk level
-  const shellSeverity: 'critical' | 'high' | 'medium' | 'low' =
+  // Editorial shell severity from sector risk level (kept for legacy refs)
+  const _shellSeverity: 'critical' | 'high' | 'medium' | 'low' =
     riskLevel === 'critical' ? 'critical' :
     riskLevel === 'high' ? 'high' :
     riskLevel === 'medium' ? 'medium' : 'low'
+  void _shellSeverity
 
   return (
     <article className="max-w-6xl mx-auto pb-12 px-4 sm:px-6 pt-4">
@@ -1115,47 +1114,43 @@ export function SectorProfile() {
         </div>
       </nav>
 
-      <EditorialPageShell
-        kicker={`SECTOR PROFILE · ${sector.name?.toUpperCase() ?? 'LOADING...'}`}
-        headline={
-          <>
-            The <span style={{ color: sectorColor }} className="capitalize">{sector.name}</span> sector
-          </>
-        }
-        paragraph={
-          <>
-            {getSectorDescription(sector.code).short} Procurement patterns in this sector reveal how
-            public spending concentrates among vendors, where competitive bidding gives way to direct
-            awards, and which institutions control the largest share of contract value.
-          </>
-        }
-        stats={stats ? [
-          { value: formatCompactMXN(stats.total_value_mxn), label: t('profile.totalSpend'), color: sectorColor },
-          { value: formatNumber(stats.total_contracts), label: t('profile.contracts') },
-          {
-            value: `${highRiskPct}%`,
-            label: t('profile.highPlusCritical'),
-            color: parseFloat(highRiskPct) > 15 ? 'var(--color-risk-high)' : undefined,
-            sub: 'OECD: 2-15%',
-          },
-          {
-            value: formatPercentSafe(stats.direct_award_pct, false) ?? '-',
-            label: t('profile.directAward'),
-            color: (stats.direct_award_pct ?? 0) > 70 ? 'var(--color-risk-high)' : undefined,
-            sub: 'OECD max: 25%',
-          },
-        ] : undefined}
-        meta={<>RUBLI · v0.6.5</>}
-        actions={
-          <div className="flex items-center gap-3">
-            <RiskBadge level={riskLevel} />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
-              {sector.code}
-            </span>
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight capitalize">
+              {sector.name} <span className="text-text-muted font-normal">sector</span>
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              SECTOR PROFILE · {sector.code} · v0.6.5
+            </p>
           </div>
-        }
-        severity={shellSeverity}
-      >
+          <div className="flex items-baseline gap-5">
+            <RiskBadge level={riskLevel} />
+            {stats && (
+              <>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: sectorColor }}>
+                    {formatCompactMXN(stats.total_value_mxn)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.totalSpend')}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    {formatNumber(stats.total_contracts)}
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.contracts')}</div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-xl sm:text-2xl font-bold tabular-nums leading-none ${parseFloat(highRiskPct) > 15 ? 'text-risk-high' : 'text-text-primary'}`}>
+                    {highRiskPct}%
+                  </div>
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.highPlusCritical')}</div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
 
       {/* ── TABS ────────────────────────────────────────────────────────────── */}
       <Act number="I" label="EVIDENCIA · ANÁLISIS DEL SECTOR">
@@ -1530,7 +1525,6 @@ export function SectorProfile() {
         </div>
       </div>
       </Act>
-      </EditorialPageShell>
     </article>
   )
 }

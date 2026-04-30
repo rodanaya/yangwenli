@@ -13,7 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { captureApi, type CaptureItem } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
@@ -157,121 +156,90 @@ export default function CaptureCreep() {
   const captures = data?.data ?? []
   const totalCount = data?.total_captures ?? 0
 
+  const capturedValue = data?.data.reduce((sum, c) => sum + c.cumulative_value_mxn, 0) ?? 0
+  const largestJump = data && data.data.length > 0
+    ? Math.max(...data.data.map((c) => c.peak_share_pct - c.earliest_share_pct))
+    : 0
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <EditorialPageShell
-        kicker={lang === 'es' ? 'RUBLI · CAPTURA INSTITUCIONAL' : 'RUBLI · INSTITUTIONAL CAPTURE'}
-        headline={
-          isLoading ? (
-            lang === 'es' ? 'Captura institucional' : 'Institutional capture'
-          ) : totalCount > 0 ? (
-            lang === 'es' ? (
-              <>
-                <span style={{ color: 'var(--color-risk-critical)' }}>{totalCount}</span>
-                {' '}instituciones capturadas por un solo proveedor entre 2018 y 2025.
-              </>
-            ) : (
-              <>
-                <span style={{ color: 'var(--color-risk-critical)' }}>{totalCount}</span>
-                {' '}institutions captured by a single vendor between 2018 and 2025.
-              </>
-            )
-          ) : (
-            lang === 'es' ? 'Sin capturas detectadas.' : 'No captures detected.'
-          )
-        }
-        paragraph={
-          lang === 'es' ? (
-            <>
-              Sin modelo, sin regresión, sin SHAP. Para cada institución × año, sumamos los contratos de cada proveedor, dividimos entre el total anual, y buscamos curvas monótonas donde la participación de un proveedor saltó de <strong className="text-text-primary">&le; 25%</strong> a <strong className="text-text-primary">&ge; 50%</strong> en al menos <strong className="text-text-primary">4 años</strong>. Cada fila es un hallazgo publicable — una institución federal donde un solo proveedor pasó de marginal a dominante en la década actual.
-            </>
-          ) : (
-            <>
-              No model, no regression, no SHAP. For every institution × year, we sum each vendor's contracts, divide by that year's total, and look for monotonic growth curves where a vendor's share jumped from <strong className="text-text-primary">&le; 25%</strong> to <strong className="text-text-primary">&ge; 50%</strong> across at least <strong className="text-text-primary">4 years</strong>. Every row is a publishable finding — a federal institution where a single vendor went from marginal to dominant in the current decade.
-            </>
-          )
-        }
-        stats={
-          isLoading || !data ? undefined : [
-            {
-              value: formatNumber(data.total_captures),
-              label: lang === 'es' ? 'Capturas' : 'Captures',
-              color: 'var(--color-risk-critical)',
-              sub: lang === 'es' ? 'instituciones' : 'institutions',
-            },
-            {
-              value: formatCompactMXN(data.data.reduce((sum, c) => sum + c.cumulative_value_mxn, 0)),
-              label: lang === 'es' ? 'Valor capturado' : 'Captured value',
-              color: 'var(--color-accent)',
-            },
-            {
-              value: data.data.length > 0
-                ? `${Math.max(...data.data.map((c) => c.peak_share_pct - c.earliest_share_pct)).toFixed(0)}pt`
-                : '—',
-              label: lang === 'es' ? 'Mayor salto' : 'Largest jump',
-              sub: lang === 'es' ? 'puntos porcentuales' : 'percentage points',
-            },
-            {
-              value: data.thresholds.year_window,
-              label: lang === 'es' ? 'Ventana' : 'Window',
-              sub: lang === 'es' ? `${data.thresholds.floor_share_pct}% → ${data.thresholds.ceil_share_pct}%` : `${data.thresholds.floor_share_pct}% → ${data.thresholds.ceil_share_pct}%`,
-            },
-          ]
-        }
-        severity="critical"
-        loading={isLoading}
-      >
-        {isLoading ? (
-          <div className="space-y-3 mt-6">
-            {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {lang === 'es' ? 'Captura institucional' : 'Institutional capture'}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              {lang === 'es' ? 'RUBLI · 2018–2025 · UMBRALES 25% → 50% · ≥4 AÑOS' : 'RUBLI · 2018–2025 · THRESHOLDS 25% → 50% · ≥4 YEARS'}
+            </p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
-              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
-              <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
-                {lang === 'es' ? (
-                  <>
-                    La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada fila abajo merece investigación — no acusación.
-                  </>
-                ) : (
-                  <>
-                    Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each row below warrants investigation — not accusation.
-                  </>
-                )}
-              </p>
+          <div className="flex items-baseline gap-5">
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCount)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Capturas' : 'Captures'}</div>
             </div>
-
-            <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-              {captures.map((c, i) => (
-                <CaptureRow
-                  key={`${c.institution_id}-${c.vendor_id}`}
-                  c={c}
-                  rank={i + 1}
-                  lang={lang}
-                />
-              ))}
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Valor capturado' : 'Captured value'}</div>
             </div>
-
-            <div className="pt-6 border-t border-border">
-              <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-                {lang === 'es' ? 'Metodología' : 'Methodology'}
-              </p>
-              <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
-                {lang === 'es' ? (
-                  <>
-                    Calculado sobre {data ? data.total_unfiltered : '—'} candidatos (institución, proveedor) con al menos {data?.thresholds.min_years ?? '—'} años de datos. Umbrales: piso {data?.thresholds.floor_share_pct ?? '—'}%, techo {data?.thresholds.ceil_share_pct ?? '—'}%. Institución total mínimo: {formatCompactMXN(data?.thresholds.min_inst_total_mxn ?? 0)}. Valor capturado mínimo: {formatCompactMXN(data?.thresholds.min_cumulative_value_mxn ?? 0)}. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos federales 2018-2025, montos validados (rechazados &gt; 100B MXN).
-                  </>
-                ) : (
-                  <>
-                    Computed over {data ? data.total_unfiltered : '—'} (institution, vendor) candidates with at least {data?.thresholds.min_years ?? '—'} years of data. Thresholds: floor {data?.thresholds.floor_share_pct ?? '—'}%, ceiling {data?.thresholds.ceil_share_pct ?? '—'}%. Minimum institution total: {formatCompactMXN(data?.thresholds.min_inst_total_mxn ?? 0)}. Minimum captured value: {formatCompactMXN(data?.thresholds.min_cumulative_value_mxn ?? 0)}. Ranking: Δshare × √(captured MXN). Data: COMPRANET federal contracts 2018-2025, validated amounts (reject &gt; 100B MXN).
-                  </>
-                )}
-              </p>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
             </div>
           </div>
-        )}
-      </EditorialPageShell>
+        </div>
+      </header>
+
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-24 w-full" />)}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
+            <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+            <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
+              {lang === 'es' ? (
+                <>
+                  La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada fila abajo merece investigación — no acusación.
+                </>
+              ) : (
+                <>
+                  Institutional capture is not proof of wrongdoing. Some legitimate concentrations emerge from technical certification, regional exclusivity, or single-source regulatory dependency. Each row below warrants investigation — not accusation.
+                </>
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-sm border border-border bg-background-card overflow-hidden">
+            {captures.map((c, i) => (
+              <CaptureRow
+                key={`${c.institution_id}-${c.vendor_id}`}
+                c={c}
+                rank={i + 1}
+                lang={lang}
+              />
+            ))}
+          </div>
+
+          <div className="pt-6 border-t border-border">
+            <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              {lang === 'es' ? 'Metodología' : 'Methodology'}
+            </p>
+            <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
+              {lang === 'es' ? (
+                <>
+                  Calculado sobre {data ? data.total_unfiltered : '—'} candidatos (institución, proveedor) con al menos {data?.thresholds.min_years ?? '—'} años de datos. Umbrales: piso {data?.thresholds.floor_share_pct ?? '—'}%, techo {data?.thresholds.ceil_share_pct ?? '—'}%. Institución total mínimo: {formatCompactMXN(data?.thresholds.min_inst_total_mxn ?? 0)}. Valor capturado mínimo: {formatCompactMXN(data?.thresholds.min_cumulative_value_mxn ?? 0)}. Ranking: Δparticipación × √(valor MXN capturado). Datos: COMPRANET contratos federales 2018-2025, montos validados (rechazados &gt; 100B MXN).
+                </>
+              ) : (
+                <>
+                  Computed over {data ? data.total_unfiltered : '—'} (institution, vendor) candidates with at least {data?.thresholds.min_years ?? '—'} years of data. Thresholds: floor {data?.thresholds.floor_share_pct ?? '—'}%, ceiling {data?.thresholds.ceil_share_pct ?? '—'}%. Minimum institution total: {formatCompactMXN(data?.thresholds.min_inst_total_mxn ?? 0)}. Minimum captured value: {formatCompactMXN(data?.thresholds.min_cumulative_value_mxn ?? 0)}. Ranking: Δshare × √(captured MXN). Data: COMPRANET federal contracts 2018-2025, validated amounts (reject &gt; 100B MXN).
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

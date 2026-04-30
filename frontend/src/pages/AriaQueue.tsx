@@ -29,7 +29,6 @@ import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorNameEN, SECTORS } from '@/lib/constants'
 import {
   Search,
-  AlertTriangle,
   FileText,
   ArrowRight,
   ClipboardEdit,
@@ -168,14 +167,14 @@ function PatternChip({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
+        'inline-flex items-center gap-1.5 px-2 py-1 rounded-sm border text-[11px] font-medium transition-colors flex-shrink-0',
         isActive
           ? cn(meta.bg, meta.text, meta.border)
           : 'bg-background-card text-text-secondary border-border hover:border-border'
       )}
       aria-pressed={isActive}
     >
-      <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
+      <span className={cn('h-1 w-1 rounded-full', meta.dot)} />
       <span className={cn(isActive ? meta.text : 'text-text-secondary')}>{t(`patterns.${pattern}`)}</span>
       <span className="font-mono tabular-nums text-text-muted">{formatNumber(count)}</span>
     </button>
@@ -662,26 +661,29 @@ export default function AriaPage() {
             (TierNavigationRow stack, pattern chips, EditorialPageShell
             actions slot) that fought for vertical space.
            ════════════════════════════════════════════════════════════════ */}
-        <div className="mb-5 space-y-2.5">
-          {/* Pattern chips — promoted to the top per the design ask. */}
+        <div className="mb-4 space-y-2">
+          {/* Pattern chips — single horizontal-scrollable row, sorted by
+              count descending so the most frequent pattern leads the eye.
+              Replaces the prior 4-row wrapped grid that read as "scattered." */}
           {Object.keys(patternCounts).length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
               <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0 inline-flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3 text-orange-400" />
                 {isEs ? 'Patrón' : 'Pattern'}
               </span>
-              {Object.entries(patternCounts).map(([pattern, count]) => (
-                <PatternChip
-                  key={pattern}
-                  pattern={pattern}
-                  count={count}
-                  isActive={patternFilter === pattern}
-                  onClick={() => {
-                    setPatternFilter(patternFilter === pattern ? null : pattern)
-                    setPage(1)
-                  }}
-                />
-              ))}
+              {Object.entries(patternCounts)
+                .sort(([, a], [, b]) => b - a)
+                .map(([pattern, count]) => (
+                  <PatternChip
+                    key={pattern}
+                    pattern={pattern}
+                    count={count}
+                    isActive={patternFilter === pattern}
+                    onClick={() => {
+                      setPatternFilter(patternFilter === pattern ? null : pattern)
+                      setPage(1)
+                    }}
+                  />
+                ))}
             </div>
           )}
           {/* Tier pills + flags + sector + search — single row. */}
@@ -786,33 +788,56 @@ export default function AriaPage() {
         {/* INVESTIGATION LIST — one row per vendor, one action            */}
         {/* ============================================================== */}
         <section id="aria-investigation-list" aria-label={t('queueSection.title')}>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-                  {tierFilter != null
-                    ? t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)
-                    : t('queueSection.title', { defaultValue: 'Cola completa' })}
-                </p>
-                {activeFilterCount > 0 && (
-                  <>
-                    <span className="text-[10px] text-text-muted font-mono">·</span>
-                    <button
-                      onClick={clearAll}
-                      className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors"
-                    >
-                      {t('filterBar.clearAll')} ({activeFilterCount})
-                    </button>
-                  </>
-                )}
-              </div>
-              {totalLeads > 0 && (
-                <p className="text-xs text-text-muted font-mono mt-1 tabular-nums">
-                  {formatNumber(totalLeads)} {t('leads.vendorCount')}
-                </p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
+          {/* List header strip — single dense row. Combines the previous
+              orphan title block + review filter chips + export button.
+              Was: 3 stacked sections (title row → vendor count → review
+              chips → export); now flows as one. */}
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border flex-wrap">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+              {tierFilter != null
+                ? t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)
+                : t('queueSection.title', { defaultValue: 'Cola completa' })}
+            </p>
+            {totalLeads > 0 && (
+              <span className="text-[11px] text-text-muted font-mono tabular-nums">
+                · {formatNumber(totalLeads)}
+              </span>
+            )}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={clearAll}
+                className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors"
+              >
+                · {t('filterBar.clearAll')} ({activeFilterCount})
+              </button>
+            )}
+
+            {/* Review chips — pushed to the right of the list header */}
+            <div className="ml-auto flex items-center gap-1 flex-wrap">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
+                {t('table.review')}
+              </span>
+              {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
+                const meta = s ? REVIEW_STATUS_META[s] : null
+                const isActive = reviewStatusFilter === s
+                return (
+                  <button
+                    key={s ?? 'all'}
+                    onClick={() => { setReviewStatusFilter(s); setPage(1) }}
+                    className={cn(
+                      'px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors',
+                      isActive
+                        ? s
+                          ? cn(meta!.className, 'ring-1 ring-border')
+                          : 'bg-background-elevated text-text-primary border-border'
+                        : 'bg-background-card text-text-muted border-border hover:border-border'
+                    )}
+                  >
+                    {s ? t('status.' + s) : t('reviewFilter.all')}
+                  </button>
+                )
+              })}
+              <span className="mx-1 h-3 w-px bg-border" aria-hidden />
               <TableExportButton
                 data={leadsItems as unknown as Record<string, unknown>[]}
                 filename="aria-queue"
@@ -820,33 +845,6 @@ export default function AriaPage() {
                 disabled={leadsItems.length === 0}
               />
             </div>
-          </div>
-
-          {/* Review status filter — compact chip row */}
-          <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
-              {t('table.review')}
-            </span>
-            {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
-              const meta = s ? REVIEW_STATUS_META[s] : null
-              const isActive = reviewStatusFilter === s
-              return (
-                <button
-                  key={s ?? 'all'}
-                  onClick={() => { setReviewStatusFilter(s); setPage(1) }}
-                  className={cn(
-                    'px-2 py-0.5 rounded text-[11px] font-medium border transition-colors',
-                    isActive
-                      ? s
-                        ? cn(meta!.className, 'ring-1 ring-border')
-                        : 'bg-background-elevated text-text-primary border-border'
-                      : 'bg-background-card text-text-muted border-border hover:border-border'
-                  )}
-                >
-                  {s ? t('status.' + s) : t('reviewFilter.all')}
-                </button>
-              )
-            })}
           </div>
 
           {leadsLoading ? (

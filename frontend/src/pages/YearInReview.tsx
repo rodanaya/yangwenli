@@ -19,8 +19,6 @@ import {
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DotBar } from '@/components/ui/DotBar'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -1106,15 +1104,41 @@ export default function YearInReview() {
   // =============================================================================
 
   return (
-    <div className="max-w-[1040px] mx-auto px-4 py-8">
-      <EditorialPageShell
-        kicker="YEAR IN REVIEW"
-        headline={`Mexico Federal Procurement · ${validYear}`}
-        severity="medium"
-        loading={isLoading}
-      >
-        {/* ── ACT I: HERO + YEAR SELECTOR ── */}
-        <Act number="I" label="THE YEAR IN NUMBERS" className="space-y-8">
+    <div className="max-w-[1040px] mx-auto px-4 md:px-6 py-6">
+      <header className="mb-5 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              {t('title') || 'Year in Review'} · {validYear}
+            </h1>
+            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+              MEXICO FEDERAL PROCUREMENT · COMPRANET
+            </p>
+          </div>
+          <div className="flex items-baseline gap-5">
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{yearRow ? formatNumber(yearRow.contracts) : '—'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Contracts</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{yearRow ? formatCompactMXN(yearRow.total_value) : '—'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Total spend</div>
+            </div>
+            <div className="text-right">
+              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-accent)' }}>{yearRow ? `${yearRow.direct_award_pct.toFixed(0)}%` : '—'}</div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">Direct award</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {isLoading && (
+        <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+      )}
+
+      <div className="space-y-8">
+        {/* ── SECTION I: HERO + YEAR SELECTOR ── */}
+        <div className="space-y-8">
 
           {/* Year selector — comes FIRST so user picks the year before seeing stats */}
           <div className="relative overflow-hidden rounded-sm border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
@@ -1353,10 +1377,9 @@ export default function YearInReview() {
             </div>
           </motion.div>
 
-        </Act>
+        </div>
 
-        {/* ── ACT II: BY SECTOR ── */}
-        <Act number="II" label="BY SECTOR">
+        <div className="pt-2 border-t border-border" />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
@@ -1418,10 +1441,9 @@ export default function YearInReview() {
 
           </div>
 
-        </Act>
+        <div className="pt-2 border-t border-border" />
 
-        {/* ── ACT III: RISK & PROCEDURE ── */}
-        <Act number="III" label="RISK &amp; PROCEDURE" className="space-y-8">
+        <div className="space-y-8">
 
           {/* Risk Evolution */}
           {yearRow && yoyData.length > 0 && (
@@ -1459,11 +1481,11 @@ export default function YearInReview() {
               <ProcedureTypeSection yearRow={yearRow} allYears={yoyData} validYear={validYear} />
             </div>
           )}
+        </div>
 
-        </Act>
+        <div className="pt-2 border-t border-border" />
 
-        {/* ── ACT IV: SPENDING CALENDAR ── */}
-        <Act number="IV" label="SPENDING CALENDAR" className="space-y-8">
+        <div className="space-y-8">
 
           {/* Monthly spending */}
           <div>
@@ -1487,10 +1509,11 @@ export default function YearInReview() {
             )}
           </div>
 
-        </Act>
+        </div>
 
-        {/* ── ACT V: ACTORS & CONTRACTS ── */}
-        <Act number="V" label="ACTORS &amp; CONTRACTS" className="space-y-8">
+        <div className="pt-2 border-t border-border" />
+
+        <div className="space-y-8">
 
           {/* Spotlight — top vendor */}
           {topVendor && !vendorsLoading && (
@@ -1633,9 +1656,9 @@ export default function YearInReview() {
 
           <div className="h-8" />
 
-        </Act>
+        </div>
 
-      </EditorialPageShell>
+      </div>
     </div>
   )
 }
