@@ -31,7 +31,6 @@ import {
   Search,
   FileText,
   ArrowRight,
-  ClipboardEdit,
   Check,
   X as XIcon,
 } from 'lucide-react'
@@ -56,20 +55,10 @@ const PATTERN_META: Record<PatternKey, { text: string; bg: string; border: strin
   P7: { text: 'text-risk-high',     bg: 'bg-risk-high/10',     border: 'border-risk-high/30',     dot: 'bg-risk-high' },
 }
 
-// IPS pill color mirrors risk severity bands (critical/high/medium/low).
-const IPS_TEXT_COLOR = (score: number) => {
-  if (score >= 0.75) return 'text-risk-critical'
-  if (score >= 0.50) return 'text-risk-high'
-  if (score >= 0.30) return 'text-text-secondary'
-  return 'text-text-muted'
-}
-
-const IPS_BG_COLOR = (score: number) => {
-  if (score >= 0.75) return 'bg-risk-critical/10 border-risk-critical/30'
-  if (score >= 0.50) return 'bg-risk-high/10 border-risk-high/30'
-  if (score >= 0.30) return 'bg-background-elevated border-border'
-  return 'bg-background-card border-border'
-}
+// (Former IPS_TEXT_COLOR + IPS_BG_COLOR helpers removed — the row now
+// inlines a single riskColor CSS var derived from ips_final, used both
+// for the score text and the TenureRibbon. The dual-classname helpers
+// are no longer referenced.)
 
 type TierConfig = {
   tier: 1 | 2 | 3 | 4
@@ -306,7 +295,63 @@ function ReviewPopover({
 // TIER_GHOST_META + SIG_LABELS + SIG_KEYS + GhostSuspectsPanel itself moved
 // to components/aria/GhostSuspectsPanel.tsx (167 LOC removed from this file).
 
-function InvestigationRow({ item }: { item: AriaQueueItem }) {
+/**
+ * TenureRibbon — horizontal mini-strip mapping a vendor's active years
+ * to the full COMPRANET 2002-2025 axis. Replaces the useless 12px IPS
+ * bar that was always 80-90% full for every T1 vendor.
+ *
+ * The visual difference between vendors is now SHAPE: a vendor active
+ * 2008-2025 has a wide bar; one active only 2024-2025 has a tiny bar
+ * pinned to the right. Position + width = trajectory at a glance.
+ */
+function TenureRibbon({
+  firstYear,
+  lastYear,
+  riskColor,
+}: {
+  firstYear: number
+  lastYear: number
+  riskColor: string
+}) {
+  const AXIS_MIN = 2002
+  const AXIS_MAX = 2025
+  const span = AXIS_MAX - AXIS_MIN
+  const startPct = ((firstYear - AXIS_MIN) / span) * 100
+  const widthPct = Math.max(2, ((lastYear - firstYear + 1) / span) * 100)
+  const isRecent = lastYear >= 2024
+  return (
+    <div className="relative w-[88px] h-2 rounded-sm bg-background-elevated/60 border border-border/50 overflow-hidden flex-shrink-0" aria-hidden>
+      {/* 2010 / 2018 reference ticks — faint vertical guide lines for orientation */}
+      {[2010, 2018].map((y) => (
+        <div
+          key={y}
+          className="absolute top-0 bottom-0 w-px bg-border/40"
+          style={{ left: `${((y - AXIS_MIN) / span) * 100}%` }}
+        />
+      ))}
+      {/* The ribbon itself */}
+      <div
+        className="absolute top-0.5 bottom-0.5 rounded-sm"
+        style={{
+          left: `${startPct}%`,
+          width: `${widthPct}%`,
+          backgroundColor: riskColor,
+          opacity: 0.85,
+          boxShadow: isRecent ? `0 0 4px ${riskColor}` : undefined,
+        }}
+      />
+    </div>
+  )
+}
+
+const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; title: string }> = {
+  pending:    { char: '○', color: 'var(--color-text-muted)',     title: 'Pending review' },
+  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      title: 'Under review' },
+  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  title: 'Confirmed corrupt' },
+  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     title: 'Dismissed' },
+}
+
+function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }) {
   const { t } = useTranslation('aria')
   const navigate = useNavigate()
   const [reviewOpen, setReviewOpen] = useState(false)
@@ -315,13 +360,37 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
   const ipsPct = Math.round(ips * 100)
   const tier = item.ips_tier ?? 4
   const tierCfg = TIER_CONFIG.find((c) => c.tier === tier) ?? TIER_CONFIG[3]
-  const patternMeta = item.primary_pattern
-    ? PATTERN_META[item.primary_pattern as PatternKey]
-    : null
+  const patternKey = item.primary_pattern as PatternKey | null
+  const patternMeta = patternKey ? PATTERN_META[patternKey] : null
 
   const value = item.total_value_mxn ?? 0
   const contracts = item.total_contracts ?? 0
   const sector = item.primary_sector_name ?? null
+
+  // Recency / tenure derived from years_active + last_contract_year.
+  // years_active was already on the payload but never visualized.
+  const lastYear = item.last_contract_year ?? null
+  const yearsActive = item.years_active ?? null
+  const firstYear =
+    lastYear != null && yearsActive != null && yearsActive > 0
+      ? lastYear - yearsActive + 1
+      : null
+  const isActive = lastYear != null && lastYear >= 2024
+  const isDormant = lastYear != null && lastYear < 2022
+
+  const reviewStatus = (item.review_status as ReviewStatus | undefined) ?? 'pending'
+  const reviewGlyph = REVIEW_GLYPH[reviewStatus] ?? REVIEW_GLYPH.pending
+  const flagsCount =
+    (item.in_ground_truth ? 1 : 0) +
+    (item.is_efos_definitivo ? 1 : 0) +
+    (item.is_sfp_sanctioned ? 1 : 0)
+
+  // IPS color for both score and tenure ribbon (consistent across the row)
+  const riskColor =
+    ips >= 0.75 ? 'var(--color-risk-critical)'
+    : ips >= 0.50 ? 'var(--color-risk-high)'
+    : ips >= 0.30 ? 'var(--color-risk-medium)'
+    : 'var(--color-text-muted)'
 
   const handleClick = () => {
     navigate(`/thread/${item.vendor_id}`)
@@ -340,105 +409,156 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
+          'group relative grid items-center gap-x-3 gap-y-1 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
+          'grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_auto_auto_auto_auto]',
           tierCfg.accent
         )}
       >
-        {/* Tier — fixed-width column, smaller chip */}
-        <div className="shrink-0 w-8 text-center">
-          <span className={cn(
-            'inline-block px-1 py-0.5 rounded-sm text-[9px] font-mono font-bold uppercase tracking-[0.12em]',
-            tierCfg.pillBg,
-            tierCfg.pillText
-          )}>
-            T{tier}
-          </span>
-        </div>
+        {/* ─── LINE 1 ─────────────────────────────────────────────────── */}
 
-        {/* Vendor name — single line, truncated. Was: name + subline (2 rows). */}
-        <div className="flex-1 min-w-0 flex items-center gap-2">
-          <span className="text-sm font-semibold text-text-primary truncate leading-tight" title={item.vendor_name}>
-            {formatVendorName(item.vendor_name, 48)}
+        {/* Vendor name — bold primary text */}
+        <div className="min-w-0 flex items-center gap-2">
+          <span className="text-sm font-bold text-text-primary truncate leading-tight" title={item.vendor_name}>
+            {formatVendorName(item.vendor_name, 56)}
           </span>
           {item.new_vendor_risk && (
             <span className="shrink-0 font-mono text-[8px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1 py-0.5 rounded-sm">
-              NEW
+              {isEs ? 'NUEVO' : 'NEW'}
             </span>
           )}
         </div>
 
-        {/* Pattern + sector + value — inline metadata, hidden on smaller widths */}
-        <div className="hidden lg:flex items-center gap-3 shrink-0 text-[11px] font-mono text-text-muted">
-          {item.primary_pattern && patternMeta && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium',
-                patternMeta.bg,
-                patternMeta.text,
-                patternMeta.border
-              )}
-            >
-              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
-              {item.primary_pattern}
-            </span>
-          )}
-          {sector && (
-            <span className="truncate max-w-[110px]" title={getSectorNameEN(sector)}>
-              {getSectorNameEN(sector)}
-            </span>
-          )}
-          {contracts > 0 && (
-            <span className="tabular-nums">{formatNumber(contracts)} ct</span>
-          )}
+        {/* Total value — line 1, right-aligned */}
+        <div className="text-right shrink-0">
           {value > 0 && (
-            <span className="tabular-nums font-bold text-text-secondary">{formatCompactMXN(value)}</span>
+            <span className="text-sm font-bold font-mono tabular-nums text-text-primary">
+              {formatCompactMXN(value)}
+            </span>
           )}
         </div>
 
-        {/* Compact metadata for sm/md — just value + pattern code */}
-        <div className="lg:hidden flex items-center gap-2 shrink-0 text-[10px] font-mono text-text-muted">
-          {item.primary_pattern && patternMeta && (
-            <span className={cn('font-bold', patternMeta.text)}>{item.primary_pattern}</span>
-          )}
-          {value > 0 && (
-            <span className="tabular-nums">{formatCompactMXN(value)}</span>
-          )}
-        </div>
-
-        {/* IPS — number + mini horizontal bar. The bar visually anchors the
-            score against the 0–100 range so scanners distinguish "barely T1"
-            from "deeply T1" without reading the digits. */}
-        <div className="shrink-0 flex items-center gap-1.5">
-          <div className="hidden sm:block w-12 h-1.5 rounded-full bg-background-elevated overflow-hidden" aria-hidden>
-            <div
-              className={cn('h-full rounded-full', IPS_BG_COLOR(ips))}
-              style={{ width: `${Math.min(100, Math.max(2, ipsPct))}%` }}
-            />
-          </div>
-          <span className={cn('font-mono font-bold text-sm tabular-nums leading-none', IPS_TEXT_COLOR(ips))} title={`IPS ${ipsPct}`}>
+        {/* IPS score — large, color-coded */}
+        <div className="shrink-0 text-right">
+          <span
+            className="font-mono font-bold text-base tabular-nums leading-none"
+            style={{ color: riskColor }}
+            title={`IPS ${ipsPct}`}
+          >
             {ipsPct}
           </span>
         </div>
 
-        {/* Review + arrow */}
-        <div className="relative flex items-center gap-0.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+        {/* Review status glyph — visible inline, replaces the buried popover icon */}
+        <div className="shrink-0 flex items-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setReviewOpen((v) => !v)}
-            className="hidden sm:inline-flex p-1 rounded text-text-muted hover:text-risk-high hover:bg-risk-high/10 transition-colors"
+            className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
+            style={{ color: reviewGlyph.color }}
             aria-label={t('reviewPopover.updateTitle')}
-            title={t('reviewPopover.updateTitle')}
+            title={`${reviewGlyph.title} — ${t('reviewPopover.updateTitle')}`}
           >
-            <ClipboardEdit className="h-3 w-3" />
+            {reviewGlyph.char}
           </button>
           {reviewOpen && (
             <ReviewPopover
               vendorId={item.vendor_id}
-              currentStatus={item.review_status as ReviewStatus | undefined}
+              currentStatus={reviewStatus}
               inGroundTruth={!!item.in_ground_truth}
               onClose={() => setReviewOpen(false)}
             />
           )}
-          <ArrowRight className="h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all" />
+        </div>
+
+        {/* Open arrow */}
+        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" />
+
+        {/* ─── LINE 2 ─────────────────────────────────────────────────── */}
+
+        {/* Meta row spans the full width */}
+        <div className="col-span-full flex items-center gap-2.5 text-[10px] font-mono text-text-muted flex-wrap">
+          {/* Sector chip with sector-color dot */}
+          {sector && (
+            <span className="inline-flex items-center gap-1 max-w-[160px]">
+              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" />
+              <span className="uppercase tracking-[0.06em] truncate" title={getSectorNameEN(sector)}>
+                {getSectorNameEN(sector)}
+              </span>
+            </span>
+          )}
+
+          {/* Contract count */}
+          {contracts > 0 && (
+            <span className="tabular-nums">
+              {formatNumber(contracts)} {isEs ? 'contratos' : 'contracts'}
+            </span>
+          )}
+
+          {/* Pattern — full label inline (was: just "P5") */}
+          {patternKey && patternMeta && (
+            <span className={cn('inline-flex items-center gap-1', patternMeta.text)}>
+              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
+              <span className="font-mono font-bold">{patternKey}</span>
+              <span className="text-text-secondary normal-case">{t(`patterns.${patternKey}`)}</span>
+            </span>
+          )}
+
+          {/* Recency badge — derived from last_contract_year */}
+          {isActive ? (
+            <span className="inline-flex items-center gap-1 text-risk-high">
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" />
+              <span className="uppercase tracking-[0.08em] font-bold">
+                {isEs ? `Activo ${lastYear}` : `Active ${lastYear}`}
+              </span>
+            </span>
+          ) : isDormant && lastYear ? (
+            <span className="text-text-muted/70">
+              {isEs ? `Inactivo desde ${lastYear}` : `Dormant since ${lastYear}`}
+            </span>
+          ) : lastYear ? (
+            <span className="text-text-muted/70">
+              {isEs ? `Última: ${lastYear}` : `Last: ${lastYear}`}
+            </span>
+          ) : null}
+
+          {/* External flag glyphs — inline, not buried */}
+          {flagsCount > 0 && (
+            <span className="inline-flex items-center gap-1">
+              {item.in_ground_truth && (
+                <span
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30"
+                  title={isEs ? 'En casos de referencia documentados' : 'In documented ground-truth cases'}
+                >
+                  GT
+                </span>
+              )}
+              {item.is_efos_definitivo && (
+                <span
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-critical/10 text-risk-critical border border-risk-critical/30"
+                  title="SAT EFOS Definitivo"
+                >
+                  EFOS
+                </span>
+              )}
+              {item.is_sfp_sanctioned && (
+                <span
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-high/10 text-risk-high border border-risk-high/30"
+                  title="Sancionado SFP"
+                >
+                  SFP
+                </span>
+              )}
+            </span>
+          )}
+
+          {/* Tenure ribbon — pushed to the right */}
+          {firstYear != null && lastYear != null && (
+            <span className="ml-auto inline-flex items-center gap-1.5">
+              <span className="font-mono tabular-nums text-text-muted/70">
+                '{String(firstYear).slice(2)}–'{String(lastYear).slice(2)}
+              </span>
+              <TenureRibbon firstYear={firstYear} lastYear={lastYear} riskColor={riskColor} />
+            </span>
+          )}
         </div>
       </div>
     </motion.div>
@@ -459,6 +579,12 @@ export default function AriaPage() {
   const [sectorFilter, setSectorFilter] = useState<number | null>(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
+
+  // Client-side sort within the current page. Server returns IPS-ordered;
+  // user can re-sort by what's actually meaningful for their triage. The
+  // 'ips' sort key is server-default so picking it preserves backend order.
+  type SortKey = 'ips' | 'value' | 'recency' | 'tenure' | 'pattern'
+  const [sortKey, setSortKey] = useState<SortKey>('ips')
 
   const PER_PAGE = 50
 
@@ -503,7 +629,24 @@ export default function AriaPage() {
   const patternCounts = stats?.pattern_counts ?? {}
   const elevatedValue = stats?.elevated_value_mxn ?? 0
 
-  const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
+  const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
+
+  // Client-side sort for the visible page. IPS is the server default —
+  // returning leadsItemsRaw unchanged preserves the original ordering.
+  const leadsItems: AriaQueueItem[] = (() => {
+    if (sortKey === 'ips') return leadsItemsRaw
+    const arr = [...leadsItemsRaw]
+    if (sortKey === 'value') {
+      arr.sort((a, b) => (b.total_value_mxn ?? 0) - (a.total_value_mxn ?? 0))
+    } else if (sortKey === 'recency') {
+      arr.sort((a, b) => (b.last_contract_year ?? 0) - (a.last_contract_year ?? 0))
+    } else if (sortKey === 'tenure') {
+      arr.sort((a, b) => (b.years_active ?? 0) - (a.years_active ?? 0))
+    } else if (sortKey === 'pattern') {
+      arr.sort((a, b) => (a.primary_pattern ?? 'ZZ').localeCompare(b.primary_pattern ?? 'ZZ'))
+    }
+    return arr
+  })()
 
   const tierCounts: Record<number, number> = {
     1: stats?.latest_run?.tier1_count ?? 0,
@@ -812,8 +955,26 @@ export default function AriaPage() {
               </button>
             )}
 
-            {/* Review chips — pushed to the right of the list header */}
-            <div className="ml-auto flex items-center gap-1 flex-wrap">
+            {/* Sort + review chips — pushed to the right of the list header */}
+            <div className="ml-auto flex items-center gap-2 flex-wrap">
+              {/* Sort dropdown — client-side sort within the visible page.
+                  Defaults to IPS (server order). */}
+              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
+                {isEs ? 'Ordenar' : 'Sort'}
+              </span>
+              <select
+                value={sortKey}
+                onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-background-card text-text-secondary border border-border hover:border-border cursor-pointer focus-visible:outline-none focus-visible:border-accent"
+                aria-label={isEs ? 'Ordenar por' : 'Sort by'}
+              >
+                <option value="ips">{isEs ? 'Riesgo (IPS)' : 'Risk (IPS)'}</option>
+                <option value="value">{isEs ? 'Valor total' : 'Total value'}</option>
+                <option value="recency">{isEs ? 'Última actividad' : 'Last activity'}</option>
+                <option value="tenure">{isEs ? 'Años activo' : 'Years active'}</option>
+                <option value="pattern">{isEs ? 'Patrón' : 'Pattern'}</option>
+              </select>
+              <span className="mx-1 h-3 w-px bg-border" aria-hidden />
               <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
                 {t('table.review')}
               </span>
@@ -889,7 +1050,7 @@ export default function AriaPage() {
               className="space-y-1.5"
             >
               {leadsItems.map((item) => (
-                <InvestigationRow key={item.vendor_id} item={item} />
+                <InvestigationRow key={item.vendor_id} item={item} isEs={isEs} />
               ))}
             </motion.div>
           )}
