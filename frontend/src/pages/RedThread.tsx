@@ -305,25 +305,311 @@ function ChapterSubject({ vendor, aria, t }: {
 
 // ─── Chapter 2: The Timeline ────────────────────────────────────────────────
 
+type TimelineItem = { year: number; avg_risk_score: number | null; contract_count: number; total_value: number }
+type EraBucket = 'stable' | 'watch' | 'alert'
+
+const ERA_BG: Record<EraBucket, string> = {
+  stable: 'rgba(160,104,32,0.04)',
+  watch:  'rgba(245,158,11,0.08)',
+  alert:  'rgba(220,38,38,0.10)',
+}
+
+const ERA_LABEL_COLOR: Record<EraBucket, string> = {
+  stable: 'var(--color-text-muted)',
+  watch:  'var(--color-risk-medium)',
+  alert:  'var(--color-risk-critical)',
+}
+
+function bucketOfRisk(r: number): EraBucket {
+  if (r >= 0.5) return 'alert'
+  if (r >= 0.25) return 'watch'
+  return 'stable'
+}
+
+/**
+ * TimelineSkyline — single-canvas chronology. Replaces the prior
+ * dot-strip + year-box duplication with one SVG that surfaces THREE
+ * things at once: chronology (bar X-position), value (bar height,
+ * log scale), and risk (bar color + auto-detected era backgrounds).
+ *
+ * Innovation:
+ *   • ERA SEGMENTATION — running-bucket partitioning of the timeline
+ *     into stable / watch / alert eras, rendered as faint background
+ *     bands with type labels overhead. Surfaces "regime change" as
+ *     visual structure, not an inferred reading.
+ *   • HERO CALLOUT — argmax(value × risk) gets a flag floating above
+ *     its bar with year / value / risk / contract count inline.
+ *   • SINGLE CANVAS — bars replace both dots and year-cards. Numerical
+ *     detail surfaces via tooltip (mouseover) or via the hero flag for
+ *     the year that matters most.
+ */
+function TimelineSkyline({
+  timeline,
+  eraLabels,
+  className,
+}: {
+  timeline: TimelineItem[]
+  eraLabels: { stable: string; watch: string; alert: string }
+  className?: string
+}) {
+  if (timeline.length === 0) return null
+
+  const sorted = [...timeline].sort((a, b) => a.year - b.year)
+  const minYear = sorted[0].year
+  const maxYear = sorted[sorted.length - 1].year
+  const yearSpan = Math.max(1, maxYear - minYear)
+  const maxValue = Math.max(...sorted.map((t) => t.total_value), 1)
+  const logMax = Math.log(maxValue + 1)
+
+  // Hero year — argmax(value × risk). Falls back to argmax(value) if
+  // every year has zero risk (defensive — shouldn't happen for ARIA leads).
+  const hero = sorted.reduce((max, item) => {
+    const score = item.total_value * (item.avg_risk_score ?? 0)
+    const maxScore = max.total_value * (max.avg_risk_score ?? 0)
+    return score > maxScore ? item : max
+  }, sorted[0])
+
+  // Era partitioning — greedy run-length over risk bucket
+  type Era = { startYear: number; endYear: number; bucket: EraBucket; n: number; totalValue: number }
+  const eras: Era[] = []
+  for (const item of sorted) {
+    const b = bucketOfRisk(item.avg_risk_score ?? 0)
+    const last = eras[eras.length - 1]
+    if (last && last.bucket === b) {
+      last.endYear = item.year
+      last.n += item.contract_count
+      last.totalValue += item.total_value
+    } else {
+      eras.push({ startYear: item.year, endYear: item.year, bucket: b, n: item.contract_count, totalValue: item.total_value })
+    }
+  }
+
+  // Layout
+  const W = 720
+  const H = 220
+  const PAD = { top: 44, bottom: 28, left: 8, right: 8 }
+  const innerH = H - PAD.top - PAD.bottom
+  const innerW = W - PAD.left - PAD.right
+
+  const xOf = (year: number) => PAD.left + ((year - minYear) / yearSpan) * innerW
+  const heightOf = (value: number) => Math.max(2, (Math.log(value + 1) / logMax) * innerH * 0.88)
+  const colorOf = (risk: number) => {
+    const level = getRiskLevel(risk)
+    return RISK_DOT_COLORS[level]
+  }
+
+  // Each year column gets a half-step buffer so era bands tile cleanly
+  const halfStep = innerW / yearSpan / 2
+
+  // Year axis: first, hero, last (deduplicated)
+  const axisYears = Array.from(new Set([minYear, hero.year, maxYear])).sort((a, b) => a - b)
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className={className ?? 'w-full h-auto'} role="img" aria-label="Timeline skyline">
+      {/* Era background bands */}
+      {eras.map((era, i) => {
+        const isFirst = i === 0
+        const isLast = i === eras.length - 1
+        const x1 = isFirst ? 0 : xOf(era.startYear) - halfStep
+        const x2 = isLast ? W : xOf(era.endYear) + halfStep
+        return (
+          <rect
+            key={`era-bg-${i}`}
+            x={x1}
+            y={PAD.top}
+            width={x2 - x1}
+            height={innerH}
+            fill={ERA_BG[era.bucket]}
+          />
+        )
+      })}
+
+      {/* Era labels at top — only label runs of 2+ years to avoid clutter */}
+      {eras.filter((e) => e.endYear - e.startYear >= 1 || eras.length <= 3).map((era, i) => {
+        const cx = (xOf(era.startYear) + xOf(era.endYear)) / 2
+        return (
+          <text
+            key={`era-lbl-${i}`}
+            x={cx}
+            y={PAD.top - 18}
+            textAnchor="middle"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            fill={ERA_LABEL_COLOR[era.bucket]}
+            fontWeight={600}
+            opacity={0.85}
+          >
+            {eraLabels[era.bucket].toUpperCase()}
+          </text>
+        )
+      })}
+
+      {/* Era extent ticks */}
+      {eras.map((era, i) => {
+        const cx = (xOf(era.startYear) + xOf(era.endYear)) / 2
+        const w = Math.max(20, xOf(era.endYear) - xOf(era.startYear))
+        return (
+          <line
+            key={`era-tick-${i}`}
+            x1={cx - w / 2}
+            x2={cx + w / 2}
+            y1={PAD.top - 8}
+            y2={PAD.top - 8}
+            stroke={ERA_LABEL_COLOR[era.bucket]}
+            strokeWidth={1.2}
+            opacity={0.55}
+          />
+        )
+      })}
+
+      {/* Baseline */}
+      <line
+        x1={0}
+        x2={W}
+        y1={PAD.top + innerH}
+        y2={PAD.top + innerH}
+        stroke="var(--color-border)"
+        strokeWidth={0.8}
+      />
+
+      {/* Skyscraper bars */}
+      {sorted.map((item) => {
+        const x = xOf(item.year)
+        const h = heightOf(item.total_value)
+        const y = PAD.top + innerH - h
+        const isHero = item.year === hero.year
+        const barW = isHero ? 9 : 5
+        const risk = item.avg_risk_score ?? 0
+        const color = colorOf(risk)
+        return (
+          <g key={item.year}>
+            <rect
+              x={x - barW / 2}
+              y={y}
+              width={barW}
+              height={h}
+              rx={1}
+              fill={color}
+              opacity={isHero ? 1 : 0.78}
+              style={isHero ? { filter: `drop-shadow(0 0 4px ${color}aa)` } : undefined}
+            />
+            {/* Contract-count tick under the bar */}
+            <circle
+              cx={x}
+              cy={PAD.top + innerH + 4}
+              r={Math.min(3.2, 1.2 + Math.log(item.contract_count + 1) * 0.7)}
+              fill="var(--color-text-muted)"
+              opacity={0.55}
+            />
+            <title>
+              {item.year} · {formatCompactMXN(item.total_value)} · {item.contract_count} contract{item.contract_count !== 1 ? 's' : ''} · {Math.round(risk * 100)}% risk
+            </title>
+          </g>
+        )
+      })}
+
+      {/* Hero callout flag */}
+      {(() => {
+        const x = xOf(hero.year)
+        const h = heightOf(hero.total_value)
+        const barTop = PAD.top + innerH - h
+        const flagW = 152
+        const flagH = 34
+        const flagX = Math.min(W - flagW - 4, Math.max(4, x - flagW / 2))
+        const heroColor = colorOf(hero.avg_risk_score ?? 0)
+        return (
+          <g>
+            <line
+              x1={x}
+              y1={barTop}
+              x2={x}
+              y2={4 + flagH}
+              stroke={heroColor}
+              strokeWidth={0.6}
+              strokeDasharray="2 2"
+              opacity={0.55}
+            />
+            <rect
+              x={flagX}
+              y={4}
+              width={flagW}
+              height={flagH}
+              rx={2}
+              fill="var(--color-background-card)"
+              stroke={heroColor}
+              strokeWidth={1}
+            />
+            <text
+              x={flagX + 8}
+              y={18}
+              fontSize={11}
+              fontFamily="var(--font-family-mono)"
+              fontWeight={700}
+              fill="var(--color-text-primary)"
+            >
+              {hero.year} · {formatCompactMXN(hero.total_value)}
+            </text>
+            <text
+              x={flagX + 8}
+              y={30}
+              fontSize={9}
+              fontFamily="var(--font-family-mono)"
+              fill={heroColor}
+            >
+              {Math.round((hero.avg_risk_score ?? 0) * 100)}% risk · {hero.contract_count} contract{hero.contract_count !== 1 ? 's' : ''}
+            </text>
+          </g>
+        )
+      })()}
+
+      {/* Year axis */}
+      {axisYears.map((y, i) => {
+        const cx = xOf(y)
+        const anchor: 'start' | 'middle' | 'end' = i === 0 ? 'start' : i === axisYears.length - 1 ? 'end' : 'middle'
+        const isHero = y === hero.year
+        return (
+          <text
+            key={y}
+            x={cx}
+            y={H - 6}
+            textAnchor={anchor}
+            fontSize={10}
+            fontFamily="var(--font-family-mono)"
+            fontWeight={isHero ? 700 : 400}
+            fill={isHero ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}
+          >
+            {y}
+          </text>
+        )
+      })}
+
+      {/* No SVG legend — the lede paragraph above the chart explains the
+          encoding (bar height / color / count tick). Trying to render it
+          inside the SVG fights the year axis or the era labels. */}
+    </svg>
+  )
+}
+
 function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline, t }: {
   totalContracts?: number
   vendorFirstYear?: number
   vendorLastYear?: number
-  timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  timeline: TimelineItem[]
   t: TFunction
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-20% 0px' })
-
-  // Use year-aggregate timeline data (covers ALL years, not just 100 most-recent contracts)
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year)
-  const years = sortedTimeline.map((item) => item.year)
-  const minYear = years[0] ?? vendorFirstYear ?? 2010
-  const maxYear = years[years.length - 1] ?? vendorLastYear ?? 2025
+  const minYear = sortedTimeline[0]?.year ?? vendorFirstYear ?? 2010
+  const maxYear = sortedTimeline[sortedTimeline.length - 1]?.year ?? vendorLastYear ?? 2025
   const displayTotal = totalContracts ?? sortedTimeline.reduce((s, item) => s + item.contract_count, 0)
 
-  // Normalize dot sizes: log scale, 10px–44px based on total_value per year
-  const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
+  // Era summary line — auto-generated narrative footer in the same spirit
+  // as the chart's era bands. Computes (alert era count, alert era share
+  // of total value) and pulls the boundary year for the inflection.
+  const totalValue = sortedTimeline.reduce((s, item) => s + item.total_value, 0)
+  const alertItems = sortedTimeline.filter((item) => bucketOfRisk(item.avg_risk_score ?? 0) === 'alert')
+  const alertValue = alertItems.reduce((s, item) => s + item.total_value, 0)
+  const alertShare = totalValue > 0 ? (alertValue / totalValue) * 100 : 0
+  const inflectionYear = alertItems.length > 0 ? alertItems[0].year : null
 
   return (
     <ChapterShell id="chapter-timeline">
@@ -331,108 +617,41 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         label={t('chapters.headings.timeline')}
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       />
-      <p className="text-text-secondary mb-6 max-w-xl text-sm">
-        {t('timeline.dotDescription')}
+      <p className="text-text-secondary mb-1 max-w-2xl text-sm leading-relaxed">
+        {t('timeline.skylineDescription', {
+          defaultValue: 'Each bar is a year. Height encodes total value (log scale); color encodes average risk; the dot beneath encodes contract count. Background bands segment the timeline into stable, watch, and alert eras based on the prevailing risk regime.',
+        })}
+      </p>
+      <p className="text-text-muted mb-6 max-w-2xl text-[11px] font-mono leading-relaxed">
+        {t('timeline.skylineLegend', {
+          defaultValue: 'BAR HEIGHT = LOG(VALUE) · BAR COLOR = AVG RISK · ● = CONTRACT COUNT',
+        })}
       </p>
 
-      <div ref={ref} className="relative">
-        {/* Year axis — left/right anchored, evenly spaced labels */}
-        <div className="flex justify-between text-[10px] font-mono text-text-muted mb-2 px-1">
-          {(() => {
-            // Sample 5 evenly-spaced years across the range
-            const yearLabels: number[] = []
-            const span = maxYear - minYear
-            for (let i = 0; i < 5; i++) {
-              yearLabels.push(Math.round(minYear + (span * i) / 4))
-            }
-            return yearLabels.map((y) => <span key={y}>{y}</span>)
-          })()}
-        </div>
+      {/* Single skyline canvas — replaces the dot-strip + year-card duplication */}
+      <TimelineSkyline
+        timeline={sortedTimeline}
+        eraLabels={{
+          stable: t('timeline.era.stable', { defaultValue: 'Stable era' }),
+          watch:  t('timeline.era.watch',  { defaultValue: 'Watch era' }),
+          alert:  t('timeline.era.alert',  { defaultValue: 'Alert era' }),
+        }}
+      />
 
-        {/* Horizontal dot strip — one row, all dots on the same Y baseline.
-            Was: h-48 scatter with deterministic-but-unreadable Y jitter; the
-            random vertical positioning made the time series look noisy
-            instead of clear. Now dots sit on a single horizontal axis,
-            positioned by year, sized by log(value), colored by risk. */}
-        <div className="relative h-14 bg-background-card border border-border rounded-sm overflow-hidden px-4">
-          {/* Center baseline */}
-          <div className="absolute left-4 right-4 top-1/2 h-px bg-border/60" aria-hidden />
-          {sortedTimeline.map((item, idx) => {
-            const xPct = maxYear > minYear ? ((item.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
-            const risk = item.avg_risk_score ?? 0
-            const level = getRiskLevel(risk)
-            const size = Math.max(8, Math.min(28, 8 + (Math.log(item.total_value + 1) / Math.log(maxValue + 1)) * 20))
-            return (
-              <motion.div
-                key={item.year}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={inView ? { opacity: 0.95, scale: 1 } : {}}
-                transition={{ delay: idx * 0.04, duration: 0.35, ease: 'backOut' }}
-                className="absolute rounded-full cursor-pointer hover:opacity-100 hover:scale-110 transition-transform"
-                style={{
-                  left: `${xPct}%`,
-                  top: '50%',
-                  width: size,
-                  height: size,
-                  backgroundColor: RISK_DOT_COLORS[level],
-                  transform: 'translate(-50%, -50%)',
-                  boxShadow: risk > 0.6 ? `0 0 6px 1px ${RISK_DOT_COLORS[level]}66` : 'none',
-                  zIndex: Math.round(size),
-                }}
-                title={`${item.year} · ${formatCompactMXN(item.total_value)} · ${item.contract_count} contracts · avg risk ${(risk * 100).toFixed(0)}%`}
-              />
-            )
+      {/* Auto-generated era narrative — inline, no card-in-card */}
+      {inflectionYear && alertShare > 0 && (
+        <p className="mt-3 text-xs text-text-secondary leading-relaxed max-w-2xl">
+          <span className="font-mono uppercase tracking-[0.12em] text-[10px]" style={{ color: 'var(--color-risk-critical)' }}>
+            {t('timeline.era.alert', { defaultValue: 'Alert era' })}
+          </span>
+          {' '}— {t('timeline.eraNarrative', {
+            defaultValue: 'opens in {{year}}. {{share}}% of total value (≈ {{value}}) flowed during high-risk years.',
+            year: inflectionYear,
+            share: alertShare.toFixed(0),
+            value: formatCompactMXN(alertValue),
           })}
-        </div>
-
-        {/* Legend */}
-        <div className="flex items-center gap-5 mt-3 flex-wrap">
-          {Object.entries(RISK_DOT_COLORS).map(([level, color]) => (
-            <div key={level} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">{level}</span>
-            </div>
-          ))}
-          <div className="ml-auto text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
-            {t('timeline.legend.sizeLabel')}
-          </div>
-        </div>
-      </div>
-
-      {/* Compact year strip — was a 12-card grid (~480px tall). Now one
-          horizontal scrollable row of 28px chips, year-ordered, color =
-          risk, width = log(value). Reads in one glance. */}
-      <div className="mt-6 overflow-x-auto -mx-4 sm:-mx-8 px-4 sm:px-8 scrollbar-thin">
-        <div className="flex items-stretch gap-1 min-w-max">
-          {sortedTimeline.map((item) => {
-            const risk = item.avg_risk_score ?? 0
-            const pctHigh = risk * 100
-            const level = getRiskLevel(risk)
-            return (
-              <div
-                key={item.year}
-                className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-sm hover:bg-background-elevated transition-colors flex-shrink-0"
-                title={`${item.year} · ${formatCompactMXN(item.total_value)} · ${item.contract_count} contracts · ${Math.round(pctHigh)}% risk`}
-              >
-                <span className="text-[9px] font-mono text-text-muted tabular-nums">{item.year}</span>
-                <span className="text-[11px] font-bold font-mono text-text-primary tabular-nums leading-none">
-                  {formatCompactMXN(item.total_value)}
-                </span>
-                <span
-                  className="block w-8 h-1 rounded-full"
-                  style={{ backgroundColor: RISK_DOT_COLORS[level], opacity: 0.8 }}
-                />
-                <span
-                  className="text-[9px] font-mono tabular-nums leading-none"
-                  style={{ color: RISK_DOT_COLORS[level] }}
-                >
-                  {Math.round(pctHigh)}%
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+        </p>
+      )}
     </ChapterShell>
   )
 }
