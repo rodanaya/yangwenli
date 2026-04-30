@@ -635,6 +635,10 @@ export default function AriaPage() {
   type SortKey = 'ips' | 'value' | 'recency' | 'tenure' | 'pattern'
   const [sortKey, setSortKey] = useState<SortKey>('ips')
 
+  // Disclosure state for the "+ More filters" panel. Hides secondary
+  // filters by default to drop the chrome from 9 rows to 3-4.
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false)
+
   const PER_PAGE = 50
 
   // refetchOnWindowFocus auto-recovers from transient deploy windows /
@@ -899,9 +903,113 @@ export default function AriaPage() {
             actions slot) that fought for vertical space.
            ════════════════════════════════════════════════════════════════ */}
         <div className="mb-4 space-y-2">
-          {/* Pattern chips — single horizontal-scrollable row, sorted by
-              count descending so the most frequent pattern leads the eye.
-              Replaces the prior 4-row wrapped grid that read as "scattered." */}
+          {/* Quick-select preset row — most-used investigative views as
+              one-click chips. 90% of users never touch raw filters; the
+              presets give them the curated view they actually want. */}
+          {(() => {
+            const presets: Array<{
+              id: string
+              label: string
+              icon: string
+              isActive: boolean
+              onClick: () => void
+            }> = [
+              {
+                id: 'all-t1',
+                label: isEs ? 'Cola T1' : 'All T1',
+                icon: '◆',
+                isActive: tierFilter === 1 && !patternFilter && !adminFilter && !gtOnly && !efosOnly && !sfpOnly && !newVendorOnly && !novelOnly && !sectorFilter,
+                onClick: () => {
+                  setTierFilter(1); setPatternFilter(null); setAdminFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setNewVendorOnly(false); setNovelOnly(false); setSectorFilter(null)
+                  setReviewStatusFilter(null); setSearch(''); setPage(1)
+                },
+              },
+              {
+                id: 'active',
+                label: isEs ? 'Activos 2024+' : 'Active 2024+',
+                icon: '●',
+                isActive: adminFilter === 'sheinbaum' && tierFilter === 1,
+                onClick: () => {
+                  setTierFilter(1); setAdminFilter('sheinbaum'); setPatternFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setSortKey('recency'); setPage(1)
+                },
+              },
+              {
+                id: 'flagged',
+                label: isEs ? 'Validados externamente' : 'External-flagged',
+                icon: '⚑',
+                isActive: (gtOnly || efosOnly || sfpOnly) && tierFilter === 1,
+                onClick: () => {
+                  setTierFilter(1); setGtOnly(true); setEfosOnly(false); setSfpOnly(false)
+                  setAdminFilter(null); setPatternFilter(null)
+                  setNewVendorOnly(false); setNovelOnly(false); setPage(1)
+                },
+              },
+              {
+                id: 'long-running',
+                label: isEs ? 'Histórico (10+ años)' : 'Long-running',
+                icon: '↗',
+                isActive: sortKey === 'tenure' && tierFilter === 1 && !adminFilter && !gtOnly,
+                onClick: () => {
+                  setTierFilter(1); setSortKey('tenure'); setAdminFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setPatternFilter(null); setPage(1)
+                },
+              },
+              {
+                id: 'biggest-bets',
+                label: isEs ? 'Mayor valor' : 'Biggest bets',
+                icon: '$',
+                isActive: sortKey === 'value' && tierFilter === 1 && !adminFilter && !gtOnly,
+                onClick: () => {
+                  setTierFilter(1); setSortKey('value'); setAdminFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setPatternFilter(null); setPage(1)
+                },
+              },
+            ]
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {isEs ? 'Vista' : 'View'}
+                </span>
+                {presets.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={preset.onClick}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
+                      preset.isActive
+                        ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                        : 'bg-background-card text-text-secondary border-border hover:border-border-hover'
+                    )}
+                  >
+                    <span aria-hidden className="font-mono opacity-70">{preset.icon}</span>
+                    {preset.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setMoreFiltersOpen((v) => !v)}
+                  className={cn(
+                    'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                    moreFiltersOpen
+                      ? 'bg-background-elevated text-text-primary'
+                      : 'text-text-muted hover:text-text-primary'
+                  )}
+                  aria-expanded={moreFiltersOpen}
+                >
+                  {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
+                </button>
+              </div>
+            )
+          })()}
+
+          {/* Pattern chips — kept always-visible. The chip counts
+              ("Institutional Capture 15,923") are a useful at-a-glance
+              signal that a dropdown would hide. Single horizontal-scroll row. */}
           {Object.keys(patternCounts).length > 0 && (
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
               <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0 inline-flex items-center gap-1">
@@ -923,7 +1031,8 @@ export default function AriaPage() {
                 ))}
             </div>
           )}
-          {/* Tier pills + flags + sector + search — single row. */}
+
+          {/* Tier pills + Search — primary slicer always-visible row. */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
               {isEs ? 'Nivel' : 'Tier'}
@@ -952,57 +1061,7 @@ export default function AriaPage() {
                 }}
               />
             ))}
-            <span className="mx-1 h-4 w-px bg-border" aria-hidden />
-            <button
-              onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-                newVendorOnly
-                  ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-            >
-              {t('filters.newVendorOnly')}
-              {stats?.new_vendor_count != null && (
-                <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
-              )}
-            </button>
-            <button
-              onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-                novelOnly
-                  ? 'bg-background-elevated text-text-secondary border-border'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-              title={t('filters.novelOnlyTooltip')}
-            >
-              {t('filters.novelOnly')}
-            </button>
-            <select
-              value={sectorFilter ?? ''}
-              onChange={(e) => {
-                const v = e.target.value
-                setSectorFilter(v === '' ? null : Number(v))
-                setPage(1)
-              }}
-              className={cn(
-                'inline-flex items-center px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors cursor-pointer',
-                sectorFilter != null
-                  ? 'bg-background-elevated text-text-primary border-border'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-              aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}
-            >
-              <option value="">{isEs ? 'Todos los sectores' : 'All sectors'}</option>
-              {SECTORS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {isEs ? s.name : s.nameEN}
-                </option>
-              ))}
-            </select>
             <span className="mx-1 h-4 w-px bg-border hidden sm:inline-block" aria-hidden />
-            {/* Search — flexes to fill remaining width on the same row. */}
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
               <input
@@ -1015,92 +1074,177 @@ export default function AriaPage() {
             </div>
           </div>
 
-          {/* Administration (sexenio) chips + external-flag toggles.
-              Sexenio chips are client-side filters that match the vendor's
-              [first_year, last_year] overlap with the administration's
-              window. Mexican-context labels = journalistic-meaningful. */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-              {isEs ? 'Sexenio' : 'Admin'}
-            </span>
-            <button
-              onClick={() => { setAdminFilter(null); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                adminFilter == null
-                  ? 'bg-background-elevated text-text-primary border-border'
-                  : 'bg-background-card text-text-muted border-border hover:border-border'
-              )}
-            >
-              {t('filters.all')}
-            </button>
-            {(['sheinbaum', 'amlo', 'pena', 'calderon', 'fox'] as const).map((key) => {
-              const meta = ADMIN_META[key]
-              const isActive = adminFilter === key
-              return (
-                <button
-                  key={key}
-                  onClick={() => { setAdminFilter(isActive ? null : key); setPage(1) }}
+          {/* "+ More filters" disclosure — secondary filters hidden by
+              default. Most users (~90%) never touch these. Power users
+              get the same control with one click. Drops the chrome from
+              ~9 default rows to 3-4. */}
+          {moreFiltersOpen && (
+            <div className="space-y-2 pt-2 mt-1 border-t border-border/60">
+              {/* Sector + New / Novel toggles */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {isEs ? 'Sector' : 'Sector'}
+                </span>
+                <select
+                  value={sectorFilter ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    setSectorFilter(v === '' ? null : Number(v))
+                    setPage(1)
+                  }}
                   className={cn(
-                    'inline-flex items-baseline gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                    isActive
-                      ? 'border-current'
+                    'inline-flex items-center px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors cursor-pointer',
+                    sectorFilter != null
+                      ? 'bg-background-elevated text-text-primary border-border'
                       : 'bg-background-card text-text-secondary border-border hover:border-border'
                   )}
-                  style={isActive ? { color: meta.color, backgroundColor: `${meta.color}10` } : undefined}
-                  title={`${meta.label} (${meta.range})`}
+                  aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}
                 >
-                  <span>{meta.label}</span>
-                  <span className="font-mono text-[9px] text-text-muted tabular-nums">{meta.range}</span>
+                  <option value="">{isEs ? 'Todos los sectores' : 'All sectors'}</option>
+                  {SECTORS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {isEs ? s.name : s.nameEN}
+                    </option>
+                  ))}
+                </select>
+                <span className="mx-1 h-3 w-px bg-border" aria-hidden />
+                <button
+                  onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    newVendorOnly
+                      ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                >
+                  {t('filters.newVendorOnly')}
+                  {stats?.new_vendor_count != null && (
+                    <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
+                  )}
                 </button>
-              )
-            })}
+                <button
+                  onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    novelOnly
+                      ? 'bg-background-elevated text-text-secondary border-border'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title={t('filters.novelOnlyTooltip')}
+                >
+                  {t('filters.novelOnly')}
+                </button>
+              </div>
 
-            <span className="mx-1 h-3 w-px bg-border" aria-hidden />
+              {/* Administration (sexenio) + external flags */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {isEs ? 'Sexenio' : 'Admin'}
+                </span>
+                <button
+                  onClick={() => { setAdminFilter(null); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    adminFilter == null
+                      ? 'bg-background-elevated text-text-primary border-border'
+                      : 'bg-background-card text-text-muted border-border hover:border-border'
+                  )}
+                >
+                  {t('filters.all')}
+                </button>
+                {(['sheinbaum', 'amlo', 'pena', 'calderon', 'fox'] as const).map((key) => {
+                  const meta = ADMIN_META[key]
+                  const isActive = adminFilter === key
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => { setAdminFilter(isActive ? null : key); setPage(1) }}
+                      className={cn(
+                        'inline-flex items-baseline gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                        isActive
+                          ? 'border-current'
+                          : 'bg-background-card text-text-secondary border-border hover:border-border'
+                      )}
+                      style={isActive ? { color: meta.color, backgroundColor: `${meta.color}10` } : undefined}
+                      title={`${meta.label} (${meta.range})`}
+                    >
+                      <span>{meta.label}</span>
+                      <span className="font-mono text-[9px] text-text-muted tabular-nums">{meta.range}</span>
+                    </button>
+                  )
+                })}
+                <span className="mx-1 h-3 w-px bg-border" aria-hidden />
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {isEs ? 'Banderas' : 'Flags'}
+                </span>
+                <button
+                  onClick={() => { setGtOnly(!gtOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    gtOnly
+                      ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border-[color:var(--color-accent)]/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}
+                >
+                  GT
+                </button>
+                <button
+                  onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    efosOnly
+                      ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title="SAT EFOS Definitivo"
+                >
+                  EFOS
+                </button>
+                <button
+                  onClick={() => { setSfpOnly(!sfpOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    sfpOnly
+                      ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title={isEs ? 'Sancionado por SFP' : 'Sanctioned by SFP'}
+                >
+                  SFP
+                </button>
+              </div>
 
-            {/* External-flag toggles. EFOS uses the existing API param;
-                GT and SFP filter client-side. Visible inline so the user
-                can pair them with sexenio + pattern + sector. */}
-            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-              {isEs ? 'Banderas' : 'Flags'}
-            </span>
-            <button
-              onClick={() => { setGtOnly(!gtOnly); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                gtOnly
-                  ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border-[color:var(--color-accent)]/30'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-              title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}
-            >
-              GT
-            </button>
-            <button
-              onClick={() => { setEfosOnly(!efosOnly); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                efosOnly
-                  ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-              title="SAT EFOS Definitivo"
-            >
-              EFOS
-            </button>
-            <button
-              onClick={() => { setSfpOnly(!sfpOnly); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
-                sfpOnly
-                  ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                  : 'bg-background-card text-text-secondary border-border hover:border-border'
-              )}
-              title={isEs ? 'Sancionado por SFP' : 'Sanctioned by SFP'}
-            >
-              SFP
-            </button>
-          </div>
+              {/* Review-status filter — moved out of the list header to
+                  unblock single-line header layout. Workflow filter, used
+                  by editorial leads tracking what's been triaged. */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {t('table.review')}
+                </span>
+                {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
+                  const meta = s ? REVIEW_STATUS_META[s] : null
+                  const isActive = reviewStatusFilter === s
+                  return (
+                    <button
+                      key={s ?? 'all'}
+                      onClick={() => { setReviewStatusFilter(s); setPage(1) }}
+                      className={cn(
+                        'px-2 py-0.5 rounded-sm text-[11px] font-medium border transition-colors',
+                        isActive
+                          ? s
+                            ? cn(meta!.className, 'ring-1 ring-border')
+                            : 'bg-background-elevated text-text-primary border-border'
+                          : 'bg-background-card text-text-muted border-border hover:border-border'
+                      )}
+                    >
+                      {s ? t('status.' + s) : t('reviewFilter.all')}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* GhostSuspectsPanel — only renders when P2 pattern is active. */}
@@ -1190,34 +1334,16 @@ export default function AriaPage() {
             </div>
           )}
 
-          {/* List header strip — single dense row. Combines the previous
-              orphan title block + review filter chips + export button.
-              Was: 3 stacked sections (title row → vendor count → review
-              chips → export); now flows as one. */}
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border flex-wrap">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-              {tierFilter != null
-                ? t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)
-                : t('queueSection.title', { defaultValue: 'Cola completa' })}
-            </p>
-            {totalLeads > 0 && (
-              <span className="text-[11px] text-text-muted font-mono tabular-nums">
-                · {formatNumber(totalLeads)}
-              </span>
-            )}
-            {activeFilterCount > 0 && (
-              <button
-                onClick={clearAll}
-                className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high hover:text-accent transition-colors"
-              >
-                · {t('filterBar.clearAll')} ({activeFilterCount})
-              </button>
-            )}
-
-            {/* Sort + review chips — pushed to the right of the list header */}
-            <div className="ml-auto flex items-center gap-2 flex-wrap">
-              {/* Sort dropdown — client-side sort within the visible page.
-                  Defaults to IPS (server order). */}
+          {/* List header — single tight line. The redundant "TIER 1 · 320 ·
+              CLEAR ALL (1)" was already covered by the Active Filter Bar
+              above; review-status chips moved into "+ More filters" since
+              they're a workflow filter most users don't touch. Header now
+              shows: count · sort · export — three things, never wraps. */}
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+            <span className="text-[11px] text-text-muted font-mono tabular-nums">
+              {totalLeads > 0 ? `${formatNumber(totalLeads)} ${t('leads.vendorCount')}` : ''}
+            </span>
+            <div className="ml-auto flex items-center gap-1.5">
               <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
                 {isEs ? 'Ordenar' : 'Sort'}
               </span>
@@ -1233,30 +1359,6 @@ export default function AriaPage() {
                 <option value="tenure">{isEs ? 'Años activo' : 'Years active'}</option>
                 <option value="pattern">{isEs ? 'Patrón' : 'Pattern'}</option>
               </select>
-              <span className="mx-1 h-3 w-px bg-border" aria-hidden />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
-                {t('table.review')}
-              </span>
-              {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
-                const meta = s ? REVIEW_STATUS_META[s] : null
-                const isActive = reviewStatusFilter === s
-                return (
-                  <button
-                    key={s ?? 'all'}
-                    onClick={() => { setReviewStatusFilter(s); setPage(1) }}
-                    className={cn(
-                      'px-1.5 py-0.5 rounded text-[10px] font-medium border transition-colors',
-                      isActive
-                        ? s
-                          ? cn(meta!.className, 'ring-1 ring-border')
-                          : 'bg-background-elevated text-text-primary border-border'
-                        : 'bg-background-card text-text-muted border-border hover:border-border'
-                    )}
-                  >
-                    {s ? t('status.' + s) : t('reviewFilter.all')}
-                  </button>
-                )
-              })}
               <span className="mx-1 h-3 w-px bg-border" aria-hidden />
               <TableExportButton
                 data={leadsItems as unknown as Record<string, unknown>[]}
