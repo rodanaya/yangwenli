@@ -40,7 +40,12 @@ import {
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
-const CHAPTER_IDS = ['subject', 'timeline', 'pattern', 'network', 'money', 'verdict'] as const
+// Order: subject → timeline → network → money → pattern → verdict.
+// Reordered (Apr 2026) per user feedback: Pattern (the algorithmic
+// diagnosis) now sits immediately before Verdict, since the Verdict's
+// evidence list cites the pattern. Network moves up so the structural
+// "who-with" chapter precedes the "how-much" chapter.
+const CHAPTER_IDS = ['subject', 'timeline', 'network', 'money', 'pattern', 'verdict'] as const
 type ChapterId = typeof CHAPTER_IDS[number]
 
 const CHAPTER_ICONS: Record<ChapterId, React.ElementType> = {
@@ -1054,6 +1059,7 @@ function ConcentricConstellation({
   sectorsCount,
   coBidders,
   t,
+  i18n,
 }: {
   subjectName: string
   sectorName: string | null
@@ -1061,18 +1067,18 @@ function ConcentricConstellation({
   sectorsCount: number
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }>
   t: TFunction
+  i18n: { language: string }
 }) {
   const W = 720
-  const H = 320
+  const H = 340
   const cx = W / 2
-  const cy = H / 2 + 4
-  const innerR = 70
-  const outerR = 132
+  const cy = H / 2 + 6
+  const innerR = 78
+  const outerR = 144
 
   const sectorColor = sectorName ? (SECTOR_COLORS[sectorName.toLowerCase()] ?? '#a06820') : '#a06820'
 
-  // Outer ring: place totalInstitutions anonymous dots, capped at 24 for
-  // visual legibility — beyond that the ring becomes a continuous line.
+  // Outer ring: place totalInstitutions institution dots, capped at 24
   const visibleInst = Math.min(totalInstitutions, 24)
 
   // Inner ring: top 8 co-bidders by co_bid_count.
@@ -1080,41 +1086,98 @@ function ConcentricConstellation({
   const maxCoBids = Math.max(...top.map((c) => c.co_bid_count), 1)
   const hasCoBidders = top.length > 0
 
-  // Gradient ID — unique-ish per vendor name; fine for a single instance per page.
-  const gradId = 'constellation-bg-' + (subjectName.length % 999)
+  // Stable IDs scoped to this instance — defs collide if multiple
+  // constellations render on one page; namespace by vendor name length + first char.
+  const idSuffix = `${subjectName.length}-${subjectName.charCodeAt(0) || 0}`
+  const bgGradId = `constellation-bg-${idSuffix}`
+  const dotGlowId = `constellation-glow-${idSuffix}`
+  const centerGlowId = `constellation-core-${idSuffix}`
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Vendor reach constellation">
       <defs>
-        <radialGradient id={gradId} cx="50%" cy="50%" r="55%">
-          <stop offset="0%" stopColor={sectorColor} stopOpacity={0.10} />
-          <stop offset="60%" stopColor={sectorColor} stopOpacity={0.04} />
+        {/* Background atmospheric tint */}
+        <radialGradient id={bgGradId} cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor={sectorColor} stopOpacity={0.14} />
+          <stop offset="50%" stopColor={sectorColor} stopOpacity={0.06} />
           <stop offset="100%" stopColor={sectorColor} stopOpacity={0} />
+        </radialGradient>
+        {/* Star-like radial gradient for institutional dots — gives a "glowing" look */}
+        <radialGradient id={dotGlowId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={sectorColor} stopOpacity={1} />
+          <stop offset="55%" stopColor={sectorColor} stopOpacity={0.8} />
+          <stop offset="100%" stopColor={sectorColor} stopOpacity={0} />
+        </radialGradient>
+        {/* Vendor center halo */}
+        <radialGradient id={centerGlowId} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="var(--color-risk-critical)" stopOpacity={0.45} />
+          <stop offset="60%" stopColor="var(--color-risk-critical)" stopOpacity={0.10} />
+          <stop offset="100%" stopColor="var(--color-risk-critical)" stopOpacity={0} />
         </radialGradient>
       </defs>
 
-      {/* Sector tint background */}
-      <rect x={0} y={0} width={W} height={H} fill={`url(#${gradId})`} />
+      {/* Atmospheric background */}
+      <rect x={0} y={0} width={W} height={H} fill={`url(#${bgGradId})`} />
 
-      {/* Outer ring guide — faint dashed circle */}
-      <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="var(--color-border)" strokeWidth={0.6} strokeDasharray="2 4" opacity={0.4} />
+      {/* Sector petal arcs — divide the canvas into N sector wedges if
+          sectorsCount ≥ 2. Subtle dashed radial guides + a small label arc.
+          Adds the "this vendor crosses N sectors" dimension visually. */}
+      {sectorsCount >= 2 && Array.from({ length: sectorsCount }).map((_, i) => {
+        const angle = (i / sectorsCount) * Math.PI * 2 - Math.PI / 2
+        const xEnd = cx + Math.cos(angle) * (outerR + 8)
+        const yEnd = cy + Math.sin(angle) * (outerR + 8)
+        return (
+          <line
+            key={`sector-divider-${i}`}
+            x1={cx}
+            y1={cy}
+            x2={xEnd}
+            y2={yEnd}
+            stroke={sectorColor}
+            strokeWidth={0.4}
+            strokeDasharray="2 6"
+            opacity={0.25}
+          />
+        )
+      })}
 
-      {/* Outer ring nodes — institutions */}
+      {/* Radial spokes — vendor → each institution. Faint sector-color
+          lines that give the constellation depth and signal "every
+          institution is connected to the vendor." Renders before nodes
+          so dots overlay them cleanly. */}
       {Array.from({ length: visibleInst }).map((_, i) => {
         const angle = (i / visibleInst) * Math.PI * 2 - Math.PI / 2
         const x = cx + Math.cos(angle) * outerR
         const y = cy + Math.sin(angle) * outerR
         return (
-          <circle
-            key={`inst-${i}`}
-            cx={x}
-            cy={y}
-            r={3.2}
-            fill={sectorColor}
-            stroke="var(--color-background)"
-            strokeWidth={0.8}
-            opacity={0.85}
+          <line
+            key={`spoke-${i}`}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            stroke={sectorColor}
+            strokeWidth={0.5}
+            opacity={0.18}
           />
+        )
+      })}
+
+      {/* Outer ring guide — faint dashed circle */}
+      <circle cx={cx} cy={cy} r={outerR} fill="none" stroke={sectorColor} strokeWidth={0.7} strokeDasharray="1 5" opacity={0.5} />
+
+      {/* Outer ring nodes — institutions, now as glowing star-like dots */}
+      {Array.from({ length: visibleInst }).map((_, i) => {
+        const angle = (i / visibleInst) * Math.PI * 2 - Math.PI / 2
+        const x = cx + Math.cos(angle) * outerR
+        const y = cy + Math.sin(angle) * outerR
+        return (
+          <g key={`inst-${i}`}>
+            {/* Halo */}
+            <circle cx={x} cy={y} r={9} fill={`url(#${dotGlowId})`} opacity={0.6} />
+            {/* Core */}
+            <circle cx={x} cy={y} r={3.6} fill={sectorColor} stroke="var(--color-background)" strokeWidth={0.8} />
+          </g>
         )
       })}
 
@@ -1124,10 +1187,10 @@ function ConcentricConstellation({
         cy={cy}
         r={innerR}
         fill="none"
-        stroke="var(--color-border)"
+        stroke={hasCoBidders ? 'var(--color-border)' : 'var(--color-text-muted)'}
         strokeWidth={hasCoBidders ? 0.8 : 1}
         strokeDasharray={hasCoBidders ? '0' : '3 5'}
-        opacity={hasCoBidders ? 0.45 : 0.55}
+        opacity={hasCoBidders ? 0.55 : 0.5}
       />
 
       {/* Inner ring: co-bidder nodes + edges */}
@@ -1138,18 +1201,19 @@ function ConcentricConstellation({
         const role = classifyRole(cb, t)
         const strokeW = 0.6 + (cb.co_bid_count / maxCoBids) * 2.2
         const nodeR = 4 + (cb.co_bid_count / maxCoBids) * 4
-        // Label outside the inner ring, inside the outer ring
-        const labelR = innerR + 16
+        const labelR = innerR + 18
         const lx = cx + Math.cos(angle) * labelR
         const ly = cy + Math.sin(angle) * labelR + 3
         const anchor: 'start' | 'middle' | 'end' = Math.cos(angle) > 0.3 ? 'start' : Math.cos(angle) < -0.3 ? 'end' : 'middle'
         return (
           <g key={`cb-${cb.vendor_id}`}>
-            <line x1={cx} y1={cy} x2={x} y2={y} stroke={role.color} strokeWidth={strokeW} opacity={0.45} />
+            <line x1={cx} y1={cy} x2={x} y2={y} stroke={role.color} strokeWidth={strokeW} opacity={0.55} />
             <Link to={`/thread/${cb.vendor_id}`}>
               <title>{cb.vendor_name} · {cb.co_bid_count} co-bids · {role.label}</title>
-              <circle cx={x} cy={y} r={nodeR + 6} fill="transparent" />
-              <circle cx={x} cy={y} r={nodeR} fill={role.color} stroke="var(--color-background)" strokeWidth={1.2} />
+              <circle cx={x} cy={y} r={nodeR + 8} fill="transparent" />
+              {/* Halo glow */}
+              <circle cx={x} cy={y} r={nodeR + 4} fill={role.color} opacity={0.18} />
+              <circle cx={x} cy={y} r={nodeR} fill={role.color} stroke="var(--color-background)" strokeWidth={1.4} />
               <text x={lx} y={ly} textAnchor={anchor} fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-secondary)">
                 {formatVendorName(cb.vendor_name, 16)}
               </text>
@@ -1162,44 +1226,66 @@ function ConcentricConstellation({
       {!hasCoBidders && (
         <g>
           <text x={cx} y={cy - innerR + 14} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" letterSpacing={1.2}>
-            ── NO COORDINATED BIDDING ──
+            {t('network.noCoordinatedBidding')}
           </text>
           <text x={cx} y={cy - innerR + 26} textAnchor="middle" fontSize={8} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.6}>
-            single-source / direct-award dominant
+            {t('network.noCoordinatedBiddingNote')}
           </text>
         </g>
       )}
 
-      {/* Subject — pulsing red node at center */}
-      <circle cx={cx} cy={cy} r={20} fill="var(--color-risk-critical)" opacity={0.16}>
-        <animate attributeName="r" values="20;26;20" dur="2.4s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="0.16;0.28;0.16" dur="2.4s" repeatCount="indefinite" />
+      {/* Subject — multi-layered halo at center */}
+      <circle cx={cx} cy={cy} r={32} fill={`url(#${centerGlowId})`} />
+      <circle cx={cx} cy={cy} r={22} fill="var(--color-risk-critical)" opacity={0.18}>
+        <animate attributeName="r" values="22;28;22" dur="2.6s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.18;0.32;0.18" dur="2.6s" repeatCount="indefinite" />
       </circle>
-      <circle cx={cx} cy={cy} r={9} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.5} />
-      <text x={cx} y={cy + 30} textAnchor="middle" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
-        {formatVendorName(subjectName, 24)}
+      <circle cx={cx} cy={cy} r={11} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.8} />
+      <circle cx={cx} cy={cy} r={4} fill="var(--color-background)" opacity={0.85} />
+
+      {/* Subject label — Playfair italic editorial type instead of plain mono */}
+      <text
+        x={cx}
+        y={cy + 36}
+        textAnchor="middle"
+        fontSize={12}
+        fontFamily="var(--font-family-serif)"
+        fontStyle="italic"
+        fontWeight={700}
+        fill="var(--color-text-primary)"
+      >
+        {formatVendorName(subjectName, 28)}
       </text>
 
-      {/* Ring labels — annotate counts */}
+      {/* Ring labels — annotate counts. Use Spanish/English from i18n. */}
       <text x={W - 14} y={28} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill="var(--color-text-muted)">
-        {totalInstitutions} INSTITUTIONS
-        {totalInstitutions > visibleInst && ` (${visibleInst} SHOWN)`}
+        {totalInstitutions} {t('network.ringLabels.institutions')}
+        {totalInstitutions > visibleInst && ` (${visibleInst} ${t('network.ringLabels.shown')})`}
       </text>
       <text x={W - 14} y={42} textAnchor="end" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill="var(--color-text-muted)">
-        {sectorsCount} {sectorsCount === 1 ? 'SECTOR' : 'SECTORS'}{sectorName ? ` · ${sectorName.toUpperCase()}` : ''}
+        {sectorsCount} {sectorsCount === 1 ? t('network.ringLabels.sector') : t('network.ringLabels.sectors')}
+        {sectorName ? ` · ${sectorName.toUpperCase()}` : ''}
       </text>
       <text x={14} y={28} textAnchor="start" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing={1.2} fill={hasCoBidders ? 'var(--color-text-secondary)' : 'var(--color-text-muted)'}>
-        {coBidders.length} CO-BIDDER{coBidders.length === 1 ? '' : 'S'}
+        {coBidders.length} {coBidders.length === 1 ? t('network.ringLabels.coBidder') : t('network.ringLabels.coBidders')}
+      </text>
+
+      {/* Bottom-edge legend — i18n-aware encoding hint */}
+      <text x={W - 14} y={H - 8} textAnchor="end" fontSize={8.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.55}>
+        {i18n.language.startsWith('es')
+          ? 'ANILLO EXTERIOR = INSTITUCIONES · ANILLO INTERIOR = CO-LICITANTES'
+          : 'OUTER RING = INSTITUTIONS · INNER RING = CO-BIDDERS'}
       </text>
     </svg>
   )
 }
 
-function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
+function ChapterNetwork({ vendorId, vendor, coBidders, t, i18n }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
   t: TFunction
+  i18n: { language: string }
 }) {
   const totalCoBidders = coBidders?.length ?? 0
   const topCoBidder = coBidders?.[0] ?? null
@@ -1208,26 +1294,24 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   // Topology read — interprets the constellation in plain language
   const topologyRead =
     totalCoBidders === 0 && vendor.total_institutions <= 5
-      ? t('network.topology.tightSingleSource', { defaultValue: 'Tight single-source profile. No co-bidders, narrow institutional reach — typical of capture or sole-source contracts.' })
+      ? t('network.topology.tightSingleSource')
       : totalCoBidders === 0
-      ? t('network.topology.broadSingleSource', { defaultValue: 'Broad single-source profile. No coordinated co-bidding, but contracts spread across many institutions — possible direct-award dominance.' })
+      ? t('network.topology.broadSingleSource')
       : totalCoBidders <= 3
-      ? t('network.topology.thinNetwork', { defaultValue: 'Thin co-bidding network. The vendor occasionally bids alongside a small set of others.' })
-      : t('network.topology.denseNetwork', { defaultValue: 'Dense co-bidding network. The vendor consistently bids alongside the same group — review for rotation or decoy patterns.' })
+      ? t('network.topology.thinNetwork')
+      : t('network.topology.denseNetwork')
 
   return (
     <ChapterShell id="chapter-network">
       <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
       <p className="text-text-secondary mb-3 max-w-2xl text-sm leading-relaxed">
-        {t('network.constellationDescription', {
-          defaultValue: 'A reach topology. The outer ring marks the institutions this vendor served; the inner ring marks the vendors who bid alongside them. The shape exposes whether this vendor operates inside a network or as a single source.',
-        })}
+        {t('network.constellationDescription')}
       </p>
 
       {/* The constellation — always renders, even with 0 co-bidders */}
       <div className="bg-background-card border border-border rounded-sm p-4 mb-3">
         {coBidders === null ? (
-          <div className="h-[320px] rounded bg-background-elevated animate-pulse" />
+          <div className="h-[340px] rounded bg-background-elevated animate-pulse" />
         ) : (
           <ConcentricConstellation
             subjectName={vendor.name}
@@ -1236,27 +1320,28 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
             sectorsCount={vendor.sectors_count}
             coBidders={coBidders}
             t={t}
+            i18n={i18n}
           />
         )}
       </div>
 
       {/* Topology read — plain-language interpretation */}
       <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
-        <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">Read</span>
+        <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">{t('network.topologyRead')}</span>
         {' '}— {topologyRead}
       </p>
 
       {/* Top co-bidder callout — only when present */}
       {topCoBidder && (
         <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
-          <span className="text-text-muted">Most-frequent co-bidder:</span>{' '}
+          <span className="text-text-muted">{t('network.mostFrequent')}</span>{' '}
           <Link
             to={`/thread/${topCoBidder.vendor_id}`}
             className="font-bold text-text-primary hover:text-[var(--color-risk-critical)] transition-colors"
           >
             {formatVendorName(topCoBidder.vendor_name, 50)}
           </Link>
-          {' '}— {topCoBidder.co_bid_count} shared procedures, {classifyRole(topCoBidder, t).label.toLowerCase()}.
+          {' '}— {t('network.sharedProcedures', { count: topCoBidder.co_bid_count })}, {classifyRole(topCoBidder, t).label.toLowerCase()}.
         </p>
       )}
 
@@ -1879,7 +1964,7 @@ function ThreadSkeleton({ label }: { label: string }) {
 export default function RedThread() {
   const { vendorId } = useParams<{ vendorId: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation('redThread')
+  const { t, i18n } = useTranslation('redThread')
   const id = Number(vendorId)
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -1963,7 +2048,10 @@ export default function RedThread() {
   const { data: coBidders } = useQuery({
     queryKey: ['co-bidders', id],
     queryFn: () => networkApi.getCoBidders(id, 10, 5),
-    enabled: !!id && !isNaN(id) && activeChapter >= 3,
+    // Network chapter is now at index 2 (subject=0, timeline=1, network=2);
+    // fetch as soon as the user scrolls past timeline. The previous gate
+    // (>= 3) targeted the old order where network was 4th.
+    enabled: !!id && !isNaN(id) && activeChapter >= 1,
     retry: false,
     ...COMMON_QUERY_OPTS,
   })
@@ -2081,7 +2169,10 @@ export default function RedThread() {
         </Link>
       </div>
 
-      {/* Chapters */}
+      {/* Chapters — order: Subject → Timeline → Network → Money → Pattern → Verdict.
+          Pattern (algorithmic diagnosis) sits immediately before Verdict
+          since the verdict cites it as evidence. Network moves up so
+          relationships precede the financial chapter. */}
       <div className="pl-6">
         <ChapterSubject
           vendor={vendor}
@@ -2101,14 +2192,6 @@ export default function RedThread() {
 
         <ChapterDivider />
 
-        <ChapterPattern
-          waterfall={waterfall ?? []}
-          ariaPattern={aria?.primary_pattern ?? null}
-          t={t}
-        />
-
-        <ChapterDivider />
-
         <ChapterNetwork
           vendorId={id}
           vendor={{
@@ -2119,6 +2202,7 @@ export default function RedThread() {
           }}
           coBidders={coBidders?.co_bidders ?? null}
           t={t}
+          i18n={i18n}
         />
 
         <ChapterDivider />
@@ -2130,6 +2214,14 @@ export default function RedThread() {
             contract_count: item.contract_count,
             total_value: item.total_value,
           }))}
+          t={t}
+        />
+
+        <ChapterDivider />
+
+        <ChapterPattern
+          waterfall={waterfall ?? []}
+          ariaPattern={aria?.primary_pattern ?? null}
           t={t}
         />
 

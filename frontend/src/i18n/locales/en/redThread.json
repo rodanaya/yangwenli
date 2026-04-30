@@ -9,9 +9,9 @@
     "headings": {
       "subject": "Chapter I · The Subject",
       "timeline": "Chapter II · The Timeline",
-      "pattern": "Chapter III · The Pattern",
-      "network": "Chapter IV · The Network",
-      "money": "Chapter V · The Money",
+      "network": "Chapter III · The Network",
+      "money": "Chapter IV · The Money",
+      "pattern": "Chapter V · The Pattern",
       "verdict": "Chapter VI · The Summary"
     }
   },
@@ -65,6 +65,16 @@
   "timeline": {
     "heading": "{{total}} Contracts, {{minYear}}–{{maxYear}}",
     "dotDescription": "Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.",
+    "hourglassDescription": "A two-channel reading. Above the year axis: how many contracts each year produced. Below: how much money flowed. When one channel diverges from the other — a single contract worth billions, or a swarm of small contracts adding to nothing — the mismatch is the signal.",
+    "hourglassLegend": "▲ ABOVE = CONTRACT COUNT · ▼ BELOW = LOG(VALUE) · COLOR = AVG RISK",
+    "countAxis": "contracts",
+    "valueAxis": "log(value)",
+    "era": {
+      "stable": "Stable era",
+      "watch": "Watch era",
+      "alert": "Alert era"
+    },
+    "eraNarrative": "opens in {{year}}. {{share}}% of total value (≈ {{value}}) flowed during high-risk years.",
     "legend": {
       "sizeLabel": "Size = annual contract value"
     }
@@ -74,12 +84,36 @@
     "description": "Risk scores are built from 16 z-score features normalized against sector baselines. These are the factors that drove this vendor's score.",
     "raisesRisk": "▲ raises risk",
     "lowersRisk": "▼ lowers risk",
+    "raises": "raises",
+    "lowers": "lowers",
+    "sectorReference": "sector p25–p75",
+    "diagnosis": "{{anomalous}} of {{total}} lab values outside sector reference range",
     "noData": "Feature attribution data not available for this vendor.",
     "shapNote": "Positive values increase risk score (red). Negative values reduce it (green). Values are SHAP-style feature contributions: β_i × (z_i − E[z_i])."
   },
   "network": {
     "heading": "Connections & Relationships",
     "description": "Vendor networks reveal co-contracting rings, shared entities, and institutional dependencies invisible in contract-by-contract analysis.",
+    "constellationDescription": "A reach topology. The outer ring marks the institutions this vendor served; the inner ring marks the vendors who bid alongside them. The shape exposes whether this vendor operates inside a network or as a single source.",
+    "topology": {
+      "tightSingleSource": "Tight single-source profile. No co-bidders, narrow institutional reach — typical of capture or sole-source contracts.",
+      "broadSingleSource": "Broad single-source profile. No coordinated co-bidding, but contracts spread across many institutions — possible direct-award dominance.",
+      "thinNetwork": "Thin co-bidding network. The vendor occasionally bids alongside a small set of others.",
+      "denseNetwork": "Dense co-bidding network. The vendor consistently bids alongside the same group — review for rotation or decoy patterns."
+    },
+    "noCoordinatedBidding": "── NO COORDINATED BIDDING ──",
+    "noCoordinatedBiddingNote": "single-source / direct-award dominant",
+    "ringLabels": {
+      "institutions": "INSTITUTIONS",
+      "shown": "SHOWN",
+      "sector": "SECTOR",
+      "sectors": "SECTORS",
+      "coBidder": "CO-BIDDER",
+      "coBidders": "CO-BIDDERS"
+    },
+    "topologyRead": "Read",
+    "mostFrequent": "Most-frequent co-bidder:",
+    "sharedProcedures": "{{count}} shared procedures",
     "institutionsServed": "Institutions Served",
     "sectorsActive": "Sectors Active",
     "institutionsNote": {
@@ -108,6 +142,10 @@
   "money": {
     "heading": "{{value}} Over Time",
     "description": "Annual contract value and risk trajectory — where the money went, and when the risk spiked.",
+    "staircaseDescription": "The journey of money. Each step is a year. Step color is the average risk that year. The taller the step, the larger the year-over-year jump — pinned annotations mark the three largest. The final number is the cumulative total.",
+    "flowedIn": "flowed in {{year}}",
+    "peakRiskYearShort": "peak risk year",
+    "byYear": "by {{year}}",
     "peakByValue": "Peak Year by Value",
     "peakByRisk": "Peak Year by Risk",
     "peakValueLabel": "{{year}} — {{value}}",
@@ -119,12 +157,35 @@
   "verdict": {
     "heading": "Investigation Summary",
     "description": "Statistical signals warrant attention. A high score is not proof of wrongdoing — it means this vendor closely resembles documented corruption patterns.",
+    "theQuestion": "The Question",
+    "theEvidence": "The Evidence",
+    "theFinding": "The Finding",
+    "theNextStep": "The Next Step",
+    "questionText": "Does this vendor's procurement record warrant investigation?",
+    "finding": {
+      "critical": "The data warrants urgent investigation.",
+      "high": "Statistical signals warrant scrutiny.",
+      "medium": "Anomalies present. Verification recommended.",
+      "low": "No standout signals against sector baseline."
+    },
+    "evidence": {
+      "signal": "Statistical signal",
+      "pattern": "Pattern detected",
+      "aria": "ARIA classification",
+      "external": "External validation",
+      "network": "Network"
+    },
+    "tierIps": "Tier {{tier}} · IPS {{ips}}",
+    "networkRow": "{{coBidders}} co-bidder{{coBiddersPlural}} · {{institutions}} inst. · {{sectors}} sector{{sectorsPlural}}",
+    "readFullMemo": "+ Read full memo",
+    "collapseMemo": "— Collapse",
     "riskIndicatorScore": "Risk Indicator Score",
     "outOf100": "out of 100",
     "ariaIps": "ARIA IPS: {{ips}} · Tier {{tier}}",
     "efosLabel": "SAT EFOS Definitivo",
     "sfpLabel": "SFP Sanctioned",
     "groundTruthLabel": "In Ground Truth Cases",
+    "groundTruthShort": "GT",
     "ariaMemoTitle": "ARIA Intelligence Memo",
     "fullVendorProfile": "Full Vendor Profile",
     "exportPdf": "Export PDF Briefing",

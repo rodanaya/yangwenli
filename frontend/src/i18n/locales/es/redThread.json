@@ -9,9 +9,9 @@
     "headings": {
       "subject": "Capítulo I · El Sujeto",
       "timeline": "Capítulo II · La Cronología",
-      "pattern": "Capítulo III · El Patrón",
-      "network": "Capítulo IV · La Red",
-      "money": "Capítulo V · El Dinero",
+      "network": "Capítulo III · La Red",
+      "money": "Capítulo IV · El Dinero",
+      "pattern": "Capítulo V · El Patrón",
       "verdict": "Capítulo VI · El Veredicto"
     }
   },
@@ -65,6 +65,16 @@
   "timeline": {
     "heading": "{{total}} Contratos, {{minYear}}–{{maxYear}}",
     "dotDescription": "Cada punto es un año. El tamaño refleja el valor total. El color refleja el riesgo promedio. Pasa el cursor para más detalles.",
+    "hourglassDescription": "Una lectura en dos canales. Sobre el eje del año: cuántos contratos produjo cada año. Debajo: cuánto dinero fluyó. Cuando un canal diverge del otro — un solo contrato por miles de millones, o un enjambre de contratos pequeños que suman poco — la disparidad es la señal.",
+    "hourglassLegend": "▲ ARRIBA = NÚMERO DE CONTRATOS · ▼ ABAJO = LOG(VALOR) · COLOR = RIESGO PROMEDIO",
+    "countAxis": "contratos",
+    "valueAxis": "log(valor)",
+    "era": {
+      "stable": "Era estable",
+      "watch": "Era de vigilancia",
+      "alert": "Era de alerta"
+    },
+    "eraNarrative": "abre en {{year}}. {{share}}% del valor total (≈ {{value}}) fluyó durante años de alto riesgo.",
     "legend": {
       "sizeLabel": "Tamaño = valor anual de contratos"
     }
@@ -74,12 +84,36 @@
     "description": "Las puntuaciones de riesgo se construyen a partir de 16 características z-score normalizadas contra los promedios del sector. Estos son los factores que impulsaron la puntuación de este proveedor.",
     "raisesRisk": "▲ aumenta el riesgo",
     "lowersRisk": "▼ reduce el riesgo",
+    "raises": "aumenta",
+    "lowers": "reduce",
+    "sectorReference": "p25–p75 del sector",
+    "diagnosis": "{{anomalous}} de {{total}} valores fuera del rango de referencia del sector",
     "noData": "Datos de atribución de características no disponibles para este proveedor.",
     "shapNote": "Los valores positivos aumentan la puntuación de riesgo (rojo). Los negativos la reducen (verde). Los valores son contribuciones de características estilo SHAP: β_i × (z_i − E[z_i])."
   },
   "network": {
     "heading": "Conexiones y Relaciones",
     "description": "Las redes de proveedores revelan anillos de co-contratación, entidades compartidas y dependencias institucionales invisibles en el análisis contrato por contrato.",
+    "constellationDescription": "Una topología de alcance. El anillo exterior marca las instituciones que este proveedor atendió; el interior marca los proveedores que licitaron junto a él. La forma revela si este proveedor opera dentro de una red o como fuente única.",
+    "topology": {
+      "tightSingleSource": "Perfil estrecho de fuente única. Sin co-licitantes, alcance institucional limitado — típico de captura o contratos de fuente exclusiva.",
+      "broadSingleSource": "Perfil amplio de fuente única. Sin licitación coordinada, pero contratos repartidos entre muchas instituciones — posible dominio por adjudicación directa.",
+      "thinNetwork": "Red de co-licitación delgada. El proveedor licita ocasionalmente junto a un grupo pequeño.",
+      "denseNetwork": "Red de co-licitación densa. El proveedor licita consistentemente con el mismo grupo — revisar por patrones de rotación o señuelo."
+    },
+    "noCoordinatedBidding": "── SIN LICITACIÓN COORDINADA ──",
+    "noCoordinatedBiddingNote": "fuente única / dominio por adjudicación directa",
+    "ringLabels": {
+      "institutions": "INSTITUCIONES",
+      "shown": "MOSTRADAS",
+      "sector": "SECTOR",
+      "sectors": "SECTORES",
+      "coBidder": "CO-LICITANTE",
+      "coBidders": "CO-LICITANTES"
+    },
+    "topologyRead": "Lectura",
+    "mostFrequent": "Co-licitante más frecuente:",
+    "sharedProcedures": "{{count}} procedimientos compartidos",
     "institutionsServed": "Instituciones Atendidas",
     "sectorsActive": "Sectores Activos",
     "institutionsNote": {
@@ -108,6 +142,10 @@
   "money": {
     "heading": "{{value}} a lo Largo del Tiempo",
     "description": "Valor anual de contratos y trayectoria de riesgo — a dónde fue el dinero y cuándo aumentó el riesgo.",
+    "staircaseDescription": "El recorrido del dinero. Cada peldaño es un año. El color del peldaño es el riesgo promedio de ese año. Cuanto más alto el peldaño, mayor el salto interanual — las anotaciones marcan los tres mayores. La cifra final es el total acumulado.",
+    "flowedIn": "fluyó en {{year}}",
+    "peakRiskYearShort": "año pico de riesgo",
+    "byYear": "para {{year}}",
     "peakByValue": "Año Pico por Valor",
     "peakByRisk": "Año Pico por Riesgo",
     "peakValueLabel": "{{year}} — {{value}}",
@@ -119,12 +157,35 @@
   "verdict": {
     "heading": "Resumen de Investigación",
     "description": "Las señales estadísticas justifican atención. Una puntuación alta no es prueba de irregularidades — significa que este proveedor se asemeja estrechamente a patrones de corrupción documentados.",
+    "theQuestion": "La Pregunta",
+    "theEvidence": "La Evidencia",
+    "theFinding": "El Hallazgo",
+    "theNextStep": "El Siguiente Paso",
+    "questionText": "¿La historia de contratación de este proveedor amerita investigación?",
+    "finding": {
+      "critical": "Los datos justifican una investigación urgente.",
+      "high": "Las señales estadísticas justifican escrutinio.",
+      "medium": "Anomalías presentes. Se recomienda verificación.",
+      "low": "Sin señales destacadas frente a la línea base del sector."
+    },
+    "evidence": {
+      "signal": "Señal estadística",
+      "pattern": "Patrón detectado",
+      "aria": "Clasificación ARIA",
+      "external": "Validación externa",
+      "network": "Red"
+    },
+    "tierIps": "Nivel {{tier}} · IPS {{ips}}",
+    "networkRow": "{{coBidders}} co-licitante{{coBiddersPlural}} · {{institutions}} inst. · {{sectors}} sector{{sectorsPlural}}",
+    "readFullMemo": "+ Leer memorándum completo",
+    "collapseMemo": "— Colapsar",
     "riskIndicatorScore": "Puntuación de Indicador de Riesgo",
     "outOf100": "sobre 100",
     "ariaIps": "IPS ARIA: {{ips}} · Nivel {{tier}}",
     "efosLabel": "SAT EFOS Definitivo",
     "sfpLabel": "Sancionado por SFP",
     "groundTruthLabel": "En Casos de Referencia",
+    "groundTruthShort": "GT",
     "ariaMemoTitle": "Memorándum de Inteligencia ARIA",
     "fullVendorProfile": "Perfil Completo del Proveedor",
     "exportPdf": "Exportar Informe PDF",
