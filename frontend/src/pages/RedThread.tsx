@@ -40,7 +40,6 @@ import {
   Clock,
   Zap,
   Shield,
-  ChevronDown,
 } from 'lucide-react'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
@@ -148,18 +147,22 @@ function ChapterSubject({ vendor, aria, t }: {
   const riskColor = RISK_DOT_COLORS[riskLevel]
 
   return (
-    <section id="chapter-subject" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <section id="chapter-subject" className="py-10 px-4 sm:px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.subject')}</ChapterLabel>
 
+      {/* Tightened from 56px serif headline + bouncing scroll-hint chevron
+          per the user's "resumen ejecutivo... laughable" feedback. The
+          chapter still names the vendor + tags, but at investigative-tool
+          scale, not magazine-cover scale. */}
       <motion.h1
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="font-serif font-bold text-text-primary leading-[1.05] mb-8"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="font-serif font-bold text-text-primary leading-[1.1] mb-4"
         style={{
           fontFamily: 'var(--font-family-serif)',
-          fontSize: 'clamp(2rem, 4.5vw, 3.5rem)',
-          letterSpacing: '-0.025em',
+          fontSize: 'clamp(1.5rem, 2.6vw, 2rem)',
+          letterSpacing: '-0.02em',
         }}
         title={vendor.name}
       >
@@ -169,36 +172,36 @@ function ChapterSubject({ vendor, aria, t }: {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="flex flex-wrap items-center gap-3 mb-12"
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="flex flex-wrap items-center gap-1.5 mb-6"
       >
         {sectorName && (
           <span
-            className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest"
-            style={{ backgroundColor: sectorColor + '22', color: sectorColor, border: `1px solid ${sectorColor}44` }}
+            className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em]"
+            style={{ backgroundColor: sectorColor + '14', color: sectorColor, border: `1px solid ${sectorColor}33` }}
           >
             {sectorName}
           </span>
         )}
         <span
-          className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest"
-          style={{ backgroundColor: riskColor + '22', color: riskColor, border: `1px solid ${riskColor}44` }}
+          className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em]"
+          style={{ backgroundColor: riskColor + '14', color: riskColor, border: `1px solid ${riskColor}33` }}
         >
           {t('subject.riskBadge', { level: riskLevel })}
         </span>
         {aria && (
-          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30">
+          <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30">
             {t('subject.ariaTier', { tier: aria.ips_tier })}
           </span>
         )}
       </motion.div>
 
-      {/* Key stats */}
+      {/* Key stats — tighter cards, smaller anchor numbers, more density. */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10"
+        transition={{ delay: 0.3, duration: 0.4 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6"
       >
         {[
           {
@@ -222,10 +225,10 @@ function ChapterSubject({ vendor, aria, t }: {
             note: t('notes.oecdBenchmark'),
           },
         ].map((s) => (
-          <div key={s.label} className="bg-background-card border border-border rounded-sm p-5">
-            <p className="editorial-label text-text-muted mb-1">{s.label}</p>
-            <p className="text-2xl font-black text-text-primary font-mono tabular-nums">{s.value}</p>
-            <AnnotationNote>{s.note}</AnnotationNote>
+          <div key={s.label} className="bg-background-card border border-border rounded-sm px-3 py-2.5">
+            <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">{s.label}</p>
+            <p className="text-lg font-bold text-text-primary font-mono tabular-nums leading-none">{s.value}</p>
+            <p className="text-[10px] text-text-muted mt-1.5 leading-tight">{s.note}</p>
           </div>
         ))}
       </motion.div>
@@ -233,8 +236,8 @@ function ChapterSubject({ vendor, aria, t }: {
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.6 }}
-        className="text-text-muted text-lg leading-relaxed max-w-2xl"
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="text-text-muted text-sm leading-relaxed max-w-2xl"
         // introText uses {{name}} placeholder — vendor.name is escaped to prevent XSS
         dangerouslySetInnerHTML={{
           __html: t('subject.introText', {
@@ -246,16 +249,9 @@ function ChapterSubject({ vendor, aria, t }: {
           }),
         }}
       />
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="mt-16 flex items-center gap-2 text-text-secondary"
-      >
-        <ChevronDown className="w-4 h-4 animate-bounce" />
-        <span className="text-xs tracking-widest uppercase">{t('subject.scrollHint')}</span>
-      </motion.div>
+      {/* Removed: bouncing-chevron "Scroll to continue" hint — Medium-article
+          chrome on a working investigative tool. The thread-line indicator
+          on the left edge already signals scroll progress. */}
     </section>
   )
 }
