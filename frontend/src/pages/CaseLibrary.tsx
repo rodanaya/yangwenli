@@ -384,11 +384,11 @@ export default function CaseLibrary() {
             not a magazine cover; the impact-statement that lived in the
             42px serif headline is now compressed into the dateline so it
             still reads but doesn't crowd the data. */}
-        <header className="mb-5 pb-4 border-b" style={{ borderColor: BORDER_STRONG }}>
+        <header className="mb-3 pb-4 border-b" style={{ borderColor: BORDER_STRONG }}>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                {i18n.language === 'es' ? 'Archivo de Casos' : 'Case Archive'}
+                {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {i18n.language === 'es'
@@ -445,6 +445,24 @@ export default function CaseLibrary() {
             </div>
           </div>
         </header>
+
+        {/* Editorial framing — what this page is, and what it isn't.
+            These cases were documented by Mexican investigative
+            journalism, federal audits, and court records — not by
+            RUBLI. The platform aggregates them as the training
+            corpus for the v0.6.5 risk model. Putting that on the
+            tin avoids the misimpression that "Cases" = our work. */}
+        <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
+          <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-[color:var(--color-accent)] mr-2">
+              {i18n.language === 'es' ? 'Corpus de entrenamiento' : 'Training corpus'}
+            </span>
+            {i18n.language === 'es'
+              ? <>Estos casos no son nuestras investigaciones. Son escándalos documentados por <span className="text-text-primary font-medium">periodismo de investigación mexicano</span>, <span className="text-text-primary font-medium">auditorías federales</span> y <span className="text-text-primary font-medium">expedientes judiciales</span> — el conjunto de verdad fundamental que entrena el modelo de riesgo de RUBLI. Cuando ARIA marca a un proveedor, el modelo pregunta: ¿se parece este patrón a uno de estos casos?</>
+              : <>These cases are not our investigations. They are scandals documented by <span className="text-text-primary font-medium">Mexican investigative journalism</span>, <span className="text-text-primary font-medium">federal audits</span>, and <span className="text-text-primary font-medium">court records</span> — the ground-truth corpus that trains RUBLI's risk model. When ARIA flags a vendor, the model is asking: does this pattern resemble one of these cases?</>
+            }
+          </p>
+        </div>
 
         {/* ─────────── Filter strip ─────────── */}
         <section className="mb-6 space-y-3">

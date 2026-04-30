@@ -963,6 +963,53 @@ function CaseBody({
         }}
       >
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
+          {/* DOCUMENTED-BY byline — promoted to the top per the user's
+              "these aren't our cases, they're our training data" framing.
+              The authority of every claim on this page comes from the
+              cited sources. They should appear above the headline like
+              a byline, not buried at section 04. */}
+          {(data.sources ?? []).length > 0 && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', marginBottom: 14, flexWrap: 'wrap' }}>
+              <span style={{ ...OVERLINE, color: TEXT_FAINT, letterSpacing: '0.18em' }}>
+                {lang === 'es' ? 'Documentado por' : 'Documented by'}
+              </span>
+              {(data.sources ?? []).slice(0, 4).map((src, i, arr) => (
+                <span key={i} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+                  {src.url ? (
+                    <a
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 11,
+                        ...MONO,
+                        color: TEXT_PRIMARY,
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        textDecoration: 'none',
+                      }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = CRIMSON_HI)}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = TEXT_PRIMARY)}
+                    >
+                      {src.outlet}
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: 11, ...MONO, color: TEXT_PRIMARY, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {src.outlet}
+                    </span>
+                  )}
+                  {i < arr.length - 1 && <span style={{ color: TEXT_FAINT }}>·</span>}
+                </span>
+              ))}
+              {(data.sources ?? []).length > 4 && (
+                <span style={{ fontSize: 10, ...MONO, color: TEXT_MUTED }}>
+                  + {(data.sources ?? []).length - 4} {lang === 'es' ? 'más' : 'more'}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Meta row */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
             <Pill color={accent} border={`${accent}55`} bg={`${accent}12`}>
@@ -978,7 +1025,7 @@ function CaseBody({
               <>
                 <span style={{ color: TEXT_FAINT }}>·</span>
                 <Link to="/methodology" style={{ ...OVERLINE, color: CYAN, textDecoration: 'none' }}>
-                  ML-linked ground truth
+                  {lang === 'es' ? 'Caso de entrenamiento ML' : 'ML training case'}
                 </Link>
               </>
             )}
