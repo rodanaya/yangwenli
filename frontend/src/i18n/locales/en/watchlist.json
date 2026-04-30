@@ -1,6 +1,6 @@
 {
-  "title": "Watchlist",
-  "subtitle": "Vendors and institutions under monitoring",
+  "title": "Workspace",
+  "subtitle": "Your saved vendors, contracts, and case leads — organized into dossiers.",
   "addToWatchlist": "Add to watchlist",
   "columns": {
     "type": "Type",

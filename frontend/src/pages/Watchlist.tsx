@@ -8,9 +8,10 @@ import { useState, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -393,7 +394,9 @@ export function Watchlist() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { open: openEntityDrawer } = useEntityDrawer()
-  const { t } = useTranslation('watchlist')
+  const { t, i18n } = useTranslation('watchlist')
+  const { user, isLoading: authLoading } = useAuth()
+  const isAuthed = !!user
 
   const [activeTab, setActiveTab] = useState<'entities' | 'dossiers'>('entities')
   const [dossierDialogOpen, setDossierDialogOpen] = useState(false)
@@ -410,10 +413,13 @@ export function Watchlist() {
   const [sortField, setSortField] = useState<SortField>('risk')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
-  // Folder queries
+  // Folder queries — gated on auth so unauthenticated visits don't
+  // hammer the API with 401s and the page can render an auth-required
+  // empty state instead of a generic "Failed to load."
   const { data: foldersData } = useQuery({
     queryKey: ['watchlist-folders'],
     queryFn: () => watchlistApi.getFolders(),
+    enabled: isAuthed,
     staleTime: 5 * 60 * 1000,
   })
   const folders = foldersData ?? []
@@ -438,6 +444,7 @@ export function Watchlist() {
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ['watchlist-stats'],
     queryFn: () => watchlistApi.getStats(),
+    enabled: isAuthed,
   })
 
   // Items query (filtered). `activeFolderId` MUST be in queryKey so
@@ -456,6 +463,7 @@ export function Watchlist() {
       priority: priorityFilter === 'all' ? undefined : priorityFilter,
       folder_id: activeFolderId ?? undefined,
     }),
+    enabled: isAuthed,
   })
 
   const updateMutation = useMutation({
@@ -481,7 +489,7 @@ export function Watchlist() {
   const { data: dossiers, isLoading: dossiersLoading } = useQuery({
     queryKey: ['dossiers', dossierStatusFilter],
     queryFn: () => dossierApi.list(dossierStatusFilter === 'all' ? undefined : dossierStatusFilter),
-    enabled: activeTab === 'dossiers',
+    enabled: isAuthed && activeTab === 'dossiers',
     staleTime: 60 * 1000,
   })
 
@@ -583,50 +591,27 @@ export function Watchlist() {
     [dossiers, activeDossierId]
   )
 
-  // ---- error state ----
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-sm bg-risk-critical/10 border border-risk-critical/20">
-            <AlertTriangle className="h-4 w-4 text-risk-critical" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">{t('errorTitle')}</h2>
-            <p className="text-xs text-text-muted mt-0.5">{t('errorDescription')}</p>
-          </div>
-        </div>
-        <Card className="border-risk-critical/30 bg-risk-critical/5">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-risk-critical opacity-50" />
-            <p className="text-text-muted mb-4">{t('errorMessage')}</p>
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {t('retry')}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const isEs = i18n.language.startsWith('es')
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
         {/* Utility header — same treatment as /aria. Workspace is a working
-            surface (saved vendors, dossier-building) not an editorial spread. */}
+            surface (saved vendors, dossier-building) not an editorial spread.
+            Header always renders, even in auth-required / error / loading
+            states, so the page feels consistent. */}
         <header className="mb-5 pb-4 border-b border-border">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                {t('title', { defaultValue: 'Workspace' })}
+                {t('title', { defaultValue: isEs ? 'Espacio de trabajo' : 'Workspace' })}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                {t('subtitle', { defaultValue: 'Your saved vendors, contracts, and case leads — organized into dossiers.' })}
+                {t('subtitle', { defaultValue: isEs ? 'Sus proveedores, contratos y pistas guardadas — organizados en dossiers.' : 'Your saved vendors, contracts, and case leads — organized into dossiers.' })}
               </p>
             </div>
-            {!statsLoading && (
+            {isAuthed && !statsLoading && (
               <div className="flex items-baseline gap-5">
                 <div className="text-right">
                   <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
@@ -648,6 +633,70 @@ export function Watchlist() {
             )}
           </div>
         </header>
+
+        {/* Auth-required empty state — replaces the prior "Failed to load"
+            confusion. The watchlist + dossier endpoints all require a
+            JWT; without one, every query returns 401 which the old page
+            rendered as a generic error. Now it's an explicit invitation
+            to sign in / register, with the rest of the page chrome
+            preserved so the user knows where they are. */}
+        {!authLoading && !isAuthed && (
+          <div className="rounded-sm border border-border bg-background-card px-6 py-10">
+            <div className="max-w-md mx-auto text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-background-elevated">
+                <FolderOpen className="w-5 h-5 text-text-secondary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
+                  {isEs ? 'Acceso requerido' : 'Sign in required'}
+                </p>
+                <h2 className="text-base font-bold text-text-primary mb-2">
+                  {isEs ? 'Inicia sesión para abrir tu espacio de trabajo' : 'Sign in to open your workspace'}
+                </h2>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  {isEs
+                    ? 'El espacio de trabajo es personal — guarda proveedores, contratos y casos en dossiers privados. Necesitas una cuenta para usarlo.'
+                    : 'Your workspace is personal — save vendors, contracts, and cases into private dossiers. You need an account to use it.'}
+                </p>
+              </div>
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-risk-critical)] hover:opacity-90 text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-4 py-2 transition-opacity"
+                >
+                  {isEs ? 'Iniciar sesión' : 'Sign in'}
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-4 py-2 transition-colors border border-border"
+                >
+                  {isEs ? 'Crear cuenta' : 'Create account'}
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Genuine error state — only shown when authenticated but the
+            request still failed (network, 5xx, etc.). Keeps the same
+            utility-header above; just an inline panel below. */}
+        {isAuthed && error && (
+          <div className="rounded-sm border border-risk-critical/30 bg-risk-critical/5 px-6 py-8">
+            <div className="max-w-md mx-auto text-center space-y-3">
+              <AlertTriangle className="h-8 w-8 mx-auto text-risk-critical opacity-60" />
+              <h2 className="text-base font-bold text-text-primary">{t('errorTitle')}</h2>
+              <p className="text-xs text-text-muted leading-relaxed">{t('errorMessage')}</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-2">
+                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                {t('retry')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Authenticated + no error — render the working surface. */}
+        {isAuthed && !error && (<>
+
 
     <div className="flex flex-col md:flex-row gap-4">
       {/* Folder sidebar */}
@@ -1111,6 +1160,7 @@ export function Watchlist() {
         />
       )}
     </div>
+        </>)}
       </div>
     </div>
   )
