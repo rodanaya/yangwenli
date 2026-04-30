@@ -74,7 +74,19 @@
       "watch": "Era de vigilancia",
       "alert": "Era de alerta"
     },
+    "eraAll": "Todos",
     "eraNarrative": "abre en {{year}}. {{share}}% del valor total (≈ {{value}}) fluyó durante años de alto riesgo.",
+    "filter": "Filtrar:",
+    "unpin": "Desfijar año",
+    "detail": {
+      "hovering": "Año señalado",
+      "pinned": "Año fijado",
+      "spotlight": "Año destacado",
+      "contracts": "Contratos",
+      "value": "Valor",
+      "ofTotal": "del total",
+      "avgRisk": "Riesgo prom."
+    },
     "legend": {
       "sizeLabel": "Tamaño = valor anual de contratos"
     }
@@ -114,6 +126,9 @@
     "topologyRead": "Lectura",
     "mostFrequent": "Co-licitante más frecuente:",
     "sharedProcedures": "{{count}} procedimientos compartidos",
+    "institutionalRibbonLabel": "HUELLA INSTITUCIONAL",
+    "institutionalRibbonHeading": "A dónde aterrizaron las relaciones, año por año",
+    "institutionalRibbonDescription": "Cada carril es una institución. La cinta abarca los años en que esa institución recibió contratos de este proveedor; el grosor codifica el valor total, el color codifica el riesgo promedio. Ordenadas de mayor a menor valor. Haga clic en cualquier carril para abrir la institución.",
     "institutionsServed": "Instituciones Atendidas",
     "sectorsActive": "Sectores Activos",
     "institutionsNote": {

@@ -424,12 +424,22 @@ function TimelineHourglass({
   eraLabels,
   countLabel,
   valueLabel,
+  selectedYear,
+  hoverYear,
+  eraFilter,
+  onHoverYear,
+  onSelectYear,
   className,
 }: {
   timeline: TimelineItem[]
   eraLabels: { stable: string; watch: string; alert: string }
   countLabel: string
   valueLabel: string
+  selectedYear: number | null
+  hoverYear: number | null
+  eraFilter: EraBucket | null
+  onHoverYear: (y: number | null) => void
+  onSelectYear: (y: number | null) => void
   className?: string
 }) {
   if (timeline.length === 0) return null
@@ -450,8 +460,6 @@ function TimelineHourglass({
     return score > maxScore ? item : max
   }, sorted[0])
 
-  // Era partitioning — same algorithm as before but bands now span
-  // count + value channels instead of just one chart area.
   type Era = { startYear: number; endYear: number; bucket: EraBucket }
   const eras: Era[] = []
   for (const item of sorted) {
@@ -468,10 +476,9 @@ function TimelineHourglass({
   const W = 720
   const H = 240
   const PAD = { left: 8, right: 8 }
-  // Asymmetric channels: count gets ~38% (less story), value gets ~62%
   const COUNT_AREA = 76
   const VALUE_AREA = 124
-  const CENTER_BAND = 18 // for axis ticks/labels
+  const CENTER_BAND = 18
   const Y_TOP = 8
   const Y_CENTER = Y_TOP + COUNT_AREA + CENTER_BAND / 2
   const Y_BASE_VALUE = Y_CENTER + CENTER_BAND / 2
@@ -484,12 +491,24 @@ function TimelineHourglass({
 
   const halfStep = innerW / yearSpan / 2
 
-  // Year axis: minYear / hero / maxYear
+  // Helper — does a year match the active era filter?
+  const matchesEraFilter = (item: TimelineItem) => {
+    if (!eraFilter) return true
+    return bucketOfRisk(item.avg_risk_score ?? 0) === eraFilter
+  }
+
   const axisYears = Array.from(new Set([minYear, hero.year, maxYear])).sort((a, b) => a - b)
+  const activeYear = hoverYear ?? selectedYear // hover takes precedence over pinned
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={className ?? 'w-full h-auto'} role="img" aria-label="Timeline hourglass — count and value channels">
-      {/* Era background bands — span full height across both channels */}
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className={className ?? 'w-full h-auto cursor-crosshair'}
+      role="img"
+      aria-label="Timeline hourglass — count and value channels"
+      onMouseLeave={() => onHoverYear(null)}
+    >
+      {/* Era background bands */}
       {eras.map((era, i) => {
         const isFirst = i === 0
         const isLast = i === eras.length - 1
@@ -507,27 +526,26 @@ function TimelineHourglass({
         )
       })}
 
-      {/* Channel labels — left margin, vertical writing axes */}
-      <text
-        x={PAD.left + 4}
-        y={Y_TOP + 10}
-        fontSize={8.5}
-        fontFamily="var(--font-family-mono)"
-        fill="var(--color-text-muted)"
-        opacity={0.7}
-        letterSpacing={0.5}
-      >
+      {/* Active-year highlight column — vertical band */}
+      {activeYear != null && (
+        <rect
+          x={xOf(activeYear) - 12}
+          y={Y_TOP - 4}
+          width={24}
+          height={H - Y_TOP}
+          fill="var(--color-text-primary)"
+          fillOpacity={0.05}
+          stroke="var(--color-text-primary)"
+          strokeOpacity={0.2}
+          strokeWidth={0.6}
+        />
+      )}
+
+      {/* Channel labels — left margin */}
+      <text x={PAD.left + 4} y={Y_TOP + 10} fontSize={8.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.7} letterSpacing={0.5}>
         ▲ {countLabel.toUpperCase()}
       </text>
-      <text
-        x={PAD.left + 4}
-        y={Y_BASE_VALUE + 10}
-        fontSize={8.5}
-        fontFamily="var(--font-family-mono)"
-        fill="var(--color-text-muted)"
-        opacity={0.7}
-        letterSpacing={0.5}
-      >
+      <text x={PAD.left + 4} y={Y_BASE_VALUE + 10} fontSize={8.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.7} letterSpacing={0.5}>
         ▼ {valueLabel.toUpperCase()}
       </text>
 
@@ -551,21 +569,37 @@ function TimelineHourglass({
         )
       })}
 
-      {/* Centerline + year axis ticks */}
       <line x1={0} x2={W} y1={Y_CENTER} y2={Y_CENTER} stroke="var(--color-border)" strokeWidth={0.7} />
 
-      {/* Bars — count above, value below */}
+      {/* Bars — count above, value below. Each year has an invisible
+          hit-area for hover/click that's wider than the visible bar. */}
       {sorted.map((item) => {
         const x = xOf(item.year)
         const isHero = item.year === hero.year
-        const barW = isHero ? 8 : 5
+        const isActive = item.year === activeYear
+        const isPinned = item.year === selectedYear
+        const dimmed = !matchesEraFilter(item)
+        const barW = isHero || isActive ? 8 : 5
         const cH = countH(item.contract_count)
         const vH = valueH(item.total_value)
         const risk = item.avg_risk_score ?? 0
         const valueColor = colorOf(risk)
+        // Hit-area width — at least 14px or half the column gap, whichever larger
+        const hitW = Math.max(14, (innerW / Math.max(1, sorted.length)) * 0.85)
         return (
           <g key={item.year}>
-            {/* Count bar (above, muted gray) */}
+            {/* Invisible hit-area covering the full vertical span at this year */}
+            <rect
+              x={x - hitW / 2}
+              y={Y_TOP}
+              width={hitW}
+              height={H - Y_TOP - 4}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => onHoverYear(item.year)}
+              onClick={() => onSelectYear(item.year === selectedYear ? null : item.year)}
+            />
+            {/* Count bar */}
             <rect
               x={x - barW / 2}
               y={Y_CENTER - CENTER_BAND / 2 - cH}
@@ -573,9 +607,10 @@ function TimelineHourglass({
               height={cH}
               rx={1}
               fill="var(--color-text-muted)"
-              opacity={isHero ? 0.85 : 0.55}
+              opacity={dimmed ? 0.18 : (isActive ? 1 : isHero ? 0.85 : 0.55)}
+              style={{ pointerEvents: 'none', transition: 'opacity 120ms ease' }}
             />
-            {/* Value bar (below, risk-colored) */}
+            {/* Value bar */}
             <rect
               x={x - barW / 2}
               y={Y_BASE_VALUE}
@@ -583,12 +618,23 @@ function TimelineHourglass({
               height={vH}
               rx={1}
               fill={valueColor}
-              opacity={isHero ? 1 : 0.82}
-              style={isHero ? { filter: `drop-shadow(0 0 5px ${valueColor}aa)` } : undefined}
+              opacity={dimmed ? 0.20 : (isActive ? 1 : isHero ? 1 : 0.82)}
+              style={{
+                pointerEvents: 'none',
+                filter: isActive || isHero ? `drop-shadow(0 0 5px ${valueColor}aa)` : undefined,
+                transition: 'opacity 120ms ease',
+              }}
             />
-            <title>
-              {item.year} · {item.contract_count} contract{item.contract_count !== 1 ? 's' : ''} · {formatCompactMXN(item.total_value)} · {Math.round(risk * 100)}% risk
-            </title>
+            {/* Pin marker — small dot above the year if pinned */}
+            {isPinned && (
+              <circle
+                cx={x}
+                cy={Y_TOP + 2}
+                r={2.6}
+                fill="var(--color-text-primary)"
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
           </g>
         )
       })}
@@ -672,19 +718,51 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   timeline: TimelineItem[]
   t: TFunction
 }) {
+  // Interactive state — hover (transient), pinned (sticky), era filter
+  const [hoverYear, setHoverYear] = useState<number | null>(null)
+  const [selectedYear, setSelectedYear] = useState<number | null>(null)
+  const [eraFilter, setEraFilter] = useState<EraBucket | null>(null)
+
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year)
   const minYear = sortedTimeline[0]?.year ?? vendorFirstYear ?? 2010
   const maxYear = sortedTimeline[sortedTimeline.length - 1]?.year ?? vendorLastYear ?? 2025
   const displayTotal = totalContracts ?? sortedTimeline.reduce((s, item) => s + item.contract_count, 0)
 
-  // Era summary line — auto-generated narrative footer in the same spirit
-  // as the chart's era bands. Computes (alert era count, alert era share
-  // of total value) and pulls the boundary year for the inflection.
+  // Era summary line — auto-generated narrative footer
   const totalValue = sortedTimeline.reduce((s, item) => s + item.total_value, 0)
   const alertItems = sortedTimeline.filter((item) => bucketOfRisk(item.avg_risk_score ?? 0) === 'alert')
   const alertValue = alertItems.reduce((s, item) => s + item.total_value, 0)
   const alertShare = totalValue > 0 ? (alertValue / totalValue) * 100 : 0
   const inflectionYear = alertItems.length > 0 ? alertItems[0].year : null
+
+  // Per-bucket counts for filter pill labels
+  const bucketCounts = sortedTimeline.reduce(
+    (acc, item) => {
+      const b = bucketOfRisk(item.avg_risk_score ?? 0)
+      acc[b] = (acc[b] ?? 0) + 1
+      return acc
+    },
+    {} as Record<EraBucket, number>
+  )
+
+  // Active year for the detail panel (hover wins, then selected, else hero)
+  const heroForFallback = sortedTimeline.reduce(
+    (max, item) => {
+      const score = item.total_value * (item.avg_risk_score ?? 0)
+      const maxScore = max.total_value * (max.avg_risk_score ?? 0)
+      return score > maxScore ? item : max
+    },
+    sortedTimeline[0] ?? { year: 0, total_value: 0, avg_risk_score: 0, contract_count: 0 }
+  )
+  const detailYear = hoverYear ?? selectedYear
+  const detailItem =
+    detailYear != null
+      ? sortedTimeline.find((item) => item.year === detailYear) ?? heroForFallback
+      : heroForFallback
+  const detailRisk = detailItem.avg_risk_score ?? 0
+  const detailColor = RISK_DOT_COLORS[getRiskLevel(detailRisk)]
+  const detailBucket = bucketOfRisk(detailRisk)
+  const detailValueShare = totalValue > 0 ? (detailItem.total_value / totalValue) * 100 : 0
 
   return (
     <ChapterShell id="chapter-timeline">
@@ -693,38 +771,108 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       />
       <p className="text-text-secondary mb-1 max-w-2xl text-sm leading-relaxed">
-        {t('timeline.hourglassDescription', {
-          defaultValue: 'A two-channel reading. Above the year axis: how many contracts each year produced. Below: how much money flowed. When one channel diverges from the other — a single contract worth billions, or a swarm of small contracts adding to nothing — the mismatch is the signal.',
-        })}
+        {t('timeline.hourglassDescription')}
       </p>
       <p className="text-text-muted mb-3 max-w-2xl text-[11px] font-mono leading-relaxed">
-        {t('timeline.hourglassLegend', {
-          defaultValue: '▲ ABOVE = CONTRACT COUNT · ▼ BELOW = LOG(VALUE) · COLOR = AVG RISK',
-        })}
+        {t('timeline.hourglassLegend')}
       </p>
 
-      {/* Dual-channel hourglass — count above the axis, value below.
-          Replaces the prior skyline + year-card duplication with a
-          mirror chart that exposes volume/value mismatch visually. */}
+      {/* Era filter pills — click to dim non-matching years */}
+      <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mr-1">
+          {t('timeline.filter')}
+        </span>
+        {(['all', 'stable', 'watch', 'alert'] as const).map((key) => {
+          const isAll = key === 'all'
+          const active = isAll ? eraFilter === null : eraFilter === key
+          const count = isAll ? sortedTimeline.length : (bucketCounts[key as EraBucket] ?? 0)
+          const accent = isAll
+            ? 'var(--color-text-secondary)'
+            : ERA_LABEL_COLOR[key as EraBucket]
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setEraFilter(isAll ? null : (key as EraBucket))}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-sm border text-[10px] font-mono uppercase tracking-[0.1em] transition-colors"
+              style={{
+                borderColor: active ? accent : 'var(--color-border)',
+                color: active ? accent : 'var(--color-text-secondary)',
+                backgroundColor: active ? `${accent}10` : 'transparent',
+              }}
+            >
+              <span>{isAll ? t('timeline.eraAll') : t(`timeline.era.${key}`)}</span>
+              <span className="font-bold tabular-nums">{count}</span>
+            </button>
+          )
+        })}
+        {selectedYear != null && (
+          <button
+            type="button"
+            onClick={() => setSelectedYear(null)}
+            className="ml-auto text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted hover:text-text-primary transition-colors"
+          >
+            {t('timeline.unpin')}
+          </button>
+        )}
+      </div>
+
       <TimelineHourglass
         timeline={sortedTimeline}
         eraLabels={{
-          stable: t('timeline.era.stable', { defaultValue: 'Stable era' }),
-          watch:  t('timeline.era.watch',  { defaultValue: 'Watch era' }),
-          alert:  t('timeline.era.alert',  { defaultValue: 'Alert era' }),
+          stable: t('timeline.era.stable'),
+          watch:  t('timeline.era.watch'),
+          alert:  t('timeline.era.alert'),
         }}
-        countLabel={t('timeline.countAxis', { defaultValue: 'contracts' })}
-        valueLabel={t('timeline.valueAxis', { defaultValue: 'log(value)' })}
+        countLabel={t('timeline.countAxis')}
+        valueLabel={t('timeline.valueAxis')}
+        selectedYear={selectedYear}
+        hoverYear={hoverYear}
+        eraFilter={eraFilter}
+        onHoverYear={setHoverYear}
+        onSelectYear={setSelectedYear}
       />
 
-      {/* Auto-generated era narrative — inline, no card-in-card */}
+      {/* Detail panel — shows the active year's full breakdown.
+          Falls back to the hero year when nothing is hovered/pinned. */}
+      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 px-3 py-2.5 rounded-sm border border-border bg-background-card/40">
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {hoverYear != null
+              ? t('timeline.detail.hovering')
+              : selectedYear != null
+              ? t('timeline.detail.pinned')
+              : t('timeline.detail.spotlight')}
+          </p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{detailItem.year}</p>
+          <p className="text-[10px] font-mono uppercase tracking-[0.12em]" style={{ color: ERA_LABEL_COLOR[detailBucket] }}>
+            {t(`timeline.era.${detailBucket}`)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('timeline.detail.contracts')}</p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatNumber(detailItem.contract_count)}</p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('timeline.detail.value')}</p>
+          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatCompactMXN(detailItem.total_value)}</p>
+          <p className="text-[10px] font-mono tabular-nums text-text-muted">{detailValueShare.toFixed(1)}% {t('timeline.detail.ofTotal')}</p>
+        </div>
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('timeline.detail.avgRisk')}</p>
+          <p className="text-base font-bold font-mono tabular-nums leading-tight" style={{ color: detailColor }}>
+            {Math.round(detailRisk * 100)}%
+          </p>
+        </div>
+      </div>
+
+      {/* Auto-generated era narrative */}
       {inflectionYear && alertShare > 0 && (
         <p className="mt-3 text-xs text-text-secondary leading-relaxed max-w-2xl">
           <span className="font-mono uppercase tracking-[0.12em] text-[10px]" style={{ color: 'var(--color-risk-critical)' }}>
-            {t('timeline.era.alert', { defaultValue: 'Alert era' })}
+            {t('timeline.era.alert')}
           </span>
           {' '}— {t('timeline.eraNarrative', {
-            defaultValue: 'opens in {{year}}. {{share}}% of total value (≈ {{value}}) flowed during high-risk years.',
             year: inflectionYear,
             share: alertShare.toFixed(0),
             value: formatCompactMXN(alertValue),
@@ -1280,10 +1428,226 @@ function ConcentricConstellation({
   )
 }
 
-function ChapterNetwork({ vendorId, vendor, coBidders, t, i18n }: {
+/**
+ * InstitutionalRibbon — second graph in the Network chapter. Each
+ * institution gets one horizontal lane spanning [first_year, last_year],
+ * rendered as a colored ribbon. Ribbon thickness encodes log(value);
+ * ribbon color encodes avg_risk; the institution's name + value badge
+ * sit on the left, contract count + risk pct on the right.
+ *
+ * The lane composition surfaces THREE dimensions at once:
+ *   • TENURE — when the relationship was active (ribbon span)
+ *   • SCALE — how much money flowed there (ribbon height)
+ *   • RISK  — how anomalous the relationship was (ribbon color)
+ *
+ * Hover any ribbon to highlight; click navigates to the institution
+ * profile. Top concentration is auto-annotated below the chart.
+ */
+function InstitutionalRibbon({
+  institutions,
+  vendorFirstYear,
+  vendorLastYear,
+  i18n,
+}: {
+  institutions: Array<{
+    institution_id: number
+    institution_name: string
+    institution_type?: string
+    contract_count: number
+    total_value_mxn: number
+    avg_risk_score?: number
+    first_year?: number
+    last_year?: number
+  }>
+  vendorFirstYear: number
+  vendorLastYear: number
+  i18n: { language: string }
+}) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null)
+
+  // Sort institutions by total_value desc — biggest relationships at the top
+  const sorted = [...institutions]
+    .filter((inst) => inst.total_value_mxn > 0)
+    .sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+    .slice(0, 12) // Cap at 12 lanes for legibility
+
+  if (sorted.length === 0) return null
+
+  // Year axis — use vendor's full active range so all ribbons align
+  const minYear = Math.min(...sorted.map((i) => i.first_year ?? vendorFirstYear), vendorFirstYear)
+  const maxYear = Math.max(...sorted.map((i) => i.last_year ?? vendorLastYear), vendorLastYear)
+  const yearSpan = Math.max(1, maxYear - minYear + 1)
+
+  const maxValue = Math.max(...sorted.map((i) => i.total_value_mxn), 1)
+  const logMaxValue = Math.log(maxValue + 1)
+
+  // Concentration metric — % of total value flowing to the top institution
+  const totalValue = sorted.reduce((s, i) => s + i.total_value_mxn, 0)
+  const topShare = (sorted[0].total_value_mxn / totalValue) * 100
+
+  const colorOf = (risk: number) => RISK_DOT_COLORS[getRiskLevel(risk)]
+  const ribbonHeight = (value: number) => 6 + (Math.log(value + 1) / logMaxValue) * 18 // 6-24px
+
+  // Y-axis ticks for the year axis
+  const axisYears: number[] = []
+  const yearTickCount = 5
+  for (let i = 0; i < yearTickCount; i++) {
+    axisYears.push(Math.round(minYear + ((yearSpan - 1) * i) / (yearTickCount - 1)))
+  }
+  const uniqueAxisYears = Array.from(new Set(axisYears))
+
+  return (
+    <div>
+      {/* Year axis at top */}
+      <div className="relative pb-2 border-b border-border mb-2">
+        <div className="grid items-end" style={{ gridTemplateColumns: '160px 1fr 80px', gap: '12px' }}>
+          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {i18n.language.startsWith('es') ? 'Institución' : 'Institution'}
+          </span>
+          <div className="relative h-3">
+            {uniqueAxisYears.map((y, i) => {
+              const xPct = ((y - minYear) / (yearSpan - 1)) * 100
+              return (
+                <span
+                  key={y}
+                  className="absolute -translate-x-1/2 text-[9px] font-mono tabular-nums text-text-muted"
+                  style={{ left: `${xPct}%`, top: 0 }}
+                >
+                  {i === 0 ? y : i === uniqueAxisYears.length - 1 ? y : y}
+                </span>
+              )
+            })}
+          </div>
+          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted text-right">
+            {i18n.language.startsWith('es') ? 'Valor · contratos' : 'Value · contracts'}
+          </span>
+        </div>
+      </div>
+
+      {/* Lanes */}
+      <div className="space-y-1">
+        {sorted.map((inst, idx) => {
+          const start = inst.first_year ?? minYear
+          const end = inst.last_year ?? maxYear
+          const startPct = ((start - minYear) / (yearSpan - 1)) * 100
+          const widthPct = Math.max(2.5, ((end - start + 1) / yearSpan) * 100)
+          const risk = inst.avg_risk_score ?? 0
+          const color = colorOf(risk)
+          const height = ribbonHeight(inst.total_value_mxn)
+          const isHover = hoverIdx === idx
+
+          return (
+            <Link
+              key={inst.institution_id}
+              to={`/institutions/${inst.institution_id}`}
+              className="block group"
+              onMouseEnter={() => setHoverIdx(idx)}
+              onMouseLeave={() => setHoverIdx(null)}
+            >
+              <div
+                className={cn(
+                  'grid items-center py-1 px-1 rounded-sm transition-colors',
+                  isHover ? 'bg-background-elevated' : ''
+                )}
+                style={{ gridTemplateColumns: '160px 1fr 80px', gap: '12px' }}
+              >
+                {/* Institution name */}
+                <div className="min-w-0">
+                  <div
+                    className="text-[11px] text-text-primary truncate group-hover:text-[var(--color-risk-critical)] transition-colors"
+                    title={inst.institution_name}
+                  >
+                    {inst.institution_name}
+                  </div>
+                  {inst.institution_type && (
+                    <div className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted truncate">
+                      {inst.institution_type}
+                    </div>
+                  )}
+                </div>
+
+                {/* Lane — ribbon spans first→last year */}
+                <div className="relative h-7 rounded-sm bg-background-elevated/40 border border-border/40">
+                  {/* Faint full-span baseline */}
+                  <div className="absolute inset-y-0 left-0 right-0 my-auto h-px bg-border/30" />
+                  {/* Ribbon */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 rounded-sm transition-all"
+                    style={{
+                      left: `${startPct}%`,
+                      width: `${widthPct}%`,
+                      height: `${height}px`,
+                      backgroundColor: color,
+                      opacity: isHover ? 1 : 0.78,
+                      boxShadow: isHover ? `0 0 6px 1px ${color}aa` : 'none',
+                    }}
+                  >
+                    {/* Inline year tag at the start of the ribbon if width allows */}
+                    {widthPct > 12 && (
+                      <span
+                        className="absolute inset-y-0 left-1.5 flex items-center text-[9px] font-mono tabular-nums text-text-primary/90 whitespace-nowrap"
+                        style={{ mixBlendMode: 'plus-lighter' }}
+                      >
+                        {start === end ? `${start}` : `${start}–${end}`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Value + count badge */}
+                <div className="text-right">
+                  <div className="text-[11px] font-mono tabular-nums font-bold text-text-primary leading-tight">
+                    {formatCompactMXN(inst.total_value_mxn)}
+                  </div>
+                  <div className="text-[9px] font-mono tabular-nums text-text-muted leading-tight">
+                    {inst.contract_count}c · {Math.round(risk * 100)}%
+                  </div>
+                </div>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Concentration callout */}
+      <p className="mt-3 text-xs text-text-secondary leading-relaxed">
+        <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">
+          {i18n.language.startsWith('es') ? 'Concentración' : 'Concentration'}
+        </span>
+        {' '}— {i18n.language.startsWith('es') ? (
+          <>
+            {topShare.toFixed(0)}% del valor fluyó a {' '}
+            <span className="text-text-primary font-medium">{sorted[0].institution_name}</span>
+            {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (captura institucional probable)</span>}
+            .
+          </>
+        ) : (
+          <>
+            {topShare.toFixed(0)}% of value flowed to {' '}
+            <span className="text-text-primary font-medium">{sorted[0].institution_name}</span>
+            {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (likely institutional capture)</span>}
+            .
+          </>
+        )}
+      </p>
+    </div>
+  )
+}
+
+function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: {
   vendorId: number
-  vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null }
+  vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null; first_contract_year?: number; last_contract_year?: number }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
+  institutions: Array<{
+    institution_id: number
+    institution_name: string
+    institution_type?: string
+    contract_count: number
+    total_value_mxn: number
+    avg_risk_score?: number
+    first_year?: number
+    last_year?: number
+  }> | null
   t: TFunction
   i18n: { language: string }
 }) {
@@ -1345,10 +1709,36 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t, i18n }: {
         </p>
       )}
 
+      {/* Second graph — InstitutionalRibbon. Each institution is one
+          horizontal lane spanning their first→last contract year, with
+          ribbon thickness encoding value and color encoding avg risk.
+          Top concentration is auto-annotated. */}
+      {institutions && institutions.length > 0 && (
+        <div className="mt-5 pt-4 border-t border-border">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1.5">
+            {t('network.institutionalRibbonLabel')}
+          </p>
+          <h3 className="font-serif text-base font-bold text-text-primary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            {t('network.institutionalRibbonHeading')}
+          </h3>
+          <p className="text-text-secondary mb-4 max-w-2xl text-xs leading-relaxed">
+            {t('network.institutionalRibbonDescription')}
+          </p>
+          <div className="bg-background-card border border-border rounded-sm p-3">
+            <InstitutionalRibbon
+              institutions={institutions}
+              vendorFirstYear={vendor.first_contract_year ?? 2008}
+              vendorLastYear={vendor.last_contract_year ?? 2025}
+              i18n={i18n}
+            />
+          </div>
+        </div>
+      )}
+
       {/* CTA */}
       <Link
         to={`/network?vendor=${vendorId}`}
-        className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
+        className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors mt-4"
       >
         <GitBranch className="w-3.5 h-3.5" />
         {t('network.openNetworkGraph')}
@@ -2056,6 +2446,18 @@ export default function RedThread() {
     ...COMMON_QUERY_OPTS,
   })
 
+  // Per-institution breakdown — used by the InstitutionalRibbon graph
+  // in the Network chapter. Returns each institution with first_year,
+  // last_year, contract_count, total_value_mxn, avg_risk_score so we
+  // can plot horizontal lanes spanning each institution's tenure.
+  const { data: institutions } = useQuery({
+    queryKey: ['vendor-institutions', id],
+    queryFn: () => vendorApi.getInstitutions(id, 50),
+    enabled: !!id && !isNaN(id) && activeChapter >= 1,
+    retry: false,
+    ...COMMON_QUERY_OPTS,
+  })
+
   // Distinguish "vendor doesn't exist" (404) from "backend unreachable" so
   // the UI can give the reader an actionable message instead of the same
   // generic "Could not load" for every failure mode. Was a single early-
@@ -2199,8 +2601,11 @@ export default function RedThread() {
             total_institutions: vendor.total_institutions,
             sectors_count: vendor.sectors_count,
             primary_sector_name: vendor.primary_sector_name ?? aria?.primary_sector_name ?? null,
+            first_contract_year: vendor.first_contract_year,
+            last_contract_year: vendor.last_contract_year,
           }}
           coBidders={coBidders?.co_bidders ?? null}
+          institutions={institutions?.data ?? null}
           t={t}
           i18n={i18n}
         />

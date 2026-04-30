@@ -74,7 +74,19 @@
       "watch": "Watch era",
       "alert": "Alert era"
     },
+    "eraAll": "All",
     "eraNarrative": "opens in {{year}}. {{share}}% of total value (≈ {{value}}) flowed during high-risk years.",
+    "filter": "Filter:",
+    "unpin": "Unpin year",
+    "detail": {
+      "hovering": "Year hovered",
+      "pinned": "Year pinned",
+      "spotlight": "Spotlight year",
+      "contracts": "Contracts",
+      "value": "Value",
+      "ofTotal": "of total",
+      "avgRisk": "Avg risk"
+    },
     "legend": {
       "sizeLabel": "Size = annual contract value"
     }
@@ -114,6 +126,9 @@
     "topologyRead": "Read",
     "mostFrequent": "Most-frequent co-bidder:",
     "sharedProcedures": "{{count}} shared procedures",
+    "institutionalRibbonLabel": "INSTITUTIONAL FOOTPRINT",
+    "institutionalRibbonHeading": "Where the relationships landed, year by year",
+    "institutionalRibbonDescription": "Each lane is one institution. The ribbon spans the years that institution received contracts from this vendor; thickness encodes total value, color encodes average risk. Sorted top-down by money received. Click any lane to open the institution.",
     "institutionsServed": "Institutions Served",
     "sectorsActive": "Sectors Active",
     "institutionsNote": {
