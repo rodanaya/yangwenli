@@ -419,6 +419,29 @@ function bucketOfRisk(r: number): EraBucket {
  * so risk regimes are visible in both channels. Hero year (max
  * value × risk) gets a callout flag with full inline data.
  */
+/**
+ * Mexican procurement-context annotations rendered as pins on the
+ * Hourglass year axis. Mix of administration transitions (neutral
+ * context) and well-documented procurement scandals (highlighted).
+ *
+ * Conservative list — only events with public reporting that a
+ * journalist would expect to know. Hover the pin to read the label.
+ */
+type TimelineAnnotation = {
+  year: number
+  label: string
+  kind: 'admin' | 'event'
+}
+const TIMELINE_ANNOTATIONS: TimelineAnnotation[] = [
+  { year: 2000, kind: 'admin', label: 'Fox inaugurated' },
+  { year: 2006, kind: 'admin', label: 'Calderón inaugurated' },
+  { year: 2012, kind: 'admin', label: 'Peña Nieto inaugurated' },
+  { year: 2017, kind: 'event', label: 'Estafa Maestra exposed (Animal Político)' },
+  { year: 2018, kind: 'admin', label: 'AMLO inaugurated · NAIM cancelled' },
+  { year: 2020, kind: 'event', label: 'COVID emergency procurement begins' },
+  { year: 2024, kind: 'admin', label: 'Sheinbaum inaugurated' },
+]
+
 function TimelineHourglass({
   timeline,
   eraLabels,
@@ -705,6 +728,45 @@ function TimelineHourglass({
           >
             {y}
           </text>
+        )
+      })}
+
+      {/* Mexican procurement-context annotation pins — admin transitions
+          and major scandals. Only render pins for events that fall
+          within the vendor's [first, last] year range to avoid clutter.
+          Render LAST so they sit on top of bars + grid. */}
+      {TIMELINE_ANNOTATIONS.filter((a) => a.year >= minYear && a.year <= maxYear).map((a) => {
+        const cx = xOf(a.year)
+        const isEvent = a.kind === 'event'
+        const pinColor = isEvent ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'
+        return (
+          <g key={`anno-${a.year}-${a.kind}`} className="cursor-help">
+            <title>{a.year} · {a.label}</title>
+            {/* Vertical guide line — faint */}
+            <line
+              x1={cx}
+              x2={cx}
+              y1={Y_TOP - 4}
+              y2={H - 4}
+              stroke={pinColor}
+              strokeWidth={0.5}
+              strokeDasharray={isEvent ? '0' : '1 3'}
+              opacity={isEvent ? 0.35 : 0.2}
+            />
+            {/* Pin head — small triangle at the top of the chart */}
+            <polygon
+              points={`${cx},${Y_TOP - 4} ${cx - 3},${Y_TOP - 9} ${cx + 3},${Y_TOP - 9}`}
+              fill={pinColor}
+              opacity={isEvent ? 1 : 0.6}
+            />
+            {/* Hover-target — invisible larger triangle for easier hovering */}
+            <circle
+              cx={cx}
+              cy={Y_TOP - 6}
+              r={6}
+              fill="transparent"
+            />
+          </g>
         )
       })}
     </svg>
