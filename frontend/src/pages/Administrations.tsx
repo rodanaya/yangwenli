@@ -12,8 +12,6 @@
 
 import { lazy, Suspense, useMemo, useState, useRef, memo } from 'react'
 import { Link } from 'react-router-dom'
-import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import { Act } from '@/components/layout/Act'
 import { useWikipediaImage } from '@/hooks/useWikipediaImage'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -1082,24 +1080,42 @@ export default function Administrations() {
   }
 
   return (
-    <EditorialPageShell
-      kicker="ADMINISTRATIONS · SEXENIO ANALYSIS"
-      headline={
-        <>Six administrations,{' '}
-          <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
-        </>
-      }
-      paragraph="A comparative analysis of federal procurement across six presidential administrations (2002-2025). Each administration's spending patterns, risk concentrations, and vendor relationships are measured using the same model — making cross-administration comparison possible for the first time."
-      stats={[
-        { value: '6', label: 'Administrations' },
-        { value: '2002–2025', label: 'Coverage' },
-        { value: '9.9T MXN', label: 'Total spend', color: 'var(--color-accent)' },
-        { value: '3.1M', label: 'Contracts' },
-      ]}
-      loading={isLoading ?? false}
-    >
-      <Act number="I" label="THE FIELD">
-    <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Utility header — closes out the redesign sweep. /administrations
+            is the cross-sexenio comparison surface. The compact header here
+            still carries the editorial hook ("Six administrations, one
+            pattern.") because the page IS framed as a finding, not just a
+            data table — but the kicker / paragraph / stat tile spread is
+            collapsed into a one-line dateline + 3 inline anchor stats. */}
+        <header className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+                Six administrations,{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
+              </h1>
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                ADMINISTRATIONS · SEXENIO ANALYSIS · 2002–2025
+              </p>
+            </div>
+            <div className="flex items-baseline gap-5">
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">6</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Administrations</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>9.9T MXN</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+              </div>
+              <div className="text-right">
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">3.1M</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
+              </div>
+            </div>
+          </div>
+        </header>
+    <div className="space-y-8 max-w-[1600px] mx-auto">
       {/* ── EDITORIAL MASTHEAD ── */}
       <header className="border-b pb-8 mb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         {/* Dateline */}
@@ -2229,8 +2245,8 @@ export default function Administrations() {
       </> /* end overview tab */
       )}
     </div>
-      </Act>
-    </EditorialPageShell>
+      </div>
+    </div>
   )
 }
 
