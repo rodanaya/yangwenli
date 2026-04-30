@@ -19,9 +19,18 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
-import { EditorialAreaChart } from '@/components/charts/editorial'
-import { DotBar } from '@/components/ui/DotBar'
+import { motion, useScroll, useInView } from 'framer-motion'
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ReferenceLine,
+} from 'recharts'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -114,18 +123,55 @@ function RedThreadChapter({ label, title, id }: { label: string; title: React.Re
 
 function ChapterDivider() {
   return (
-    <div className="flex items-center gap-4 my-16">
+    <div className="flex items-center gap-4 my-8">
       <div className="h-px flex-1 bg-background-elevated" />
-      <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
+      <div className="w-1 h-1 rounded-full bg-[var(--color-accent)] opacity-60" />
       <div className="h-px flex-1 bg-background-elevated" />
     </div>
   )
 }
 
-function AnnotationNote({ children }: { children: React.ReactNode }) {
+/**
+ * RedThreadShell — chapter rhythm primitive (Phase 1 redesign).
+ * Every chapter conforms to ≤640px total height: header + 280px viz + support.
+ * Eliminates the inconsistent py-10/py-12 + max-w-4xl/3xl drift across chapters.
+ */
+function ChapterShell({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <p className="text-xs text-text-muted italic mt-1 leading-relaxed">
+    <section id={id} className="py-8 px-4 sm:px-8 max-w-4xl mx-auto">
       {children}
+    </section>
+  )
+}
+
+/**
+ * StakesPullquote — a single-line italic equivalence that translates raw
+ * MXN into a public-finance comparison the reader can feel. Renders inline
+ * in Chapter I to anchor scale before any chart is shown.
+ */
+function StakesPullquote({ totalMxn }: { totalMxn: number }) {
+  // Calibrated 2025 MXN equivalents (rough public-budget references)
+  const equivalents: Array<{ threshold: number; phrase: (mxn: number) => string }> = [
+    { threshold: 500_000_000_000, phrase: (m) => `≈ ${(m / 138_000_000_000).toFixed(1)}× Mexico's annual federal Defense budget` },
+    { threshold: 100_000_000_000, phrase: (m) => `≈ ${(m / 4_200_000_000).toFixed(0)} years of IMSS pediatric oncology funding` },
+    { threshold: 10_000_000_000,  phrase: (m) => `≈ ${(m / 800_000_000).toFixed(0)} new federal hospitals` },
+    { threshold: 1_000_000_000,   phrase: (m) => `≈ ${(m / 30_000_000).toFixed(0)} km of federal highway` },
+    { threshold: 100_000_000,     phrase: (m) => `≈ ${(m / 800_000).toFixed(0)} school classrooms` },
+  ]
+  const match = equivalents.find((e) => totalMxn >= e.threshold)
+  if (!match) return null
+  return (
+    <p
+      className="text-text-secondary italic mb-6 max-w-2xl"
+      style={{
+        fontFamily: 'var(--font-family-serif)',
+        fontSize: '0.95rem',
+        lineHeight: 1.55,
+        borderLeft: '2px solid var(--color-accent)',
+        paddingLeft: '0.85rem',
+      }}
+    >
+      {match.phrase(totalMxn)}
     </p>
   )
 }
@@ -147,7 +193,7 @@ function ChapterSubject({ vendor, aria, t }: {
   const riskColor = RISK_DOT_COLORS[riskLevel]
 
   return (
-    <section id="chapter-subject" className="py-10 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-subject">
       <ChapterLabel>{t('chapters.headings.subject')}</ChapterLabel>
 
       {/* Tightened from 56px serif headline + bouncing scroll-hint chevron
@@ -237,7 +283,7 @@ function ChapterSubject({ vendor, aria, t }: {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.4 }}
-        className="text-text-muted text-sm leading-relaxed max-w-2xl"
+        className="text-text-muted text-sm leading-relaxed max-w-2xl mb-4"
         // introText uses {{name}} placeholder — vendor.name is escaped to prevent XSS
         dangerouslySetInnerHTML={{
           __html: t('subject.introText', {
@@ -249,10 +295,11 @@ function ChapterSubject({ vendor, aria, t }: {
           }),
         }}
       />
-      {/* Removed: bouncing-chevron "Scroll to continue" hint — Medium-article
-          chrome on a working investigative tool. The thread-line indicator
-          on the left edge already signals scroll progress. */}
-    </section>
+
+      {/* Stakes pullquote — translates raw MXN into a public-finance
+          equivalence the reader can feel before any chart is shown. */}
+      <StakesPullquote totalMxn={vendor.total_value_mxn} />
+    </ChapterShell>
   )
 }
 
@@ -279,12 +326,12 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
 
   return (
-    <section id="chapter-timeline" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-timeline">
       <RedThreadChapter
         label={t('chapters.headings.timeline')}
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       />
-      <p className="text-text-secondary mb-12 max-w-xl">
+      <p className="text-text-secondary mb-6 max-w-xl text-sm">
         {t('timeline.dotDescription')}
       </p>
 
@@ -352,25 +399,41 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         </div>
       </div>
 
-      <ChapterDivider />
-
-      {/* Yearly breakdown cards — from timeline aggregates */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-8">
-        {sortedTimeline.slice(-12).map((item) => {
-          const risk = item.avg_risk_score ?? 0
-          const pctHigh = risk * 100
-          return (
-            <div key={item.year} className="bg-background-card border border-border rounded-sm p-3">
-              <p className="text-xs text-text-muted mb-1">{item.year}</p>
-              <p className="text-sm font-bold text-text-primary font-mono tabular-nums">{formatCompactMXN(item.total_value)}</p>
-              <p className="text-xs mt-0.5 font-mono tabular-nums" style={{ color: pctHigh > 40 ? 'var(--color-risk-critical)' : pctHigh > 25 ? 'var(--color-risk-high)' : 'var(--color-text-muted)' }}>
-                {item.contract_count} · {Math.round(pctHigh)}% risk
-              </p>
-            </div>
-          )
-        })}
+      {/* Compact year strip — was a 12-card grid (~480px tall). Now one
+          horizontal scrollable row of 28px chips, year-ordered, color =
+          risk, width = log(value). Reads in one glance. */}
+      <div className="mt-6 overflow-x-auto -mx-4 sm:-mx-8 px-4 sm:px-8 scrollbar-thin">
+        <div className="flex items-stretch gap-1 min-w-max">
+          {sortedTimeline.map((item) => {
+            const risk = item.avg_risk_score ?? 0
+            const pctHigh = risk * 100
+            const level = getRiskLevel(risk)
+            return (
+              <div
+                key={item.year}
+                className="flex flex-col items-center gap-1 px-2 py-1.5 rounded-sm hover:bg-background-elevated transition-colors flex-shrink-0"
+                title={`${item.year} · ${formatCompactMXN(item.total_value)} · ${item.contract_count} contracts · ${Math.round(pctHigh)}% risk`}
+              >
+                <span className="text-[9px] font-mono text-text-muted tabular-nums">{item.year}</span>
+                <span className="text-[11px] font-bold font-mono text-text-primary tabular-nums leading-none">
+                  {formatCompactMXN(item.total_value)}
+                </span>
+                <span
+                  className="block w-8 h-1 rounded-full"
+                  style={{ backgroundColor: RISK_DOT_COLORS[level], opacity: 0.8 }}
+                />
+                <span
+                  className="text-[9px] font-mono tabular-nums leading-none"
+                  style={{ color: RISK_DOT_COLORS[level] }}
+                >
+                  {Math.round(pctHigh)}%
+                </span>
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </section>
+    </ChapterShell>
   )
 }
 
@@ -396,81 +459,78 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
 
   const maxAbs = Math.max(...sorted.map((f) => Math.abs(f.contribution)), 0.01)
 
+  // Cap waterfall at 6 rows (was 10). Below 6 the contributions are <0.05
+  // and add noise without explaining the pattern.
+  const sortedSix = sorted.slice(0, 6)
+
   return (
-    <section id="chapter-pattern" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-pattern">
       <RedThreadChapter label={t('chapters.headings.pattern')} title={t('pattern.heading')} />
-      <p className="text-text-muted mb-10 max-w-xl">
+      <p className="text-text-muted mb-6 max-w-xl text-sm">
         {t('pattern.description')}
       </p>
 
-      {/* ARIA pattern badge */}
+      {/* ARIA pattern badge — compact one-liner instead of a 6-padding card */}
       {meta && ariaPattern && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-sm border p-6 mb-10"
+          className="rounded-sm border px-4 py-2.5 mb-5 flex items-center gap-3 flex-wrap"
           style={{ backgroundColor: meta.bg, borderColor: meta.color + '44' }}
         >
-          <div className="flex items-center gap-3 mb-3">
-            <AlertTriangle className="w-5 h-5" style={{ color: meta.color }} />
-            <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
-            <span className="text-lg font-bold text-text-primary ml-2">{meta.label}</span>
-          </div>
-          <p className="text-text-primary text-sm leading-relaxed">{meta.description}</p>
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+          <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
+          <span className="text-sm font-bold text-text-primary">{meta.label}</span>
+          <span className="text-text-muted">·</span>
+          <span className="text-text-secondary text-xs leading-relaxed flex-1 min-w-[280px]">{meta.description}</span>
         </motion.div>
       )}
 
-      {/* Waterfall bars */}
-      <div ref={ref} className="space-y-3">
-        {sorted.map((f, idx) => {
+      {/* Waterfall bars — compacted: 28px row height (was 60px), 6 rows max
+          (was 10). Bar fill renders as a horizontal sliver inside the row,
+          not a separate decorative DotBar layer below text. */}
+      <div ref={ref} className="space-y-1">
+        {sortedSix.map((f, idx) => {
           const isPositive = f.contribution > 0
           const width = (Math.abs(f.contribution) / maxAbs) * 100
           const color = isPositive ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'
-          const bgColor = isPositive ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)'
           return (
             <motion.div
               key={f.feature}
               initial={{ opacity: 0, x: -20 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: idx * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: idx * 0.05, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               className="relative rounded-sm border border-border overflow-hidden"
-              style={{ backgroundColor: bgColor }}
             >
-              {/* Decorative fill bar — canonical DotBar (round dots, no oval-stretch). */}
-              <div className="absolute bottom-1 left-4 right-4 opacity-50 pointer-events-none">
-                <DotBar
-                  value={width / 100}
-                  max={1}
-                  dots={40}
-                  dotR={1.5}
-                  dotGap={4}
-                  color={color}
-                  emptyColor="var(--color-background-elevated)"
-                  emptyStroke="var(--color-border-hover)"
-                />
-              </div>
-              <div className="relative flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-3 min-w-0">
+              {/* Inline horizontal fill — the bar IS the row. */}
+              <div
+                className="absolute inset-y-0 left-0 pointer-events-none"
+                style={{
+                  width: `${width}%`,
+                  backgroundColor: color,
+                  opacity: 0.10,
+                }}
+              />
+              <div className="relative flex items-center justify-between px-3 py-1.5">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: color }}
                   />
-                  <div className="min-w-0">
-                    <span className="text-sm text-text-secondary">{f.label_en}</span>
-                    {f.z_score !== 0 && (
-                      <span className="text-xs text-text-muted font-mono tabular-nums ml-2">
-                        z={f.z_score.toFixed(2)}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-xs text-text-secondary">{f.label_en}</span>
+                  {f.z_score !== 0 && (
+                    <span className="text-[10px] text-text-muted font-mono tabular-nums">
+                      z={f.z_score.toFixed(2)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs text-text-muted">
+                  <span className="text-[10px] text-text-muted">
                     {isPositive ? t('pattern.raisesRisk') : t('pattern.lowersRisk')}
                   </span>
                   <span
-                    className="text-sm font-mono font-bold tabular-nums"
+                    className="text-xs font-mono font-bold tabular-nums"
                     style={{ color }}
                   >
                     {isPositive ? '+' : ''}{f.contribution.toFixed(3)}
@@ -486,10 +546,10 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
         <div className="text-text-secondary text-sm italic">{t('pattern.noData')}</div>
       )}
 
-      <p className="text-xs text-text-muted italic mt-6 leading-relaxed">
+      <p className="text-[10px] text-text-muted italic mt-3 leading-relaxed">
         {t('pattern.shapNote')}
       </p>
-    </section>
+    </ChapterShell>
   )
 }
 
@@ -507,126 +567,166 @@ function classifyRole(coBidder: { win_count: number; co_bid_count: number }, t: 
   return { label: t('roles.coBidder'), color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
 }
 
+/**
+ * NetworkMiniGraph — embedded radial layout of the subject vendor + top
+ * co-bidders. Replaces the "tease the network behind a CTA" anti-pattern
+ * with the actual graph rendered inline at 280px height. Click any node
+ * navigates to that vendor's thread.
+ */
+function NetworkMiniGraph({
+  subjectName,
+  coBidders,
+  t,
+}: {
+  subjectName: string
+  coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number }>
+  t: TFunction
+}) {
+  const W = 720
+  const H = 280
+  const cx = W / 2
+  const cy = H / 2
+  const top = coBidders.slice(0, 8)
+  const maxCoBids = Math.max(...top.map((c) => c.co_bid_count), 1)
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Co-bidder network mini-graph">
+      {/* Edges — colored by role, thickness by co_bid_count */}
+      {top.map((cb, i) => {
+        const angle = (i / top.length) * Math.PI * 2 - Math.PI / 2
+        const r = 100
+        const x = cx + Math.cos(angle) * r
+        const y = cy + Math.sin(angle) * r
+        const role = classifyRole(cb, t)
+        const strokeW = 0.8 + (cb.co_bid_count / maxCoBids) * 2.4
+        return (
+          <line
+            key={`edge-${cb.vendor_id}`}
+            x1={cx}
+            y1={cy}
+            x2={x}
+            y2={y}
+            stroke={role.color}
+            strokeWidth={strokeW}
+            opacity={0.45}
+          />
+        )
+      })}
+
+      {/* Subject vendor — pulsing center node */}
+      <circle cx={cx} cy={cy} r={18} fill="var(--color-risk-critical)" opacity={0.18}>
+        <animate attributeName="r" values="18;22;18" dur="2.4s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.18;0.30;0.18" dur="2.4s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={cx} cy={cy} r={9} fill="var(--color-risk-critical)" />
+      <text x={cx} y={cy + 32} textAnchor="middle" fontSize={11} fontFamily="var(--font-family-mono)" fill="var(--color-text-primary)" fontWeight="700">
+        {formatVendorName(subjectName, 22)}
+      </text>
+
+      {/* Co-bidder nodes */}
+      {top.map((cb, i) => {
+        const angle = (i / top.length) * Math.PI * 2 - Math.PI / 2
+        const r = 100
+        const x = cx + Math.cos(angle) * r
+        const y = cy + Math.sin(angle) * r
+        const role = classifyRole(cb, t)
+        const nodeR = 5 + (cb.co_bid_count / maxCoBids) * 4
+        const labelOffset = 14
+        // Position label outward from center
+        const lx = cx + Math.cos(angle) * (r + labelOffset)
+        const ly = cy + Math.sin(angle) * (r + labelOffset)
+        const anchor = Math.cos(angle) > 0.3 ? 'start' : Math.cos(angle) < -0.3 ? 'end' : 'middle'
+        return (
+          <g key={cb.vendor_id} className="cursor-pointer">
+            <Link to={`/thread/${cb.vendor_id}`}>
+              <title>{cb.vendor_name} · {cb.co_bid_count} co-bids · {role.label}</title>
+              <circle cx={x} cy={y} r={nodeR + 6} fill="transparent" />
+              <circle cx={x} cy={y} r={nodeR} fill={role.color} stroke="var(--color-background)" strokeWidth={1.2} />
+              <text
+                x={lx}
+                y={ly + 3}
+                textAnchor={anchor}
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+                fill="var(--color-text-secondary)"
+              >
+                {formatVendorName(cb.vendor_name, 18)}
+              </text>
+            </Link>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
   t: TFunction
 }) {
+  const totalCoBidders = coBidders?.length ?? 0
+  const topCoBidder = coBidders?.[0] ?? null
+
   return (
-    <section id="chapter-network" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-network">
       <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
-      <p className="text-text-muted mb-10 max-w-xl">
+      <p className="text-text-muted mb-5 max-w-xl text-sm">
         {t('network.description')}
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-background-card border border-border rounded-sm p-6">
-          <p className="editorial-label text-text-muted mb-2">{t('network.institutionsServed')}</p>
-          <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</p>
-          <AnnotationNote>
-            {vendor.total_institutions <= 3
-              ? t('network.institutionsNote.few')
-              : vendor.total_institutions >= 20
-              ? t('network.institutionsNote.many')
-              : t('network.institutionsNote.moderate')}
-          </AnnotationNote>
+      {/* Compact stat row — 3 inline anchors instead of two 6-padding cards */}
+      <div className="flex items-baseline gap-6 mb-5 flex-wrap">
+        <div>
+          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('network.institutionsServed')}</span>
         </div>
-
-        <div className="bg-background-card border border-border rounded-sm p-6">
-          <p className="editorial-label text-text-muted mb-2">{t('network.sectorsActive')}</p>
-          <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{vendor.sectors_count}</p>
-          <AnnotationNote>
-            {vendor.sectors_count <= 1
-              ? t('network.sectorsNote.single')
-              : vendor.sectors_count >= 5
-              ? t('network.sectorsNote.multi')
-              : t('network.sectorsNote.moderate')}
-          </AnnotationNote>
+        <div>
+          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{vendor.sectors_count}</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('network.sectorsActive')}</span>
+        </div>
+        <div>
+          <span className="text-lg font-bold text-text-primary font-mono tabular-nums">{formatNumber(totalCoBidders)}</span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">co-bidders</span>
         </div>
       </div>
 
-      {/* Co-bidding partners */}
-      <div className="mb-10">
-        <p className="editorial-label text-text-muted mb-4">{t('network.coBiddingPartners')}</p>
+      {/* Embedded mini-graph — 280px tall, click any node → that thread */}
+      <div className="bg-background-card border border-border rounded-sm p-4 mb-4">
         {coBidders === null ? (
-          <div className="space-y-2">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-14 rounded-sm bg-background-elevated animate-pulse" />
-            ))}
-          </div>
+          <div className="h-[280px] rounded bg-background-elevated animate-pulse" />
         ) : coBidders.length === 0 ? (
-          <p className="text-text-muted text-sm italic">{t('network.noCoBidders')}</p>
+          <p className="text-text-muted text-sm italic py-12 text-center">{t('network.noCoBidders')}</p>
         ) : (
-          <ul className="space-y-2">
-            {coBidders.slice(0, 5).map((cb) => {
-              const role = classifyRole(cb, t)
-              return (
-                <li key={cb.vendor_id}>
-                  <Link
-                    to={`/thread/${cb.vendor_id}`}
-                    className="flex items-center gap-3 bg-background hover:bg-background-elevated border border-border rounded-sm px-4 py-3 transition-colors group"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className="text-text-primary text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors"
-                        title={cb.vendor_name}
-                      >
-                        {formatVendorName(cb.vendor_name, 40)}
-                      </p>
-                      <p className="text-text-muted text-xs mt-0.5">
-                        {t('network.sharedProcedures', { count: cb.co_bid_count })}
-                      </p>
-                    </div>
-                    <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                      style={{ color: role.color, backgroundColor: role.bg }}
-                    >
-                      {role.label}
-                    </span>
-                    <ExternalLink className="w-3 h-3 text-text-muted flex-shrink-0" />
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          <NetworkMiniGraph subjectName={vendor.name} coBidders={coBidders} t={t} />
         )}
       </div>
 
-      {/* CTA to full network graph */}
+      {/* Top co-bidder callout — narrative pull instead of a list of 5 boxes */}
+      {topCoBidder && (
+        <p className="text-xs text-text-secondary mb-4 max-w-2xl leading-relaxed">
+          <span className="text-text-muted">Most-frequent co-bidder:</span>{' '}
+          <Link
+            to={`/thread/${topCoBidder.vendor_id}`}
+            className="font-bold text-text-primary hover:text-[var(--color-risk-critical)] transition-colors"
+          >
+            {formatVendorName(topCoBidder.vendor_name, 50)}
+          </Link>
+          {' '}— {topCoBidder.co_bid_count} shared procedures, {classifyRole(topCoBidder, t).label.toLowerCase()}.
+        </p>
+      )}
+
+      {/* Single CTA — open full force-directed graph */}
       <Link
         to={`/network?vendor=${vendorId}`}
-        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all mb-6"
+        className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
       >
-        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-[color:var(--color-risk-critical)]/10 flex items-center justify-center transition-colors flex-shrink-0">
-          <GitBranch className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
-        </div>
-        <div className="flex-1">
-          <p className="text-text-primary font-semibold mb-1">{t('network.openNetworkGraph')}</p>
-          <p className="text-text-muted text-sm">
-            {t('network.openNetworkGraphDesc')}
-          </p>
-        </div>
-        <ExternalLink className="w-4 h-4 text-text-secondary group-hover:text-text-muted transition-colors flex-shrink-0" />
+        <GitBranch className="w-3.5 h-3.5" />
+        {t('network.openNetworkGraph')}
+        <ExternalLink className="w-3 h-3" />
       </Link>
-
-      {/* CTA to vendor profile network tab */}
-      <Link
-        to={`/vendors/${vendorId}?tab=network`}
-        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all"
-      >
-        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-[color:var(--color-risk-critical)]/10 flex items-center justify-center transition-colors flex-shrink-0">
-          <Building2 className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
-        </div>
-        <div className="flex-1">
-          <p className="text-text-primary font-semibold mb-1">{t('network.coBidderAnalysis')}</p>
-          <p className="text-text-muted text-sm">
-            {t('network.coBidderAnalysisDesc')}
-          </p>
-        </div>
-        <ExternalLink className="w-4 h-4 text-text-secondary group-hover:text-text-muted transition-colors flex-shrink-0" />
-      </Link>
-    </section>
+    </ChapterShell>
   )
 }
 
@@ -636,12 +736,10 @@ function ChapterMoney({ timeline, t }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   t: TFunction
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-15% 0px' })
-
   const chartData = timeline.map((item) => ({
     year: item.year,
-    value: item.total_value, // raw MXN; primitive renders compact
+    value: item.total_value,
+    valueM: item.total_value / 1_000_000, // bars in millions for axis legibility
     risk: (item.avg_risk_score ?? 0) * 100,
     contracts: item.contract_count,
   }))
@@ -651,172 +749,103 @@ function ChapterMoney({ timeline, t }: {
   const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
 
   return (
-    <section id="chapter-money" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-money">
       <RedThreadChapter
         label={t('chapters.headings.money')}
         title={t('money.heading', { value: formatCompactMXN(totalValue) })}
       />
-      <p className="text-text-muted mb-10 max-w-xl">
+      <p className="text-text-muted mb-4 max-w-xl text-sm">
         {t('money.description')}
       </p>
 
-      {/* Annotations */}
+      {/* Inline anchor stats — replaces two boxed cards (~140px) with a row */}
       {peakYear && (
-        <div className="flex flex-wrap gap-4 mb-8">
-          <div className="bg-background-card border border-border rounded-sm px-4 py-3">
-            <p className="editorial-label text-text-muted mb-1">{t('money.peakByValue')}</p>
-            <p className="text-text-primary font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
+        <div className="flex items-baseline gap-6 mb-4 flex-wrap">
+          <div>
+            <span className="text-base font-bold text-text-primary font-mono tabular-nums">{peakYear.year}</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakByValue')}</span>
+            <span className="text-xs text-text-secondary ml-2 font-mono tabular-nums">{formatCompactMXN(peakYear.total_value)}</span>
           </div>
           {peakRiskYear && (
-            <div className="bg-background-card border border-risk-critical/30 rounded-sm px-4 py-3">
-              <p className="editorial-label text-risk-critical mb-1">{t('money.peakByRisk')}</p>
-              <p className="text-text-primary font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
+            <div>
+              <span className="text-base font-bold font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{peakRiskYear.year}</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakByRisk')}</span>
+              <span className="text-xs ml-2 font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1)}%</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Area chart: contract value over time */}
-      <div ref={ref} className="bg-background-card border border-border rounded-sm p-6 mb-6">
-        <p className="editorial-label text-text-muted mb-4">{t('money.chartValueLabel')}</p>
-        <AnimatePresence>
-          {inView && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-              className="h-52"
-            >
-              <EditorialAreaChart
-                data={chartData}
-                xKey="year"
-                yKey="value"
-                colorToken="risk-critical"
-                yFormat="mxn-compact"
-                height={208}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Dot-matrix: avg risk score by year */}
-      {chartData.some((d) => d.risk > 0) && (
-        <div className="bg-background-card border border-border rounded-sm p-6">
-          <p className="editorial-label text-text-muted mb-4">{t('money.chartRiskLabel')}</p>
-          <RiskHistoryDotMatrix chartData={chartData} />
-          <AnnotationNote>
-            {t('money.riskNote')}
-          </AnnotationNote>
+      {/* Single dual-axis chart: bars = MXN value, line = avg risk %.
+          Replaces the two stacked charts (area + dot-matrix, ~600px total)
+          with one 280px ComposedChart. Same x-axis. Reads in one image. */}
+      <div className="bg-background-card border border-border rounded-sm p-4">
+        <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
+          <p className="editorial-label text-text-muted">{t('money.chartValueLabel')} <span className="text-text-muted/60">·</span> {t('money.chartRiskLabel')}</p>
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
+            <span className="flex items-center gap-1.5"><span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: 'var(--color-risk-critical)', opacity: 0.7 }} />Value (MDP)</span>
+            <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5" style={{ backgroundColor: 'var(--color-accent)' }} />Avg risk %</span>
+          </div>
         </div>
-      )}
-    </section>
-  )
-}
-
-// ─── Risk History Dot-Matrix ────────────────────────────────────────────────
-
-const RH_ROWS = 40           // 1 dot = 2.5pp risk (0-100)
-const RH_DOT_R = 2.6
-const RH_DOT_GAP = 5.5
-const RH_COL_W = 38
-const RH_TOP_PAD = 8
-const RH_BOTTOM_PAD = 20
-const RH_LEFT_PAD = 32
-
-function riskColor(pct: number): string {
-  if (pct > 50) return 'var(--color-risk-critical)'
-  if (pct > 30) return 'var(--color-risk-high)'
-  if (pct > 15) return 'var(--color-risk-medium)'
-  return 'var(--color-text-muted)'
-}
-
-function RiskHistoryDotMatrix({
-  chartData,
-}: {
-  chartData: Array<{ year: number; risk: number }>
-}) {
-  if (!chartData.length) return null
-
-  const chartW = RH_LEFT_PAD + chartData.length * RH_COL_W + 8
-  const chartH = RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + RH_BOTTOM_PAD
-
-  return (
-    <svg
-      viewBox={`0 0 ${chartW} ${chartH}`}
-      className="w-full h-auto"
-      role="img"
-      aria-label="Annual average risk score history"
-    >
-      {/* Y-axis guide lines at 0/25/50/75/100 */}
-      {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
-        const value = 100 * (1 - frac)
-        const y = RH_TOP_PAD + frac * RH_ROWS * RH_DOT_GAP
-        return (
-          <g key={frac}>
-            <line
-              x1={RH_LEFT_PAD - 4}
-              x2={chartW - 4}
-              y1={y}
-              y2={y}
-              stroke="var(--color-border-hover)"
-              strokeDasharray="3 3"
-              strokeWidth={0.5}
-            />
-            <text
-              x={RH_LEFT_PAD - 6}
-              y={y + 3}
-              textAnchor="end"
-              fill="var(--color-text-muted)"
-              fontSize={10}
-              fontFamily="var(--font-family-mono)"
-            >
-              {value}%
-            </text>
-          </g>
-        )
-      })}
-
-      {chartData.map((item, colIdx) => {
-        const filled = Math.round((Math.min(100, Math.max(0, item.risk)) / 100) * RH_ROWS)
-        const xCenter = RH_LEFT_PAD + colIdx * RH_COL_W + RH_COL_W / 2
-        const color = riskColor(item.risk)
-
-        return (
-          <g key={item.year}>
-            {Array.from({ length: RH_ROWS }).map((_, i) => {
-              const dotY = RH_TOP_PAD + (RH_ROWS - 1 - i) * RH_DOT_GAP
-              const isFilled = i < filled
-              return (
-                <motion.circle
-                  key={i}
-                  cx={xCenter}
-                  cy={dotY}
-                  r={RH_DOT_R}
-                  fill={isFilled ? color : 'var(--color-background-elevated)'}
-                  stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
-                  strokeWidth={0.5}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2, delay: colIdx * 0.03 + (filled - i) * 0.004 }}
-                />
-              )
-            })}
-            <text
-              x={xCenter}
-              y={RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + 12}
-              textAnchor="middle"
-              fill="var(--color-text-muted)"
-              fontSize={10}
-              fontFamily="var(--font-family-mono)"
-            >
-              {item.year}
-            </text>
-            <title>{item.year}: {item.risk.toFixed(1)}% avg risk</title>
-          </g>
-        )
-      })}
-    </svg>
+        <div style={{ height: 280 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
+              <CartesianGrid stroke="var(--color-border)" strokeDasharray="3 3" opacity={0.35} vertical={false} />
+              <XAxis
+                dataKey="year"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                axisLine={{ stroke: 'var(--color-border)' }}
+                tickLine={false}
+              />
+              <YAxis
+                yAxisId="value"
+                orientation="left"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}B` : `${v.toFixed(0)}M`}
+                width={48}
+              />
+              <YAxis
+                yAxisId="risk"
+                orientation="right"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => `${v}%`}
+                domain={[0, 100]}
+                width={36}
+              />
+              {/* OECD high-risk benchmark band */}
+              <ReferenceLine yAxisId="risk" y={15} stroke="var(--color-risk-medium)" strokeDasharray="2 2" strokeWidth={0.8} opacity={0.4} />
+              <ReferenceLine yAxisId="risk" y={40} stroke="var(--color-risk-high)" strokeDasharray="2 2" strokeWidth={0.8} opacity={0.4} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--color-background-card)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 2,
+                  fontSize: 11,
+                  fontFamily: 'var(--font-family-mono)',
+                  color: 'var(--color-text-primary)',
+                }}
+                formatter={(value, name) => {
+                  const v = typeof value === 'number' ? value : Number(value)
+                  if (name === 'valueM') return [formatCompactMXN(v * 1_000_000), 'Value']
+                  if (name === 'risk') return [`${v.toFixed(1)}%`, 'Risk']
+                  return [String(v), String(name)]
+                }}
+                cursor={{ fill: 'var(--color-background-elevated)', opacity: 0.4 }}
+              />
+              <Bar yAxisId="value" dataKey="valueM" fill="var(--color-risk-critical)" fillOpacity={0.55} radius={[2, 2, 0, 0]} />
+              <Line yAxisId="risk" type="monotone" dataKey="risk" stroke="var(--color-accent)" strokeWidth={2} dot={{ r: 2.5, fill: 'var(--color-accent)' }} activeDot={{ r: 4 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-[10px] text-text-muted italic mt-2 leading-relaxed">
+          {t('money.riskNote')}
+        </p>
+      </div>
+    </ChapterShell>
   )
 }
 
@@ -848,85 +877,102 @@ function ChapterVerdict({
   const riskColor = RISK_DOT_COLORS[riskLevel]
   const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
 
+  // Memo: clamp to first 220 words via CSS line-clamp + expandable disclosure.
+  // Was rendering full memo (700–1500 words) inline → 2,400+px chapter height.
+  const [memoExpanded, setMemoExpanded] = useState(false)
+
   return (
-    <section id="chapter-verdict" className="py-12 px-4 sm:px-8 max-w-4xl mx-auto">
+    <ChapterShell id="chapter-verdict">
       <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
-      <p className="text-text-muted mb-10 max-w-xl">
+      <p className="text-text-muted mb-4 max-w-xl text-sm">
         {t('verdict.description')}
       </p>
 
-      {/* Score card */}
-      <div className="bg-background-card border border-border rounded-sm p-8 mb-8">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="editorial-label text-text-muted mb-2">{t('verdict.riskIndicatorScore')}</p>
-            <p className="font-mono text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor }}>
-              {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
-            </p>
-            <p className="text-text-muted text-sm mt-1">{t('verdict.outOf100')}</p>
-          </div>
-          <div className="text-right">
-            <span
-              className="inline-block px-4 py-2 rounded-full text-sm font-bold uppercase tracking-widest"
-              style={{ backgroundColor: riskColor + '22', color: riskColor, border: `1px solid ${riskColor}44` }}
-            >
-              {riskLevel}
-            </span>
-            {aria && (
-              <p className="text-text-muted text-xs mt-2">
-                {t('verdict.ariaIps', { ips: (aria.ips_final * 100).toFixed(0), tier: aria.ips_tier })}
-              </p>
-            )}
-          </div>
+      {/* Inline verdict header — score + level + ARIA, no oversized score card */}
+      <div className="flex items-baseline justify-between gap-4 flex-wrap mb-4 pb-3 border-b border-border">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span className="font-mono text-2xl font-bold tabular-nums" style={{ color: riskColor }}>
+            {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
+          </span>
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('verdict.riskIndicatorScore')}</span>
+          <span
+            className="inline-block px-2.5 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest"
+            style={{ backgroundColor: riskColor + '22', color: riskColor, border: `1px solid ${riskColor}44` }}
+          >
+            {riskLevel}
+          </span>
         </div>
-
-        {/* External flags */}
-        {aria && (aria.is_efos_definitivo || aria.is_sfp_sanctioned || aria.in_ground_truth) && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {aria.is_efos_definitivo && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30 flex items-center gap-1.5">
-                <Shield className="w-3 h-3" /> {t('verdict.efosLabel')}
-              </span>
-            )}
-            {aria.is_sfp_sanctioned && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-950 text-orange-300 border border-orange-800 flex items-center gap-1.5">
-                <Gavel className="w-3 h-3" /> {t('verdict.sfpLabel')}
-              </span>
-            )}
-            {aria.in_ground_truth && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1.5">
-                <Zap className="w-3 h-3" /> {t('verdict.groundTruthLabel')}
-              </span>
-            )}
-          </div>
+        {aria && (
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {t('verdict.ariaIps', { ips: (aria.ips_final * 100).toFixed(0), tier: aria.ips_tier })}
+          </span>
         )}
+      </div>
 
-        {patternMeta && aria?.primary_pattern && (
-          <div className="rounded-sm border p-4 mb-4" style={{ backgroundColor: patternMeta.bg, borderColor: patternMeta.color + '44' }}>
-            <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: patternMeta.color }}>
-              {aria.primary_pattern} · {patternMeta.label}
-            </p>
-            <p className="text-text-primary text-sm">{patternMeta.description}</p>
+      {/* External flags — single inline row */}
+      {aria && (aria.is_efos_definitivo || aria.is_sfp_sanctioned || aria.in_ground_truth) && (
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {aria.is_efos_definitivo && (
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30 flex items-center gap-1">
+              <Shield className="w-2.5 h-2.5" /> {t('verdict.efosLabel')}
+            </span>
+          )}
+          {aria.is_sfp_sanctioned && (
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-risk-high)]/10 text-[color:var(--color-risk-high)] border border-[color:var(--color-risk-high)]/30 flex items-center gap-1">
+              <Gavel className="w-2.5 h-2.5" /> {t('verdict.sfpLabel')}
+            </span>
+          )}
+          {aria.in_ground_truth && (
+            <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30 flex items-center gap-1">
+              <Zap className="w-2.5 h-2.5" /> {t('verdict.groundTruthLabel')}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Pattern card — compact one-liner */}
+      {patternMeta && aria?.primary_pattern && (
+        <div className="rounded-sm border px-3 py-2 mb-4 flex items-center gap-3 flex-wrap" style={{ backgroundColor: patternMeta.bg, borderColor: patternMeta.color + '44' }}>
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: patternMeta.color }}>
+            {aria.primary_pattern}
+          </span>
+          <span className="text-sm font-bold text-text-primary">{patternMeta.label}</span>
+          <span className="text-text-muted">·</span>
+          <span className="text-text-secondary text-xs leading-relaxed flex-1 min-w-[280px]">{patternMeta.description}</span>
+        </div>
+      )}
+
+      {/* ARIA memo — clamped with disclosure (was unbounded full render) */}
+      {aria?.memo_text && (
+        <div className="border-l-2 border-[var(--color-accent)] pl-3 mb-4">
+          <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+            <p className="editorial-label text-text-muted">{t('verdict.ariaMemoTitle')}</p>
+            <button
+              onClick={() => setMemoExpanded((v) => !v)}
+              className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
+            >
+              {memoExpanded ? '— Collapse' : '+ Read full memo'}
+            </button>
           </div>
-        )}
-
-        {/* ARIA memo */}
-        {aria?.memo_text && (
-          <div className="border-l-2 border-[var(--color-accent)] pl-4 mt-4">
-            <p className="editorial-label text-text-muted mb-2">{t('verdict.ariaMemoTitle')}</p>
-            <div className="text-text-primary text-sm leading-relaxed space-y-1.5">
-              {aria.memo_text.split('\n').map((line, i) => {
-                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>
-                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>
-                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>
+          <div
+            className={cn(
+              'text-text-secondary text-xs leading-relaxed',
+              !memoExpanded && 'line-clamp-4'
+            )}
+            style={!memoExpanded ? { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
+          >
+            {memoExpanded ? (
+              aria.memo_text.split('\n').map((line, i) => {
+                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-xs mt-2">{line.slice(4)}</h4>
+                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-sm mt-3">{line.slice(3)}</h3>
+                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-base mt-3">{line.slice(2)}</h2>
                 if (line.trim() === '') return <div key={i} className="h-1" />
-                // Pipe table row
                 if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
                   const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
-                  const isSeparator = cells.every(c => /^[-: ]+$/.test(c))
+                  const isSeparator = cells.every((c) => /^[-: ]+$/.test(c))
                   if (isSeparator) return null
                   return (
-                    <div key={i} className="flex gap-2 text-xs">
+                    <div key={i} className="flex gap-2 text-[11px] my-1">
                       {cells.map((cell, ci) => (
                         <span key={ci} className={cn('flex-1 px-2 py-0.5 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>{cell.trim()}</span>
                       ))}
@@ -935,26 +981,34 @@ function ChapterVerdict({
                 }
                 const parts = line.split(/\*\*(.+?)\*\*/g)
                 return (
-                  <p key={i}>
-                    {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
+                  <p key={i} className="my-0.5">
+                    {parts.map((part, j) => (j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part))}
                   </p>
                 )
-              })}
-            </div>
+              })
+            ) : (
+              aria.memo_text.replace(/[#*]/g, '').slice(0, 380)
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Compact action row — was 3 large stacked buttons */}
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => navigate(`/vendors/${vendorId}`)}
-          className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors"
+          className="inline-flex items-center gap-1.5 bg-[var(--color-risk-critical)] hover:opacity-90 text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-opacity"
         >
-          <Building2 className="w-4 h-4" />
+          <Building2 className="w-3.5 h-3.5" />
           {t('verdict.fullVendorProfile')}
         </button>
-
+        <Link
+          to="/workspace"
+          className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
+        >
+          <BookmarkPlus className="w-3.5 h-3.5" />
+          {t('verdict.addToWorkspace')}
+        </Link>
         <button
           onClick={() => {
             const prev = document.title
@@ -962,34 +1016,20 @@ function ChapterVerdict({
             window.print()
             window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
           }}
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
+          className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-3.5 h-3.5" />
           {t('verdict.exportPdf')}
         </button>
-
         <Link
-          to="/workspace"
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
+          to="/methodology"
+          className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
         >
-          <BookmarkPlus className="w-4 h-4" />
-          {t('verdict.addToWorkspace')}
+          <FileText className="w-3 h-3" />
+          {t('verdict.methodologyLink')}
         </Link>
       </div>
-
-      {/* Disclaimer */}
-      <div className="mt-10 p-4 bg-background-card border border-border rounded-sm">
-        <div className="flex items-start gap-3">
-          <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-text-secondary leading-relaxed">
-            <strong className="text-text-muted">{t('verdict.methodologyNote')}</strong>{' '}
-            <Link to="/methodology" className="text-text-muted underline hover:text-text-primary">
-              {t('verdict.methodologyLink')}
-            </Link>.
-          </p>
-        </div>
-      </div>
-    </section>
+    </ChapterShell>
   )
 }
 
