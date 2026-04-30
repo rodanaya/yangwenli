@@ -693,6 +693,118 @@ function RiskDistribution({ dist }: { dist: RiskDist }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUAL — Role-mix concentration strip
+// Horizontal stacked bar showing how documented vendors break down by role.
+// Adds a glance-level "what kind of network is this?" before the reader
+// scans the individual vendor cards. Each role gets a color + count chip.
+// ─────────────────────────────────────────────────────────────────────────────
+function RoleMixBar({ vendors, lang }: { vendors: Array<{ role: string }>; lang: string }) {
+  const total = vendors.length
+  if (total === 0) return null
+
+  // Role → role-color mapping. Mirrors the role accents used in vendor cards.
+  const ROLE_COLOR: Record<string, string> = {
+    shell_company:   'var(--color-risk-critical)',
+    ghost_company:   'var(--color-risk-critical)',
+    intermediary:    'var(--color-risk-high)',
+    beneficiary:     'var(--color-accent)',
+    front_company:   'var(--color-risk-critical)',
+    contractor:      'var(--color-text-secondary)',
+    subcontractor:   'var(--color-text-muted)',
+    primary:         'var(--color-text-primary)',
+  }
+
+  // Tally by role
+  const counts: Record<string, number> = {}
+  for (const v of vendors) {
+    const k = (v.role || 'other').toLowerCase()
+    counts[k] = (counts[k] ?? 0) + 1
+  }
+  const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a)
+
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div
+        style={{
+          ...OVERLINE,
+          color: TEXT_FAINT,
+          letterSpacing: '0.18em',
+          marginBottom: 8,
+        }}
+      >
+        {lang === 'es' ? 'Composición por rol' : 'Role mix'}
+      </div>
+      {/* The bar itself */}
+      <div
+        style={{
+          display: 'flex',
+          width: '100%',
+          height: 6,
+          borderRadius: 1,
+          overflow: 'hidden',
+          background: 'var(--color-background-elevated)',
+          marginBottom: 8,
+        }}
+      >
+        {sorted.map(([role, count]) => {
+          const pct = (count / total) * 100
+          const color = ROLE_COLOR[role] ?? 'var(--color-text-muted)'
+          return (
+            <div
+              key={role}
+              title={`${titleCase(role)} · ${count}/${total} · ${pct.toFixed(0)}%`}
+              style={{
+                width: `${pct}%`,
+                background: color,
+                borderRight: '1px solid var(--color-background)',
+                opacity: 0.9,
+              }}
+            />
+          )
+        })}
+      </div>
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        {sorted.map(([role, count]) => {
+          const color = ROLE_COLOR[role] ?? 'var(--color-text-muted)'
+          const pct = (count / total) * 100
+          return (
+            <span
+              key={role}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'baseline',
+                gap: 6,
+                fontSize: 10,
+                ...MONO,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: TEXT_SECONDARY,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 1,
+                  background: color,
+                  display: 'inline-block',
+                }}
+              />
+              <span style={{ color: TEXT_PRIMARY, fontWeight: 700 }}>{titleCase(role)}</span>
+              <span style={{ color: TEXT_FAINT }}>
+                {count} · {pct.toFixed(0)}%
+              </span>
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Evidence strength badge
 // ─────────────────────────────────────────────────────────────────────────────
 function evidenceBadgeColor(strength: string): { color: string; bg: string; border: string } {
@@ -1234,6 +1346,13 @@ function CaseBody({
         >
           {linkedVendors.length > 0 ? (
             <div style={{ display: 'grid', gap: 10 }}>
+              {/* Role-mix concentration strip — horizontal stacked bar
+                  showing how the documented vendors break down by role
+                  (shell_company, beneficiary, intermediary, etc.). Adds
+                  a glance-level "what kind of network is this?" before
+                  the reader scans the individual vendor cards. */}
+              <RoleMixBar vendors={linkedVendors} lang={lang} />
+
               {linkedVendors.map((vendor, i) => {
                 const score = vendor.avg_risk_score
                 const scoreLevel = score != null ? getRiskLevelFromScore(score) : null
