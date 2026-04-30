@@ -694,6 +694,171 @@ function RiskDistribution({ dist }: { dist: RiskDist }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────────────────────
+// Fraud-type → ARIA pattern mapping. The case's fraud_type is the human
+// label from the documenting source; the ARIA pattern (P1-P7) is what the
+// model actually trains on. Showing the mapping makes the data flow
+// concrete: "this case taught the model to recognize the P5 pattern."
+// ─────────────────────────────────────────────────────────────────────────────
+function fraudToAriaPattern(fraudType: string): { code: string; label: string; labelEs: string } {
+  switch (fraudType) {
+    case 'monopoly':              return { code: 'P1', label: 'Market Monopoly', labelEs: 'Monopolio de Mercado' }
+    case 'ghost_company':         return { code: 'P2', label: 'Ghost Company', labelEs: 'Empresa Fantasma' }
+    case 'bid_rigging':           return { code: 'P4', label: 'Bid Rigging', labelEs: 'Colusión en Licitaciones' }
+    case 'overpricing':           return { code: 'P5', label: 'Price Manipulation', labelEs: 'Manipulación de Precios' }
+    case 'procurement_fraud':     return { code: 'P5', label: 'Price Manipulation', labelEs: 'Manipulación de Precios' }
+    case 'tender_rigging':        return { code: 'P4', label: 'Bid Rigging', labelEs: 'Colusión en Licitaciones' }
+    case 'infrastructure_overrun':return { code: 'P5', label: 'Price Manipulation', labelEs: 'Manipulación de Precios' }
+    case 'conflict_of_interest':  return { code: 'P6', label: 'Institutional Capture', labelEs: 'Captura Institucional' }
+    case 'embezzlement':          return { code: 'P7', label: 'Network Cluster', labelEs: 'Clúster de Red' }
+    case 'bribery':               return { code: 'P6', label: 'Institutional Capture', labelEs: 'Captura Institucional' }
+    case 'emergency_fraud':       return { code: 'P5', label: 'Price Manipulation', labelEs: 'Manipulación de Precios' }
+    default:                      return { code: 'P7', label: 'Network Cluster', labelEs: 'Clúster de Red' }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VISUAL — Model Provenance panel
+// Surfaces the data flow that backs every claim of "this case trained the
+// model." Three explicit stat tiles + a flow diagram showing
+// documented → matched → labeled.
+// ─────────────────────────────────────────────────────────────────────────────
+function ModelProvenancePanel({
+  data,
+  linkedVendors,
+  totalContracts,
+  lang,
+}: {
+  data: ScandalDetail
+  linkedVendors: LinkedVendor[]
+  totalContracts: number
+  lang: string
+}) {
+  const docCount = linkedVendors.length || (data.key_actors ?? []).filter((a) => a.role === 'vendor').length
+  const matchedCount = linkedVendors.filter((v) => v.contract_count > 0).length
+  const ariaPattern = fraudToAriaPattern(data.fraud_type)
+  const severity = data.severity ?? 0
+  const severityLabel = ['', 'Low', 'Medium', 'High', 'Confirmed'][severity] || '—'
+  const severityLabelEs = ['', 'Bajo', 'Medio', 'Alto', 'Confirmado'][severity] || '—'
+
+  // Match-rate phrasing — be honest about COMPRANET coverage gaps
+  const matchRate = docCount > 0 ? (matchedCount / docCount) * 100 : 0
+  const isHighCoverage = matchRate >= 50
+  const isPartialCoverage = matchRate > 0 && matchRate < 50
+  const isNoCoverage = matchRate === 0
+
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      {/* Three stat tiles — documented vendors / matched contracts / pattern label */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+          background: 'var(--color-background-card)',
+          border: `1px solid ${BORDER}`,
+          borderRadius: 2,
+        }}
+      >
+        <div style={{ padding: '16px 20px', borderLeft: `1px solid ${BORDER}`, minWidth: 0 }}>
+          <div style={{ ...OVERLINE, color: TEXT_FAINT, marginBottom: 8 }}>
+            {lang === 'es' ? 'Proveedores documentados' : 'Documented vendors'}
+          </div>
+          <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+            {docCount}
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
+            {lang === 'es' ? 'en fuentes públicas' : 'in source materials'}
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 20px', borderLeft: `1px solid ${BORDER}`, minWidth: 0 }}>
+          <div style={{ ...OVERLINE, color: TEXT_FAINT, marginBottom: 8 }}>
+            {lang === 'es' ? 'Contratos vinculados' : 'Matched contracts'}
+          </div>
+          <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: matchedCount > 0 ? TEXT_PRIMARY : TEXT_MUTED, letterSpacing: '-0.02em' }}>
+            {totalContracts > 0 ? formatCompact(totalContracts) : '0'}
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO }}>
+            {matchedCount > 0
+              ? `${matchedCount}/${docCount} ${lang === 'es' ? 'proveedores' : 'vendors'} · ${matchRate.toFixed(0)}%`
+              : (lang === 'es' ? 'pendiente vinculación' : 'pending match')}
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 20px', borderLeft: `1px solid ${BORDER}`, minWidth: 0 }}>
+          <div style={{ ...OVERLINE, color: TEXT_FAINT, marginBottom: 8 }}>
+            {lang === 'es' ? 'Patrón ARIA' : 'ARIA pattern'}
+          </div>
+          <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: 'var(--color-risk-critical)', letterSpacing: '-0.02em' }}>
+            {ariaPattern.code}
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_SECONDARY, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
+            {lang === 'es' ? ariaPattern.labelEs : ariaPattern.label}
+          </div>
+        </div>
+
+        <div style={{ padding: '16px 20px', borderLeft: `1px solid ${BORDER}`, minWidth: 0 }}>
+          <div style={{ ...OVERLINE, color: TEXT_FAINT, marginBottom: 8 }}>
+            {lang === 'es' ? 'Peso en entrenamiento' : 'Training weight'}
+          </div>
+          <div style={{ ...MONO, fontSize: 22, fontWeight: 700, color: severity >= 3 ? 'var(--color-risk-critical)' : TEXT_PRIMARY, letterSpacing: '-0.02em' }}>
+            {severity}/4
+          </div>
+          <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 5, ...MONO, letterSpacing: '0.04em' }}>
+            {lang === 'es' ? severityLabelEs : severityLabel}
+          </div>
+        </div>
+      </div>
+
+      {/* Flow narrative — explicit data chain with honest match-rate phrasing */}
+      <div
+        style={{
+          padding: '16px 20px',
+          background: 'rgba(160,104,32,0.04)',
+          border: `1px solid rgba(160,104,32,0.20)`,
+          borderLeft: '3px solid var(--color-accent)',
+          borderRadius: 2,
+        }}
+      >
+        <div style={{ ...OVERLINE, color: 'var(--color-accent)', marginBottom: 10 }}>
+          {lang === 'es' ? 'Cadena de datos' : 'Data chain'}
+        </div>
+        <p style={{ fontSize: 13, color: TEXT_SECONDARY, lineHeight: 1.65, margin: 0, maxWidth: 760 }}>
+          {lang === 'es' ? (
+            <>
+              Este caso aporta <strong style={{ color: TEXT_PRIMARY }}>{docCount} proveedores</strong> al corpus de entrenamiento como etiquetas positivas.
+              {isHighCoverage && (
+                <> De ellos, <strong style={{ color: 'var(--color-accent)' }}>{matchedCount} ({matchRate.toFixed(0)}%) están vinculados a {formatCompact(totalContracts)} contratos en COMPRANET</strong> — esos contratos entrenan al modelo a reconocer el patrón <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.labelEs}</strong>.</>
+              )}
+              {isPartialCoverage && (
+                <> De ellos, <strong>{matchedCount} ({matchRate.toFixed(0)}%) están vinculados a {formatCompact(totalContracts)} contratos en COMPRANET</strong>; el resto no fue posible vincular (vacíos de cobertura RFC). Los contratos vinculados entrenan al modelo a reconocer el patrón <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.labelEs}</strong>.</>
+              )}
+              {isNoCoverage && (
+                <> <strong style={{ color: 'var(--color-risk-high)' }}>Ninguno fue vinculado todavía a contratos específicos en COMPRANET</strong> — gap conocido de cobertura RFC en el periodo {data.contract_year_start}–{data.contract_year_end}. Este caso aporta etiquetas narrativas (patrón <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.labelEs}</strong>) pero no contratos identificables; futuras vinculaciones manuales lo harán parte completa del entrenamiento.</>
+              )}
+              {' '}Modelo activo: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.6.5</Link>.
+            </>
+          ) : (
+            <>
+              This case contributes <strong style={{ color: TEXT_PRIMARY }}>{docCount} vendors</strong> to the training corpus as positive labels.
+              {isHighCoverage && (
+                <> Of those, <strong style={{ color: 'var(--color-accent)' }}>{matchedCount} ({matchRate.toFixed(0)}%) are matched to {formatCompact(totalContracts)} COMPRANET contracts</strong> — those contracts trained the model to recognize the <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.label}</strong> pattern.</>
+              )}
+              {isPartialCoverage && (
+                <> Of those, <strong>{matchedCount} ({matchRate.toFixed(0)}%) are matched to {formatCompact(totalContracts)} COMPRANET contracts</strong>; the rest weren't matchable (RFC-coverage gaps). The matched contracts trained the model on the <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.label}</strong> pattern.</>
+              )}
+              {isNoCoverage && (
+                <> <strong style={{ color: 'var(--color-risk-high)' }}>None have been matched to specific COMPRANET contracts yet</strong> — known RFC-coverage gap for the {data.contract_year_start}–{data.contract_year_end} window. This case contributes narrative labels (the <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.label}</strong> pattern) but not identifiable contracts; future manual matches will make it a full training contributor.</>
+              )}
+              {' '}Active model: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.6.5</Link>.
+            </>
+          )}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // VISUAL — Role-mix concentration strip
 // Horizontal stacked bar showing how documented vendors break down by role.
 // Adds a glance-level "what kind of network is this?" before the reader
@@ -1263,9 +1428,33 @@ function CaseBody({
           />
         </Section>
 
-        {/* VISUAL 2 — Risk distribution */}
+        {/* NEW — Model Provenance: explicit transparency about how this
+            case actually fed into the v0.6.5 model. Shows the data flow
+            from documented vendors → matched COMPRANET contracts →
+            positive training labels. The user called out the prior
+            "Training Corpus" framing as rhetoric without evidence — this
+            section is the evidence. */}
         <Section
           index="02"
+          label={lang === 'es' ? 'Procedencia del modelo' : 'Model Provenance'}
+          title={lang === 'es' ? 'Cómo este caso entrenó al modelo' : 'How this case trained the model'}
+          subtitle={
+            lang === 'es'
+              ? 'La cadena explícita de datos: proveedores documentados → contratos en COMPRANET → etiquetas positivas en el entrenamiento del modelo de riesgo v0.6.5.'
+              : 'The explicit data chain: documented vendors → matched COMPRANET contracts → positive labels in v0.6.5 risk-model training.'
+          }
+        >
+          <ModelProvenancePanel
+            data={data}
+            linkedVendors={linkedVendors}
+            totalContracts={totalContracts}
+            lang={lang}
+          />
+        </Section>
+
+        {/* VISUAL 2 — Risk distribution */}
+        <Section
+          index="03"
           label="Risk Signature"
           title="How the model sees this case"
           subtitle={
@@ -1325,7 +1514,7 @@ function CaseBody({
 
         {/* VISUAL 3 — Vendor evidence cards */}
         <Section
-          index="03"
+          index="04"
           label="Evidence"
           title={
             linkedVendors.length > 0
@@ -1662,7 +1851,7 @@ function CaseBody({
 
         {/* VISUAL 4 — Methodology & sources */}
         <Section
-          index="04"
+          index="05"
           label="Methodology"
           title="Sources and confidence"
           subtitle="Every claim in this file is traceable to a named public source — journalism, audit, or legal record."
@@ -1837,7 +2026,7 @@ function CaseBody({
 
         {/* VISUAL 5 — Legal status */}
         <Section
-          index="05"
+          index="06"
           label="Legal status"
           title="Judicial disposition"
           subtitle="The outcome — or absence of one — based on public court records."
