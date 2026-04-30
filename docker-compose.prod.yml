@@ -74,26 +74,12 @@ services:
     networks:
       - rubli-network
 
-  magyar:
-    build:
-      context: ../magyar-study-app
-      dockerfile: Dockerfile
-    container_name: rubli-magyar
-    environment:
-      - SECRET_KEY=${MAGYAR_SECRET_KEY:-changeme}
-    restart: unless-stopped
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "2"
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.5'
-    networks:
-      - rubli-network
+  # magyar service removed (2026-04-30) — separate study app that
+  # didn't belong in the RUBLI compose. Every deploy hit recurring
+  # container-name conflicts with rubli-magyar requiring manual
+  # docker rm -f. Build context (../magyar-study-app) wasn't even
+  # in this repo. If it's needed later, it should run from its own
+  # compose file, not piggyback on RUBLI's.
 
   caddy:
     image: caddy:2-alpine
