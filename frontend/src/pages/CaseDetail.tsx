@@ -176,6 +176,26 @@ function titleCase(s: string): string {
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+/**
+ * Humanize the GroundTruth match_method enum. Raw values like
+ * "orphaned_no_match" or "rfc_exact" read as database jargon. This
+ * maps to plain-language labels journalists understand.
+ */
+function humanizeMatchMethod(method: string, lang: string): string {
+  const isEs = lang === 'es'
+  const map: Record<string, { en: string; es: string }> = {
+    orphaned_no_match: { en: 'Not in COMPRANET', es: 'Sin coincidencia en COMPRANET' },
+    rfc_exact:         { en: 'RFC exact match',  es: 'Coincidencia exacta de RFC' },
+    rfc_fuzzy:         { en: 'RFC partial match', es: 'Coincidencia parcial de RFC' },
+    name_exact:        { en: 'Name exact match',  es: 'Coincidencia exacta de nombre' },
+    name_fuzzy:        { en: 'Name partial match', es: 'Coincidencia parcial de nombre' },
+    manual:            { en: 'Manually verified', es: 'Verificación manual' },
+  }
+  const entry = map[method]
+  if (!entry) return titleCase(method)
+  return isEs ? entry.es : entry.en
+}
+
 // Format a date string (ISO 'YYYY-MM-DD' or 'YYYY-MM') to 'Mon YYYY' in locale
 function formatDateShort(raw: string | null | undefined, lang: string): string {
   if (!raw) return ''
@@ -273,7 +293,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section style={{ borderTop: `1px solid ${BORDER}`, padding: '48px 0 8px' }}>
+    <section style={{ borderTop: `1px solid ${BORDER}`, padding: '28px 0 8px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 10, flexWrap: 'wrap' }}>
         <span style={{ ...OVERLINE, color: CRIMSON_HI }}>
           {index} · {label}
@@ -1000,11 +1020,17 @@ function CaseBody({
               marginBottom: 28,
             }}
           >
-            <HeroStat
-              label="Contracts"
-              value={totalContracts > 0 ? formatCompact(totalContracts) : '—'}
-              foot={totalContracts > 0 ? 'linked in COMPRANET' : undefined}
-            />
+            {/* Contracts cell — hidden when 0 to avoid an empty "—"
+                placeholder. The "vendors matched / institutions affected"
+                cells already convey scope; an empty Contracts cell was
+                a recurring source of "looks empty" complaints. */}
+            {totalContracts > 0 && (
+              <HeroStat
+                label="Contracts"
+                value={formatCompact(totalContracts)}
+                foot="linked in COMPRANET"
+              />
+            )}
             <HeroStat
               label="Total value"
               value={data.amount_mxn_low ? formatMXN(data.amount_mxn_low) : '—'}
@@ -1069,6 +1095,12 @@ function CaseBody({
             yearStart={yearStart}
             yearEnd={yearEnd}
             discoveryYear={data.discovery_year}
+            // Smart zoom — show a 4-year buffer before/after the fraud
+            // window. The default 2002-2025 axis was 95% empty for short
+            // cases like Segalmex (2020-2022). Discovery year is also
+            // bracketed when it falls outside the fraud window.
+            axisStart={Math.max(2002, Math.min(yearStart ?? 2002, data.discovery_year ?? 2025) - 4)}
+            axisEnd={Math.min(2025, Math.max(yearEnd ?? 2025, data.discovery_year ?? 2002) + 4)}
           />
         </Section>
 
@@ -1224,15 +1256,26 @@ function CaseBody({
                         }}
                       >
                         <span>
-                          <span style={{ color: TEXT_FAINT }}>CONTRACTS · </span>
+                          <span style={{ color: TEXT_FAINT }}>{lang === 'es' ? 'CONTRATOS · ' : 'CONTRACTS · '}</span>
                           <span style={{ color: TEXT_PRIMARY, fontWeight: 600 }}>
                             {vendor.contract_count.toLocaleString()}
                           </span>
+                          {vendor.contract_count === 0 && (
+                            <span style={{ color: TEXT_FAINT, marginLeft: 6, textTransform: 'none', letterSpacing: '0.01em', fontStyle: 'italic' }}>
+                              {lang === 'es' ? '(no hay registros en COMPRANET)' : '(none in COMPRANET)'}
+                            </span>
+                          )}
                         </span>
                         {vendor.match_method && (
                           <span>
-                            <span style={{ color: TEXT_FAINT }}>MATCH · </span>
-                            <span style={{ color: TEXT_SECONDARY }}>{vendor.match_method}</span>
+                            <span style={{ color: TEXT_FAINT }}>{lang === 'es' ? 'COINCIDENCIA · ' : 'MATCH · '}</span>
+                            <span style={{ color: TEXT_SECONDARY }}>
+                              {/* Humanize the raw match_method enum. The
+                                  original string ("orphaned_no_match",
+                                  "rfc_exact", "name_fuzzy", etc.) reads
+                                  as database jargon to journalists. */}
+                              {humanizeMatchMethod(vendor.match_method, lang)}
+                            </span>
                           </span>
                         )}
                       </div>

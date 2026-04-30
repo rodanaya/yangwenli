@@ -31,6 +31,12 @@
     "3": "Alto",
     "4": "Crítico"
   },
+  "legalStatuses": {
+    "impunity": "Impunidad",
+    "investigation": "En investigación",
+    "prosecuted": "Procesado",
+    "convicted": "Condenado"
+  },
   "loadError": "Error al cargar los casos.",
   "loadErrorDetail": "El servidor puede estar temporalmente no disponible. Los datos aparecerán una vez que se restablezca la conexión.",
   "resultCount": "{{count}} casos",

@@ -31,6 +31,12 @@
     "3": "High",
     "4": "Critical"
   },
+  "legalStatuses": {
+    "impunity": "Impunity",
+    "investigation": "Under investigation",
+    "prosecuted": "Prosecuted",
+    "convicted": "Convicted"
+  },
   "loadError": "Failed to load cases.",
   "loadErrorDetail": "The server may be temporarily unavailable. Data will appear once the connection is restored.",
   "resultCount": "{{count}} cases",
