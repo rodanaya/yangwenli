@@ -53,7 +53,8 @@ TABLES_TO_DROP = [
     "vendor_investigation_features",
     "vendor_price_profiles",
     "investigation_folder_items",
-    "aria_web_evidence",
+    # aria_web_evidence: KEPT in production — used by /aria/queue/{id}/web-evidence
+    "aria_web_evidence_runs",  # run metadata, not needed in prod
     "asf_institution_findings",
     "asf_ramo_crosswalk",
 ]
