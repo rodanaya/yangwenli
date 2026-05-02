@@ -3,7 +3,7 @@ Pydantic models for procurement scandals (Case Library).
 """
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 from pydantic import BaseModel
 
 
@@ -41,7 +41,7 @@ class ScandalListItem(BaseModel):
     compranet_visibility: str
     summary_en: str
     is_verified: int
-    ground_truth_case_id: Optional[int] = None
+    ground_truth_case_id: Optional[Union[int, str]] = None
 
 
 class ScandalDetail(ScandalListItem):
