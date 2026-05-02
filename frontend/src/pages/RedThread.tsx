@@ -2451,10 +2451,20 @@ function ChapterVerdict({
               return (
                 <div key={i} className={cn('border rounded-sm p-2 text-[11px]', isHigh ? 'border-risk-high/40 bg-risk-high/5' : 'border-border bg-background-elevated')}>
                   <div className="flex items-start justify-between gap-2">
-                    <span className={cn('font-mono font-bold uppercase tracking-wider text-[9px] px-1 py-0.5 rounded border', art.verdict === 'SANCTION' ? 'text-risk-critical bg-risk-critical/10 border-risk-critical/30' : art.verdict === 'CORRUPTION_MENTION' ? 'text-risk-high bg-risk-high/10 border-risk-high/30' : 'text-text-secondary bg-background-card border-border')}>
-                      {art.query_type}
-                    </span>
-                    <span className="text-text-muted font-mono tabular-nums">{(art.confidence * 100).toFixed(0)}%</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={cn('font-mono font-bold uppercase tracking-wider text-[9px] px-1 py-0.5 rounded border', art.verdict === 'SANCTION' ? 'text-risk-critical bg-risk-critical/10 border-risk-critical/30' : art.verdict === 'CORRUPTION_MENTION' ? 'text-risk-high bg-risk-high/10 border-risk-high/30' : 'text-text-secondary bg-background-card border-border')}>
+                        {art.verdict}
+                      </span>
+                      {art.source_name && (
+                        <span className="text-[9px] font-mono text-text-muted truncate max-w-[120px]">{art.source_name}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {art.published_date && (
+                        <span className="text-[9px] font-mono text-text-muted">{art.published_date.slice(0, 16)}</span>
+                      )}
+                      <span className="text-text-muted font-mono tabular-nums text-[9px]">{(art.confidence * 100).toFixed(0)}%</span>
+                    </div>
                   </div>
                   <p className="text-text-primary mt-1 leading-snug">{art.snippet}</p>
                   {art.source_url && (
@@ -2465,7 +2475,7 @@ function ChapterVerdict({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
                     >
-                      Ver artículo →
+                      {isEs ? 'Ver artículo →' : 'Read article →'}
                     </a>
                   )}
                 </div>

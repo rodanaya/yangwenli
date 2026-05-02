@@ -472,7 +472,7 @@ def get_vendor_web_evidence(
 
     rows = conn.execute(
         """
-        SELECT query_type, verdict, confidence, snippet, source_url, reasoning, created_at
+        SELECT query_type, verdict, confidence, snippet, source_url, source_name, published_date, reasoning, created_at
         FROM aria_web_evidence
         WHERE vendor_id = ? AND verdict != 'NEGATIVE' AND snippet IS NOT NULL
         ORDER BY confidence DESC, created_at DESC
