@@ -725,7 +725,11 @@ export default function AriaPage() {
     let arr = [...leadsItemsRaw]
     if (gtOnly) arr = arr.filter((it) => it.in_ground_truth)
     if (sfpOnly) arr = arr.filter((it) => it.is_sfp_sanctioned)
-    if (webEvidenceOnly) arr = arr.filter((it) => it.web_evidence_verdict && it.web_evidence_verdict !== 'NEGATIVE')
+    if (webEvidenceOnly) {
+      arr = arr.filter((it) => it.web_evidence_verdict && it.web_evidence_verdict !== 'NEGATIVE')
+      // Sort by evidence score descending when WEB filter is active (overrides IPS order)
+      if (sortKey === 'ips') arr.sort((a, b) => (b.web_evidence_score ?? 0) - (a.web_evidence_score ?? 0))
+    }
     if (adminFilter) {
       const [adminStart, adminEnd] = ADMIN_RANGES[adminFilter]
       arr = arr.filter((it) => {
