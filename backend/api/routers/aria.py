@@ -176,7 +176,7 @@ def get_aria_queue(
                q.risk_score_norm, q.ensemble_norm, q.financial_scale_norm,
                q.external_flags_score, q.is_disappeared,
                q.top_institution, q.top_institution_ratio, q.value_per_contract,
-               q.web_evidence_score, q.web_evidence_verdict
+               q.web_evidence_score, q.web_evidence_verdict, q.web_evidence_updated_at
         FROM aria_queue q
         {where_sql}
         ORDER BY q.ips_final DESC

@@ -2249,6 +2249,7 @@ function ChapterVerdict({
     memo_text?: string | null
     web_evidence_score?: number | null
     web_evidence_verdict?: string | null
+    web_evidence_updated_at?: string | null
   } | null
   t: TFunction
 }) {
@@ -2309,15 +2310,23 @@ function ChapterVerdict({
       weight: 'high',
     })
   }
-  if (aria?.web_evidence_verdict && aria.web_evidence_verdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
+  if (aria?.web_evidence_updated_at) {
     const webVerdict = aria.web_evidence_verdict
-    const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
-    const webLabel = webVerdict === 'SANCTION' ? 'Sanción documentada' : webVerdict === 'CORRUPTION_MENTION' ? 'Mención en noticias' : 'Cobertura periodística'
-    evidence.push({
-      label: 'Evidencia web (CENTINELA)',
-      value: <span style={{ color: webColor }}>{webLabel} · score {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}</span>,
-      weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
-    })
+    if (webVerdict && webVerdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
+      const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
+      const webLabel = webVerdict === 'SANCTION' ? (isEs ? 'Sanción documentada' : 'Documented sanction') : webVerdict === 'CORRUPTION_MENTION' ? (isEs ? 'Mención en noticias' : 'News mention') : (isEs ? 'Cobertura periodística' : 'Press coverage')
+      evidence.push({
+        label: isEs ? 'Evidencia web (CENTINELA)' : 'Web evidence (CENTINELA)',
+        value: <span style={{ color: webColor }}>{webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%</span>,
+        weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
+      })
+    } else {
+      evidence.push({
+        label: isEs ? 'Búsqueda web (CENTINELA)' : 'Web search (CENTINELA)',
+        value: <span className="text-text-muted">{isEs ? 'Sin cobertura encontrada' : 'No coverage found'}</span>,
+        weight: 'low',
+      })
+    }
   }
   evidence.push({
     label: t('verdict.evidence.network', { defaultValue: 'Network' }),
@@ -2904,6 +2913,7 @@ export default function RedThread() {
             memo_text: aria.memo_text,
             web_evidence_score: aria.web_evidence_score,
             web_evidence_verdict: aria.web_evidence_verdict,
+            web_evidence_updated_at: aria.web_evidence_updated_at,
           } : null}
           t={t}
         />

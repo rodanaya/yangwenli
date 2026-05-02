@@ -2279,6 +2279,7 @@ export interface AriaQueueItem {
   // CENTINELA web evidence (Google News RSS + keyword classifier)
   web_evidence_score?: number | null
   web_evidence_verdict?: 'SANCTION' | 'CORRUPTION_MENTION' | 'JOURNALISM' | 'SHELL_SIGNAL' | 'NEGATIVE' | null
+  web_evidence_updated_at?: string | null
 }
 
 export interface AriaStats {

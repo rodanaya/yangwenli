@@ -195,27 +195,31 @@ _KEYWORD_MAP = {
     "CORRUPTION": {
         "CORRUPTION_MENTION": [
             "corrupción", "corrupto", "soborno", "colusión", "bid-rigging",
-            "irregular", "fraude", "desvío", "peculado", "enriquecimiento ilícito",
+            "fraude", "desvío", "peculado", "enriquecimiento ilícito",
+            "cartel", "acuerdo colusorio", "precio inflado", "facturas apócrifas",
+            "licitación amañada", "adjudicación ilegal",
         ],
-        "JOURNALISM": ["investigación", "proceso", "animal político", "ssalud"],
+        "JOURNALISM": ["investigación periodística", "animal político", "contralínea"],
     },
     "SANCTION": {
         "SANCTION": [
             "inhabilitado", "inhabilitación", "sancionado", "sanción", "barred",
             "sfp", "función pública", "secodam", "veda",
+            "resolución sancionadora", "procedimiento sancionador",
         ],
     },
     "JOURNALISM": {
         "JOURNALISM": [
-            "investigación", "periodística", "proceso", "animal político",
-            "contralínea", "escándalo", "reportaje",
+            "investigación periodística", "animal político",
+            "contralínea", "escándalo", "reportaje especial",
         ],
-        "CORRUPTION_MENTION": ["corrupción", "fraude", "irregularidades"],
+        "CORRUPTION_MENTION": ["corrupción", "fraude", "irregularidades graves"],
     },
     "SHELL": {
         "SHELL_SIGNAL": [
             "fantasma", "prestanombres", "facturación falsa", "efos",
             "69-b", "sat", "simulación", "inexistente",
+            "empresa de papel", "sociedad fantasma", "empresa pantalla",
         ],
     },
 }
