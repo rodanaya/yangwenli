@@ -458,6 +458,47 @@ def promote_to_ground_truth(
 
 
 # ---------------------------------------------------------------------------
+# GET /aria/queue/{vendor_id}/web-evidence
+# ---------------------------------------------------------------------------
+
+@router.get("/queue/{vendor_id}/web-evidence")
+def get_vendor_web_evidence(
+    vendor_id: int,
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """Return top web evidence articles for a vendor (CENTINELA data)."""
+    if not _table_exists(conn, "aria_web_evidence"):
+        return {"articles": [], "aggregate": None}
+
+    rows = conn.execute(
+        """
+        SELECT query_type, verdict, confidence, snippet, source_url, reasoning, created_at
+        FROM aria_web_evidence
+        WHERE vendor_id = ? AND verdict != 'NEGATIVE' AND snippet IS NOT NULL
+        ORDER BY confidence DESC, created_at DESC
+        LIMIT 10
+        """,
+        (vendor_id,),
+    ).fetchall()
+
+    articles = []
+    for row in rows:
+        d = _row_to_dict(row)
+        articles.append(d)
+
+    # Aggregate from aria_queue
+    agg = conn.execute(
+        "SELECT web_evidence_score, web_evidence_verdict, web_evidence_updated_at FROM aria_queue WHERE vendor_id = ?",
+        (vendor_id,),
+    ).fetchone()
+
+    return {
+        "articles": articles,
+        "aggregate": _row_to_dict(agg) if agg else None,
+    }
+
+
+# ---------------------------------------------------------------------------
 # GET /aria/stats
 # ---------------------------------------------------------------------------
 

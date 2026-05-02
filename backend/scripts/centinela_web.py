@@ -166,11 +166,19 @@ def _search_gnews(query: str, client: httpx.Client) -> list[dict]:
         if not title:
             continue
 
+        title_text = title.get_text(strip=True)
+        # Google News descriptions contain nested HTML (<a href="...">title</a>)
+        # Re-parse the description as HTML to strip inner tags
+        raw_desc = desc.get_text(strip=True) if desc else ""
+        if raw_desc.startswith("<"):
+            raw_desc = BeautifulSoup(raw_desc, "html.parser").get_text(strip=True)
+        # Fall back to title when description is empty or same as title
+        snippet_text = (raw_desc[:300] if raw_desc and raw_desc != title_text else title_text[:300])
         results.append(
             {
-                "title": title.get_text(strip=True),
+                "title": title_text,
                 "url": (link.get_text(strip=True) if link else ""),
-                "snippet": (desc.get_text(strip=True)[:300] if desc else ""),
+                "snippet": snippet_text,
                 "published_date": (pub_date.get_text(strip=True) if pub_date else ""),
                 "source_name": (source.get_text(strip=True) if source else ""),
             }
@@ -440,7 +448,7 @@ def process_vendor(
                     vendor_id, run_id, query, tmpl["query_type"],
                     results[0].get("source_name") or results[0].get("title") if results else None,
                     results[0].get("url") if results else None,
-                    results[0].get("snippet") if results else None,
+                    results[0].get("title") if results else None,
                     results[0].get("published_date") if results else None,
                     classification["verdict"],
                     classification["confidence"],
