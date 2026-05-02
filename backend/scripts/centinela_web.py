@@ -180,6 +180,63 @@ def _search_gnews(query: str, client: httpx.Client) -> list[dict]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Keyword fallback classifier (no API key required)
+# ──────────────────────────────────────────────────────────────────────────────
+
+_KEYWORD_MAP = {
+    "CORRUPTION": {
+        "CORRUPTION_MENTION": [
+            "corrupción", "corrupto", "soborno", "colusión", "bid-rigging",
+            "irregular", "fraude", "desvío", "peculado", "enriquecimiento ilícito",
+        ],
+        "JOURNALISM": ["investigación", "proceso", "animal político", "ssalud"],
+    },
+    "SANCTION": {
+        "SANCTION": [
+            "inhabilitado", "inhabilitación", "sancionado", "sanción", "barred",
+            "sfp", "función pública", "secodam", "veda",
+        ],
+    },
+    "JOURNALISM": {
+        "JOURNALISM": [
+            "investigación", "periodística", "proceso", "animal político",
+            "contralínea", "escándalo", "reportaje",
+        ],
+        "CORRUPTION_MENTION": ["corrupción", "fraude", "irregularidades"],
+    },
+    "SHELL": {
+        "SHELL_SIGNAL": [
+            "fantasma", "prestanombres", "facturación falsa", "efos",
+            "69-b", "sat", "simulación", "inexistente",
+        ],
+    },
+}
+
+
+def _classify_keywords(query_type: str, results: list[dict]) -> dict:
+    """Simple keyword-based fallback when Haiku is unavailable."""
+    if not results:
+        return {"verdict": "NEGATIVE", "confidence": 0.0, "reasoning": "No results"}
+
+    combined = " ".join(
+        (r.get("title", "") + " " + r.get("snippet", "")).lower()
+        for r in results
+    )
+
+    mapping = _KEYWORD_MAP.get(query_type, {})
+    for verdict, keywords in mapping.items():
+        matched = [kw for kw in keywords if kw in combined]
+        if matched:
+            confidence = min(0.6, 0.2 + 0.1 * len(matched))
+            return {
+                "verdict": verdict,
+                "confidence": round(confidence, 2),
+                "reasoning": f"keyword match: {', '.join(matched[:3])}",
+            }
+    return {"verdict": "NEGATIVE", "confidence": 0.0, "reasoning": "no keywords matched"}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Haiku classifier
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -334,13 +391,16 @@ def process_vendor(
         logger.debug("  [%s] %s", tmpl["query_type"], query)
 
         results = _search_gnews(query, http_client)
-        classification = _classify_with_haiku(
-            vendor_name=vendor_name,
-            query_type=tmpl["query_type"],
-            query=query,
-            results=results,
-            anthropic_client=anthropic_client,
-        )
+        if anthropic_client is not None:
+            classification = _classify_with_haiku(
+                vendor_name=vendor_name,
+                query_type=tmpl["query_type"],
+                query=query,
+                results=results,
+                anthropic_client=anthropic_client,
+            )
+        else:
+            classification = _classify_keywords(tmpl["query_type"], results)
 
         query_result = {
             "query_type": tmpl["query_type"],
@@ -422,33 +482,39 @@ def main() -> None:
     parser.add_argument("--refresh-days", type=int, default=30,
                         help="Skip vendors with evidence newer than N days (default: 30)")
     parser.add_argument("--dry-run", action="store_true", help="Search and classify but do not write to DB")
+    parser.add_argument("--no-haiku", action="store_true", help="Use keyword fallback instead of Claude Haiku (no API cost)")
     parser.add_argument("--db", type=Path, default=DB_PATH, help="Path to SQLite database")
     args = parser.parse_args()
 
     if not args.tier and not args.vendor_id:
         parser.error("Specify --tier or --vendor-id")
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        # Try loading from .env.prod in the project root
-        env_path = Path(__file__).parent.parent.parent / ".env.prod"
-        if env_path.exists():
-            for line in env_path.read_text().splitlines():
-                if line.startswith("ANTHROPIC_API_KEY="):
-                    api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
-                    break
-    if not api_key:
-        parser.error("ANTHROPIC_API_KEY not set (env var or .env.prod)")
-
-    import anthropic
-    anthropic_client = anthropic.Anthropic(api_key=api_key)
+    anthropic_client = None
+    if not args.no_haiku:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            # Try loading from .env.prod in the project root
+            env_path = Path(__file__).parent.parent.parent / ".env.prod"
+            if env_path.exists():
+                for line in env_path.read_text().splitlines():
+                    if line.startswith("ANTHROPIC_API_KEY="):
+                        api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                        break
+        if api_key:
+            import anthropic
+            anthropic_client = anthropic.Anthropic(api_key=api_key)
+            logger.info("Haiku classifier enabled (model: claude-haiku-4-5-20251001)")
+        else:
+            logger.warning("ANTHROPIC_API_KEY not found — falling back to keyword classifier")
+    else:
+        logger.info("Keyword-only classifier (--no-haiku)")
 
     conn = sqlite3.connect(str(args.db), timeout=60)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=60000")
 
-    if not args.dry_run:
-        _migrate_schema(conn)
+    # Always migrate schema (idempotent) so query columns exist even in dry-run
+    _migrate_schema(conn)
 
     # Build vendor list
     if args.vendor_id:
