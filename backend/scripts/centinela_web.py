@@ -213,25 +213,42 @@ _KEYWORD_MAP = {
 }
 
 
-def _classify_keywords(query_type: str, results: list[dict]) -> dict:
-    """Simple keyword-based fallback when Haiku is unavailable."""
+def _classify_keywords(query_type: str, results: list[dict], search_name: str = "") -> dict:
+    """Simple keyword-based fallback when Haiku is unavailable.
+
+    Specificity rule: if the vendor's search_name appears verbatim in an article
+    title, confidence is boosted to 0.85 (direct hit). Otherwise capped at 0.45
+    to prevent generic articles from polluting scores across many vendors.
+    """
     if not results:
         return {"verdict": "NEGATIVE", "confidence": 0.0, "reasoning": "No results"}
 
+    titles = [r.get("title", "").lower() for r in results]
     combined = " ".join(
-        (r.get("title", "") + " " + r.get("snippet", "")).lower()
-        for r in results
+        t + " " + r.get("snippet", "").lower()
+        for t, r in zip(titles, results)
     )
+
+    # Check if any title is a direct name hit (vendor appears in article headline)
+    name_lower = search_name.lower()
+    direct_hit = name_lower and any(name_lower in t for t in titles)
 
     mapping = _KEYWORD_MAP.get(query_type, {})
     for verdict, keywords in mapping.items():
         matched = [kw for kw in keywords if kw in combined]
         if matched:
-            confidence = min(0.6, 0.2 + 0.1 * len(matched))
+            if direct_hit:
+                # Article headline mentions the vendor — strong signal
+                confidence = min(0.90, 0.70 + 0.05 * len(matched))
+                reasoning = f"direct name hit + keywords: {', '.join(matched[:3])}"
+            else:
+                # Generic article matching keywords but no vendor name in headline
+                confidence = min(0.45, 0.15 + 0.1 * len(matched))
+                reasoning = f"generic keyword match: {', '.join(matched[:3])}"
             return {
                 "verdict": verdict,
                 "confidence": round(confidence, 2),
-                "reasoning": f"keyword match: {', '.join(matched[:3])}",
+                "reasoning": reasoning,
             }
     return {"verdict": "NEGATIVE", "confidence": 0.0, "reasoning": "no keywords matched"}
 
@@ -400,7 +417,7 @@ def process_vendor(
                 anthropic_client=anthropic_client,
             )
         else:
-            classification = _classify_keywords(tmpl["query_type"], results)
+            classification = _classify_keywords(tmpl["query_type"], results, search_name)
 
         query_result = {
             "query_type": tmpl["query_type"],

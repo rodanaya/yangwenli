@@ -586,6 +586,27 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             </span>
           )}
 
+          {/* Web evidence badge (CENTINELA) */}
+          {item.web_evidence_verdict && item.web_evidence_verdict !== 'NEGATIVE' && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border',
+                item.web_evidence_verdict === 'SANCTION'
+                  ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                  : item.web_evidence_verdict === 'CORRUPTION_MENTION'
+                    ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
+                    : 'bg-background-elevated text-text-secondary border-border'
+              )}
+              title={`Evidencia web CENTINELA — ${item.web_evidence_verdict} (score ${((item.web_evidence_score ?? 0) * 100).toFixed(0)})`}
+            >
+              {item.web_evidence_verdict === 'SANCTION'
+                ? (isEs ? 'SANC·WEB' : 'SANC·WEB')
+                : item.web_evidence_verdict === 'CORRUPTION_MENTION'
+                  ? (isEs ? 'CORR·WEB' : 'CORR·WEB')
+                  : (isEs ? 'PRENSA' : 'PRESS')}
+            </span>
+          )}
+
           {/* Tenure ribbon — pushed to the right */}
           {firstYear != null && lastYear != null && (
             <span className="ml-auto inline-flex items-center gap-1.5">

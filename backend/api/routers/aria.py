@@ -175,7 +175,8 @@ def get_aria_queue(
                COALESCE(q.new_vendor_risk, 0) as new_vendor_risk,
                q.risk_score_norm, q.ensemble_norm, q.financial_scale_norm,
                q.external_flags_score, q.is_disappeared,
-               q.top_institution, q.top_institution_ratio, q.value_per_contract
+               q.top_institution, q.top_institution_ratio, q.value_per_contract,
+               q.web_evidence_score, q.web_evidence_verdict
         FROM aria_queue q
         {where_sql}
         ORDER BY q.ips_final DESC
