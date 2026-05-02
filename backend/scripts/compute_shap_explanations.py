@@ -122,10 +122,11 @@ def load_calibration(conn: sqlite3.Connection):
     """
     cursor = conn.cursor()
 
-    # Determine the run_id of the most recently created global calibration
+    # Determine the run_id of the most recently created global calibration.
+    # v0.8.5+ stores the global row as sector_id=0; older runs used sector_id=NULL.
     cursor.execute("""
         SELECT run_id FROM model_calibration
-        WHERE sector_id IS NULL
+        WHERE sector_id IS NULL OR sector_id = 0
         ORDER BY created_at DESC LIMIT 1
     """)
     run_row = cursor.fetchone()
@@ -153,7 +154,14 @@ def load_calibration(conn: sqlite3.Connection):
             continue
         seen.add(sid)
 
-        coefs = json.loads(coefs_json)
+        raw = json.loads(coefs_json)
+        # Support both formats:
+        # v0.8+: {'names': [...], 'values': [...]}
+        # v0.6/v0.7: flat dict {feature_name: coefficient}
+        if isinstance(raw, dict) and 'names' in raw and 'values' in raw:
+            coefs = dict(zip(raw['names'], raw['values']))
+        else:
+            coefs = raw
         coef_vector = np.array([coefs.get(f, 0.0) for f in FACTOR_NAMES])
 
         cal = {
@@ -164,7 +172,8 @@ def load_calibration(conn: sqlite3.Connection):
             'auc': test_auc or auc_roc,
         }
 
-        if sid is None:
+        # v0.8+ uses sector_id=0 for global model; older runs used NULL
+        if sid is None or sid == 0:
             global_cal = cal
         else:
             sector_cals[sid] = cal
