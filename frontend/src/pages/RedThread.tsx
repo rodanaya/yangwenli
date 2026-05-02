@@ -2314,16 +2314,16 @@ function ChapterVerdict({
     const webVerdict = aria.web_evidence_verdict
     if (webVerdict && webVerdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
       const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
-      const webLabel = webVerdict === 'SANCTION' ? (isEs ? 'Sanción documentada' : 'Documented sanction') : webVerdict === 'CORRUPTION_MENTION' ? (isEs ? 'Mención en noticias' : 'News mention') : (isEs ? 'Cobertura periodística' : 'Press coverage')
+      const webLabel = webVerdict === 'SANCTION' ? 'Sanción documentada' : webVerdict === 'CORRUPTION_MENTION' ? 'Mención en noticias' : 'Cobertura periodística'
       evidence.push({
-        label: isEs ? 'Evidencia web (CENTINELA)' : 'Web evidence (CENTINELA)',
+        label: 'Evidencia web (CENTINELA)',
         value: <span style={{ color: webColor }}>{webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%</span>,
         weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
       })
     } else {
       evidence.push({
-        label: isEs ? 'Búsqueda web (CENTINELA)' : 'Web search (CENTINELA)',
-        value: <span className="text-text-muted">{isEs ? 'Sin cobertura encontrada' : 'No coverage found'}</span>,
+        label: 'Búsqueda web (CENTINELA)',
+        value: <span className="text-text-muted">Sin cobertura encontrada</span>,
         weight: 'low',
       })
     }
@@ -2484,7 +2484,7 @@ function ChapterVerdict({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
                     >
-                      {isEs ? 'Ver artículo →' : 'Read article →'}
+                      Ver artículo →
                     </a>
                   )}
                 </div>
