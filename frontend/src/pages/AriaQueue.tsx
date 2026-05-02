@@ -649,6 +649,7 @@ export default function AriaPage() {
   const [gtOnly, setGtOnly] = useState(false)
   const [efosOnly, setEfosOnly] = useState(false)
   const [sfpOnly, setSfpOnly] = useState(false)
+  const [webEvidenceOnly, setWebEvidenceOnly] = useState(false)
 
   // Client-side sort within the current page. Server returns IPS-ordered;
   // user can re-sort by what's actually meaningful for their triage. The
@@ -724,6 +725,7 @@ export default function AriaPage() {
     let arr = [...leadsItemsRaw]
     if (gtOnly) arr = arr.filter((it) => it.in_ground_truth)
     if (sfpOnly) arr = arr.filter((it) => it.is_sfp_sanctioned)
+    if (webEvidenceOnly) arr = arr.filter((it) => it.web_evidence_verdict && it.web_evidence_verdict !== 'NEGATIVE')
     if (adminFilter) {
       const [adminStart, adminEnd] = ADMIN_RANGES[adminFilter]
       arr = arr.filter((it) => {
@@ -774,6 +776,7 @@ export default function AriaPage() {
     setGtOnly(false)
     setEfosOnly(false)
     setSfpOnly(false)
+    setWebEvidenceOnly(false)
     setSearch('')
     setPage(1)
   }
@@ -789,6 +792,7 @@ export default function AriaPage() {
     gtOnly || null,
     efosOnly || null,
     sfpOnly || null,
+    webEvidenceOnly || null,
     search || null,
   ].filter(Boolean).length
 
@@ -1234,6 +1238,18 @@ export default function AriaPage() {
                 >
                   SFP
                 </button>
+                <button
+                  onClick={() => { setWebEvidenceOnly(!webEvidenceOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    webEvidenceOnly
+                      ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title={isEs ? 'Evidencia web (CENTINELA)' : 'Has web evidence (CENTINELA)'}
+                >
+                  WEB
+                </button>
               </div>
 
               {/* Review-status filter — moved out of the list header to
@@ -1324,6 +1340,11 @@ export default function AriaPage() {
               {sfpOnly && (
                 <FilterChip onClear={() => { setSfpOnly(false); setPage(1) }} accent="var(--color-risk-high)">
                   SFP only
+                </FilterChip>
+              )}
+              {webEvidenceOnly && (
+                <FilterChip onClear={() => { setWebEvidenceOnly(false); setPage(1) }} accent="var(--color-risk-critical)">
+                  {isEs ? 'Con evidencia web' : 'Web evidence'}
                 </FilterChip>
               )}
               {newVendorOnly && (
