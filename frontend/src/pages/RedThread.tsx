@@ -2247,10 +2247,19 @@ function ChapterVerdict({
     is_sfp_sanctioned: boolean
     in_ground_truth: boolean
     memo_text?: string | null
+    web_evidence_score?: number | null
+    web_evidence_verdict?: string | null
   } | null
   t: TFunction
 }) {
   const navigate = useNavigate()
+  const { data: webEvidence } = useQuery({
+    queryKey: ['aria-web-evidence', vendorId],
+    queryFn: () => ariaApi.getWebEvidence(vendorId),
+    enabled: !!aria?.web_evidence_verdict && aria.web_evidence_verdict !== 'NEGATIVE',
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
   const PATTERN_META = getPatternMeta(t)
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const riskColor = RISK_DOT_COLORS[riskLevel]
@@ -2298,6 +2307,16 @@ function ChapterVerdict({
       label: t('verdict.evidence.external', { defaultValue: 'External validation' }),
       value: <span className="text-[color:var(--color-accent)]">{flags.join(' · ')}</span>,
       weight: 'high',
+    })
+  }
+  if (aria?.web_evidence_verdict && aria.web_evidence_verdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
+    const webVerdict = aria.web_evidence_verdict
+    const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
+    const webLabel = webVerdict === 'SANCTION' ? 'Sanción documentada' : webVerdict === 'CORRUPTION_MENTION' ? 'Mención en noticias' : 'Cobertura periodística'
+    evidence.push({
+      label: 'Evidencia web (CENTINELA)',
+      value: <span style={{ color: webColor }}>{webLabel} · score {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}</span>,
+      weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
     })
   }
   evidence.push({
@@ -2416,6 +2435,42 @@ function ChapterVerdict({
                 aria.memo_text.replace(/[#*]/g, '').slice(0, 380)
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* CENTINELA web evidence articles */}
+      {webEvidence && webEvidence.articles.length > 0 && (
+        <div className="mb-5">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+            Evidencia Web · CENTINELA
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {webEvidence.articles.slice(0, 5).map((art, i) => {
+              const isHigh = art.verdict === 'SANCTION' || art.verdict === 'CORRUPTION_MENTION'
+              return (
+                <div key={i} className={cn('border rounded-sm p-2 text-[11px]', isHigh ? 'border-risk-high/40 bg-risk-high/5' : 'border-border bg-background-elevated')}>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={cn('font-mono font-bold uppercase tracking-wider text-[9px] px-1 py-0.5 rounded border', art.verdict === 'SANCTION' ? 'text-risk-critical bg-risk-critical/10 border-risk-critical/30' : art.verdict === 'CORRUPTION_MENTION' ? 'text-risk-high bg-risk-high/10 border-risk-high/30' : 'text-text-secondary bg-background-card border-border')}>
+                      {art.query_type}
+                    </span>
+                    <span className="text-text-muted font-mono tabular-nums">{(art.confidence * 100).toFixed(0)}%</span>
+                  </div>
+                  <p className="text-text-primary mt-1 leading-snug">{art.snippet}</p>
+                  {art.source_url && (
+                    <a
+                      href={art.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
+                    >
+                      Ver artículo →
+                    </a>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -2837,6 +2892,8 @@ export default function RedThread() {
             is_sfp_sanctioned: aria.is_sfp_sanctioned,
             in_ground_truth: aria.in_ground_truth,
             memo_text: aria.memo_text,
+            web_evidence_score: aria.web_evidence_score,
+            web_evidence_verdict: aria.web_evidence_verdict,
           } : null}
           t={t}
         />

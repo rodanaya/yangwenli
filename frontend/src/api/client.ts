@@ -2730,6 +2730,14 @@ export const ariaApi = {
   },
 
   /**
+   * Get CENTINELA web evidence articles for a vendor
+   */
+  async getWebEvidence(vendorId: number): Promise<{ articles: Array<{ query_type: string; verdict: string; confidence: number; snippet: string; source_url: string | null; reasoning: string }>, aggregate: { web_evidence_score: number; web_evidence_verdict: string; web_evidence_updated_at: string } | null }> {
+    const { data } = await api.get(`/aria/queue/${vendorId}/web-evidence`)
+    return data
+  },
+
+  /**
    * Update review status for a queue item
    */
   async updateReview(
