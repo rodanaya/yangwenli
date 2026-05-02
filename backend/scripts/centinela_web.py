@@ -541,6 +541,7 @@ def main() -> None:
     conn = sqlite3.connect(str(args.db), timeout=60)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=60000")
+    conn.execute("PRAGMA wal_autocheckpoint=100")  # keep WAL small; avoid 2GB buildup
 
     # Always migrate schema (idempotent) so query columns exist even in dry-run
     _migrate_schema(conn)
