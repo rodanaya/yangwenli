@@ -472,18 +472,26 @@ def get_vendor_web_evidence(
 
     rows = conn.execute(
         """
-        SELECT query_type, verdict, confidence, snippet, source_url, source_name, published_date, reasoning, created_at
+        SELECT query_type, verdict, MAX(confidence) as confidence, snippet,
+               source_url, source_name, published_date, reasoning, MAX(created_at) as created_at
         FROM aria_web_evidence
         WHERE vendor_id = ? AND verdict != 'NEGATIVE' AND snippet IS NOT NULL
-        ORDER BY confidence DESC, created_at DESC
+        GROUP BY snippet
+        ORDER BY confidence DESC
         LIMIT 10
         """,
         (vendor_id,),
     ).fetchall()
 
+    # Deduplicate further by normalized snippet prefix (handles minor truncation differences)
+    seen_prefixes: set = set()
     articles = []
     for row in rows:
         d = _row_to_dict(row)
+        prefix = (d.get("snippet") or "")[:80].lower()
+        if prefix and prefix in seen_prefixes:
+            continue
+        seen_prefixes.add(prefix)
         articles.append(d)
 
     # Aggregate from aria_queue
