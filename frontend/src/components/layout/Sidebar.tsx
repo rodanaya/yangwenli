@@ -22,6 +22,7 @@ import {
   Newspaper,
   Briefcase,
   Sparkles,
+  Tag,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -83,6 +84,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.explore',
     items: [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'categories', href: '/sectors?view=categories', icon: Tag },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'network', href: '/network', icon: Network },
     ],
@@ -273,7 +275,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                   href: itemDef.href,
                   icon: itemDef.icon,
                 }
-                const isActive = getIsActive(itemDef.href, location.pathname)
+                const isActive = getIsActive(itemDef.href, location.pathname, location.search)
                 const badge = getBadgeCount(itemDef.badgeSource)
                 const badgeStyle = getBadgeStyle(itemDef.badgeSource)
                 return (
@@ -424,13 +426,18 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   )
 }
 
-/** Determine if a nav item is active based on current pathname */
-function getIsActive(href: string, pathname: string): boolean {
+/** Determine if a nav item is active based on current pathname + search */
+function getIsActive(href: string, pathname: string, search = ''): boolean {
   if (href === '/dashboard') {
     return pathname === '/' || pathname === '/dashboard'
   }
+  // /sectors?view=categories — match exactly (pathname + query)
+  if (href === '/sectors?view=categories') {
+    return pathname === '/sectors' && search.includes('view=categories')
+  }
   if (href === '/sectors') {
-    return pathname === '/sectors' || pathname.startsWith('/sectors/')
+    // Active for /sectors (without categories view) and /sectors/:id
+    return (pathname === '/sectors' && !search.includes('view=categories')) || pathname.startsWith('/sectors/')
   }
   if (href === '/workspace') {
     return pathname === '/workspace' || pathname === '/watchlist' || pathname.startsWith('/workspace/')

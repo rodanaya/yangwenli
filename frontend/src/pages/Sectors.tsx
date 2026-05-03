@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -26,6 +26,7 @@ import {
 } from '@/lib/constants'
 import type { SectorStatistics, SectorTrend } from '@/api/types'
 import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
@@ -530,7 +531,6 @@ function RiskRankingStrip({
 
 export function Sectors() {
   const { t, i18n } = useTranslation('sectors')
-  const navigate = useNavigate()
   const [sortKey, setSortKey] = useState<SortKey>('total_value_mxn')
   const [selectedCoefSectorId, setSelectedCoefSectorId] = useState<number | null>(null)
 
@@ -776,11 +776,9 @@ export function Sectors() {
                       const riskLevel = getRiskLevelFromScore(cat.avg_risk)
                       const sectorColor = cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? '#64748b' : '#64748b'
                       return (
-                        <button
+                        <div
                           key={cat.category_id}
-                          type="button"
-                          onClick={() => navigate(`/categories/${cat.category_id}`)}
-                          className="w-full flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors text-left"
+                          className="flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
                           style={{ borderLeft: `3px solid ${sectorColor}` }}
                         >
                           <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
@@ -788,9 +786,12 @@ export function Sectors() {
                           </span>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h3 className="text-sm font-semibold text-text-primary truncate">
-                                {i18n.language === 'es' ? cat.name_es : cat.name_en}
-                              </h3>
+                              <EntityIdentityChip
+                                type="category"
+                                id={cat.category_id}
+                                name={i18n.language === 'es' ? cat.name_es : cat.name_en}
+                                size="sm"
+                              />
                               {cat.sector_code && (
                                 <span className="text-[9px] font-mono tracking-widest uppercase text-text-muted">
                                   {t(cat.sector_code) as string}
@@ -798,10 +799,10 @@ export function Sectors() {
                               )}
                             </div>
                             {cat.top_vendor && (
-                              <p className="text-[11px] text-text-muted mt-0.5 truncate">
-                                {i18n.language === 'es' ? 'Top proveedor: ' : 'Top vendor: '}
-                                <span className="text-text-secondary">{cat.top_vendor.name}</span>
-                              </p>
+                              <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
+                                <span>{i18n.language === 'es' ? 'Top:' : 'Top:'}</span>
+                                <EntityIdentityChip type="vendor" id={cat.top_vendor.id} name={cat.top_vendor.name} size="xs" hideIcon />
+                              </div>
                             )}
                           </div>
                           <div className="flex-shrink-0 text-right min-w-[90px]">
@@ -831,7 +832,7 @@ export function Sectors() {
                               {i18n.language === 'es' ? 'Adj.Dir.' : 'Direct'}
                             </div>
                           </div>
-                        </button>
+                        </div>
                       )
                     })}
                   </div>
