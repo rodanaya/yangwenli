@@ -678,3 +678,62 @@ def get_data_quality(response: Response):
         _stats_cache.set("data_quality", result, ttl=7200)  # Cache 2 hours
         response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
         return result
+
+
+# ---------------------------------------------------------------------------
+# Hardcoded fallback used when exchange_rates table is empty
+# ---------------------------------------------------------------------------
+_FALLBACK_RATES: Dict[int, float] = {
+    2002: 9.66,  2003: 10.79, 2004: 11.29, 2005: 10.90, 2006: 10.90,
+    2007: 10.93, 2008: 13.16, 2009: 13.51, 2010: 12.64, 2011: 12.43,
+    2012: 13.17, 2013: 12.77, 2014: 13.29, 2015: 15.87, 2016: 18.66,
+    2017: 18.91, 2018: 19.24, 2019: 19.26, 2020: 21.49, 2021: 20.27,
+    2022: 20.12, 2023: 17.16, 2024: 17.20, 2025: 19.50, 2026: 20.10,
+}
+
+
+class ExchangeRatesResponse(BaseModel):
+    """Annual MXN/USD exchange rates."""
+    rates: Dict[str, float] = Field(..., description="Year-keyed annual average MXN/USD rates")
+    current_year: int = Field(..., description="Current calendar year")
+    current_rate: float = Field(..., description="MXN/USD rate for the current year")
+
+
+@router.get("/exchange-rates", response_model=ExchangeRatesResponse)
+def get_exchange_rates(response: Response):
+    """
+    Get annual average MXN/USD exchange rates.
+
+    Reads from the exchange_rates table (annual rows where month = 0).
+    Falls back to hardcoded Banxico averages if the table is empty.
+    Cached for 24 hours — rates change only when manually re-seeded.
+    """
+    cached = _stats_cache.get("exchange_rates")
+    if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return cached
+
+    rates: Dict[str, float] = {}
+    with get_db() as conn:
+        cursor = conn.cursor()
+        # month=0 is the sentinel for annual-average rows (schema enforces NOT NULL)
+        cursor.execute(
+            "SELECT year, mxn_usd_fix FROM exchange_rates WHERE month = 0 AND mxn_usd_fix IS NOT NULL ORDER BY year"
+        )
+        for row in cursor.fetchall():
+            rates[str(row["year"])] = row["mxn_usd_fix"]
+
+    if not rates:
+        rates = {str(y): r for y, r in _FALLBACK_RATES.items()}
+
+    current_year = 2026
+    current_rate = rates.get(str(current_year), list(rates.values())[-1])
+
+    result = ExchangeRatesResponse(
+        rates=rates,
+        current_year=current_year,
+        current_rate=current_rate,
+    )
+    _stats_cache.set("exchange_rates", result, ttl=86400)
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return result

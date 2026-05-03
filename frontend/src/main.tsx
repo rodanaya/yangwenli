@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/react'
 import './i18n' // Must be imported before App
 import './index.css'
 import App from './App.tsx'
+import { initExchangeRates } from './lib/exchangeRates'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Stale-chunk recovery
@@ -69,6 +70,12 @@ if (sentryDsn) {
     replaysOnErrorSampleRate: 1.0,
   })
 }
+
+// Kick off exchange rate fetch before first render — non-blocking.
+// formatCompactMXN uses the cached value synchronously; the first render
+// may use the static fallback if the fetch hasn't resolved yet, subsequent
+// renders will pick up live rates once the module cache is populated.
+initExchangeRates()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

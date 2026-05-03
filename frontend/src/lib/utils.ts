@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import i18n from '@/i18n'
 import { MAX_CONTRACT_VALUE, FLAG_THRESHOLD } from './constants'
+import { getExchangeRate } from './exchangeRates'
 
 /**
  * Get the Intl locale string matching the current i18n language.
@@ -65,10 +66,18 @@ export function formatCompactMXN(amount: number): string {
     return formatMXN(amount)
   }
 
-  // English
-  if (amount >= 1_000_000_000_000) return `${(amount / 1_000_000_000_000).toFixed(1)}T MXN`
-  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B MXN`
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M MXN`
+  // English — append USD equivalent for amounts >= 1M
+  const rate = getExchangeRate()
+  const toUSD = (n: number): string => {
+    const usd = n / rate
+    if (usd >= 1e9) return `$${(usd / 1e9).toFixed(1)}B`
+    if (usd >= 1e6) return `$${(usd / 1e6).toFixed(1)}M`
+    if (usd >= 1e3) return `$${(usd / 1e3).toFixed(0)}K`
+    return `$${Math.round(usd)}`
+  }
+  if (amount >= 1_000_000_000_000) return `${(amount / 1_000_000_000_000).toFixed(1)}T MXN (≈ ${toUSD(amount)} USD)`
+  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)}B MXN (≈ ${toUSD(amount)} USD)`
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M MXN (≈ ${toUSD(amount)} USD)`
   if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K MXN`
   return formatMXN(amount)
 }
