@@ -1549,12 +1549,15 @@ export default function YearInReview() {
                 <p className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('spotlight.topVendorLabel', { year: validYear })}
                 </p>
-                <h3
-                  className="text-xl font-bold text-text-primary"
-                  style={{ fontFamily: 'var(--font-family-serif)' }}
-                >
-                  {topVendor.vendor_name}
-                </h3>
+                <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                  <EntityIdentityChip
+                    type="vendor"
+                    id={topVendor.vendor_id}
+                    name={topVendor.vendor_name}
+                    riskScore={topVendor.avg_risk_score ?? undefined}
+                    size="md"
+                  />
+                </div>
                 <div className="flex items-center gap-4 mt-2 flex-wrap">
                   <span className="text-sm font-mono text-text-secondary">
                     {formatCompactMXN(topVendor.metric_value)}
