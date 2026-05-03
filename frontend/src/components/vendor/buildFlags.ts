@@ -146,6 +146,25 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
     })
   }
 
+  // ─── Institutional capture (post S.1 backfill) ────────────────────────
+  // When a vendor's top institution represents ≥ 80% of total award value,
+  // it signals potential regulatory capture (P6 pattern). Don't double-fire
+  // if an ARIA T1/T2 flag already covers this.
+  const topInstRatio = aria?.top_institution_ratio ?? 0
+  const topInst = aria?.top_institution
+  const ariaAlreadyCovered = aria?.ips_tier === 1 || aria?.ips_tier === 2
+  if (topInstRatio >= 0.8 && topInst && !ariaAlreadyCovered && !aria?.fp_structural_monopoly) {
+    flags.push({
+      key: 'institutional-capture',
+      severity: 'high',
+      headline: t('vendorFlags.institutionalCapture.headline', {
+        pct: (topInstRatio * 100).toFixed(0),
+        inst: topInst,
+      }),
+      detail: t('vendorFlags.institutionalCapture.detail'),
+    })
+  }
+
   // ─── Procurement patterns ──────────────────────────────────────────────
   const daPct = vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0
   if (daPct > 70) {

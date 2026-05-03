@@ -106,6 +106,10 @@
     "fpStructural": {
       "headline": "Monopolio estructural — el indicador de riesgo no es una anomalía",
       "detail": "Este proveedor es el único abastecedor en un mercado regulado (p.ej. gases medicinales, farmacéuticos de especialidad). Las altas tasas de adjudicación directa y concentración son esperadas y no indican irregularidades."
+    },
+    "institutionalCapture": {
+      "headline": "{{pct}}% de adjudicaciones provienen de una sola institución ({{inst}})",
+      "detail": "La concentración de contratos con un solo comprador puede indicar captura regulatoria (patrón P6). Verifique si las licitaciones fueron competitivas durante el período."
     }
   },
   "waterfall": {
