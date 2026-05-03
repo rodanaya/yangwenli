@@ -1,5 +1,4 @@
 import { createPortal } from 'react-dom'
-import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { useTranslation } from 'react-i18next'
 import { X, GitCompareArrows, ExternalLink } from 'lucide-react'
@@ -244,9 +243,7 @@ export function ContractCompareModal({
                 label="Institution"
                 values={contracts.map((c) => (
                   c.institution_id
-                    ? <Link key={c.id} to={`/institutions/${c.institution_id}`} onClick={() => onOpenChange(false)} className="text-accent hover:underline line-clamp-2">
-                        {toTitleCase(c.institution_name || 'Unknown')}
-                      </Link>
+                    ? <EntityIdentityChip key={c.id} type="institution" id={c.institution_id} name={c.institution_name || 'Unknown'} size="sm" />
                     : <span key={c.id} className="text-text-muted">Unknown</span>
                 ))}
               />

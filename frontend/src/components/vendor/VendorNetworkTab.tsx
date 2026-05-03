@@ -12,7 +12,8 @@ import type {
   VendorDetailResponse,
   VendorExternalFlags,
 } from '@/api/types'
-import { DotBarRow } from '@/components/ui/DotBar'
+import { DotBar } from '@/components/ui/DotBar'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { ExternalLink, Network } from 'lucide-react'
 
 interface LinkedScandalItem {
@@ -99,21 +100,18 @@ export function VendorNetworkTab({
           </SectionTitle>
           <ul className="space-y-1.5">
             {scandalList.slice(0, 10).map((s) => (
-              <li key={s.scandal_slug}>
-                <Link
-                  to={`/cases/${s.scandal_slug}`}
-                  className="inline-flex items-center gap-2 text-sm text-text-primary hover:text-accent"
-                >
-                  <span className="font-medium">
-                    {s.scandal_title ?? s.case_name ?? s.scandal_slug}
+              <li key={s.scandal_slug} className="flex items-center gap-2">
+                <EntityIdentityChip
+                  type="case"
+                  id={s.scandal_slug}
+                  name={s.scandal_title ?? s.case_name ?? s.scandal_slug}
+                  size="sm"
+                />
+                {s.fraud_type && (
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
+                    {s.fraud_type}
                   </span>
-                  {s.fraud_type && (
-                    <span className="text-[11px] font-mono uppercase tracking-wider text-text-muted">
-                      {s.fraud_type}
-                    </span>
-                  )}
-                  <ExternalLink className="h-3 w-3 opacity-50" />
-                </Link>
+                )}
               </li>
             ))}
           </ul>
@@ -140,17 +138,26 @@ export function VendorNetworkTab({
               </button>
             )}
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {coBidList.slice(0, 6).map((cb) => (
-              <DotBarRow
-                key={cb.vendor_id}
-                label={cb.vendor_name ?? `Vendor ${cb.vendor_id}`}
-                readout={`${cb.co_bid_count ?? 0} ${isEs ? 'comp.' : 'shared'}`}
-                hint={cb.relationship_strength}
-                value={cb.co_bid_count ?? 0}
-                max={maxCoBid}
-                color="var(--color-risk-high)"
-              />
+              <div key={cb.vendor_id} className="flex items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <EntityIdentityChip
+                    type="vendor"
+                    id={cb.vendor_id}
+                    name={cb.vendor_name ?? `Vendor ${cb.vendor_id}`}
+                    size="xs"
+                  />
+                </div>
+                <DotBar
+                  value={cb.co_bid_count ?? 0}
+                  max={maxCoBid}
+                  color="var(--color-risk-high)"
+                />
+                <span className="text-[11px] font-mono tabular-nums text-text-muted flex-shrink-0 w-14 text-right">
+                  {cb.co_bid_count ?? 0} {isEs ? 'comp.' : 'shared'}
+                </span>
+              </div>
             ))}
           </div>
         </section>

@@ -6,7 +6,6 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
-import { Link } from 'react-router-dom'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
@@ -107,13 +106,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
                   <InfoRow icon={Building2} label={t('detail.institution')}>
                     {contract.institution_id ? (
-                      <Link
-                        to={`/institutions/${contract.institution_id}`}
-                        className="text-accent hover:underline"
-                        onClick={() => onOpenChange(false)}
-                      >
-                        {toTitleCase(contract.institution_name || '-')}
-                      </Link>
+                      <EntityIdentityChip type="institution" id={contract.institution_id} name={contract.institution_name || '-'} size="sm" />
                     ) : (
                       <span>{toTitleCase(contract.institution_name || '-')}</span>
                     )}

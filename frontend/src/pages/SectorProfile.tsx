@@ -812,14 +812,16 @@ function InvestigationCallout({
 
       <div className="space-y-1.5 mb-3">
         {top3.map((c) => (
-          <Link
+          <div
             key={c.id}
-            to={`/cases/${c.slug}`}
-            className="flex items-center justify-between gap-2 group rounded-lg px-2 py-1.5 hover:bg-background-elevated transition-colors"
+            className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-background-elevated transition-colors"
           >
-            <span className="text-xs text-text-secondary group-hover:text-text-primary transition-colors truncate">
-              {c.name_en}
-            </span>
+            <EntityIdentityChip
+              type="case"
+              id={c.slug}
+              name={c.name_en}
+              size="xs"
+            />
             <span
               className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded flex-shrink-0"
               style={{
@@ -835,7 +837,7 @@ function InvestigationCallout({
             >
               severity {c.severity}
             </span>
-          </Link>
+          </div>
         ))}
       </div>
 

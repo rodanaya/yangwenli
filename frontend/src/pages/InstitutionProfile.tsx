@@ -1591,16 +1591,18 @@ export function InstitutionProfile() {
                       </div>
                       <div className="space-y-1.5">
                         {sectorCases!.slice(0, 5).map((c) => (
-                          <Link
+                          <div
                             key={c.slug}
-                            to={`/cases/${c.slug}`}
-                            className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors group"
+                            className="flex items-center justify-between p-2 rounded hover:bg-background-elevated/30 transition-colors"
                           >
-                            <span className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate">
-                              {c.name_es || c.name_en}
-                            </span>
+                            <EntityIdentityChip
+                              type="case"
+                              id={c.slug}
+                              name={c.name_es || c.name_en}
+                              size="xs"
+                            />
                             <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
-                          </Link>
+                          </div>
                         ))}
                       </div>
                     </>
