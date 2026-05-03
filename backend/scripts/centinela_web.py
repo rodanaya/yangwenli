@@ -415,6 +415,7 @@ def process_vendor(
 
     query_results = []
 
+    # Phase 1: all network I/O — no DB connection held open
     for tmpl in QUERY_TEMPLATES:
         query = tmpl["template"].format(name=search_name)
         logger.debug("  [%s] %s", tmpl["query_type"], query)
@@ -440,8 +441,14 @@ def process_vendor(
             "reasoning": classification["reasoning"],
         }
         query_results.append(query_result)
+        time.sleep(SEARCH_DELAY_SECONDS)
 
-        if not dry_run:
+    web_score, web_verdict = _aggregate_score(query_results)
+
+    # Phase 2: single batched write — write lock held for <100ms
+    if not dry_run:
+        for qr in query_results:
+            r = qr["results"]
             conn.execute(
                 """INSERT OR REPLACE INTO aria_web_evidence
                    (vendor_id, aria_run_id, query, query_type,
@@ -449,23 +456,17 @@ def process_vendor(
                     verdict, confidence, reasoning, raw_results_json)
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
-                    vendor_id, run_id, query, tmpl["query_type"],
-                    results[0].get("source_name") or results[0].get("title") if results else None,
-                    results[0].get("url") if results else None,
-                    results[0].get("title") if results else None,
-                    results[0].get("published_date") if results else None,
-                    classification["verdict"],
-                    classification["confidence"],
-                    classification["reasoning"],
-                    json.dumps(results, ensure_ascii=False),
+                    vendor_id, run_id, qr["query"], qr["query_type"],
+                    r[0].get("source_name") or r[0].get("title") if r else None,
+                    r[0].get("url") if r else None,
+                    r[0].get("title") if r else None,
+                    r[0].get("published_date") if r else None,
+                    qr["verdict"],
+                    qr["confidence"],
+                    qr["reasoning"],
+                    json.dumps(r, ensure_ascii=False),
                 ),
             )
-
-        time.sleep(SEARCH_DELAY_SECONDS)
-
-    web_score, web_verdict = _aggregate_score(query_results)
-
-    if not dry_run:
         conn.execute(
             """INSERT INTO aria_web_evidence_runs
                (run_id, vendor_id, vendor_name, tier,
