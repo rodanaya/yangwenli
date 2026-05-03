@@ -1600,9 +1600,8 @@ function InstitutionalRibbon({
           const isHover = hoverIdx === idx
 
           return (
-            <Link
+            <div
               key={inst.institution_id}
-              to={`/institutions/${inst.institution_id}`}
               className="block group"
               onMouseEnter={() => setHoverIdx(idx)}
               onMouseLeave={() => setHoverIdx(null)}
@@ -1616,12 +1615,13 @@ function InstitutionalRibbon({
               >
                 {/* Institution name */}
                 <div className="min-w-0">
-                  <div
-                    className="text-[11px] text-text-primary truncate group-hover:text-[var(--color-risk-critical)] transition-colors"
-                    title={inst.institution_name}
-                  >
-                    {inst.institution_name}
-                  </div>
+                  <EntityIdentityChip
+                    type="institution"
+                    id={inst.institution_id}
+                    name={inst.institution_name}
+                    size="xs"
+                    hideIcon
+                  />
                   {inst.institution_type && (
                     <div className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted truncate">
                       {inst.institution_type}
@@ -1667,7 +1667,7 @@ function InstitutionalRibbon({
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           )
         })}
       </div>
@@ -1680,14 +1680,14 @@ function InstitutionalRibbon({
         {' '}— {i18n.language.startsWith('es') ? (
           <>
             {topShare.toFixed(0)}% del valor fluyó a {' '}
-            <span className="text-text-primary font-medium">{sorted[0].institution_name}</span>
+            <EntityIdentityChip type="institution" id={sorted[0].institution_id} name={sorted[0].institution_name} size="xs" className="inline-flex align-middle" />
             {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (captura institucional probable)</span>}
             .
           </>
         ) : (
           <>
             {topShare.toFixed(0)}% of value flowed to {' '}
-            <span className="text-text-primary font-medium">{sorted[0].institution_name}</span>
+            <EntityIdentityChip type="institution" id={sorted[0].institution_id} name={sorted[0].institution_name} size="xs" className="inline-flex align-middle" />
             {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (likely institutional capture)</span>}
             .
           </>

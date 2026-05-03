@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useMemo, useRef, useEffect } from 'react'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -1989,7 +1989,6 @@ function LongestTenuredGantt({ vendors }: {
     avg_risk_score?: number
   }>
 }) {
-  const navigate = useNavigate()
   const { i18n } = useTranslation('institutions')
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const allYears = vendors.flatMap((v) => [v.first_contract_year, v.last_contract_year])
@@ -2025,11 +2024,17 @@ function LongestTenuredGantt({ vendors }: {
         return (
           <div
             key={v.vendor_id}
-            className="flex items-center gap-2 group cursor-pointer"
-            onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+            className="flex items-center gap-2 group"
           >
-            <div className="w-[140px] flex-shrink-0 truncate text-[10px] text-text-secondary group-hover:text-accent transition-colors pr-2 text-right" title={v.vendor_name}>
-              {v.vendor_name.length > 20 ? v.vendor_name.slice(0, 18) + '\u2026' : v.vendor_name}
+            <div className="w-[140px] flex-shrink-0 flex justify-end pr-2">
+              <EntityIdentityChip
+                type="vendor"
+                id={v.vendor_id}
+                name={v.vendor_name}
+                riskScore={v.avg_risk_score}
+                size="xs"
+                hideIcon
+              />
             </div>
             <div className="flex-1 relative">
               {(() => {

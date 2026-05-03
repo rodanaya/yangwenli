@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { X, FileText, AlertTriangle, Building2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { collusionApi, type SharedContract } from '@/api/client'
 import { formatMXN, formatNumber, formatCompactMXN } from '@/lib/utils'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 interface SharedContractsModalProps {
   vendorAId: number
@@ -265,12 +266,14 @@ export function SharedContractsModal({
 
                       {/* Proveedor */}
                       <td className="px-4 py-2.5 max-w-[180px]">
-                        <span
-                          className="text-text-secondary font-medium truncate block"
-                          title={c.vendor_name}
-                        >
-                          {truncateName(c.vendor_name, 26)}
-                        </span>
+                        <EntityIdentityChip
+                          type="vendor"
+                          id={c.vendor_id}
+                          name={c.vendor_name}
+                          riskScore={c.risk_score}
+                          size="xs"
+                          hideIcon
+                        />
                         {c.sector_name && (
                           <span className="text-[10px] font-mono text-text-muted">{c.sector_name}</span>
                         )}

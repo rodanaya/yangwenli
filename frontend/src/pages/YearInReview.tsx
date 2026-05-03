@@ -24,6 +24,7 @@ import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { analysisApi, vendorApi, contractApi } from '@/api/client'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type {
   YearOverYearChange,
   SectorYearItem,
@@ -698,12 +699,12 @@ function TopVendorsTable({
           const level = getRiskLevel(score)
           const riskColor = getRiskLevelColor(level)
           return (
-            <motion.button
+            <motion.div
               key={v.vendor_id}
               variants={staggerItem}
               onClick={() => onVendorClick(v.vendor_id)}
               className={cn(
-                'w-full grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 items-center px-3 py-3 text-left transition-colors rounded',
+                'w-full grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 items-center px-3 py-3 text-left transition-colors rounded cursor-pointer',
                 'hover:bg-card-hover/40',
                 rank === 1 && 'bg-red-500/5',
               )}
@@ -719,9 +720,14 @@ function TopVendorsTable({
               >
                 {rank}
               </span>
-              <span className="text-sm text-text-primary truncate font-medium">
-                {v.vendor_name}
-              </span>
+              <EntityIdentityChip
+                type="vendor"
+                id={v.vendor_id}
+                name={v.vendor_name}
+                riskScore={v.avg_risk_score}
+                size="xs"
+                hideIcon
+              />
               <span className="text-sm font-mono text-text-secondary text-right tabular-nums">
                 {formatCompactMXN(v.metric_value)}
               </span>
@@ -744,7 +750,7 @@ function TopVendorsTable({
                   <span className="text-[10px] font-mono text-text-muted/50">—</span>
                 )}
               </span>
-            </motion.button>
+            </motion.div>
           )
         })}
       </motion.div>
@@ -829,9 +835,20 @@ function NotableRiskContracts({
                 </p>
                 <div className="flex items-center gap-3 flex-wrap text-[11px] font-mono text-text-muted">
                   {c.vendor_name && (
-                    <span className="truncate max-w-[240px]">
+                    <span className="truncate max-w-[240px] inline-flex items-center gap-1">
                       <span className="text-text-muted/60">{t('notableRisks.vendor')}:</span>{' '}
-                      <span className="text-text-secondary">{c.vendor_name}</span>
+                      {c.vendor_id ? (
+                        <EntityIdentityChip
+                          type="vendor"
+                          id={c.vendor_id}
+                          name={c.vendor_name}
+                          riskScore={c.risk_score}
+                          size="xs"
+                          hideIcon
+                        />
+                      ) : (
+                        <span className="text-text-secondary">{c.vendor_name}</span>
+                      )}
                     </span>
                   )}
                   {c.institution_name && (
