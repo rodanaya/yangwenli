@@ -203,19 +203,16 @@ export default function ContractDetail() {
           )}
           <span className="text-text-primary shrink-0">→</span>
           {contract.institution_id ? (
-            <Link
-              to={`/institutions/${contract.institution_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary hover:border-border hover:bg-background/80 transition-colors max-w-full min-w-0"
-              title={toTitleCase(contract.institution_name || '')}
-            >
-              <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
-              <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-text-muted shrink-0" />
-            </Link>
+            <EntityIdentityChip
+              type="institution"
+              id={contract.institution_id}
+              name={contract.institution_name || '-'}
+              size="sm"
+            />
           ) : (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
               <Building2 className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || 'Unknown institution')}</span>
+              <span className="truncate max-w-[260px] md:max-w-[360px]">{contract.institution_name || 'Unknown institution'}</span>
             </span>
           )}
         </div>
@@ -606,23 +603,20 @@ export default function ContractDetail() {
                 </div>
               )}
               {contract.institution_id && (
-                <Link
-                  to={`/institutions/${contract.institution_id}`}
-                  className="flex items-center justify-between group py-2 border-b border-border last:border-b-0"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-text-muted uppercase tracking-[0.15em]">
-                        Institution
-                      </p>
-                      <p className="text-xs text-text-secondary truncate group-hover:text-text-primary">
-                        {toTitleCase(contract.institution_name || '-')}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
+                  <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
+                      Institution
+                    </p>
+                    <EntityIdentityChip
+                      type="institution"
+                      id={contract.institution_id}
+                      name={contract.institution_name || '-'}
+                      size="xs"
+                    />
                   </div>
-                  <ChevronRight className="h-3 w-3 text-text-muted group-hover:text-text-secondary shrink-0 ml-2" />
-                </Link>
+                </div>
               )}
               {contract.vendor_id && (
                 <Link

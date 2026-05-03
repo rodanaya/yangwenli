@@ -1416,17 +1416,17 @@ function ContractRow({
       {/* Institution */}
       <td className="px-3 py-2 max-w-[180px]">
         {contract.institution_id ? (
-          <Link
-            to={`/institutions/${contract.institution_id}`}
-            className="text-xs text-text-muted hover:text-accent transition-colors block truncate"
-            title={toTitleCase(contract.institution_name || 'Unknown')}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {toTitleCase(contract.institution_name || 'Unknown')}
-          </Link>
+          <div onClick={(e) => e.stopPropagation()}>
+            <EntityIdentityChip
+              type="institution"
+              id={contract.institution_id}
+              name={contract.institution_name || `Inst #${contract.institution_id}`}
+              size="xs"
+            />
+          </div>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.institution_name || ''}>
-            {contract.institution_name ? toTitleCase(contract.institution_name) : '—'}
+            {contract.institution_name || '—'}
           </span>
         )}
       </td>
@@ -1603,14 +1603,14 @@ function ContractRow({
           <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || `Vendor #${contract.vendor_id}`} size="sm" />
         )}
         {contract.institution_id && (
-          <Link
-            to={`/institutions/${contract.institution_id}`}
-            className="text-xs text-accent hover:underline flex items-center gap-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3 w-3" />
-            {contract.institution_name ? toTitleCase(contract.institution_name) : `Inst #${contract.institution_id}`}
-          </Link>
+          <div onClick={(e) => e.stopPropagation()}>
+            <EntityIdentityChip
+              type="institution"
+              id={contract.institution_id}
+              name={contract.institution_name || `Inst #${contract.institution_id}`}
+              size="xs"
+            />
+          </div>
         )}
         {contract.contract_number && (
           <a

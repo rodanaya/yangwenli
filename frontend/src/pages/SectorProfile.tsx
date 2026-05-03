@@ -181,22 +181,21 @@ function InstitutionList({
           RISK_COLORS.low
 
         return (
-          <Link
+          <div
             key={i}
-            to={`/institutions/${f.source_id}`}
-            className="group block rounded-lg px-3 py-2 hover:bg-background-elevated transition-all"
+            className="rounded-lg px-3 py-2 hover:bg-background-elevated transition-all"
           >
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
                   #{i + 1}
                 </span>
-                <span
-                  className="text-xs font-medium text-text-secondary group-hover:text-accent transition-colors truncate"
-                  title={toTitleCase(f.source_name)}
-                >
-                  {toTitleCase(f.source_name)}
-                </span>
+                <EntityIdentityChip
+                  type="institution"
+                  id={f.source_id}
+                  name={f.source_name}
+                  size="xs"
+                />
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
@@ -210,10 +209,6 @@ function InstitutionList({
                     {Math.round(f.avg_risk * 100)}%
                   </span>
                 )}
-                <ExternalLink
-                  className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-hidden="true"
-                />
               </div>
             </div>
             <div className="ml-6">
@@ -234,7 +229,7 @@ function InstitutionList({
                 )
               })()}
             </div>
-          </Link>
+          </div>
         )
       })}
     </div>

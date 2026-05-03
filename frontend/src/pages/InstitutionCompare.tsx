@@ -259,13 +259,14 @@ function InstitutionPreviewCard({
           </p>
         </div>
       </div>
-      <Link
-        to={`/institutions/${institution.id}`}
-        className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
-        aria-label={isEsCard ? `Ver perfil completo de ${institution.name}` : `View full profile for ${institution.name}`}
-      >
-        {isEsCard ? 'Ver perfil completo' : 'View full profile'}
-      </Link>
+      <div className="mt-3">
+        <EntityIdentityChip
+          type="institution"
+          id={institution.id}
+          name={institution.name}
+          size="xs"
+        />
+      </div>
     </div>
   )
 }
