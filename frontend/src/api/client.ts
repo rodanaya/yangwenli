@@ -2390,6 +2390,10 @@ export interface AriaMemoResponse {
   memo_text: string
   generated_at: string
   model_used: string | null
+  /** S.3 provenance classification: 'llm_narrative' | 'template' | 'stub' | 'duplicate' */
+  memo_type?: string | null
+  created_at?: string | null
+  generated_by?: string | null
 }
 
 export interface AriaMemoListResponse {

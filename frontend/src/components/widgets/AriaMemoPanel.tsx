@@ -222,7 +222,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
   // Provenance — prefer the canonical memo_type column from S.3 classification,
   // fall back to text heuristic if API doesn't return it (e.g. older deploys).
   const memoText = memo?.memo_text ?? ''
-  const memoType = (memo as { memo_type?: string } | null | undefined)?.memo_type
+  const memoType = memo?.memo_type
   const isTemplated = memoType === 'template' || memoType === 'duplicate' || isTemplatedMemo(memoText)
   const hasStaleScore = hasStaleModelReference(memoText)
 
@@ -255,10 +255,26 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
           </span>
           <span className="text-[10px] text-text-muted">Generado por IA</span>
           {effectiveTier != null && <TierBadge tier={effectiveTier} />}
+          {/* S.3 provenance badge */}
+          {memoType === 'llm_narrative' && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              LLM
+            </span>
+          )}
+          {(memoType === 'template' || memoType === 'duplicate') && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-medium/10 text-risk-medium border border-risk-medium/20">
+              PLANTILLA
+            </span>
+          )}
+          {memoType === 'stub' && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-border/40 text-text-muted border border-border">
+              STUB
+            </span>
+          )}
         </div>
-        {memo?.generated_at && (
+        {(memo?.generated_at ?? memo?.created_at) && (
           <span className="text-[10px] text-text-muted font-mono">
-            {new Date(memo.generated_at).toLocaleDateString('es-MX', {
+            {new Date((memo.generated_at ?? memo.created_at)!).toLocaleDateString('es-MX', {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
