@@ -537,6 +537,31 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             </span>
           )}
 
+          {/* Top institution — institutional capture indicator (S.1 backfill) */}
+          {item.top_institution && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1',
+                (item.top_institution_ratio ?? 0) >= 0.6
+                  ? 'text-risk-high'
+                  : 'text-text-muted'
+              )}
+              title={
+                item.top_institution_ratio != null
+                  ? `${isEs ? 'Institución principal' : 'Top institution'}: ${item.top_institution} · ${(item.top_institution_ratio * 100).toFixed(0)}%`
+                  : item.top_institution
+              }
+            >
+              <span className="text-text-muted/50">▸</span>
+              <span className="uppercase tracking-[0.04em] truncate max-w-[100px]">{item.top_institution}</span>
+              {item.top_institution_ratio != null && item.top_institution_ratio >= 0.3 && (
+                <span className="tabular-nums opacity-70">
+                  {(item.top_institution_ratio * 100).toFixed(0)}%
+                </span>
+              )}
+            </span>
+          )}
+
           {/* Pattern — full label inline (was: just "P5") */}
           {patternKey && patternMeta && (
             <span className={cn('inline-flex items-center gap-1', patternMeta.text)}>
