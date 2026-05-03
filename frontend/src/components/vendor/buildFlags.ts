@@ -52,6 +52,7 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
   // ─── Ground truth (confirmed cases from model training) ────────────────
   if (groundTruthStatus?.is_known_bad) {
     const caseCount = groundTruthStatus.cases?.length ?? 0
+    const firstSlug = groundTruthStatus.cases?.[0]?.scandal_slug
     flags.push({
       key: 'gt-confirmed',
       severity: 'critical',
@@ -60,6 +61,8 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
         caseCount > 0
           ? t('vendorFlags.groundTruth.detail', { n: caseCount })
           : undefined,
+      // § 7 dossier spec: GT case flag must be clickable → /cases/:slug
+      linkTo: firstSlug ? `/cases/${firstSlug}` : undefined,
     })
   }
 

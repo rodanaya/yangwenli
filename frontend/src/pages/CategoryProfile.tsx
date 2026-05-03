@@ -1152,8 +1152,8 @@ export default function CategoryProfile() {
                           {/* Mean diamond */}
                           {xMean !== null && (
                             <div
-                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rotate-45" style={{ backgroundColor: '#f59e0b' }}
-                              style={{ left: `calc(${xMean}% - 4px)` }}
+                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rotate-45"
+                              style={{ backgroundColor: '#f59e0b', left: `calc(${xMean}% - 4px)` }}
                             />
                           )}
                           {/* Labels */}
