@@ -298,12 +298,7 @@ function ExtremeCaseCard({
           <ExternalLink className="w-3 h-3" />
         </Link>
         {contract.vendor_id && (
-          <Link
-            to={`/vendors/${contract.vendor_id}`}
-            className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-secondary transition-colors"
-          >
-            {t('vendorProfile')}
-          </Link>
+          <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
         )}
       </div>
     </article>

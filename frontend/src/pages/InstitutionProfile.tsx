@@ -72,6 +72,7 @@ import {
   type ComposedLayer,
 } from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
@@ -1809,11 +1810,11 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
         const riskLvl = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : null
         const riskClr = riskLvl ? RISK_COLORS[riskLvl] : null
         return (
-          <Link key={v.vendor_id} to={`/vendors/${v.vendor_id}`} className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-background-elevated/50 transition-colors">
+          <div key={v.vendor_id} className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-background-elevated/50 transition-colors">
             <span className="text-xs font-mono text-text-muted w-4 text-right flex-shrink-0">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{formatVendorName(v.vendor_name, 40)}</span>
+                <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="sm" />
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs font-mono text-text-muted">{formatCompactMXN(v.total_value_mxn)}</span>
                   <span className="text-xs font-mono text-text-muted w-8 text-right">{pct.toFixed(0)}%</span>
@@ -1840,7 +1841,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                 )
               })()}
             </div>
-          </Link>
+          </div>
         )
       })}
       <div className="pt-2 text-xs text-text-muted text-right font-mono">
@@ -1882,9 +1883,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
           return (
             <tr key={v.vendor_id}>
               <td className="pr-2 py-0.5">
-                <Link to={`/vendors/${v.vendor_id}`} className="text-[10px] text-text-secondary hover:text-accent truncate block max-w-[100px]" title={v.vendor_name}>
-                  {v.vendor_name.length > 16 ? v.vendor_name.slice(0, 16) + '\u2026' : v.vendor_name}
-                </Link>
+                <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
               </td>
               {displayYears.map((yr) => {
                 const cell = yearMap.get(yr)

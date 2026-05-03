@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { Link } from 'react-router-dom'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
@@ -98,13 +99,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <InfoRow icon={User} label={t('detail.vendor')}>
                     {contract.vendor_id ? (
-                      <Link
-                        to={`/vendors/${contract.vendor_id}`}
-                        className="text-accent hover:underline"
-                        onClick={() => onOpenChange(false)}
-                      >
-                        {toTitleCase(contract.vendor_name || '-')}
-                      </Link>
+                      <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || '-'} size="sm" />
                     ) : (
                       <span>{toTitleCase(contract.vendor_name || '-')}</span>
                     )}

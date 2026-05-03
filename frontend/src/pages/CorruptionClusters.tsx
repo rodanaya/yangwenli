@@ -21,7 +21,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { ArrowUpRight, AlertTriangle, ExternalLink } from 'lucide-react'
+import { ArrowUpRight, AlertTriangle } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { Act } from '@/components/layout/Act'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { networkApi, type PatternSpotlight } from '@/api/client'
@@ -874,10 +875,7 @@ function PatternVendorRow({
   rank: number
 }) {
   return (
-    <Link
-      to={`/vendors/${vendor.vendor_id}`}
-      className="group flex items-center gap-3 rounded-sm px-3 py-2 hover:bg-background-elevated transition-colors"
-    >
+    <div className="flex items-center gap-3 rounded-sm px-3 py-2 hover:bg-background-elevated transition-colors">
       <span
         className="flex-shrink-0 text-[10px] font-mono font-black w-4 text-right tabular-nums"
         style={{ color }}
@@ -886,8 +884,8 @@ function PatternVendorRow({
         {rank}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[12px] text-text-primary font-semibold truncate leading-tight group-hover:text-text-primary">
-          {vendor.vendor_name}
+        <div className="leading-tight">
+          <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name} size="sm" />
         </div>
         <div className="text-[10px] text-text-muted/60 truncate mt-0.5">
           {vendor.primary_sector_name ?? '—'}
@@ -914,8 +912,7 @@ function PatternVendorRow({
           </div>
         </div>
       )}
-      <ExternalLink className="h-3 w-3 text-text-muted/30 flex-shrink-0 group-hover:text-text-muted/70 transition-colors" aria-hidden />
-    </Link>
+    </div>
   )
 }
 

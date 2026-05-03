@@ -68,6 +68,7 @@ import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/E
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { Act } from '@/components/layout/Act'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // =============================================================================
 // Configuration
@@ -1403,15 +1404,7 @@ function ContractRow({
             >
               {toTitleCase(contract.vendor_name || 'Unknown')}
             </button>
-            <Link
-              to={`/vendors/${contract.vendor_id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-text-muted hover:text-accent transition-colors flex-shrink-0"
-              title="Open vendor profile"
-              aria-label="Open vendor profile page"
-            >
-              <ExternalLink className="h-3 w-3" />
-            </Link>
+            <EntityIdentityChip type="vendor" id={contract.vendor_id!} name={contract.vendor_name || ''} size="xs" />
           </div>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
@@ -1607,14 +1600,7 @@ function ContractRow({
 
       <div className="flex items-center gap-3 pt-2 border-t border-border/30">
         {contract.vendor_id && (
-          <Link
-            to={`/vendors/${contract.vendor_id}`}
-            className="text-xs text-accent hover:underline flex items-center gap-1"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ExternalLink className="h-3 w-3" />
-            {contract.vendor_name ? toTitleCase(contract.vendor_name) : `Vendor #${contract.vendor_id}`}
-          </Link>
+          <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name || `Vendor #${contract.vendor_id}`} size="sm" />
         )}
         {contract.institution_id && (
           <Link

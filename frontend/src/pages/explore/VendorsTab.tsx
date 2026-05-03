@@ -909,13 +909,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
 
       {/* Arrow */}
       <td className="px-2 py-2 text-right">
-        <Link
-          to={`/vendors/${vendor.id}`}
-          className="text-text-muted group-hover:text-accent transition-colors"
-          aria-label={`View ${toTitleCase(vendor.name)} details`}
-        >
-          <ExternalLink className="h-3 w-3" />
-        </Link>
+        <EntityIdentityChip type="vendor" id={vendor.id} name={vendor.name} size="xs" />
       </td>
     </tr>
   )
