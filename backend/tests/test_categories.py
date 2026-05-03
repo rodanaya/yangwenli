@@ -56,3 +56,82 @@ class TestCategoryTrends:
         r = client.get(f"{base_url}/categories/trends")
         data = r.json()
         assert isinstance(data, (list, dict))
+
+
+class TestCategoryCompetition:
+
+    def test_returns_200_or_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/competition")
+        assert r.status_code in (200, 404)
+
+    def test_shape(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/competition")
+        if r.status_code == 200:
+            data = r.json()
+            assert "procedure_breakdown" in data
+            assert "yearly_trend" in data
+            assert isinstance(data["procedure_breakdown"], list)
+
+    def test_invalid_returns_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/9999999/competition")
+        assert r.status_code == 404
+
+
+class TestCategorySeasonality:
+
+    def test_returns_200_or_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/seasonality")
+        assert r.status_code in (200, 404)
+
+    def test_shape(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/seasonality")
+        if r.status_code == 200:
+            data = r.json()
+            assert "monthly" in data
+            assert isinstance(data["monthly"], list)
+            assert "december_index" in data
+
+    def test_invalid_returns_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/9999999/seasonality")
+        assert r.status_code == 404
+
+
+class TestCategoryPatterns:
+
+    def test_returns_200_or_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/patterns")
+        assert r.status_code in (200, 404)
+
+    def test_shape(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/patterns")
+        if r.status_code == 200:
+            data = r.json()
+            assert "patterns" in data
+            assert "tier_distribution" in data
+            assert isinstance(data["patterns"], list)
+
+    def test_invalid_returns_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/9999999/patterns")
+        assert r.status_code == 404
+
+
+class TestCategoryPriceDistribution:
+
+    def test_returns_200_or_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/price-distribution")
+        assert r.status_code in (200, 404)
+
+    def test_shape(self, client, base_url):
+        r = client.get(f"{base_url}/categories/1/price-distribution")
+        if r.status_code == 200:
+            data = r.json()
+            assert "n" in data
+            assert "p50" in data
+            assert "mean" in data
+            assert "mean_median_ratio" in data
+            assert "yearly_trend" in data
+            assert isinstance(data["yearly_trend"], list)
+
+    def test_invalid_returns_404(self, client, base_url):
+        r = client.get(f"{base_url}/categories/9999999/price-distribution")
+        assert r.status_code == 404
