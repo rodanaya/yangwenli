@@ -1919,6 +1919,20 @@ export interface VendorGroundTruthStatus {
   cases: VendorGroundTruthCaseInfo[]
 }
 
+export interface PeerComparisonMetric {
+  metric: string
+  value: number | null
+  peer_median: number | null
+  percentile: number | null
+  label_en: string
+}
+
+export interface VendorPeerComparisonResponse {
+  vendor_id: number
+  sector_id: number | null
+  metrics: PeerComparisonMetric[]
+}
+
 export interface VendorWaterfallContribution {
   feature: string
   z_score: number

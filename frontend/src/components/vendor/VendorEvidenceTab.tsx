@@ -11,6 +11,7 @@ import type {
   VendorGroundTruthStatus,
   VendorSHAPResponse,
   VendorWaterfallContribution,
+  VendorPeerComparisonResponse,
   AriaQueueItem,
 } from '@/api/types'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
@@ -28,6 +29,7 @@ interface VendorEvidenceTabProps {
   shap?: VendorSHAPResponse | null
   aria?: AriaQueueItem | null
   groundTruth?: VendorGroundTruthStatus | null
+  peerComparison?: VendorPeerComparisonResponse | null
 }
 
 export function VendorEvidenceTab({
@@ -37,6 +39,7 @@ export function VendorEvidenceTab({
   shap,
   aria,
   groundTruth,
+  peerComparison,
 }: VendorEvidenceTabProps) {
   const { t, i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
@@ -144,20 +147,73 @@ export function VendorEvidenceTab({
         </section>
       )}
 
-      {/* Peer comparison summary (percentile) */}
-      {vendor.sector_risk_percentile != null && (
+      {/* § 9 La Comparación — peer metrics vs sector median */}
+      {peerComparison && peerComparison.metrics.length > 0 && (
         <section
           aria-labelledby="peer-title"
           className="pt-6 border-t border-border/40"
         >
           <SectionTitle id="peer-title">
-            {isEs ? 'Posición en el sector' : 'Position within sector'}
+            {isEs ? '§ 9 · La Comparación (sector)' : '§ 9 · Sector Comparison'}
           </SectionTitle>
-          <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+          <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
-              ? `Este proveedor está en el percentil ${(vendor.sector_risk_percentile * 100).toFixed(0)} de su sector (${vendor.primary_sector_name ?? 'desconocido'}).`
-              : `This vendor is in the ${(vendor.sector_risk_percentile * 100).toFixed(0)}th percentile of its sector (${vendor.primary_sector_name ?? 'unknown'}).`}
+              ? `Métricas clave del proveedor frente a la mediana de ${vendor.primary_sector_name ?? 'su sector'}.`
+              : `Key metrics versus the sector median for ${vendor.primary_sector_name ?? 'this sector'}.`}
           </p>
+          <div className="space-y-3">
+            {peerComparison.metrics
+              .filter((m) => m.value != null && m.peer_median != null)
+              .map((m) => {
+                // For risk score and rate metrics, higher = worse (red).
+                // For total_contracts / total_value, higher is neutral.
+                const isRiskMetric = m.metric === 'avg_risk_score' || m.metric === 'direct_award_pct' || m.metric === 'single_bid_pct'
+                const pct = m.percentile ?? 0
+                const dotColor = isRiskMetric
+                  ? pct >= 75 ? 'var(--color-risk-critical)' : pct >= 50 ? 'var(--color-risk-high)' : 'var(--color-text-muted)'
+                  : 'var(--color-accent)'
+                const label = (() => {
+                  switch (m.metric) {
+                    case 'avg_risk_score': return isEs ? 'Puntuación de riesgo' : 'Risk score'
+                    case 'total_contracts': return isEs ? 'Contratos totales' : 'Total contracts'
+                    case 'total_value_mxn': return isEs ? 'Valor total (MXN)' : 'Total value (MXN)'
+                    case 'direct_award_pct': return isEs ? 'Adjudicación directa' : 'Direct award rate'
+                    case 'single_bid_pct': return isEs ? 'Licitación sin competencia' : 'Single-bid rate'
+                    default: return m.label_en
+                  }
+                })()
+                const readout = (() => {
+                  const v = m.value ?? 0
+                  const med = m.peer_median ?? 0
+                  if (m.metric === 'total_value_mxn') {
+                    const fmtV = v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `$${(v / 1e6).toFixed(0)}M` : `$${v.toFixed(0)}`
+                    const fmtM = med >= 1e9 ? `$${(med / 1e9).toFixed(1)}B` : med >= 1e6 ? `$${(med / 1e6).toFixed(0)}M` : `$${med.toFixed(0)}`
+                    return `${fmtV} vs ${fmtM} median`
+                  }
+                  if (m.metric === 'total_contracts') {
+                    return `${v.toFixed(0)} vs ${med.toFixed(0)} median`
+                  }
+                  return `${(v * 100).toFixed(0)}% vs ${(med * 100).toFixed(0)}% median`
+                })()
+                return (
+                  <DotBarRow
+                    key={m.metric}
+                    label={label}
+                    readout={readout}
+                    value={pct}
+                    max={100}
+                    color={dotColor}
+                  />
+                )
+              })}
+          </div>
+          {vendor.sector_risk_percentile != null && (
+            <p className="text-[11px] text-text-muted font-mono mt-3">
+              {isEs
+                ? `Percentil ${vendor.sector_risk_percentile} · riesgo vs. ${vendor.primary_sector_name ?? 'sector'}`
+                : `${vendor.sector_risk_percentile}th percentile · risk vs. ${vendor.primary_sector_name ?? 'sector'}`}
+            </p>
+          )}
         </section>
       )}
 

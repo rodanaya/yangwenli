@@ -267,6 +267,7 @@ export function VendorProfile() {
             shap={data.shap.data}
             aria={data.aria.data}
             groundTruth={data.groundTruthStatus.data}
+            peerComparison={data.peerComparison.data}
           />
         </TabPanel>
         <TabPanel tabKey="activity">

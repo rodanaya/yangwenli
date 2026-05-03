@@ -569,7 +569,7 @@ export const vendorApi = {
     return Array.isArray(data) ? data : []
   },
 
-  async getPeerComparison(vendorId: number): Promise<unknown> {
+  async getPeerComparison(vendorId: number): Promise<import('@/api/types').VendorPeerComparisonResponse> {
     const { data } = await api.get(`/vendors/${vendorId}/peer-comparison`)
     return data
   },
