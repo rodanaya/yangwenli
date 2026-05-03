@@ -11,6 +11,7 @@ import type {
   CoBiddersResponse,
   VendorDetailResponse,
   VendorExternalFlags,
+  VendorLinkedScandalsResponse,
   VendorSHAPResponse,
 } from '@/api/types'
 import { DotBar } from '@/components/ui/DotBar'
@@ -51,18 +52,10 @@ const FACTOR_LABELS_EN: Record<string, string> = {
   same_day_count: 'Same-day contracts',
 }
 
-interface LinkedScandalItem {
-  scandal_slug: string
-  scandal_title?: string
-  case_id?: number
-  case_name?: string
-  fraud_type?: string
-}
-
 interface VendorNetworkTabProps {
   vendor: VendorDetailResponse
   aria?: AriaQueueItem | null
-  linkedScandals?: { scandals?: LinkedScandalItem[]; cases?: LinkedScandalItem[] } | null
+  linkedScandals?: VendorLinkedScandalsResponse | null
   coBidders?: CoBiddersResponse | null
   externalFlags?: VendorExternalFlags | null
   shap?: VendorSHAPResponse | null

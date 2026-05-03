@@ -574,7 +574,7 @@ export const vendorApi = {
     return data
   },
 
-  async getLinkedScandals(vendorId: number): Promise<unknown> {
+  async getLinkedScandals(vendorId: number): Promise<import('@/api/types').VendorLinkedScandalsResponse> {
     const { data } = await api.get(`/vendors/${vendorId}/linked-scandals`)
     return data
   },

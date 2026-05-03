@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 
 import { vendorApi } from '@/api/client'
-import type { ContractListItem } from '@/api/types'
+import type { ContractListItem, VendorLinkedScandalsResponse } from '@/api/types'
 
 import { useVendorData, type VendorTabKey } from '@/hooks/useVendorData'
 import { buildVendorFlags } from '@/components/vendor/buildFlags'
@@ -286,10 +286,7 @@ export function VendorProfile() {
           <VendorNetworkTab
             vendor={vendor}
             aria={data.aria.data}
-            linkedScandals={data.linkedScandals.data as
-              | { scandals?: Array<{ scandal_slug: string; scandal_title?: string; case_id?: number; case_name?: string; fraud_type?: string }>; cases?: Array<{ scandal_slug: string; scandal_title?: string; case_id?: number; case_name?: string; fraud_type?: string }> }
-              | null
-              | undefined}
+            linkedScandals={data.linkedScandals.data as VendorLinkedScandalsResponse | null | undefined}
             coBidders={data.coBidders.data}
             externalFlags={data.externalFlags.data}
             shap={data.shap.data}

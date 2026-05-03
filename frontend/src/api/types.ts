@@ -1919,6 +1919,19 @@ export interface VendorGroundTruthStatus {
   cases: VendorGroundTruthCaseInfo[]
 }
 
+export interface LinkedScandalItem {
+  scandal_slug: string
+  scandal_title?: string
+  case_id?: number
+  case_name?: string
+  fraud_type?: string
+}
+
+export interface VendorLinkedScandalsResponse {
+  scandals?: LinkedScandalItem[]
+  cases?: LinkedScandalItem[]
+}
+
 export interface PeerComparisonMetric {
   metric: string
   value: number | null
