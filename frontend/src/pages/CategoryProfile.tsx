@@ -859,9 +859,7 @@ export default function CategoryProfile() {
                           <div className="flex items-center gap-1.5 mb-1">
                             <EntityIdentityChip type="vendor" id={pair.vendor_id} name={pair.vendor_name} size="xs" hideIcon />
                             <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
-                            <span className="text-xs text-text-secondary truncate max-w-[160px]">
-                              {truncate(pair.institution_name, 28)}
-                            </span>
+                            <EntityIdentityChip type="institution" id={pair.institution_id} name={pair.institution_name} size="xs" hideIcon />
                           </div>
                           {(() => {
                             const pct = Math.min(pair.total_value / maxVal, 1)
