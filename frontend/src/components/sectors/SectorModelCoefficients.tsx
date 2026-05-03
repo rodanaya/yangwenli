@@ -317,7 +317,7 @@ function Header({ sectorName }: { sectorName: string }) {
         Factores de riesgo — {sectorName}
       </h3>
       <p className="mt-1 text-[10px] text-text-muted">
-        Coeficientes del modelo logístico v0.6.5
+        Coeficientes del modelo logístico v0.8.5
       </p>
     </header>
   )
