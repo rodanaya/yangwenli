@@ -2149,6 +2149,28 @@ export const categoriesApi = {
     }
   },
 
+  getPatterns: async (categoryId: number) => {
+    const { data } = await api.get(`/categories/${categoryId}/patterns`)
+    return data as {
+      category_id: number
+      category_name: string
+      total_vendors: number
+      vendors_in_aria: number
+      dominant_pattern: string | null
+      patterns: {
+        pattern: string
+        label_es: string
+        label_en: string
+        color: string
+        vendor_count: number
+        pct_of_aria: number
+        avg_confidence: number
+        high_tier_count: number
+      }[]
+      tier_distribution: { tier: number; count: number }[]
+    }
+  },
+
   getSeasonality: async (categoryId: number) => {
     const { data } = await api.get(`/categories/${categoryId}/seasonality`)
     return data as {

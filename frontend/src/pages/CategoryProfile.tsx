@@ -377,6 +377,13 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  const { data: patternsData } = useQuery({
+    queryKey: ['categories', 'patterns', categoryId],
+    queryFn: () => categoriesApi.getPatterns(categoryId),
+    enabled: !isNaN(categoryId),
+    staleTime: 10 * 60 * 1000,
+  })
+
   // Derived data
   const category: CategoryStat | null = useMemo(() => {
     if (!summaryData?.data) return null
@@ -1355,6 +1362,110 @@ export default function CategoryProfile() {
                   )
                 })()}
 
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
+
+      {/* ================================================================= */}
+      {/* § 7 Los Patrones                                                 */}
+      {/* ================================================================= */}
+      {patternsData && patternsData.patterns.length > 0 && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const { patterns, tier_distribution, vendors_in_aria, total_vendors, dominant_pattern } = patternsData
+        const maxVendors = Math.max(...patterns.map(p => p.vendor_count), 1)
+        const t1 = tier_distribution.find(t => t.tier === 1)?.count ?? 0
+        const t2 = tier_distribution.find(t => t.tier === 2)?.count ?? 0
+        const highPriorityCount = t1 + t2
+
+        return (
+          <section className="pt-2">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                    {isEs ? '§ 7 · PATRONES' : '§ 7 · PATTERNS'}
+                  </span>
+                  {dominant_pattern && (
+                    <span
+                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      style={{
+                        color: patterns[0]?.color ?? '#94a3b8',
+                        backgroundColor: `${patterns[0]?.color ?? '#94a3b8'}18`,
+                        border: `1px solid ${patterns[0]?.color ?? '#94a3b8'}40`,
+                      }}
+                    >
+                      {dominant_pattern}
+                    </span>
+                  )}
+                </div>
+                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                  {isEs ? 'Los Patrones' : 'Fraud Patterns'}
+                </CardTitle>
+                <p className="text-sm text-text-secondary">
+                  {isEs
+                    ? `Qué patrones de fraude detecta el modelo ARIA en los ${vendors_in_aria.toLocaleString('es-MX')} proveedores activos en esta categoría.`
+                    : `What fraud patterns the ARIA model detects across the ${vendors_in_aria.toLocaleString('en-US')} vendors active in this category.`}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+
+                {/* T1/T2 KPI */}
+                {highPriorityCount > 0 && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-sm border border-risk-high/30 bg-risk-high/5">
+                    <div
+                      className="text-xl font-bold tabular-nums"
+                      style={{ fontFamily: 'var(--font-serif)', color: '#f87171' }}
+                    >
+                      {highPriorityCount.toLocaleString(isEs ? 'es-MX' : 'en-US')}
+                    </div>
+                    <div className="text-xs text-text-secondary">
+                      {isEs
+                        ? `proveedores T1/T2 (investigación prioritaria) de ${vendors_in_aria.toLocaleString('es-MX')} en ARIA`
+                        : `T1/T2 vendors (priority investigation) out of ${vendors_in_aria.toLocaleString('en-US')} in ARIA`}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pattern bars */}
+                <div className="space-y-2">
+                  {patterns.slice(0, 6).map(p => {
+                    const barW = (p.vendor_count / maxVendors) * 100
+                    return (
+                      <div key={p.pattern}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-sm"
+                              style={{ color: p.color, backgroundColor: `${p.color}18`, border: `1px solid ${p.color}40` }}
+                            >
+                              {p.pattern}
+                            </span>
+                            <span className="text-[11px] text-text-secondary">
+                              {isEs ? p.label_es : p.label_en}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono tabular-nums text-text-muted">
+                            {p.vendor_count.toLocaleString(isEs ? 'es-MX' : 'en-US')}
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full bg-border/30 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${barW}%`, backgroundColor: p.color }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="text-[10px] text-text-muted border-t border-border/30 pt-2">
+                  {isEs
+                    ? `${vendors_in_aria.toLocaleString('es-MX')} de ${total_vendors.toLocaleString('es-MX')} proveedores (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) en la cola ARIA`
+                    : `${vendors_in_aria.toLocaleString('en-US')} of ${total_vendors.toLocaleString('en-US')} vendors (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) in the ARIA queue`}
+                </div>
               </CardContent>
             </Card>
           </section>

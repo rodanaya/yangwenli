@@ -396,6 +396,101 @@ def get_categories_sexenio():
     }
 
 
+@router.get("/{category_id}/patterns")
+def get_category_patterns(category_id: int):
+    """ARIA fraud-pattern concentration for vendors active in this category."""
+    PATTERN_META = {
+        "P1": {"label_es": "Monopolio estructural", "label_en": "Structural monopoly",   "color": "#f87171"},
+        "P2": {"label_es": "Empresa fantasma",      "label_en": "Ghost company",         "color": "#fb923c"},
+        "P3": {"label_es": "Intermediario",         "label_en": "Intermediary",          "color": "#fbbf24"},
+        "P4": {"label_es": "Red coordinada",        "label_en": "Coordinated network",   "color": "#a78bfa"},
+        "P5": {"label_es": "Fraccionamiento",       "label_en": "Threshold splitting",   "color": "#60a5fa"},
+        "P6": {"label_es": "Captura institucional", "label_en": "Institutional capture", "color": "#34d399"},
+        "P7": {"label_es": "Patrón mixto",          "label_en": "Mixed pattern",         "color": "#94a3b8"},
+    }
+
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        # Total distinct vendors in this category
+        cur.execute("""
+            SELECT COUNT(DISTINCT vendor_id) AS total_vendors
+            FROM contracts WHERE category_id = ?
+        """, (category_id,))
+        total_vendors = cur.fetchone()["total_vendors"] or 1
+
+        # ARIA pattern distribution for those vendors
+        cur.execute("""
+            SELECT
+                aq.primary_pattern,
+                COUNT(DISTINCT aq.vendor_id)                          AS vendor_count,
+                AVG(COALESCE(aq.pattern_confidence, 0))               AS avg_confidence,
+                SUM(CASE WHEN aq.ips_tier IN (1,2) THEN 1 ELSE 0 END) AS high_tier_count
+            FROM aria_queue aq
+            WHERE aq.vendor_id IN (
+                SELECT DISTINCT vendor_id FROM contracts WHERE category_id = ?
+            )
+            AND aq.primary_pattern IS NOT NULL
+            GROUP BY aq.primary_pattern
+            ORDER BY vendor_count DESC
+        """, (category_id,))
+        pattern_rows = cur.fetchall()
+
+        # Tier distribution
+        cur.execute("""
+            SELECT aq.ips_tier, COUNT(*) AS cnt
+            FROM aria_queue aq
+            WHERE aq.vendor_id IN (
+                SELECT DISTINCT vendor_id FROM contracts WHERE category_id = ?
+            )
+            GROUP BY aq.ips_tier ORDER BY aq.ips_tier
+        """, (category_id,))
+        tier_rows = cur.fetchall()
+
+        # ARIA vendor count
+        cur.execute("""
+            SELECT COUNT(DISTINCT aq.vendor_id) AS in_aria
+            FROM aria_queue aq
+            WHERE aq.vendor_id IN (
+                SELECT DISTINCT vendor_id FROM contracts WHERE category_id = ?
+            )
+        """, (category_id,))
+        in_aria = cur.fetchone()["in_aria"] or 0
+
+    patterns = []
+    for r in pattern_rows:
+        code = r["primary_pattern"]
+        meta = PATTERN_META.get(code, {"label_es": code, "label_en": code, "color": "#94a3b8"})
+        patterns.append({
+            "pattern": code,
+            "label_es": meta["label_es"],
+            "label_en": meta["label_en"],
+            "color": meta["color"],
+            "vendor_count": r["vendor_count"],
+            "pct_of_aria": round(r["vendor_count"] * 100.0 / max(in_aria, 1), 1),
+            "avg_confidence": round(r["avg_confidence"] or 0, 2),
+            "high_tier_count": r["high_tier_count"],
+        })
+
+    tier_dist = [{"tier": r["ips_tier"], "count": r["cnt"]} for r in tier_rows]
+
+    dominant = patterns[0] if patterns else None
+
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "total_vendors": total_vendors,
+        "vendors_in_aria": in_aria,
+        "patterns": patterns,
+        "tier_distribution": tier_dist,
+        "dominant_pattern": dominant["pattern"] if dominant else None,
+    }
+
+
 @router.get("/{category_id}/seasonality")
 def get_category_seasonality(category_id: int):
     """Monthly spend distribution — surface the December rush pattern."""
