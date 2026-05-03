@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1409,
+    "case_id": "CASE-1409",
+    "case_name": "Ingenieria del Agua y Medio Ambiente Personnel Outsourcing Sector Mismatch",
+    "case_type": "intermediary",
+    "confidence_level": "medium",
+    "year_start": 2021,
+    "year_end": 2025,
+    "estimated_fraud_mxn": 328000000,
+    "notes": "S.C. named environmental engineering but contracts are 'Servicios Especializados de Personal' (labor outsourcing). Tiny activity 2015-2020 (~6M), then 2021 jumps to 31M, peaks 2025 at 148M. 100pct LP single-bid at FIRA, FEFA, NAFIN, port authorities, CIATEJ, CIMAT. Post-2021 outsourcing-reform disguised-name pattern. P5. Sector mismatch ambiente->labor leasing.",
+    "fraud_institution_ids": "190,4271,302,3712,1509",
+    "vendor_id": 150209,
+    "vendor_name": "Ingenieria del Agua y Medio Ambiente, S.C."
+  },
+  {
+    "id": 1410,
+    "case_id": "CASE-1410",
+    "case_name": "Supervision Tecnica del Norte IMP Vehicle Leasing Capture",
+    "case_type": "institutional_capture",
+    "confidence_level": "medium",
+    "year_start": 2021,
+    "year_end": 2025,
+    "estimated_fraud_mxn": 272000000,
+    "notes": "Vehicle leasing firm. 5 contracts at IMP (Instituto Mexicano del Petroleo) total 272M. 2021 LP single-bid 32M then 2025 LP single-bid 239M (7.5x escalation). 60pct DA at IMP (small renewals 90-152k). All other 56 contracts diversified across IMT (87.5pct DA), port authorities, CFE etc. P6 capture at IMP for vehicle leasing.",
+    "fraud_institution_ids": "250",
+    "vendor_id": 90457,
+    "vendor_name": "SUPERVISION TECNICA DEL NORTE SA DE CV"
+  }
+]
