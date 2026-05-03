@@ -63,8 +63,8 @@ export function VendorEvidenceTab({
       <AriaMemoPanel
         vendorId={Number(vendor.id)}
         vendorName={vendor.name}
-        tier={(vendor as { tier?: number; aria_tier?: number }).aria_tier ?? (vendor as { tier?: number }).tier}
-        isFalsePositive={Boolean((vendor as { is_false_positive?: boolean | number }).is_false_positive)}
+        tier={aria?.ips_tier ?? (vendor as { tier?: number; aria_tier?: number }).aria_tier ?? (vendor as { tier?: number }).tier}
+        isFalsePositive={Boolean(aria?.fp_structural_monopoly ?? (vendor as { is_false_positive?: boolean | number }).is_false_positive)}
         fpReason={(vendor as { fp_reason?: string }).fp_reason}
       />
 
