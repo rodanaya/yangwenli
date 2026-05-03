@@ -1251,7 +1251,14 @@ export function InstitutionProfile() {
                       return (
                         <div key={cat.category_id} className="flex items-center gap-2 text-xs py-1 border-b border-border/10 last:border-0">
                           <span className="font-mono text-text-muted w-10 shrink-0">{cat.code}</span>
-                          <span className="flex-1 text-text-primary truncate" title={cat.name_es || cat.name_en}>{cat.name_es || cat.name_en}</span>
+                          <div className="flex-1 min-w-0">
+                            <EntityIdentityChip
+                              type="category"
+                              id={cat.category_id}
+                              name={lang === 'en' ? (cat.name_en || cat.name_es) : (cat.name_es || cat.name_en)}
+                              size="xs"
+                            />
+                          </div>
                           <span className="text-text-secondary shrink-0">{formatCompactMXN(cat.total_value_mxn)}</span>
                           <span className="w-12 text-right shrink-0" style={{ color: riskCol }}>{(cat.avg_risk_score * 100).toFixed(0)}%</span>
                         </div>
