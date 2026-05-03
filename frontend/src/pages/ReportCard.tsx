@@ -333,7 +333,7 @@ function HeroImpactSection({
               cells.push(cells[cells.length - 1])
             }
             return (
-              <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+              <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
                 role="img" aria-label="Risk level distribution across all contracts">
                 {cells.map((c, k) => (
                   <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.9}>
@@ -612,7 +612,7 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
           cells.push(cells[cells.length - 1])
         }
         return (
-          <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none"
+          <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8}
             role="img" aria-label="Risk distribution by contract value">
             {cells.map((c, k) => (
               <circle key={k} cx={k * DG + DR} cy={4} r={DR} fill={c.color} fillOpacity={0.9}>

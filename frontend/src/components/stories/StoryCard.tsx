@@ -111,7 +111,7 @@ export function StoryCard(props: StoryCardProps) {
 
       {/* Lead stat */}
       <div className="mt-auto pt-2">
-        <div className="text-2xl font-black tracking-tight" style={{ color: accent }}>
+        <div className="text-2xl tabular-nums tracking-tight" style={{ color: accent, fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800, fontStyle: 'italic' }}>
           {parsed ? (
             <AnimatedNumber
               value={parsed.numeric}

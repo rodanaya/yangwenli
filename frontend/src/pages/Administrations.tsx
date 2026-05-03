@@ -31,6 +31,7 @@ import {
   Line,
 } from '@/components/charts'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { gradeToTierKey, TIER_STYLES } from '@/lib/tiers'
 import {
   EditorialLineChart,
   EditorialComposedChart,
@@ -2300,12 +2301,22 @@ function ProcurementGradeCard({ agg }: { agg: AdminAgg }) {
       </div>
       <div className="flex items-center gap-3">
         <div className="flex-shrink-0 text-center">
-          <div
-            className="text-6xl font-black leading-none"
-            style={{ color: gradeColor }}
-          >
-            {result.grade}
-          </div>
+          {(() => {
+            const tk = gradeToTierKey(result.grade)
+            const ts = tk ? TIER_STYLES[tk] : null
+            return ts ? (
+              <span
+                className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-bold font-mono uppercase tracking-wider border"
+                style={{ color: ts.color, backgroundColor: `${ts.color}18`, borderColor: `${ts.color}40` }}
+              >
+                {tk}
+              </span>
+            ) : (
+              <div className="text-4xl font-mono font-black leading-none" style={{ color: gradeColor }}>
+                {result.grade}
+              </div>
+            )
+          })()}
           <div className="text-[9px] font-mono text-text-muted mt-1">
             {result.score}/100
           </div>

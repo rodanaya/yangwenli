@@ -128,43 +128,85 @@ export function getLedeForVendor(ctx: LedeContext): string {
 }
 
 export function getLedeForCategory(ctx: LedeContext): string {
-  const parts: string[] = []
-  const name = ctx.category_name || 'Categoría'
+  const name = ctx.category_name_en || ctx.category_name || 'Categoría'
+
+  // Opening: value + contract count
+  let sentence = ''
   if (ctx.total_value_mxn && ctx.total_contracts) {
-    parts.push(`${formatCompactMXN(ctx.total_value_mxn)} en ${formatNumber(ctx.total_contracts)} contratos`)
+    sentence += `${name} concentra ${formatCompactMXN(ctx.total_value_mxn)} en ${formatNumber(ctx.total_contracts)} contratos federales`
+  } else {
+    sentence += name
   }
-  if (ctx.direct_award_pct != null) {
-    parts.push(`${fmtPct(ctx.direct_award_pct, 1)} adjudicación directa`)
-  }
+
+  // Market structure
   if (ctx.hhi != null) {
     const concentr = ctx.hhi > 0.25 ? 'oligopólico' : ctx.hhi > 0.10 ? 'concentrado' : 'competitivo'
-    parts.push(`Mercado ${concentr} (HHI ${ctx.hhi.toFixed(2)})`)
+    const vendorNote = ctx.unique_vendors ? ` (${formatNumber(ctx.unique_vendors)} proveedores)` : ''
+    sentence += `, en un mercado ${concentr}${vendorNote}`
+  } else if (ctx.unique_vendors != null) {
+    sentence += ` distribuidos entre ${formatNumber(ctx.unique_vendors)} proveedores`
   }
-  if (ctx.unique_vendors != null) {
-    parts.push(`${formatNumber(ctx.unique_vendors)} proveedores únicos`)
+  sentence += '.'
+
+  // Risk signal
+  const sentences: string[] = [sentence]
+  const da = ctx.direct_award_pct != null ? (ctx.direct_award_pct > 1.5 ? ctx.direct_award_pct : ctx.direct_award_pct * 100) : null
+  if (da != null && ctx.avg_risk_score != null) {
+    const daHigh = da > 60
+    const riskHigh = ctx.avg_risk_score >= 0.40
+    if (daHigh && riskHigh) {
+      sentences.push(`Con ${da.toFixed(0)}% de adjudicaciones directas y un indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)}, presenta señales de concentración relevantes para investigación.`)
+    } else if (daHigh) {
+      sentences.push(`El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal y merece seguimiento.`)
+    } else if (riskHigh) {
+      sentences.push(`El indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)} ubica esta categoría en alerta alta.`)
+    }
+  } else if (da != null && da > 60) {
+    sentences.push(`El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal.`)
   }
-  if (ctx.avg_risk_score != null) {
-    parts.push(`Indicador de riesgo promedio: ${ctx.avg_risk_score.toFixed(2)}`)
-  }
-  return `${name} — ${parts.join(' · ')}`
+  return sentences.join(' ')
 }
 
 export function getLedeForInstitution(ctx: LedeContext): string {
-  const parts: string[] = []
   const name = ctx.institution_name || 'Institución'
-  if (ctx.total_value_mxn) {
-    parts.push(`Gasto total: ${formatCompactMXN(ctx.total_value_mxn)}`)
+
+  // Opening: spending scale + span
+  let sentence = ''
+  if (ctx.total_value_mxn && ctx.total_contracts) {
+    sentence += `${name} ha contratado ${formatCompactMXN(ctx.total_value_mxn)} en ${formatNumber(ctx.total_contracts)} procedimientos`
+  } else if (ctx.total_value_mxn) {
+    sentence += `${name} registra un gasto contratado de ${formatCompactMXN(ctx.total_value_mxn)}`
+  } else {
+    return `${name} — datos insuficientes para síntesis editorial.`
   }
+
+  // Top category
   if (ctx.top_category_name) {
-    parts.push(`Top categoría: ${ctx.top_category_name}`)
+    sentence += `, concentrando su mayor gasto en ${ctx.top_category_name}`
   }
-  if (ctx.governance_grade) {
-    parts.push(`Calificación gobernanza: ${ctx.governance_grade}`)
+  sentence += '.'
+
+  // Risk signals: direct-award + governance grade
+  const sentences: string[] = [sentence]
+  const da = ctx.direct_award_pct != null ? (ctx.direct_award_pct > 1.5 ? ctx.direct_award_pct : ctx.direct_award_pct * 100) : null
+  if (da != null && ctx.governance_grade) {
+    const GRADE_WORDS: Record<string, string> = {
+      S: 'Excelente', A: 'Satisfactorio', 'B+': 'Satisfactorio', B: 'Satisfactorio',
+      'C+': 'Regular', C: 'Regular', D: 'Deficiente', 'D-': 'Deficiente', F: 'Crítico', 'F-': 'Crítico',
+    }
+    const tierLabel = GRADE_WORDS[ctx.governance_grade] ?? ctx.governance_grade
+    sentences.push(`Con ${da.toFixed(0)}% de adjudicaciones directas y una calificación de gobernanza ${tierLabel}, ${da > 60 ? 'sus patrones de adjudicación merecen revisión prioritaria.' : 'su desempeño de transparencia es evaluado como ' + tierLabel.toLowerCase() + '.'}`)
+  } else if (da != null && da > 70) {
+    sentences.push(`El ${da.toFixed(0)}% de adjudicaciones directas supera significativamente el promedio federal y es señal de alerta.`)
+  } else if (ctx.governance_grade) {
+    const GRADE_WORDS: Record<string, string> = {
+      S: 'Excelente', A: 'Satisfactorio', 'B+': 'Satisfactorio', B: 'Satisfactorio',
+      'C+': 'Regular', C: 'Regular', D: 'Deficiente', 'D-': 'Deficiente', F: 'Crítico', 'F-': 'Crítico',
+    }
+    const tierLabel = GRADE_WORDS[ctx.governance_grade] ?? ctx.governance_grade
+    sentences.push(`Su calificación de gobernanza es ${tierLabel}.`)
   }
-  if (ctx.direct_award_pct != null) {
-    parts.push(`${fmtPct(ctx.direct_award_pct)} adjudicación directa`)
-  }
-  return `${name} — ${parts.join(' · ')}`
+  return sentences.join(' ')
 }
 
 /** Universal entry point. Routes to the type-specific synthesizer. */
