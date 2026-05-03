@@ -23,7 +23,6 @@ import {
   formatCompactMXN,
   formatDate,
   getRiskLevel,
-  toTitleCase,
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -151,7 +150,7 @@ export function VendorActivityTab({
                 key={inst.institution_id}
                 className="flex items-center justify-between gap-4 px-2 py-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
               >
-                <EntityIdentityChip type="institution" id={inst.institution_id} name={toTitleCase(inst.institution_name)} size="sm" />
+                <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" />
                 <div className="flex items-center gap-4 flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted">
                   <span>{inst.contract_count}</span>
                   <span className="text-text-primary font-medium">
