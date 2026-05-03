@@ -21,7 +21,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { ariaApi, networkApi, type PatternSpotlight } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'

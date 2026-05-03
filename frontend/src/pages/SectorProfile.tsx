@@ -1552,7 +1552,7 @@ export function SectorProfile() {
                   if (sb > 25) {
                     return `El ${sb.toFixed(0)}% de procedimientos con un solo postor en ${name} supera los umbrales de alerta del modelo de riesgo. La ausencia de competencia efectiva en un cuarto de las licitaciones es señal de posible colusión o barrera de entrada.`
                   }
-                  return `${name} registra ${formatCompactMXN(sector.total_value_mxn ?? 0)} en contratos federales. El modelo v0.8.5 no detecta señales sistémicas elevadas, aunque los proveedores individuales de alto riesgo siguen disponibles en la cola ARIA para análisis detallado.`
+                  return `${name} registra ${formatCompactMXN(stats.total_value_mxn ?? 0)} en contratos federales. El modelo v0.8.5 no detecta señales sistémicas elevadas, aunque los proveedores individuales de alto riesgo siguen disponibles en la cola ARIA para análisis detallado.`
                 })()}
               </p>
 
