@@ -11,10 +11,45 @@ import type {
   CoBiddersResponse,
   VendorDetailResponse,
   VendorExternalFlags,
+  VendorSHAPResponse,
 } from '@/api/types'
 import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { ExternalLink, Network } from 'lucide-react'
+
+const FACTOR_LABELS_ES: Record<string, string> = {
+  price_volatility: 'Volatilidad de precios',
+  vendor_concentration: 'Concentración en dependencias',
+  price_ratio: 'Ratio precio/referencia',
+  institution_diversity: 'Diversidad institucional',
+  cobid_herfindahl: 'Concentración co-licitantes',
+  recency_z: 'Peso reciente',
+  amount_residual_z: 'Monto fuera de rango',
+  network_member_count: 'Tamaño de red',
+  amendment_flag: 'Enmiendas en contratos',
+  ad_period_days: 'Plazo de adjudicación',
+  direct_award: 'Adjudicaciones directas',
+  pub_delay_z: 'Retraso de publicación',
+  win_rate: 'Tasa de victoria',
+  same_day_count: 'Contratos mismo día',
+}
+
+const FACTOR_LABELS_EN: Record<string, string> = {
+  price_volatility: 'Price volatility',
+  vendor_concentration: 'Institutional concentration',
+  price_ratio: 'Price/reference ratio',
+  institution_diversity: 'Institutional diversity',
+  cobid_herfindahl: 'Co-bidder concentration',
+  recency_z: 'Recency weight',
+  amount_residual_z: 'Amount out of range',
+  network_member_count: 'Network size',
+  amendment_flag: 'Contract amendments',
+  ad_period_days: 'Award period length',
+  direct_award: 'Direct awards',
+  pub_delay_z: 'Publication delay',
+  win_rate: 'Win rate',
+  same_day_count: 'Same-day contracts',
+}
 
 interface LinkedScandalItem {
   scandal_slug: string
@@ -30,6 +65,7 @@ interface VendorNetworkTabProps {
   linkedScandals?: { scandals?: LinkedScandalItem[]; cases?: LinkedScandalItem[] } | null
   coBidders?: CoBiddersResponse | null
   externalFlags?: VendorExternalFlags | null
+  shap?: VendorSHAPResponse | null
   onOpenNetworkGraph?: () => void
 }
 
@@ -39,6 +75,7 @@ export function VendorNetworkTab({
   linkedScandals,
   coBidders,
   externalFlags,
+  shap,
   onOpenNetworkGraph,
 }: VendorNetworkTabProps) {
   const { i18n } = useTranslation(['vendors'])
@@ -80,6 +117,37 @@ export function VendorNetworkTab({
               )}
             </p>
           )}
+          {/* § 3 · El Patrón — top SHAP risk drivers */}
+          {shap && shap.top_risk_factors.length > 0 && (() => {
+            const topFactors = shap.top_risk_factors.slice(0, 3)
+            const maxShap = topFactors.reduce((m, f) => Math.max(m, Math.abs(f.shap)), 0.001)
+            const factorLabels = isEs ? FACTOR_LABELS_ES : FACTOR_LABELS_EN
+            return (
+              <div className="mt-4 pt-4 border-t border-border/30">
+                <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest mb-2">
+                  {isEs ? '§ 3 · Señales del modelo' : '§ 3 · Model signals'}
+                </div>
+                <div className="space-y-2">
+                  {topFactors.map((f) => (
+                    <div key={f.factor} className="flex items-center gap-2">
+                      <span className="text-[11px] text-text-secondary min-w-0 flex-1 truncate">
+                        {factorLabels[f.factor] ?? f.factor}
+                      </span>
+                      <DotBar
+                        value={Math.abs(f.shap)}
+                        max={maxShap}
+                        color="var(--color-risk-high)"
+                      />
+                      <span className="text-[11px] font-mono tabular-nums text-risk-high flex-shrink-0 w-12 text-right">
+                        +{f.shap.toFixed(3)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           <Link
             to={`/aria/${vendor.id}`}
             className="text-sm text-accent hover:underline mt-3 inline-flex items-center gap-1"

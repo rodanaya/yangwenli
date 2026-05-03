@@ -290,6 +290,7 @@ export function VendorProfile() {
               | undefined}
             coBidders={data.coBidders.data}
             externalFlags={data.externalFlags.data}
+            shap={data.shap.data}
             onOpenNetworkGraph={() => setNetworkOpen(true)}
           />
         </TabPanel>
