@@ -9,18 +9,21 @@ import type {
   VendorDetailResponse,
   VendorSHAPResponse,
   VendorWaterfallContribution,
+  AriaQueueItem,
 } from '@/api/types'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { DotBarRow } from '@/components/ui/DotBar'
 import { parseFactorLabel } from '@/lib/risk-factors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
+import { getVerdictForVendor } from '@/lib/entity/verdict'
 
 interface VendorEvidenceTabProps {
   vendor: VendorDetailResponse
   waterfall?: VendorWaterfallContribution[] | null
   waterfallLoading?: boolean
   shap?: VendorSHAPResponse | null
+  aria?: AriaQueueItem | null
 }
 
 export function VendorEvidenceTab({
@@ -28,6 +31,7 @@ export function VendorEvidenceTab({
   waterfall,
   waterfallLoading,
   shap,
+  aria,
 }: VendorEvidenceTabProps) {
   const { t, i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
@@ -151,6 +155,49 @@ export function VendorEvidenceTab({
           </p>
         </section>
       )}
+
+      {/* § 8 El Veredicto — 4-bucket classification */}
+      {(() => {
+        const verdict = getVerdictForVendor({
+          avg_risk_score: vendor.avg_risk_score ?? 0,
+          total_value_mxn: vendor.total_value_mxn ?? 0,
+          total_contracts: vendor.total_contracts ?? 0,
+          direct_award_pct: vendor.direct_award_pct ?? 0,
+          is_false_positive: aria?.fp_structural_monopoly ?? false,
+          fp_reason: undefined,
+          in_ground_truth: aria?.in_ground_truth ?? false,
+          top_institution_pct: aria?.top_institution_ratio ?? 0,
+          ghost_companion_score: 0,
+        })
+
+        const bucketColor =
+          verdict.bucket === 'critical' ? '#f87171' :
+          verdict.bucket === 'high' ? '#fb923c' :
+          verdict.bucket === 'medium' ? '#fbbf24' :
+          'var(--color-text-muted)'
+
+        return (
+          <section
+            aria-labelledby="verdict-title"
+            className="pt-6 border-t border-border/40"
+          >
+            <SectionTitle id="verdict-title">
+              {isEs ? '§ 8 · El Veredicto' : '§ 8 · Verdict'}
+            </SectionTitle>
+            <div className="flex items-start gap-3">
+              <span
+                className="inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] shrink-0"
+                style={{ color: bucketColor, backgroundColor: `${bucketColor}15`, border: `1px solid ${bucketColor}30` }}
+              >
+                {isEs ? verdict.label_es : verdict.label_en}
+              </span>
+              <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+                {isEs ? verdict.rationale_es : verdict.rationale_en}
+              </p>
+            </div>
+          </section>
+        )
+      })()}
 
       {/* Methodology disclosure */}
       <section
