@@ -19,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { DotBar } from '@/components/ui/DotBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { getRiskLevelFromScore } from '@/lib/constants'
-import { formatEntityName } from '@/lib/entity/format'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
 import { DossierCreateDialog } from '@/components/DossierCreateDialog'
@@ -1213,13 +1213,12 @@ function WatchlistRow({
       {/* Entity */}
       <td className="px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <button
-            onClick={handleEntityClick}
-            className="text-left font-medium hover:text-accent transition-colors truncate max-w-[200px]"
-            title={item.item_name}
-          >
-            {formatEntityName(item.item_type as 'vendor' | 'institution' | 'category', item.item_name, 'sm')}
-          </button>
+          <EntityIdentityChip
+            type={item.item_type as 'vendor' | 'institution' | 'category'}
+            id={item.item_id}
+            name={item.item_name}
+            size="sm"
+          />
           {item.reason && (
             <span className="text-xs text-text-muted truncate max-w-[200px]" title={item.reason}>
               {item.reason}
