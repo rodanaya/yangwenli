@@ -8,8 +8,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { ariaApi } from '@/api/client'
-import type { AriaMemoResponse } from '@/api/client'
+import { ariaApi, vendorApi } from '@/api/client'
+import type { AriaMemoResponse, VendorSHAPResponse } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileText, Copy, Check, AlertCircle, Sparkles } from 'lucide-react'
@@ -75,6 +75,131 @@ function MemoSkeleton() {
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-11/12" />
       <Skeleton className="h-4 w-4/5" />
+    </div>
+  )
+}
+
+// Risk factor display names (Spanish) — maps SHAP factor keys to editorial labels.
+// Mirrors the v0.8.5 18-feature set from CLAUDE.md Risk Model section.
+const FACTOR_LABELS: Record<string, string> = {
+  price_volatility: 'Volatilidad de precios',
+  vendor_concentration: 'Concentración en dependencias',
+  price_ratio: 'Ratio precio/referencia',
+  institution_diversity: 'Diversidad institucional',
+  cobid_herfindahl: 'Concentración COBID',
+  recency_z: 'Peso relativo reciente',
+  amount_residual_z: 'Monto fuera de rango esperado',
+  network_member_count: 'Membresía en red de proveedores',
+  amendment_flag: 'Contratos con enmiendas',
+  ad_period_days: 'Plazo de adjudicación breve',
+  direct_award: 'Adjudicaciones directas',
+  pub_delay_z: 'Retraso de publicación',
+  win_rate: 'Tasa de éxito en licitaciones',
+  same_day_count: 'Contratos adjudicados el mismo día',
+}
+
+// SHAP-driven analytical stub — shown when no LLM memo exists for a vendor.
+// Fetches top risk factors and renders an editorial reading of the model's
+// signal, making clear this is algorithmic (not investigative) analysis.
+function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName: string }) {
+  const { data: shap, isLoading } = useQuery<VendorSHAPResponse>({
+    queryKey: ['vendor-shap', vendorId],
+    queryFn: () => vendorApi.getShap(vendorId),
+    staleTime: 600_000,
+    enabled: vendorId > 0,
+    retry: false,
+  })
+
+  const topFactors = shap?.top_risk_factors?.slice(0, 3) ?? []
+  const riskScore = shap?.risk_score
+
+  if (isLoading) return <MemoSkeleton />
+
+  // No SHAP data at all — plain placeholder
+  if (!shap) {
+    return (
+      <div className="flex flex-col items-center gap-2 py-6 text-center">
+        <FileText className="h-8 w-8 text-text-muted/40" />
+        <p className="text-sm text-text-muted">
+          Análisis narrativo no disponible para{' '}
+          <span className="font-semibold text-text-secondary">{vendorName}</span>
+        </p>
+        <p className="text-[11px] text-text-muted/70 max-w-xs leading-relaxed">
+          Este proveedor no ha sido analizado aún por el pipeline de investigación.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Stub disclaimer */}
+      <div className="px-4 py-3 border-l-4 border-border bg-background-elevated/40 rounded-sm">
+        <p className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1 font-mono">
+          Perfil algorítmico · sin memo investigativo
+        </p>
+        <p className="text-xs text-text-secondary leading-relaxed">
+          No existe memo narrativo para este proveedor. Se muestran las señales
+          del modelo de riesgo v0.8.5 como punto de partida para investigación.{' '}
+          <strong className="text-text-primary">Requiere verificación periodística independiente.</strong>
+        </p>
+      </div>
+
+      {/* Model signal summary */}
+      {riskScore != null && (
+        <div className="flex items-baseline gap-3">
+          <span
+            className="text-3xl font-bold tabular-nums leading-none"
+            style={{ fontFamily: 'var(--font-family-serif)', color: riskScore >= 0.60 ? 'var(--color-risk-critical)' : riskScore >= 0.40 ? 'var(--color-risk-high)' : riskScore >= 0.25 ? 'var(--color-risk-medium)' : 'var(--color-text-muted)' }}
+          >
+            {(riskScore * 100).toFixed(0)}
+          </span>
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+              Indicador de riesgo · escala 0–100
+            </p>
+            <p className="text-[10px] text-text-muted/60">
+              {shap.n_contracts?.toLocaleString('es-MX') ?? '—'} contratos analizados
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Top risk factors */}
+      {topFactors.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+            Factores de riesgo principales
+          </p>
+          {topFactors.map((factor, i) => {
+            const label = FACTOR_LABELS[factor.factor] ?? factor.label_es ?? factor.factor
+            const pct = Math.min(100, Math.abs(factor.shap) * 200)
+            return (
+              <div key={factor.factor} className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-secondary">
+                    <span className="font-mono text-[10px] text-text-muted mr-2">{i + 1}.</span>
+                    {label}
+                  </span>
+                  <span className="text-[10px] font-mono text-risk-high">
+                    +{factor.shap.toFixed(3)}
+                  </span>
+                </div>
+                <div className="h-1 bg-border/50 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-risk-high/60 rounded-full"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <p className="text-[10px] text-text-muted/60 italic border-t border-border/30 pt-3">
+        Análisis generado por modelo — no sustituye investigación periodística
+      </p>
     </div>
   )
 }
@@ -215,13 +340,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-2 py-6 text-center">
-            <FileText className="h-8 w-8 text-text-muted/40" />
-            <p className="text-sm text-text-muted">
-              Memo no disponible para{' '}
-              <span className="font-semibold text-text-secondary">{vendorName}</span>
-            </p>
-          </div>
+          <MemoEmptyState vendorId={vendorId} vendorName={vendorName} />
         )}
       </div>
     </div>

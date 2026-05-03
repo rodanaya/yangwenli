@@ -61,6 +61,7 @@ import {
 } from '@/components/charts/editorial'
 import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { gradeToTierKey, TIER_STYLES } from '@/lib/tiers'
 
 // ── constants ────────────────────────────────────────────────────────────────
 
@@ -555,12 +556,10 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
   const avgBidders = data.indicators?.avg_bidders?.value ?? null
   const singleBidRate = data.indicators?.single_bid_rate?.value ?? null
 
-  const gradeColor =
-    grade === 'A' || grade === 'A+' ? 'text-text-muted' :
-    grade.startsWith('B') ? 'text-lime-400' :
-    grade.startsWith('C') ? 'text-risk-high' :
-    grade.startsWith('D') ? 'text-orange-400' :
-    'text-risk-critical'
+  // Map backend letter grade to canonical 5-tier label (CLAUDE.md hard rule §7)
+  const tierKey = grade !== '—' ? gradeToTierKey(grade) : null
+  const tierStyle = tierKey ? TIER_STYLES[tierKey] : null
+  const tierColor = tierStyle?.color ?? 'var(--color-text-muted)'
 
   const indicators: Array<{ label: string; value: string | null; benchmark: string; highlight: boolean }> = [
     {
@@ -589,20 +588,31 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
       aria-label="Procurement Health Index governance grade"
     >
       <div className="flex items-start gap-5">
-        {/* Grade letter + score */}
-        <div className="flex flex-col items-center flex-shrink-0 min-w-[56px]">
-          <span
-            className={cn('text-5xl font-black leading-none tabular-nums', gradeColor)}
-            aria-label={`Governance grade: ${grade}`}
-          >
-            {grade}
-          </span>
+        {/* Tier label + score — 5-tier canonical (CLAUDE.md §7: Excelente/Satisfactorio/Regular/Deficiente/Crítico) */}
+        <div className="flex flex-col items-start flex-shrink-0 min-w-[96px]">
+          {tierKey ? (
+            <span
+              className="text-[13px] font-bold uppercase tracking-[0.08em] leading-none px-2 py-1"
+              style={{
+                color: tierColor,
+                background: tierStyle?.bg,
+                border: `1px solid ${tierStyle?.border}`,
+                fontFamily: 'var(--font-family-mono)',
+              }}
+              aria-label={`Governance tier: ${tierKey}`}
+            >
+              {tierKey}
+            </span>
+          ) : (
+            <span className="text-[13px] font-mono text-text-muted">—</span>
+          )}
           {score != null && (
-            <span className="text-[11px] font-mono text-text-muted mt-1 tabular-nums">
+            <span className="text-[11px] font-mono text-text-muted mt-1.5 tabular-nums">
               {score.toFixed(1)}/100
             </span>
           )}
-          <span className="text-[9px] uppercase tracking-widest text-text-muted mt-1 font-semibold">
+          <span className="text-[9px] uppercase tracking-widest text-text-muted mt-1 font-semibold"
+            style={{ fontFamily: 'var(--font-family-mono)' }}>
             PHI
           </span>
         </div>

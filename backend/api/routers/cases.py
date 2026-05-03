@@ -94,6 +94,14 @@ def list_cases(
     if cached is not None:
         return cached
 
+    # Guard: return empty list if the table doesn't exist yet (older deployed DB)
+    with get_db() as conn:
+        tbl = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='procurement_scandals'"
+        ).fetchone()
+        if not tbl:
+            return []
+
     conditions = ["is_verified = 1"]
     params: list = []
 
@@ -146,7 +154,19 @@ def get_stats():
     if cached is not None:
         return cached
 
+    # Guard: return zero stats if the table doesn't exist yet (older deployed DB)
     with get_db() as conn:
+        tbl = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='procurement_scandals'"
+        ).fetchone()
+        if not tbl:
+            return {
+                "total_cases": 0, "total_amount_mxn_low": 0, "total_amount_mxn_high": 0,
+                "cases_by_fraud_type": [], "cases_by_administration": [],
+                "cases_by_legal_status": [], "cases_by_severity": [],
+                "gt_linked_count": 0, "high_compranet_visibility_count": 0,
+            }
+
         total_row = conn.execute(
             "SELECT COUNT(*) as n, SUM(COALESCE(amount_mxn_low, 0)) as total FROM procurement_scandals WHERE is_verified=1"
         ).fetchone()
