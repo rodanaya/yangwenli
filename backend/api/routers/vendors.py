@@ -1715,6 +1715,8 @@ class GroundTruthCaseInfo(BaseModel):
     case_type: str
     role: Optional[str] = None
     evidence_strength: Optional[str] = None
+    # Slug of the linked procurement_scandal (for /cases/:slug dossier link)
+    scandal_slug: Optional[str] = None
 
 
 class GroundTruthStatusResponse(BaseModel):
@@ -1741,9 +1743,12 @@ def get_vendor_ground_truth_status(
 
         rows = cursor.execute("""
             SELECT gtc.id as case_id, gtc.case_name, gtc.case_type,
-                   gtv.role, gtv.evidence_strength
+                   gtv.role, gtv.evidence_strength,
+                   ps.slug as scandal_slug
             FROM ground_truth_vendors gtv
             JOIN ground_truth_cases gtc ON gtv.case_id = gtc.id
+            LEFT JOIN procurement_scandals ps ON ps.ground_truth_case_id = gtc.id
+                AND ps.is_verified = 1
             WHERE gtv.vendor_id = ?
         """, (vendor_id,)).fetchall()
 
@@ -1754,6 +1759,7 @@ def get_vendor_ground_truth_status(
                 case_type=r["case_type"],
                 role=r["role"],
                 evidence_strength=r["evidence_strength"],
+                scandal_slug=r["scandal_slug"],
             )
             for r in rows
         ]

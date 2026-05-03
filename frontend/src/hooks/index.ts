@@ -28,5 +28,8 @@ export type { ExportOptions } from './useBulkExport'
 export { useSavedSearches } from './useSavedSearches'
 export type { SavedSearch } from './useSavedSearches'
 
+// Universal entity data fetcher (P1.5 — shared cache key ['entity', type, id])
+export { useEntity, useVendorEntity, useInstitutionEntity, entityQueryKey } from './useEntity'
+
 // Re-export existing hooks
 export { useTheme } from './useTheme'

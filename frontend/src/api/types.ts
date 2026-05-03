@@ -1905,14 +1905,18 @@ export type FastDashboardResponse = FastDashboardData
 // New Types for API expansion
 // ============================================================================
 
+export interface VendorGroundTruthCaseInfo {
+  case_id: number
+  case_name: string
+  case_type: string
+  role?: string | null
+  evidence_strength?: string | null
+  scandal_slug?: string | null
+}
+
 export interface VendorGroundTruthStatus {
   is_known_bad: boolean
-  cases: Array<{
-    case_id: number
-    scandal_slug: string
-    fraud_type: string
-    case_name: string
-  }>
+  cases: VendorGroundTruthCaseInfo[]
 }
 
 export interface VendorWaterfallContribution {

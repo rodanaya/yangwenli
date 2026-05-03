@@ -5,8 +5,10 @@
  * Single-purpose: no activity, no network, no external registries.
  */
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import type {
   VendorDetailResponse,
+  VendorGroundTruthStatus,
   VendorSHAPResponse,
   VendorWaterfallContribution,
   AriaQueueItem,
@@ -17,6 +19,7 @@ import { parseFactorLabel } from '@/lib/risk-factors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { getVerdictForVendor } from '@/lib/entity/verdict'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 interface VendorEvidenceTabProps {
   vendor: VendorDetailResponse
@@ -24,6 +27,7 @@ interface VendorEvidenceTabProps {
   waterfallLoading?: boolean
   shap?: VendorSHAPResponse | null
   aria?: AriaQueueItem | null
+  groundTruth?: VendorGroundTruthStatus | null
 }
 
 export function VendorEvidenceTab({
@@ -32,6 +36,7 @@ export function VendorEvidenceTab({
   waterfallLoading,
   shap,
   aria,
+  groundTruth,
 }: VendorEvidenceTabProps) {
   const { t, i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
@@ -153,6 +158,99 @@ export function VendorEvidenceTab({
               ? `Este proveedor está en el percentil ${(vendor.sector_risk_percentile * 100).toFixed(0)} de su sector (${vendor.primary_sector_name ?? 'desconocido'}).`
               : `This vendor is in the ${(vendor.sector_risk_percentile * 100).toFixed(0)}th percentile of its sector (${vendor.primary_sector_name ?? 'unknown'}).`}
           </p>
+        </section>
+      )}
+
+      {/* § 7 Los Signos — external validation signals (GT cases, EFOS, SFP) */}
+      {(groundTruth?.is_known_bad || aria?.is_efos_definitivo || aria?.is_sfp_sanctioned) && (
+        <section
+          aria-labelledby="signos-title"
+          className="pt-6 border-t border-border/40"
+        >
+          <SectionTitle id="signos-title">
+            {isEs ? '§ 7 · Los Signos' : '§ 7 · External Signals'}
+          </SectionTitle>
+          <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+            {isEs
+              ? 'Registros documentados en fuentes externas: casos de corrupción confirmados, listas negras fiscales, sanciones administrativas.'
+              : 'Records in external sources: documented corruption cases, tax blacklists, administrative sanctions.'}
+          </p>
+
+          <div className="space-y-2">
+            {/* EFOS flag */}
+            {aria?.is_efos_definitivo && (
+              <div className="flex items-start gap-3 p-3 rounded-sm bg-risk-critical/5 border border-risk-critical/20">
+                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm">
+                  EFOS
+                </span>
+                <p className="text-sm text-text-secondary leading-snug">
+                  {isEs
+                    ? 'Registrado en la lista EFOS definitivos del SAT — empresa que factura operaciones simuladas.'
+                    : 'Listed on the SAT EFOS (shell invoice) register — confirmed fictitious billing company.'}
+                </p>
+              </div>
+            )}
+
+            {/* SFP sanction */}
+            {aria?.is_sfp_sanctioned && (
+              <div className="flex items-start gap-3 p-3 rounded-sm bg-risk-high/5 border border-risk-high/20">
+                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-high bg-risk-high/10 border border-risk-high/30 px-1.5 py-0.5 rounded-sm">
+                  SFP
+                </span>
+                <p className="text-sm text-text-secondary leading-snug">
+                  {isEs
+                    ? 'Registrado en el Registro de Proveedores Sancionados de la SFP — inhabilitado para contratar con el gobierno federal.'
+                    : 'Listed in the SFP Sanctioned Vendors Registry — banned from federal contracting.'}
+                </p>
+              </div>
+            )}
+
+            {/* GT cases */}
+            {groundTruth?.cases?.map((c) => (
+              <div
+                key={c.case_id}
+                className="flex items-start gap-3 p-3 rounded-sm bg-background-elevated border border-border hover:border-border-hover transition-colors"
+              >
+                <span className="shrink-0 text-[9px] font-mono font-bold uppercase tracking-wider text-risk-critical bg-risk-critical/10 border border-risk-critical/30 px-1.5 py-0.5 rounded-sm mt-0.5">
+                  GT
+                </span>
+                <div className="flex-1 min-w-0">
+                  {c.scandal_slug ? (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <EntityIdentityChip
+                        type="case"
+                        id={c.case_id}
+                        name={c.case_name}
+                        size="sm"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-sm font-semibold text-text-primary">{c.case_name}</span>
+                  )}
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {c.role && (
+                      <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                        {isEs ? 'Rol' : 'Role'}: {c.role}
+                      </span>
+                    )}
+                    {c.evidence_strength && (
+                      <span className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                        {isEs ? 'Evidencia' : 'Evidence'}: {c.evidence_strength}
+                      </span>
+                    )}
+                  </div>
+                  {c.scandal_slug && (
+                    <Link
+                      to={`/cases/${c.scandal_slug}`}
+                      className="text-[10px] font-mono text-accent hover:underline mt-1 inline-block"
+                    >
+                      {isEs ? 'Ver expediente →' : 'View case dossier →'}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
       )}
 

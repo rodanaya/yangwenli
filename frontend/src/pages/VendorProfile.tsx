@@ -266,6 +266,7 @@ export function VendorProfile() {
             waterfallLoading={data.waterfall.isLoading}
             shap={data.shap.data}
             aria={data.aria.data}
+            groundTruth={data.groundTruthStatus.data}
           />
         </TabPanel>
         <TabPanel tabKey="activity">
