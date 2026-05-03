@@ -28,6 +28,7 @@ import { SECTOR_COLORS } from '@/lib/constants'
 import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
 import { FlowParticle, type FlowLink, type FlowNode } from '@/components/charts/FlowParticle'
 import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, Activity } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
 // Community corpus — illustrative top 10 communities derived from ARIA
@@ -583,10 +584,9 @@ function TopVendorsPanel({
       </div>
       <div className="space-y-1">
         {spotlight.top_vendors.slice(0, 4).map((v, i) => (
-          <Link
+          <div
             key={v.vendor_id}
-            to={`/vendors/${v.vendor_id}`}
-            className="group flex items-center gap-2 rounded px-2 py-1 hover:bg-background-card transition-colors"
+            className="flex items-center gap-2 rounded px-2 py-1 hover:bg-background-card transition-colors"
           >
             <span
               className="text-[9px] font-mono font-bold w-3 text-right tabular-nums flex-shrink-0"
@@ -594,16 +594,16 @@ function TopVendorsPanel({
             >
               {i + 1}
             </span>
-            <span className="text-[11px] text-text-secondary truncate flex-1 group-hover:text-text-primary">
-              {v.vendor_name}
-            </span>
+            <div className="flex-1 min-w-0">
+              <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
+            </div>
             <span
               className="text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
               style={{ color }}
             >
               {v.ips_final.toFixed(3)}
             </span>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

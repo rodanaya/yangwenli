@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { contractApi, vendorApi } from '@/api/client'
 import { RiskBadge, Badge } from '@/components/ui/badge'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
@@ -193,15 +194,7 @@ export default function ContractDetail() {
         {/* Vendor / Institution chips */}
         <div className="flex items-center gap-3 flex-wrap text-sm mb-6">
           {contract.vendor_id ? (
-            <Link
-              to={`/vendors/${contract.vendor_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary hover:border-border hover:bg-background/80 transition-colors max-w-full min-w-0"
-              title={toTitleCase(contract.vendor_name || '')}
-            >
-              <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
-              <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-text-muted shrink-0" />
-            </Link>
+            <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
           ) : (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
               <User className="h-3.5 w-3.5 shrink-0" />
@@ -602,23 +595,15 @@ export default function ContractDetail() {
           <SidebarCard overline="Investigation paths">
             <div className="space-y-1.5">
               {contract.vendor_id && (
-                <Link
-                  to={`/vendors/${contract.vendor_id}`}
-                  className="flex items-center justify-between group py-2 border-b border-border last:border-b-0"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-text-muted uppercase tracking-[0.15em]">
-                        Vendor profile
-                      </p>
-                      <p className="text-xs text-text-secondary truncate group-hover:text-text-primary">
-                        {toTitleCase(contract.vendor_name || '-')}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
+                  <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
+                      Vendor profile
+                    </p>
+                    <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="xs" />
                   </div>
-                  <ChevronRight className="h-3 w-3 text-text-muted group-hover:text-text-secondary shrink-0 ml-2" />
-                </Link>
+                </div>
               )}
               {contract.institution_id && (
                 <Link
