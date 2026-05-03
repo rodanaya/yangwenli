@@ -1,10 +1,11 @@
 /**
  * SectorProfile — Individual sector detail page
  *
- * Three-tab layout:
- *   Overview   — spend trend (area chart) + top institutions
- *   Top Vendors — ranked table by value with risk badges
- *   Risk Analysis — risk distribution + top risk factors
+ * Four-tab layout:
+ *   Overview      — spend trend (area chart) + top institutions
+ *   Top Vendors   — ranked table by value with risk badges
+ *   Risk Analysis — risk distribution + top risk factors + § 7 ARIA patterns
+ *   Sexenios      — § 6 Comparación Sexenal (Fox → Sheinbaum)
  *
  * Hero: sector name + color + total spend + contract count + risk level
  * Navigation: prev/next sector + back to all sectors
@@ -33,7 +34,9 @@ import {
   phiApi,
   caseLibraryApi,
   categoriesApi,
+  ariaApi,
 } from '@/api/client'
+import { ADMINISTRATIONS } from '@/lib/administrations'
 import {
   SECTOR_COLORS,
   RISK_COLORS,
@@ -118,7 +121,7 @@ const FACTOR_DESC: Record<string, string> = {
 
 // ── Tab type ──────────────────────────────────────────────────────────────────
 
-type TabId = 'overview' | 'vendors' | 'risk'
+type TabId = 'overview' | 'vendors' | 'risk' | 'sexenios'
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -986,6 +989,14 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // § 7 Los Patrones ARIA: T1+T2 vendors in this sector grouped by primary_pattern
+  const { data: ariaPatternVendors, isLoading: ariaPatternLoading } = useQuery({
+    queryKey: ['aria', 'patterns-by-sector', sectorId],
+    queryFn: () => ariaApi.getQueue({ sector_id: sectorId, tier: 2, per_page: 300 }),
+    enabled: !!sectorId && activeTab === 'risk',
+    staleTime: 10 * 60 * 1000,
+  })
+
   // ── derived values ─────────────────────────────────────────────────────────
 
   const insights = useMemo(() => {
@@ -1075,10 +1086,13 @@ export function SectorProfile() {
         ).toFixed(1)
       : '0'
 
+  const isEs = i18n.language.startsWith('es')
+
   const tabs: Array<{ id: TabId; label: string }> = [
     { id: 'overview', label: t('profile.overviewTab') },
     { id: 'vendors', label: t('profile.vendorsTab') },
     { id: 'risk', label: t('profile.riskTab') },
+    { id: 'sexenios', label: isEs ? 'Sexenios' : 'By Administration' },
   ]
 
   // Editorial shell severity from sector risk level (kept for legacy refs)
@@ -1617,6 +1631,92 @@ export function SectorProfile() {
             </section>
           )}
 
+          {/* § 7 Los Patrones ARIA en este Sector ─────────────────────────── */}
+          {(() => {
+            const items = ariaPatternVendors?.data ?? []
+            if (ariaPatternLoading) {
+              return (
+                <section aria-labelledby="patterns-aria-heading">
+                  <h2 id="patterns-aria-heading" className="text-base font-bold text-text-primary mb-3">
+                    {isEs ? '§ 7 Patrones ARIA en este Sector' : '§ 7 ARIA Patterns in this Sector'}
+                  </h2>
+                  <div className="space-y-2">
+                    {[0,1,2].map(i => <Skeleton key={i} className="h-8 w-full" />)}
+                  </div>
+                </section>
+              )
+            }
+            if (!items.length) return null
+            const PATTERN_NAMES: Record<string, { code: string; label_es: string; label_en: string }> = {
+              p1_monopoly:     { code: 'P1', label_es: 'Monopolio',             label_en: 'Monopoly' },
+              p2_ghost:        { code: 'P2', label_es: 'Empresa Fantasma',      label_en: 'Ghost Company' },
+              p3_intermediary: { code: 'P3', label_es: 'Intermediario',         label_en: 'Intermediary' },
+              p4_kickback:     { code: 'P4', label_es: 'Soborno',               label_en: 'Kickback' },
+              p5_bid_rotation: { code: 'P5', label_es: 'Rotación de Oferta',    label_en: 'Bid Rotation' },
+              p6_capture:      { code: 'P6', label_es: 'Captura Institucional', label_en: 'Institutional Capture' },
+              p7_budget_dump:  { code: 'P7', label_es: 'Vaciado Presupuestal',  label_en: 'Budget Dump' },
+            }
+            const counts: Record<string, number> = {}
+            for (const item of items) {
+              const p = item.primary_pattern ?? 'unknown'
+              counts[p] = (counts[p] ?? 0) + 1
+            }
+            const sorted = Object.entries(counts)
+              .filter(([k]) => k !== 'unknown' && PATTERN_NAMES[k])
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 7)
+            if (!sorted.length) return null
+            const maxCount = sorted[0][1]
+            return (
+              <section aria-labelledby="patterns-aria-heading">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 id="patterns-aria-heading" className="text-base font-bold text-text-primary">
+                      {isEs ? '§ 7 Patrones ARIA en este Sector' : '§ 7 ARIA Patterns in this Sector'}
+                    </h2>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {isEs
+                        ? `Distribución de ${items.length} proveedores T1–T2 ARIA por tipo de patrón`
+                        : `Distribution of ${items.length} T1–T2 ARIA vendors by fraud pattern`}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-sm border border-border bg-background/40 divide-y divide-border/60">
+                  {sorted.map(([patternKey, count]) => {
+                    const meta = PATTERN_NAMES[patternKey]
+                    const code = patternKey.split('_')[0].toUpperCase()
+                    const pct = (count / maxCount) * 100
+                    return (
+                      <div key={patternKey} className="flex items-center gap-3 px-4 py-2.5">
+                        <Link
+                          to={`/patterns/${code.toLowerCase()}`}
+                          className="flex-shrink-0 inline-flex items-center justify-center w-8 h-6 rounded text-[10px] font-bold font-mono border border-border hover:border-border-hover transition-colors"
+                          style={{ color: sectorColor }}
+                        >
+                          {meta.code}
+                        </Link>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium text-text-primary">
+                            {isEs ? meta.label_es : meta.label_en}
+                          </div>
+                          <div className="mt-1 h-1.5 rounded-full bg-border/60 overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%`, backgroundColor: sectorColor, opacity: 0.7 }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-xs font-mono tabular-nums text-text-secondary flex-shrink-0">
+                          {count}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })()}
+
           {/* ── Editorial closing: investigation CTAs ──────────────────────── */}
           {sector && stats && (
             <section className="pt-2 border-t border-border/40 space-y-4">
@@ -1664,6 +1764,147 @@ export function SectorProfile() {
               </div>
             </section>
           )}
+        </div>
+
+        {/* ── SEXENIOS TAB ──────────────────���──────────────────────────────── */}
+        <div
+          id="tabpanel-sexenios"
+          role="tabpanel"
+          aria-labelledby="tab-sexenios"
+          hidden={activeTab !== 'sexenios'}
+          className="space-y-6"
+        >
+          <section aria-labelledby="sexenal-heading">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2
+                  id="sexenal-heading"
+                  className="text-base font-bold text-text-primary"
+                >
+                  {isEs ? '§ 6 Comparación Sexenal' : '§ 6 By Administration'}
+                </h2>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  {isEs
+                    ? 'Gasto acumulado e indicador de riesgo por administración federal'
+                    : 'Total spend and risk indicator by federal administration'}
+                </p>
+              </div>
+            </div>
+            {(() => {
+              const trends = sector?.trends ?? []
+              if (!trends.length) {
+                return (
+                  <p className="text-sm text-text-muted py-8 text-center">
+                    {isEs ? 'Sin datos de tendencia disponibles.' : 'No trend data available.'}
+                  </p>
+                )
+              }
+              type AdminRow = {
+                key: string
+                long: string
+                yearStart: number
+                yearEnd: number
+                total_value: number
+                total_contracts: number
+                risk_sum: number
+                risk_weight: number
+                da_sum: number
+                da_count: number
+                years_with_data: number
+              }
+              const adminMap = new Map<string, AdminRow>()
+              for (const adm of ADMINISTRATIONS) {
+                adminMap.set(adm.key, {
+                  key: adm.key,
+                  long: adm.long,
+                  yearStart: adm.yearStart,
+                  yearEnd: adm.yearEnd,
+                  total_value: 0,
+                  total_contracts: 0,
+                  risk_sum: 0,
+                  risk_weight: 0,
+                  da_sum: 0,
+                  da_count: 0,
+                  years_with_data: 0,
+                })
+              }
+              for (const t of trends) {
+                const adm = ADMINISTRATIONS.find(a => t.year >= a.yearStart && t.year <= a.yearEnd)
+                if (!adm) continue
+                const row = adminMap.get(adm.key)!
+                row.total_value += t.total_value_mxn
+                row.total_contracts += t.total_contracts
+                if (t.avg_risk_score != null) {
+                  row.risk_sum += t.avg_risk_score * t.total_contracts
+                  row.risk_weight += t.total_contracts
+                }
+                if (t.direct_award_pct != null) {
+                  row.da_sum += t.direct_award_pct
+                  row.da_count += 1
+                }
+                row.years_with_data += 1
+              }
+              const rows = Array.from(adminMap.values()).filter(r => r.years_with_data > 0)
+              const maxValue = Math.max(...rows.map(r => r.total_value), 1)
+              return (
+                <div className="rounded-sm border border-border bg-background/40 divide-y divide-border/60">
+                  {rows.map(row => {
+                    const avgRisk = row.risk_weight > 0 ? row.risk_sum / row.risk_weight : 0
+                    const riskLevel = getRiskLevelFromScore(avgRisk)
+                    const riskColor = riskLevel === 'critical' ? 'var(--color-risk-critical)'
+                      : riskLevel === 'high' ? 'var(--color-risk-high)'
+                      : riskLevel === 'medium' ? 'var(--color-risk-medium)'
+                      : 'var(--color-text-muted)'
+                    const barPct = (row.total_value / maxValue) * 100
+                    const avgDa = row.da_count > 0 ? row.da_sum / row.da_count : null
+                    return (
+                      <div key={row.key} className="px-4 py-3">
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-text-primary">{row.long}</div>
+                            <div className="text-[10px] text-text-muted font-mono">
+                              {row.yearStart}–{Math.min(row.yearEnd, new Date().getFullYear())}
+                              {' · '}{formatNumber(row.total_contracts)} contratos
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 flex-shrink-0 text-right">
+                            <div>
+                              <div
+                                className="text-sm font-bold tabular-nums"
+                                style={{ fontFamily: 'var(--font-family-serif)', color: sectorColor }}
+                              >
+                                {formatCompactMXN(row.total_value)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-mono tabular-nums" style={{ color: riskColor }}>
+                                {(avgRisk * 100).toFixed(0)}
+                              </div>
+                              <div className="text-[9px] text-text-muted uppercase tracking-wide">riesgo</div>
+                            </div>
+                            {avgDa !== null && (
+                              <div>
+                                <div className="text-xs font-mono tabular-nums text-text-secondary">
+                                  {avgDa.toFixed(0)}%
+                                </div>
+                                <div className="text-[9px] text-text-muted uppercase tracking-wide">adj. dir.</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-border/60 overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{ width: `${barPct}%`, backgroundColor: sectorColor, opacity: 0.65 }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </section>
         </div>
       </div>
       </Act>
