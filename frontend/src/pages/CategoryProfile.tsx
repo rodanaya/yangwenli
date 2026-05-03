@@ -1006,6 +1006,181 @@ export default function CategoryProfile() {
       )}
 
       {/* ================================================================= */}
+      {/* § 8 El Veredicto                                                  */}
+      {/* ================================================================= */}
+      {category && topVendorsData && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const risk = category.avg_risk
+        const da = category.direct_award_pct
+        const hhi = topVendorsData.hhi
+        const top3 = topVendorsData.top3_share_pct
+        const catName = category.name_es || category.name_en
+        const catNameEn = category.name_en || category.name_es
+
+        let verdictColor: string
+        let verdictEs: string
+        let verdictEn: string
+        let descEs: string
+        let descEn: string
+
+        if (risk >= 0.60) {
+          verdictColor = '#f87171'
+          verdictEs = 'Patrón Anómalo'
+          verdictEn = 'Anomalous Pattern'
+          descEs = `El modelo detecta señales de alta intensidad en ${catName}. Múltiples factores de riesgo se activan simultáneamente, superando el umbral de alerta crítica del sistema.`
+          descEn = `The model detects high-intensity signals in ${catName}. Multiple risk factors activate simultaneously, exceeding the system's critical alert threshold.`
+        } else if (hhi > 2500 && da > 60) {
+          verdictColor = '#fb923c'
+          verdictEs = 'Capturado'
+          verdictEn = 'Captured'
+          descEs = `Alta concentración (HHI ${hhi.toFixed(0)}) combinada con ${da.toFixed(0)}% adjudicación directa. Pocos proveedores acceden a contratos sin competencia — patrón consistente con captura de mercado.`
+          descEn = `High concentration (HHI ${hhi.toFixed(0)}) combined with ${da.toFixed(0)}% direct-award rate. Few vendors win contracts without competition — a pattern consistent with market capture.`
+        } else if (hhi > 1500 || top3 > 60) {
+          verdictColor = '#fbbf24'
+          verdictEs = 'Oligopólico'
+          verdictEn = 'Oligopolistic'
+          descEs = `${catName} muestra concentración significativa: los 3 principales proveedores controlan el ${top3.toFixed(0)}% del valor. No alcanza el umbral de captura pero requiere monitoreo activo.`
+          descEn = `${catNameEn} shows significant concentration: the top 3 vendors control ${top3.toFixed(0)}% of value. Does not reach the capture threshold but warrants active monitoring.`
+        } else {
+          verdictColor = 'var(--color-text-muted)'
+          verdictEs = 'Competitivo'
+          verdictEn = 'Competitive'
+          descEs = `Los indicadores de ${catName} no registran señales de captura o concentración anómala. El mercado mantiene características de competencia estructural dentro del rango esperado para su sector.`
+          descEn = `${catNameEn} indicators show no signals of capture or anomalous concentration. The market maintains structural competition within the expected range for its sector.`
+        }
+
+        return (
+          <section>
+            <div className="mb-4">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+                {isEs ? '§ 8 · DIAGNÓSTICO' : '§ 8 · VERDICT'}
+              </p>
+              <h2
+                className="text-lg font-bold text-text-primary leading-tight"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {isEs ? 'El Veredicto' : 'Market Health Verdict'}
+              </h2>
+            </div>
+            <Card>
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-start gap-4">
+                  <div className="shrink-0">
+                    <span
+                      className="inline-flex items-center px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold uppercase tracking-[0.15em]"
+                      style={{ color: verdictColor, backgroundColor: `${verdictColor}15`, border: `1px solid ${verdictColor}30` }}
+                    >
+                      {isEs ? verdictEs : verdictEn}
+                    </span>
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                      {isEs ? descEs : descEn}
+                    </p>
+                    <div className="flex flex-wrap gap-4 text-[11px] font-mono text-text-muted/70">
+                      <span>HHI <span className="font-bold" style={{ color: verdictColor }}>{hhi.toFixed(0)}</span></span>
+                      <span>Top 3 <span className="font-bold" style={{ color: verdictColor }}>{top3.toFixed(0)}%</span></span>
+                      <span>DA <span className="font-bold" style={{ color: daColor }}>{da.toFixed(0)}%</span></span>
+                      <span>Riesgo <span className="font-bold" style={{ color: riskColor }}>{(risk * 100).toFixed(0)}/100</span></span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
+
+      {/* ================================================================= */}
+      {/* § 9 La Comparación (sister categories in same sector)             */}
+      {/* ================================================================= */}
+      {category && summaryData?.data && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const sectorId = category.sector_id
+        if (!sectorId) return null
+
+        const sisters = (summaryData.data as CategoryStat[])
+          .filter(c => c.sector_id === sectorId && c.category_id !== categoryId && c.total_contracts > 0)
+          .sort((a, b) => b.avg_risk - a.avg_risk)
+          .slice(0, 8)
+
+        if (sisters.length === 0) return null
+
+        return (
+          <section>
+            <div className="mb-4">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+                {isEs ? '§ 9 · COMPARACIÓN' : '§ 9 · COMPARISON'}
+              </p>
+              <h2
+                className="text-lg font-bold text-text-primary leading-tight"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {isEs ? 'Categorías del mismo sector' : 'Sister Categories in Sector'}
+              </h2>
+            </div>
+            <Card>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border/10">
+                  {sisters.map((sc) => {
+                    const scRisk = sc.avg_risk
+                    const scColor = getRiskColor(scRisk)
+                    const N = 12, DR = 1.75, DG = 4
+                    const filled = Math.max(1, Math.round(Math.min(scRisk, 1) * N))
+                    return (
+                      <div
+                        key={sc.category_id}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <EntityIdentityChip
+                            type="category"
+                            id={sc.category_id}
+                            name={isEs ? sc.name_es : sc.name_en}
+                            size="xs"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <svg
+                            viewBox={`0 0 ${N * DG} 6`}
+                            width={N * DG}
+                            height={6}
+                            aria-hidden="true"
+                          >
+                            {Array.from({ length: N }).map((_, k) => (
+                              <circle
+                                key={k}
+                                cx={k * DG + DR}
+                                cy={3}
+                                r={DR}
+                                fill={k < filled ? scColor : 'var(--color-background-elevated)'}
+                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
+                                strokeWidth={k < filled ? 0 : 0.5}
+                                fillOpacity={k < filled ? 0.7 : 1}
+                              />
+                            ))}
+                          </svg>
+                          <span
+                            className="text-xs font-mono tabular-nums w-8 text-right"
+                            style={{ color: scColor }}
+                          >
+                            {(scRisk * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono text-text-muted tabular-nums w-14 text-right hidden md:block">
+                          {sc.direct_award_pct.toFixed(0)}% DA
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
+
+      {/* ================================================================= */}
       {/* Editorial Closing                                                 */}
       {/* ================================================================= */}
       {category && (() => {
