@@ -176,8 +176,11 @@ def get_aria_queue(
                q.risk_score_norm, q.ensemble_norm, q.financial_scale_norm,
                q.external_flags_score, q.is_disappeared,
                q.top_institution, q.top_institution_ratio, q.value_per_contract,
-               q.web_evidence_score, q.web_evidence_verdict, q.web_evidence_updated_at
+               q.web_evidence_score, q.web_evidence_verdict, q.web_evidence_updated_at,
+               vs.last_contract_year, vs.first_contract_year,
+               q.memo_provenance
         FROM aria_queue q
+        LEFT JOIN vendor_stats vs ON vs.vendor_id = q.vendor_id
         {where_sql}
         ORDER BY q.ips_final DESC
         LIMIT ? OFFSET ?

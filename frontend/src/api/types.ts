@@ -2311,6 +2311,9 @@ export interface AriaQueueItem {
   web_evidence_score?: number | null
   web_evidence_verdict?: 'SANCTION' | 'CORRUPTION_MENTION' | 'JOURNALISM' | 'SHELL_SIGNAL' | 'NEGATIVE' | null
   web_evidence_updated_at?: string | null
+  /** S.3 memo provenance: 'llm_narrative' | 'template' | 'stub' | 'duplicate' */
+  memo_provenance?: string | null
+  first_contract_year?: number | null
 }
 
 export interface AriaStats {

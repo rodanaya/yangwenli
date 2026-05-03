@@ -403,14 +403,15 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
   const contracts = item.total_contracts ?? 0
   const sector = item.primary_sector_name ?? null
 
-  // Recency / tenure derived from years_active + last_contract_year.
-  // years_active was already on the payload but never visualized.
+  // Recency / tenure — prefer direct year columns (from vendor_stats JOIN),
+  // fall back to years_active derivation for older API deploys.
   const lastYear = item.last_contract_year ?? null
   const yearsActive = item.years_active ?? null
   const firstYear =
-    lastYear != null && yearsActive != null && yearsActive > 0
+    item.first_contract_year ??
+    (lastYear != null && yearsActive != null && yearsActive > 0
       ? lastYear - yearsActive + 1
-      : null
+      : null)
   const isActive = lastYear != null && lastYear >= 2024
   const isDormant = lastYear != null && lastYear < 2022
 
@@ -616,6 +617,16 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
                   SFP
                 </span>
               )}
+            </span>
+          )}
+
+          {/* Memo quality glyph — LLM narrative available */}
+          {item.memo_provenance === 'llm_narrative' && (
+            <span
+              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+              title={isEs ? 'Memo investigativo LLM disponible' : 'LLM investigation memo available'}
+            >
+              LLM
             </span>
           )}
 
