@@ -32,23 +32,27 @@ import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 // Static Data
 // ============================================================================
 
+// v0.8.5 ACTIVE (May 2 2026, Run ID: CAL-v8-202605020212)
+// 18 active features from ElasticNet (C=0.2243, l1_ratio=0.7545, c_pu=0.32)
 const V6_COEFFICIENTS = [
-  { nameKey: 'priceVolatility', coeff: 0.534 },
-  { nameKey: 'institutionDiversity', coeff: -0.382 },
-  { nameKey: 'priceRatio', coeff: 0.235 },
-  { nameKey: 'vendorConcentration', coeff: 0.375 },
-  { nameKey: 'networkMembers', coeff: 0.181 },
-  { nameKey: 'sameDayContracts', coeff: 0.095 },
-  { nameKey: 'winRate', coeff: 0.049 },
-  { nameKey: 'directAward', coeff: 0.031 },
-  { nameKey: 'adPeriodDays', coeff: 0.042 },
+  { nameKey: 'priceVolatility', coeff: 0.558 },
+  { nameKey: 'institutionDiversity', coeff: -0.388 },
+  { nameKey: 'priceRatio', coeff: 0.358 },
+  { nameKey: 'vendorConcentration', coeff: 0.327 },
+  { nameKey: 'cobidHerfindahl', coeff: 0.272 },
+  { nameKey: 'recencyZ', coeff: -0.247 },
+  { nameKey: 'amountResidualZ', coeff: -0.187 },
+  { nameKey: 'networkMembers', coeff: 0.166 },
+  { nameKey: 'amendmentFlag', coeff: 0.102 },
+  { nameKey: 'adPeriodDays', coeff: 0.090 },
+  { nameKey: 'directAward', coeff: -0.081 },
+  { nameKey: 'pubDelayZ', coeff: -0.055 },
+  { nameKey: 'sameDayContracts', coeff: 0.0 },
+  { nameKey: 'winRate', coeff: 0.0 },
   { nameKey: 'singleBid', coeff: 0.0 },
   { nameKey: 'sectorSpread', coeff: 0.0 },
   { nameKey: 'coBidRate', coeff: 0.0 },
   { nameKey: 'priceHypConfidence', coeff: 0.0 },
-  { nameKey: 'institutionRisk', coeff: 0.0 },
-  { nameKey: 'yearEnd', coeff: 0.0 },
-  { nameKey: 'industryMismatch', coeff: 0.0 },
 ] as const
 
 const V33_WEIGHTS = [
@@ -64,11 +68,12 @@ const V33_WEIGHTS = [
 
 // Colors routed through canonical RISK_COLORS instead of three local hex
 // duplicates that drifted from the rest of the platform.
+// v0.8.5 distribution (3,051,294 scored contracts, HR=11.01%)
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: RISK_COLORS.critical },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: RISK_COLORS.high },
-  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: RISK_COLORS.medium },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: RISK_COLORS.low },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
+  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -115,8 +120,8 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v60: '0.828', improvement: '+42%' },
-  { metric: 'Brier Score', v33: '0.411', v60: '0.107', improvement: '-74%' },
+  { metric: 'AUC-ROC', v33: '0.584', v60: '0.785', improvement: '+34%' },
+  { metric: 'Brier Score', v33: '0.411', v60: '0.114', improvement: '-72%' },
   { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '100%', improvement: '+33pp' },
   { metric: 'High+ Detection', v33: '18.3%', v60: '67.4%', improvement: '+49pp' },
   { metric: 'Lift vs Random', v33: '1.22x', v60: '3.1x', improvement: '+1.9x' },
@@ -165,7 +170,7 @@ const MODEL_EVOLUTION_STEPS = [
     titleKey: 'v60Title',
     descKey: 'v60Desc',
     metric: 'AUC 0.828 (test)',
-    active: true,
+    active: false,
     overlay: false,
   },
   {
@@ -176,6 +181,15 @@ const MODEL_EVOLUTION_STEPS = [
     metric: '~130K dual-confirmed',
     active: false,
     overlay: true,
+  },
+  {
+    version: 'v0.8.5',
+    date: 'May 2, 2026',
+    titleKey: 'v85Title',
+    descKey: 'v85Desc',
+    metric: 'AUC 0.785 (test)',
+    active: true,
+    overlay: false,
   },
 ] as const
 
@@ -345,8 +359,8 @@ const CoefficientChart = memo(function CoefficientChart() {
           : 'var(--color-text-muted)',
   })), [t])
 
-  // Scale: v0.6.5 coefficients range from -0.39 to +0.55. Symmetric 0-based axis.
-  // (v5.x had ±1.3; updated per F5 audit — actual v0.6.5 max is price_volatility +0.5343,
+  // Scale: v0.8.5 coefficients range from -0.39 to +0.56. Symmetric 0-based axis.
+  // (v5.x had ±1.3; v0.6.5 max was price_volatility +0.534, v0.8.5 max is +0.558;
   // min is institution_diversity -0.3821.)
   const RANGE_MIN = -0.55
   const RANGE_MAX = 0.55
@@ -676,20 +690,20 @@ export function Methodology() {
                 How we score corruption risk.
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                METHODOLOGY · TRANSPARENCY REPORT · v0.6.5
+                METHODOLOGY · TRANSPARENCY REPORT · v0.8.5
               </p>
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.828</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.785</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Test AUC</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">13.49%</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">11.01%</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk rate</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,363</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,401</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">GT cases</div>
               </div>
             </div>
@@ -708,7 +722,7 @@ export function Methodology() {
               <span className="text-text-primary">·</span>
               <span>{t('kicker')}</span>
               <span className="text-text-primary">·</span>
-              <span className="font-mono tabular-nums">v0.6.5</span>
+              <span className="font-mono tabular-nums">v0.8.5</span>
             </div>
             <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>
             <h1
@@ -747,19 +761,19 @@ export function Methodology() {
         {/* Editorial pull-quotes: the three numbers that matter */}
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
           <PullQuote
-            stat="0.828"
+            stat="0.785"
             label="Test AUC"
             source="Vendor-stratified 70/30 hold-out"
           />
           <PullQuote
-            stat="13.49%"
+            stat="11.01%"
             label="High-risk rate"
             source="OECD benchmark: 2–15%"
           />
           <PullQuote
-            stat="1,363"
+            stat="1,401"
             label="Ground-truth cases"
-            source="603 vendors · ~288K contracts"
+            source="861 vendors · ~302K contracts"
           />
         </div>
       </header>
@@ -825,7 +839,7 @@ export function Methodology() {
                   <ul className="text-xs text-text-muted space-y-0.5">
                     <li>· SAT EFOS Definitivo list (13,960 vendors)</li>
                     <li>· SFP sanctions registry (544 vendors)</li>
-                    <li>· Ground truth cases (1,363 documented investigations)</li>
+                    <li>· Ground truth cases (1,401 documented investigations)</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-[#ef4444]/15">
@@ -1160,9 +1174,9 @@ export function Methodology() {
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: t('body.validation.metricTestAuc'), value: '0.828' },
-                  { label: t('body.validation.metricTrainAuc'), value: '0.798' },
-                  { label: 'High-risk rate (OECD compliance)', value: '13.49%' },
+                  { label: t('body.validation.metricTestAuc'), value: '0.785' },
+                  { label: t('body.validation.metricTrainAuc'), value: '0.797' },
+                  { label: 'High-risk rate (OECD compliance)', value: '11.01%' },
                   { label: t('body.validation.metricHighPlus'), value: '25.3%' },
                   { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
@@ -1176,7 +1190,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted italic">
-                Train AUC 0.798 / Test AUC 0.828 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=13.49% OECD-compliant (within 2–15% benchmark). Model v0.6.5 active since March 25, 2026.
+                Train AUC 0.797 / Test AUC 0.785 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=11.01% OECD-compliant (within 2–15% benchmark). Model v0.8.5 active since May 2, 2026. Run ID: CAL-v8-202605020212.
               </p>
             </div>
           </CollapsibleSection>
@@ -1547,8 +1561,8 @@ export function Methodology() {
                       { l: 'Temporal stationarity', i: 'New fraud patterns may be undetected', f: 'Periodic retraining with new cases' },
                       { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
                       { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
-                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.6.5 split', f: 'Point-in-time rolling features' },
-                      { l: 'Ghost-companion boost applied post-OECD calibration', i: 'HR=13.49% exceeds 9% target by design (+403K boosted contracts)', f: 'Documented intentional design decision' },
+                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.8.5 temporal split', f: 'Point-in-time rolling features' },
+                      { l: 'PU c=0.32 post-OECD calibration', i: 'HR=11.01% (within OECD 2–15% range); intercept -2.616 floor applied', f: 'Documented intentional design decision' },
                       { l: 'ARIA T1 = ground-truth lookup', i: 'External-flags +0.20 IPS boost guarantees GT vendors enter T1; T2 is the actual discovery surface', f: 'S.7 deliberate recalibration session pending' },
                     ] as const).map((row) => (
                       <tr key={row.l} className="hover:bg-accent/[0.03]">
@@ -1608,7 +1622,7 @@ export function Methodology() {
         <TableOfContents />
       </div>
 
-      <CitationBlock context="RUBLI methodology — v0.6.5 risk model" className="mt-2" />
+      <CitationBlock context="RUBLI methodology — v0.8.5 risk model" className="mt-2" />
     </div>
       </div>
     </div>
