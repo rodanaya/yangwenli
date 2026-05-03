@@ -39,6 +39,7 @@ import {
 import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
 // Inline chart map — type string → component
@@ -1486,6 +1487,60 @@ function ChapterNav({
 // Methodology footer
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// DramatisPersonaeSection — entity chips for named subjects in the story
+// ---------------------------------------------------------------------------
+
+function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; accentColor: string }) {
+  const { i18n } = useTranslation('common')
+  const isEs = i18n.language.startsWith('es')
+
+  if (!story.entities || story.entities.length === 0) return null
+
+  return (
+    <ScrollReveal>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 my-10">
+        <div
+          className="rounded-sm border border-border bg-background-elevated px-6 py-5"
+          style={{ borderLeft: `3px solid ${accentColor}` }}
+        >
+          {/* Kicker */}
+          <p
+            className="text-[9px] font-mono uppercase tracking-[0.22em] mb-4"
+            style={{ color: accentColor }}
+          >
+            {isEs ? 'Sujetos de esta investigación' : 'Subjects of this investigation'}
+          </p>
+
+          {/* Chip grid — 1 col on mobile, 2 col on sm+, 3 on lg */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {story.entities.map((entity) => (
+              <div
+                key={`${entity.type}-${entity.id}`}
+                className="flex flex-col gap-1 p-3 rounded-sm bg-background border border-border hover:border-border-hover transition-colors"
+              >
+                <EntityIdentityChip
+                  type={entity.type}
+                  id={entity.id}
+                  name={entity.name}
+                  riskScore={entity.riskScore}
+                  ariaTier={entity.ariaTier as 1 | 2 | 3 | 4 | undefined}
+                  size="sm"
+                />
+                {(entity.role || entity.role_es) && (
+                  <p className="text-[10px] font-mono text-text-muted pl-1 leading-relaxed">
+                    {isEs ? (entity.role_es ?? entity.role) : entity.role}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ScrollReveal>
+  )
+}
+
 function MethodologySection({ story }: { story: StoryDef }) {
   const { t } = useTranslation('common')
   const statusCfg = story.status ? STATUS_CONFIG[story.status] : null
@@ -1845,6 +1900,11 @@ export default function StoryNarrative() {
           })}
         </Act>
       </main>
+
+      {/* ── DRAMATIS PERSONAE — named subjects with dossier links ── */}
+      {story.entities && story.entities.length > 0 && (
+        <DramatisPersonaeSection story={story} accentColor={accentColor} />
+      )}
 
       {/* ── ACT II: THE METHODOLOGY ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">

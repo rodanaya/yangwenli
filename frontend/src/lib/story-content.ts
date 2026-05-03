@@ -272,6 +272,23 @@ export interface StoryDef {
     /** Free-text terms surfaced in the constellation TERMS lens. */
     terms?: string[]
   }
+  /**
+   * Dramatis Personae — named entities (vendors / institutions) that
+   * appear in this story. Each entry renders as an EntityIdentityChip
+   * in the "Subjects" panel between Act I and Act II. Only populate
+   * when RUBLI has a confirmed vendor_id or institution_id so the chip
+   * links to an actual dossier.
+   */
+  entities?: Array<{
+    type: 'vendor' | 'institution'
+    id: number
+    name: string
+    riskScore?: number
+    ariaTier?: number
+    /** Short role descriptor shown beneath the chip (e.g. "Principal suspect", "Contracting authority"). */
+    role?: string
+    role_es?: string
+  }>
 }
 
 /** ARIA pattern codes from the queue typology (P1–P7). */
@@ -1043,6 +1060,12 @@ export const STORIES: StoryDef[] = [
       'Identify which IMSS procurement directors approved the 2013-2019 Grupo Fármacos contracts using SIPOT declarations of interests and meeting records.',
       'Track the AMLO-era transition of pharmaceutical contracting from IMSS-direct to BIRMEX/INSABI: did the same P1 vendors continue dominating under the new architecture?',
     ],
+    entities: [
+      { type: 'vendor', id: 29277, name: 'Grupo Fármacos Especializados', riskScore: 0.99, ariaTier: 1, role: 'Principal suspect · 133.4B MXN',        role_es: 'Principal investigado · 133.4 MDP' },
+      { type: 'vendor', id: 2873,  name: 'Farmacéuticos Maypo',           riskScore: 0.95, ariaTier: 1, role: 'Principal suspect · 88.0B MXN',          role_es: 'Principal investigado · 88.0 MDP' },
+      { type: 'vendor', id: 4335,  name: 'Laboratorios PISA',             riskScore: 0.75, ariaTier: 2, role: 'Principal suspect · 55.6B MXN',          role_es: 'Principal investigado · 55.6 MDP' },
+      { type: 'vendor', id: 13885, name: 'DIMM',                          riskScore: 0.54, ariaTier: 2, role: 'Principal suspect · 51.6B MXN',          role_es: 'Principal investigado · 51.6 MDP' },
+    ],
   },
 
   // =========================================================================
@@ -1326,6 +1349,11 @@ export const STORIES: StoryDef[] = [
       'Research which industries in Mexico have COFECE "effective competition" certification and cross-reference their single-bid rates against uncertified sectors.',
       'Map single-bid rates by procurement institution to identify the worst-offending procurement units for prioritized audit.',
       'Pursue a journalistic investigation of the 2011 single-bid peak (64.4%) — what specific procurement category or institution drove the annual figure?',
+    ],
+    entities: [
+      { type: 'vendor', id: 44372,  name: 'Edenred Mexico',      riskScore: 0.928, ariaTier: 1, role: 'Welfare-voucher monopolist · 1,679 single-bid wins', role_es: 'Monopolio de vales · 1,679 victorias de oferta única' },
+      { type: 'vendor', id: 102627, name: 'TOKA Internacional',  riskScore: 0.988, ariaTier: 1, role: 'Welfare-voucher monopolist · 1,290 single-bid wins', role_es: 'Monopolio de vales · 1,290 victorias de oferta única' },
+      { type: 'vendor', id: 64,     name: 'Efectivale',          riskScore: 0.957, ariaTier: 1, role: 'Welfare-voucher monopolist · 2,210 single-bid wins', role_es: 'Monopolio de vales · 2,210 victorias de oferta única' },
     ],
   },
 
@@ -2079,6 +2107,13 @@ export const STORIES: StoryDef[] = [
       'Cross-reference AMLO-era direct-award contracts above 500M MXN against the SFP sanctions registry and the SAT EFOS list.',
       'Compile a comprehensive list of the top 1,000 AMLO-era contracts by RUBLI risk score, with procurement institution and approving unit identified.',
       'Pursue academic research collaboration with CIDE, COLMEX, or UNAM to publish a peer-reviewed analysis of the Fox-to-AMLO risk trajectory.',
+    ],
+    entities: [
+      { type: 'vendor', id: 102627, name: 'TOKA Internacional',         riskScore: 0.988, ariaTier: 1, role: 'Welfare-voucher dominant vendor',          role_es: 'Proveedor dominante de vales del bienestar' },
+      { type: 'vendor', id: 36961,  name: 'Operadora CICSA',            riskScore: 0.641, ariaTier: 2, role: 'Tren Maya contractor · 139.0B MXN',         role_es: 'Contratista Tren Maya · 139.0 MDP' },
+      { type: 'vendor', id: 8143,   name: 'Dowell Schlumberger',        riskScore: 0.971, ariaTier: 1, role: 'Pemex contractor · risk 0.97',               role_es: 'Contratista Pemex · riesgo 0.97' },
+      { type: 'vendor', id: 139711, name: 'Alstom Transport Mexico',    riskScore: 1.000, ariaTier: 1, role: 'Tren Maya contractor · risk 1.00',           role_es: 'Contratista Tren Maya · riesgo 1.00' },
+      { type: 'vendor', id: 28111,  name: 'Constructora Arhnos',        riskScore: 0.516, ariaTier: 2, role: 'Military construction operator',             role_es: 'Operador de construcción militar' },
     ],
   },
 
