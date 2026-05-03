@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
 import { SECTOR_NAMES_EN } from '@/lib/constants'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -1054,37 +1055,28 @@ function AriaLiveTicker() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         {items.slice(0, 6).map((item) => {
           const risk = item.risk_score_norm ?? item.avg_risk_score ?? 0
-          const pct = Math.round(risk * 100)
-          const name =
-            item.vendor_name.length > 44
-              ? item.vendor_name.slice(0, 44) + '…'
-              : item.vendor_name
+          const flags: ('gt' | 'efos' | 'sfp')[] = []
+          if (item.in_ground_truth) flags.push('gt')
+          if (item.is_efos_definitivo) flags.push('efos')
+          if (item.is_sfp_sanctioned) flags.push('sfp')
 
           return (
-            <Link
+            <div
               key={item.vendor_id}
-              to={`/thread/${item.vendor_id}`}
-              className={cn(
-                'group flex items-center justify-between gap-3',
-                'px-3 py-2.5 bg-background-card border border-border',
-                'rounded-sm hover:border-border-hover transition-colors'
-              )}
+              className="px-2 py-1.5 bg-background-card border border-border rounded-sm hover:border-border-hover transition-colors"
             >
-              <span
-                className="text-[11px] text-text-secondary font-mono truncate group-hover:text-text-primary"
-                title={item.vendor_name}
-              >
-                {name}
-              </span>
-              <span
-                className="text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
-                style={{
-                  color: risk >= 0.6 ? '#ef4444' : risk >= 0.4 ? '#fb923c' : '#f59e0b',
-                }}
-              >
-                {pct}
-              </span>
-            </Link>
+              <EntityIdentityChip
+                type="vendor"
+                id={item.vendor_id}
+                name={item.vendor_name}
+                riskScore={risk}
+                ariaTier={item.ips_tier}
+                flags={flags.length > 0 ? flags : undefined}
+                narrative={true}
+                size="xs"
+                className="w-full"
+              />
+            </div>
           )
         })}
       </div>
