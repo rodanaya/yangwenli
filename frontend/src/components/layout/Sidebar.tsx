@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Library,
+  Layers,
   X,
   MessageSquarePlus,
   Shield,
@@ -87,6 +88,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'categories', href: '/sectors?view=categories', icon: Tag },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'network', href: '/network', icon: Network },
+      { i18nKey: 'patterns', href: '/patterns', icon: Layers },
     ],
   },
   {

@@ -61,6 +61,8 @@ const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
+const Patterns = lazy(() => import('@/pages/Patterns'))
+const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
 function SectorRedirect() {
@@ -231,6 +233,22 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <AriaQueue />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="patterns"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Patterns />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="patterns/:code"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <PatternDossier />
                   </SuspenseBoundary>
                 }
               />
