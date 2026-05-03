@@ -118,6 +118,18 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
     })
   }
 
+  // ─── § 8 False-positive guard — structural monopoly (BAXTER/FRESENIUS etc) ──
+  // When set, ARIA/risk flags above are noise, not signal. Surface explicitly
+  // so a journalist doesn't draw a false corruption inference.
+  if (aria?.fp_structural_monopoly) {
+    flags.push({
+      key: 'fp-structural',
+      severity: 'info',
+      headline: t('vendorFlags.fpStructural.headline'),
+      detail: t('vendorFlags.fpStructural.detail'),
+    })
+  }
+
   // ─── Model risk score ──────────────────────────────────────────────────
   const score = vendor.avg_risk_score ?? 0
   if (score >= RISK_THRESHOLDS.critical) {

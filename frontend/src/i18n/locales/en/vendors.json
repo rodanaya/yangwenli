@@ -102,6 +102,10 @@
     },
     "primaryDriver": {
       "headline": "Primary driver: {{factor}} ({{z}}σ above sector norm)"
+    },
+    "fpStructural": {
+      "headline": "Structural monopoly — risk score is not an anomaly",
+      "detail": "This vendor is a sole-source supplier in a regulated market (e.g. medical gases, specialty pharma). High direct-award and concentration scores are expected and do not indicate malfeasance."
     }
   },
   "waterfall": {
