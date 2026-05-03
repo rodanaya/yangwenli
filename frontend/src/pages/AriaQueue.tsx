@@ -694,6 +694,8 @@ export default function AriaPage() {
   const [efosOnly, setEfosOnly] = useState(false)
   const [sfpOnly, setSfpOnly] = useState(false)
   const [webEvidenceOnly, setWebEvidenceOnly] = useState(false)
+  // S.3: filter to vendors with genuine LLM investigation memos
+  const [llmMemoOnly, setLlmMemoOnly] = useState(false)
 
   // Client-side sort within the current page. Server returns IPS-ordered;
   // user can re-sort by what's actually meaningful for their triage. The
@@ -769,6 +771,7 @@ export default function AriaPage() {
     let arr = [...leadsItemsRaw]
     if (gtOnly) arr = arr.filter((it) => it.in_ground_truth)
     if (sfpOnly) arr = arr.filter((it) => it.is_sfp_sanctioned)
+    if (llmMemoOnly) arr = arr.filter((it) => it.memo_provenance === 'llm_narrative')
     if (webEvidenceOnly) {
       arr = arr.filter((it) => it.web_evidence_verdict && it.web_evidence_verdict !== 'NEGATIVE')
       // Sort by evidence score descending when WEB filter is active (overrides IPS order)
@@ -841,6 +844,7 @@ export default function AriaPage() {
     efosOnly || null,
     sfpOnly || null,
     webEvidenceOnly || null,
+    llmMemoOnly || null,
     search || null,
   ].filter(Boolean).length
 
@@ -1297,6 +1301,18 @@ export default function AriaPage() {
                   title={isEs ? 'Evidencia web (CENTINELA)' : 'Has web evidence (CENTINELA)'}
                 >
                   WEB
+                </button>
+                <button
+                  onClick={() => { setLlmMemoOnly(!llmMemoOnly); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
+                    llmMemoOnly
+                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                      : 'bg-background-card text-text-secondary border-border hover:border-border'
+                  )}
+                  title={isEs ? 'Solo proveedores con memo investigativo LLM completo' : 'Only vendors with full LLM investigation memo'}
+                >
+                  LLM
                 </button>
               </div>
 
