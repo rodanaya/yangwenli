@@ -1532,6 +1532,54 @@ export function SectorProfile() {
               </div>
             </section>
           )}
+
+          {/* ── Editorial closing: investigation CTAs ──────────────────────── */}
+          {sector && stats && (
+            <section className="pt-2 border-t border-border/40 space-y-4">
+              {/* Synthesized risk signal */}
+              <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                {(() => {
+                  const da = stats.direct_award_pct ?? 0
+                  const sb = stats.single_bid_pct ?? 0
+                  const rs = stats.avg_risk_score ?? 0
+                  const name = sector.name ?? 'Este sector'
+                  if (da > 70 && rs >= 0.40) {
+                    return `${name} combina una tasa de adjudicación directa del ${da.toFixed(0)}% con un indicador de riesgo promedio de ${(rs * 100).toFixed(0)} — patrón consistente con captura institucional. La cola de investigación ARIA identifica ${formatNumber(stats.total_vendors ?? 0)} proveedores activos; los de mayor señal están disponibles para revisión inmediata.`
+                  }
+                  if (da > 60) {
+                    return `Con ${da.toFixed(0)}% de adjudicaciones directas en ${formatNumber(stats.total_vendors ?? 0)} proveedores registrados, ${name} presenta una concentración de procedimiento que merece seguimiento sistemático. Consulta la cola ARIA para los proveedores prioritarios del sector.`
+                  }
+                  if (sb > 25) {
+                    return `El ${sb.toFixed(0)}% de procedimientos con un solo postor en ${name} supera los umbrales de alerta del modelo de riesgo. La ausencia de competencia efectiva en un cuarto de las licitaciones es señal de posible colusión o barrera de entrada.`
+                  }
+                  return `${name} registra ${formatCompactMXN(sector.total_value_mxn ?? 0)} en contratos federales. El modelo v0.8.5 no detecta señales sistémicas elevadas, aunque los proveedores individuales de alto riesgo siguen disponibles en la cola ARIA para análisis detallado.`
+                })()}
+              </p>
+
+              {/* CTA row */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  to={`/aria?sector_id=${sectorId}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                >
+                  <ShieldAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                  Cola ARIA · {sector.code?.toUpperCase()}
+                  <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
+                </Link>
+                <Link
+                  to={`/atlas?lens=SECTORS&pin=${sectorId}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-semibold text-text-secondary hover:text-text-primary hover:border-border-hover transition-colors"
+                >
+                  <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+                  Ver en el Observatorio
+                  <ExternalLink className="h-3 w-3 opacity-50" aria-hidden="true" />
+                </Link>
+                <span className="text-[10px] text-text-muted font-mono ml-auto">
+                  Indicador estadístico · no prueba de irregularidades
+                </span>
+              </div>
+            </section>
+          )}
         </div>
       </div>
       </Act>
