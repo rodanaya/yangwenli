@@ -20,7 +20,7 @@ const BIBTEX = `@misc{rubli2026,
   year         = {2026},
   version      = {2.1},
   howpublished = {\\url{${APP_URL}}},
-  note         = {Open-source procurement analytics. 3.1M contracts 2002--2025. Risk model v0.6.5 (AUC=0.828).}
+  note         = {Open-source procurement analytics. 3.1M contracts 2002--2025. Risk model v0.8.5 (AUC=0.785).}
 }`
 
 const APA = `RUBLI Project. (2026). RUBLI: Mexican Federal Procurement Intelligence Platform (v0.2.5). Retrieved from ${APP_URL}`

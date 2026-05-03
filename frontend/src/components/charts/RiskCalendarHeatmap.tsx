@@ -19,7 +19,7 @@ const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct',
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
 // Risk color ramp — cream-mode, bible §2 (NO green for low; zinc for low).
-// Breakpoints aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
+// Breakpoints aligned to v0.8.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
 function riskToColor(risk: number): string {
   if (risk === 0) return '#f3f1ec'    // elevated cream — no data
   if (risk < 0.15) return '#e2ddd6'   // warm border gray — very low

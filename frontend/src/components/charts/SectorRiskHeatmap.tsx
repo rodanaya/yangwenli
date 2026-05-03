@@ -40,13 +40,13 @@ type MetricLabels = Record<CellMetric, string>
 function metricColor(value: number, metric: CellMetric): string {
   let t: number
   if (metric === 'risk') {
-    t = Math.min(value / 0.60, 1) // normalize to v0.6.5 critical threshold
+    t = Math.min(value / 0.60, 1) // normalize to v0.8.5 critical threshold
   } else {
     t = Math.min(value / 100, 1)
   }
   if (t === 0) return 'transparent'
   // Bible §2: cream-mode ramp, no green for low. Warm zinc → amber → red.
-  // Thresholds aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
+  // Thresholds aligned to v0.8.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
   if (t < 0.25) return '#e2ddd6'   // warm border — low (zinc, not green)
   if (t < 0.40) return '#a16207'   // medium (bible canonical)
   if (t < 0.60) return '#f59e0b'   // high (bible canonical)

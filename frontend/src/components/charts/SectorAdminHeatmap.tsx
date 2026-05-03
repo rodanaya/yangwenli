@@ -7,7 +7,7 @@
  * using a contract-weighted mean of `avg_risk`.
  *
  * Visualization: pure CSS/Tailwind grid. No chart library. Cell background is
- * bucketed by risk level (v0.6.5 thresholds). Hover reveals a tooltip with
+ * bucketed by risk level (v0.8.5 thresholds). Hover reveals a tooltip with
  * sector, admin, score and risk level in Spanish.
  */
 import { memo, useMemo, useState } from 'react'
@@ -35,7 +35,7 @@ const ADMINISTRATIONS: readonly Administration[] = [
   { name: 'Sheinbaum',  shortYears: '24+',   dataStart: 2024, end: 2031 },
 ] as const
 
-// ── Risk thresholds (v0.6.5) ─────────────────────────────────────────────────
+// ── Risk thresholds (v0.8.5) ─────────────────────────────────────────────────
 
 type RiskLevel = 'critical' | 'high' | 'medium' | 'low'
 
@@ -238,8 +238,8 @@ function HeatmapHeader({ lang }: { lang: string }) {
       </h3>
       <p className="mt-1 text-xs text-text-muted">
         {lang === 'en'
-          ? 'Average v0.6.5 model score by sector and presidential term'
-          : 'Puntuación promedio del modelo v0.6.5 por sector y período presidencial'}
+          ? 'Average v0.8.5 model score by sector and presidential term'
+          : 'Puntuación promedio del modelo v0.8.5 por sector y período presidencial'}
       </p>
     </div>
   )
