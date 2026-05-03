@@ -135,30 +135,54 @@ export function VendorActivityTab({
         )}
       </section>
 
-      {/* Top institutions list (no dot strip — list IS the chart) */}
+      {/* § 2 La Captura — top institutions list with capture pill */}
       {institutionRows.length > 0 && (
         <section
           aria-labelledby="inst-title"
           className="pt-6 border-t border-border/40"
         >
           <SectionTitle id="inst-title">
-            {isEs ? 'Top instituciones' : 'Top institutions'}
+            {isEs ? '§ 2 · La Captura institucional' : '§ 2 · Institutional capture'}
           </SectionTitle>
+          {/* Capture pill — shown if top institution > 40% of total vendor value */}
+          {(() => {
+            const topInst = institutionRows[0]
+            if (!topInst || !vendor.total_value_mxn) return null
+            const share = topInst.total_value_mxn / vendor.total_value_mxn
+            if (share < 0.40) return null
+            return (
+              <div className="mb-3">
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em]"
+                  style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.3)' }}
+                >
+                  {isEs
+                    ? `Capturado por ${topInst.institution_name.split(' ').slice(0, 3).join(' ')} · ${(share * 100).toFixed(0)}%`
+                    : `Captured by ${topInst.institution_name.split(' ').slice(0, 3).join(' ')} · ${(share * 100).toFixed(0)}%`}
+                </span>
+              </div>
+            )
+          })()}
           <ul className="space-y-2">
-            {institutionRows.slice(0, 10).map((inst) => (
-              <li
-                key={inst.institution_id}
-                className="flex items-center justify-between gap-4 px-2 py-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
-              >
-                <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" />
-                <div className="flex items-center gap-4 flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted">
-                  <span>{inst.contract_count}</span>
-                  <span className="text-text-primary font-medium">
-                    {formatCompactMXN(inst.total_value_mxn)}
-                  </span>
-                </div>
-              </li>
-            ))}
+            {institutionRows.slice(0, 10).map((inst) => {
+              const share = vendor.total_value_mxn > 0
+                ? inst.total_value_mxn / vendor.total_value_mxn
+                : 0
+              return (
+                <li
+                  key={inst.institution_id}
+                  className="flex items-center justify-between gap-4 px-2 py-1.5 rounded-sm hover:bg-background-elevated/60 transition-colors"
+                >
+                  <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" />
+                  <div className="flex items-center gap-4 flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted">
+                    <span className="text-text-secondary">{(share * 100).toFixed(0)}%</span>
+                    <span className="text-text-primary font-medium">
+                      {formatCompactMXN(inst.total_value_mxn)}
+                    </span>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </section>
       )}
