@@ -396,6 +396,99 @@ def get_categories_sexenio():
     }
 
 
+@router.get("/{category_id}/seasonality")
+def get_category_seasonality(category_id: int):
+    """Monthly spend distribution — surface the December rush pattern."""
+    MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        cur.execute("""
+            SELECT contract_month AS month,
+                   COUNT(*)                   AS contracts,
+                   COALESCE(SUM(amount_mxn), 0) AS value
+            FROM contracts
+            WHERE category_id = ?
+              AND contract_month BETWEEN 1 AND 12
+              AND amount_mxn IS NOT NULL
+              AND amount_mxn < 10000000000
+            GROUP BY contract_month
+            ORDER BY contract_month
+        """, (category_id,))
+        rows = cur.fetchall()
+
+        # Q4 (Oct-Dec) rush — compare vs Q1+Q2 baseline
+        cur.execute("""
+            SELECT contract_year AS year,
+                   SUM(CASE WHEN contract_month = 12 THEN amount_mxn ELSE 0 END) AS dec_val,
+                   SUM(amount_mxn) AS total_val,
+                   COUNT(*) AS total_cnt,
+                   SUM(CASE WHEN contract_month = 12 THEN 1 ELSE 0 END) AS dec_cnt
+            FROM contracts
+            WHERE category_id = ?
+              AND contract_month BETWEEN 1 AND 12
+              AND contract_year BETWEEN 2010 AND 2025
+              AND amount_mxn IS NOT NULL
+              AND amount_mxn < 10000000000
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """, (category_id,))
+        year_rows = cur.fetchall()
+
+    total_val = sum(r["value"] for r in rows) or 1.0
+    total_cnt = sum(r["contracts"] for r in rows) or 1
+
+    monthly = []
+    for r in rows:
+        m = r["month"]
+        monthly.append({
+            "month": m,
+            "month_name": MONTH_NAMES[m - 1],
+            "contracts": r["contracts"],
+            "value": round(r["value"], 2),
+            "pct_contracts": round(r["contracts"] * 100.0 / total_cnt, 1),
+            "pct_value": round(r["value"] * 100.0 / total_val, 1),
+        })
+
+    # Pad missing months with zeros
+    present = {r["month"] for r in rows}
+    for m in range(1, 13):
+        if m not in present:
+            monthly.append({
+                "month": m, "month_name": MONTH_NAMES[m - 1],
+                "contracts": 0, "value": 0.0,
+                "pct_contracts": 0.0, "pct_value": 0.0,
+            })
+    monthly.sort(key=lambda x: x["month"])
+
+    dec_row = next((r for r in monthly if r["month"] == 12), None)
+    dec_pct_value = dec_row["pct_value"] if dec_row else 0.0
+    # Expected share if uniform = 8.33%
+    december_index = round(dec_pct_value / 8.33, 2) if dec_pct_value else 0.0
+
+    yearly_dec = [
+        {
+            "year": r["year"],
+            "dec_pct": round(r["dec_val"] * 100.0 / r["total_val"], 1) if r["total_val"] else 0.0,
+            "dec_cnt_pct": round(r["dec_cnt"] * 100.0 / r["total_cnt"], 1) if r["total_cnt"] else 0.0,
+        }
+        for r in year_rows if r["total_val"] and r["total_val"] > 0
+    ]
+
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "monthly": monthly,
+        "december_pct_value": dec_pct_value,
+        "december_index": december_index,   # >1 = above expected
+        "yearly_december": yearly_dec,
+    }
+
+
 @router.get("/{category_id}/competition")
 def get_category_competition(category_id: int):
     """Return competition metrics: procedure breakdown, DA/single-bid trends, sector benchmark."""

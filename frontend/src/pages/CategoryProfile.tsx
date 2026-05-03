@@ -370,6 +370,13 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  const { data: seasonalityData } = useQuery({
+    queryKey: ['categories', 'seasonality', categoryId],
+    queryFn: () => categoriesApi.getSeasonality(categoryId),
+    enabled: !isNaN(categoryId),
+    staleTime: 10 * 60 * 1000,
+  })
+
   // Derived data
   const category: CategoryStat | null = useMemo(() => {
     if (!summaryData?.data) return null
@@ -1199,6 +1206,150 @@ export default function CategoryProfile() {
                           )}
                           <span>{lastYear}</span>
                         </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
+
+      {/* ================================================================= */}
+      {/* § 6 La Estacionalidad                                            */}
+      {/* ================================================================= */}
+      {seasonalityData && seasonalityData.monthly.length > 0 && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const { monthly, december_pct_value, december_index, yearly_december } = seasonalityData
+        const maxPct = Math.max(...monthly.map(m => m.pct_value), 0.1)
+        const decemberRush = december_index >= 1.5
+        const MONTH_SHORT_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+        const MONTH_SHORT_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+        return (
+          <section className="pt-2">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                    {isEs ? '§ 6 · ESTACIONALIDAD' : '§ 6 · SEASONALITY'}
+                  </span>
+                  {decemberRush && (
+                    <span
+                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', border: '1px solid rgba(251,146,60,0.3)' }}
+                    >
+                      {isEs ? 'Avalancha diciembre' : 'December rush'}
+                    </span>
+                  )}
+                </div>
+                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                  {isEs ? 'La Estacionalidad' : 'Seasonality'}
+                </CardTitle>
+                <p className="text-sm text-text-secondary">
+                  {isEs
+                    ? 'Distribución mensual del gasto. Un pico en diciembre es señal de presión de fin de año y posible evasión de controles.'
+                    : 'Monthly spend distribution. A December spike signals year-end pressure and potential control evasion.'}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-5">
+
+                {/* December KPI */}
+                <div className="flex items-center gap-6">
+                  <div>
+                    <div
+                      className="text-3xl font-bold tabular-nums"
+                      style={{
+                        fontFamily: 'var(--font-serif)',
+                        color: decemberRush ? '#fb923c' : 'var(--color-text-primary)',
+                      }}
+                    >
+                      {december_pct_value.toFixed(1)}%
+                    </div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                      {isEs ? 'del gasto en diciembre' : 'of spend in December'}
+                    </div>
+                  </div>
+                  <div className="text-sm text-text-secondary leading-relaxed max-w-xs">
+                    {december_index >= 2.0
+                      ? isEs
+                        ? `${december_index.toFixed(1)}× la cuota uniforme esperada (8.3%). Patrón de avalancha severo.`
+                        : `${december_index.toFixed(1)}× the expected uniform share (8.3%). Severe rush pattern.`
+                      : december_index >= 1.5
+                        ? isEs
+                          ? `${december_index.toFixed(1)}× la cuota esperada. Elevación significativa de fin de año.`
+                          : `${december_index.toFixed(1)}× the expected share. Significant year-end spike.`
+                        : isEs
+                          ? `${december_index.toFixed(1)}× la cuota esperada (8.3%). Distribución relativamente uniforme.`
+                          : `${december_index.toFixed(1)}× the expected share (8.3%). Relatively even distribution.`
+                    }
+                  </div>
+                </div>
+
+                {/* Monthly bar chart */}
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                    {isEs ? 'Gasto por mes (% del total)' : 'Spend by month (% of total)'}
+                  </div>
+                  <div className="flex items-end gap-1 h-16">
+                    {monthly.map((m) => {
+                      const heightPct = (m.pct_value / maxPct) * 100
+                      const isDec = m.month === 12
+                      return (
+                        <div
+                          key={m.month}
+                          className="flex-1 flex flex-col items-center gap-0.5"
+                          title={`${isEs ? MONTH_SHORT_ES[m.month - 1] : MONTH_SHORT_EN[m.month - 1]}: ${m.pct_value.toFixed(1)}%`}
+                        >
+                          <div className="w-full flex items-end" style={{ height: 52 }}>
+                            <div
+                              className="w-full rounded-sm transition-all"
+                              style={{
+                                height: `${Math.max(heightPct, 4)}%`,
+                                backgroundColor: isDec
+                                  ? (decemberRush ? '#fb923c' : '#fbbf24')
+                                  : 'var(--color-border)',
+                              }}
+                            />
+                          </div>
+                          <div className="text-[8px] text-text-muted font-mono">
+                            {isEs ? MONTH_SHORT_ES[m.month - 1].charAt(0) : MONTH_SHORT_EN[m.month - 1].charAt(0)}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {/* uniform reference label */}
+                  <div className="text-[9px] text-text-muted/60 mt-1 text-right font-mono">
+                    — {isEs ? 'cuota uniforme 8.3%' : 'uniform 8.3%'}
+                  </div>
+                </div>
+
+                {/* Year-over-year December trend */}
+                {yearly_december.length > 4 && (() => {
+                  const W = 320; const H = 40
+                  const pts = yearly_december.map((y, i) => {
+                    const x = (i / (yearly_december.length - 1)) * W
+                    const yv = H - Math.min(y.dec_pct / 40, 1) * H
+                    return `${x.toFixed(1)},${yv.toFixed(1)}`
+                  }).join(' ')
+                  return (
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                        {isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
+                      </div>
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}>
+                        {/* 8.33% reference */}
+                        <line x1="0" y1={H - (8.33 / 40) * H} x2={W} y2={H - (8.33 / 40) * H}
+                          stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
+                        <polyline points={pts} fill="none" stroke="#fb923c" strokeWidth="1.5" strokeLinejoin="round" />
+                      </svg>
+                      <div className="flex justify-between text-[9px] text-text-muted font-mono mt-0.5">
+                        <span>{yearly_december[0].year}</span>
+                        <span className="text-text-muted/60">— {isEs ? 'cuota uniform' : 'uniform'} 8.3%</span>
+                        <span>{yearly_december[yearly_december.length - 1].year}</span>
                       </div>
                     </div>
                   )

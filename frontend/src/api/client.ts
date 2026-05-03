@@ -2149,6 +2149,29 @@ export const categoriesApi = {
     }
   },
 
+  getSeasonality: async (categoryId: number) => {
+    const { data } = await api.get(`/categories/${categoryId}/seasonality`)
+    return data as {
+      category_id: number
+      category_name: string
+      monthly: {
+        month: number
+        month_name: string
+        contracts: number
+        value: number
+        pct_contracts: number
+        pct_value: number
+      }[]
+      december_pct_value: number
+      december_index: number
+      yearly_december: {
+        year: number
+        dec_pct: number
+        dec_cnt_pct: number
+      }[]
+    }
+  },
+
   getCompetition: async (categoryId: number) => {
     const { data } = await api.get(`/categories/${categoryId}/competition`)
     return data as {
