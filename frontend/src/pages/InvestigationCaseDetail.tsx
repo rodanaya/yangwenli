@@ -858,7 +858,7 @@ export function InvestigationCaseDetail() {
                     {/* Top row: name + risk number */}
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0 flex-1">
-                        <EntityIdentityChip type="vendor" id={v.vendor_id} name={toTitleCase(v.name)} size="sm" />
+                        <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.name} size="sm" />
                         <div className="flex items-center gap-2 mt-1">
                           {v.rfc && (
                             <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_FAINT, letterSpacing: '0.03em' }}>

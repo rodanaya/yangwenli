@@ -13,7 +13,6 @@ import {
   cn,
   formatCompactMXN,
   formatNumber,
-  toTitleCase,
   getRiskLevel,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
@@ -690,7 +689,7 @@ function FlashVendorRadar() {
                         const level = getRiskLevel(d.avg_risk_score)
                         return (
                           <div key={d.vendor_id} className="flex items-center justify-between gap-2">
-                            <EntityIdentityChip type="vendor" id={d.vendor_id} name={toTitleCase(d.vendor_name)} size="sm" />
+                            <EntityIdentityChip type="vendor" id={d.vendor_id} name={d.vendor_name} size="sm" />
                             <div className="flex items-center gap-2 shrink-0">
                               <span className="text-xs font-mono tabular-nums text-text-muted">{formatCompactMXN(d.total_value)}</span>
                               <span
@@ -794,7 +793,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
           />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <EntityIdentityChip type="vendor" id={vendor.id} name={toTitleCase(vendor.name)} size="sm" />
+              <EntityIdentityChip type="vendor" id={vendor.id} name={vendor.name} size="sm" />
               {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" />
               )}

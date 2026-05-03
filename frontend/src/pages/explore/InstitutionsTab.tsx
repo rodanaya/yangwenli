@@ -679,12 +679,12 @@ function ValueConcentrationAlerts() {
                       >
                         {/* Institution */}
                         <td className="px-3 py-2">
-                          <EntityIdentityChip type="institution" id={row.institution_id} name={toTitleCase(row.institution_name)} size="sm" />
+                          <EntityIdentityChip type="institution" id={row.institution_id} name={row.institution_name} size="sm" />
                         </td>
 
                         {/* Vendor */}
                         <td className="px-3 py-2">
-                          <EntityIdentityChip type="vendor" id={row.vendor_id} name={toTitleCase(row.vendor_name)} size="sm" />
+                          <EntityIdentityChip type="vendor" id={row.vendor_id} name={row.vendor_name} size="sm" />
                         </td>
 
                         {/* Share % */}
@@ -791,7 +791,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
           })()}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <EntityIdentityChip type="institution" id={institution.id} name={toTitleCase(institution.name)} size="sm" />
+              <EntityIdentityChip type="institution" id={institution.id} name={institution.name} size="sm" />
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {institution.siglas && (

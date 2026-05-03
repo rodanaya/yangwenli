@@ -23,7 +23,6 @@ import {
   formatCompactMXN,
   formatNumber,
   formatPercentSafe,
-  toTitleCase,
 } from '@/lib/utils'
 import {
   api,
@@ -304,7 +303,7 @@ function VendorTable({
                   </td>
                   <td className="py-2.5 px-3">
                     <div>
-                      <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={toTitleCase(vendor.vendor_name ?? vendor.name ?? '')} size="sm" />
+                      <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name ?? vendor.name ?? ''} size="sm" />
                       {(() => {
                         const N = 16, DR = 2, DG = 4
                         const filled = Math.max(1, Math.round((barPct / 100) * N))
