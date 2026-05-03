@@ -1762,12 +1762,14 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
       {topCoBidder && (
         <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
           <span className="text-text-muted">{t('network.mostFrequent')}</span>{' '}
-          <Link
-            to={`/thread/${topCoBidder.vendor_id}`}
-            className="font-bold text-text-primary hover:text-[var(--color-risk-critical)] transition-colors"
-          >
-            {formatVendorName(topCoBidder.vendor_name, 50)}
-          </Link>
+          <EntityIdentityChip
+            type="vendor"
+            id={topCoBidder.vendor_id}
+            name={topCoBidder.vendor_name}
+            narrative={true}
+            size="xs"
+            className="inline-flex align-middle"
+          />
           {' '}— {t('network.sharedProcedures', { count: topCoBidder.co_bid_count })}, {classifyRole(topCoBidder, t).label.toLowerCase()}.
         </p>
       )}
