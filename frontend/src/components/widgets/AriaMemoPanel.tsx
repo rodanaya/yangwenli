@@ -321,7 +321,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
             {hasStaleScore && (
               <div className="mb-4 px-4 py-2 border-l-2 border-risk-medium/50 bg-risk-medium/5 rounded-sm">
                 <p className="text-[11px] text-text-secondary leading-relaxed">
-                  ⓘ Memo escrito antes del rescore de marzo 2026 (modelo v0.6.5). Las puntuaciones citadas pueden no coincidir con los valores actuales.
+                  ⓘ Memo escrito antes del modelo activo v0.8.5 (mayo 2026). Las puntuaciones citadas pueden no coincidir con los valores actuales.
                 </p>
               </div>
             )}

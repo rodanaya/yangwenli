@@ -509,7 +509,7 @@ export function InstitutionProfile() {
             </>
           ) : null}
           <span className="text-text-primary">·</span>
-          <span className="font-mono tabular-nums">v0.6.5</span>
+          <span className="font-mono tabular-nums">v0.8.5</span>
           <span className="text-text-primary">·</span>
           <span className="font-mono tabular-nums">2002–2025</span>
         </div>

@@ -572,7 +572,7 @@ export function Contracts() {
                 Contracts
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                THE FEDERAL LEDGER · 2002–2025 · v0.6.5
+                THE FEDERAL LEDGER · 2002–2025 · v0.8.5
               </p>
             </div>
             <div className="flex items-baseline gap-5">

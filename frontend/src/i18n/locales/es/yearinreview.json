@@ -79,7 +79,7 @@
   "notableRisks": {
     "sectionLabel": "Contratos Notables por Riesgo",
     "headline": "Los 10 contratos de mayor riesgo en {{year}}",
-    "subtitle": "Contratos con los puntajes de riesgo más altos según el modelo v0.6.5. No son prueba de irregularidad — son prioridades de investigación.",
+    "subtitle": "Contratos con los puntajes de riesgo más altos según el modelo v0.8.5. No son prueba de irregularidad — son prioridades de investigación.",
     "noRiskContracts": "No se encontraron contratos de alto riesgo para este año.",
     "vendor": "Proveedor",
     "institution": "Institución"

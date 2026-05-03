@@ -624,7 +624,7 @@ export function Sectors() {
                 <span className="mx-1.5" aria-hidden>·</span>
                 COMPRANET 2002–2025
                 <span className="mx-1.5" aria-hidden>·</span>
-                v0.6.5
+                v0.8.5
               </p>
             </div>
             {!isLoading && (

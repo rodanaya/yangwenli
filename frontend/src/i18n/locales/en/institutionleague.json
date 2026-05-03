@@ -1,6 +1,6 @@
 {
   "kicker": "INSTITUTIONS · WHERE THE HIGH-RISK MONEY IS",
-  "meta": "FEDERAL · 2018–2025 · v0.6.5",
+  "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
     "before": "Five agencies account for",
     "accent": "1.25 trillion pesos in high-risk awards."
@@ -110,7 +110,7 @@
   "loadingShort": "Loading…",
   "error": "Failed to load institution rankings. Please try again.",
   "sortAriaLabel": "Sort by {{label}}",
-  "methodologyFootnote": "RUBLI Procurement Health Index v0.6.5 · COMPRANET 2002–2025 · OECD / IMF methodology",
+  "methodologyFootnote": "RUBLI Procurement Health Index v0.8.5 · COMPRANET 2002–2025 · OECD / IMF methodology",
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Scorecards",

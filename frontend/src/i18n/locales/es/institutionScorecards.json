@@ -43,7 +43,7 @@
   },
   "footnotes": {
     "title": "NOTA METODOLÓGICA",
-    "scoring": "Las calificaciones reflejan indicadores estadísticos de transparencia en contratación pública. Una calificación baja no es prueba de irregularidades, sino una señal para investigación adicional. Puntuación basada en COMPRANET (2002–2025), modelo de riesgo v0.6.5, metodología OCDE / FMI.",
+    "scoring": "Las calificaciones reflejan indicadores estadísticos de transparencia en contratación pública. Una calificación baja no es prueba de irregularidades, sino una señal para investigación adicional. Puntuación basada en COMPRANET (2002–2025), modelo de riesgo v0.8.5, metodología OCDE / FMI.",
     "minContracts": "Instituciones con menos de 30 contratos pueden mostrar mayor variabilidad."
   },
   "pagination": {

@@ -1151,7 +1151,7 @@ export function SectorProfile() {
               {sector.name} <span className="text-text-muted font-normal">sector</span>
             </h1>
             <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              SECTOR PROFILE · {sector.code} · v0.6.5
+              SECTOR PROFILE · {sector.code} · v0.8.5
             </p>
           </div>
           <div className="flex items-baseline gap-5">

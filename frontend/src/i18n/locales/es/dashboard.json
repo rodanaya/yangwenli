@@ -39,7 +39,7 @@
     "riskModel": {
       "statLabel": "contratos en nivel crítico o alto riesgo",
       "headline": "Un sistema que señala. Faltan manos que investiguen.",
-      "body": "El modelo RUBLI v0.6.5 (AUC 0.828) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización."
+      "body": "El modelo RUBLI v0.8.5 (AUC 0.785) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización."
     }
   }
 }

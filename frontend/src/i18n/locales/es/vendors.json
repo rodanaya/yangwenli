@@ -139,7 +139,7 @@
     "signals": "Señales",
     "burstScore": "Puntaje de Ráfaga",
     "fpPenalty": "Penalización por Falso Positivo",
-    "riskScoreLabel": "Puntaje de Riesgo (v0.6.5)"
+    "riskScoreLabel": "Puntaje de Riesgo (v0.8.5)"
   },
   "sectorPercentile": "Top {{pct}}% en sector",
   "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado",
@@ -153,7 +153,7 @@
   "lede": {
     "eyebrow": "PERFIL DE PROVEEDOR",
     "directAward": "{{pct}}% adjudicación directa",
-    "riskDetected": "Riesgo {{level}} detectado por modelo v0.6.5",
+    "riskDetected": "Riesgo {{level}} detectado por modelo v0.8.5",
     "contractsAnalyzed": "{{n}} contratos analizados",
     "contractsSuffix": "Total: {{value}} · {{n}} contratos",
     "riskLabels": {

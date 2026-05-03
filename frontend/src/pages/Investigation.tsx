@@ -558,7 +558,7 @@ export function Investigation() {
               {t('title') || 'Investigation Dossier'}
             </h1>
             <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              CASE ARCHIVE · RUBLI v0.6.5 · PIPELINE LIVE
+              CASE ARCHIVE · RUBLI v0.8.5 · PIPELINE LIVE
             </p>
           </div>
           <div className="flex items-baseline gap-5">

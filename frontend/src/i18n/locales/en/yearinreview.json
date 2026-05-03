@@ -79,7 +79,7 @@
   "notableRisks": {
     "sectionLabel": "Notable Risk Contracts",
     "headline": "The 10 highest-risk contracts in {{year}}",
-    "subtitle": "Contracts with the highest risk scores under model v0.6.5. Not proof of wrongdoing — these are investigation priorities.",
+    "subtitle": "Contracts with the highest risk scores under model v0.8.5. Not proof of wrongdoing — these are investigation priorities.",
     "noRiskContracts": "No high-risk contracts found for this year.",
     "vendor": "Vendor",
     "institution": "Institution"

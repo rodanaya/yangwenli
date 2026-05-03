@@ -1,6 +1,6 @@
 {
   "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
-  "meta": "FEDERAL · 2018–2025 · v0.6.5",
+  "meta": "FEDERAL · 2018–2025 · v0.8.5",
   "headline": {
     "before": "Cinco dependencias concentran",
     "accent": "1.25 billones de pesos en contratos de alto riesgo."
@@ -110,7 +110,7 @@
   "loadingShort": "Cargando…",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
   "sortAriaLabel": "Ordenar por {{label}}",
-  "methodologyFootnote": "RUBLI Índice de Salud de Contrataciones v0.6.5 · COMPRANET 2002–2025 · Metodología OCDE / FMI",
+  "methodologyFootnote": "RUBLI Índice de Salud de Contrataciones v0.8.5 · COMPRANET 2002–2025 · Metodología OCDE / FMI",
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Fichas",

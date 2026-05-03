@@ -39,7 +39,7 @@
     "riskModel": {
       "statLabel": "contracts at critical or high risk level",
       "headline": "A system that flags. Investigators still needed.",
-      "body": "The RUBLI v0.6.5 model (AUC 0.828) assigns critical or high risk to 412,000 contracts. Each one is a lead. None is a verdict. They are the starting point for journalism and accountability."
+      "body": "The RUBLI v0.8.5 model (AUC 0.785) assigns critical or high risk to 412,000 contracts. Each one is a lead. None is a verdict. They are the starting point for journalism and accountability."
     }
   }
 }

@@ -173,7 +173,7 @@
     "singleBidDesc": "Competitive tenders with only one bidder — a primary collusion indicator.",
     "singleBidPeak": "Peak: {{maxSB}}% · All-time high-risk: {{maxHR}}%",
     "highRiskCard": "High Risk Rate",
-    "highRiskDesc": "Contracts scored critical or high risk by the v0.6.5 risk model. Thresholds calibrated using ~748 documented corruption cases.",
+    "highRiskDesc": "Contracts scored critical or high risk by the v0.8.5 risk model. Thresholds calibrated using ~748 documented corruption cases.",
     "highRiskAvg": "Avg risk score: {{val}}% across 3.05M contracts",
     "chartTitle": "Systemic Patterns — 23-Year Timeline (2002–2025)",
     "nationalAvgLabel": "National avg 78%",

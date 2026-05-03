@@ -173,7 +173,7 @@
     "singleBidDesc": "Licitaciones competitivas con un solo postor — indicador principal de colusión.",
     "singleBidPeak": "Pico: {{maxSB}}% · Máximo histórico de alto riesgo: {{maxHR}}%",
     "highRiskCard": "Tasa de Alto Riesgo",
-    "highRiskDesc": "Contratos clasificados como riesgo crítico o alto por el modelo v0.6.5. Umbrales calibrados con ~748 casos documentados de corrupción.",
+    "highRiskDesc": "Contratos clasificados como riesgo crítico o alto por el modelo v0.8.5. Umbrales calibrados con ~748 casos documentados de corrupción.",
     "highRiskAvg": "Riesgo promedio: {{val}}% en 3.05M de contratos",
     "chartTitle": "Patrones Sistémicos — Cronología de 23 Años (2002–2025)",
     "nationalAvgLabel": "Prom. nacional 78%",

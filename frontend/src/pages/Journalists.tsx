@@ -1419,7 +1419,7 @@ export default function Journalists() {
             <span className="text-text-primary">·</span>
             <span>
               Risk model{' '}
-              <span className="text-text-secondary tabular-nums">v0.6.5</span>
+              <span className="text-text-secondary tabular-nums">v0.8.5</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>

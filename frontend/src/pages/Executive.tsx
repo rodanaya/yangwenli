@@ -1637,8 +1637,8 @@ export default function Executive() {
               to trusting the hero claim. */}
           <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5">
             {lang === 'en'
-              ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026 · MODEL v0.6.5'
-              : 'POR RUBLI · DATOS: COMPRANET 2002–2025 · ACTUALIZADO ABR 2026 · MODELO v0.6.5'}
+              ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026 · MODEL v0.8.5'
+              : 'POR RUBLI · DATOS: COMPRANET 2002–2025 · ACTUALIZADO ABR 2026 · MODELO v0.8.5'}
           </p>
 
           <p className="text-base leading-[1.7] text-text-secondary text-pretty">
@@ -1973,7 +1973,7 @@ export default function Executive() {
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
                 <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'v0.6.5' : 'v0.6.5'}</span>
+                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
                 <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
               </div>
             </motion.div>
@@ -2652,12 +2652,12 @@ export default function Executive() {
             <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
               {lang === 'en' ? (
                 <>
-                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.828</strong> · 91 active spending categories · 1,843 investigative memos · model <strong className="text-text-secondary">v0.6.5</strong>. See the{' '}
+                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 91 active spending categories · 1,843 investigative memos · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
-                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.828</strong> · 91 categorías activas · 1,843 memos · modelo <strong className="text-text-secondary">v0.6.5</strong>. Consulta la{' '}
+                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 91 categorías activas · 1,843 memos · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
@@ -2912,7 +2912,7 @@ export default function Executive() {
             <span>·</span>
             <span>{lang === 'en' ? 'Open source' : 'Código abierto'}</span>
             <span>·</span>
-            <span>RUBLI v0.6.5</span>
+            <span>RUBLI v0.8.5</span>
           </div>
           <p className="text-[10px] font-mono text-text-muted text-center max-w-[72ch] mx-auto leading-[1.5]">
             {lang === 'en'

@@ -1501,7 +1501,7 @@ function RiskLevelPriceGap({
         {/* Footnote */}
         <p className="text-[10px] text-text-muted italic leading-relaxed pt-2 border-t border-border">
           Nota: Segmentación basada en <code className="text-text-muted">risk_level</code>{' '}
-          del modelo v0.6.5. Los contratos críticos/altos típicamente combinan adjudicación directa,
+          del modelo v0.8.5. Los contratos críticos/altos típicamente combinan adjudicación directa,
           baja competencia y concentración de proveedor — señales asociadas con procurement irregular.
         </p>
       </div>
@@ -1597,7 +1597,7 @@ export default function PriceIntelligence() {
               Price Intelligence
             </h1>
             <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              MARKET ANOMALY DETECTION · v0.6.5
+              MARKET ANOMALY DETECTION · v0.8.5
             </p>
           </div>
           {!loading && summary && (
@@ -1639,7 +1639,7 @@ export default function PriceIntelligence() {
           <span className="text-text-primary">·</span>
           <span>Investigación · Precios anómalos</span>
           <span className="text-text-primary">·</span>
-          <span className="font-mono tabular-nums">v0.6.5</span>
+          <span className="font-mono tabular-nums">v0.8.5</span>
         </div>
 
         {/* Overline */}

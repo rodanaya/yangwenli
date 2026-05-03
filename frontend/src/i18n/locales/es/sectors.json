@@ -115,12 +115,12 @@
     "gastoTotal": "Gasto Total",
     "riesgoPromedio": "Riesgo Promedio",
     "mayorGasto": "Mayor Gasto",
-    "sourceFootnote": "Fuente: COMPRANET 2002–2025, modelo de riesgo v0.6.5 · Valores normalizados min-max por métrica"
+    "sourceFootnote": "Fuente: COMPRANET 2002–2025, modelo de riesgo v0.8.5 · Valores normalizados min-max por métrica"
   },
   "editorial": {
     "kicker": "RUBLI · Análisis por Sector · 2002-2025",
     "headline": "Dónde se concentra el riesgo en el gasto federal",
-    "body": "12 sectores. 3.06 millones de contratos. MXN 9.88 billones. El modelo v0.6.5 asigna puntuaciones de riesgo a cada contrato usando 9 indicadores estadísticos calibrados contra 748 casos documentados de corrupción. Agricultura encabeza la lista: 93.5% adjudicación directa, 0.369 riesgo promedio.",
+    "body": "12 sectores. 3.06 millones de contratos. MXN 9.88 billones. El modelo v0.8.5 asigna puntuaciones de riesgo a cada contrato usando 18 indicadores estadísticos calibrados contra 748 casos documentados de corrupción. Agricultura encabeza la lista: 93.5% adjudicación directa, 0.369 riesgo promedio.",
     "stat1Label": "DA en Agricultura · AMLO 2019-24",
     "stat2Label": "valor en riesgo · sector salud",
     "stat3Label": "sobre el límite OCDE del 25%"
@@ -273,7 +273,7 @@
   "riskFactors": {
     "eyebrow": "RUBLI · Análisis de factores",
     "title": "Qué empuja el riesgo en cada sector",
-    "description": "Coeficientes del modelo logístico v0.6.5 — positivos aumentan el riesgo, negativos son protectores.",
+    "description": "Coeficientes del modelo logístico v0.8.5 — positivos aumentan el riesgo, negativos son protectores.",
     "sectorLabel": "Sector:",
     "sectorAriaLabel": "Seleccionar sector para ver coeficientes del modelo",
     "sectionAriaLabel": "Análisis de factores de riesgo por sector"

@@ -939,7 +939,7 @@ export default function AriaPage() {
                 <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
                 <span>{isEs ? 'proveedores procesados' : 'vendors processed'}</span>
                 <span aria-hidden>·</span>
-                <span>v0.6.5</span>
+                <span>v0.8.5</span>
                 <MetodologiaTooltip
                   title={t('methodology.title')}
                   body={t('methodology.body')}

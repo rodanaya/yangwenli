@@ -308,7 +308,7 @@ function GeneralTab() {
             {t('general.about.description')}
           </p>
           <div className="text-xs text-text-muted space-y-1 font-mono">
-            <p><span className="text-accent">Risk Model:</span> v0.6.5 Vendor-Stratified Calibrated (Internal AUC: 0.798 · Test AUC: 0.828)</p>
+            <p><span className="text-accent">Risk Model:</span> v0.8.5 Vendor-Stratified Calibrated (Train AUC: 0.797 · Test AUC: 0.785)</p>
             <p><span className="text-accent">Sectors:</span> 12-sector taxonomy</p>
             <p><span className="text-accent">Backend:</span> FastAPI + SQLite</p>
             <p><span className="text-accent">Frontend:</span> React + TypeScript + TailwindCSS</p>

@@ -1129,7 +1129,7 @@ export default function Administrations() {
           <span aria-hidden>·</span>
           <span>{t('classifiedHeader.eyebrow', 'Political cycle analysis')}</span>
           <span aria-hidden>·</span>
-          <span className="font-mono tabular-nums">v0.6.5</span>
+          <span className="font-mono tabular-nums">v0.8.5</span>
         </div>
         <div className="flex items-start justify-between gap-6">
           <div className="flex-1 min-w-0">
@@ -1501,7 +1501,7 @@ export default function Administrations() {
               Riesgo Promedio — Sector × Administración
             </CardTitle>
             <p className="text-xs text-text-muted">
-              Puntuación de riesgo v0.6.5 ponderada por contratos, comparable entre sectores y sexenios.
+              Puntuación de riesgo v0.8.5 ponderada por contratos, comparable entre sectores y sexenios.
             </p>
           </CardHeader>
           <CardContent>

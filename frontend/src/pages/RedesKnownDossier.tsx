@@ -1210,7 +1210,7 @@ export default function RedesKnownDossier() {
                   comparten patrones de adjudicación). Las firmas de red provienen del
                   motor ARIA v1.1 (Run{' '}
                   <span className="font-mono text-text-primary/80">28d5c453</span>) combinado con
-                  el modelo de riesgo v0.6.5 (AUC test 0.828). Los veredictos son
+                  el modelo de riesgo v0.8.5 (AUC test 0.785). Los veredictos son
                   editoriales; las métricas son del motor.
                 </>
               ) : (
@@ -1220,7 +1220,7 @@ export default function RedesKnownDossier() {
                   operate at the same institution in overlapping time windows, or share
                   award patterns). Network signatures come from the ARIA v1.1 engine
                   (Run <span className="font-mono text-text-primary/80">28d5c453</span>)
-                  combined with risk model v0.6.5 (test AUC 0.828). Verdicts are
+                  combined with risk model v0.8.5 (test AUC 0.785). Verdicts are
                   editorial; metrics come from the engine.
                 </>
               )}

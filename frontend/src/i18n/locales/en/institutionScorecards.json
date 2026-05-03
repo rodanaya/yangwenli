@@ -43,7 +43,7 @@
   },
   "footnotes": {
     "title": "METHODOLOGICAL NOTE",
-    "scoring": "Scores reflect statistical transparency indicators in public procurement. A low score is not proof of irregularities, but a signal for further investigation. Score based on COMPRANET (2002–2025), risk model v0.6.5, OECD / IMF methodology.",
+    "scoring": "Scores reflect statistical transparency indicators in public procurement. A low score is not proof of irregularities, but a signal for further investigation. Score based on COMPRANET (2002–2025), risk model v0.8.5, OECD / IMF methodology.",
     "minContracts": "Institutions with fewer than 30 contracts may show greater variability."
   },
   "pagination": {

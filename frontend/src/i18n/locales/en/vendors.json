@@ -139,7 +139,7 @@
     "signals": "Signals",
     "burstScore": "Burst Score",
     "fpPenalty": "FP Penalty",
-    "riskScoreLabel": "Risk Score (v0.6.5)"
+    "riskScoreLabel": "Risk Score (v0.8.5)"
   },
   "sectorPercentile": "Top {{pct}}% in sector",
   "vendorGroupTooltip": "This vendor belongs to a related network group",
@@ -153,7 +153,7 @@
   "lede": {
     "eyebrow": "VENDOR PROFILE",
     "directAward": "{{pct}}% direct award",
-    "riskDetected": "{{level}} risk detected by model v0.6.5",
+    "riskDetected": "{{level}} risk detected by model v0.8.5",
     "contractsAnalyzed": "{{n}} contracts analyzed",
     "contractsSuffix": "Total: {{value}} · {{n}} contracts",
     "riskLabels": {

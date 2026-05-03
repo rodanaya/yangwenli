@@ -835,7 +835,7 @@ function ModelProvenancePanel({
               {isNoCoverage && (
                 <> <strong style={{ color: 'var(--color-risk-high)' }}>Ninguno fue vinculado todavía a contratos específicos en COMPRANET</strong> — gap conocido de cobertura RFC en el periodo {data.contract_year_start}–{data.contract_year_end}. Este caso aporta etiquetas narrativas (patrón <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.labelEs}</strong>) pero no contratos identificables; futuras vinculaciones manuales lo harán parte completa del entrenamiento.</>
               )}
-              {' '}Modelo activo: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.6.5</Link>.
+              {' '}Modelo activo: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.8.5</Link>.
             </>
           ) : (
             <>
@@ -849,7 +849,7 @@ function ModelProvenancePanel({
               {isNoCoverage && (
                 <> <strong style={{ color: 'var(--color-risk-high)' }}>None have been matched to specific COMPRANET contracts yet</strong> — known RFC-coverage gap for the {data.contract_year_start}–{data.contract_year_end} window. This case contributes narrative labels (the <strong style={{ color: 'var(--color-risk-critical)' }}>{ariaPattern.code} {ariaPattern.label}</strong> pattern) but not identifiable contracts; future manual matches will make it a full training contributor.</>
               )}
-              {' '}Active model: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.6.5</Link>.
+              {' '}Active model: <Link to="/methodology" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textDecorationColor: 'rgba(160,104,32,0.4)' }}>v0.8.5</Link>.
             </>
           )}
         </p>
@@ -1800,8 +1800,8 @@ function CaseBody({
           title={lang === 'es' ? 'Cómo este caso entrenó al modelo' : 'How this case trained the model'}
           subtitle={
             lang === 'es'
-              ? 'La cadena explícita de datos: proveedores documentados → contratos en COMPRANET → etiquetas positivas en el entrenamiento del modelo de riesgo v0.6.5.'
-              : 'The explicit data chain: documented vendors → matched COMPRANET contracts → positive labels in v0.6.5 risk-model training.'
+              ? 'La cadena explícita de datos: proveedores documentados → contratos en COMPRANET → etiquetas positivas en el entrenamiento del modelo de riesgo v0.8.5.'
+              : 'The explicit data chain: documented vendors → matched COMPRANET contracts → positive labels in v0.8.5 risk-model training.'
           }
         >
           <ModelProvenancePanel
@@ -1831,10 +1831,10 @@ function CaseBody({
           }
           subtitle={
             riskDist.hasData
-              ? `Average RUBLI score across matched vendors: ${(avgRiskScore * 100).toFixed(0)}%. The distribution below shows where those vendors fall on the v0.6.5 risk scale.`
+              ? `Average RUBLI score across matched vendors: ${(avgRiskScore * 100).toFixed(0)}%. The distribution below shows where those vendors fall on the v0.8.5 risk scale.`
               : (lang === 'es'
-                  ? `Sin contratos vinculados específicos de este caso, mostramos cómo el modelo v0.6.5 caracteriza el patrón ${fraudToAriaPattern(data.fraud_type).code} a través de todos los proveedores marcados.`
-                  : `Without case-specific matched contracts, here's how the v0.6.5 model characterizes the ${fraudToAriaPattern(data.fraud_type).code} pattern across all flagged vendors.`)
+                  ? `Sin contratos vinculados específicos de este caso, mostramos cómo el modelo v0.8.5 caracteriza el patrón ${fraudToAriaPattern(data.fraud_type).code} a través de todos los proveedores marcados.`
+                  : `Without case-specific matched contracts, here's how the v0.8.5 model characterizes the ${fraudToAriaPattern(data.fraud_type).code} pattern across all flagged vendors.`)
           }
         >
           {riskDist.hasData ? (
@@ -1871,7 +1871,7 @@ function CaseBody({
                 </div>
                 <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
                   Across {riskDist.totalVendors} {riskDist.totalVendors === 1 ? 'vendor' : 'vendors'}{' '}
-                  with COMPRANET contracts. The v0.6.5 model uses 9 features — price volatility,
+                  with COMPRANET contracts. The v0.8.5 model uses 18 features — price volatility,
                   vendor concentration, institution diversity — calibrated against 1,363 confirmed
                   corruption cases.
                   {avgRiskScore < 0.3 && (

@@ -736,8 +736,10 @@ function WhatThisMeans({
 
   const sectorNames = worstSectors.slice(0, 3).join(', ')
 
+  const n = highRiskPct && highRiskPct > 0 ? Math.round(100 / highRiskPct) : 9
+
   const bullets = [
-    t(bullet1Key),
+    t(bullet1Key, { n }),
     t('bullet2', { sectors: sectorNames }),
     t('bullet3'),
   ]
@@ -998,7 +1000,7 @@ function TrendSection() {
         {/* Sentence + small year markers */}
         <div className="flex-1 min-w-0">
           <p className="text-base leading-relaxed mb-4 text-text-secondary">
-            {t(trendConfig.sentenceKey)}
+            {t(trendConfig.sentenceKey, { year: earliestYear })}
           </p>
 
           {/* Compact year-grade timeline ribbon */}
@@ -1253,7 +1255,7 @@ function ReportCard() {
 
         {/* Source footnote */}
         <p className="text-[10px] text-text-primary font-mono text-center pb-4">
-          RUBLI v0.6.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
+          RUBLI v0.8.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
         </p>
       </div>
     </main>
