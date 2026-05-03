@@ -1183,11 +1183,11 @@ interface WatchlistRowProps {
 function WatchlistRow({
   item,
   isMutating,
-  onEntityNav,
+  onEntityNav: _onEntityNav,
   onInvestigate,
   onStatusTransition,
   onRemove,
-  onOpenDrawer,
+  onOpenDrawer: _onOpenDrawer,
 }: WatchlistRowProps) {
   const [expanded, setExpanded] = useState(false)
   const { t } = useTranslation('watchlist')
@@ -1198,14 +1198,6 @@ function WatchlistRow({
     enabled: expanded && item.item_type === 'vendor',
     staleTime: 10 * 60 * 1000,
   })
-
-  function handleEntityClick() {
-    if (item.item_type === 'vendor' || item.item_type === 'institution') {
-      onOpenDrawer(item.item_id, item.item_type)
-    } else {
-      onEntityNav(item)
-    }
-  }
 
   return (
     <>
