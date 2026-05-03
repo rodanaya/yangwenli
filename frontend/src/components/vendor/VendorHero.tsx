@@ -9,6 +9,7 @@
  * top-3 model drivers.
  */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Copy,
@@ -16,6 +17,7 @@ import {
   Building2,
   ChevronDown,
   ChevronUp,
+  GitBranch,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type {
@@ -150,12 +152,27 @@ export function VendorHero({
       {/* ─── Row 2: priority alert (collapses 5 banners into 1) ─────────── */}
       {flags.length > 0 && <PriorityAlert flags={flags} />}
 
-      {/* ─── Row 3: verdict sentence ─────────────────────────────────────── */}
+      {/* ─── Row 3: verdict sentence + investigation CTA ─────────────────── */}
       {verdict && (
         <p className="text-base leading-[1.55] text-text-secondary max-w-prose">
           {verdict}
         </p>
       )}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Link
+          to={`/thread/${vendor.id}`}
+          className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1 rounded-sm"
+        >
+          <GitBranch className="h-3 w-3" aria-hidden="true" />
+          {isEs ? 'Hilo de Investigación →' : 'Build Investigation Thread →'}
+        </Link>
+        <Link
+          to={`/aria?vendor_id=${vendor.id}`}
+          className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
+        >
+          {isEs ? 'Cola ARIA' : 'ARIA Queue'}
+        </Link>
+      </div>
 
       {/* ─── Row 4: stat row ─────────────────────────────────────────────── */}
       <StatRow
