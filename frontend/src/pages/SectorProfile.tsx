@@ -33,6 +33,7 @@ import {
   institutionApi,
   phiApi,
   caseLibraryApi,
+  categoriesApi,
 } from '@/api/client'
 import {
   SECTOR_COLORS,
@@ -51,6 +52,7 @@ import {
   TrendingUp,
   ShieldAlert,
   Info,
+  Tag,
 } from 'lucide-react'
 import {
   EditorialAreaChart,
@@ -875,7 +877,7 @@ export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
   const sectorId = Number(id)
   const navigate = useNavigate()
-  const { t } = useTranslation('sectors')
+  const { t, i18n } = useTranslation('sectors')
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
   const [activeTab, setActiveTab] = useState<TabId>('overview')
 
@@ -973,6 +975,14 @@ export function SectorProfile() {
     queryFn: () => caseLibraryApi.getBySector(sectorId),
     enabled: !!sectorId && activeTab === 'overview',
     staleTime: 60 * 60 * 1000,
+  })
+
+  // § 2 Las Categorías: fetch summary (shared cache key with Sectors page)
+  const { data: categorySummary } = useQuery({
+    queryKey: ['categories', 'summary'],
+    queryFn: () => categoriesApi.getSummary(),
+    enabled: !!sectorId && activeTab === 'overview',
+    staleTime: 10 * 60 * 1000,
   })
 
   // ── derived values ─────────────────────────────────────────────────────────
@@ -1347,6 +1357,84 @@ export function SectorProfile() {
               )}
             </div>
           </section>
+
+          {/* § 2 Las Categorías — top categories within sector → Category Dossier */}
+          {categorySummary?.data && (() => {
+            const sectorCategories = (categorySummary.data as Array<{
+              category_id: number; name_es: string; name_en: string;
+              sector_id: number | null; total_contracts: number;
+              total_value: number; avg_risk: number; direct_award_pct: number;
+            }>)
+              .filter(c => c.sector_id === sectorId && c.total_contracts > 0)
+              .sort((a, b) => b.total_value - a.total_value)
+              .slice(0, 8)
+
+            if (sectorCategories.length === 0) return null
+            const isEs = i18n.language.startsWith('es')
+
+            return (
+              <section aria-labelledby="categories-heading">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2
+                      id="categories-heading"
+                      className="text-base font-bold text-text-primary flex items-center gap-2"
+                    >
+                      <Tag className="h-4 w-4" style={{ color: sectorColor }} aria-hidden="true" />
+                      {isEs ? 'Categorías de Gasto' : 'Spending Categories'}
+                    </h2>
+                    <p className="text-xs text-text-secondary mt-0.5">
+                      {isEs ? 'Principales mercados dentro del sector' : 'Top markets within this sector'}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-sm border border-border bg-background/40 divide-y divide-border/10">
+                  {sectorCategories.map((cat, idx) => {
+                    const catRisk = cat.avg_risk
+                    const catColor = RISK_COLORS[getRiskLevelFromScore(catRisk)]
+                    const N = 16, DR = 1.75, DG = 4
+                    const filled = Math.max(1, Math.round(Math.min(catRisk, 1) * N))
+                    return (
+                      <div
+                        key={cat.category_id}
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-background-elevated/40 transition-colors"
+                      >
+                        <span className="text-[10px] font-mono text-text-muted/40 w-4 shrink-0">
+                          {idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <EntityIdentityChip
+                            type="category"
+                            id={cat.category_id}
+                            name={isEs ? cat.name_es : cat.name_en}
+                            size="xs"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
+                            {Array.from({ length: N }).map((_, k) => (
+                              <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                fill={k < filled ? catColor : 'var(--color-background-elevated)'}
+                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
+                                strokeWidth={k < filled ? 0 : 0.5}
+                                fillOpacity={k < filled ? 0.7 : 1}
+                              />
+                            ))}
+                          </svg>
+                          <span className="text-xs font-mono tabular-nums w-8 text-right" style={{ color: catColor }}>
+                            {(catRisk * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <span className="text-xs font-mono text-text-muted tabular-nums w-20 text-right hidden sm:block">
+                          {formatCompactMXN(cat.total_value)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })()}
         </div>
 
         {/* ── VENDORS TAB ───────────────────────────────────────────────────── */}
