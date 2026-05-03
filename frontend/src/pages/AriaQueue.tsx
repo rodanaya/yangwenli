@@ -22,7 +22,7 @@ import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
 import { TableExportButton } from '@/components/TableExportButton'
 import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
-import { formatVendorName } from '@/lib/vendor/formatName'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -452,11 +452,19 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
       >
         {/* ─── LINE 1 ─────────────────────────────────────────────────── */}
 
-        {/* Vendor name — bold primary text */}
+        {/* Vendor name — EntityIdentityChip; stopPropagation so row-click → thread still works */}
         <div className="min-w-0 flex items-center gap-2">
-          <span className="text-sm font-bold text-text-primary truncate leading-tight" title={item.vendor_name}>
-            {formatVendorName(item.vendor_name, 56)}
-          </span>
+          <div onClick={(e) => e.stopPropagation()} className="min-w-0">
+            <EntityIdentityChip
+              type="vendor"
+              id={item.vendor_id}
+              name={item.vendor_name}
+              size="sm"
+              riskScore={item.avg_risk_score}
+              ariaTier={item.ips_tier}
+              hideIcon
+            />
+          </div>
           {item.new_vendor_risk && (
             <span className="shrink-0 font-mono text-[8px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1 py-0.5 rounded-sm">
               {isEs ? 'NUEVO' : 'NEW'}
