@@ -97,6 +97,24 @@ function normalize(value: number, max: number): number {
   return value / max  // 0..1 for editorial radar valueDomain default
 }
 
+// Consensus polygon — average of all 5 administrations on each axis,
+// normalized to the same 0..1 scale. Computed once at module load.
+const CONSENSUS_DATA: number[] = (() => {
+  const n = ADMIN_DATA.length
+  const sumRisk = ADMIN_DATA.reduce((s, a) => s + a.avgRisk, 0)
+  const sumHr = ADMIN_DATA.reduce((s, a) => s + a.hrPct, 0)
+  const sumDa = ADMIN_DATA.reduce((s, a) => s + a.directAwardPct, 0)
+  const sumVal = ADMIN_DATA.reduce((s, a) => s + a.totalBillions, 0)
+  const sumVol = ADMIN_DATA.reduce((s, a) => s + a.contracts, 0)
+  return [
+    normalize(sumRisk / n, MAX_AVG_RISK),
+    normalize(sumHr / n, MAX_HR_PCT),
+    normalize(sumDa / n, MAX_DA_PCT),
+    normalize(sumVal / n, MAX_BILLIONS),
+    normalize(sumVol / n, MAX_CONTRACTS),
+  ]
+})()
+
 function buildSeries(admin: (typeof ADMIN_DATA)[0]): RadarSeries[] {
   return [
     {
@@ -133,6 +151,8 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
           series={buildSeries(admin)}
           height={180}
           valueDomain={[0, 1]}
+          consensusData={CONSENSUS_DATA}
+          consensusLabel="Promedio · 5 sexenios"
         />
       </div>
 

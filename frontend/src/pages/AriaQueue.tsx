@@ -380,6 +380,77 @@ function FilterChip({
   )
 }
 
+// ============================================================================
+// LollipopScore — FT Visual Vocabulary "lollipop" ranking pattern.
+//
+// One row. Thin baseline rule from x=0 to score-x. Vertical tick at the
+// T2/T3 boundary (avg ≈ 0.50, the high-risk threshold) to anchor scale.
+// Filled dot at score-x, colored by tier. Score label sits right of dot.
+//
+// Reads magnitude AND deviation-from-baseline at a glance — the two
+// pieces of information a journalist needs from a queue ranking.
+// ============================================================================
+
+const TIER_DOT_COLOR: Record<1 | 2 | 3 | 4, string> = {
+  1: '#c41e3a', // T1 critical
+  2: '#ea580c', // T2 high
+  3: '#f59e0b', // T3 medium
+  4: '#71717a', // T4 low — warm zinc, never green
+}
+
+function LollipopScore({ ips, tier }: { ips: number; tier: 1 | 2 | 3 | 4 }) {
+  // ips is in [0, 1]. Map to a 0..130 px track inside a 140-wide SVG.
+  const trackW = 130
+  const clamped = Math.max(0, Math.min(1, ips))
+  const dotX = clamped * trackW
+  const avgX = 0.5 * trackW // T2/T3 boundary baseline tick
+  const dotColor = TIER_DOT_COLOR[tier]
+  const label = Math.round(clamped * 100)
+
+  return (
+    <svg
+      width={140}
+      height={20}
+      viewBox="0 0 140 20"
+      role="img"
+      aria-label={`IPS ${label} of 100, tier ${tier}`}
+      className="shrink-0 overflow-visible"
+    >
+      {/* Stick: thin line from origin to dot */}
+      <line
+        x1={0}
+        y1={10}
+        x2={dotX}
+        y2={10}
+        stroke="#3f3f46"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      {/* Baseline tick at avg — small vertical mark */}
+      <line
+        x1={avgX}
+        y1={6}
+        x2={avgX}
+        y2={14}
+        stroke="#52525b"
+        strokeWidth={1}
+      />
+      {/* Lollipop head */}
+      <circle cx={dotX} cy={10} r={5} fill={dotColor} />
+      {/* IPS readout right of dot */}
+      <text
+        x={Math.min(dotX + 9, trackW + 1)}
+        y={13}
+        fontSize={9}
+        fill="#a1a1aa"
+        className="font-mono tabular-nums"
+      >
+        {label}
+      </text>
+    </svg>
+  )
+}
+
 const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; title: string }> = {
   pending:    { char: '○', color: 'var(--color-text-muted)',     title: 'Pending review' },
   reviewing:  { char: '◐', color: 'var(--color-risk-high)',      title: 'Under review' },
@@ -482,15 +553,13 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           )}
         </div>
 
-        {/* IPS score — large, color-coded */}
-        <div className="shrink-0 text-right">
-          <span
-            className="font-mono font-bold text-base tabular-nums leading-none"
-            style={{ color: riskColor }}
-            title={`IPS ${ipsPct}`}
-          >
-            {ipsPct}
-          </span>
+        {/* IPS score — FT lollipop: baseline + dot + label.
+            Replaces the bare integer. Title surfaces tier for screen readers. */}
+        <div
+          className="shrink-0 flex items-center justify-end"
+          title={`IPS ${ipsPct} · T${tier} (baseline tick = high-risk threshold 50)`}
+        >
+          <LollipopScore ips={ips} tier={tier} />
         </div>
 
         {/* Review status glyph — visible inline, replaces the buried popover icon */}

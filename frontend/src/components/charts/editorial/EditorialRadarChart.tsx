@@ -21,15 +21,34 @@ export interface EditorialRadarChartProps {
   series: RadarSeries[]
   valueDomain?: [number, number]
   height?: number
+  /**
+   * Optional consensus polygon (FT-style). Same length as `axes`,
+   * each value already normalized to `valueDomain`. Renders as a
+   * semi-transparent zinc-700 polygon BEHIND all series so any
+   * series bulging outside the consensus is visually obvious.
+   */
+  consensusData?: number[]
+  /** Tooltip label for the consensus polygon. Default: 'Promedio'. */
+  consensusLabel?: string
 }
+
+const CONSENSUS_KEY = '__consensus__'
 
 export function EditorialRadarChart({
   axes, series, valueDomain = [0, 1],
   height = CHART_TOKENS.dims.default,
+  consensusData,
+  consensusLabel = 'Promedio',
 }: EditorialRadarChartProps) {
+  const hasConsensus =
+    Array.isArray(consensusData) && consensusData.length === axes.length
+
   // Transform into Recharts shape: one row per axis
-  const data = axes.map((axis) => {
+  const data = axes.map((axis, i) => {
     const row: Record<string, number | string> = { axis }
+    if (hasConsensus) {
+      row[CONSENSUS_KEY] = consensusData![i] ?? 0
+    }
     series.forEach((s) => {
       row[s.name] = s.values[axis] ?? 0
     })
@@ -66,6 +85,19 @@ export function EditorialRadarChart({
             fontFamily: 'var(--font-family-mono)',
           }}
         />
+        {hasConsensus && (
+          <Radar
+            // Render consensus FIRST so it sits behind the colored series
+            key={CONSENSUS_KEY}
+            name={consensusLabel}
+            dataKey={CONSENSUS_KEY}
+            stroke="none"
+            fill="#3f3f46"
+            fillOpacity={0.25}
+            legendType="none"
+            isAnimationActive={false}
+          />
+        )}
         {series.map((s) => {
           const color = tokenColor(s.colorToken)
           return (

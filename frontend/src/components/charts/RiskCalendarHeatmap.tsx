@@ -10,6 +10,7 @@
 
 import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
@@ -46,6 +47,8 @@ interface TooltipData {
 
 export function RiskCalendarHeatmap() {
   const [tooltip, setTooltip] = useState<(TooltipData & { x: number; y: number }) | null>(null)
+  const { i18n } = useTranslation()
+  const isES = i18n.language?.startsWith('es') ?? true
 
   // Fetch all years in parallel
   const results = useQueries({
@@ -65,14 +68,62 @@ export function RiskCalendarHeatmap() {
     }))
   }, [results])
 
+  // Find the year with the highest December risk — "budget avalanche" peak
+  const peakDecemberYear = useMemo(() => {
+    let bestYear: number | null = null
+    let bestRisk = 0
+    for (const { year, months } of yearData) {
+      const dec = months[11]
+      if (dec && dec.contracts > 0 && dec.avg_risk > bestRisk) {
+        bestRisk = dec.avg_risk
+        bestYear = year
+      }
+    }
+    return bestYear
+  }, [yearData])
+
   if (isLoading) return <Skeleton className="h-48 w-full bg-background-elevated" />
 
   const CELL_W = 28, CELL_H = 18, GAP = 3
   const LABEL_W = 36
+  // December is month index 11. Each cell occupies CELL_W + GAP horizontally.
+  // The grid row uses `ml-1` (4px) after the year label of width LABEL_W.
+  const decemberLeft = LABEL_W + 4 + 11 * (CELL_W + GAP)
+  const decemberCenter = decemberLeft + CELL_W / 2
 
   return (
     <div className="overflow-x-auto">
-      <div className="relative">
+      <div className="relative pt-10">
+        {/* December annotation callout — JBM-style: a labeled spike, not silent data */}
+        <div
+          className="pointer-events-none absolute top-0 flex flex-col items-center"
+          style={{
+            left: decemberCenter,
+            transform: 'translateX(-50%)',
+            width: 180,
+          }}
+        >
+          <div
+            className="font-mono leading-tight text-center whitespace-nowrap"
+            style={{ fontSize: 9, color: '#ea580c' }}
+          >
+            {isES ? '↑ 64% más riesgo en diciembre' : '↑ 64% higher risk in December'}
+          </div>
+          <div
+            className="font-mono leading-tight text-center text-text-muted mt-0.5"
+            style={{ fontSize: 7, maxWidth: 170 }}
+          >
+            {isES
+              ? 'Cierre de presupuesto impulsa contratos de fin de año'
+              : 'Presupuesto deadline drives year-end rush'}
+          </div>
+          {/* Tick connecting the label to the December column */}
+          <div
+            className="mt-0.5"
+            style={{ width: 1, height: 6, backgroundColor: '#ea580c', opacity: 0.55 }}
+          />
+        </div>
+
         {/* Month headers */}
         <div className="flex ml-[36px] mb-1">
           {MONTH_ABBR.map(m => (
@@ -103,6 +154,7 @@ export function RiskCalendarHeatmap() {
                   const contracts = monthData?.contracts ?? 0
                   const value = monthData?.value ?? 0
                   const isDecember = mi === 11
+                  const isPeakDecember = isDecember && year === peakDecemberYear
 
                   return (
                     <div
@@ -120,7 +172,17 @@ export function RiskCalendarHeatmap() {
                         setTooltip({ year, month: mi + 1, risk, contracts, value, x: e.clientX, y: e.clientY })
                       }}
                       onMouseLeave={() => setTooltip(null)}
-                    />
+                    >
+                      {isPeakDecember && (
+                        <span
+                          aria-label={isES ? 'Pico de avalancha presupuestal' : 'Budget avalanche peak'}
+                          className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono leading-none"
+                          style={{ fontSize: 8, color: '#1a1714' }}
+                        >
+                          ●
+                        </span>
+                      )}
+                    </div>
                   )
                 })}
               </div>
