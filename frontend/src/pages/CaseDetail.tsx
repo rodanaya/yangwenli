@@ -879,6 +879,7 @@ function SimilarPatternsTeaser({
   ariaPatternCode: string
   lang: string
 }) {
+  const navigate = useNavigate()
   const { data, isLoading } = useQuery({
     queryKey: ['aria-similar', ariaPatternCode],
     queryFn: () => ariaApi.getQueue({ pattern: ariaPatternCode, tier: 1, per_page: 3 }),
@@ -912,29 +913,43 @@ function SimilarPatternsTeaser({
           {items.map((v) => {
             const ips = Math.round((v.ips_final ?? 0) * 100)
             const lastYear = (v as { last_contract_year?: number | null }).last_contract_year ?? null
+            const flags: ('gt' | 'efos' | 'sfp')[] = []
+            if (v.in_ground_truth) flags.push('gt')
+            if (v.is_efos_definitivo) flags.push('efos')
+            if (v.is_sfp_sanctioned) flags.push('sfp')
             return (
-              <Link
+              <article
                 key={v.vendor_id}
-                to={`/thread/${v.vendor_id}`}
+                role="link"
+                tabIndex={0}
+                onClick={() => navigate(`/thread/${v.vendor_id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/thread/${v.vendor_id}`)}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr auto auto',
                   gap: 12,
-                  alignItems: 'baseline',
-                  padding: '10px 14px',
+                  alignItems: 'center',
+                  padding: '8px 14px',
                   background: 'var(--color-background-card)',
                   border: `1px solid ${BORDER}`,
                   borderRadius: 2,
-                  textDecoration: 'none',
+                  cursor: 'pointer',
                   transition: 'border-color 0.12s ease',
                 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = 'var(--color-risk-critical)')}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.borderColor = BORDER)}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--color-risk-critical)')}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = BORDER)}
               >
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {titleCase(v.vendor_name.toLowerCase())}
-                  </div>
+                  <EntityIdentityChip
+                    type="vendor"
+                    id={v.vendor_id}
+                    name={v.vendor_name}
+                    riskScore={v.avg_risk_score}
+                    ariaTier={v.ips_tier}
+                    flags={flags.length > 0 ? flags : undefined}
+                    narrative={true}
+                    size="sm"
+                  />
                   <div style={{ fontSize: 10, ...MONO, color: TEXT_MUTED, marginTop: 2, letterSpacing: '0.04em' }}>
                     {v.primary_sector_name ? titleCase(v.primary_sector_name) + ' · ' : ''}
                     {v.total_contracts.toLocaleString()} {lang === 'es' ? 'contratos' : 'contracts'}
@@ -945,7 +960,7 @@ function SimilarPatternsTeaser({
                   {ips}
                 </div>
                 <span style={{ fontSize: 10, ...MONO, color: TEXT_FAINT, letterSpacing: '0.12em' }}>→</span>
-              </Link>
+              </article>
             )
           })}
           <Link
