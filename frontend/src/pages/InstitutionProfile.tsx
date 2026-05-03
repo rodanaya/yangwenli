@@ -805,7 +805,7 @@ export function InstitutionProfile() {
                               const N = 22, DR = 2, DG = 5.5
                               const filled = Math.max(1, Math.round((r.pct / 100) * N))
                               return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                                       fill={k < filled ? r.color : 'var(--color-background-elevated)'}
@@ -1061,7 +1061,7 @@ export function InstitutionProfile() {
                             const markerIdx = Math.round((pct / 100) * N)
                             const medianX = (m.peer_median / 100) * totalW
                             return (
-                              <svg viewBox={`0 0 ${totalW} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                              <svg viewBox={`0 0 ${totalW} 10`} width={totalW} height={10} aria-hidden="true">
                                 {/* Track dots */}
                                 {Array.from({ length: N }).map((_, k) => {
                                   const inPeerRange = k >= p25Idx && k < p75Idx
@@ -1631,6 +1631,58 @@ export function InstitutionProfile() {
 
       </SimpleTabs>
 
+      {/* ---- EDITORIAL CLOSING ---- */}
+      {(() => {
+        const daPct = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
+        const risk = institution.avg_risk_score ?? 0
+        const instName = toTitleCase(institution.name)
+        const instId = institutionId
+
+        let prose = ''
+        if (daPct > 70 && risk >= 0.40) {
+          prose = lang === 'es'
+            ? `${instName} combina una tasa de adjudicación directa del ${daPct.toFixed(0)}% con un indicador de riesgo promedio de ${(risk * 100).toFixed(0)}/100 — señales que ubican a esta institución en alerta de posible captura institucional. Los patrones detectados por RUBLI sugieren revisión prioritaria de sus procedimientos de contratación.`
+            : `${instName} combines a direct-award rate of ${daPct.toFixed(0)}% with an average risk indicator of ${(risk * 100).toFixed(0)}/100 — signals placing this institution on alert for potential institutional capture. Patterns detected by RUBLI suggest priority review of its contracting procedures.`
+        } else if (daPct > 60) {
+          prose = lang === 'es'
+            ? `${instName} concentra el ${daPct.toFixed(0)}% de sus contratos en adjudicaciones directas, por encima del promedio federal (74%). Este patrón merece seguimiento en el contexto de sus principales proveedores y categorías de gasto.`
+            : `${instName} concentrates ${daPct.toFixed(0)}% of its contracts in direct awards, above the federal average (74%). This pattern warrants monitoring in the context of its top vendors and spending categories.`
+        } else if (risk >= 0.40) {
+          prose = lang === 'es'
+            ? `El indicador de riesgo promedio de ${instName} (${(risk * 100).toFixed(0)}/100) supera el umbral de alerta alta. El modelo RUBLI identifica señales estadísticas de irregularidad en sus patrones de contratación que justifican revisión analítica.`
+            : `${instName}'s average risk indicator (${(risk * 100).toFixed(0)}/100) exceeds the high-alert threshold. RUBLI's model identifies statistical signals of irregularity in its contracting patterns warranting analytic review.`
+        } else {
+          prose = lang === 'es'
+            ? `${instName} registra un indicador de riesgo promedio de ${(risk * 100).toFixed(0)}/100 con una tasa de adjudicación directa del ${daPct.toFixed(0)}%. No se detectan señales de captura institucional de alta prioridad en el período analizado.`
+            : `${instName} records an average risk indicator of ${(risk * 100).toFixed(0)}/100 with a direct-award rate of ${daPct.toFixed(0)}%. No high-priority institutional capture signals are detected in the analyzed period.`
+        }
+
+        return (
+          <section className="pt-2 border-t border-border/40 space-y-4">
+            <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
+              {prose}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to={`/aria?institution_id=${instId}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1 rounded-sm"
+              >
+                {lang === 'es' ? `Cola ARIA · ${institution.siglas ?? institution.name.split(' ')[0]}` : `ARIA Queue · ${institution.siglas ?? institution.name.split(' ')[0]}`}
+              </Link>
+              <Link
+                to={`/atlas?lens=SECTORS&pin=${institution.sector_id ?? ''}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
+              >
+                {lang === 'es' ? 'Ver en el Observatorio' : 'View in Observatory'}
+              </Link>
+              <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
+                {lang === 'es' ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}
+              </span>
+            </div>
+          </section>
+        )
+      })()}
+
       {isDetailOpen && (
         <Suspense fallback={null}>
           <ContractDetailModal
@@ -1683,7 +1735,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
         const benchIdx = Math.round((benchmark / 100) * N)
         const benchX = benchIdx * DG + DR
         return (
-          <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+          <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={4} r={DR}
                 fill={k < filled ? barColor : 'var(--color-background-elevated)'}
@@ -1828,7 +1880,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                 const N = 30, DR = 2, DG = 5
                 const filled = Math.max(1, Math.round((barW / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                         fill={k < filled ? 'var(--color-oecd)' : 'var(--color-background-elevated)'}
@@ -1978,7 +2030,7 @@ function LongestTenuredGantt({ vendors }: {
                 const endIdx = Math.min(N, startIdx + Math.max(1, Math.round((widthPct / 100) * N)))
                 return (
                   <div className="relative">
-                    <svg viewBox={`0 0 ${totalW} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                    <svg viewBox={`0 0 ${totalW} 10`} width={totalW} height={10} aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => {
                         const inSpan = k >= startIdx && k < endIdx
                         return (
