@@ -2809,10 +2809,13 @@ export default function Executive() {
                   ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'
                   : '#64748b'
                 return (
-                  <button
+                  <div
                     key={c.id}
                     onClick={() => navigate(`/contracts/${c.id}`)}
-                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors focus:outline-none focus:bg-background-elevated"
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate(`/contracts/${c.id}`)}
+                    role="link"
+                    tabIndex={0}
+                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus:bg-background-elevated"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
@@ -2821,9 +2824,12 @@ export default function Executive() {
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-text-primary truncate">
-                        {c.vendor_name || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}
-                      </p>
+                      <div className="truncate" onClick={(e) => e.stopPropagation()}>
+                        {c.vendor_id
+                          ? <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name ?? ''} riskScore={c.risk_score ?? undefined} size="sm" />
+                          : <span className="text-sm font-semibold text-text-primary">{c.vendor_name || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}</span>
+                        }
+                      </div>
                       <p className="text-xs text-text-muted truncate mt-0.5">
                         {c.title || c.institution_name || '—'}
                       </p>
@@ -2847,7 +2853,7 @@ export default function Executive() {
                         </div>
                       )}
                     </div>
-                  </button>
+                  </div>
                 )
               })}
             </div>
