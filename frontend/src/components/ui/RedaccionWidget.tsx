@@ -10,6 +10,7 @@ import { ariaApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RISK_COLORS } from '@/lib/constants'
 import { ArrowRight } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 interface StoryCard {
   vendorId: number
@@ -97,15 +98,15 @@ export default function RedaccionWidget() {
           stories.map((story) => (
             <div key={story.vendorId} className="border-t border-border pt-3">
               {/* Vendor name */}
-              <Link
-                to={`/thread/${story.vendorId}`}
-                className="block text-sm font-bold text-text-primary hover:text-accent transition-colors leading-snug"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {story.vendorName.length > 60
-                  ? story.vendorName.slice(0, 57) + '...'
-                  : story.vendorName}
-              </Link>
+              <EntityIdentityChip
+                type="vendor"
+                id={story.vendorId}
+                name={story.vendorName}
+                riskScore={story.avgRiskScore}
+                ariaTier={story.tier}
+                narrative={true}
+                size="sm"
+              />
 
               {/* Headline */}
               <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
