@@ -737,7 +737,7 @@ function AdminDossierPanel({
                           const N = 20, DR = 1.75, DG = 4.5
                           const filled = Math.max(1, Math.round((pct / 100) * N))
                           return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                               {Array.from({ length: N }).map((_, k) => (
                                 <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                                   fill={k < filled ? sector.color : 'var(--color-background-elevated)'}
@@ -1647,7 +1647,7 @@ export default function Administrations() {
                       const filled = Math.max(1, Math.round((barWidth / 100) * N))
                       const color = isAmlo ? '#dc2626' : partyColor
                       return (
-                        <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                        <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={5} r={DR}
                               fill={k < filled ? color : 'var(--color-background-elevated)'}
@@ -2559,7 +2559,7 @@ function TransitionMiniBar({
             const N = 20, DR = 2, DG = 5
             const filled = Math.max(1, Math.round((fromPct / 100) * N))
             return (
-              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                     fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
@@ -2580,7 +2580,7 @@ function TransitionMiniBar({
             const N = 20, DR = 2, DG = 5
             const filled = Math.max(1, Math.round((toPct / 100) * N))
             return (
-              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                     fill={k < filled ? toBarColor : 'var(--color-background-elevated)'}
@@ -2880,7 +2880,7 @@ function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin
         aria-label={`${sector.name} under ${adminName}: ${displayText}`}
       >
         <span style={{ color: bgColor }}>{sector.code}</span>
-        <svg className="absolute bottom-0.5 left-1 right-1" viewBox="0 0 20 3" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
+        <svg className="absolute bottom-0.5 left-1 right-1" viewBox="0 0 20 3" width={20} height={3} aria-hidden="true">
           {(() => {
             const N = 5, DR = 1, DG = 4
             const filled = Math.max(1, Math.round(intensity * N))

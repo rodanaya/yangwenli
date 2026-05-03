@@ -24,13 +24,14 @@ import {
 } from '@/components/charts/editorial'
 import {
   ArrowLeft,
-  ArrowUpRight,
   ExternalLink,
   AlertTriangle,
   Building2,
   User,
 } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { getLedeForCategory } from '@/lib/entity/lede'
 
 // =============================================================================
 // Types
@@ -312,7 +313,7 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
 export default function CategoryProfile() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation('categories')
+  const { t, i18n } = useTranslation('categories')
   const categoryId = Number(id)
 
   // Data queries
@@ -493,6 +494,22 @@ export default function CategoryProfile() {
           </div>
         ) : null}
       </div>
+
+      {/* ================================================================= */}
+      {/* 1b. Editorial Lede                                                */}
+      {/* ================================================================= */}
+      {category && (
+        <p className="text-sm text-text-secondary leading-[1.65] max-w-prose" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          {getLedeForCategory({
+            category_name: category.name_es,
+            category_name_en: category.name_en,
+            total_value_mxn: category.total_value,
+            total_contracts: category.total_contracts,
+            direct_award_pct: category.direct_award_pct,
+            avg_risk_score: category.avg_risk,
+          })}
+        </p>
+      )}
 
       {/* ================================================================= */}
       {/* 2. KPI Strip                                                      */}
@@ -709,13 +726,7 @@ export default function CategoryProfile() {
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <button
-                            onClick={() => navigate(`/vendors/${v.vendor_id}`)}
-                            className="text-xs font-semibold text-text-primary hover:text-accent truncate max-w-[240px] transition-colors flex items-center gap-1"
-                          >
-                            {truncate(v.vendor_name, 35)}
-                            <ArrowUpRight className="h-3 w-3 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </button>
+                          <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" hideIcon />
                         </div>
                         <div className="w-28 flex-shrink-0">
                           <div className="flex items-center gap-2">
@@ -723,7 +734,7 @@ export default function CategoryProfile() {
                               const N = 14, DR = 2, DG = 4.5
                               const filled = Math.max(1, Math.round((Math.min(v.market_share_pct, 100) / 100) * N))
                               return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                                       fill={k < filled ? vendorRiskColor : 'var(--color-background-elevated)'}
@@ -818,12 +829,7 @@ export default function CategoryProfile() {
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <button
-                              onClick={() => navigate(`/vendors/${pair.vendor_id}`)}
-                              className="text-xs font-semibold text-text-primary hover:text-accent truncate max-w-[180px] transition-colors"
-                            >
-                              {truncate(pair.vendor_name, 30)}
-                            </button>
+                            <EntityIdentityChip type="vendor" id={pair.vendor_id} name={pair.vendor_name} size="xs" hideIcon />
                             <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
                             <span className="text-xs text-text-secondary truncate max-w-[160px]">
                               {truncate(pair.institution_name, 28)}
@@ -835,7 +841,7 @@ export default function CategoryProfile() {
                             const filled = Math.max(1, Math.round(pct * N))
                             const color = getRiskColor(pair.avg_risk)
                             return (
-                              <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                              <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2} r={DR}
                                     fill={k < filled ? color : 'var(--color-background-elevated)'}
@@ -923,16 +929,11 @@ export default function CategoryProfile() {
                         <span className="w-20 text-right text-xs font-mono font-bold text-text-primary tabular-nums flex-shrink-0">
                           {formatCompactMXN(c.amount_mxn ?? 0)}
                         </span>
-                        <span className="w-24 text-right text-xs text-text-muted truncate flex-shrink-0 hidden md:block">
+                        <div className="w-24 text-right flex-shrink-0 hidden md:block">
                           {c.vendor_id ? (
-                            <button
-                              onClick={() => navigate(`/vendors/${c.vendor_id}`)}
-                              className="hover:text-accent transition-colors"
-                            >
-                              {truncate(c.vendor_name ?? '---', 18)}
-                            </button>
-                          ) : '---'}
-                        </span>
+                            <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" hideIcon />
+                          ) : <span className="text-xs text-text-muted">---</span>}
+                        </div>
                         <span className="w-10 text-right text-[10px] text-text-muted font-mono flex-shrink-0 hidden md:block">
                           {c.contract_year ?? '---'}
                         </span>
@@ -1003,6 +1004,61 @@ export default function CategoryProfile() {
           </Card>
         </section>
       )}
+
+      {/* ================================================================= */}
+      {/* Editorial Closing                                                 */}
+      {/* ================================================================= */}
+      {category && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const catName = category.name_es || category.name_en
+        const da = category.direct_award_pct
+        const risk = category.avg_risk
+        const catId = categoryId
+
+        let prose = ''
+        if (da > 60 && risk >= 0.40) {
+          prose = isEs
+            ? `${catName} combina una tasa de adjudicación directa del ${da.toFixed(0)}% con un indicador de riesgo promedio de ${(risk * 100).toFixed(0)}/100 — patrón consistente con captura de mercado documentada. RUBLI marca esta categoría como de revisión prioritaria.`
+            : `${catName} combines a direct-award rate of ${da.toFixed(0)}% with a risk indicator of ${(risk * 100).toFixed(0)}/100 — a pattern consistent with documented market capture. RUBLI flags this category as priority for review.`
+        } else if (da > 50) {
+          prose = isEs
+            ? `El ${da.toFixed(0)}% de adjudicaciones directas en ${catName} supera el promedio federal. Este nivel de contratación sin licitación merece seguimiento continuo.`
+            : `${catName}'s ${da.toFixed(0)}% direct-award rate exceeds the federal average. This level of no-bid contracting warrants continued monitoring.`
+        } else if (risk >= 0.40) {
+          prose = isEs
+            ? `El indicador de riesgo promedio de ${catName} (${(risk * 100).toFixed(0)}/100) ubica esta categoría en alerta alta. El modelo identifica anomalías estadísticas que justifican revisión.`
+            : `${catName}'s average risk indicator (${(risk * 100).toFixed(0)}/100) places this category on high alert. The model identifies statistical anomalies warranting review.`
+        } else {
+          prose = isEs
+            ? `${catName} registra indicadores dentro del rango esperado para su sector. No se detectan señales de captura de alta prioridad en el período analizado.`
+            : `${catName} records indicators within the expected range for its sector. No high-priority capture signals are detected in the analyzed period.`
+        }
+
+        return (
+          <section className="pt-2 border-t border-border/40 space-y-4">
+            <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
+              {prose}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to={`/aria?category_id=${catId}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1 rounded-sm"
+              >
+                {isEs ? `Cola ARIA · ${catName.split(' ').slice(0, 2).join(' ')}` : `ARIA Queue · ${catName.split(' ').slice(0, 2).join(' ')}`}
+              </Link>
+              <Link
+                to={`/atlas?lens=CATEGORIES&pin=${catId}`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
+              >
+                {isEs ? 'Ver en el Observatorio' : 'View in Observatory'}
+              </Link>
+              <span className="text-[10px] font-mono text-text-muted/50 uppercase tracking-wider">
+                {isEs ? 'Indicador estadístico · no prueba de irregularidades' : 'Statistical indicator · not evidence of wrongdoing'}
+              </span>
+            </div>
+          </section>
+        )
+      })()}
 
       {/* ================================================================= */}
       {/* Footer                                                            */}

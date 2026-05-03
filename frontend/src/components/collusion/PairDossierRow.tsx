@@ -171,7 +171,7 @@ export function PairDossierRow({
                 const N = 30, DR = 1.5, DG = 4
                 const filled = Math.max(1, Math.round((sharesBarPct / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2} r={DR}
                         fill={k < filled ? accent : 'var(--color-background-elevated)'}

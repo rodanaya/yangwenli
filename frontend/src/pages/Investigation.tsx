@@ -358,7 +358,7 @@ function CaseCard({
               : caseItem.suspicion_score >= 0.4 ? '#f59e0b'
               : caseItem.suspicion_score >= 0.25 ? '#a16207' : 'var(--color-text-muted)'
             return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} className="w-full h-2.5" preserveAspectRatio="none">
+              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} width={DOTS * DOT_GAP} height={10}>
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
                     fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
@@ -879,7 +879,7 @@ function CaseTableRow({
               : priority.level === 'high' ? '#f59e0b'
               : priority.level === 'medium' ? '#a16207' : 'var(--color-text-muted)'
             return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-16 h-2" preserveAspectRatio="none">
+              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} width={DOTS * DOT_GAP} height={8}>
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
                     fill={i < filled ? riskColor : 'var(--color-background-elevated)'}

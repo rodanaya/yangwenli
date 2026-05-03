@@ -427,9 +427,8 @@ function RiskEvolution({
             return (
               <svg
                 viewBox={`0 0 ${N * DG} 10`}
-                className="w-full"
-                style={{ height: 10 }}
-                preserveAspectRatio="none"
+                width={N * DG}
+                height={10}
                 aria-hidden="true"
               >
                 {Array.from({ length: N }).map((_, i) => (

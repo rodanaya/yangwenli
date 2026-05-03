@@ -1420,7 +1420,7 @@ function RiskLevelPriceGap({
                 const N = 40, DR = 3, DG = 8
                 const filled = Math.max(1, Math.round((flaggedPct / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 12`} width={N * DG} height={12} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={6} r={DR}
                         fill={k < filled ? '#dc2626' : 'var(--color-background-elevated)'}
@@ -1459,7 +1459,7 @@ function RiskLevelPriceGap({
                 const N = 40, DR = 3, DG = 8
                 const filled = Math.max(1, Math.round((standardPct / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 12`} width={N * DG} height={12} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={6} r={DR}
                         fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}

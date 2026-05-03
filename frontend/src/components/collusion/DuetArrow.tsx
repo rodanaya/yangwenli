@@ -55,9 +55,8 @@ export function DuetArrow({
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        width="100%"
+        width={W}
         height={H}
-        preserveAspectRatio="none"
         className="block"
         aria-hidden="true"
       >

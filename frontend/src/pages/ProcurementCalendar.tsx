@@ -485,7 +485,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 const N = 30, DR = 3, DG = 8
                 const filled = Math.max(1, Math.round((decBarWidth / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={5} r={DR}
                         fill={k < filled ? '#f97316' : 'var(--color-background-elevated)'}
@@ -507,7 +507,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 const N = 30, DR = 3, DG = 8
                 const filled = Math.max(1, Math.round((avgBarWidth / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={5} r={DR}
                         fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}
@@ -538,7 +538,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 const N = 30, DR = 3, DG = 8
                 const filled = Math.max(1, Math.round((decRiskBarWidth / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={5} r={DR}
                         fill={k < filled ? '#ef4444' : 'var(--color-background-elevated)'}
@@ -560,7 +560,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 const N = 30, DR = 2.5, DG = 6.5
                 const filled = Math.max(1, Math.round((avgRiskBarWidth / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={4} r={DR}
                         fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}

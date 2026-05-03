@@ -245,8 +245,8 @@ export function AnimatedSegment({ pct, color, delay }: { pct: number; color: str
     >
       <svg
         viewBox={`0 0 ${mySlice * DG} 10`}
-        className="w-full h-full"
-        preserveAspectRatio="none"
+        width={mySlice * DG}
+        height={10}
         aria-hidden="true"
       >
         {Array.from({ length: mySlice }).map((_, i) => (

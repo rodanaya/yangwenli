@@ -172,7 +172,7 @@ function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
           cells.push(cells[cells.length - 1])
         }
         return (
-          <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+          <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
             role="img" aria-label={t('distribution.ariaLabel')}>
             {cells.map((c, k) => (
               <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.88}>
@@ -235,7 +235,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
               const N = 14, DR = 1.5, DG = 4
               const filled = Math.max(1, Math.round((pct / 100) * N))
               return (
-                <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2} r={DR}
                       fill={k < filled ? color : 'var(--color-background-elevated)'}
