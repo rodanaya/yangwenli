@@ -2148,6 +2148,31 @@ export const categoriesApi = {
       }[]
     }
   },
+
+  getCompetition: async (categoryId: number) => {
+    const { data } = await api.get(`/categories/${categoryId}/competition`)
+    return data as {
+      category_id: number
+      category_name: string
+      sector_id: number | null
+      total_contracts: number
+      procedure_breakdown: {
+        type: string
+        count: number
+        pct_contracts: number
+        value: number
+        pct_value: number
+      }[]
+      yearly_trend: {
+        year: number
+        contracts: number
+        da_pct: number
+        sb_pct: number
+      }[]
+      sector_da_avg: number | null
+      sector_sb_avg: number | null
+    }
+  },
 }
 
 // ============================================================================

@@ -11,7 +11,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
@@ -359,6 +359,13 @@ export default function CategoryProfile() {
   const { data: subcategoryData, isLoading: subcategoryLoading } = useQuery({
     queryKey: ['categories', 'subcategories', categoryId],
     queryFn: () => categoriesApi.getSubcategories(categoryId),
+    enabled: !isNaN(categoryId),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: competitionData } = useQuery({
+    queryKey: ['categories', 'competition', categoryId],
+    queryFn: () => categoriesApi.getCompetition(categoryId),
     enabled: !isNaN(categoryId),
     staleTime: 10 * 60 * 1000,
   })
@@ -1004,6 +1011,204 @@ export default function CategoryProfile() {
           </Card>
         </section>
       )}
+
+      {/* ================================================================= */}
+      {/* § 5 La Competencia                                               */}
+      {/* ================================================================= */}
+      {competitionData && competitionData.total_contracts > 0 && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const { procedure_breakdown, yearly_trend, sector_da_avg, sector_sb_avg } = competitionData
+
+        // Canonical procedure labels
+        const PROC_LABELS: Record<string, { es: string; en: string; color: string }> = {
+          directa:     { es: 'Adjudicación directa', en: 'Direct award',   color: '#f87171' },
+          licitacion:  { es: 'Licitación pública',   en: 'Public tender',  color: '#34d399' },
+          invitacion:  { es: 'Invitación a 3',       en: 'Invitation ×3',  color: '#fbbf24' },
+          otro:        { es: 'Otro',                 en: 'Other',          color: '#94a3b8' },
+          desconocido: { es: 'Desconocido',          en: 'Unknown',        color: '#64748b' },
+        }
+
+        const daRow = procedure_breakdown.find(p => p.type === 'directa')
+        const tendRow = procedure_breakdown.find(p => p.type === 'licitacion')
+        const daPct = daRow?.pct_contracts ?? 0
+        const sectorDa = sector_da_avg ?? 0
+
+        // Flag: is this category above sector DA average?
+        const daAboveSector = sector_da_avg != null && daPct > sectorDa + 10
+
+        // Find the single-bid pct from category summary
+        const catSbPct = competitionData.yearly_trend.length > 0
+          ? competitionData.yearly_trend.reduce((sum, y) => sum + y.sb_pct, 0) / competitionData.yearly_trend.length
+          : 0
+
+        return (
+          <section className="pt-2">
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
+                    {isEs ? '§ 5 · COMPETENCIA' : '§ 5 · COMPETITION'}
+                  </span>
+                  {daAboveSector && (
+                    <span
+                      className="text-[9px] font-bold uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                      style={{ color: '#f87171', backgroundColor: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.3)' }}
+                    >
+                      {isEs ? 'Alta adjudicación directa' : 'High direct award'}
+                    </span>
+                  )}
+                </div>
+                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                  {isEs ? 'La Competencia' : 'Competition'}
+                </CardTitle>
+                <p className="text-sm text-text-secondary">
+                  {isEs
+                    ? 'Cómo se distribuyen los contratos por tipo de procedimiento, y qué tan competitivo es este mercado.'
+                    : 'How contracts distribute by procedure type, and how competitive this market is.'}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+                {/* KPI row */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div
+                      className="text-2xl font-bold tabular-nums"
+                      style={{ fontFamily: 'var(--font-serif)', color: daPct > 70 ? '#f87171' : daPct > 50 ? '#fb923c' : '#34d399' }}
+                    >
+                      {daPct.toFixed(0)}%
+                    </div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                      {isEs ? 'Directa' : 'Direct award'}
+                    </div>
+                    {sector_da_avg != null && (
+                      <div className="text-[10px] text-text-muted mt-0.5">
+                        {isEs ? 'sector' : 'sector'} {sectorDa.toFixed(0)}%
+                        <span className={daPct > sectorDa ? ' text-risk-high' : ' text-signal-live'}> {daPct > sectorDa ? '▲' : '▼'}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <div
+                      className="text-2xl font-bold tabular-nums"
+                      style={{ fontFamily: 'var(--font-serif)', color: (tendRow?.pct_contracts ?? 0) > 20 ? '#34d399' : '#94a3b8' }}
+                    >
+                      {(tendRow?.pct_contracts ?? 0).toFixed(0)}%
+                    </div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                      {isEs ? 'Licitación' : 'Public tender'}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div
+                      className="text-2xl font-bold tabular-nums"
+                      style={{ fontFamily: 'var(--font-serif)', color: catSbPct > 10 ? '#fb923c' : '#94a3b8' }}
+                    >
+                      {catSbPct.toFixed(0)}%
+                    </div>
+                    <div className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">
+                      {isEs ? 'Oferta única' : 'Single bid'}
+                    </div>
+                    {sector_sb_avg != null && (
+                      <div className="text-[10px] text-text-muted mt-0.5">
+                        {isEs ? 'sector' : 'sector'} {sector_sb_avg.toFixed(0)}%
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Procedure breakdown bar */}
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                    {isEs ? 'Desglose por procedimiento' : 'Procedure breakdown'}
+                  </div>
+                  <div className="h-5 rounded-sm overflow-hidden flex w-full">
+                    {procedure_breakdown
+                      .filter(p => p.pct_contracts > 0.5)
+                      .map(p => {
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        return (
+                          <div
+                            key={p.type}
+                            title={`${isEs ? meta.es : meta.en}: ${p.pct_contracts.toFixed(1)}%`}
+                            style={{ width: `${p.pct_contracts}%`, backgroundColor: meta.color }}
+                            className="h-full transition-all"
+                          />
+                        )
+                      })}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                    {procedure_breakdown
+                      .filter(p => p.pct_contracts > 0.5)
+                      .map(p => {
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        return (
+                          <div key={p.type} className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
+                            <span className="text-[11px] text-text-secondary">
+                              {isEs ? meta.es : meta.en}
+                            </span>
+                            <span className="text-[11px] font-mono tabular-nums text-text-muted">
+                              {p.pct_contracts.toFixed(0)}%
+                            </span>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+
+                {/* DA trend sparkline */}
+                {yearly_trend.length > 3 && (() => {
+                  const W = 320; const H = 48
+                  const pts = yearly_trend.map((y, i) => {
+                    const x = (i / (yearly_trend.length - 1)) * W
+                    const yv = H - (y.da_pct / 100) * H
+                    return `${x.toFixed(1)},${yv.toFixed(1)}`
+                  }).join(' ')
+                  const firstYear = yearly_trend[0].year
+                  const lastYear = yearly_trend[yearly_trend.length - 1].year
+                  return (
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                        {isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
+                      </div>
+                      <div className="relative">
+                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 48 }}>
+                          {/* Sector avg reference line */}
+                          {sector_da_avg != null && (
+                            <line
+                              x1="0" y1={H - (sector_da_avg / 100) * H}
+                              x2={W} y2={H - (sector_da_avg / 100) * H}
+                              stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3"
+                            />
+                          )}
+                          <polyline
+                            points={pts}
+                            fill="none"
+                            stroke="#f87171"
+                            strokeWidth="1.5"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <div className="flex justify-between text-[9px] text-text-muted font-mono mt-0.5">
+                          <span>{firstYear}</span>
+                          {sector_da_avg != null && (
+                            <span className="text-text-muted/60">
+                              — {isEs ? 'promedio sector' : 'sector avg'} {sector_da_avg.toFixed(0)}%
+                            </span>
+                          )}
+                          <span>{lastYear}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
 
       {/* ================================================================= */}
       {/* § 8 El Veredicto                                                  */}

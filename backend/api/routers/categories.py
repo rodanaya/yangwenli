@@ -396,6 +396,99 @@ def get_categories_sexenio():
     }
 
 
+@router.get("/{category_id}/competition")
+def get_category_competition(category_id: int):
+    """Return competition metrics: procedure breakdown, DA/single-bid trends, sector benchmark."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        # Procedure type breakdown
+        cur.execute("""
+            SELECT
+                COALESCE(procedure_type_normalized, 'desconocido') AS proc_type,
+                COUNT(*)           AS cnt,
+                COALESCE(SUM(amount_mxn), 0) AS val
+            FROM contracts
+            WHERE category_id = ?
+            GROUP BY procedure_type_normalized
+            ORDER BY cnt DESC
+        """, (category_id,))
+        proc_rows = cur.fetchall()
+        total_cnt = sum(r["cnt"] for r in proc_rows) or 1
+        total_val = sum(r["val"] for r in proc_rows) or 1.0
+
+        procedure_breakdown = [
+            {
+                "type": r["proc_type"],
+                "count": r["cnt"],
+                "pct_contracts": round(r["cnt"] * 100.0 / total_cnt, 1),
+                "value": round(r["val"], 2),
+                "pct_value": round(r["val"] * 100.0 / total_val, 1),
+            }
+            for r in proc_rows
+        ]
+
+        # Direct-award & single-bid trend by year
+        cur.execute("""
+            SELECT
+                contract_year                                  AS year,
+                COUNT(*)                                       AS contracts,
+                SUM(is_direct_award) * 100.0 / COUNT(*)       AS da_pct,
+                SUM(is_single_bid)   * 100.0 / COUNT(*)       AS sb_pct
+            FROM contracts
+            WHERE category_id = ? AND contract_year BETWEEN 2010 AND 2025
+            GROUP BY contract_year
+            ORDER BY contract_year
+        """, (category_id,))
+        trend_rows = cur.fetchall()
+        yearly_trend = [
+            {
+                "year": r["year"],
+                "contracts": r["contracts"],
+                "da_pct": round(r["da_pct"] or 0, 1),
+                "sb_pct": round(r["sb_pct"] or 0, 1),
+            }
+            for r in trend_rows
+        ]
+
+        # Sector benchmark — avg direct_award_pct across all categories in same sector
+        cur.execute("""
+            SELECT cs.sector_id
+            FROM category_stats cs WHERE cs.category_id = ?
+        """, (category_id,))
+        sector_row = cur.fetchone()
+        sector_id = sector_row["sector_id"] if sector_row else None
+
+        sector_da_avg = None
+        sector_sb_avg = None
+        if sector_id:
+            cur.execute("""
+                SELECT AVG(cs.direct_award_pct) AS da_avg,
+                       AVG(cs.single_bid_pct)   AS sb_avg
+                FROM category_stats cs
+                WHERE cs.sector_id = ? AND cs.total_contracts >= 100
+            """, (sector_id,))
+            bm = cur.fetchone()
+            if bm and bm["da_avg"] is not None:
+                sector_da_avg = round(bm["da_avg"], 1)
+                sector_sb_avg = round(bm["sb_avg"] or 0, 1)
+
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "sector_id": sector_id,
+        "total_contracts": total_cnt,
+        "procedure_breakdown": procedure_breakdown,
+        "yearly_trend": yearly_trend,
+        "sector_da_avg": sector_da_avg,
+        "sector_sb_avg": sector_sb_avg,
+    }
+
+
 @router.get("/{category_id}/top-vendors")
 def get_category_top_vendors(
     category_id: int,
