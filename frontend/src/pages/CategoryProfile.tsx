@@ -1055,7 +1055,10 @@ export default function CategoryProfile() {
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     {heavySkew && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-500/40 text-amber-400 bg-amber-500/10 uppercase tracking-wider">
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                        style={{ color: '#f59e0b', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
+                      >
                         {isEs ? 'Distribución asimétrica' : 'Heavy skew'}
                       </span>
                     )}
@@ -1092,10 +1095,10 @@ export default function CategoryProfile() {
                     <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
                       {isEs ? 'Media' : 'Mean'}
                     </div>
-                    <div className={cn(
-                      "text-lg font-bold font-mono tabular-nums mt-0.5",
-                      heavySkew ? 'text-amber-400' : 'text-text-primary'
-                    )}>
+                    <div
+                      className="text-lg font-bold font-mono tabular-nums mt-0.5"
+                      style={{ color: heavySkew ? '#f59e0b' : 'var(--color-text-primary)' }}
+                    >
                       {formatCompactMXN(mean ?? 0)}
                     </div>
                     {mean_median_ratio !== null && (
@@ -1149,7 +1152,7 @@ export default function CategoryProfile() {
                           {/* Mean diamond */}
                           {xMean !== null && (
                             <div
-                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-amber-400"
+                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rotate-45" style={{ backgroundColor: '#f59e0b' }}
                               style={{ left: `calc(${xMean}% - 4px)` }}
                             />
                           )}
@@ -1178,7 +1181,7 @@ export default function CategoryProfile() {
                         {isEs ? 'Mediana' : 'Median'}
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="inline-block w-2 h-2 rotate-45 bg-amber-400" />
+                        <span className="inline-block w-2 h-2 rotate-45" style={{ backgroundColor: '#f59e0b' }} />
                         {isEs ? 'Media' : 'Mean'}
                       </span>
                     </div>
