@@ -576,7 +576,7 @@ function TopVendorsComparison({
                     const N = 22, DR = 2, DG = 5
                     const filled = Math.max(1, Math.round((Math.min(share, 100) / 100) * N))
                     return (
-                      <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                      <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="mt-1.5" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                             fill={k < filled ? accentColor : 'var(--color-background-elevated)'}

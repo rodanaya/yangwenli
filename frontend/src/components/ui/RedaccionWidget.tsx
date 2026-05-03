@@ -123,7 +123,7 @@ export default function RedaccionWidget() {
                   const filled = Math.round(pct * N)
                   const color = ipsColor(story.ipsScore)
                   return (
-                    <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                    <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                       {Array.from({ length: N }).map((_, i) => (
                         <circle key={i} cx={i * DG + DR} cy={3} r={DR}
                           fill={i < filled ? color : '#f3f1ec'}

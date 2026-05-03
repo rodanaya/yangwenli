@@ -63,10 +63,10 @@ export function RiskScoreBar({
           <TooltipTrigger asChild>
             <svg
               viewBox={`0 0 ${N * DG} 10`}
-              className="w-full cursor-default"
-              style={{ height: 10 }}
+              width={N * DG}
+              height={10}
+              className="cursor-default"
               aria-hidden="true"
-              preserveAspectRatio="none"
             >
               {Array.from({ length: N }).map((_, i) => (
                 <circle

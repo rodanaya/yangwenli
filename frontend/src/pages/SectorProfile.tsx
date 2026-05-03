@@ -221,7 +221,7 @@ function InstitutionList({
                 const N = 24, DR = 2, DG = 5
                 const filled = Math.max(1, Math.round((barPct / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                         fill={k < filled ? color : 'var(--color-background-elevated)'}
@@ -312,7 +312,7 @@ function VendorTable({
                         const N = 16, DR = 2, DG = 4
                         const filled = Math.max(1, Math.round((barPct / 100) * N))
                         return (
-                          <svg viewBox={`0 0 ${N * DG} 5`} className="w-32 mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                          <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="mt-1" aria-hidden="true">
                             {Array.from({ length: N }).map((_, k) => (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                                 fill={k < filled ? color : 'var(--color-background-elevated)'}
@@ -411,7 +411,7 @@ function RiskDonut({
               const filled = Math.max(1, Math.round((d.pct / 100) * N))
               const color = RISK_COLORS[d.level as keyof typeof RISK_COLORS]
               return (
-                <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                       fill={k < filled ? color : 'var(--color-background-elevated)'}
@@ -481,7 +481,7 @@ function FactorRankList({
                 const N = 22, DR = 2, DG = 5
                 const filled = Math.max(1, Math.round((barWidth / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                         fill={k < filled ? color : 'var(--color-background-elevated)'}

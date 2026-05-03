@@ -145,7 +145,7 @@ export function PillarBar({
         const N = 22, DR = 2, DG = 5
         const filled = Math.max(1, Math.round((pct / 100) * N))
         return (
-          <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                 fill={k < filled ? color : 'var(--color-background-elevated)'}

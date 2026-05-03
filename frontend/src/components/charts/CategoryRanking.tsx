@@ -224,7 +224,7 @@ function RankingRow({
             const filled = Math.max(1, Math.round((barWidth / 100) * N))
             const color = isCritical ? '#ef4444' : isHigh ? '#f59e0b' : '#71717a'
             return (
-              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                 {Array.from({ length: N }).map((_, i) => (
                   <circle key={i} cx={i * DG + DR} cy={3} r={DR}
                     fill={i < filled ? color : '#f3f1ec'}

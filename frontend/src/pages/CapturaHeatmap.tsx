@@ -387,7 +387,7 @@ function CaptureBarChart({
                     const N = 30, DR = 2.5, DG = 6
                     const filled = Math.max(1, Math.round((Math.min(100, pct) / 100) * N))
                     return (
-                      <svg viewBox={`0 0 ${N * DG} 7`} className="flex-1" style={{ height: 7 }} preserveAspectRatio="none" aria-hidden="true">
+                      <svg viewBox={`0 0 ${N * DG} 7`} width={N * DG} height={7} aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={3.5} r={DR}
                             fill={k < filled ? barColor : 'var(--color-background-elevated)'}

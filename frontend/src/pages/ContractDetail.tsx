@@ -328,7 +328,7 @@ export default function ContractDetail() {
                   const totalW = N * DG
                   const markerX = (t: number) => (t / 100) * totalW
                   return (
-                    <svg viewBox={`0 0 ${totalW} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                    <svg viewBox={`0 0 ${totalW} 12`} width={totalW} height={12} aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={6} r={DR}
                           fill={k < filled ? riskPalette.color : 'var(--color-background-elevated)'}
@@ -795,7 +795,7 @@ function AnomalyScoreCard({
         const filled = Math.max(1, Math.round(pct * N))
         const color = isAiConfirmed ? '#f87171' : 'var(--color-text-muted)'
         return (
-          <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+          <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                 fill={k < filled ? color : 'var(--color-background-elevated)'}

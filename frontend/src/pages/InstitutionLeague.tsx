@@ -241,7 +241,7 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
           cells.push(cells[cells.length - 1])
         }
         return (
-          <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+          <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10}
             role="img" aria-label={ariaLabel}>
             {cells.map((c, k) => (
               <circle key={k} cx={k * DG + DR} cy={5} r={DR}
@@ -679,7 +679,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
                 const N = 20, DR = 2, DG = 5
                 const filled = Math.max(1, Math.round((pct / 100) * N))
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                         fill={k < filled ? barColor : 'var(--color-background-elevated)'}

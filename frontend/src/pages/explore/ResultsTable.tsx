@@ -320,7 +320,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
                   const pct = Math.min(score, 1)
                   const filled = Math.max(1, Math.round(pct * N))
                   return (
-                    <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                    <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
                           fill={k < filled ? color : 'var(--color-background-elevated)'}

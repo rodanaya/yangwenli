@@ -502,7 +502,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
             cells.push(cells[cells.length - 1])
           }
           return (
-            <svg viewBox={`0 0 ${N * DG} 12`} className="w-full mb-2" style={{ height: 36 }} preserveAspectRatio="none"
+            <svg viewBox={`0 0 ${N * DG} 12`} width={N * DG} height={12} className="mb-2"
               role="img" aria-label="Unified risk distribution">
               {cells.map((c, k) => (
                 <circle key={k} cx={k * DG + DR} cy={6} r={DR} fill={c.color} fillOpacity={0.9}>
