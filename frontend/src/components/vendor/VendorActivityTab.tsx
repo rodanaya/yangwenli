@@ -26,6 +26,8 @@ import {
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { ADMINISTRATIONS } from '@/lib/administrations'
+import { getRiskLevelFromScore } from '@/lib/constants'
 
 interface LifecycleTimelineEntry {
   year: number
@@ -108,6 +110,25 @@ export function VendorActivityTab({
 
   const institutionRows = institutions?.data ?? []
 
+  // §6 Cronología: peak year derived from lifecycle value data
+  const peakYear = useMemo(() => {
+    if (!lifecycle?.timeline?.length) return null
+    return lifecycle.timeline.reduce(
+      (best, y) => (!best || (y.total_value_mxn ?? 0) > (best.total_value_mxn ?? 0) ? y : best),
+      null as LifecycleTimelineEntry | null
+    )?.year ?? null
+  }, [lifecycle])
+
+  // Which administrations overlap with the vendor's active years
+  const overlappingAdmins = useMemo(() => {
+    const first = vendor.first_contract_year
+    const last = vendor.last_contract_year
+    if (!first) return []
+    return ADMINISTRATIONS.filter(
+      (a) => a.yearEnd >= first && a.yearStart <= (last ?? new Date().getFullYear())
+    )
+  }, [vendor.first_contract_year, vendor.last_contract_year])
+
   return (
     <div className="space-y-8">
       {/* Risk year-over-year */}
@@ -134,6 +155,76 @@ export function VendorActivityTab({
           </p>
         )}
       </section>
+
+      {/* § 6 La Cronología — birth → peak → death timeline */}
+      {vendor.first_contract_year != null && (
+        <section
+          aria-labelledby="cronologia-title"
+          className="pt-6 border-t border-border/40"
+        >
+          <SectionTitle id="cronologia-title">
+            {isEs ? '§ 6 · La Cronología' : '§ 6 · Timeline'}
+          </SectionTitle>
+          <div className="relative pl-6">
+            {/* Vertical thread */}
+            <div className="absolute left-2 top-0 bottom-0 w-[1.5px] bg-border" />
+
+            {/* First contract */}
+            <TimelineNode
+              year={vendor.first_contract_year}
+              label={isEs ? 'Primer contrato' : 'First contract'}
+              color="var(--color-border-hover)"
+              isEs={isEs}
+            />
+
+            {/* Administration crossings */}
+            {overlappingAdmins.map((admin) => (
+              <TimelineNode
+                key={admin.key}
+                year={admin.yearStart > (vendor.first_contract_year ?? 0) ? admin.yearStart : null}
+                label={isEs ? `Inicio: ${admin.long}` : `${admin.short} administration`}
+                color="var(--color-text-muted)"
+                isEs={isEs}
+                isAdmin
+              />
+            ))}
+
+            {/* Peak year */}
+            {peakYear != null && peakYear !== vendor.first_contract_year && peakYear !== vendor.last_contract_year && (
+              <TimelineNode
+                year={peakYear}
+                label={isEs ? 'Año de máxima actividad' : 'Peak activity year'}
+                color={
+                  vendor.avg_risk_score != null
+                    ? getRiskLevelFromScore(vendor.avg_risk_score) === 'critical' ? 'var(--color-risk-critical)'
+                    : getRiskLevelFromScore(vendor.avg_risk_score) === 'high' ? 'var(--color-risk-high)'
+                    : 'var(--color-risk-medium)'
+                    : 'var(--color-risk-high)'
+                }
+                isEs={isEs}
+                isPeak
+              />
+            )}
+
+            {/* Last contract */}
+            {vendor.last_contract_year != null && vendor.last_contract_year !== vendor.first_contract_year && (
+              <TimelineNode
+                year={vendor.last_contract_year}
+                label={
+                  vendor.last_contract_year >= new Date().getFullYear() - 1
+                    ? (isEs ? 'Contrato más reciente' : 'Most recent contract')
+                    : (isEs ? 'Último contrato registrado' : 'Last contract on record')
+                }
+                color={
+                  vendor.last_contract_year >= new Date().getFullYear() - 1
+                    ? 'var(--color-signal-live)' : 'var(--color-text-muted)'
+                }
+                isEs={isEs}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* § 2 La Captura — top institutions list with capture pill */}
       {institutionRows.length > 0 && (
@@ -331,5 +422,70 @@ function SectionTitle({
     >
       {children}
     </h2>
+  )
+}
+
+function TimelineNode({
+  year,
+  label,
+  color,
+  isEs,
+  isAdmin,
+  isPeak,
+}: {
+  year: number | null
+  label: string
+  color: string
+  isEs: boolean
+  isAdmin?: boolean
+  isPeak?: boolean
+}) {
+  if (!year) return null
+  return (
+    <div className="relative flex items-start gap-3 mb-4 last:mb-0">
+      {/* Dot on the thread */}
+      <div
+        className="absolute left-[-1.25rem] top-[4px] w-3 h-3 rounded-full border-2 flex-shrink-0 z-10"
+        style={{
+          borderColor: color,
+          backgroundColor: isPeak ? color : 'var(--color-background)',
+        }}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-baseline gap-2">
+          <span
+            className="text-sm font-mono font-bold tabular-nums"
+            style={{ color }}
+          >
+            {year}
+          </span>
+          {isAdmin && (
+            <span
+              className="text-[9px] font-mono uppercase tracking-[0.15em] px-1 py-[1px] rounded-sm border"
+              style={{
+                color: 'var(--color-text-muted)',
+                borderColor: 'var(--color-border)',
+                backgroundColor: 'var(--color-background-elevated)',
+              }}
+            >
+              {isEs ? 'cambio admin.' : 'admin. change'}
+            </span>
+          )}
+          {isPeak && (
+            <span
+              className="text-[9px] font-mono uppercase tracking-[0.15em] px-1 py-[1px] rounded-sm border"
+              style={{
+                color,
+                borderColor: `${color}40`,
+                backgroundColor: `${color}10`,
+              }}
+            >
+              {isEs ? 'pico' : 'peak'}
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-text-secondary leading-snug mt-0.5">{label}</p>
+      </div>
+    </div>
   )
 }
