@@ -61,13 +61,15 @@
       "v60Title": "Clasificador de Anomalías Honesto",
       "v60Desc": "~748 casos, ~603 proveedores. División estratificada por proveedor (ningún proveedor en entrenamiento+prueba), etiquetas con ventana temporal, Optuna TPE.",
       "v52Title": "Capa Analítica (En Vivo)",
-      "v52Desc": "Valores SHAP por proveedor (456K proveedores) + ensemble PyOD de validación cruzada (9.3M puntuaciones) + monitoreo de deriva KS. Ver Perfil de Proveedor → Pestaña Riesgo, Detalle de contrato → Confirmado por IA, Panel → Validación Cruzada."
+      "v52Desc": "Valores SHAP por proveedor (456K proveedores) + ensemble PyOD de validación cruzada (9.3M puntuaciones) + monitoreo de deriva KS. Ver Perfil de Proveedor → Pestaña Riesgo, Detalle de contrato → Confirmado por IA, Panel → Validación Cruzada.",
+      "v85Title": "Modelo de Producción Recalibrado",
+      "v85Desc": "1,401 casos GT · 861 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (cumple OECD 2–15%). Corrida: CAL-v8-202605020212."
     }
   },
   "kpiBadges": {
     "contracts": "3.05M Contratos",
-    "auc": "AUC 0.828",
-    "cases": "~748 Casos Validados",
+    "auc": "AUC 0.785",
+    "cases": "1,401 Casos Validados",
     "sectors": "12 Sectores"
   },
   "body": {

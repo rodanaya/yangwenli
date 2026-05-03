@@ -61,13 +61,15 @@
       "v60Title": "Honest Anomaly Ranker",
       "v60Desc": "~748 cases, ~603 vendors. Vendor-stratified split (no vendor in both train+test), time-windowed labels, Optuna TPE.",
       "v52Title": "Analytical Overlay (Live)",
-      "v52Desc": "SHAP per-vendor explanations (456K vendors) + PyOD cross-model ensemble (9.3M scores) + KS drift monitoring. See Vendor Profile → Risk tab, Contract detail → AI Confirmed, Dashboard → Cross-Model."
+      "v52Desc": "SHAP per-vendor explanations (456K vendors) + PyOD cross-model ensemble (9.3M scores) + KS drift monitoring. See Vendor Profile → Risk tab, Contract detail → AI Confirmed, Dashboard → Cross-Model.",
+      "v85Title": "Recalibrated Production Model",
+      "v85Desc": "1,401 GT cases · 861 vendors. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 active features, c_pu=0.32. HR=11.01% OECD-compliant. Run: CAL-v8-202605020212."
     }
   },
   "kpiBadges": {
     "contracts": "3.05M Contracts",
-    "auc": "AUC 0.828",
-    "cases": "~748 Cases Validated",
+    "auc": "AUC 0.785",
+    "cases": "1,401 Cases Validated",
     "sectors": "12 Sectors"
   },
   "body": {
