@@ -2218,6 +2218,24 @@ export const categoriesApi = {
       sector_sb_avg: number | null
     }
   },
+
+  getPriceDistribution: async (categoryId: number) => {
+    const { data } = await api.get(`/categories/${categoryId}/price-distribution`)
+    return data as {
+      category_id: number
+      category_name: string
+      n: number
+      p25: number | null
+      p50: number | null
+      p75: number | null
+      mean: number | null
+      iqr: number | null
+      mean_median_ratio: number | null
+      outlier_count: number
+      outlier_value: number
+      yearly_trend: { year: number; count: number; avg_value: number }[]
+    }
+  },
 }
 
 // ============================================================================

@@ -384,6 +384,13 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  const { data: priceDistData } = useQuery({
+    queryKey: ['categories', 'price-distribution', categoryId],
+    queryFn: () => categoriesApi.getPriceDistribution(categoryId),
+    enabled: !isNaN(categoryId),
+    staleTime: 10 * 60 * 1000,
+  })
+
   // Derived data
   const category: CategoryStat | null = useMemo(() => {
     if (!summaryData?.data) return null
@@ -1025,6 +1032,225 @@ export default function CategoryProfile() {
           </Card>
         </section>
       )}
+
+      {/* ================================================================= */}
+      {/* § 4 El Precio                                                    */}
+      {/* ================================================================= */}
+      {priceDistData && priceDistData.n > 0 && priceDistData.p50 !== null && (() => {
+        const isEs = i18n.language.startsWith('es')
+        const { p25, p50, p75, mean, iqr, mean_median_ratio, outlier_count, yearly_trend } = priceDistData
+        const heavySkew = mean_median_ratio !== null && mean_median_ratio >= 5
+
+        // Sparkline geometry
+        const svgW = 280; const svgH = 48; const barW = 18; const barGap = 4
+        const maxAvg = yearly_trend.reduce((m, y) => Math.max(m, y.avg_value), 1)
+
+        return (
+          <section aria-labelledby="price-section-title" className="scroll-mt-24">
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <CardTitle id="price-section-title" className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
+                    {isEs ? '§ 4 · El Precio' : '§ 4 · Pricing'}
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {heavySkew && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-500/40 text-amber-400 bg-amber-500/10 uppercase tracking-wider">
+                        {isEs ? 'Distribución asimétrica' : 'Heavy skew'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+
+                {/* KPI row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="rounded-sm border border-border p-3 bg-background-card">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Mediana' : 'Median'}
+                    </div>
+                    <div className="text-lg font-bold font-mono tabular-nums text-text-primary mt-0.5">
+                      {formatCompactMXN(p50 ?? 0)}
+                    </div>
+                    <div className="text-[10px] text-text-muted mt-0.5">P50</div>
+                  </div>
+                  <div className="rounded-sm border border-border p-3 bg-background-card">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Rango IQR' : 'IQR Range'}
+                    </div>
+                    <div className="text-base font-bold font-mono tabular-nums text-text-primary mt-0.5 leading-tight">
+                      <span className="text-text-muted text-xs">P25 </span>{formatCompactMXN(p25 ?? 0)}
+                      <span className="text-text-muted mx-1">–</span>
+                      <span className="text-text-muted text-xs">P75 </span>{formatCompactMXN(p75 ?? 0)}
+                    </div>
+                    {iqr !== null && (
+                      <div className="text-[10px] text-text-muted mt-0.5">IQR {formatCompactMXN(iqr)}</div>
+                    )}
+                  </div>
+                  <div className="rounded-sm border border-border p-3 bg-background-card">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Media' : 'Mean'}
+                    </div>
+                    <div className={cn(
+                      "text-lg font-bold font-mono tabular-nums mt-0.5",
+                      heavySkew ? 'text-amber-400' : 'text-text-primary'
+                    )}>
+                      {formatCompactMXN(mean ?? 0)}
+                    </div>
+                    {mean_median_ratio !== null && (
+                      <div className="text-[10px] text-text-muted mt-0.5">
+                        {mean_median_ratio.toFixed(1)}× {isEs ? 'mediana' : 'median'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="rounded-sm border border-border p-3 bg-background-card">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Valores atípicos' : 'Outliers'}
+                    </div>
+                    <div className="text-lg font-bold font-mono tabular-nums text-text-primary mt-0.5">
+                      {formatNumber(outlier_count)}
+                    </div>
+                    <div className="text-[10px] text-text-muted mt-0.5">
+                      {isEs ? 'sobre 1.5×IQR' : 'above 1.5×IQR'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* IQR band visualization */}
+                {p25 !== null && p50 !== null && p75 !== null && mean !== null && (
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Banda de precios (escala logarítmica)' : 'Price band (log scale)'}
+                    </div>
+                    {(() => {
+                      // Log-scale band bar
+                      const logMin = Math.log10(Math.max(p25 * 0.1, 1000))
+                      const logMax = Math.log10(Math.min((mean ?? p75) * 10, 1e10))
+                      const logRange = logMax - logMin
+                      const toX = (v: number) => ((Math.log10(Math.max(v, 1000)) - logMin) / logRange) * 100
+                      const x25 = toX(p25)
+                      const x50 = toX(p50)
+                      const x75 = toX(p75)
+                      const xMean = mean !== null ? toX(mean) : null
+
+                      return (
+                        <div className="relative h-8 rounded-sm overflow-hidden bg-background-elevated/30 border border-border/40">
+                          {/* IQR band */}
+                          <div
+                            className="absolute top-0 bottom-0 bg-accent/20 border-l border-r border-accent/40"
+                            style={{ left: `${x25}%`, width: `${x75 - x25}%` }}
+                          />
+                          {/* P50 line */}
+                          <div
+                            className="absolute top-0 bottom-0 w-0.5 bg-accent"
+                            style={{ left: `${x50}%` }}
+                          />
+                          {/* Mean diamond */}
+                          {xMean !== null && (
+                            <div
+                              className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rotate-45 bg-amber-400"
+                              style={{ left: `calc(${xMean}% - 4px)` }}
+                            />
+                          )}
+                          {/* Labels */}
+                          <div className="absolute inset-0 flex items-center">
+                            <div className="absolute text-[9px] font-mono text-text-muted" style={{ left: `${Math.max(x25, 1)}%`, transform: 'translateX(-50%)' }}>
+                              P25
+                            </div>
+                            <div className="absolute text-[9px] font-mono text-accent font-bold" style={{ left: `${x50}%`, transform: 'translateX(-50%)', top: '2px' }}>
+                              P50
+                            </div>
+                            <div className="absolute text-[9px] font-mono text-text-muted" style={{ left: `${Math.min(x75, 99)}%`, transform: 'translateX(-50%)' }}>
+                              P75
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                    <div className="flex items-center gap-4 text-[10px] text-text-muted">
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block w-3 h-2 bg-accent/20 border border-accent/40 rounded-[1px]" />
+                        {isEs ? 'Banda IQR (P25–P75)' : 'IQR band (P25–P75)'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block w-0.5 h-3 bg-accent" />
+                        {isEs ? 'Mediana' : 'Median'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block w-2 h-2 rotate-45 bg-amber-400" />
+                        {isEs ? 'Media' : 'Mean'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Skew interpretation */}
+                {mean_median_ratio !== null && (
+                  <p className="text-sm text-text-secondary leading-relaxed border-l-2 border-accent/30 pl-3">
+                    {isEs
+                      ? mean_median_ratio >= 10
+                        ? `La media (${formatCompactMXN(mean ?? 0)}) es ${mean_median_ratio.toFixed(1)}× la mediana — unos pocos contratos de alto valor distorsionan el promedio. La mediana (${formatCompactMXN(p50 ?? 0)}) refleja mejor el contrato típico.`
+                        : mean_median_ratio >= 5
+                          ? `La media es ${mean_median_ratio.toFixed(1)}× la mediana, indicando asimetría moderada. Contratos grandes elevan el promedio por encima del caso típico.`
+                          : `La distribución es relativamente simétrica. La media y la mediana están próximas (ratio ${mean_median_ratio.toFixed(1)}×).`
+                      : mean_median_ratio >= 10
+                        ? `Mean (${formatCompactMXN(mean ?? 0)}) is ${mean_median_ratio.toFixed(1)}× the median — a few high-value contracts skew the average. Median (${formatCompactMXN(p50 ?? 0)}) better represents a typical contract.`
+                        : mean_median_ratio >= 5
+                          ? `Mean is ${mean_median_ratio.toFixed(1)}× the median, indicating moderate skew. Large contracts pull the average above the typical case.`
+                          : `Distribution is relatively symmetric. Mean and median are close (ratio ${mean_median_ratio.toFixed(1)}×).`
+                    }
+                  </p>
+                )}
+
+                {/* Yearly avg value sparkline */}
+                {yearly_trend.length > 2 && (
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest">
+                      {isEs ? 'Valor medio por año (2015–)' : 'Avg. contract value by year (2015–)'}
+                    </div>
+                    <svg
+                      viewBox={`0 0 ${svgW} ${svgH}`}
+                      width={svgW}
+                      height={svgH}
+                      aria-label={isEs ? 'Valor medio por año' : 'Average value by year'}
+                      className="overflow-visible"
+                    >
+                      {yearly_trend.map((y, i) => {
+                        const barH = Math.max(2, (y.avg_value / maxAvg) * (svgH - 12))
+                        const x = i * (barW + barGap)
+                        return (
+                          <g key={y.year}>
+                            <rect
+                              x={x}
+                              y={svgH - barH}
+                              width={barW}
+                              height={barH}
+                              fill="var(--color-accent)"
+                              opacity={0.55}
+                              rx={1}
+                            />
+                            <text
+                              x={x + barW / 2}
+                              y={svgH}
+                              textAnchor="middle"
+                              fontSize={7}
+                              fill="var(--color-text-muted)"
+                            >
+                              {String(y.year).slice(2)}
+                            </text>
+                          </g>
+                        )
+                      })}
+                    </svg>
+                  </div>
+                )}
+
+              </CardContent>
+            </Card>
+          </section>
+        )
+      })()}
 
       {/* ================================================================= */}
       {/* § 5 La Competencia                                               */}

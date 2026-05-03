@@ -677,6 +677,108 @@ def get_category_competition(category_id: int):
     }
 
 
+@router.get("/{category_id}/price-distribution")
+def get_category_price_distribution(category_id: int):
+    """Return contract-amount distribution: P25/P50/P75, mean, skew ratio, outlier count."""
+    with get_db() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail="Category not found")
+
+        # Total valid count
+        cur.execute("""
+            SELECT COUNT(*) AS n
+            FROM contracts
+            WHERE category_id = ? AND amount_mxn > 0 AND amount_mxn < 10000000000
+        """, (category_id,))
+        n = cur.fetchone()["n"] or 0
+
+        p25 = p50 = p75 = mean_val = None
+        iqr = None
+        outlier_count = 0
+        outlier_value = 0.0
+
+        if n > 0:
+            def _percentile(q_offset: int):
+                cur.execute("""
+                    SELECT amount_mxn
+                    FROM contracts
+                    WHERE category_id = ? AND amount_mxn > 0 AND amount_mxn < 10000000000
+                    ORDER BY amount_mxn
+                    LIMIT 1 OFFSET ?
+                """, (category_id, q_offset))
+                row = cur.fetchone()
+                return row["amount_mxn"] if row else None
+
+            p25 = _percentile(max(0, n // 4))
+            p50 = _percentile(max(0, n // 2))
+            p75 = _percentile(max(0, 3 * n // 4))
+
+            cur.execute("""
+                SELECT AVG(amount_mxn) AS mean_val
+                FROM contracts
+                WHERE category_id = ? AND amount_mxn > 0 AND amount_mxn < 10000000000
+            """, (category_id,))
+            mean_row = cur.fetchone()
+            mean_val = mean_row["mean_val"] if mean_row else None
+
+            if p25 is not None and p75 is not None:
+                iqr = p75 - p25
+                fence = p75 + 1.5 * iqr
+                cur.execute("""
+                    SELECT COUNT(*) AS cnt, COALESCE(SUM(amount_mxn), 0) AS total_val
+                    FROM contracts
+                    WHERE category_id = ?
+                      AND amount_mxn > ?
+                      AND amount_mxn < 10000000000
+                """, (category_id, fence))
+                out_row = cur.fetchone()
+                outlier_count = out_row["cnt"] or 0
+                outlier_value = out_row["total_val"] or 0.0
+
+        mean_median_ratio = None
+        if p50 and p50 > 0 and mean_val:
+            mean_median_ratio = round(mean_val / p50, 2)
+
+        # Yearly median trend (last 10 years)
+        cur.execute("""
+            SELECT
+                CAST(strftime('%Y', contract_date) AS INTEGER) AS yr,
+                COUNT(*) AS cnt,
+                AVG(amount_mxn) AS avg_val
+            FROM contracts
+            WHERE category_id = ?
+              AND amount_mxn > 0
+              AND amount_mxn < 10000000000
+              AND contract_date IS NOT NULL
+              AND CAST(strftime('%Y', contract_date) AS INTEGER) >= 2015
+            GROUP BY yr
+            ORDER BY yr
+        """, (category_id,))
+        yearly_rows = cur.fetchall()
+        yearly_trend = [
+            {"year": r["yr"], "count": r["cnt"], "avg_value": round(r["avg_val"] or 0)}
+            for r in yearly_rows
+        ]
+
+    return {
+        "category_id": category_id,
+        "category_name": cat["name_es"],
+        "n": n,
+        "p25": round(p25) if p25 is not None else None,
+        "p50": round(p50) if p50 is not None else None,
+        "p75": round(p75) if p75 is not None else None,
+        "mean": round(mean_val) if mean_val is not None else None,
+        "iqr": round(iqr) if iqr is not None else None,
+        "mean_median_ratio": mean_median_ratio,
+        "outlier_count": outlier_count,
+        "outlier_value": round(outlier_value),
+        "yearly_trend": yearly_trend,
+    }
+
+
 @router.get("/{category_id}/top-vendors")
 def get_category_top_vendors(
     category_id: int,
