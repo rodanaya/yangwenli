@@ -24,6 +24,7 @@ import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   ArrowLeft,
   ExternalLink,
@@ -2822,12 +2823,7 @@ export default function RedThread() {
           <span className="text-xs text-text-muted">·</span>
           <span className="text-xs text-text-muted max-w-[160px] md:max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>
         </div>
-        <Link
-          to={`/vendors/${id}`}
-          className="text-xs text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1"
-        >
-          {t('nav.fullProfile')} <ExternalLink className="w-3 h-3" />
-        </Link>
+        <EntityIdentityChip type="vendor" id={id} name={vendor.name} size="xs" />
       </div>
 
       {/* Chapters — order: Subject → Timeline → Network → Money → Pattern → Verdict.

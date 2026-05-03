@@ -23,6 +23,7 @@ import type { VendorDetailResponse, VendorWaterfallContribution, VendorListItem 
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatPercentSafe, formatNumber, toTitleCase, cn } from '@/lib/utils'
 import { ArrowLeft, AlertCircle, Search, X } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 // ============================================================================
 // Radar axis definitions — 6 key risk dimensions
@@ -194,13 +195,9 @@ function VendorSearchInput({
               {formatNumber(selectedVendor.total_contracts)} {t('contracts')}
             </span>
           </div>
-          <Link
-            to={`/vendors/${selectedVendor.id}`}
-            className="text-xs text-accent hover:underline mt-2 inline-block"
-            aria-label={`View full profile for ${selectedVendor.name}`}
-          >
-            {t('viewProfile')}
-          </Link>
+          <div className="mt-2">
+            <EntityIdentityChip type="vendor" id={selectedVendor.id} name={selectedVendor.name} size="sm" />
+          </div>
         </div>
       </div>
     )

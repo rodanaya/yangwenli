@@ -20,6 +20,7 @@ import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 
 function RegistryBadges({ v }: { v: IntersectionVendor }) {
   const badges: Array<{ label: string; color: string; title: string }> = []
@@ -80,9 +81,8 @@ function VendorRow({
         ? `${(v.avg_risk_score * 100).toFixed(0)}/100`
         : formatCompactMXN(v.total_value_mxn)
   return (
-    <Link
-      to={`/vendors/${v.vendor_id}`}
-      className="group flex items-center gap-3 px-4 py-2.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors text-left"
+    <div
+      className="flex items-center gap-3 px-4 py-2.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
       style={{ borderLeft: `3px solid ${sectorColor}` }}
     >
       <span className="flex-shrink-0 w-6 font-mono text-[11px] font-bold text-text-muted tabular-nums">
@@ -90,9 +90,7 @@ function VendorRow({
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[13px] font-semibold text-text-primary truncate group-hover:text-[color:var(--color-accent)] transition-colors">
-            {v.vendor_name}
-          </span>
+          <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
           <RegistryBadges v={v} />
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-text-muted">
@@ -116,8 +114,8 @@ function VendorRow({
           {secondary}
         </div>
       </div>
-      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" />
-    </Link>
+      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+    </div>
   )
 }
 
