@@ -316,5 +316,14 @@
       "contracts": "Contracts",
       "sectorsBeyond": "Sectors > OECD 25%"
     }
+  },
+  "treemap": {
+    "kicker": "THE DISTRIBUTION · WHERE THE MONEY GOES",
+    "headline": "Public spend is not uniform",
+    "deck": "Each rectangle is a sector. Area = total spend (MXN); color saturation = v0.8.5 risk indicator. Amber border marks sectors exceeding the OECD 25% direct-award ceiling.",
+    "oecdViolatorNote": "Amber border = exceeds OECD 25% ceiling",
+    "saturationNote": "Saturation = risk indicator",
+    "ariaLabel": "Sector spend distribution treemap",
+    "segalmexCaveat": "Score inflated by Segalmex GT case — see Segalmex thread"
   }
 }

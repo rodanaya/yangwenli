@@ -316,5 +316,14 @@
       "contracts": "Contratos",
       "sectorsBeyond": "Sectores > OCDE 25%"
     }
+  },
+  "treemap": {
+    "kicker": "LA DISTRIBUCIÓN · DÓNDE VA EL DINERO",
+    "headline": "El gasto público no es uniforme",
+    "deck": "Cada rectángulo es un sector. El área = gasto total (MXN); la saturación del color = indicador de riesgo v0.8.5. El borde ámbar marca los sectores que superan el límite OCDE del 25% en adjudicación directa.",
+    "oecdViolatorNote": "Borde ámbar = supera límite OCDE del 25%",
+    "saturationNote": "Saturación = indicador de riesgo",
+    "ariaLabel": "Mapa de distribución del gasto sectorial",
+    "segalmexCaveat": "Score inflado por Segalmex/GT — ver hilo Segalmex"
   }
 }

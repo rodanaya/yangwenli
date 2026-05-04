@@ -28,6 +28,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
+import { SectorTreemap } from '@/components/sectors/SectorTreemap'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 
@@ -631,6 +632,56 @@ export function Sectors() {
             OECDCompetitionDotMatrix, SectorRiskTrendPanel, RiskRankingStrip
             removed. P2-P4 will reintroduce one slope chart, one treemap,
             one beeswarm. See docs/SECTORS_REDESIGN_PLAN.md. */}
+
+        {/* ── § 2 HERO 1: Sector Treemap ───────────────────────────────────
+            docs/SECTORS_REDESIGN_PLAN.md §5 HERO 1.
+            Area = total_value_mxn; saturation = avg_risk_score.
+            Amber border on OECD violators; editorial pull-arrow on Agricultura. */}
+        {!isLoading && sectors.length > 0 && (
+          <section
+            aria-labelledby="treemap-heading"
+            className="mb-10 pb-8 border-b border-border"
+          >
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              {t('treemap.kicker')}
+            </p>
+            <h2
+              id="treemap-heading"
+              className="text-text-primary leading-[1.1] mb-2"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {t('treemap.headline')}
+            </h2>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-1">
+              {t('treemap.deck')}
+            </p>
+            {/* Legend row */}
+            <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                <span
+                  className="inline-block h-2.5 w-4 rounded-sm border border-amber-500"
+                  style={{ background: 'rgba(245,158,11,0.15)' }}
+                  aria-hidden="true"
+                />
+                {t('treemap.oecdViolatorNote')}
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                <span
+                  className="inline-block h-2.5 w-4 rounded-sm"
+                  style={{ background: 'linear-gradient(90deg, rgba(220,38,38,0.35) 0%, rgba(220,38,38,0.90) 100%)' }}
+                  aria-hidden="true"
+                />
+                {t('treemap.saturationNote')}
+              </div>
+            </div>
+            <SectorTreemap sectors={sectors} />
+          </section>
+        )}
 
         {/* ── § 3 HERO 2: Competition Slope Chart ──────────────────────────
             docs/SECTORS_REDESIGN_PLAN.md §5 HERO 2.
