@@ -23,7 +23,6 @@ import {
   cn,
   formatCompactMXN,
   formatNumber,
-  formatPercentSafe,
 } from '@/lib/utils'
 import {
   api,
@@ -39,6 +38,7 @@ import {
 import { ADMINISTRATIONS } from '@/lib/administrations'
 import {
   SECTOR_COLORS,
+  SECTOR_TEXT_COLORS,
   RISK_COLORS,
   SECTORS,
   getRiskLevelFromScore,
@@ -66,6 +66,9 @@ import {
 import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { gradeToTierKey, TIER_STYLES } from '@/lib/tiers'
+import { SectorSledgehammer } from '@/components/sectors/SectorSledgehammer'
+import { BenchmarkRow, type BenchmarkRowProps } from '@/components/editorial/BenchmarkRow'
+import { VendorRiskSpendBeeswarm, type VendorBeeItem } from '@/components/sectors/VendorRiskSpendBeeswarm'
 
 // ── constants ────────────────────────────────────────────────────────────────
 
@@ -721,7 +724,7 @@ interface ConcentrationYear {
   vendor_count: number
 }
 
-function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
+function ConcentrationGiniChart({ history, isEs }: { history: ConcentrationYear[]; isEs: boolean }) {
   const data = history.filter((d) => d.year >= 2010)
 
   if (!data.length) {
@@ -732,35 +735,76 @@ function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
     )
   }
 
+  // Find peak year for annotation
+  const peakEntry = data.reduce(
+    (prev, curr) => (curr.gini > prev.gini ? curr : prev),
+    data[0],
+  )
+  const lastEntry = data[data.length - 1]
+
   return (
-    <div
-      className="h-[160px]"
-      role="img"
-      aria-label="Line chart showing market concentration Gini coefficient over time"
-    >
-      <span className="sr-only">
-        Gini coefficient from 0 (perfectly equal) to 1 (full monopoly). Reference line at 0.25
-        marks low-concentration threshold.
-      </span>
-      {(() => {
-        const series: LineSeries<ConcentrationYear>[] = [
-          { key: 'gini', label: 'Gini', colorToken: 'risk-high' },
-        ]
-        const annotations: ChartAnnotation[] = [
-          { kind: 'hrule', y: 0.25, label: 'Low concentration', tone: 'info' },
-        ]
-        return (
-          <EditorialLineChart
-            data={data}
-            xKey="year"
-            series={series}
-            yFormat="decimal"
-            yDomain={[0, 1]}
-            annotations={annotations}
-            height={160}
-          />
-        )
-      })()}
+    <div>
+      <div
+        className="h-[180px]"
+        role="img"
+        aria-label="Line chart showing market concentration Gini coefficient over time"
+      >
+        <span className="sr-only">
+          Gini coefficient from 0 (perfectly equal) to 1 (full monopoly).
+          Reference line at 0.5 marks competitive market threshold.
+          Reference line at 0.25 marks low-concentration threshold.
+        </span>
+        {(() => {
+          const series: LineSeries<ConcentrationYear>[] = [
+            { key: 'gini', label: 'Gini', colorToken: 'risk-high' },
+          ]
+          const annotations: ChartAnnotation[] = [
+            {
+              kind: 'hrule',
+              y: 0.5,
+              label: isEs ? 'umbral competitivo' : 'competitive threshold',
+              tone: 'info',
+            },
+            {
+              kind: 'hrule',
+              y: 0.25,
+              label: isEs ? 'baja concentración' : 'low concentration',
+              tone: 'neutral' as 'info',
+            },
+          ]
+          return (
+            <EditorialLineChart
+              data={data}
+              xKey="year"
+              series={series}
+              yFormat="decimal"
+              yDomain={[0, 1]}
+              annotations={annotations}
+              height={180}
+            />
+          )
+        })()}
+      </div>
+      {/* FT-style annotations below chart */}
+      <div className="flex items-start justify-between gap-4 mt-2 text-[10px] font-mono text-text-muted">
+        {/* Peak callout */}
+        <span>
+          {isEs
+            ? `Pico: ${peakEntry.year} (Gini ${peakEntry.gini.toFixed(2)})`
+            : `Peak: ${peakEntry.year} (Gini ${peakEntry.gini.toFixed(2)})`}
+        </span>
+        {/* Right-edge direct label */}
+        <span style={{ color: 'var(--color-risk-high)' }}>
+          {isEs
+            ? `${lastEntry.year} · Gini ${lastEntry.gini.toFixed(2)}`
+            : `${lastEntry.year} · Gini ${lastEntry.gini.toFixed(2)}`}
+        </span>
+      </div>
+      <p className="text-[9px] font-mono text-text-muted mt-1 opacity-70">
+        {isEs
+          ? 'Umbral de mercado competitivo = 0.5 (línea punteada)'
+          : 'Competitive market threshold = 0.5 (dashed line)'}
+      </p>
     </div>
   )
 }
@@ -1144,8 +1188,8 @@ export function SectorProfile() {
         </div>
       </nav>
 
-      <header className="mb-5 pb-4 border-b border-border">
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
+      <header className="mb-2 pb-4 border-b border-border">
+        <div className="flex items-baseline justify-between gap-4 flex-wrap mb-2">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight capitalize">
               {sector.name} <span className="text-text-muted font-normal">sector</span>
@@ -1180,6 +1224,14 @@ export function SectorProfile() {
             )}
           </div>
         </div>
+
+        {/* sp-P1 — SectorSledgehammer: picks WORST metric, renders Pudding-style */}
+        <SectorSledgehammer
+          sectorCode={sector.code ?? ''}
+          sectorFill={sectorColor}
+          sectorName={sector.name ?? ''}
+          stats={stats ?? null}
+        />
       </header>
 
       {/* ── TABS ────────────────────────────────────────────────────────────── */}
@@ -1470,6 +1522,17 @@ export function SectorProfile() {
             </div>
           </div>
 
+          {/* sp-P4 — VendorRiskSpendBeeswarm: risk × log(spend) plane above the table */}
+          {!vendorsLoading && topVendors?.data?.length ? (
+            <div className="rounded-sm border border-border bg-background/40 p-4 mb-2">
+              <VendorRiskSpendBeeswarm
+                vendors={topVendors.data as VendorBeeItem[]}
+                sectorFill={sectorColor}
+                sectorTextColor={SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor}
+              />
+            </div>
+          ) : null}
+
           <div className="rounded-sm border border-border bg-background/40 overflow-hidden">
             {vendorsLoading ? (
               <div className="p-4 space-y-3">
@@ -1501,8 +1564,14 @@ export function SectorProfile() {
           hidden={activeTab !== 'risk'}
           className="space-y-6"
         >
-          {/* Risk distribution */}
+          {/* sp-P3 — Risk distribution — § kicker added above constellation */}
           <section aria-labelledby="risk-distribution-heading">
+            <p
+              className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1"
+              style={{ color: SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor }}
+            >
+              {isEs ? '§ 3 DISTRIBUCIÓN DE RIESGO' : '§ 3 RISK DISTRIBUTION'}
+            </p>
             <h2
               id="risk-distribution-heading"
               className="text-base font-bold text-text-primary mb-1"
@@ -1570,64 +1639,77 @@ export function SectorProfile() {
                 Gini coefficient — 1.0 = full monopoly, 0 = perfect competition
               </p>
               <div className="rounded-sm border border-border bg-background/40 p-5">
-                <ConcentrationGiniChart history={concentrationHistory.history} />
+                <ConcentrationGiniChart history={concentrationHistory.history} isEs={isEs} />
               </div>
             </section>
           ) : null}
 
-          {/* Procurement pattern stats */}
+          {/* sp-P3 — Procurement Patterns → 4 BenchmarkRow FT bullet rows with OECD refs */}
           {stats && (
             <section aria-labelledby="procurement-patterns-heading">
+              <p
+                className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1"
+                style={{ color: SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor }}
+              >
+                {isEs ? '§ 3 LA PATOLOGÍA DEL SECTOR' : '§ 3 THE SECTOR PATHOLOGY'}
+              </p>
               <h2
                 id="procurement-patterns-heading"
-                className="text-base font-bold text-text-primary mb-4"
+                className="text-base font-bold text-text-primary mb-1"
               >
-                Procurement Patterns
+                {isEs ? 'Patrones de contratación vs. OCDE' : 'Procurement patterns vs. OECD'}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[
-                  {
-                    label: t('profile.directAward'),
-                    value: formatPercentSafe(stats.direct_award_pct, false) ?? '-',
-                    warn: (stats.direct_award_pct ?? 0) > 70,
-                  },
-                  {
-                    label: t('profile.singleBid'),
-                    value: formatPercentSafe(stats.single_bid_pct, false) ?? '-',
-                    warn: (stats.single_bid_pct ?? 0) > 25,
-                  },
-                  {
-                    label: t('profile.avgRisk'),
-                    value: `${((stats.avg_risk_score ?? 0) * 100).toFixed(1)}%`,
-                    warn: false,
-                  },
-                  {
-                    label: t('profile.vendors'),
-                    value: formatNumber(stats.total_vendors ?? 0),
-                    warn: false,
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className={cn(
-                      'rounded-sm border p-4',
-                      item.warn
-                        ? 'border-amber-500/30 bg-amber-500/5'
-                        : 'border-border bg-background/40'
-                    )}
-                  >
-                    <p
-                      className={cn(
-                        'text-2xl font-black tabular-nums',
-                        item.warn ? 'text-risk-high' : 'text-text-primary'
-                      )}
-                    >
-                      {item.value}
-                    </p>
-                    <p className="text-[11px] text-text-secondary mt-0.5 capitalize">{item.label}</p>
-                  </div>
-                ))}
+              <p className="text-xs text-text-secondary mb-4">
+                {isEs
+                  ? 'Barras a la derecha del centro = por encima del límite (peor).'
+                  : 'Bars right of center = above the limit (worse).'}
+              </p>
+              <div className="rounded-sm border border-border bg-background/40 p-4 space-y-0.5 overflow-x-auto">
+                {(() => {
+                  const MAX_DELTA = 0.75
+                  const rows: (BenchmarkRowProps & { key: string })[] = [
+                    {
+                      key: 'da',
+                      label: isEs ? 'Adjudicación directa' : 'Direct award',
+                      value: (stats.direct_award_pct ?? 0) / 100,
+                      benchmark: 0.25,
+                      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+                      maxDelta: MAX_DELTA,
+                    },
+                    {
+                      key: 'sb',
+                      label: isEs ? 'Licitación un solo postor' : 'Single-bid rate',
+                      value: (stats.single_bid_pct ?? 0) / 100,
+                      benchmark: 0.10,
+                      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+                      maxDelta: MAX_DELTA,
+                    },
+                    {
+                      key: 'rs',
+                      label: isEs ? 'Riesgo promedio' : 'Avg risk indicator',
+                      value: stats.avg_risk_score ?? 0,
+                      benchmark: 0.11,
+                      benchmarkLabel: isEs ? 'prom. plataforma' : 'platform avg',
+                      maxDelta: MAX_DELTA,
+                    },
+                  ]
+                  return rows.map(({ key, ...rowProps }) => (
+                    <BenchmarkRow key={key} {...rowProps} />
+                  ))
+                })()}
+                <div className="pt-2 mt-2 border-t border-border/40">
+                  <span className="text-[10px] font-mono text-text-muted">
+                    {isEs
+                      ? `${formatNumber(stats.total_vendors ?? 0)} proveedores activos en este sector`
+                      : `${formatNumber(stats.total_vendors ?? 0)} active vendors in this sector`}
+                  </span>
+                </div>
               </div>
+              <p className="text-[9px] font-mono text-text-muted mt-2 opacity-60">
+                {isEs
+                  ? 'OCDE: adj. directa ≤25%, un solo postor ≤10% · Plataforma: riesgo prom. 11.0%'
+                  : 'OECD: direct award ≤25%, single-bid ≤10% · Platform: avg risk 11.0%'}
+              </p>
             </section>
           )}
 
