@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ariaApi, networkApi, type PatternSpotlight } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
 import { FlowParticle, type FlowLink, type FlowNode } from '@/components/charts/FlowParticle'
 import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, Activity } from 'lucide-react'
@@ -633,7 +633,9 @@ function CommunityDossier({
   patternSpotlight: PatternSpotlight | undefined
 }) {
   const fill = PATTERN_HEX[c.pattern]
-  const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
+  // sectorFill for backgrounds/borders (vivid); sectorTextColor for readable text labels
+  const sectorFill = SECTOR_COLORS[c.sector] ?? '#64748b'
+  const sectorTextColor = SECTOR_TEXT_COLORS[c.sector] ?? '#475569'
   const Icon = PATTERN_ICON[c.pattern]
 
   // Normalizers for member-bar and confirmed-bar (relative to our corpus)
@@ -675,14 +677,14 @@ function CommunityDossier({
           <div
             className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-semibold border"
             style={{
-              color: sectorColor,
-              borderColor: `${sectorColor}55`,
-              backgroundColor: `${sectorColor}12`,
+              color: sectorTextColor,
+              borderColor: `${sectorFill}55`,
+              backgroundColor: `${sectorFill}12`,
             }}
           >
             <span
               className="h-1.5 w-1.5 rounded-full shrink-0"
-              style={{ backgroundColor: sectorColor }}
+              style={{ backgroundColor: sectorFill }}
             />
             {c.institution}
           </div>
@@ -704,8 +706,8 @@ function CommunityDossier({
             {isEs ? 'Valor capturado' : 'Value captured'}
           </div>
           <div
-            className="text-3xl font-mono font-black tabular-nums text-text-primary leading-none"
-            style={{ color: fill }}
+            className="text-3xl tabular-nums leading-none"
+            style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
           >
             {formatCompactMXN(c.value)}
           </div>
@@ -1089,7 +1091,7 @@ export default function RedesKnownDossier() {
               <span className="text-text-primary font-semibold">comunidades</span> que capturan
               instituciones. Estas son las diez redes más grandes detectadas por algoritmo
               de comunidades Louvain sobre{' '}
-              <span className="text-text-primary font-mono">3.05M</span> contratos federales.
+              <span className="text-text-primary font-mono">3.1M</span> contratos federales.
             </>
           ) : (
             <>
@@ -1097,7 +1099,7 @@ export default function RedesKnownDossier() {
               <span className="text-text-primary font-semibold">communities</span> that capture
               institutions. These are the ten largest networks detected by the Louvain
               community algorithm over{' '}
-              <span className="text-text-primary font-mono">3.05M</span> federal contracts.
+              <span className="text-text-primary font-mono">3.1M</span> federal contracts.
             </>
           )}
         </p>

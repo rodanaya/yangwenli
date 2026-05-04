@@ -446,6 +446,12 @@ export const STORIES: StoryDef[] = [
           'Más sorprendentes son los contratistas individuales. EMILIO CARRANZA OBERSOHN aparece con dos contratos por aproximadamente 370 MDP. ARTURO PUEBLITA FERNANDEZ aparece con dos contratos por aproximadamente la misma cantidad. VALERIA FERNANDEZ DIAZ sigue el mismo patrón. En cada caso una sola persona física, no una empresa, ganó contratos federales por cientos de millones de pesos — el equivalente a 18 a 25 millones de dólares estadounidenses — y luego desapareció completamente del registro de contratación.',
           'La ley mexicana de contratación pública permite que personas físicas tengan contratos federales, y hay circunstancias legítimas en las que un contratista individual nominado es apropiado: consultoría especializada, comisiones artísticas, servicios locales de pequeña escala. Ninguna de esas circunstancias explica contratos de 370 MDP. Combinadas con las otras señales P2 — sin actividad previa, sin actividad posterior, concentración en una sola institución durante un solo año — estos contratistas individuales constituyen los líderes P2 más claros de toda la cola.',
         ],
+        chartConfig: {
+          type: 'editorial-treemap',
+          title: 'P2 Ghost-Pattern Vendors — Spend by Sector',
+          title_es: 'Proveedores con patrón fantasma P2 — Gasto por sector',
+          chartId: 'ghost-vendors-treemap',
+        },
         pullquote: {
           quote: 'An individual person — not a company — winning federal contracts worth 370 million pesos, and then disappearing from the record entirely.',
           quote_es: 'Una persona física — no una empresa — ganando contratos federales por 370 MDP, y luego desapareciendo completamente del registro.',
@@ -1988,7 +1994,7 @@ export const STORIES: StoryDef[] = [
           'Reporting in 2023 by Mexican investigative outlets — including Animal Político, MCCI (Mexicanos Contra la Corrupción y la Impunidad), and Aristegui Noticias — alleged that SEDENA contractors on Tren Maya and AIFA were required to channel a percentage of contract value through specific intermediary firms designated by military procurement officials, a pattern that, if substantiated, fits RUBLI\'s P3 (intermediary capture) signature precisely. RUBLI cannot independently verify those allegations from procurement data alone, but the structural conditions — concentrated awards, intermediary vendors, classified procurement, and limited public visibility — are exactly the conditions under which such patterns emerge.',
         ],
         chartConfig: {
-          type: 'inline-multi-line',
+          type: 'editorial-slope',
           title: 'SEDENA Annual Federal Contracting, 2015-2025',
           title_es: 'Contratación federal anual de SEDENA, 2015-2025',
           chartId: 'sedena-rise',
@@ -2258,7 +2264,7 @@ export const STORIES: StoryDef[] = [
           'Adyacentes a esos probables pasos están contratistas internacionales de servicios petroleros — TÉCNICAS REUNIDAS S.A. (7.2 mil millones / 2 contratos en PEMEX), un consorcio liderado por PETROBRAS (5.9 mil millones / 2 contratos en PEMEX), PRIDE INTERNATIONAL (5.5 mil millones / 6 contratos en PEMEX) — todos con calificaciones de riesgo menores a 0.25. Estos representan el extremo legítimo de la población P3: especialistas extranjeros con pericia técnica que PEMEX no puede contratar domésticamente, ganando estructuralmente pocos contratos grandes. El imperativo investigativo es separar el patrón TÉCNICAS REUNIDAS (única fuente legítima) del patrón CONSTRUCTORA ARHNOS (casi con certeza paso). El algoritmo P3 de RUBLI marca ambos con la misma forma; el trabajo humano consiste en distinguir cuál es cuál.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-treemap',
           title: 'Top P3 Intermediary-Pattern Vendors by Total Contract Value',
           title_es: 'Top proveedores con patrón de intermediario P3 por valor total de contratos',
           chartId: 'p3-top-vendors',

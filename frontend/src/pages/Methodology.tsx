@@ -637,7 +637,7 @@ function CopyCitationButton() {
       className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
       title={t('copyCitation')}
     >
-      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="w-3 h-3 text-accent" /> : <Copy className="w-3 h-3" />}
       {copied ? t('citationCopied') : t('copyCitation')}
     </button>
   )
@@ -823,9 +823,9 @@ export function Methodology() {
             <div className="grid gap-4 sm:grid-cols-3 mt-4">
 
               {/* Tier I */}
-              <div className="rounded-sm border border-[#ef4444]/25 bg-[#ef4444]/5 p-4 space-y-3">
+              <div className="rounded-sm border border-risk-critical/25 bg-risk-critical/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#f87171]">TIER I</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">TIER I</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     Externally Confirmed
                   </h3>
@@ -842,16 +842,16 @@ export function Methodology() {
                     <li>· Ground truth cases (1,401 documented investigations)</li>
                   </ul>
                 </div>
-                <div className="pt-2 border-t border-[#ef4444]/15">
+                <div className="pt-2 border-t border-risk-critical/15">
                   <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-[#f87171] italic">"confirmed" · "documented" · "formally established"</p>
+                  <p className="text-xs text-risk-critical italic">"confirmed" · "documented" · "formally established"</p>
                 </div>
               </div>
 
               {/* Tier II */}
-              <div className="rounded-sm border border-[#f59e0b]/25 bg-[#f59e0b]/5 p-4 space-y-3">
+              <div className="rounded-sm border border-risk-high/25 bg-risk-high/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#fbbf24]">TIER II</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">TIER II</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
                     Corroborated
                   </h3>
@@ -869,9 +869,9 @@ export function Methodology() {
                     <li>· High risk + RUPC exclusion list</li>
                   </ul>
                 </div>
-                <div className="pt-2 border-t border-[#f59e0b]/15">
+                <div className="pt-2 border-t border-risk-high/15">
                   <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-[#fbbf24] italic">"corroborated by" · "flagged and independently noted" · "warrants investigation"</p>
+                  <p className="text-xs text-risk-high italic">"corroborated by" · "flagged and independently noted" · "warrants investigation"</p>
                 </div>
               </div>
 
@@ -935,6 +935,9 @@ export function Methodology() {
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="overview" number="01" title={t('sectionLabels.overview')} icon={Shield}>
             <div className="space-y-4">
+              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
+                § Modelo activo v0.8.5 · AUC 0.785 · HR 11.01%
+              </p>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.overview.p1Start')}<strong className="text-text-primary">{t('body.overview.p1StatisticalIndicator')}</strong>{' '}
                 <Mono>S(features)</Mono>{t('body.overview.p1End')}
@@ -1012,6 +1015,9 @@ export function Methodology() {
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="features" number="02" title={t('sectionLabels.features')} icon={BarChart3}>
             <div className="space-y-4">
+              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
+                § Importancia de variables · ElasticNet C=0.2243
+              </p>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.features.p1')}
               </p>
@@ -1020,7 +1026,7 @@ export function Methodology() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-risk-high" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1126,6 +1132,9 @@ export function Methodology() {
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="validation" number="05" title={t('sectionLabels.validation')} icon={Target}>
             <div className="space-y-4">
+              <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
+                § Validación de casos documentados · v0.8.5
+              </p>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}
               </p>
@@ -1417,7 +1426,7 @@ export function Methodology() {
                           <td className="py-2 pr-3 text-right font-mono text-accent font-semibold">
                             {row.v60}
                           </td>
-                          <td className="py-2 text-right font-mono text-[#71717a]">
+                          <td className="py-2 text-right font-mono text-text-muted">
                             {row.improvement}
                           </td>
                         </tr>
@@ -1466,7 +1475,7 @@ export function Methodology() {
                               ds.quality === 'Lowest' && 'bg-risk-critical/10 text-risk-critical border-risk-critical/20',
                               ds.quality === 'Better' && 'bg-risk-medium/10 text-risk-medium border-risk-medium/20',
                               ds.quality === 'Good' && 'bg-accent/10 text-accent border-accent/20',
-                              ds.quality === 'Best' && 'bg-risk-low/10 text-risk-low border-risk-low/20',
+                              ds.quality === 'Best' && 'bg-accent/10 text-accent border-accent/20',
                             )}
                           >
                             {ds.quality}
