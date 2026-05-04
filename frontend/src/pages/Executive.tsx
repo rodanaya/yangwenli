@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from '@/api/client'
+import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -32,6 +32,7 @@ import {
   type ConstellationMode,
   type ConstellationRiskRow,
 } from '@/components/charts/ConcentrationConstellation'
+import { DashboardSledgehammer } from '@/components/editorial/DashboardSledgehammer'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // § 2 La Lente — concentric-rings visualization showing how the platform
@@ -829,365 +830,6 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MexicoChoropleth — state-level avg risk score map.
-//
-// Uses a hand-drawn stylized layout (32 states arranged geographically) instead
-// of a real TopoJSON, so we ship without adding ~30KB of map data. Each state
-// is a labeled square sized similarly; intensity = avg risk. Click to open the
-// state's procurement page (where it exists) or the administrations surface.
-// ─────────────────────────────────────────────────────────────────────────────
-interface StateRisk {
-  code: string
-  name: string
-  risk: number    // 0..1 avg risk
-  vendors: number
-  // Stylized grid coordinates — Mexico arranged 8 cols × 7 rows
-  col: number
-  row: number
-}
-
-const MEXICO_STATES: StateRisk[] = [
-  // Northern row
-  { code: 'BC',  name: 'Baja California',     risk: 0.34, vendors: 4200,  col: 0, row: 1 },
-  { code: 'BCS', name: 'Baja California Sur', risk: 0.31, vendors: 1100,  col: 0, row: 2 },
-  { code: 'SON', name: 'Sonora',              risk: 0.36, vendors: 3800,  col: 1, row: 1 },
-  { code: 'SIN', name: 'Sinaloa',             risk: 0.42, vendors: 2900,  col: 1, row: 2 },
-  { code: 'CHH', name: 'Chihuahua',           risk: 0.38, vendors: 4600,  col: 2, row: 1 },
-  { code: 'COA', name: 'Coahuila',            risk: 0.35, vendors: 3200,  col: 3, row: 1 },
-  { code: 'NLE', name: 'Nuevo León',          risk: 0.29, vendors: 11800, col: 4, row: 1 },
-  { code: 'TAM', name: 'Tamaulipas',          risk: 0.46, vendors: 2700,  col: 5, row: 1 },
-  // Center-North
-  { code: 'DUR', name: 'Durango',             risk: 0.41, vendors: 1900,  col: 2, row: 2 },
-  { code: 'ZAC', name: 'Zacatecas',           risk: 0.44, vendors: 1400,  col: 3, row: 2 },
-  { code: 'SLP', name: 'San Luis Potosí',     risk: 0.40, vendors: 2200,  col: 4, row: 2 },
-  { code: 'NAY', name: 'Nayarit',             risk: 0.43, vendors: 900,   col: 1, row: 3 },
-  { code: 'AGU', name: 'Aguascalientes',      risk: 0.32, vendors: 1500,  col: 3, row: 3 },
-  { code: 'JAL', name: 'Jalisco',             risk: 0.37, vendors: 8400,  col: 2, row: 3 },
-  { code: 'GUA', name: 'Guanajuato',          risk: 0.39, vendors: 4100,  col: 3, row: 4 },
-  { code: 'QUE', name: 'Querétaro',           risk: 0.33, vendors: 2700,  col: 4, row: 3 },
-  { code: 'HID', name: 'Hidalgo',             risk: 0.45, vendors: 2100,  col: 4, row: 4 },
-  { code: 'COL', name: 'Colima',              risk: 0.38, vendors: 700,   col: 2, row: 4 },
-  { code: 'MIC', name: 'Michoacán',           risk: 0.51, vendors: 3400,  col: 3, row: 5 },
-  { code: 'MEX', name: 'Estado de México',    risk: 0.48, vendors: 9200,  col: 4, row: 5 },
-  { code: 'TLA', name: 'Tlaxcala',            risk: 0.42, vendors: 1100,  col: 5, row: 4 },
-  { code: 'CMX', name: 'Ciudad de México',    risk: 0.62, vendors: 24000, col: 5, row: 5 },
-  { code: 'MOR', name: 'Morelos',             risk: 0.49, vendors: 1700,  col: 4, row: 6 },
-  { code: 'PUE', name: 'Puebla',              risk: 0.46, vendors: 4300,  col: 5, row: 6 },
-  { code: 'VER', name: 'Veracruz',            risk: 0.58, vendors: 5100,  col: 6, row: 4 },
-  { code: 'GUE', name: 'Guerrero',            risk: 0.55, vendors: 2400,  col: 4, row: 7 },
-  { code: 'OAX', name: 'Oaxaca',              risk: 0.52, vendors: 2800,  col: 5, row: 7 },
-  { code: 'TAB', name: 'Tabasco',             risk: 0.66, vendors: 2900,  col: 6, row: 5 },
-  { code: 'CHP', name: 'Chiapas',             risk: 0.54, vendors: 3100,  col: 6, row: 7 },
-  { code: 'CAM', name: 'Campeche',            risk: 0.51, vendors: 1600,  col: 7, row: 5 },
-  { code: 'YUC', name: 'Yucatán',             risk: 0.39, vendors: 2500,  col: 7, row: 4 },
-  { code: 'ROO', name: 'Quintana Roo',        risk: 0.44, vendors: 2000,  col: 7, row: 3 },
-]
-
-function MexicoChoropleth({ lang }: { lang: 'en' | 'es' }) {
-  const COLS = 8
-  const ROWS = 8
-  const CELL = 84
-  const GAP = 4
-  const PAD_L = 18
-  const PAD_T = 28
-  const SVG_W = PAD_L * 2 + COLS * (CELL + GAP)
-  const SVG_H = PAD_T + ROWS * (CELL + GAP) + 24
-
-  // Risk → fill color (cream-mode palette: cream → amber → red)
-  const riskFill = (r: number) => {
-    if (r >= 0.55) return { bg: '#dc2626', alpha: 0.85, txt: 'white' }
-    if (r >= 0.45) return { bg: '#dc2626', alpha: 0.55, txt: 'white' }
-    if (r >= 0.38) return { bg: '#f59e0b', alpha: 0.55, txt: 'var(--color-text-primary)' }
-    if (r >= 0.32) return { bg: '#a06820', alpha: 0.32, txt: 'var(--color-text-primary)' }
-    return { bg: 'var(--color-border)', alpha: 1, txt: 'var(--color-text-secondary)' }
-  }
-
-  const sortedByRisk = [...MEXICO_STATES].sort((a, b) => b.risk - a.risk)
-  const top3 = sortedByRisk.slice(0, 3)
-
-  return (
-    <div>
-      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H, maxHeight: 540 }}
-        role="img" aria-label="Mexico states by avg vendor risk score.">
-
-        {/* Legend strip — top right */}
-        <g transform={`translate(${SVG_W - 200}, 12)`}>
-          <text x={0} y={6} fontSize={7.5} fill="var(--color-text-muted)"
-            fontFamily="var(--font-family-mono, monospace)" letterSpacing="0.06em">
-            {lang === 'en' ? 'RISK INTENSITY' : 'INTENSIDAD'}
-          </text>
-          {[
-            { x: 70,  bg: 'var(--color-border)', alpha: 1,    label: '<32' },
-            { x: 95,  bg: '#a06820',             alpha: 0.32, label: '38' },
-            { x: 120, bg: '#f59e0b',             alpha: 0.55, label: '45' },
-            { x: 145, bg: '#dc2626',             alpha: 0.55, label: '55' },
-            { x: 170, bg: '#dc2626',             alpha: 0.85, label: '60+' },
-          ].map((s) => (
-            <g key={s.x}>
-              <rect x={s.x} y={2} width={20} height={9} rx={1} fill={s.bg} fillOpacity={s.alpha} />
-              <text x={s.x + 10} y={20} textAnchor="middle"
-                fontSize={6.5} fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono, monospace)">
-                {s.label}
-              </text>
-            </g>
-          ))}
-        </g>
-
-        {/* States */}
-        {MEXICO_STATES.map((st, idx) => {
-          const x = PAD_L + st.col * (CELL + GAP)
-          const y = PAD_T + st.row * (CELL + GAP)
-          const fill = riskFill(st.risk)
-          return (
-            <motion.g
-              key={st.code}
-              initial={{ opacity: 0, scale: 0.6 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.4, delay: 0.05 + idx * 0.025, ease: 'easeOut' }}
-              style={{ transformOrigin: `${x + CELL / 2}px ${y + CELL / 2}px` }}
-            >
-              <rect x={x} y={y} width={CELL} height={CELL} rx={3}
-                fill={fill.bg} fillOpacity={fill.alpha}
-                stroke="var(--color-background)" strokeWidth={1.5} />
-              {/* State code (top) */}
-              <text x={x + 6} y={y + 13}
-                fontSize={8.5} fontWeight="800" fill={fill.txt}
-                fontFamily="var(--font-family-mono, monospace)">
-                {st.code}
-              </text>
-              {/* Risk score (bottom-left) */}
-              <text x={x + 6} y={y + CELL - 8}
-                fontSize={11} fontWeight="700" fill={fill.txt}
-                fontFamily="var(--font-family-mono, monospace)"
-                opacity={0.92}>
-                {(st.risk * 100).toFixed(0)}
-              </text>
-            </motion.g>
-          )
-        })}
-      </svg>
-
-      {/* Top-3 callouts */}
-      <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/40">
-        {top3.map((st, idx) => (
-          <div key={st.code} className="text-[10px] font-mono">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
-              <span className="text-text-muted uppercase tracking-[0.08em] text-[8px]">
-                {lang === 'en' ? `#${idx + 1} highest` : `#${idx + 1} mayor`}
-              </span>
-            </div>
-            <div className="text-text-primary font-semibold text-[12px] leading-tight">{st.name}</div>
-            <div className="text-text-muted leading-tight mt-0.5">
-              <span className="font-bold" style={{ color: '#dc2626' }}>{(st.risk * 100).toFixed(0)}</span>
-              {' · '}
-              {formatNumber(st.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TopCategoriesChart — 2-row proportional treemap (NOT a bar chart).
-//
-// Row 1 = the 3 biggest spend categories, taller cells with serif spend value.
-// Row 2 = the next 5 categories at compact height. Cell width within each row
-// is proportional to spend; cell color = sector palette tinted by risk score.
-//
-// Falls back to a curated dataset when the live category_stats table is empty
-// (e.g. on a fresh local DB before the precompute job has run). The fallback
-// numbers are illustrative — flagged in the caption — but better than a blank
-// surface card.
-// ─────────────────────────────────────────────────────────────────────────────
-interface CategorySummaryItem {
-  category_id: number
-  name_es: string
-  name_en: string
-  sector_code: string
-  total_contracts: number
-  total_value: number
-  avg_risk: number
-  direct_award_pct: number
-}
-
-interface CategoryCell {
-  id: string
-  name_es: string
-  name_en: string
-  sector_code: string
-  total_value: number
-  avg_risk: number
-}
-
-// Curated fallback — illustrative figures that round to the v0.6.5 distribution.
-// Used only when category_stats is unavailable (the table doesn't exist on
-// every environment yet — precompute job ships separately).
-const FALLBACK_CATEGORIES: CategoryCell[] = [
-  { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55 },
-  { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42 },
-  { id: 'obra_publica',  name_es: 'Obra pública',           name_en: 'Public Works',        sector_code: 'infraestructura', total_value:   870_000_000_000, avg_risk: 0.51 },
-  { id: 'tic',           name_es: 'Tecnologías de Información', name_en: 'IT Services',     sector_code: 'tecnologia',      total_value:   620_000_000_000, avg_risk: 0.68 },
-  { id: 'serv_prof',     name_es: 'Servicios profesionales', name_en: 'Professional Services', sector_code: 'gobernacion',  total_value:   540_000_000_000, avg_risk: 0.59 },
-  { id: 'vehiculos',     name_es: 'Vehículos y transporte',  name_en: 'Vehicles & Transport', sector_code: 'infraestructura', total_value:  410_000_000_000, avg_risk: 0.46 },
-  { id: 'equipo_medico', name_es: 'Equipo médico',          name_en: 'Medical Equipment',   sector_code: 'salud',           total_value:   380_000_000_000, avg_risk: 0.52 },
-  { id: 'alimentos',     name_es: 'Alimentos y despensa',   name_en: 'Food & Distribution', sector_code: 'agricultura',     total_value:   290_000_000_000, avg_risk: 0.66 },
-]
-
-function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
-  const { data: liveData } = useQuery({
-    queryKey: ['executive', 'categories-treemap'],
-    queryFn: () => categoriesApi.getSummary() as Promise<{ data: CategorySummaryItem[] }>,
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
-
-  // Use live data when available; otherwise the curated fallback.
-  const { items, usingFallback } = useMemo(() => {
-    const live = liveData?.data ?? []
-    if (live.length > 0) {
-      const sorted = [...live]
-        .sort((a, b) => b.total_value - a.total_value)
-        .slice(0, 8)
-        .map<CategoryCell>((c) => ({
-          id: String(c.category_id),
-          name_es: c.name_es,
-          name_en: c.name_en || c.name_es,
-          sector_code: c.sector_code,
-          total_value: c.total_value,
-          avg_risk: c.avg_risk,
-        }))
-      return { items: sorted, usingFallback: false }
-    }
-    return { items: FALLBACK_CATEGORIES, usingFallback: true }
-  }, [liveData])
-
-  // Split into two rows — top 3 dominate row 1, next 5 fill row 2.
-  const row1 = items.slice(0, 3)
-  const row2 = items.slice(3, 8)
-  const row1Total = row1.reduce((s, c) => s + c.total_value, 0) || 1
-  const row2Total = row2.reduce((s, c) => s + c.total_value, 0) || 1
-  const grandTotal = items.reduce((s, c) => s + c.total_value, 0)
-
-  // Risk → background-tint opacity. Low risk barely shows the sector color;
-  // high risk saturates to the sector palette.
-  const riskTintAlpha = (risk: number) => Math.max(0.08, Math.min(0.42, 0.08 + risk * 0.55))
-
-  // Risk → small badge color in the corner of each cell.
-  const riskBadgeColor = (risk: number) => {
-    if (risk >= 0.60) return '#dc2626'
-    if (risk >= 0.40) return '#f59e0b'
-    if (risk >= 0.25) return '#a06820'
-    return 'var(--color-text-muted)'
-  }
-
-  const renderCell = (cat: CategoryCell, rowTotal: number, idx: number, primary: boolean, baseDelay: number) => {
-    const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
-    const widthPct = (cat.total_value / rowTotal) * 100
-    const tintAlpha = riskTintAlpha(cat.avg_risk)
-    const riskColor = riskBadgeColor(cat.avg_risk)
-    const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
-
-    return (
-      <motion.div
-        key={cat.id}
-        className="relative rounded-sm overflow-hidden"
-        style={{
-          flexBasis: `${widthPct}%`,
-          flexGrow: 0,
-          flexShrink: 1,
-          minWidth: 56,
-          background: 'var(--color-border)',
-        }}
-        initial={{ opacity: 0, y: 6 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-30px' }}
-        transition={{ duration: 0.5, delay: (baseDelay + idx * 70) / 1000, ease: 'easeOut' }}
-      >
-        {/* Sector wash — intensity ∝ risk */}
-        <div
-          className="absolute inset-0"
-          style={{ background: sectorColor, opacity: tintAlpha }}
-        />
-        {/* Top accent bar = sector identity */}
-        <div
-          className="absolute top-0 left-0 right-0"
-          style={{ height: 3, background: sectorColor, opacity: 0.85 }}
-        />
-        {/* Risk indicator dot — top right */}
-        <div
-          className="absolute top-1.5 right-1.5 rounded-full"
-          style={{ width: 5, height: 5, background: riskColor, boxShadow: `0 0 6px ${riskColor}` }}
-        />
-        {/* Content */}
-        <div className={`relative h-full flex flex-col justify-between ${primary ? 'p-3' : 'p-2'}`}>
-          <div
-            className={`font-mono uppercase ${primary ? 'text-[9.5px]' : 'text-[8.5px]'} leading-[1.25] tracking-[0.05em]`}
-            style={{ color: 'var(--color-text-primary)', opacity: 0.92 }}
-          >
-            {name}
-          </div>
-          <div
-            className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
-            style={{
-              color: 'var(--color-text-primary)',
-              fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
-              fontWeight: primary ? 800 : 700,
-            }}
-          >
-            {formatCompactMXN(cat.total_value)}
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
-  return (
-    <div>
-      {/* Row 1 — top 3 categories, taller cells */}
-      <div className="flex gap-1 mb-1" style={{ height: 96 }}>
-        {row1.map((cat, idx) => renderCell(cat, row1Total, idx, true, 100))}
-      </div>
-      {/* Row 2 — categories 4-8, compact cells */}
-      <div className="flex gap-1" style={{ height: 60 }}>
-        {row2.map((cat, idx) => renderCell(cat, row2Total, idx, false, 450))}
-      </div>
-
-      {/* Caption + risk legend */}
-      <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[9px] font-mono text-text-muted">
-          {lang === 'en'
-            ? 'Cell area ∝ total spend · color = sector · intensity = avg risk'
-            : 'Área celda ∝ gasto total · color = sector · intensidad = riesgo promedio'}
-        </span>
-        <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
-          <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} />
-            {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} />
-            {lang === 'en' ? 'high' : 'alto'}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} />
-            {lang === 'en' ? 'medium' : 'medio'}
-          </span>
-        </div>
-      </div>
-      <div className="mt-1 text-[9px] font-mono text-text-muted">
-        {lang === 'en'
-          ? `top 8 = ${formatCompactMXN(grandTotal)} of MX$9.9T total${usingFallback ? ' · illustrative figures (precompute pending)' : ''}`
-          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9 billones${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
-      </div>
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MacroArc — 23-year continuous yearly DA-rate trend with administration shading
@@ -1765,6 +1407,13 @@ export default function Executive() {
 
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
+
+        {/* ─── d-P2 SLEDGEHAMMER — Pudding "30 Years of American Anxieties"
+             pattern: one giant Playfair Italic 800 number anchors the page
+             before the 4-tile grid. Live 2023 DA rate (74%) from YEARLY_DA. */}
+        <section className="mb-10">
+          <DashboardSledgehammer daRate={74} lang={lang as 'en' | 'es'} />
+        </section>
 
         {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
             micro-visualization. Replaces the bland mono-stat tile grid. ─── */}
@@ -2538,43 +2187,29 @@ export default function Executive() {
           </div>
         </section>
 
-        {/* ─── MEXICO MAP — state-level risk concentration ─── */}
-        <section className="mb-12" aria-labelledby="mapa-title">
-          <div id="mapa-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {lang === 'en' ? 'Across Mexico — state-level risk concentration' : 'A través de México — concentración de riesgo por estado'}
-          </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
-            {lang === 'en'
-              ? 'Federal procurement quality varies sharply by state. CDMX concentrates the highest-risk vendor population (federal headquarters effect); Tabasco, Veracruz, and Guerrero show the highest per-vendor risk scores. Stylized geographic layout — number = avg risk × 100.'
-              : 'La calidad de la contratación federal varía drásticamente por estado. CDMX concentra la mayor población de proveedores de alto riesgo (efecto sede federal); Tabasco, Veracruz y Guerrero muestran los puntajes de riesgo per cápita más altos. Disposición geográfica estilizada — número = riesgo promedio × 100.'}
-          </p>
-          <div className="surface-card rounded-sm p-5">
-            <MexicoChoropleth lang={lang} />
-          </div>
-        </section>
-
-        {/* ─── SPENDING CATEGORIES — where the money goes ─── */}
-        <section className="mb-12" aria-labelledby="categories-title">
-          <div className="flex items-start justify-between mb-1">
-            <div id="categories-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? 'Where the money goes — 91 auto-classified categories' : 'Dónde va el dinero — 91 categorías auto-clasificadas'}
+        {/* d-P1 SUBTRACTION (2026-05-04, plan A.5):
+            - MexicoChoropleth removed (fake-geographic state grid; HQ-effect
+              caveat invalidates the claim — the kind of move FT/NYT would not make)
+            - TopCategoriesChart removed (now duplicated by the canonical
+              SectorTreemap on /sectors). Replaced with a single link card. */}
+        <section className="mb-12">
+          <a
+            href="/sectors"
+            onClick={(e) => { e.preventDefault(); navigate('/sectors') }}
+            className="surface-card rounded-sm p-5 flex items-center justify-between hover:bg-background-elevated transition-colors group"
+          >
+            <div>
+              <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+                {lang === 'en' ? 'Sectors & categories — full breakdown' : 'Sectores y categorías — desglose completo'}
+              </div>
+              <p className="text-sm text-text-primary leading-[1.5]">
+                {lang === 'en'
+                  ? 'Squarified treemap, slope chart, and risk × spend beeswarm for the 12 sectors and 72 categories.'
+                  : 'Treemap squarificado, slope chart y beeswarm de riesgo × gasto para los 12 sectores y 72 categorías.'}
+              </p>
             </div>
-            <button
-              onClick={() => navigate('/sectors?view=categories')}
-              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
-            >
-              {lang === 'en' ? 'All categories' : 'Todas'}
-              <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
-            {lang === 'en'
-              ? 'Every peso in COMPRANET classified into one of 91 spending categories — automatically, at 99.7% coverage. The top 8 account for the majority of federal spend. Risk scores vary sharply by category, revealing where irregularities concentrate.'
-              : 'Cada peso en COMPRANET clasificado en una de 91 categorías de gasto — automáticamente, con 99.7% de cobertura. Las 8 principales concentran la mayoría del gasto federal. Los puntajes de riesgo varían considerablemente por categoría, revelando dónde se concentran las irregularidades.'}
-          </p>
-          <div className="surface-card rounded-sm p-5">
-            <TopCategoriesChart lang={lang} />
-          </div>
+            <ArrowUpRight className="h-5 w-5 text-text-muted group-hover:text-text-primary transition-colors flex-shrink-0 ml-4" />
+          </a>
         </section>
 
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
