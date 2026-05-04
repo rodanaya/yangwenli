@@ -105,6 +105,18 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'story-ano-sin-excusas': lazyChart(() => import('@/components/stories/charts/StoryAnoSinExcusas'), 'StoryAnoSinExcusas'),
   'story-insabi': lazyChart(() => import('@/components/stories/charts/StoryInsabi'), 'StoryInsabi'),
   'story-tren-maya': lazyChart(() => import('@/components/stories/charts/StoryTrenMaya'), 'StoryTrenMaya'),
+  // ---------------------------------------------------------------------------
+  // Editorial sector chart components — n-P1 (2026-05-04)
+  // These 5 components are self-fetching: CompetitionSlopeChart fetches
+  // directly; the other 4 are wrapped in story-specific adapters in
+  // EditorialSectorStoryCharts.tsx that call sectorApi/categoriesApi
+  // internally. Story chapters only need chartConfig.type — no data payload.
+  // ---------------------------------------------------------------------------
+  'editorial-slope':    lazyChart(() => import('@/components/sectors/CompetitionSlopeChart'), 'CompetitionSlopeChart'),
+  'editorial-treemap':  lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'SectorTreemapStory'),
+  'editorial-beeswarm': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'RiskSpendBeeswarmStory'),
+  'editorial-swimlane': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategorySwimlaneStory'),
+  'editorial-dumbbell': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategoryDumbbellStory'),
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
@@ -124,6 +136,12 @@ const TYPE_TO_CHART_ID: Record<string, string> = {
   'sunburst':    'admin-sunburst',
   'racing':      'racing-bar',
   'breakdown':   'procedure-breakdown',
+  // n-P1 editorial sector chart types (self-fetching)
+  'editorial-slope':    'editorial-slope',
+  'editorial-treemap':  'editorial-treemap',
+  'editorial-beeswarm': 'editorial-beeswarm',
+  'editorial-swimlane': 'editorial-swimlane',
+  'editorial-dumbbell': 'editorial-dumbbell',
 }
 
 // ---------------------------------------------------------------------------

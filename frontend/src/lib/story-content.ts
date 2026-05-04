@@ -73,6 +73,11 @@ export interface StoryChapterDef {
       | 'inline-multi-line'
       | 'inline-network'
       | 'inline-stacked-bar'
+      | 'editorial-slope'
+      | 'editorial-treemap'
+      | 'editorial-beeswarm'
+      | 'editorial-swimlane'
+      | 'editorial-dumbbell'
     highlight?: string
     title: string
     /** Optional Spanish translation of `title`. */
