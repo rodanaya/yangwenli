@@ -221,6 +221,19 @@ export function Sectors() {
     searchParams.get('view') === 'categories' ? 'categories' : 'sectors'
   const sortParam = searchParams.get('sort') as SortKey | null
   const sortKey: SortKey = sortParam && SORT_KEYS.includes(sortParam) ? sortParam : 'total_value_mxn'
+
+  // cat-P3: quiet ?sort= for the categories list (no visible chooser — power users only).
+  // Values: risk (default) | spend | name | capture
+  // "capture" = sort by descending direct_award_pct as a proxy for capture risk
+  // (top1_share − top2_share is not carried by getSummary; DA% is the best
+  // available proxy on this endpoint without a new backend call).
+  type CatSortKey = 'risk' | 'spend' | 'name' | 'capture'
+  const CAT_SORT_KEYS: ReadonlyArray<CatSortKey> = ['risk', 'spend', 'name', 'capture']
+  const catSortParam = searchParams.get('sort') as CatSortKey | null
+  const catSortKey: CatSortKey =
+    view === 'categories' && catSortParam && CAT_SORT_KEYS.includes(catSortParam)
+      ? catSortParam
+      : 'risk'
   const setView = (v: 'sectors' | 'categories') => {
     const next = new URLSearchParams(searchParams)
     if (v === 'sectors') next.delete('view')
@@ -503,60 +516,155 @@ export function Sectors() {
                   </div>
 
                   {/* ── § 3 — RANKED TABLE ───────────────────────────────── */}
-                  <div className="rounded-sm border border-border overflow-hidden">
-                    {sortedByRisk.map((cat, idx) => {
-                      const riskLevel = getRiskLevelFromScore(cat.avg_risk)
-                      const sectorColor = cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? '#64748b' : '#64748b'
-                      return (
-                        <div
-                          key={cat.category_id}
-                          className="flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
-                          style={{ borderLeft: `3px solid ${sectorColor}` }}
-                        >
-                          <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
-                            {String(idx + 1).padStart(2, '0')}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <EntityIdentityChip
-                                type="category"
-                                id={cat.category_id}
-                                name={i18n.language === 'es' ? cat.name_es : cat.name_en}
-                                size="sm"
-                              />
-                            </div>
-                            {cat.top_vendor && (
-                              <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
-                                <span>{i18n.language === 'es' ? 'Top:' : 'Top:'}</span>
-                                <EntityIdentityChip type="vendor" id={cat.top_vendor.id} name={cat.top_vendor.name} size="xs" hideIcon />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-shrink-0 text-right min-w-[90px]">
-                            <div className="font-mono text-sm tabular-nums text-text-primary">
-                              {formatSpend(cat.total_value)}
-                            </div>
-                            <div className="text-[10px] font-mono text-text-muted mt-0.5">
-                              {formatNumber(cat.total_contracts)} {i18n.language === 'es' ? 'cont.' : 'contracts'}
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0 text-right min-w-[80px]">
-                            <div
-                              className="font-mono text-sm font-bold tabular-nums"
-                              style={{ color: RISK_COLORS[riskLevel] }}
-                            >
-                              {(cat.avg_risk * 100).toFixed(1)}%
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0 text-right min-w-[70px]">
-                            <div className="font-mono text-sm tabular-nums text-text-secondary">
-                              {cat.direct_award_pct.toFixed(0)}%
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
+                  {/* cat-P3: § kicker */}
+                  <div className="mb-3">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                      {i18n.language === 'es'
+                        ? 'El Catálogo · 72 Categorías'
+                        : 'The Catalog · 72 Categories'}
+                    </p>
                   </div>
+                  {(() => {
+                    // cat-P3 D: sort rows per ?sort= param
+                    const catRows = (() => {
+                      if (catSortKey === 'spend') {
+                        return [...categoryData.data].sort((a, b) => b.total_value - a.total_value)
+                      }
+                      if (catSortKey === 'name') {
+                        return [...categoryData.data].sort((a, b) => {
+                          const aName = i18n.language === 'es' ? a.name_es : a.name_en
+                          const bName = i18n.language === 'es' ? b.name_es : b.name_en
+                          return aName.localeCompare(bName)
+                        })
+                      }
+                      if (catSortKey === 'capture') {
+                        // Proxy: descending direct_award_pct (top1_share − top2_share
+                        // not available on getSummary without an extra backend call)
+                        return [...categoryData.data].sort(
+                          (a, b) => b.direct_award_pct - a.direct_award_pct,
+                        )
+                      }
+                      // default: risk (descending avg_risk)
+                      return sortedByRisk
+                    })()
+                    return (
+                      <div className="rounded-sm border border-border overflow-hidden">
+                        {catRows.map((cat, idx) => {
+                          const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+                          const sectorColor =
+                            cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? '#64748b' : '#64748b'
+
+                          // cat-P3 C: sector-colored divider between rows where
+                          // the sector changes. Per the plan, we always show the
+                          // divider on sector-change so the grouping is visible
+                          // regardless of current sort — power users who switch
+                          // to ?sort=spend or ?sort=name will see the groupings
+                          // emerge naturally, while ?sort=risk produces dividers
+                          // between most consecutive rows (different sectors).
+                          const prevSectorCode = idx > 0 ? catRows[idx - 1].sector_code : null
+                          const sectorChanged = idx > 0 && prevSectorCode !== cat.sector_code
+
+                          // cat-P3 A: single-bid traffic-light dot
+                          const sbPct = cat.single_bid_pct ?? 0
+                          const sbDotClass =
+                            sbPct > 25
+                              ? 'bg-red-500'
+                              : sbPct >= 15
+                                ? 'bg-amber-500'
+                                : 'bg-zinc-400'
+
+                          return (
+                            <div key={cat.category_id}>
+                              {/* Sector-change divider — sector colour at low opacity */}
+                              {sectorChanged && (
+                                <div
+                                  className="border-t-2"
+                                  style={{ borderColor: `${sectorColor}33` }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <div
+                                className="flex items-center gap-4 px-5 py-2.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                                style={{ borderLeft: `3px solid ${sectorColor}` }}
+                              >
+                                <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
+                                  {String(idx + 1).padStart(2, '0')}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <EntityIdentityChip
+                                      type="category"
+                                      id={cat.category_id}
+                                      name={i18n.language === 'es' ? cat.name_es : cat.name_en}
+                                      size="sm"
+                                    />
+                                  </div>
+                                  {/* Top vendor chip */}
+                                  {cat.top_vendor && (
+                                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
+                                      <span>{i18n.language === 'es' ? 'Top:' : 'Top:'}</span>
+                                      <EntityIdentityChip
+                                        type="vendor"
+                                        id={cat.top_vendor.id}
+                                        name={cat.top_vendor.name}
+                                        size="xs"
+                                        hideIcon
+                                      />
+                                    </div>
+                                  )}
+                                  {/* cat-P3 B: top institution chip — below top vendor */}
+                                  {cat.top_institution && (
+                                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
+                                      <span>{i18n.language === 'es' ? 'Inst:' : 'Inst:'}</span>
+                                      <EntityIdentityChip
+                                        type="institution"
+                                        id={cat.top_institution.id}
+                                        name={
+                                          cat.top_institution.name.length > 32
+                                            ? cat.top_institution.name.slice(0, 32) + '…'
+                                            : cat.top_institution.name
+                                        }
+                                        size="xs"
+                                        hideIcon
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0 text-right min-w-[90px]">
+                                  <div className="font-mono text-sm tabular-nums text-text-primary">
+                                    {formatSpend(cat.total_value)}
+                                  </div>
+                                  <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                                    {formatNumber(cat.total_contracts)}{' '}
+                                    {i18n.language === 'es' ? 'cont.' : 'contracts'}
+                                  </div>
+                                </div>
+                                <div className="flex-shrink-0 text-right min-w-[80px]">
+                                  <div
+                                    className="font-mono text-sm font-bold tabular-nums"
+                                    style={{ color: RISK_COLORS[riskLevel] }}
+                                  >
+                                    {(cat.avg_risk * 100).toFixed(1)}%
+                                  </div>
+                                </div>
+                                {/* cat-P3 A: DA% with single-bid dot to its left */}
+                                <div className="flex-shrink-0 flex items-center justify-end gap-1 min-w-[80px]">
+                                  <span
+                                    className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`}
+                                    title={`${sbPct.toFixed(1)}% single-bid`}
+                                    aria-label={`${sbPct.toFixed(1)}% licitación con un solo postor`}
+                                  />
+                                  <div className="font-mono text-sm tabular-nums text-text-secondary">
+                                    {cat.direct_award_pct.toFixed(0)}%
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
                   <p className="mt-4 text-[11px] text-text-muted leading-relaxed max-w-prose">
                     {i18n.language === 'es'
                       ? <>Las categorías usan códigos Partida/CUCoP. La cobertura confiable es 2023–2025 (100% Partida en Estructura D); años anteriores pueden tener clasificación parcial. Haz clic en una categoría para ver contratos, proveedores e instituciones.</>
