@@ -1,6 +1,7 @@
 /**
  * Yang Wen-li Constants
  * Centralized configuration values
+ * Build: 2026-05-04-v2
  */
 
 // Sector Colors - matches CLAUDE.md spec exactly
