@@ -278,6 +278,18 @@
     "sectorAriaLabel": "Select sector to view model coefficients",
     "sectionAriaLabel": "Risk factor analysis by sector"
   },
+  "slope": {
+    "dateline": "COMPETITION · A DECADE PAST THE OECD CEILING",
+    "title": "Ten years past the OECD ceiling",
+    "titleEn": "Ten years past the OECD ceiling",
+    "deck": "Direct-award % by sector, 2015–2025. The cyan dashed line is the OECD 25% ceiling. Sectors ending above are labeled in their sector color; those below are muted gray.",
+    "oecdLine": "OECD 25%",
+    "covidBand": "COVID emergency",
+    "belowCeiling": "+ {{count}} below ceiling",
+    "aboveCeiling": "sectors above OECD ceiling",
+    "showAll": "Show all 12",
+    "showCrossers": "Only OECD crossers"
+  },
   "featured": {
     "kicker": "Sector lede · {{sector}}",
     "leadsRisk": "leads in risk with",

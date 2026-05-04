@@ -27,6 +27,7 @@ import { Building2 } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
+import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -588,6 +589,42 @@ export function Sectors() {
             OECDCompetitionDotMatrix, SectorRiskTrendPanel, RiskRankingStrip
             removed. P2-P4 will reintroduce one slope chart, one treemap,
             one beeswarm. See docs/SECTORS_REDESIGN_PLAN.md. */}
+
+        {/* ── § 3 HERO 2: Competition Slope Chart ──────────────────────────
+            docs/SECTORS_REDESIGN_PLAN.md §5 HERO 2.
+            Replaces SectorSmallMultiples + OECDCompetitionDotMatrix +
+            SectorRiskTrendPanel — three charts → one.
+            Data: sectorApi.getTrends(id) returns direct_award_pct per year. */}
+        <section
+          aria-labelledby="slope-heading"
+          className="mb-10 pb-8 border-b border-border"
+        >
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+            {i18n.language === 'es'
+              ? 'La Competencia · Una década cruzando el techo OCDE'
+              : 'Competition · A decade past the OECD ceiling'}
+          </p>
+          <h2
+            id="slope-heading"
+            className="text-text-primary leading-[1.1] mb-2"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {i18n.language === 'es'
+              ? 'Diez años cruzando el techo OCDE'
+              : 'Ten years past the OECD ceiling'}
+          </h2>
+          <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-6">
+            {i18n.language === 'es'
+              ? 'Adjudicación directa por sector, 2015–2025. La línea de puntos cyan es el umbral OCDE del 25%. Los sectores que terminan por encima del umbral están etiquetados en su color; los que se mantienen por debajo se agrupan en gris.'
+              : 'Direct-award % by sector, 2015–2025. The cyan dashed line is the OECD 25% ceiling. Sectors ending above the threshold are labeled in their sector color; those that stay below are grouped gray.'}
+          </p>
+          <CompetitionSlopeChart />
+        </section>
 
         {/* Quiet count row — sort dropdown removed; ?sort= URL param controls order */}
         <div className="flex items-center justify-between mb-6">

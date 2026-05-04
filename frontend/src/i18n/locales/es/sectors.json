@@ -278,6 +278,18 @@
     "sectorAriaLabel": "Seleccionar sector para ver coeficientes del modelo",
     "sectionAriaLabel": "Análisis de factores de riesgo por sector"
   },
+  "slope": {
+    "dateline": "LA COMPETENCIA · UNA DÉCADA CRUZANDO EL TECHO OCDE",
+    "title": "Diez años cruzando el techo OCDE",
+    "titleEn": "Ten years past the OECD ceiling",
+    "deck": "Adjudicación directa por sector, 2015–2025. La línea de puntos cyan es el límite OCDE del 25%. Los sectores que terminan por encima están etiquetados en su color; los que quedan por debajo, en gris.",
+    "oecdLine": "OCDE 25%",
+    "covidBand": "Emergencia COVID",
+    "belowCeiling": "+ {{count}} bajo el techo",
+    "aboveCeiling": "sectores sobre el techo OCDE",
+    "showAll": "Mostrar todos los 12",
+    "showCrossers": "Solo los que cruzan OCDE"
+  },
   "featured": {
     "kicker": "Lede sectorial · {{sector}}",
     "leadsRisk": "encabeza el riesgo con",
