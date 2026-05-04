@@ -8,13 +8,11 @@
  * Sort: total spend (default) | avg risk score | contract count | name
  */
 
-import { useMemo, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
-import { useQuery, useQueries } from '@tanstack/react-query'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { useQuery } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
@@ -24,19 +22,11 @@ import {
   RISK_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import type { SectorStatistics, SectorTrend } from '@/api/types'
-import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
+import type { SectorStatistics } from '@/api/types'
+import { Building2 } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
-import { SectorModelCoefficients } from '@/components/sectors/SectorModelCoefficients'
-import {
-  EditorialLineChart,
-  type LineSeries,
-  type ColorToken,
-} from '@/components/charts/editorial'
-import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -156,25 +146,14 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           </span>
         </div>
 
-        {/* Risk distribution — single MiniRiskField source of truth */}
-        <div className="space-y-1.5">
-          <MiniRiskField
-            criticalPct={((sector.critical_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
-            highPct={((sector.high_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
-            mediumPct={((sector.medium_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
-            lowPct={((sector.low_risk_count ?? 0) / (sector.total_contracts || 1)) * 100}
-            seed={sector.sector_id ?? 7}
-            width={320}
-            height={14}
-          />
-          <div className="flex items-center justify-between text-[10px] font-mono text-text-muted">
-            <span>
-              {highPlusCritical > 0
-                ? `${formatNumber(highPlusCritical)} ${t('profile.highPlusCritical')}`
-                : t('card.low')}
-            </span>
-            <span>{(sector.avg_risk_score * 100).toFixed(1)}% {t('profile.avgRisk')}</span>
-          </div>
+        {/* Avg risk + high+critical count */}
+        <div className="flex items-center justify-between text-[10px] font-mono text-text-muted mt-auto">
+          <span>
+            {highPlusCritical > 0
+              ? `${formatNumber(highPlusCritical)} ${t('profile.highPlusCritical')}`
+              : t('card.low')}
+          </span>
+          <span className="tabular-nums">{(sector.avg_risk_score * 100).toFixed(1)}% {t('profile.avgRisk')}</span>
         </div>
 
         {/* Single-bid signal */}
@@ -183,22 +162,6 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           <span className="font-mono tabular-nums">{sbPct.toFixed(1)}%</span>
           <span className="text-text-muted">{t('card.singleBid')}</span>
         </div>
-
-        {/* Market depth micro-stats */}
-        <p className="text-[10px] text-text-muted tabular-nums mt-auto pt-1 border-t border-border">
-          {formatNumber(sector.total_institutions ?? 0)} {t('card.institutions')}
-          <span className="mx-1 text-text-primary">·</span>
-          {formatNumber(sector.total_vendors ?? 0)} {t('card.providers')}
-        </p>
-      </div>
-
-      {/* Footer link */}
-      <div
-        className="flex items-center justify-end gap-1 px-4 py-2 border-t border-border text-[11px] font-semibold transition-colors"
-        style={{ color: `${color}cc` }}
-      >
-        <span className="group-hover:underline">{t('page.exploreLink')}</span>
-        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
       </div>
     </Link>
   )
@@ -236,480 +199,23 @@ function SectorCardSkeleton() {
   )
 }
 
-// ── SortDropdown ──────────────────────────────────────────────────────────────
-
-interface SortDropdownProps {
-  value: SortKey
-  onChange: (v: SortKey) => void
-}
-
-function SortDropdown({ value, onChange }: SortDropdownProps) {
-  const { t } = useTranslation('sectors')
-
-  const options: { value: SortKey; label: string }[] = [
-    { value: 'total_value_mxn', label: t('page.sortValue') },
-    { value: 'avg_risk_score', label: t('page.sortRisk') },
-    { value: 'total_contracts', label: t('page.sortContracts') },
-    { value: 'name', label: t('page.sortName') },
-  ]
-
-  return (
-    <div className="inline-flex items-center gap-3">
-      <span className="text-[11px] text-text-muted font-mono uppercase tracking-widest">
-        {t('page.sortBy')}
-      </span>
-      <div role="radiogroup" aria-label={t('page.sortBy')} className="flex items-center rounded-sm border border-border bg-background-elevated p-0.5">
-        {options.map((o) => {
-          const active = o.value === value
-          return (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => onChange(o.value)}
-              className={`px-2.5 py-1 text-[12px] font-medium rounded-sm transition-colors ${
-                active
-                  ? 'bg-accent/15 text-accent'
-                  : 'text-text-muted hover:text-text-primary'
-              }`}
-            >
-              {o.label}
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-// ── OECD Competition Dot Matrix ──────────────────────────────────────────────
-// Horizontal dot strips: 50 dots = 0-100%, 1 dot = 2pp. OECD 25% marker at dot 12.
-
-const OE_DOTS = 50            // 1 dot = 2pp
-const OE_DOT_R = 3
-const OE_DOT_GAP = 8
-const OE_LABEL_W = 100
-const OE_ROW_H = 16
-const OE_VAL_W = 42
-const OE_TOP_PAD = 16
-const OE_BOTTOM_PAD = 6
-const OECD_DOT_IDX = 12       // 12 * 2pp = 24-26pp, marks 25% line
-
-function OECDCompetitionDotMatrix({
-  data,
-}: {
-  data: Array<{ name: string; code: string; da_pct: number }>
-}) {
-  if (!data.length) return null
-
-  const chartW = OE_LABEL_W + OE_DOTS * OE_DOT_GAP + OE_VAL_W
-  const chartH = OE_TOP_PAD + data.length * OE_ROW_H + OE_BOTTOM_PAD
-
-  // OECD line sits between dot index 11 and 12 (25% = 12.5 dots)
-  const oecdX = OE_LABEL_W + OECD_DOT_IDX * OE_DOT_GAP - OE_DOT_GAP / 2 + OE_DOT_R
-
-  return (
-    <svg
-      viewBox={`0 0 ${chartW} ${chartH}`}
-      className="w-full h-auto"
-    >
-      {/* OECD 25% reference line */}
-      <line
-        x1={oecdX}
-        x2={oecdX}
-        y1={OE_TOP_PAD - 10}
-        y2={OE_TOP_PAD + data.length * OE_ROW_H}
-        stroke="#22d3ee"
-        strokeDasharray="4 4"
-        strokeWidth={1}
-      />
-      <text
-        x={oecdX}
-        y={OE_TOP_PAD - 4}
-        textAnchor="middle"
-        fill="#22d3ee"
-        fontSize={10}
-        fontFamily="var(--font-family-mono)"
-        fontWeight={600}
-      >
-        OCDE 25%
-      </text>
-
-      {data.map((item, rowIdx) => {
-        const filled = Math.min(OE_DOTS, Math.round((item.da_pct / 100) * OE_DOTS))
-        const yCenter = OE_TOP_PAD + rowIdx * OE_ROW_H + OE_ROW_H / 2
-        const color = SECTOR_COLORS[item.code] ?? '#64748b'
-        const aboveOECD = item.da_pct > 25
-
-        return (
-          <g key={item.code}>
-            <text
-              x={OE_LABEL_W - 6}
-              y={yCenter + 3}
-              textAnchor="end"
-              fill="var(--color-text-muted)"
-              fontSize={10}
-              fontFamily="var(--font-family-mono)"
-            >
-              {item.name.length > 12 ? item.name.slice(0, 12) + '…' : item.name}
-            </text>
-            {Array.from({ length: OE_DOTS }).map((_, i) => {
-              const isFilled = i < filled
-              return (
-                <motion.circle
-                  key={i}
-                  cx={OE_LABEL_W + i * OE_DOT_GAP + OE_DOT_R}
-                  cy={yCenter}
-                  r={OE_DOT_R}
-                  fill={isFilled ? color : 'var(--color-background-elevated)'}
-                  stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
-                  strokeWidth={0.5}
-                  fillOpacity={isFilled ? (aboveOECD ? 0.9 : 0.4) : 1}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
-                />
-              )
-            })}
-            <text
-              x={OE_LABEL_W + OE_DOTS * OE_DOT_GAP + 6}
-              y={yCenter + 3}
-              fill={aboveOECD ? color : 'var(--color-text-muted)'}
-              fontSize={10}
-              fontFamily="var(--font-family-mono)"
-              fontWeight={aboveOECD ? 700 : 400}
-            >
-              {item.da_pct.toFixed(1)}%
-            </text>
-            <title>{item.name}: {item.da_pct.toFixed(1)}% direct awards</title>
-          </g>
-        )
-      })}
-    </svg>
-  )
-}
-
-// ── SectorSmallMultiples ─────────────────────────────────────────────────────
-// Visual pattern #3 (FT/Economist swipe file): 12 identical mini area charts
-// in a 4×3 grid, one per sector, sharing a global Y-axis. Position itself
-// becomes the comparison — readers spot the outlier sector instantly.
-
-function SectorSmallMultiples({
-  sectors,
-  t,
-}: {
-  sectors: SectorStatistics[]
-  t: (k: string) => string
-}) {
-  // Sort highest-risk first so the eye lands on the worst sector top-left.
-  const ranked = useMemo(
-    () => [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score),
-    [sectors]
-  )
-
-  // Fetch trends for ALL 12 sectors (rules-of-hooks safe via useQueries).
-  const trendQueries = useQueries({
-    queries: ranked.map((s) => ({
-      queryKey: ['sector', 'trends', s.sector_id],
-      queryFn: () => sectorApi.getTrends(s.sector_id),
-      staleTime: 10 * 60 * 1000,
-    })),
-  })
-
-  const isLoading = trendQueries.some((q) => q.isLoading)
-
-  // Per-sector cleaned series (pct, 2015–2025) + global Y-axis maximum so
-  // every panel renders on the same scale — the entire point of small
-  // multiples.
-  const panels = useMemo(() => {
-    const built = ranked.map((s, i) => {
-      const raw = trendQueries[i].data?.data ?? []
-      const series = raw
-        .filter((tr) => tr.year >= 2015 && tr.year <= 2025)
-        .map((tr) => {
-          const score =
-            'avg_risk_score' in tr
-              ? (tr as unknown as SectorTrend).avg_risk_score
-              : ((tr as { avg_risk?: number }).avg_risk ?? 0)
-          return { year: tr.year, avg_risk_score: (score ?? 0) * 100 }
-        })
-        .sort((a, b) => a.year - b.year)
-      return { sector: s, series }
-    })
-    return built
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, ranked.length])
-
-  const globalMax = useMemo(() => {
-    let m = 0
-    for (const p of panels) {
-      for (const row of p.series) {
-        if (row.avg_risk_score > m) m = row.avg_risk_score
-      }
-    }
-    // Leave 10% headroom; minimum visible domain so flat sectors don't
-    // collapse into a hairline.
-    return Math.max(m * 1.1, 5)
-  }, [panels])
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="surface-card p-3">
-            <Skeleton className="h-2.5 w-20 mb-2" />
-            <Skeleton className="h-[72px] w-full" />
-            <div className="flex items-center justify-between mt-2">
-              <Skeleton className="h-3 w-10" />
-              <Skeleton className="h-3 w-6" />
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // Risk-level → hex color (safe for inline style; no Tailwind 300/400/500
-  // tokens which the lint gate forbids in src/pages).
-  const riskHex: Record<'critical' | 'high' | 'medium' | 'low', string> = {
-    critical: '#c41e3a',
-    high: '#ea580c',
-    medium: '#f59e0b',
-    low: '#71717a',
-  }
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-      {panels.map(({ sector, series }) => {
-        const color = SECTOR_COLORS[sector.sector_code] ?? '#64748b'
-        const last = series[series.length - 1]
-        const prev = series[series.length - 2]
-        const currentPct = last?.avg_risk_score ?? 0
-        const trendUp = last && prev ? last.avg_risk_score > prev.avg_risk_score : false
-        const trendFlat = last && prev ? Math.abs(last.avg_risk_score - prev.avg_risk_score) < 0.1 : true
-        const level = getRiskLevelFromScore((currentPct / 100) || 0)
-        const statColor = riskHex[level]
-        const arrowColor = trendUp ? '#c41e3a' : '#71717a'
-        const arrow = trendFlat ? '·' : trendUp ? '↑' : '↓'
-        const gradId = `sm-grad-${sector.sector_code}`
-
-        return (
-          <div
-            key={sector.sector_id}
-            className="surface-card p-3 flex flex-col"
-            role="img"
-            aria-label={`${t(sector.sector_code)} risk trajectory 2015 to 2025, current ${currentPct.toFixed(1)} percent`}
-          >
-            <p
-              className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] mb-1.5 truncate"
-              style={{ color }}
-              title={t(sector.sector_code)}
-            >
-              {t(sector.sector_code)}
-            </p>
-
-            <div className="w-full" style={{ height: 72 }}>
-              <ResponsiveContainer width="100%" height={72}>
-                <AreaChart
-                  data={series}
-                  margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
-                >
-                  <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={color} stopOpacity={0.2} />
-                      <stop offset="100%" stopColor={color} stopOpacity={0.05} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="year" hide />
-                  <YAxis hide domain={[0, globalMax]} />
-                  <Area
-                    type="monotone"
-                    dataKey="avg_risk_score"
-                    stroke={color}
-                    strokeWidth={1.5}
-                    fill={`url(#${gradId})`}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2">
-              <span
-                className="text-[11px] font-mono font-bold tabular-nums"
-                style={{ color: statColor }}
-              >
-                {currentPct.toFixed(1)}%
-              </span>
-              <span
-                className="text-[11px] font-mono"
-                style={{ color: arrowColor }}
-                aria-label={trendUp ? 'rising' : trendFlat ? 'flat' : 'falling'}
-              >
-                {arrow}
-              </span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── SectorRiskTrendPanel ─────────────────────────────────────────────────────
-// Fetches per-sector trends for the top 6 sectors and renders a LineChart.
-
-function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: (k: string) => string }) {
-  const top6 = useMemo(
-    () => [...sectors].sort((a, b) => b.total_value_mxn - a.total_value_mxn).slice(0, 6),
-    [sectors]
-  )
-
-  // Fetch trends for each of the top 6 sectors using useQueries (rules-of-hooks safe)
-  const trendQueries = useQueries({
-    queries: top6.map((s) => ({
-      queryKey: ['sector', 'trends', s.sector_id],
-      queryFn: () => sectorApi.getTrends(s.sector_id),
-      staleTime: 10 * 60 * 1000,
-    })),
-  })
-
-  const isLoadingTrends = trendQueries.some((q) => q.isLoading)
-
-  // Build merged year-keyed dataset
-  const chartData = useMemo(() => {
-    if (isLoadingTrends) return []
-    const yearMap = new Map<number, Record<string, number>>()
-    for (let i = 0; i < top6.length; i++) {
-      const sectorCode = top6[i].sector_code
-      const rawTrends = trendQueries[i].data?.data ?? []
-      for (const tr of rawTrends) {
-        if (tr.year < 2015 || tr.year > 2025) continue
-        const existing = yearMap.get(tr.year) || { year: tr.year }
-        // YearOverYearChange uses avg_risk; SectorTrend uses avg_risk_score
-        const avgRiskVal = ('avg_risk_score' in tr ? (tr as unknown as SectorTrend).avg_risk_score : (tr as { avg_risk?: number }).avg_risk) ?? 0
-        existing[sectorCode] = avgRiskVal
-        yearMap.set(tr.year, existing)
-      }
-    }
-    return [...yearMap.values()].sort((a, b) => (a.year as number) - (b.year as number))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoadingTrends, top6.length])
-
-  if (isLoadingTrends) {
-    return (
-      <div className="surface-card p-4">
-        <Skeleton className="h-5 w-48 mb-3" />
-        <Skeleton className="h-[220px] w-full" />
-      </div>
-    )
-  }
-
-  // Pre-multiply by 100 so the y-axis renders 0–100% via 'pct' formatter.
-  const seriesData = chartData.map((row) => {
-    const out: Record<string, number> = { year: row.year as number }
-    for (const s of top6) {
-      const raw = row[s.sector_code]
-      if (typeof raw === 'number') out[s.sector_code] = raw * 100
-    }
-    return out
-  })
-  const series: LineSeries<typeof seriesData[number]>[] = top6.map((s) => ({
-    key: s.sector_code,
-    label: t(s.sector_code),
-    colorToken: `sector-${s.sector_code}` as ColorToken,
-    emphasis: 'secondary',
-  }))
-
-  return (
-    <div className="surface-card p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('trendChart.eyebrow')}
-      </p>
-      <h3 className="text-sm font-bold text-text-primary mb-3">
-        {t('trendChart.title')}
-      </h3>
-      <EditorialLineChart
-        data={seriesData}
-        xKey="year"
-        series={series}
-        yFormat="pct"
-        height={220}
-      />
-    </div>
-  )
-}
-
-// ── RiskRankingStrip ─────────────────────────────────────────────────────────
-// Compact ranking of all 12 sectors by avg_risk_score descending, with
-// horizontal bars proportional to the maximum score.
-
-function RiskRankingStrip({
-  sectors,
-  t,
-}: {
-  sectors: SectorStatistics[]
-  t: (k: string) => string
-}) {
-  const ranked = useMemo(
-    () => [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score),
-    [sectors]
-  )
-  const maxScore = ranked[0]?.avg_risk_score ?? 0
-
-  if (!ranked.length) return null
-
-  return (
-    <div className="surface-card p-4 mb-8">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
-        {t('riskRanking.eyebrow')}
-      </p>
-      <div className="flex flex-col">
-        {ranked.map((s) => {
-          const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-          const pct = maxScore > 0 ? (s.avg_risk_score / maxScore) * 100 : 0
-          return (
-            <div
-              key={s.sector_id}
-              className="flex items-center gap-3"
-              style={{ height: 24 }}
-            >
-              <span className="text-[11px] text-text-secondary w-28 flex-shrink-0 truncate">
-                {t(s.sector_code)}
-              </span>
-              <div className="flex-1 h-1.5 bg-background-elevated rounded-sm overflow-hidden">
-                <div
-                  className="h-full rounded-sm"
-                  style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.9 }}
-                />
-              </div>
-              <span className="text-[11px] font-mono tabular-nums text-text-secondary w-12 text-right flex-shrink-0">
-                {(s.avg_risk_score * 100).toFixed(1)}%
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
+
+const SORT_KEYS: ReadonlyArray<SortKey> = ['total_value_mxn', 'avg_risk_score', 'total_contracts', 'name']
 
 export function Sectors() {
   const { t, i18n } = useTranslation('sectors')
-  const [sortKey, setSortKey] = useState<SortKey>('total_value_mxn')
-  const [selectedCoefSectorId, setSelectedCoefSectorId] = useState<number | null>(null)
 
-  // WHO / WHAT tab state. Previously /categories was its own page (3,700 LOC,
-  // orphaned from the sidebar, and analytically complementary to /sectors
-  // rather than distinct). Merged here per 5-agent review: one page, two
-  // axes. URL-synced so deep links like /sectors?view=categories work.
+  // WHO / WHAT tab + sort key — both URL-synced.
+  // Default sort = total_value_mxn (the canonical "money first" view); power
+  // users can override via ?sort=avg_risk_score|total_contracts|name.
+  // Previously a 4-button radiogroup; the dropdown was decision paralysis for
+  // 12 rows that read fine in any order — kept the URL knob, dropped the UI.
   const [searchParams, setSearchParams] = useSearchParams()
   const view: 'sectors' | 'categories' =
     searchParams.get('view') === 'categories' ? 'categories' : 'sectors'
+  const sortParam = searchParams.get('sort') as SortKey | null
+  const sortKey: SortKey = sortParam && SORT_KEYS.includes(sortParam) ? sortParam : 'total_value_mxn'
   const setView = (v: 'sectors' | 'categories') => {
     const next = new URLSearchParams(searchParams)
     if (v === 'sectors') next.delete('view')
@@ -1078,56 +584,12 @@ export function Sectors() {
           )
         })()}
 
-        {/* ── SECTOR SMALL MULTIPLES — 4×3 grid, shared Y-axis ─────── */}
-        {!isLoading && sectors.length > 0 && (
-          <section aria-label="Sector risk trajectory grid" className="mb-8">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-              {i18n.language === 'es'
-                ? 'Evolución por sector · 2015–2025'
-                : 'Risk trajectory · all 12 sectors · 2015–2025'}
-            </p>
-            <h2 className="text-sm font-bold text-text-primary mb-4">
-              {i18n.language === 'es'
-                ? 'Cada sector en la misma escala — comparación directa'
-                : 'Same scale across all sectors — direct comparison'}
-            </h2>
-            <SectorSmallMultiples sectors={sectors} t={t} />
-          </section>
-        )}
+        {/* P1 SUBTRACTION (2026-05-04): SectorSmallMultiples,
+            OECDCompetitionDotMatrix, SectorRiskTrendPanel, RiskRankingStrip
+            removed. P2-P4 will reintroduce one slope chart, one treemap,
+            one beeswarm. See docs/SECTORS_REDESIGN_PLAN.md. */}
 
-        {/* ── OECD COMPETITION GAP + RISK TREND ─────────────────────── */}
-        {!isLoading && sectors.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            {/* OECD Competition Gap Dot Matrix */}
-            <div className="surface-card p-4" role="img" aria-label="Dot matrix comparing direct award rates by sector against the OECD 25% benchmark">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-                {t('finding.competitionGapLabel')}
-              </p>
-              <h3 className="text-sm font-bold text-text-primary mb-3">
-                {t('finding.directAwardVsOECD')}
-              </h3>
-              <OECDCompetitionDotMatrix
-                data={[...sectors]
-                  .map((s) => ({
-                    name: t(s.sector_code),
-                    code: s.sector_code,
-                    da_pct: s.direct_award_pct ?? 0,
-                  }))
-                  .sort((a, b) => b.da_pct - a.da_pct)}
-              />
-            </div>
-
-            {/* Risk Trend per Sector (top 6 by value) */}
-            <SectorRiskTrendPanel sectors={sectors} t={t} />
-          </div>
-        )}
-
-        {/* ── RISK RANKING STRIP — all 12 sectors by avg risk score ── */}
-        {!isLoading && sectors.length > 0 && (
-          <RiskRankingStrip sectors={sectors} t={t} />
-        )}
-
-        {/* Controls row */}
+        {/* Quiet count row — sort dropdown removed; ?sort= URL param controls order */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-text-secondary">
             {isLoading ? (
@@ -1138,7 +600,9 @@ export function Sectors() {
               </span>
             )}
           </p>
-          <SortDropdown value={sortKey} onChange={setSortKey} />
+          <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+            {t('page.sortBy')}: {t(`page.sort${sortKey === 'total_value_mxn' ? 'Value' : sortKey === 'avg_risk_score' ? 'Risk' : sortKey === 'total_contracts' ? 'Contracts' : 'Name'}`)}
+          </p>
         </div>
 
         {/* Error state */}
@@ -1185,70 +649,11 @@ export function Sectors() {
           </>
         )}
 
-        {/* Risk Factor Analysis — per-sector model coefficients */}
-        {!isLoading && !error && sectors.length > 0 && (() => {
-          const sectorsByRisk = [...sectors].sort(
-            (a, b) => b.avg_risk_score - a.avg_risk_score,
-          )
-          const defaultSector = sectorsByRisk[0]
-          const activeSectorId = selectedCoefSectorId ?? defaultSector.sector_id
-          const activeSector =
-            sectors.find((s) => s.sector_id === activeSectorId) ?? defaultSector
-          const activeSectorName = t(activeSector.sector_code) as string
-          return (
-            <section className="mt-10" aria-label={t('riskFactors.sectionAriaLabel')}>
-              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
-                <div>
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-                    {t('riskFactors.eyebrow')}
-                  </p>
-                  <h2 className="text-xl font-bold text-text-primary leading-tight">
-                    {t('riskFactors.title')}
-                  </h2>
-                  <p className="text-xs text-text-muted mt-1 max-w-2xl">
-                    {t('riskFactors.description')}
-                  </p>
-                </div>
-                <div className="relative inline-flex items-center gap-2">
-                  <span className="text-xs text-text-secondary font-medium">{t('riskFactors.sectorLabel')}</span>
-                  <div className="relative">
-                    <select
-                      value={activeSectorId}
-                      onChange={(e) =>
-                        setSelectedCoefSectorId(Number(e.target.value))
-                      }
-                      className="appearance-none rounded-lg border border-border bg-background-elevated pl-3 pr-8 py-1.5 text-sm text-text-primary font-medium cursor-pointer hover:border-border focus:outline-none focus:ring-2 focus:ring-border transition-colors"
-                      aria-label={t('riskFactors.sectorAriaLabel')}
-                    >
-                      {sectorsByRisk.map((s) => (
-                        <option key={s.sector_id} value={s.sector_id}>
-                          {t(s.sector_code)} — {(s.avg_risk_score * 100).toFixed(1)}%
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown
-                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary"
-                      aria-hidden="true"
-                    />
-                  </div>
-                </div>
-              </div>
-              <ErrorBoundary fallback={null}>
-                <SectorModelCoefficients
-                  sectorId={activeSector.sector_id}
-                  sectorName={activeSectorName}
-                />
-              </ErrorBoundary>
-            </section>
-          )
-        })()}
-
-        {/* Market Concentration Chart */}
-        <div className="mt-8">
-          <ErrorBoundary fallback={null}>
-            <SectorConcentrationChart />
-          </ErrorBoundary>
-        </div>
+        {/* P1 SUBTRACTION (2026-05-04): SectorModelCoefficients and
+            SectorConcentrationChart moved to /sectors/:id (per-sector
+            analytical views shouldn't crowd the index). Backend endpoint
+            /sectors/model/coefficients was also returning 500s on this page;
+            removing the call fixes that error too. */}
 
         {/* Model note footnote */}
         {!isLoading && !error && (
