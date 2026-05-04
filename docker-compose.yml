@@ -1,5 +1,9 @@
 # RUBLI - Mexican Government Procurement Analysis Platform
 # Docker Compose Configuration
+#
+# ⚠️  DEV ONLY — no Caddy, no HTTPS, frontend on port 3009.
+# Production: ssh root@37.60.232.109 "bash /opt/rubli/deploy.sh"
+# Or locally:  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 services:
   # Backend API (FastAPI + SQLite)
