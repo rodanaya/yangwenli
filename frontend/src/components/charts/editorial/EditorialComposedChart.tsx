@@ -149,6 +149,14 @@ export function EditorialComposedChart<T extends object>({
               <ReferenceArea
                 key={idx} x1={a.x1} x2={a.x2} yAxisId="left"
                 fill={annotationStroke(a.tone)} fillOpacity={0.06} stroke="none"
+                label={a.label ? {
+                  value: a.label,
+                  position: 'insideTopLeft',
+                  fill: annotationStroke(a.tone),
+                  fontSize: 9,
+                  fontFamily: 'var(--font-family-mono)',
+                  opacity: 0.7,
+                } : undefined}
               />
             )
           }

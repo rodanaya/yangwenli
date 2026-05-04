@@ -55,8 +55,27 @@ export function VendorEvidenceTab({
     0.001
   )
 
+  const hasDA   = vendor.direct_award_pct != null
+  const hasSB   = vendor.single_bid_pct != null
+  const hasHR   = vendor.high_risk_pct != null
+  const hasYE   = vendor.year_end_pct != null
+  const showBenchmarks = hasDA || hasSB || hasHR
+
   return (
     <div className="space-y-8">
+
+      {/* §0 Benchmark bars — how this vendor's key rates diverge from OECD limits */}
+      {showBenchmarks && (
+        <VendorBenchmarkBars
+          directAwardPct={hasDA ? vendor.direct_award_pct : null}
+          singleBidPct={hasSB ? vendor.single_bid_pct : null}
+          highRiskPct={hasHR ? vendor.high_risk_pct : null}
+          yearEndPct={hasYE ? vendor.year_end_pct! : null}
+          yearEndSectorAvg={vendor.year_end_sector_avg ?? null}
+          isEs={isEs}
+        />
+      )}
+
       {/* § 1 Lede — ARIA investigative memo (5,800-char dossier surfaced here
           per docs/VENDOR_DOSSIER_SCHEME.md). Previously invisible: the memo
           existed in aria_queue.memo_text but no page imported AriaMemoPanel. */}
@@ -372,6 +391,156 @@ export function VendorEvidenceTab({
         </a>
       </section>
     </div>
+  )
+}
+
+// ─── Pattern #6: Diverging bars from OECD/sector benchmarks ───────────────────
+// FT Visual Vocabulary "Deviation" pattern — bars extend right (crimson) when
+// above benchmark, left (zinc) when below. Answers "compared to what?" instantly.
+
+interface BenchmarkRowProps {
+  label: string
+  value: number        // 0–1 fraction
+  benchmark: number    // 0–1 fraction (OECD limit or sector avg)
+  benchmarkLabel: string
+  maxDelta: number     // scale factor — usually 0.5 or 1.0
+}
+
+function BenchmarkRow({ label, value, benchmark, benchmarkLabel, maxDelta }: BenchmarkRowProps) {
+  const TRACK = 140       // half-track px each side
+  const CENTER = TRACK    // SVG center x
+  const TOTAL = TRACK * 2 // total SVG width
+  const delta = value - benchmark
+  const barLen = Math.min(Math.abs(delta) / maxDelta * TRACK, TRACK)
+  const isAbove = delta > 0
+  const fill = isAbove ? '#c41e3a' : '#52525b'
+  const barX = isAbove ? CENTER : CENTER - barLen
+  const absPp = Math.abs(Math.round(delta * 100))
+  const arrow = isAbove ? '↑' : '↓'
+  const valuePct = Math.round(value * 100)
+  const benchmarkPct = Math.round(benchmark * 100)
+
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <span className="text-[11px] font-mono text-text-secondary w-40 shrink-0 leading-tight">{label}</span>
+      <svg
+        width={TOTAL + 60}
+        height={22}
+        className="overflow-visible shrink-0"
+        aria-hidden="true"
+      >
+        {/* Track */}
+        <rect x={0} y={9} width={TOTAL} height={4} fill="#27272a" rx={2} />
+        {/* Center baseline tick */}
+        <line x1={CENTER} y1={3} x2={CENTER} y2={19} stroke="#3f3f46" strokeWidth={1.5} />
+        {/* Bar */}
+        {barLen > 0 && (
+          <rect x={barX} y={8} width={barLen} height={6} fill={fill} rx={1} opacity={0.9} />
+        )}
+        {/* Delta label right of track */}
+        <text
+          x={TOTAL + 6}
+          y={15}
+          fontSize={10}
+          fontFamily="var(--font-family-mono)"
+          fill={fill}
+        >
+          {arrow} {absPp}pp
+        </text>
+      </svg>
+      <span className="text-[9px] font-mono text-text-muted shrink-0 leading-tight">
+        {valuePct}% · {benchmarkLabel} {benchmarkPct}%
+      </span>
+    </div>
+  )
+}
+
+interface VendorBenchmarkBarsProps {
+  directAwardPct: number | null
+  singleBidPct: number | null
+  highRiskPct: number | null
+  yearEndPct: number | null
+  yearEndSectorAvg: number | null
+  isEs: boolean
+}
+
+function VendorBenchmarkBars({
+  directAwardPct,
+  singleBidPct,
+  highRiskPct,
+  yearEndPct,
+  yearEndSectorAvg,
+  isEs,
+}: VendorBenchmarkBarsProps) {
+  // Scale: worst-case delta drives the bar width. OECD direct-award limit is 30%,
+  // and Mexico's national average is ~72%, so a delta up to 70pp is realistic.
+  const MAX_DELTA = 0.70
+  const rows: (BenchmarkRowProps & { key: string })[] = []
+
+  if (directAwardPct != null) {
+    rows.push({
+      key: 'da',
+      label: isEs ? 'Adjudicación directa' : 'Direct award rate',
+      value: directAwardPct,
+      benchmark: 0.30,
+      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+      maxDelta: MAX_DELTA,
+    })
+  }
+  if (singleBidPct != null) {
+    rows.push({
+      key: 'sb',
+      label: isEs ? 'Licitación sin competencia' : 'Single-bid rate',
+      value: singleBidPct,
+      benchmark: 0.10,
+      benchmarkLabel: isEs ? 'límite OCDE' : 'OECD limit',
+      maxDelta: MAX_DELTA,
+    })
+  }
+  if (highRiskPct != null) {
+    rows.push({
+      key: 'hr',
+      label: isEs ? 'Contratos de alto riesgo' : 'High-risk contracts',
+      value: highRiskPct,
+      benchmark: 0.11,   // model HR baseline
+      benchmarkLabel: isEs ? 'prom. modelo' : 'model avg',
+      maxDelta: MAX_DELTA,
+    })
+  }
+  if (yearEndPct != null && yearEndSectorAvg != null) {
+    rows.push({
+      key: 'ye',
+      label: isEs ? 'Concentración fin de año' : 'Year-end concentration',
+      value: yearEndPct,
+      benchmark: yearEndSectorAvg,
+      benchmarkLabel: isEs ? 'prom. sector' : 'sector avg',
+      maxDelta: MAX_DELTA,
+    })
+  }
+
+  if (rows.length === 0) return null
+
+  return (
+    <section aria-labelledby="benchmark-title">
+      <SectionTitle id="benchmark-title">
+        {isEs ? 'Desviación de benchmarks · OCDE / sector' : 'Deviation from benchmarks · OECD / sector'}
+      </SectionTitle>
+      <p className="text-[10px] font-mono text-text-muted mb-3 leading-relaxed">
+        {isEs
+          ? 'Barras a la derecha del centro = por encima del límite (peor). Izquierda = por debajo (mejor).'
+          : 'Bars right of center = above the limit (worse). Left = below (better).'}
+      </p>
+      <div className="space-y-0.5 overflow-x-auto">
+        {rows.map(({ key, ...rowProps }) => (
+          <BenchmarkRow key={key} {...rowProps} />
+        ))}
+      </div>
+      <p className="text-[9px] font-mono text-text-muted mt-2 opacity-60">
+        {isEs
+          ? 'OCDE: adjudicación directa ≤30%, licitación sin competencia ≤10%'
+          : 'OECD: direct award ≤30%, single-bid ≤10%'}
+      </p>
+    </section>
   )
 }
 

@@ -36,6 +36,7 @@ import {
   type LineSeries,
   type ColorToken,
 } from '@/components/charts/editorial'
+import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -386,6 +387,174 @@ function OECDCompetitionDotMatrix({
         )
       })}
     </svg>
+  )
+}
+
+// ── SectorSmallMultiples ─────────────────────────────────────────────────────
+// Visual pattern #3 (FT/Economist swipe file): 12 identical mini area charts
+// in a 4×3 grid, one per sector, sharing a global Y-axis. Position itself
+// becomes the comparison — readers spot the outlier sector instantly.
+
+function SectorSmallMultiples({
+  sectors,
+  t,
+}: {
+  sectors: SectorStatistics[]
+  t: (k: string) => string
+}) {
+  // Sort highest-risk first so the eye lands on the worst sector top-left.
+  const ranked = useMemo(
+    () => [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score),
+    [sectors]
+  )
+
+  // Fetch trends for ALL 12 sectors (rules-of-hooks safe via useQueries).
+  const trendQueries = useQueries({
+    queries: ranked.map((s) => ({
+      queryKey: ['sector', 'trends', s.sector_id],
+      queryFn: () => sectorApi.getTrends(s.sector_id),
+      staleTime: 10 * 60 * 1000,
+    })),
+  })
+
+  const isLoading = trendQueries.some((q) => q.isLoading)
+
+  // Per-sector cleaned series (pct, 2015–2025) + global Y-axis maximum so
+  // every panel renders on the same scale — the entire point of small
+  // multiples.
+  const panels = useMemo(() => {
+    const built = ranked.map((s, i) => {
+      const raw = trendQueries[i].data?.data ?? []
+      const series = raw
+        .filter((tr) => tr.year >= 2015 && tr.year <= 2025)
+        .map((tr) => {
+          const score =
+            'avg_risk_score' in tr
+              ? (tr as unknown as SectorTrend).avg_risk_score
+              : ((tr as { avg_risk?: number }).avg_risk ?? 0)
+          return { year: tr.year, avg_risk_score: (score ?? 0) * 100 }
+        })
+        .sort((a, b) => a.year - b.year)
+      return { sector: s, series }
+    })
+    return built
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, ranked.length])
+
+  const globalMax = useMemo(() => {
+    let m = 0
+    for (const p of panels) {
+      for (const row of p.series) {
+        if (row.avg_risk_score > m) m = row.avg_risk_score
+      }
+    }
+    // Leave 10% headroom; minimum visible domain so flat sectors don't
+    // collapse into a hairline.
+    return Math.max(m * 1.1, 5)
+  }, [panels])
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="surface-card p-3">
+            <Skeleton className="h-2.5 w-20 mb-2" />
+            <Skeleton className="h-[72px] w-full" />
+            <div className="flex items-center justify-between mt-2">
+              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-3 w-6" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Risk-level → hex color (safe for inline style; no Tailwind 300/400/500
+  // tokens which the lint gate forbids in src/pages).
+  const riskHex: Record<'critical' | 'high' | 'medium' | 'low', string> = {
+    critical: '#c41e3a',
+    high: '#ea580c',
+    medium: '#f59e0b',
+    low: '#71717a',
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {panels.map(({ sector, series }) => {
+        const color = SECTOR_COLORS[sector.sector_code] ?? '#64748b'
+        const last = series[series.length - 1]
+        const prev = series[series.length - 2]
+        const currentPct = last?.avg_risk_score ?? 0
+        const trendUp = last && prev ? last.avg_risk_score > prev.avg_risk_score : false
+        const trendFlat = last && prev ? Math.abs(last.avg_risk_score - prev.avg_risk_score) < 0.1 : true
+        const level = getRiskLevelFromScore((currentPct / 100) || 0)
+        const statColor = riskHex[level]
+        const arrowColor = trendUp ? '#c41e3a' : '#71717a'
+        const arrow = trendFlat ? '·' : trendUp ? '↑' : '↓'
+        const gradId = `sm-grad-${sector.sector_code}`
+
+        return (
+          <div
+            key={sector.sector_id}
+            className="surface-card p-3 flex flex-col"
+            role="img"
+            aria-label={`${t(sector.sector_code)} risk trajectory 2015 to 2025, current ${currentPct.toFixed(1)} percent`}
+          >
+            <p
+              className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] mb-1.5 truncate"
+              style={{ color }}
+              title={t(sector.sector_code)}
+            >
+              {t(sector.sector_code)}
+            </p>
+
+            <div className="w-full" style={{ height: 72 }}>
+              <ResponsiveContainer width="100%" height={72}>
+                <AreaChart
+                  data={series}
+                  margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                >
+                  <defs>
+                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="year" hide />
+                  <YAxis hide domain={[0, globalMax]} />
+                  <Area
+                    type="monotone"
+                    dataKey="avg_risk_score"
+                    stroke={color}
+                    strokeWidth={1.5}
+                    fill={`url(#${gradId})`}
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="flex items-baseline justify-between mt-2">
+              <span
+                className="text-[11px] font-mono font-bold tabular-nums"
+                style={{ color: statColor }}
+              >
+                {currentPct.toFixed(1)}%
+              </span>
+              <span
+                className="text-[11px] font-mono"
+                style={{ color: arrowColor }}
+                aria-label={trendUp ? 'rising' : trendFlat ? 'flat' : 'falling'}
+              >
+                {arrow}
+              </span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -907,6 +1076,23 @@ export function Sectors() {
             </>
           )
         })()}
+
+        {/* ── SECTOR SMALL MULTIPLES — 4×3 grid, shared Y-axis ─────── */}
+        {!isLoading && sectors.length > 0 && (
+          <section aria-label="Sector risk trajectory grid" className="mb-8">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+              {i18n.language === 'es'
+                ? 'Evolución por sector · 2015–2025'
+                : 'Risk trajectory · all 12 sectors · 2015–2025'}
+            </p>
+            <h2 className="text-sm font-bold text-text-primary mb-4">
+              {i18n.language === 'es'
+                ? 'Cada sector en la misma escala — comparación directa'
+                : 'Same scale across all sectors — direct comparison'}
+            </h2>
+            <SectorSmallMultiples sectors={sectors} t={t} />
+          </section>
+        )}
 
         {/* ── OECD COMPETITION GAP + RISK TREND ─────────────────────── */}
         {!isLoading && sectors.length > 0 && (

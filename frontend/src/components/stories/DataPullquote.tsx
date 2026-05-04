@@ -53,6 +53,9 @@ interface DataPullquoteProps {
   outlet?: OutletType
   className?: string
   vizTemplate?: VizTemplate
+  /** sledgehammer = true → story-chapter-1 treatment: number fills ~50% of tile,
+   *  quote demoted below the stat, pure editorial-magazine feel. */
+  sledgehammer?: boolean
 }
 
 // Map outlet → sector accent color. The accent drives the left border, the
@@ -498,6 +501,7 @@ export default function DataPullquote({
   outlet,
   className,
   vizTemplate,
+  sledgehammer = false,
 }: DataPullquoteProps) {
   const { i18n, t: tc } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
@@ -601,59 +605,121 @@ export default function DataPullquote({
             </div>
           )}
 
-          {/* ─── Quote (demoted: smaller, secondary) ─── */}
-          <blockquote
-            className="dpq-quote text-text-secondary mb-2"
-            style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
-              fontStyle: 'italic',
-              fontWeight: 400,
-              fontSize: 'clamp(0.95rem, 1.6vw, 1.05rem)',
-              lineHeight: 1.55,
-              letterSpacing: '0.005em',
-            }}
-          >
-            &ldquo;{quote}&rdquo;
-          </blockquote>
+          {/* ─── SLEDGEHAMMER layout: number first, quote below ─── */}
+          {sledgehammer ? (
+            <>
+              {/* Giant opening number — Pudding sledgehammer pattern */}
+              <div className="flex items-baseline gap-3 mb-3 pt-2">
+                <span
+                  ref={countRef}
+                  className="tabular-nums"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(4.5rem, 12vw, 7rem)',
+                    lineHeight: 0.88,
+                    letterSpacing: '-0.03em',
+                    color: accent,
+                  }}
+                  aria-label={`${stat} ${statLabel}`}
+                >
+                  {parsed
+                    ? `${animatedValue.toLocaleString('es-MX', {
+                        minimumFractionDigits: parsed.decimals,
+                        maximumFractionDigits: parsed.decimals,
+                      })}${parsed.suffix}`
+                    : stat}
+                </span>
+              </div>
+              <p
+                className="font-mono uppercase mb-4"
+                style={{ fontSize: 11, letterSpacing: '0.12em', color: accent, opacity: 0.85 }}
+              >
+                {statLabel}
+              </p>
+              {/* Hairline */}
+              <div className="h-px w-full mb-4" style={{ background: 'var(--color-border)' }} />
+              {/* Quote — demoted below the number */}
+              <blockquote
+                className="text-text-muted mb-2"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  fontSize: 'clamp(0.85rem, 1.4vw, 0.95rem)',
+                  lineHeight: 1.5,
+                  letterSpacing: '0.005em',
+                }}
+              >
+                &ldquo;{quote}&rdquo;
+              </blockquote>
+              {attribution && (
+                <figcaption
+                  className="font-mono uppercase text-text-muted mb-4"
+                  style={{ fontSize: 9, letterSpacing: '0.16em' }}
+                >
+                  — {attribution}
+                </figcaption>
+              )}
+            </>
+          ) : (
+            <>
+              {/* ─── Standard layout: quote first, then number ─── */}
+              <blockquote
+                className="dpq-quote text-text-secondary mb-2"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontWeight: 400,
+                  fontSize: 'clamp(0.95rem, 1.6vw, 1.05rem)',
+                  lineHeight: 1.55,
+                  letterSpacing: '0.005em',
+                }}
+              >
+                &ldquo;{quote}&rdquo;
+              </blockquote>
 
-          {attribution && (
-            <figcaption
-              className="font-mono uppercase text-text-muted mb-5"
-              style={{ fontSize: 9.5, letterSpacing: '0.16em' }}
-            >
-              — {attribution}
-            </figcaption>
+              {attribution && (
+                <figcaption
+                  className="font-mono uppercase text-text-muted mb-5"
+                  style={{ fontSize: 9.5, letterSpacing: '0.16em' }}
+                >
+                  — {attribution}
+                </figcaption>
+              )}
+
+              {/* ─── Hairline rule between quote and number ─── */}
+              <div className="h-px w-full mb-4" style={{ background: 'var(--color-border)' }} />
+
+              {/* ─── Headline number — Playfair Italic 800, dashboard idiom ─── */}
+              <div className="flex items-baseline gap-3 mb-1">
+                <span
+                  ref={countRef}
+                  className="dpq-stat tabular-nums"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(2.4rem, 5.6vw, 3.6rem)',
+                    lineHeight: 0.95,
+                    letterSpacing: '-0.02em',
+                    color: accent,
+                  }}
+                  aria-label={`${stat} ${statLabel}`}
+                >
+                  {parsed
+                    ? `${animatedValue.toLocaleString('es-MX', {
+                        minimumFractionDigits: parsed.decimals,
+                        maximumFractionDigits: parsed.decimals,
+                      })}${parsed.suffix}`
+                    : stat}
+                </span>
+              </div>
+
+              <p className="text-text-secondary text-sm leading-snug mb-5">{statLabel}</p>
+            </>
           )}
-
-          {/* ─── Hairline rule between quote and number ─── */}
-          <div className="h-px w-full mb-4" style={{ background: 'var(--color-border)' }} />
-
-          {/* ─── Headline number — Playfair Italic 800, dashboard idiom ─── */}
-          <div className="flex items-baseline gap-3 mb-1">
-            <span
-              ref={countRef}
-              className="dpq-stat tabular-nums"
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontStyle: 'italic',
-                fontWeight: 800,
-                fontSize: 'clamp(2.4rem, 5.6vw, 3.6rem)',
-                lineHeight: 0.95,
-                letterSpacing: '-0.02em',
-                color: accent,
-              }}
-              aria-label={`${stat} ${statLabel}`}
-            >
-              {parsed
-                ? `${animatedValue.toLocaleString('es-MX', {
-                    minimumFractionDigits: parsed.decimals,
-                    maximumFractionDigits: parsed.decimals,
-                  })}${parsed.suffix}`
-                : stat}
-            </span>
-          </div>
-
-          <p className="text-text-secondary text-sm leading-snug mb-5">{statLabel}</p>
 
           {/* ─── Micro-viz block ─── */}
           {barValue !== undefined && (

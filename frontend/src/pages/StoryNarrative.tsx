@@ -320,7 +320,7 @@ function renderChartBlock(
   )
 }
 
-function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = '') {
+function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = '', isFirst = false) {
   if (!chapter.pullquote) return null
   return (
     <div className={className}>
@@ -333,6 +333,7 @@ function renderPullquote(chapter: StoryChapterDef, story: StoryDef, className = 
         outlet={story.outlet}
         statColor={story.leadStat.color}
         vizTemplate={chapter.pullquote.vizTemplate}
+        sledgehammer={isFirst}
       />
     </div>
   )
@@ -716,7 +717,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 
 // ── Variant: FEATURE (rich content chapter) ───────────────────────────────
 
-function FeatureChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+function FeatureChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
   const { t } = useTranslation('common')
   return (
     <section
@@ -758,7 +759,7 @@ function FeatureChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         {chapter.pullquote && (
           <aside className="lg:col-span-5 lg:col-start-8">
             <ScrollReveal className="lg:sticky lg:top-24">
-              {renderPullquote(chapter, story)}
+              {renderPullquote(chapter, story, '', isFirst)}
             </ScrollReveal>
           </aside>
         )}
@@ -776,7 +777,7 @@ function FeatureChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 
 // ── Variant: DATA-SPOTLIGHT (chart-driven chapter) ────────────────────────
 
-function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
@@ -832,7 +833,7 @@ function DataSpotlightChapter({ chapter, story, accentColor }: ChapterRenderProp
       {chapter.pullquote && (
         <div className="max-w-prose mx-auto px-4 sm:px-0 mt-10">
           <ScrollReveal>
-            {renderPullquote(chapter, story)}
+            {renderPullquote(chapter, story, '', isFirst)}
           </ScrollReveal>
         </div>
       )}
@@ -1089,7 +1090,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 
 // ── Variant: STANDARD (current default, refined) ──────────────────────────
 
-function StandardChapter({ chapter, story, accentColor }: ChapterRenderProps) {
+function StandardChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
   const { t } = useTranslation('common')
   return (
     <section
@@ -1127,7 +1128,7 @@ function StandardChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         {chapter.chartConfig && renderChartBlock(chapter)}
         {chapter.pullquote && (
           <div className="my-10">
-            <ScrollReveal>{renderPullquote(chapter, story)}</ScrollReveal>
+            <ScrollReveal>{renderPullquote(chapter, story, '', isFirst)}</ScrollReveal>
           </div>
         )}
       </div>
@@ -1141,6 +1142,7 @@ interface ChapterRenderProps {
   chapter: StoryChapterDef
   story: StoryDef
   accentColor: string
+  isFirst?: boolean
 }
 
 function ChapterSection({
@@ -1148,6 +1150,7 @@ function ChapterSection({
   story,
   accentColor,
   variant,
+  isFirst = false,
 }: ChapterRenderProps & { variant: ChapterVariant }) {
   // Build a language-localized projection of the chapter, with EN fallback when
   // _es fields are absent. All variant components consume this object's
@@ -1170,13 +1173,13 @@ function ChapterSection({
   }
   switch (variant) {
     case 'hero':            return <HeroChapter            chapter={localizedChapter} story={story} accentColor={accentColor} />
-    case 'feature':         return <FeatureChapter         chapter={localizedChapter} story={story} accentColor={accentColor} />
-    case 'data-spotlight':  return <DataSpotlightChapter   chapter={localizedChapter} story={story} accentColor={accentColor} />
-    case 'quote-spotlight': return <QuoteSpotlightChapter  chapter={localizedChapter} story={story} accentColor={accentColor} />
+    case 'feature':         return <FeatureChapter         chapter={localizedChapter} story={story} accentColor={accentColor} isFirst={isFirst} />
+    case 'data-spotlight':  return <DataSpotlightChapter   chapter={localizedChapter} story={story} accentColor={accentColor} isFirst={isFirst} />
+    case 'quote-spotlight': return <QuoteSpotlightChapter  chapter={localizedChapter} story={story} accentColor={accentColor} isFirst={isFirst} />
     case 'connective':      return <ConnectiveChapter      chapter={localizedChapter} story={story} accentColor={accentColor} />
     case 'closing':         return <ClosingChapter         chapter={localizedChapter} story={story} accentColor={accentColor} />
     case 'standard':
-    default:                return <StandardChapter        chapter={localizedChapter} story={story} accentColor={accentColor} />
+    default:                return <StandardChapter        chapter={localizedChapter} story={story} accentColor={accentColor} isFirst={isFirst} />
   }
 }
 
@@ -1890,6 +1893,7 @@ export default function StoryNarrative() {
                   story={story}
                   accentColor={accentColor}
                   variant={variant}
+                  isFirst={idx === 1}
                 />
                 {/* Decorative divider between chapters (skip after last) */}
                 {idx < story.chapters.length - 1 && variant !== 'hero' && (

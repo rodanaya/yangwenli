@@ -54,6 +54,13 @@ interface ScandalAnnotation {
   color: string
 }
 
+const ADMIN_ERAS: { x1: number; x2: number; label: string; tone: 'admin' | 'crisis' }[] = [
+  { x1: 2010, x2: 2012, label: 'CALDERÓN', tone: 'admin' },
+  { x1: 2012, x2: 2018, label: 'PEÑA NIETO', tone: 'admin' },
+  { x1: 2018, x2: 2024, label: 'AMLO', tone: 'admin' },
+  { x1: 2024, x2: 2025, label: 'SHEINBAUM', tone: 'admin' },
+]
+
 const SCANDAL_ANNOTATIONS: ScandalAnnotation[] = [
   {
     year: 2013,
@@ -161,7 +168,7 @@ export interface TemporalRiskChartProps {
 // ============================================================================
 
 export const TemporalRiskChart = memo(function TemporalRiskChart({
-  title = 'Corruption Risk Over Time',
+  title = 'Risk patterns have barely shifted in 15 years',
   height = 340,
   showScandals = true,
   className,
@@ -215,7 +222,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           <div>
             <p className="text-base font-bold text-text-primary">{title}</p>
             <p className="text-xs text-text-muted font-mono mt-0.5">
-              High-risk rate (left axis) · Avg risk score (right axis) · 2010–2025
+              High-risk rate · 2010–2025 · v0.8.5 model · 3.1M contracts
             </p>
           </div>
         </div>
@@ -305,25 +312,47 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
         rightYDomain={[0, 0.5]}
         annotations={
           showScandals
-            ? (SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map(
-                (s) => ({ kind: 'vrule', x: s.year, label: s.shortLabel, tone: 'critical' }) as ChartAnnotation,
-              ))
+            ? ([
+                ...ADMIN_ERAS
+                  .filter((e) => e.x2 > minYear && e.x1 < maxYear)
+                  .map(
+                    (e) => ({
+                      kind: 'band',
+                      x1: Math.max(e.x1, minYear),
+                      x2: Math.min(e.x2, maxYear),
+                      tone: e.tone,
+                      label: e.label,
+                    }) as ChartAnnotation,
+                  ),
+                ...SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map(
+                  (s) => ({ kind: 'vrule', x: s.year, label: s.shortLabel, tone: 'critical' }) as ChartAnnotation,
+                ),
+              ])
             : []
         }
         height={height}
       />
 
-      {/* Scandal legend */}
+      {/* Scandal callout cards */}
       {showScandals && (
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
           {SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map((scandal) => (
-            <div key={scandal.year} className="flex items-center gap-1.5">
-              <div
-                className="w-3 h-0 border-t border-dashed"
-                style={{ borderColor: scandal.color, opacity: 0.8 }}
-              />
-              <span className="text-[10px] font-mono" style={{ color: scandal.color }}>
-                {scandal.year}: {scandal.label}
+            <div
+              key={scandal.year}
+              className="flex items-start gap-2 px-2 py-1.5 rounded border border-border/30 bg-background-elevated/20"
+            >
+              <span
+                className="text-[11px] font-mono font-bold leading-none mt-0.5 shrink-0 px-1 py-0.5 rounded"
+                style={{
+                  color: scandal.color,
+                  background: `${scandal.color}18`,
+                  border: `1px solid ${scandal.color}40`,
+                }}
+              >
+                {scandal.year}
+              </span>
+              <span className="text-[10px] font-mono text-text-muted leading-tight">
+                {scandal.label}
               </span>
             </div>
           ))}
