@@ -19,6 +19,7 @@ import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import {
   SECTOR_COLORS,
+  SECTOR_TEXT_COLORS,
   RISK_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
@@ -430,7 +431,8 @@ export function Sectors() {
                     >
                       {i18n.language === 'es' ? (
                         <>
-                          <span style={{ color: SECTOR_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#dc2626' }}>
+                          {/* Category name in editorial lede: AA-safe darker color on warm-white */}
+                          <span style={{ color: SECTOR_TEXT_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#991b1b' }}>
                             {topByRisk.name_es}
                           </span>
                           {' '}es la categoría de mayor riesgo:{' '}
@@ -439,7 +441,7 @@ export function Sectors() {
                         </>
                       ) : (
                         <>
-                          <span style={{ color: SECTOR_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#dc2626' }}>
+                          <span style={{ color: SECTOR_TEXT_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#991b1b' }}>
                             {topByRisk.name_en}
                           </span>
                           {' '}is the highest-risk category:{' '}
@@ -689,6 +691,8 @@ export function Sectors() {
           const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
           const exceedingOECD = sectors.filter((s) => (s.direct_award_pct ?? 0) > 25).length
           const topSectorColor = SECTOR_COLORS[topRiskSector.sector_code] ?? '#dc2626'
+          // AA-safe text variant for kicker/meta text on warm-white
+          const topSectorTextColor = SECTOR_TEXT_COLORS[topRiskSector.sector_code] ?? topSectorColor
           const topSectorName = t(topRiskSector.sector_code) as string
           const topRiskPct = (topRiskSector.avg_risk_score * 100).toFixed(1)
           const topDaPct = (topRiskSector.direct_award_pct ?? 0).toFixed(0)
@@ -704,9 +708,11 @@ export function Sectors() {
               <FeaturedFinding
                 kicker={t('featured.kicker', { sector: topSectorName.toUpperCase() })}
                 accent={topSectorColor}
+                textAccent={topSectorTextColor}
                 headline={
                   <>
-                    <span style={{ color: topSectorColor }}>{topSectorName}</span>
+                    {/* Sector name in headline: AA-safe darker color on warm-white */}
+                    <span style={{ color: topSectorTextColor }}>{topSectorName}</span>
                     {' '}{t('featured.leadsRisk')}{' '}
                     <span className="font-mono tabular-nums">{topRiskPct}%</span>
                     {' '}{t('featured.avgRiskSuffix')}

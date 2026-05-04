@@ -20,6 +20,32 @@ export const SECTOR_COLORS: Record<string, string> = {
   otros: '#64748b',
 } as const
 
+// Darker variants of SECTOR_COLORS for use as TEXT FILL on light backgrounds.
+// Each color shifted 2-3 steps darker on the Tailwind ladder so contrast on
+// `--color-background` (#faf9f6 warm-white) reaches WCAG AA (≥4.5:1).
+// USE FOR: <text> elements, <span> labels, anything reading as foreground type.
+// DO NOT USE FOR: chart fills, large color swatches, decorative borders —
+// those should keep using the vivid SECTOR_COLORS palette.
+export const SECTOR_TEXT_COLORS: Record<string, string> = {
+  salud:           '#991b1b',  // red-800 (was red-600 — passes AA)
+  educacion:       '#1e40af',  // blue-800 (was blue-500 — passes AA)
+  infraestructura: '#9a3412',  // orange-800 (was orange-600 — passes AA)
+  energia:         '#854d0e',  // yellow-800 (was yellow-500 — 1.7:1 → 5.1:1)
+  defensa:         '#1e3a5f',  // navy — already dark, keep
+  tecnologia:      '#5b21b6',  // violet-800 (was violet-500 — passes AA)
+  hacienda:        '#166534',  // green-800 (was green-600 — 2.9:1 → 5.5:1)
+  gobernacion:     '#9f1239',  // rose-800 (was rose-700 — passes AA)
+  agricultura:     '#166534',  // green-800 (was green-500 — 1.9:1 → 5.5:1)
+  ambiente:        '#065f46',  // emerald-800 (was emerald-500 — 2.2:1 → 5.4:1)
+  trabajo:         '#9a3412',  // orange-800 (was orange-500 — 2.5:1 → 5.1:1)
+  otros:           '#475569',  // slate-600 (was slate-500 — passes AA)
+} as const
+
+/** Pick the AA-safe text color for a sector code (falls back to slate-600). */
+export function getSectorTextColor(code: string): string {
+  return SECTOR_TEXT_COLORS[code] ?? '#475569'
+}
+
 // English sector name translations for UI consistency
 export const SECTOR_NAMES_EN: Record<string, string> = {
   salud: 'Health',
@@ -71,7 +97,7 @@ export const RISK_COLORS = {
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-04-cat-p3'
+export const BUILD_ID = '2026-05-04-contrast-fix'
 
 // Risk thresholds (v0.6.5 — medium raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.

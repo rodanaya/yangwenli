@@ -37,7 +37,7 @@ import {
   forceCollide,
   type SimulationNodeDatum,
 } from 'd3-force'
-import { SECTOR_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { SectorStatistics } from '@/api/types'
 
@@ -379,6 +379,8 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             const isHovered = activeId === node.sector.sector_id
             const isDimmed = activeId !== null && !isHovered
             const color = SECTOR_COLORS[node.sector.sector_code] ?? '#64748b'
+            // Text label uses AA-safe darker variant; connector stroke keeps vivid color
+            const textColor = SECTOR_TEXT_COLORS[node.sector.sector_code] ?? color
             const pos = labelPositions[idx] ?? { x: node.labelX, y: node.labelY }
 
             // Connector line from circle edge to label
@@ -392,7 +394,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                 style={{ opacity: isDimmed ? 0.2 : 1, transition: 'opacity 0.15s' }}
                 aria-hidden="true"
               >
-                {/* Connector */}
+                {/* Connector — vivid color OK for strokes ≥ 1px (not text) */}
                 <line
                   x1={lineX1}
                   y1={lineY1}
@@ -402,14 +404,13 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   strokeWidth={0.75}
                   strokeOpacity={0.5}
                 />
-                {/* Label */}
+                {/* Label — AA-safe darker text color */}
                 <text
                   x={pos.x}
                   y={pos.y}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontSize={isMobile ? 9 : 11}
-                  fill={color}
-                  fillOpacity={0.9}
+                  fill={textColor}
                   fontWeight={isHovered ? 700 : 500}
                   style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
@@ -443,12 +444,13 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   strokeDasharray="2,2"
                   strokeOpacity={0.6}
                 />
+                {/* Callout text — AA-safe darker green (green-800) instead of green-500 */}
                 <text
                   x={calloutX}
                   y={calloutY}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontSize={isMobile ? 8 : 9}
-                  fill={SECTOR_COLORS.agricultura}
+                  fill={SECTOR_TEXT_COLORS.agricultura}
                   fillOpacity={0.8}
                 >
                   {isEs
@@ -460,7 +462,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   y={calloutY + 11}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontSize={isMobile ? 8 : 9}
-                  fill={SECTOR_COLORS.agricultura}
+                  fill={SECTOR_TEXT_COLORS.agricultura}
                   fillOpacity={0.65}
                 >
                   {isEs ? '→ ver /thread/segalmex' : '→ see /thread/segalmex'}

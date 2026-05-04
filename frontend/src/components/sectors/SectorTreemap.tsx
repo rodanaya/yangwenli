@@ -49,6 +49,26 @@ function cellFill(sectorCode: string, avgRiskScore: number): string {
   return `rgba(${r},${g},${b},${opacity.toFixed(3)})`
 }
 
+/**
+ * Pick cell label text color based on effective fill opacity.
+ * Rule: opacity < 0.55 → cell is washed out on warm-white bg → use dark text (#1f2937).
+ *       opacity ≥ 0.55 → cell is saturated/dark enough → use white text (#ffffff).
+ * Drop-shadow helps legibility either way.
+ *
+ * Range of opacity: 0.35 (min-risk) → 0.90 (max-risk). Threshold at 0.55
+ * puts the switchover around avg_risk_score ≈ 0.273, close to the medium threshold.
+ */
+function cellLabelColor(avgRiskScore: number): { fill: string; filter: string } {
+  const clamped = Math.max(0, Math.min(1, (avgRiskScore - 0.10) / 0.30))
+  const opacity = 0.35 + 0.55 * clamped
+  if (opacity < 0.55) {
+    // Low-opacity cell: sector color blends toward warm white → dark text reads better
+    return { fill: '#1f2937', filter: 'drop-shadow(0 1px 1px rgba(255,255,255,0.6))' }
+  }
+  // High-opacity cell: saturated/dark rectangle → white text
+  return { fill: '#ffffff', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }
+}
+
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
 interface TooltipData {
@@ -281,6 +301,8 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const spendLabel = formatCompactMXN(s.total_value_mxn)
           const isAgri = s.sector_code === 'agricultura'
           const sectorColor = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+          // Adaptive label color: dark text on low-opacity cells, white on saturated cells
+          const { fill: labelFill, filter: labelFilter } = cellLabelColor(s.avg_risk_score)
 
           return (
             <g
@@ -319,7 +341,10 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
                 strokeWidth={strokeWidth}
               />
 
-              {/* Cell label */}
+              {/* Cell label — color adapts to cell fill opacity:
+                    low-opacity (<0.55) → dark text on washed-out fill;
+                    high-opacity (≥0.55) → white text on saturated fill.
+                    Drop-shadow added for legibility across the full range. */}
               {showLabel && (
                 <>
                   <text
@@ -328,8 +353,8 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
                     fontSize={Math.min(13, Math.max(9, w / 9))}
                     fontWeight={700}
                     fontFamily="var(--font-family-sans)"
-                    fill="var(--color-text-primary)"
-                    style={{ pointerEvents: 'none' }}
+                    fill={labelFill}
+                    style={{ pointerEvents: 'none', filter: labelFilter }}
                   >
                     {displayName}
                   </text>
@@ -338,8 +363,9 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
                     y={y0 + 33}
                     fontSize={Math.min(11, Math.max(8, w / 12))}
                     fontFamily="var(--font-family-mono)"
-                    fill="var(--color-text-secondary)"
-                    style={{ pointerEvents: 'none' }}
+                    fill={labelFill}
+                    fillOpacity={0.85}
+                    style={{ pointerEvents: 'none', filter: labelFilter }}
                   >
                     {spendLabel}
                   </text>

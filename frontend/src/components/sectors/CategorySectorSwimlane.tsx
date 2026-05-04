@@ -21,7 +21,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import * as d3force from 'd3-force'
-import { SECTOR_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -229,7 +229,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                 fillOpacity={isHighlighted ? 0.18 : 0.07}
                 style={{ transition: 'fill-opacity 0.15s' }}
               />
-              {/* Lane label */}
+              {/* Lane label — text color uses AA-safe darker variant of sector color */}
               <text
                 x={LABEL_W - 8}
                 y={y + laneH / 2}
@@ -239,7 +239,7 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight={600}
                 letterSpacing="0.1em"
-                fill={color}
+                fill={SECTOR_TEXT_COLORS[sector.code] ?? color}
                 style={{ textTransform: 'uppercase', cursor: 'pointer', userSelect: 'none' }}
                 onMouseEnter={() => setHoveredLane(sector.code)}
                 onMouseLeave={() => setHoveredLane(null)}
@@ -369,12 +369,13 @@ export function CategorySectorSwimlane({ categories }: CategorySectorSwimlanePro
                   strokeWidth={0.8}
                   strokeOpacity={0.7}
                 />
+                {/* Top-3 labels: use AA-safe darker text color */}
                 <text
                   x={labelX}
                   y={labelY}
                   fontSize={9}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill={color}
+                  fill={SECTOR_TEXT_COLORS[node.sector_code ?? 'otros'] ?? color}
                   fontWeight={700}
                   letterSpacing="0.04em"
                 >

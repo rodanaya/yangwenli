@@ -29,7 +29,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { sectorApi } from '@/api/client'
-import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, SECTORS } from '@/lib/constants'
 import type { SectorTrend } from '@/api/types'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -413,7 +413,7 @@ export function CompetitionSlopeChart() {
               x={x + 10}
               y={y}
               dy={4}
-              fill={line.color}
+              fill={SECTOR_TEXT_COLORS[line.sectorCode] ?? line.color}
               fontSize={10}
               fontFamily="var(--font-family-mono)"
               fontWeight={600}
@@ -490,7 +490,7 @@ export function CompetitionSlopeChart() {
               type="button"
               onClick={() => navigate(`/sectors/${line.sectorId}`)}
               className="flex items-center gap-1.5 text-[10px] font-mono hover:opacity-80 transition-opacity"
-              style={{ color: line.color }}
+              style={{ color: SECTOR_TEXT_COLORS[line.sectorCode] ?? line.color }}
             >
               <span
                 className="inline-block w-4 h-px"

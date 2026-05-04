@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/client'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN } from '@/lib/utils'
@@ -555,7 +555,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                     pointerEvents: 'none',
                   }}
                 >
-                  <tspan fill={row.color} fontWeight="700">
+                  {/* XX% numeral: AA-safe darker text color */}
+                  <tspan fill={SECTOR_TEXT_COLORS[row.sector_code] ?? row.color} fontWeight="700">
                     {row.top1.market_share_pct.toFixed(0)}%
                   </tspan>
                   <tspan> vs </tspan>
