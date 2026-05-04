@@ -26,7 +26,8 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorNameEN, SECTORS } from '@/lib/constants'
+import { getSectorNameEN, SECTORS, RISK_COLORS } from '@/lib/constants'
+import { EditorialDistribution, DotStrip } from '@/components/charts/editorial'
 import {
   Search,
   FileText,
@@ -736,6 +737,201 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
 }
 
 // ============================================================================
+// Helpers for editorial visualizations
+// ============================================================================
+
+/**
+ * Synthesize an approximate risk score array from tier counts.
+ * Uses beta-like sampling concentrated around each tier's midpoint
+ * so the EditorialDistribution renders a plausible shape without
+ * a dedicated backend endpoint.
+ *
+ * T1 ≥0.60 → center 0.70  T2 0.40–0.60 → center 0.50
+ * T3 0.25–0.40 → center 0.32  T4 <0.25 → center 0.12
+ *
+ * Down-sampled to max 2,000 points total for SVG performance.
+ */
+function synthesizeScoreData(counts: Record<number, number>): number[] {
+  const MAX_TOTAL = 2000
+  const total = Object.values(counts).reduce((s, v) => s + v, 0)
+  if (total === 0) return []
+
+  const TIER_PARAMS: Array<{ tier: number; center: number; spread: number }> = [
+    { tier: 1, center: 0.70, spread: 0.08 },
+    { tier: 2, center: 0.50, spread: 0.07 },
+    { tier: 3, center: 0.32, spread: 0.06 },
+    { tier: 4, center: 0.12, spread: 0.07 },
+  ]
+
+  const result: number[] = []
+  for (const { tier, center, spread } of TIER_PARAMS) {
+    const n = Math.round(((counts[tier] ?? 0) / total) * MAX_TOTAL)
+    // Simple Gaussian-ish values using CLT approximation (sum of uniforms)
+    for (let i = 0; i < n; i++) {
+      // Average 6 uniforms → roughly Gaussian, clamped to [0,1]
+      let v = 0
+      for (let j = 0; j < 6; j++) v += Math.random()
+      v = center + (v / 6 - 0.5) * spread * 4
+      result.push(Math.max(0, Math.min(1, v)))
+    }
+  }
+  return result
+}
+
+/**
+ * TierEditorialStrip — 4 horizontal rows, one per tier.
+ * § LOS CUATRO ANILLOS (The Four Rings) — editorial naming for T1–T4.
+ */
+function TierEditorialStrip({
+  counts,
+  isEs,
+  statsLoading,
+}: {
+  counts: Record<number, number>
+  isEs: boolean
+  statsLoading: boolean
+}) {
+  const total = Object.values(counts).reduce((s, v) => s + v, 0)
+
+  const rows = [
+    {
+      tier: 1,
+      label: isEs ? 'T1 · Crítico' : 'T1 · Critical',
+      sublabel: isEs ? 'Prioridad máxima de investigación' : 'Maximum investigation priority',
+      color: RISK_COLORS.critical,
+    },
+    {
+      tier: 2,
+      label: isEs ? 'T2 · Alto' : 'T2 · High',
+      sublabel: isEs ? 'Revisión urgente' : 'Urgent review',
+      color: RISK_COLORS.high,
+    },
+    {
+      tier: 3,
+      label: isEs ? 'T3 · Medio' : 'T3 · Medium',
+      sublabel: isEs ? 'Señales emergentes' : 'Emerging signals',
+      color: RISK_COLORS.medium,
+    },
+    {
+      tier: 4,
+      label: isEs ? 'T4 · Bajo' : 'T4 · Low',
+      sublabel: isEs ? 'Ruido de fondo' : 'Background noise',
+      color: RISK_COLORS.low,
+    },
+  ]
+
+  return (
+    <div className="mb-5">
+      {/* § kicker */}
+      <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
+        {isEs
+          ? '§ LOS CUATRO ANILLOS · COLA DE INVESTIGACIÓN'
+          : '§ FOUR RINGS · INVESTIGATION QUEUE'}
+      </p>
+
+      {statsLoading ? (
+        <div className="space-y-1.5">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 rounded-sm" />)}
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {rows.map(({ tier, label, sublabel, color }) => {
+            const count = counts[tier] ?? 0
+            const fraction = total > 0 ? count / total : 0
+            const pct = (fraction * 100).toFixed(1)
+
+            return (
+              <div
+                key={tier}
+                className="grid items-center gap-x-3 px-3 py-2 rounded-sm border border-border/60 bg-background-card"
+                style={{
+                  gridTemplateColumns: '160px 1fr auto',
+                  borderLeft: `3px solid ${color}`,
+                }}
+              >
+                {/* Label col */}
+                <div>
+                  <span className="text-xs font-mono font-bold" style={{ color }}>
+                    {label}
+                  </span>
+                  <p className="text-[10px] text-text-muted mt-0.5 leading-none">{sublabel}</p>
+                </div>
+
+                {/* Progress track */}
+                <div className="relative h-1.5 rounded-full bg-background-elevated overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full"
+                    style={{ width: `${fraction * 100}%`, backgroundColor: color, opacity: 0.75 }}
+                  />
+                </div>
+
+                {/* Count + pct */}
+                <div className="text-right">
+                  <span className="font-mono tabular-nums text-sm font-bold text-text-primary">
+                    {formatNumber(count)}
+                  </span>
+                  <span className="font-mono tabular-nums text-[10px] text-text-muted ml-1.5">
+                    {pct}%
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * PatternDotStrip — horizontal bar ranking of P1–P7 patterns by vendor count.
+ * Replaces any donut/pie pattern composition chart.
+ */
+function PatternDotStrip({
+  patternCounts,
+  isEs,
+}: {
+  patternCounts: Record<string, number>
+  isEs: boolean
+}) {
+  const entries = Object.entries(patternCounts).sort(([, a], [, b]) => b - a)
+  if (entries.length === 0) return null
+
+  const maxCount = entries[0][1]
+
+  const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
+    P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: RISK_COLORS.critical },
+    P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: RISK_COLORS.high },
+    P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: RISK_COLORS.high },
+    P4: { es: 'P4 · Explosión', en: 'P4 · Temporal burst', color: RISK_COLORS.medium },
+    P5: { es: 'P5 · Concentración', en: 'P5 · Concentration', color: RISK_COLORS.medium },
+    P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: RISK_COLORS.critical },
+    P7: { es: 'P7 · Intersección', en: 'P7 · Intersection', color: RISK_COLORS.high },
+  }
+
+  const stripRows = entries.map(([key, count]) => {
+    const meta = PATTERN_LABELS[key]
+    return {
+      label: meta ? (isEs ? meta.es : meta.en) : key,
+      fraction: maxCount > 0 ? count / maxCount : 0,
+      colorRaw: meta?.color ?? RISK_COLORS.medium,
+      valueLabel: formatNumber(count),
+    }
+  })
+
+  return (
+    <div className="mb-5">
+      <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
+        {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
+      </p>
+      <div className="rounded-sm border border-border/60 bg-background-card p-3">
+        <DotStrip rows={stripRows} N={40} labelWidth={140} />
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 // Main Page
 // ============================================================================
 
@@ -1040,6 +1236,44 @@ export default function AriaPage() {
             )}
           </div>
         </header>
+
+        {/* ════════════════════════════════════════════════════════════════
+            EDITORIAL TIER STRIP + DISTRIBUTION
+            aria-P1: 4-row tier strip + approximate score distribution.
+           ════════════════════════════════════════════════════════════════ */}
+        <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_320px]">
+          {/* Left: tier strip */}
+          <TierEditorialStrip counts={tierCounts} isEs={isEs} statsLoading={statsLoading} />
+
+          {/* Right: approximate risk score distribution */}
+          <div>
+            <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
+              {isEs ? '§ DISTRIBUCIÓN DE PUNTAJE · v0.8.5' : '§ SCORE DISTRIBUTION · v0.8.5'}
+            </p>
+            <div className="rounded-sm border border-border/60 bg-background-card p-3">
+              {statsLoading ? (
+                <Skeleton className="h-[160px] w-full rounded-sm" />
+              ) : (
+                <EditorialDistribution
+                  data={synthesizeScoreData(tierCounts)}
+                  domain={[0, 1]}
+                  height={160}
+                  caption={
+                    isEs
+                      ? 'Distribución aproximada de puntajes · derivada de conteos por nivel · v0.8.5'
+                      : 'Approximate score distribution · derived from tier counts · v0.8.5'
+                  }
+                  i18n={{ highRiskLabel: isEs ? 'alto riesgo' : 'high risk' }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* aria-P2: Pattern DotStrip (replaces donut/pie pattern composition) */}
+        {Object.keys(patternCounts).length > 0 && (
+          <PatternDotStrip patternCounts={patternCounts} isEs={isEs} />
+        )}
 
         {/* ════════════════════════════════════════════════════════════════
             UNIFIED FILTER BAR
@@ -1624,7 +1858,7 @@ export default function AriaPage() {
               <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" />
               <div className="text-xs text-text-muted space-y-1 leading-relaxed">
                 <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-text-secondary">
-                  {t('about.title', { defaultValue: 'Sobre ARIA' })}
+                  {isEs ? '§ METODOLOGÍA · ' : '§ METHODOLOGY · '}{t('about.title', { defaultValue: 'Sobre ARIA' })}
                 </p>
                 <p>{t('about.description')}</p>
                 <p className="text-text-muted">{t('about.disclaimer')}</p>

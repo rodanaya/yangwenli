@@ -11,6 +11,9 @@ import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+// EditorialTimeline import deferred to follow-up cases-P2 — Cases agent timed
+// out before wiring it. The current scandal_timeline JSX block stays.
+import { formatCompactMXN } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bible §2: cream page + white cards + warm border + dark ink.
@@ -160,10 +163,7 @@ function legalStatusMeta(status: string): {
 // ─────────────────────────────────────────────────────────────────────────────
 function formatMXN(n?: number | null): string {
   if (!n) return '—'
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`
-  return `$${n.toLocaleString()}`
+  return formatCompactMXN(n)
 }
 
 function formatCompact(n: number): string {

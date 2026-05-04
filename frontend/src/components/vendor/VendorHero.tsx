@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/PriorityAlert'
 import { StatRow } from '@/components/ui/StatRow'
 import { DotBarRow } from '@/components/ui/DotBar'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import {
   formatCompactMXN,
   formatPercentSafe,
@@ -65,6 +65,7 @@ export function VendorHero({
 
   const sectorCode = vendor.primary_sector_name?.toLowerCase() ?? 'otros'
   const sectorColor = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros
+  const sectorTextColor = SECTOR_TEXT_COLORS[sectorCode] ?? SECTOR_TEXT_COLORS.otros
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const nameVariants = (vendor.name_variants ?? []).filter(
     (v) => v.variant_name && v.variant_name !== vendor.name
@@ -106,6 +107,7 @@ export function VendorHero({
             vendor={vendor}
             sectorCode={sectorCode}
             sectorColor={sectorColor}
+            sectorTextColor={sectorTextColor}
             scorecard={scorecard}
             rfcCopied={rfcCopied}
             onCopyRfc={copyRfc}
@@ -239,6 +241,7 @@ function IdentityLine({
   vendor,
   sectorCode,
   sectorColor,
+  sectorTextColor,
   scorecard,
   rfcCopied,
   onCopyRfc,
@@ -247,6 +250,7 @@ function IdentityLine({
   vendor: VendorDetailResponse
   sectorCode: string
   sectorColor: string
+  sectorTextColor: string
   scorecard?: VendorScorecardData | null
   rfcCopied: boolean
   onCopyRfc: () => void
@@ -264,7 +268,7 @@ function IdentityLine({
         style={{
           backgroundColor: `${sectorColor}15`,
           borderColor: `${sectorColor}50`,
-          color: sectorColor,
+          color: sectorTextColor,
         }}
       >
         <Building2 className="h-3 w-3" />

@@ -4,6 +4,10 @@
  * Risk timeline, contracts table with filters, top institutions, sector
  * breakdown. Excludes model explanations (Evidence) and network/external
  * (Network).
+ *
+ * vendor-P1 (2026-05-04): § 6 Cronología replaced with EditorialTimeline
+ * primitive from @/components/charts/editorial. Hand-rolled TimelineNode
+ * component removed. ADMINISTRATIONS import removed.
  */
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +18,9 @@ import type {
 } from '@/api/types'
 import {
   EditorialAreaChart,
+  EditorialTimeline,
   type ChartAnnotation,
+  type EditorialTimelineEvent,
 } from '@/components/charts/editorial'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -26,7 +32,6 @@ import {
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { ADMINISTRATIONS } from '@/lib/administrations'
 import { getRiskLevelFromScore } from '@/lib/constants'
 
 interface LifecycleTimelineEntry {
@@ -110,31 +115,39 @@ export function VendorActivityTab({
 
   const institutionRows = institutions?.data ?? []
 
-  // §6 Cronología: peak year derived from lifecycle value data
-  const peakYear = useMemo(() => {
-    if (!lifecycle?.timeline?.length) return null
-    return lifecycle.timeline.reduce(
-      (best, y) => (!best || (y.total_value_mxn ?? 0) > (best.total_value_mxn ?? 0) ? y : best),
-      null as LifecycleTimelineEntry | null
-    )?.year ?? null
-  }, [lifecycle])
-
-  // Which administrations overlap with the vendor's active years
-  const overlappingAdmins = useMemo(() => {
-    const first = vendor.first_contract_year
-    const last = vendor.last_contract_year
-    if (!first) return []
-    return ADMINISTRATIONS.filter(
-      (a) => a.yearEnd >= first && a.yearStart <= (last ?? new Date().getFullYear())
-    )
-  }, [vendor.first_contract_year, vendor.last_contract_year])
+  // §6 Cronología: map lifecycle year entries → EditorialTimelineEvent[]
+  // Each year entry becomes one timeline event; dot radius encodes total_value_mxn,
+  // dot color encodes risk level. EditorialTimeline handles sexenio bands natively.
+  const timelineEvents = useMemo((): EditorialTimelineEvent[] => {
+    if (!lifecycle?.timeline?.length) return []
+    const sectorCode = vendor.primary_sector_name?.toLowerCase() ?? 'otros'
+    return lifecycle.timeline
+      .filter((y) => y.total_value_mxn != null && y.total_value_mxn > 0)
+      .map((y): EditorialTimelineEvent => {
+        const riskScore = y.avg_risk_score ?? y.avg_risk
+        const riskLevel = riskScore != null ? getRiskLevelFromScore(riskScore) : undefined
+        return {
+          id: y.year,
+          date: `${y.year}-01-01`,
+          amount: y.total_value_mxn,
+          title: `${y.year}${y.contract_count ? ` · ${y.contract_count.toLocaleString()} contratos` : ''}`,
+          subtitle:
+            y.high_risk_count && y.high_risk_count > 0
+              ? `${y.high_risk_count} contratos de riesgo alto+`
+              : undefined,
+          riskLevel,
+          sectorCode,
+        }
+      })
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }, [lifecycle, vendor.primary_sector_name])
 
   return (
     <div className="space-y-8">
-      {/* Risk year-over-year */}
+      {/* § Indicador de riesgo — Risk year-over-year area chart */}
       <section aria-labelledby="trend-title">
         <SectionTitle id="trend-title">
-          {isEs ? 'Riesgo año tras año' : 'Risk year-over-year'}
+          {isEs ? '§ · Indicador de riesgo anual' : '§ · Annual risk indicator'}
         </SectionTitle>
         {riskTrend.length > 1 ? (
           <EditorialAreaChart
@@ -156,8 +169,8 @@ export function VendorActivityTab({
         )}
       </section>
 
-      {/* § 6 La Cronología — birth → peak → death timeline */}
-      {vendor.first_contract_year != null && (
+      {/* § 6 La Cronología — EditorialTimeline with sexenio bands */}
+      {timelineEvents.length > 0 && (
         <section
           aria-labelledby="cronologia-title"
           className="pt-6 border-t border-border/40"
@@ -165,64 +178,11 @@ export function VendorActivityTab({
           <SectionTitle id="cronologia-title">
             {isEs ? '§ 6 · La Cronología' : '§ 6 · Timeline'}
           </SectionTitle>
-          <div className="relative pl-6">
-            {/* Vertical thread */}
-            <div className="absolute left-2 top-0 bottom-0 w-[1.5px] bg-border" />
-
-            {/* First contract */}
-            <TimelineNode
-              year={vendor.first_contract_year}
-              label={isEs ? 'Primer contrato' : 'First contract'}
-              color="var(--color-border-hover)"
-              isEs={isEs}
-            />
-
-            {/* Administration crossings */}
-            {overlappingAdmins.map((admin) => (
-              <TimelineNode
-                key={admin.key}
-                year={admin.yearStart > (vendor.first_contract_year ?? 0) ? admin.yearStart : null}
-                label={isEs ? `Inicio: ${admin.long}` : `${admin.short} administration`}
-                color="var(--color-text-muted)"
-                isEs={isEs}
-                isAdmin
-              />
-            ))}
-
-            {/* Peak year */}
-            {peakYear != null && peakYear !== vendor.first_contract_year && peakYear !== vendor.last_contract_year && (
-              <TimelineNode
-                year={peakYear}
-                label={isEs ? 'Año de máxima actividad' : 'Peak activity year'}
-                color={
-                  vendor.avg_risk_score != null
-                    ? getRiskLevelFromScore(vendor.avg_risk_score) === 'critical' ? 'var(--color-risk-critical)'
-                    : getRiskLevelFromScore(vendor.avg_risk_score) === 'high' ? 'var(--color-risk-high)'
-                    : 'var(--color-risk-medium)'
-                    : 'var(--color-risk-high)'
-                }
-                isEs={isEs}
-                isPeak
-              />
-            )}
-
-            {/* Last contract */}
-            {vendor.last_contract_year != null && vendor.last_contract_year !== vendor.first_contract_year && (
-              <TimelineNode
-                year={vendor.last_contract_year}
-                label={
-                  vendor.last_contract_year >= new Date().getFullYear() - 1
-                    ? (isEs ? 'Contrato más reciente' : 'Most recent contract')
-                    : (isEs ? 'Último contrato registrado' : 'Last contract on record')
-                }
-                color={
-                  vendor.last_contract_year >= new Date().getFullYear() - 1
-                    ? 'var(--color-signal-live)' : 'var(--color-text-muted)'
-                }
-                isEs={isEs}
-              />
-            )}
-          </div>
+          <EditorialTimeline
+            events={timelineEvents}
+            showSexenios={true}
+            emptyState={isEs ? 'Sin actividad registrada.' : 'No recorded activity.'}
+          />
         </section>
       )}
 
@@ -278,14 +238,14 @@ export function VendorActivityTab({
         </section>
       )}
 
-      {/* Contracts table */}
+      {/* § · Contratos — paginated table */}
       <section
         aria-labelledby="contracts-title"
         className="pt-6 border-t border-border/40"
       >
         <div className="flex items-center justify-between mb-3">
           <SectionTitle id="contracts-title" className="mb-0">
-            {isEs ? 'Contratos' : 'Contracts'}
+            {isEs ? '§ · Contratos' : '§ · Contracts'}
           </SectionTitle>
           <span className="text-[11px] text-text-muted font-mono tabular-nums">
             {totalContracts.toLocaleString(isEs ? 'es-MX' : 'en-US')}{' '}
@@ -418,74 +378,9 @@ function SectionTitle({
   return (
     <h2
       id={id}
-      className={`text-[11px] font-semibold text-text-muted uppercase tracking-widest mb-3 ${className ?? ''}`}
+      className={`text-[11px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] mb-3 ${className ?? ''}`}
     >
       {children}
     </h2>
-  )
-}
-
-function TimelineNode({
-  year,
-  label,
-  color,
-  isEs,
-  isAdmin,
-  isPeak,
-}: {
-  year: number | null
-  label: string
-  color: string
-  isEs: boolean
-  isAdmin?: boolean
-  isPeak?: boolean
-}) {
-  if (!year) return null
-  return (
-    <div className="relative flex items-start gap-3 mb-4 last:mb-0">
-      {/* Dot on the thread */}
-      <div
-        className="absolute left-[-1.25rem] top-[4px] w-3 h-3 rounded-full border-2 flex-shrink-0 z-10"
-        style={{
-          borderColor: color,
-          backgroundColor: isPeak ? color : 'var(--color-background)',
-        }}
-      />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-baseline gap-2">
-          <span
-            className="text-sm font-mono font-bold tabular-nums"
-            style={{ color }}
-          >
-            {year}
-          </span>
-          {isAdmin && (
-            <span
-              className="text-[9px] font-mono uppercase tracking-[0.15em] px-1 py-[1px] rounded-sm border"
-              style={{
-                color: 'var(--color-text-muted)',
-                borderColor: 'var(--color-border)',
-                backgroundColor: 'var(--color-background-elevated)',
-              }}
-            >
-              {isEs ? 'cambio admin.' : 'admin. change'}
-            </span>
-          )}
-          {isPeak && (
-            <span
-              className="text-[9px] font-mono uppercase tracking-[0.15em] px-1 py-[1px] rounded-sm border"
-              style={{
-                color,
-                borderColor: `${color}40`,
-                backgroundColor: `${color}10`,
-              }}
-            >
-              {isEs ? 'pico' : 'peak'}
-            </span>
-          )}
-        </div>
-        <p className="text-[11px] text-text-secondary leading-snug mt-0.5">{label}</p>
-      </div>
-    </div>
   )
 }
