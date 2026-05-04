@@ -178,6 +178,14 @@ _SECTOR_GROWTH_TTL = 86400  # 24 hours
 _year_summary_cache: Dict[str, Any] = {}
 _YEAR_SUMMARY_TTL = 86400  # 24 hours
 
+# value-concentration and flash-vendors are pure aggregations on contracts;
+# stale-but-fast is fine. 1h TTL matches sibling endpoints. Without these
+# caches both endpoints take 48–60s and miss the 30s axios timeout.
+_value_concentration_cache: Dict[str, Any] = {}
+_VALUE_CONCENTRATION_TTL = 3600
+_flash_vendors_cache: Dict[str, Any] = {}
+_FLASH_VENDORS_TTL = 3600
+
 _MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -301,6 +309,10 @@ def get_value_concentration(
 
     Identifies market concentration and potential lock-in situations.
     """
+    cache_key = f"vc:{min_pct}:{limit}"
+    cached = _value_concentration_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _VALUE_CONCENTRATION_TTL:
+        return cached["data"]
     try:
         min_share = min_pct / 100.0
         with get_db() as conn:
@@ -359,7 +371,9 @@ def get_value_concentration(
             )
             for row in rows
         ]
-        return ValueConcentrationResponse(data=items, total=len(items), min_pct=min_pct)
+        result = ValueConcentrationResponse(data=items, total=len(items), min_pct=min_pct)
+        _value_concentration_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
 
     except sqlite3.OperationalError as e:
         logger.error(f"DB error in get_value_concentration: {e}")
@@ -387,6 +401,10 @@ def get_flash_vendors(
     primary_institution is the institution that awarded the most contracts to that vendor.
     Results are sorted by avg_risk_score DESC.
     """
+    cache_key = f"fv:{max_active_years}:{min_value}:{limit}"
+    cached = _flash_vendors_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _FLASH_VENDORS_TTL:
+        return cached["data"]
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -455,12 +473,14 @@ def get_flash_vendors(
             )
             for row in rows
         ]
-        return FlashVendorsResponse(
+        result = FlashVendorsResponse(
             data=items,
             total=len(items),
             max_active_years=max_active_years,
             min_value=min_value,
         )
+        _flash_vendors_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
 
     except sqlite3.OperationalError as e:
         logger.error(f"DB error in get_flash_vendors: {e}")
