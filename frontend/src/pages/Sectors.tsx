@@ -28,6 +28,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
+import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -388,7 +389,7 @@ export function Sectors() {
                 <Skeleton className="h-8 w-96" />
                 <Skeleton className="h-4 w-full max-w-2xl" />
                 <div className="mt-6 space-y-1">
-                  {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+                  {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
               </div>
             ) : categoryData && categoryData.data.length > 0 ? (() => {
@@ -444,10 +445,33 @@ export function Sectors() {
                     </p>
                   </div>
 
-                  {/* Ranked table */}
-                  <div className="mb-6 text-[10px] font-mono tracking-[0.15em] uppercase text-text-muted">
-                    {i18n.language === 'es' ? 'Ordenadas por riesgo · descendente' : 'Sorted by risk · descending'}
+                  {/* ── § 1 — SWIMLANE HERO ───────────────────────────────── */}
+                  <div className="mb-10 pb-8 border-b border-border">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                      {i18n.language === 'es'
+                        ? 'Lo que el Estado compra · 12 carriles'
+                        : 'What the State Buys · 12 Lanes'}
+                    </p>
+                    <h3
+                      className="text-text-primary leading-[1.1] mb-2"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {i18n.language === 'es' ? 'Doce mercados, una hoja' : 'Twelve markets, one sheet'}
+                    </h3>
+                    <p className="text-sm text-text-muted leading-relaxed mb-5 max-w-prose">
+                      {i18n.language === 'es'
+                        ? 'Cada carril es un sector; cada punto, una categoría. La posición horizontal es el indicador de riesgo v0.8.5; el tamaño, el gasto. La línea cyan marca el umbral de riesgo alto.'
+                        : 'Each lane is a sector; each dot, a category. Horizontal position is the v0.8.5 risk indicator; size encodes spend. The cyan line marks the high-risk threshold.'}
+                    </p>
+                    <CategorySectorSwimlane categories={categoryData.data} />
                   </div>
+
+                  {/* ── § 3 — RANKED TABLE ───────────────────────────────── */}
                   <div className="rounded-sm border border-border overflow-hidden">
                     {sortedByRisk.map((cat, idx) => {
                       const riskLevel = getRiskLevelFromScore(cat.avg_risk)
@@ -469,11 +493,6 @@ export function Sectors() {
                                 name={i18n.language === 'es' ? cat.name_es : cat.name_en}
                                 size="sm"
                               />
-                              {cat.sector_code && (
-                                <span className="text-[9px] font-mono tracking-widest uppercase text-text-muted">
-                                  {t(cat.sector_code) as string}
-                                </span>
-                              )}
                             </div>
                             {cat.top_vendor && (
                               <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
@@ -497,16 +516,10 @@ export function Sectors() {
                             >
                               {(cat.avg_risk * 100).toFixed(1)}%
                             </div>
-                            <div className="text-[10px] font-mono text-text-muted mt-0.5 uppercase tracking-wider">
-                              {i18n.language === 'es' ? 'Riesgo' : 'Risk'}
-                            </div>
                           </div>
                           <div className="flex-shrink-0 text-right min-w-[70px]">
                             <div className="font-mono text-sm tabular-nums text-text-secondary">
                               {cat.direct_award_pct.toFixed(0)}%
-                            </div>
-                            <div className="text-[10px] font-mono text-text-muted mt-0.5 uppercase tracking-wider">
-                              {i18n.language === 'es' ? 'Adj.Dir.' : 'Direct'}
                             </div>
                           </div>
                         </div>

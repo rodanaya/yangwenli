@@ -290,6 +290,21 @@
     "showAll": "Show all 12",
     "showCrossers": "Only OECD crossers"
   },
+  "swimlane": {
+    "kicker": "WHAT THE STATE BUYS · 12 LANES",
+    "headline": "Twelve markets, one sheet",
+    "deck": "Each lane is a sector; each dot, a category. Horizontal position is the v0.8.5 risk indicator; size encodes spend. The cyan line marks the high-risk threshold.",
+    "highRiskLabel": "HIGH RISK ≥ 25%",
+    "segalmexNote": "Score inflated by Segalmex — see /thread/segalmex",
+    "ariaLabel": "Swimlane diagram: categories by sector and risk",
+    "tooltipInvestigate": "Investigate →",
+    "tooltipValue": "Value",
+    "tooltipContracts": "Contracts",
+    "tooltipRisk": "Risk",
+    "tooltipDirect": "Direct",
+    "tooltipSingleBid": "Single bid",
+    "tooltipTopVendor": "Top vendor"
+  },
   "featured": {
     "kicker": "Sector lede · {{sector}}",
     "leadsRisk": "leads in risk with",

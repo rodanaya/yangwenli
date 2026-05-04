@@ -290,6 +290,21 @@
     "showAll": "Mostrar todos los 12",
     "showCrossers": "Solo los que cruzan OCDE"
   },
+  "swimlane": {
+    "kicker": "LO QUE EL ESTADO COMPRA · 12 CARRILES",
+    "headline": "Doce mercados, una hoja",
+    "deck": "Cada carril es un sector; cada punto, una categoría. La posición horizontal es el indicador de riesgo v0.8.5; el tamaño, el gasto. La línea cyan marca el umbral de riesgo alto.",
+    "highRiskLabel": "RIESGO ALTO ≥ 25%",
+    "segalmexNote": "Score inflado por Segalmex — ver /thread/segalmex",
+    "ariaLabel": "Diagrama de carriles: categorías por sector y riesgo",
+    "tooltipInvestigate": "Investigar →",
+    "tooltipValue": "Valor",
+    "tooltipContracts": "Contratos",
+    "tooltipRisk": "Riesgo",
+    "tooltipDirect": "Adj.Dir.",
+    "tooltipSingleBid": "Lic.Única",
+    "tooltipTopVendor": "Top proveedor"
+  },
   "featured": {
     "kicker": "Lede sectorial · {{sector}}",
     "leadsRisk": "encabeza el riesgo con",
