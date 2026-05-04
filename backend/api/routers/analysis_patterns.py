@@ -8,12 +8,19 @@ investigation leads, and institution period comparisons.
 
 import sqlite3
 import logging
+import time as _time
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
+
+# 1h in-memory cache for /leads — query is 5 sub-aggregations on 3M rows,
+# observed cold latency 169s, well past the 30s axios timeout. Stale-but-fast
+# is the right tradeoff for investigation leads that only change with new ETL.
+_leads_cache: Dict[str, Any] = {}
+_LEADS_CACHE_TTL = 3600
 
 logger = logging.getLogger(__name__)
 
@@ -469,6 +476,10 @@ def get_investigation_leads(
     Returns a combined list of leads from various detection methods,
     each with verification steps for manual review.
     """
+    cache_key = f"leads:{lead_type}:{priority}:{sector_id}:{min_amount}:{limit}"
+    cached = _leads_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _LEADS_CACHE_TTL:
+        return cached["data"]
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -586,11 +597,13 @@ def get_investigation_leads(
             # Sort by priority and risk score
             leads.sort(key=lambda x: (0 if x.priority == "HIGH" else 1, -(x.risk_score or 0)))
 
-            return InvestigationLeadsResponse(
+            result = InvestigationLeadsResponse(
                 total_leads=len(leads),
                 high_priority=high_priority,
                 leads=leads[:limit]
             )
+            _leads_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_investigation_leads: {e}")

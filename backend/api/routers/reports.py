@@ -9,6 +9,7 @@ Provides comprehensive reports for journalists and investigators:
 """
 
 import logging
+import time as _time
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query, Path
 from pydantic import BaseModel, Field
@@ -17,6 +18,12 @@ from enum import Enum
 
 from ..dependencies import get_db
 from ..services.report_service import report_service
+
+# 24h cache for sector reports — full sector analytics rebuild takes 346s on
+# 3M rows (audit 2026-05-04). Reports are static between ETL runs; cache TTL
+# matches the daily ETL cadence.
+_sector_report_cache: Dict[int, Any] = {}
+_SECTOR_REPORT_TTL = 86400
 
 logger = logging.getLogger(__name__)
 
@@ -443,13 +450,17 @@ def get_sector_report(
     - Risk factor patterns
     - Year-over-year trends
     """
+    cached = _sector_report_cache.get(sector_id)
+    if cached and (_time.time() - cached["ts"]) < _SECTOR_REPORT_TTL:
+        return cached["data"]
+
     with get_db() as conn:
         data = report_service.generate_sector_report(conn, sector_id)
 
     if data is None:
         raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
 
-    return SectorReport(
+    result = SectorReport(
         report_type=data["report_type"],
         generated_at=data["generated_at"],
         sector_id=data["sector_id"],
@@ -465,6 +476,8 @@ def get_sector_report(
         year_trends=data["year_trends"],
         notable_findings=data["notable_findings"],
     )
+    _sector_report_cache[sector_id] = {"ts": _time.time(), "data": result}
+    return result
 
 
 # =============================================================================

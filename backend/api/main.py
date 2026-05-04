@@ -144,6 +144,8 @@ def _warmup_caches():
         "/api/v1/analysis/political-cycle",                # Political cycle chart (56s+ cold)
         "/api/v1/analysis/flash-vendors",                  # Flash vendors widget (60s cold)
         "/api/v1/analysis/value-concentration",            # Value concentration widget (48s cold)
+        "/api/v1/analysis/leads",                          # Investigation leads (169s cold!)
+        *[f"/api/v1/reports/sector/{i}" for i in range(1, 13)],  # Sector reports (346s cold each)
         # Sector sub-pages — now use precomputed fast paths so safe to warm
         *[f"/api/v1/sectors/{i}/trends" for i in range(1, 13)],
         *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
@@ -154,7 +156,11 @@ def _warmup_caches():
         try:
             # executive/summary cold on VPS = 90s; price-anomalies cold = 50s+; publication-delays = 11s
             # Per-endpoint timeout based on observed cold-start latency
-            if "executive" in ep or "price-anomalies" in ep:
+            if "reports/sector" in ep:
+                timeout = 400  # 346s cold per audit; give headroom
+            elif "analysis/leads" in ep:
+                timeout = 200  # 169s cold per audit
+            elif "executive" in ep or "price-anomalies" in ep:
                 timeout = 120
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:
                 timeout = 90  # 38-60s cold; give headroom
