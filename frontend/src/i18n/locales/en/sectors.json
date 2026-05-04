@@ -325,5 +325,16 @@
     "saturationNote": "Saturation = risk indicator",
     "ariaLabel": "Sector spend distribution treemap",
     "segalmexCaveat": "Score inflated by Segalmex GT case — see Segalmex thread"
+  },
+  "beeswarm": {
+    "kicker": "THE CROSSING · RISK × SPEND",
+    "headline": "Where risk becomes expensive",
+    "deck": "Each sector as a circle: risk on the horizontal, spend on the vertical, size = number of contracts. The upper-right quadrant — high risk, high spend — is where to look first.",
+    "ariaLabel": "Bubble chart: risk × spend by sector",
+    "oecdRef": "OECD 25%",
+    "priority": "PRIORITY",
+    "investigar": "Investigate →",
+    "agriculturaNote": "Score inflated by Segalmex (GT case) — see /thread/segalmex",
+    "keyboardHint": "↑ ↓ navigate sectors · Enter to open · click circle"
   }
 }

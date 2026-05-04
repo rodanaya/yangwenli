@@ -325,5 +325,16 @@
     "saturationNote": "Saturación = indicador de riesgo",
     "ariaLabel": "Mapa de distribución del gasto sectorial",
     "segalmexCaveat": "Score inflado por Segalmex/GT — ver hilo Segalmex"
+  },
+  "beeswarm": {
+    "kicker": "EL CRUCE · RIESGO × GASTO",
+    "headline": "Dónde el riesgo se vuelve costoso",
+    "deck": "Cada sector como un círculo: riesgo en horizontal, gasto en vertical, tamaño = número de contratos. La esquina superior derecha — alto riesgo, alto gasto — es donde mirar primero.",
+    "ariaLabel": "Diagrama de burbujas: riesgo × gasto por sector",
+    "oecdRef": "OCDE 25%",
+    "priority": "PRIORIDAD",
+    "investigar": "Investigar →",
+    "agriculturaNote": "Puntaje inflado por Segalmex (caso GT) — ver /thread/segalmex",
+    "keyboardHint": "↑ ↓ navegar sectores · Enter para abrir · clic en círculo"
   }
 }

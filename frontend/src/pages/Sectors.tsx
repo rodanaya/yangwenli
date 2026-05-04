@@ -31,6 +31,7 @@ import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChar
 import { SectorTreemap } from '@/components/sectors/SectorTreemap'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
+import { RiskSpendBeeswarm } from '@/components/sectors/RiskSpendBeeswarm'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -718,6 +719,57 @@ export function Sectors() {
           </p>
           <CompetitionSlopeChart />
         </section>
+
+        {/* ── § 4 HERO 3: Risk × Spend Beeswarm ───────────────────────────────
+            docs/SECTORS_REDESIGN_PLAN.md §5 HERO 3.
+            Each sector = one circle. X = avg_risk_score, Y = log(spend),
+            R = sqrt(contracts). Upper-right quadrant shaded amber = PRIORIDAD.
+            OECD 25% dashed reference line. Agricultura caveat callout. */}
+        {!isLoading && sectors.length > 0 && (
+          <section
+            aria-labelledby="beeswarm-heading"
+            className="mb-10 pb-8 border-b border-border"
+          >
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              {t('beeswarm.kicker')}
+            </p>
+            <h2
+              id="beeswarm-heading"
+              className="text-text-primary leading-[1.1] mb-2"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {t('beeswarm.headline')}
+            </h2>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-6">
+              {t('beeswarm.deck')}
+            </p>
+            {/* Legend row */}
+            <div className="flex flex-wrap items-center gap-4 mb-5">
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                <span
+                  className="inline-block h-2.5 w-4 rounded-sm"
+                  style={{ background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.4)' }}
+                  aria-hidden="true"
+                />
+                {i18n.language === 'es' ? 'Zona de prioridad: riesgo ≥ 20% y gasto ≥ 1B' : 'Priority zone: risk ≥ 20% and spend ≥ 1B'}
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#22d3ee] uppercase tracking-[0.12em]">
+                <span className="inline-block h-px w-6 border-t border-dashed border-[#22d3ee]" aria-hidden="true" />
+                {i18n.language === 'es' ? 'OCDE 25%' : 'OECD 25%'}
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
+                {i18n.language === 'es' ? 'Tamaño = contratos totales' : 'Size = total contracts'}
+              </div>
+            </div>
+            <RiskSpendBeeswarm sectors={sectors} />
+          </section>
+        )}
 
         {/* Quiet count row — sort dropdown removed; ?sort= URL param controls order */}
         <div className="flex items-center justify-between mb-6">
