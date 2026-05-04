@@ -326,9 +326,9 @@ def get_value_concentration(
                 )
                 SELECT
                     vi.vendor_id,
-                    COALESCE(v.vendor_name, CAST(vi.vendor_id AS TEXT)) AS vendor_name,
+                    COALESCE(v.name, CAST(vi.vendor_id AS TEXT)) AS vendor_name,
                     vi.institution_id,
-                    COALESCE(i.institution_name, CAST(vi.institution_id AS TEXT)) AS institution_name,
+                    COALESCE(i.name, CAST(vi.institution_id AS TEXT)) AS institution_name,
                     vi.vendor_value,
                     it.institution_total                                 AS institution_total_value,
                     ROUND(vi.vendor_value * 100.0 / it.institution_total, 2) AS value_share_pct,
@@ -409,7 +409,7 @@ def get_flash_vendors(
                 primary_inst AS (
                     SELECT
                         c.vendor_id,
-                        COALESCE(i.institution_name, CAST(c.institution_id AS TEXT)) AS institution_name,
+                        COALESCE(i.name, CAST(c.institution_id AS TEXT)) AS institution_name,
                         COUNT(*) AS cnt,
                         ROW_NUMBER() OVER (
                             PARTITION BY c.vendor_id
@@ -422,7 +422,7 @@ def get_flash_vendors(
                 )
                 SELECT
                     va.vendor_id,
-                    COALESCE(v.vendor_name, CAST(va.vendor_id AS TEXT)) AS vendor_name,
+                    COALESCE(v.name, CAST(va.vendor_id AS TEXT)) AS vendor_name,
                     va.total_value,
                     va.contract_count,
                     va.min_year,

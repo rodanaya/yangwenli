@@ -1234,9 +1234,15 @@ def get_sector_model_coefficients(
                 raise HTTPException(status_code=404, detail="Model calibration data not found")
 
             coefficients = json.loads(row[2]) if isinstance(row[2], str) else (row[2] or {})
-            # Sort by absolute value descending
+            # v0.8.5+ stores coefficients as parallel arrays {names: [...], values: [...]}
+            # while v6.0 used a flat dict {name: coef}. Normalize both shapes here.
+            if isinstance(coefficients, dict) and "names" in coefficients and "values" in coefficients:
+                coef_pairs = list(zip(coefficients["names"], coefficients["values"]))
+            else:
+                coef_pairs = list(coefficients.items()) if isinstance(coefficients, dict) else []
+            # Sort by absolute value descending; coerce to float defensively
             sorted_coefs = sorted(
-                [{"feature": k, "coefficient": v} for k, v in coefficients.items()],
+                [{"feature": k, "coefficient": float(v)} for k, v in coef_pairs if isinstance(v, (int, float))],
                 key=lambda x: abs(x["coefficient"]),
                 reverse=True,
             )
