@@ -1,4 +1,17 @@
 {
+  "dumbbell": {
+    "kicker": "THE GAP · #1 VS #2",
+    "headline": "Where one vendor swallows the market",
+    "deck": "In the twelve most concentrated categories, the leading vendor takes this share of the market. When the filled circle pulls away from the open one, somebody captured the contract.",
+    "marketCaptured": "MARKET CAPTURED",
+    "vendor1": "#1 vendor",
+    "vendor2": "#2 vendor",
+    "contracts": "contracts",
+    "totalMarket": "Total market:",
+    "referenceLabel": "50% of market",
+    "noData": "No concentration data available.",
+    "pullQuote": "One vendor controls {{pct}}% of {{category}}"
+  },
   "profile": {
     "notFound": {
       "title": "Category not found",

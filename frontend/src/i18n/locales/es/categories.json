@@ -1,4 +1,17 @@
 {
+  "dumbbell": {
+    "kicker": "LA BRECHA · #1 VS #2",
+    "headline": "Donde un proveedor se traga el mercado",
+    "deck": "En las doce categorías más concentradas, el primer proveedor se queda con esta porción del mercado. Cuando el círculo lleno se aleja del círculo abierto, alguien capturó el contrato.",
+    "marketCaptured": "MERCADO CAPTURADO",
+    "vendor1": "#1 proveedor",
+    "vendor2": "#2 proveedor",
+    "contracts": "contratos",
+    "totalMarket": "Mercado total:",
+    "referenceLabel": "50% del mercado",
+    "noData": "No hay datos de concentración disponibles.",
+    "pullQuote": "Un solo proveedor controla el {{pct}}% de {{category}}"
+  },
   "profile": {
     "notFound": {
       "title": "Categoria no encontrada",

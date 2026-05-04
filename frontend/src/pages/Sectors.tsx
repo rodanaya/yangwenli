@@ -29,6 +29,7 @@ import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
+import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -469,6 +470,34 @@ export function Sectors() {
                         : 'Each lane is a sector; each dot, a category. Horizontal position is the v0.8.5 risk indicator; size encodes spend. The cyan line marks the high-risk threshold.'}
                     </p>
                     <CategorySectorSwimlane categories={categoryData.data} />
+                  </div>
+
+                  {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
+                  <div className="mb-10 pb-8 border-b border-border">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                      {i18n.language === 'es'
+                        ? 'La Brecha · #1 vs #2'
+                        : 'The Gap · #1 vs #2'}
+                    </p>
+                    <h3
+                      className="text-text-primary leading-[1.1] mb-2"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {i18n.language === 'es'
+                        ? 'Donde un proveedor se traga el mercado'
+                        : 'Where one vendor swallows the market'}
+                    </h3>
+                    <p className="text-sm text-text-muted leading-relaxed mb-5 max-w-prose">
+                      {i18n.language === 'es'
+                        ? 'En las doce categorías más concentradas, el primer proveedor se queda con esta porción del mercado. Cuando el círculo lleno se aleja del círculo abierto, alguien capturó el contrato.'
+                        : 'In the twelve most concentrated categories, the leading vendor takes this share of the market. When the filled circle pulls away from the open one, somebody captured the contract.'}
+                    </p>
+                    <CategoryCaptureDumbbell categories={categoryData.data} />
                   </div>
 
                   {/* ── § 3 — RANKED TABLE ───────────────────────────────── */}
