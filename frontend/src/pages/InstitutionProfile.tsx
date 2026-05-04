@@ -747,6 +747,10 @@ export function InstitutionProfile() {
         {/* ========= TAB 1: PANORAMA (OVERVIEW) ========= */}
         <TabPanel tabKey="overview">
           <div className="space-y-6">
+            {/* § PANORAMA kicker */}
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? '§ OVERVIEW · INSTITUTION PROFILE' : '§ PANORAMA · PERFIL INSTITUCIONAL'}
+            </p>
             {/* AI Intelligence Brief */}
             <div>
               <div className="flex items-center gap-2 px-1 mb-2">
@@ -948,6 +952,10 @@ export function InstitutionProfile() {
         {/* ========= TAB 2: RIESGO ========= */}
         <TabPanel tabKey="risk">
           <div className="space-y-5">
+            {/* § RIESGO kicker */}
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? '§ RISK ANALYSIS · MODEL v0.8.5' : '§ ANÁLISIS DE RIESGO · MODELO v0.8.5'}
+            </p>
             {/* Risk Trajectory */}
             <div className="card-elevated">
               <CardHeader className="pb-2 pt-4">
@@ -1136,21 +1144,42 @@ export function InstitutionProfile() {
         {/* ========= TAB 3: PROVEEDORES ========= */}
         <TabPanel tabKey="vendors">
           <div className="space-y-5">
-            {/* Vendor Concentration Treemap */}
+            {/* § PROVEEDORES kicker */}
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? '§ VENDORS · CONCENTRATION & LOYALTY' : '§ PROVEEDORES · CONCENTRACIÓN Y LEALTAD'}
+            </p>
+            {/* § CONCENTRACIÓN — vendor concentration ranked dot strip */}
             <div className="card-elevated">
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
-                  {lang === 'en' ? 'Vendor concentration' : 'Concentracion de proveedores'}
+                  {lang === 'en' ? 'Vendor concentration' : 'Concentración de proveedores'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
                 {vendorsLoading ? (
-                  <Skeleton className="h-64" />
+                  <div className="space-y-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="h-6" />)}</div>
                 ) : vendorsError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingVendors')}</p>
                 ) : vendors?.data?.length ? (
-                  <VendorTreemapLazy vendors={vendors.data} totalInstitutionValue={totalValue} />
+                  <>
+                    <DotStrip
+                      data={vendors.data.slice(0, 12).map((v) => {
+                        const riskLvl = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : 'low'
+                        return {
+                          label: formatVendorName(v.vendor_name, 28),
+                          value: v.total_value_mxn,
+                          color: RISK_COLORS[riskLvl] ?? '#64748b',
+                          valueLabel: formatCompactMXN(v.total_value_mxn),
+                        }
+                      })}
+                      formatVal={(v) => formatCompactMXN(v)}
+                      dots={40}
+                    />
+                    <p className="text-[10px] text-text-muted font-mono mt-2">
+                      {lang === 'en' ? 'Bar length = spend share · color = risk level (v0.8.5)' : 'Longitud = participación · color = nivel de riesgo (v0.8.5)'}
+                    </p>
+                  </>
                 ) : (
                   <p className="text-xs text-text-muted">{t('profile.noVendorData')}</p>
                 )}
@@ -1228,6 +1257,15 @@ export function InstitutionProfile() {
                   : 'Cruce con EFOS (SAT Art. 69-B) y sanciones SFP disponible en perfiles de proveedores. Haga clic en cualquier proveedor para verificar su estatus en registros externos.'}
               </p>
             </div>
+
+            {/*
+              TODO inst-P2: Add <CategoryCaptureDumbbell> here once the component
+              accepts institution_id and fetches institution-scoped categories.
+              Currently CategoryCaptureDumbbell (src/components/sectors/CategoryCaptureDumbbell.tsx)
+              takes a `categories: CategoryDatum[]` array that must include top-2 vendor shares
+              per category — data not yet exposed via an institution-level endpoint.
+              Tracked: docs/FULL_SITE_GRAPHICS_AUDIT.md Part A § ADDITIONS.
+            */}
 
             {/* Top Procurement Categories */}
             {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
@@ -2175,35 +2213,6 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
       </div>
     </div>
   )
-}
-
-// ---- Treemap Lazy Wrapper ----
-
-function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
-  vendors: InstitutionVendorItem[]
-  totalInstitutionValue?: number
-}) {
-  const { t } = useTranslation('institutions')
-  const [TreemapComp, setTreemapComp] = useState<React.ComponentType<any> | null>(null)
-  const [loadError, setLoadError] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    import('@/components/charts/VendorConcentrationTreemap')
-      .then((mod) => { if (!cancelled) setTreemapComp(() => mod.VendorConcentrationTreemap) })
-      .catch(() => { if (!cancelled) setLoadError(true) })
-    return () => { cancelled = true }
-  }, [])
-
-  if (loadError) {
-    return <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingConcentration')}</p>
-  }
-
-  if (!TreemapComp) {
-    return <Skeleton className="h-64" />
-  }
-
-  return <TreemapComp vendors={vendors} totalInstitutionValue={totalInstitutionValue} />
 }
 
 // ---- Contract Row ----
