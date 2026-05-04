@@ -38,3 +38,9 @@ export type { EditorialHeatmapProps } from './EditorialHeatmap'
 
 export { scaleToColor } from './colorScales'
 export type { HeatmapScale } from './colorScales'
+
+export { EditorialDistribution } from './EditorialDistribution'
+export type { EditorialDistributionProps, DistributionThreshold } from './EditorialDistribution'
+
+export { EditorialTimeline } from './EditorialTimeline'
+export type { EditorialTimelineProps, EditorialTimelineEvent } from './EditorialTimeline'
