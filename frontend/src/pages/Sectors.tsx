@@ -717,10 +717,11 @@ export function Sectors() {
     setSearchParams(next, { replace: true })
   }
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['sectors', 'list'],
     queryFn: () => sectorApi.getAll(),
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   })
 
   // Category summary — only fetched when the user is on the WHAT tab.
@@ -1147,6 +1148,12 @@ export function Sectors() {
             className="rounded-sm border border-red-500/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
           >
             {t('page.failedToLoad')}
+            <button
+              onClick={() => refetch()}
+              className="ml-3 underline opacity-70 hover:opacity-100"
+            >
+              Retry
+            </button>
           </div>
         )}
 
