@@ -651,7 +651,7 @@ export const STORIES: StoryDef[] = [
           'The single most aggressive case in the entire mega-contract universe is MANTENIMIENTO EXPRESS MARÍTIMO S.A.P.I. DE C.V., which received one contract worth 69.9 billion pesos at a perfect 1.000 risk score — Pemex/marine maintenance, awarded as a sole-source contract. URBANISSA S.A. DE C.V. received a single 58-billion-peso contract at a 0.969 score. CONSTRUCTORA ARHNOS, S.A. DE C.V. received a single 31.9-billion-peso contract at a 1.000 score. Each of these is a single contract that is, by itself, larger than the entire annual budget of several Mexican states.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-beeswarm',
           title: 'Top 12 Mega-Contract Vendors — Total Pesos in Contracts ≥1B MXN',
           title_es: 'Top 12 proveedores de mega-contratos — Pesos totales en contratos ≥1 mil millones',
           chartId: 'mega-vendors',
@@ -856,7 +856,7 @@ export const STORIES: StoryDef[] = [
           'Concentration of this magnitude does not happen by competitive market dynamics. It happens because IMSS\'s procurement architecture allowed a small set of vendors to accumulate compounding advantages: catalog familiarity, delivery infrastructure tuned to IMSS\'s specifications, and direct-award eligibility based on prior contracting history. The legal mechanism is "existing supplier relationship" under Article 41 of the Ley de Adquisiciones — a clause that converts past dependence into present preference.',
         ],
         chartConfig: {
-          type: 'inline-stacked-bar',
+          type: 'editorial-dumbbell',
           title: 'IMSS Concentration — How Much of Each Vendor\'s Revenue Comes From One Customer',
           title_es: 'Concentración IMSS — Cuánto del ingreso de cada proveedor proviene de un solo cliente',
           chartId: 'big-four-imss-share',
@@ -1142,7 +1142,7 @@ export const STORIES: StoryDef[] = [
           'El umbral OCDE del 15 por ciento, trazado como línea de referencia en esta gráfica, se ubica en una parte de la gráfica que México no ha visitado desde antes de que comenzaran los registros de CompraNet. Llegar a ese umbral requeriría una reestructuración fundamental de cómo la contratación federal mexicana genera oferentes: análisis sistemático de mercado antes de la licitación, inteligencia competitiva sobre proveedores potenciales, búsqueda activa de proveedores calificados, y especificaciones de licitación diseñadas para maximizar y no minimizar el campo competitivo.',
         ],
         chartConfig: {
-          type: 'inline-line',
+          type: 'editorial-slope',
           title: 'Single-Bid Rate in Competitive Procedures 2002-2024',
           title_es: 'Tasa de oferta única en procedimientos competitivos 2002-2024',
           chartId: 'single-bid-trend',
@@ -1528,6 +1528,12 @@ export const STORIES: StoryDef[] = [
           'La base de datos de la verdad-base de RUBLI incluye La Estafa Maestra; los proveedores directamente vinculados a ella tienen calificaciones de riesgo que promedian de 0.55 a 0.65 — elevadas pero no en el techo, porque las cuentas pequeñas de contratos de las empresas fantasma limitan lo que el modelo conductual puede ver. Lo que RUBLI sí ve con claridad es el mecanismo. Los 2,974 proveedores P3 en la cola de hoy son los sucesores estructurales de la arquitectura de La Estafa Maestra — distintas entidades, distintas instituciones, el mismo papel: un paso pagado entre el presupuesto del gobierno y la entrega real.',
           'La Revisión de Desempeño en Compras Públicas 2023 de la OCDE advirtió expresamente que las cadenas de intermediación en obra pública típicamente añaden de 15 a 30 por ciento de sobrecarga sin agregar valor de entrega. Aplicado a los 526.8 mil millones de pesos de contratación con intermediación P3 de RUBLI, el costo implícito de sobrecarga está entre 79 y 158 mil millones de pesos. Eso es, en el extremo bajo, aproximadamente el presupuesto anual del programa federal completo de infraestructura del sector salud. El costo de la intermediación, si es fraudulenta, no es hipotético.',
         ],
+        chartConfig: {
+          type: 'editorial-swimlane',
+          title: 'Institution × Pattern — Capture and Intermediation Map',
+          title_es: 'Institución × Patrón — Mapa de captura e intermediación',
+          chartId: 'institution-pattern-swimlane',
+        },
         pullquote: {
           quote: 'La Estafa Maestra moved 7.67 billion pesos through an intermediary structure in two years. RUBLI\'s current P3 population is running 526 billion.',
           quote_es: 'La Estafa Maestra movió 7.67 mil millones de pesos por una estructura de intermediación en dos años. La población P3 actual de RUBLI corre con 526 mil millones.',
@@ -1741,6 +1747,12 @@ export const STORIES: StoryDef[] = [
           'La centralización de la contratación farmacéutica de 2019 bajo BIRMEX e INSABI por AMLO fue planteada explícitamente como medida anticorrupción — removiendo la discreción de compradores institucionales individuales que habían desarrollado relaciones corruptas con proveedores. La ironía documentada en los datos de RUBLI: el sistema centralizado BIRMEX-INSABI que reemplazó a la contratación fragmentada operó con tasas de adjudicación directa cercanas al 100 por ciento en 2020-2021, con proveedores ganando enormes contratos de única fuente sin proceso competitivo. La centralización no curó la dependencia de la adjudicación directa; la concentró.',
           'El mecanismo de esta concentración es revelador. Un sistema descentralizado de contratación con relaciones corruptas en 1,000 compradores institucionales produce 1,000 instancias de adjudicación directa, cada una justificada en sus propios términos. Un sistema centralizado sin mayor capacidad competitiva que sus predecesores produce una sola adjudicación directa de escala nacional, justificada sobre una sola base institucional. La forma del problema cambió; la dependencia subyacente no.',
         ],
+        chartConfig: {
+          type: 'editorial-slope',
+          title: 'Direct Award Rate 2010-2024 vs OECD Ceiling',
+          title_es: 'Tasa de adjudicación directa 2010-2024 vs techo OCDE',
+          chartId: 'da-rate-slope',
+        },
         pullquote: {
           quote: 'The pandemic did not create Mexico\'s direct-award culture. It was an accelerant applied to a pre-existing structural condition.',
           quote_es: 'La pandemia no creó la cultura de adjudicación directa en México. Fue un acelerante aplicado a una condición estructural preexistente.',
