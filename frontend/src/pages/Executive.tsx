@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
+import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -32,7 +32,7 @@ import {
   type ConstellationMode,
   type ConstellationRiskRow,
 } from '@/components/charts/ConcentrationConstellation'
-import { DashboardSledgehammer } from '@/components/editorial/DashboardSledgehammer'
+// DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -114,104 +114,153 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
   ]
 }
 
-// LensVisualization — concentric rings narrowing 3.06M → 314 T1 priorities.
-// Restored 2026-05-05 from omega-C-P2 Hamilton-ladder revert. The rings
-// genuinely worked ("filter from outer to inner"); the ladder did not.
+// LensVisualization — ICIJ-style Sankey reduction (2026-05-05).
+// User rejected concentric rings ("ugly") AND vertical bar ladder ("horrible
+// — looked better before"). This third design follows ICIJ's Pandora Papers
+// flow vocabulary: a single "kept" ribbon flows top-to-bottom narrowing at
+// each filter; "rejected" volume diverts off to the right at each stage as
+// a thin counter-ribbon. The shape itself enacts filtration — what flows
+// through vs what gets dropped — without metaphor decoding.
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
-  const SIZE = 220
-  const CX = SIZE / 2
-  const CY = SIZE / 2
+  const W = 220
+  const H = 220
+  const PAD_T = 8
+  const PAD_B = 14
+  const CX = W / 2
+  const CH = H - PAD_T - PAD_B
+
+  // Use 5 tiers (or fall back to whatever the data provides)
+  const stages = tiers.slice(0, 5)
+  const counts = stages.map(t => t.count)
+  const maxCount = Math.max(...counts)
+  // log scale so 3M and 165 both register
+  const widthOf = (count: number) => {
+    const minW = 16
+    const maxW = 180
+    const v = Math.log10(Math.max(count, 1))
+    const vmax = Math.log10(maxCount)
+    const vmin = Math.log10(Math.max(stages[stages.length - 1].count, 1))
+    if (vmax === vmin) return maxW
+    return minW + (maxW - minW) * (v - vmin) / (vmax - vmin)
+  }
+  const stageY = (i: number) => PAD_T + (CH / (stages.length - 1)) * i
+
+  // Build "kept" ribbon polygon — connects each stage's width centered on CX
+  const keptPath = (() => {
+    const left: string[] = []
+    const right: string[] = []
+    stages.forEach((s, i) => {
+      const w = widthOf(s.count)
+      const y = stageY(i)
+      left.push(`${i === 0 ? 'M' : 'L'} ${(CX - w / 2).toFixed(1)} ${y.toFixed(1)}`)
+      right.unshift(`L ${(CX + w / 2).toFixed(1)} ${y.toFixed(1)}`)
+    })
+    return [...left, ...right, 'Z'].join(' ')
+  })()
 
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%" style={{ maxHeight: 240 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" style={{ maxHeight: 240 }} role="img" aria-label={lang === 'es'
+      ? 'Embudo de reducción: 3.06M contratos a 165 casos'
+      : 'Reduction funnel: 3.06M contracts down to 165 cases'}>
+      {/* Soft halo at the apex (T1 priority) — the surface payoff */}
       <defs>
-        <radialGradient id="lens-core" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#dc2626" stopOpacity="1" />
-          <stop offset="60%" stopColor="#dc2626" stopOpacity="0.92" />
-          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.55" />
-        </radialGradient>
-        <radialGradient id="lens-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.35" />
+        <radialGradient id="lens-apex-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.30" />
           <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
         </radialGradient>
+        <linearGradient id="lens-kept" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="var(--color-text-muted)" stopOpacity="0.35" />
+          <stop offset="55%" stopColor="#a06820" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.92" />
+        </linearGradient>
       </defs>
 
-      {/* Soft red glow behind the core */}
+      {/* Apex glow behind the bottom row */}
       <motion.circle
-        cx={CX} cy={CY}
-        fill="url(#lens-glow)"
-        initial={{ r: 0, opacity: 0 }}
-        whileInView={{ r: 50, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.9, delay: 0.6 }}
-      />
-
-      {/* Concentric rings — outer to inner */}
-      {tiers.slice(0, 4).map((t, i) => (
-        <motion.circle
-          key={i}
-          cx={CX} cy={CY}
-          r={t.ringR}
-          fill="none"
-          stroke={t.color}
-          strokeWidth={t.ringWidth}
-          initial={{ strokeOpacity: 0 }}
-          whileInView={{ strokeOpacity: t.ringOpacity }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.15 + i * 0.13, ease: 'easeOut' }}
-        />
-      ))}
-
-      {/* Tick marks on the outermost ring (compass-like) */}
-      {[0, 90, 180, 270].map((deg) => {
-        const rad = (deg * Math.PI) / 180
-        const r = tiers[0].ringR
-        const x1 = CX + Math.cos(rad) * (r - 3)
-        const y1 = CY + Math.sin(rad) * (r - 3)
-        const x2 = CX + Math.cos(rad) * (r + 3)
-        const y2 = CY + Math.sin(rad) * (r + 3)
-        return (
-          <motion.line
-            key={deg}
-            x1={x1} y1={y1} x2={x2} y2={y2}
-            stroke="var(--color-text-muted)"
-            strokeWidth={0.7}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 0.6 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.7 }}
-          />
-        )
-      })}
-
-      {/* T1 core — filled crimson disk with gradient */}
-      <motion.circle
-        cx={CX} cy={CY}
-        fill="url(#lens-core)"
+        cx={CX} cy={stageY(stages.length - 1)}
+        fill="url(#lens-apex-glow)"
         initial={{ r: 0 }}
-        whileInView={{ r: 16 }}
+        whileInView={{ r: 30 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.55, delay: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
+        transition={{ duration: 0.7, delay: 0.9 }}
       />
-      {/* Core count label */}
-      <motion.text
-        x={CX} y={CY + 1}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={12}
-        fontWeight={800}
-        fill="white"
-        fontFamily="var(--font-family-mono, monospace)"
+
+      {/* Main "kept" funnel ribbon */}
+      <motion.path
+        d={keptPath}
+        fill="url(#lens-kept)"
+        stroke="none"
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.3, delay: 1.15 }}
-      >
-        {tiers[4].display}
-      </motion.text>
-      {/* "T1" pill below the core */}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      />
+
+      {/* Stage tick marks at each level */}
+      {stages.map((s, i) => {
+        const w = widthOf(s.count)
+        const y = stageY(i)
+        const isFinal = i === stages.length - 1
+        return (
+          <motion.g
+            key={i}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.4 + i * 0.12 }}
+          >
+            {/* Crisp horizontal stage line on top of the ribbon */}
+            <line
+              x1={CX - w / 2}
+              x2={CX + w / 2}
+              y1={y}
+              y2={y}
+              stroke={isFinal ? '#dc2626' : 'var(--color-text-muted)'}
+              strokeWidth={isFinal ? 2 : 0.8}
+              strokeOpacity={isFinal ? 1 : 0.7}
+            />
+            {/* Compact count label INSIDE the ribbon (centered) */}
+            <text
+              x={CX}
+              y={y - 3}
+              textAnchor="middle"
+              fontSize={isFinal ? 12 : 9}
+              fontWeight={isFinal ? 800 : 700}
+              fill={isFinal ? '#dc2626' : 'var(--color-text-primary)'}
+              fontFamily="var(--font-family-mono, monospace)"
+              style={{ fontVariantNumeric: 'tabular-nums' }}
+            >
+              {s.display}
+            </text>
+            {/* "Rejected" tick: right-side small dropped counter for stages 1-3 */}
+            {i > 0 && i < stages.length - 1 && (() => {
+              const prevW = widthOf(stages[i - 1].count)
+              const dropped = stages[i - 1].count - s.count
+              if (dropped <= 0) return null
+              const x1 = CX + prevW / 2
+              const xEnd = Math.min(W - 4, x1 + 12)
+              return (
+                <g opacity={0.55}>
+                  <line
+                    x1={x1}
+                    x2={xEnd}
+                    y1={y - (CH / (stages.length - 1)) * 0.4}
+                    y2={y - 1}
+                    stroke="var(--color-text-muted)"
+                    strokeWidth={0.6}
+                    strokeDasharray="1.5 1.5"
+                  />
+                </g>
+              )
+            })()}
+          </motion.g>
+        )
+      })}
+
+      {/* T1 PRIORIDAD pill below the apex */}
       <motion.text
-        x={CX} y={CY + 30}
+        x={CX}
+        y={H - 2}
         textAnchor="middle"
         fontSize={8}
         fontWeight={700}
@@ -221,7 +270,7 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.3, delay: 1.25 }}
+        transition={{ duration: 0.3, delay: 1.1 }}
       >
         {lang === 'es' ? 'T1 PRIORIDAD' : 'T1 PRIORITY'}
       </motion.text>
@@ -723,10 +772,204 @@ const PATTERN_RISK: PatternRiskEntry[] = [
   { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  baselineMdp: 5,  vendors: 6034,  color: '#dc2626' },
   { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  baselineMdp: 12, vendors: 15923, color: '#dc2626' },
   { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  baselineMdp: 3,  vendors: 44,    color: '#dc2626' },
-  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2974,  color: '#f59e0b' },
+  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2974,  color: '#b45309' },
   { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  baselineMdp: 8,  vendors: 257,   color: '#dc2626' },
-  { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  baselineMdp: 4,  vendors: 220,   color: '#f59e0b' },
+  { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  baselineMdp: 4,  vendors: 220,   color: '#b45309' },
 ]
+// TopCategoriesChart — 2-row proportional treemap (NOT a bar chart).
+//
+// Row 1 = the 3 biggest spend categories, taller cells with serif spend value.
+// Row 2 = the next 5 categories at compact height. Cell width within each row
+// is proportional to spend; cell color = sector palette tinted by risk score.
+//
+// Falls back to a curated dataset when the live category_stats table is empty
+// (e.g. on a fresh local DB before the precompute job has run). The fallback
+// numbers are illustrative — flagged in the caption — but better than a blank
+// surface card.
+// ─────────────────────────────────────────────────────────────────────────────
+interface CategorySummaryItem {
+  category_id: number
+  name_es: string
+  name_en: string
+  sector_code: string
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  direct_award_pct: number
+}
+
+interface CategoryCell {
+  id: string
+  name_es: string
+  name_en: string
+  sector_code: string
+  total_value: number
+  avg_risk: number
+}
+
+// Curated fallback — illustrative figures that round to the v0.6.5 distribution.
+// Used only when category_stats is unavailable (the table doesn't exist on
+// every environment yet — precompute job ships separately).
+const FALLBACK_CATEGORIES: CategoryCell[] = [
+  { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55 },
+  { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42 },
+  { id: 'obra_publica',  name_es: 'Obra pública',           name_en: 'Public Works',        sector_code: 'infraestructura', total_value:   870_000_000_000, avg_risk: 0.51 },
+  { id: 'tic',           name_es: 'Tecnologías de Información', name_en: 'IT Services',     sector_code: 'tecnologia',      total_value:   620_000_000_000, avg_risk: 0.68 },
+  { id: 'serv_prof',     name_es: 'Servicios profesionales', name_en: 'Professional Services', sector_code: 'gobernacion',  total_value:   540_000_000_000, avg_risk: 0.59 },
+  { id: 'vehiculos',     name_es: 'Vehículos y transporte',  name_en: 'Vehicles & Transport', sector_code: 'infraestructura', total_value:  410_000_000_000, avg_risk: 0.46 },
+  { id: 'equipo_medico', name_es: 'Equipo médico',          name_en: 'Medical Equipment',   sector_code: 'salud',           total_value:   380_000_000_000, avg_risk: 0.52 },
+  { id: 'alimentos',     name_es: 'Alimentos y despensa',   name_en: 'Food & Distribution', sector_code: 'agricultura',     total_value:   290_000_000_000, avg_risk: 0.66 },
+]
+
+function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
+  const { data: liveData } = useQuery({
+    queryKey: ['executive', 'categories-treemap'],
+    queryFn: () => categoriesApi.getSummary() as Promise<{ data: CategorySummaryItem[] }>,
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+
+  // Use live data when available; otherwise the curated fallback.
+  const { items, usingFallback } = useMemo(() => {
+    const live = liveData?.data ?? []
+    if (live.length > 0) {
+      const sorted = [...live]
+        .sort((a, b) => b.total_value - a.total_value)
+        .slice(0, 8)
+        .map<CategoryCell>((c) => ({
+          id: String(c.category_id),
+          name_es: c.name_es,
+          name_en: c.name_en || c.name_es,
+          sector_code: c.sector_code,
+          total_value: c.total_value,
+          avg_risk: c.avg_risk,
+        }))
+      return { items: sorted, usingFallback: false }
+    }
+    return { items: FALLBACK_CATEGORIES, usingFallback: true }
+  }, [liveData])
+
+  // Split into two rows — top 3 dominate row 1, next 5 fill row 2.
+  const row1 = items.slice(0, 3)
+  const row2 = items.slice(3, 8)
+  const row1Total = row1.reduce((s, c) => s + c.total_value, 0) || 1
+  const row2Total = row2.reduce((s, c) => s + c.total_value, 0) || 1
+  const grandTotal = items.reduce((s, c) => s + c.total_value, 0)
+
+  // Risk → background-tint opacity. Low risk barely shows the sector color;
+  // high risk saturates to the sector palette.
+  const riskTintAlpha = (risk: number) => Math.max(0.08, Math.min(0.42, 0.08 + risk * 0.55))
+
+  // Risk → small badge color in the corner of each cell.
+  const riskBadgeColor = (risk: number) => {
+    if (risk >= 0.60) return '#dc2626'
+    if (risk >= 0.40) return '#f59e0b'
+    if (risk >= 0.25) return '#a06820'
+    return 'var(--color-text-muted)'
+  }
+
+  const renderCell = (cat: CategoryCell, rowTotal: number, idx: number, primary: boolean, baseDelay: number) => {
+    const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
+    const widthPct = (cat.total_value / rowTotal) * 100
+    const tintAlpha = riskTintAlpha(cat.avg_risk)
+    const riskColor = riskBadgeColor(cat.avg_risk)
+    const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
+
+    return (
+      <motion.div
+        key={cat.id}
+        className="relative rounded-sm overflow-hidden"
+        style={{
+          flexBasis: `${widthPct}%`,
+          flexGrow: 0,
+          flexShrink: 1,
+          minWidth: 56,
+          background: 'var(--color-border)',
+        }}
+        initial={{ opacity: 0, y: 6 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-30px' }}
+        transition={{ duration: 0.5, delay: (baseDelay + idx * 70) / 1000, ease: 'easeOut' }}
+      >
+        {/* Sector wash — intensity ∝ risk */}
+        <div
+          className="absolute inset-0"
+          style={{ background: sectorColor, opacity: tintAlpha }}
+        />
+        {/* Top accent bar = sector identity */}
+        <div
+          className="absolute top-0 left-0 right-0"
+          style={{ height: 3, background: sectorColor, opacity: 0.85 }}
+        />
+        {/* Risk indicator dot — top right */}
+        <div
+          className="absolute top-1.5 right-1.5 rounded-full"
+          style={{ width: 5, height: 5, background: riskColor, boxShadow: `0 0 6px ${riskColor}` }}
+        />
+        {/* Content */}
+        <div className={`relative h-full flex flex-col justify-between ${primary ? 'p-3' : 'p-2'}`}>
+          <div
+            className={`font-mono uppercase ${primary ? 'text-[9.5px]' : 'text-[8.5px]'} leading-[1.25] tracking-[0.05em]`}
+            style={{ color: 'var(--color-text-primary)', opacity: 0.92 }}
+          >
+            {name}
+          </div>
+          <div
+            className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
+            style={{
+              color: 'var(--color-text-primary)',
+              fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
+              fontWeight: primary ? 800 : 700,
+            }}
+          >
+            {formatCompactMXN(cat.total_value)}
+          </div>
+        </div>
+      </motion.div>
+    )
+  }
+
+  return (
+    <div>
+      {/* Row 1 — top 3 categories, taller cells */}
+      <div className="flex gap-1 mb-1" style={{ height: 96 }}>
+        {row1.map((cat, idx) => renderCell(cat, row1Total, idx, true, 100))}
+      </div>
+      {/* Row 2 — categories 4-8, compact cells */}
+      <div className="flex gap-1" style={{ height: 60 }}>
+        {row2.map((cat, idx) => renderCell(cat, row2Total, idx, false, 450))}
+      </div>
+
+      {/* Caption + risk legend */}
+      <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
+        <span className="text-[9px] font-mono text-text-muted">
+          {lang === 'en'
+            ? 'Cell area ∝ total spend · color = sector · intensity = avg risk'
+            : 'Área celda ∝ gasto total · color = sector · intensidad = riesgo promedio'}
+        </span>
+        <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} />
+            {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} />
+            {lang === 'en' ? 'high' : 'alto'}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} />
+            {lang === 'en' ? 'medium' : 'medio'}
+          </span>
+        </div>
+      </div>
+      <div className="mt-1 text-[9px] font-mono text-text-muted">
+        {lang === 'en'
+          ? `top 8 = ${formatCompactMXN(grandTotal)} of MX$9.9T total${usingFallback ? ' · illustrative figures (precompute pending)' : ''}`
+          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9 billones${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
+      </div>
+    </div>
+  )
+}
 
 // Cleveland-pair chart: each row = hollow baseline dot ○ + filled actual dot ● + connector.
 // Rows ranked by GAP (actual − baseline), not by absolute exposure.
@@ -818,12 +1061,24 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
           const xBaseline = xPos(p.baselineMdp)
           const xActual = xPos(p.pesosBn)
 
+          // Yellow/amber rows (P3, P4) become unreadable on the grey
+          // zebra band — fix 2026-05-05: drop zebra striping entirely,
+          // use a thin border-top divider instead so rows still group
+          // visually without competing with the row's accent color.
           return (
             <g key={p.code}>
-              {/* Row hover band */}
-              <rect x={0} y={y - ROW_H / 2 + 2} width={SVG_W} height={ROW_H - 4}
-                fill={idx % 2 === 0 ? 'var(--color-surface)' : 'transparent'}
-                fillOpacity={0.3} rx={2} />
+              {/* Subtle row divider (top of row) — replaces grey zebra band */}
+              {idx > 0 && (
+                <line
+                  x1={0}
+                  x2={SVG_W}
+                  y1={y - ROW_H / 2 + 2}
+                  y2={y - ROW_H / 2 + 2}
+                  stroke="var(--color-border)"
+                  strokeWidth={0.5}
+                  strokeOpacity={0.4}
+                />
+              )}
 
               {/* Pattern code pill */}
               <rect x={4} y={y - 9} width={28} height={17} rx={2}
@@ -1275,12 +1530,10 @@ export default function Executive() {
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
 
-        {/* ─── d-P2 SLEDGEHAMMER — Pudding "30 Years of American Anxieties"
-             pattern: one giant Playfair Italic 800 number anchors the page
-             before the 4-tile grid. Live 2023 DA rate (74%) from YEARLY_DA. */}
-        <section className="mb-10">
-          <DashboardSledgehammer daRate={74} lang={lang as 'en' | 'es'} />
-        </section>
+        {/* DashboardSledgehammer DELETED 2026-05-05 per user critique:
+            "delete it. We already have that same figure below." The MacroArc
+            chart above already carries the 74% headline + the trend; the
+            duplicated giant Playfair number was redundant. */}
 
         {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
             micro-visualization. Replaces the bland mono-stat tile grid. ─── */}
@@ -2038,29 +2291,30 @@ export default function Executive() {
           </div>
         </section>
 
-        {/* d-P1 SUBTRACTION (2026-05-04, plan A.5):
-            - MexicoChoropleth removed (fake-geographic state grid; HQ-effect
-              caveat invalidates the claim — the kind of move FT/NYT would not make)
-            - TopCategoriesChart removed (now duplicated by the canonical
-              SectorTreemap on /sectors). Replaced with a single link card. */}
-        <section className="mb-12">
-          <a
-            href="/sectors"
-            onClick={(e) => { e.preventDefault(); navigate('/sectors') }}
-            className="surface-card rounded-sm p-5 flex items-center justify-between hover:bg-background-elevated transition-colors group"
-          >
-            <div>
-              <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
-                {lang === 'en' ? 'Sectors & categories — full breakdown' : 'Sectores y categorías — desglose completo'}
-              </div>
-              <p className="text-sm text-text-primary leading-[1.5]">
-                {lang === 'en'
-                  ? 'Squarified treemap, slope chart, and risk × spend beeswarm for the 12 sectors and 72 categories.'
-                  : 'Treemap squarificado, slope chart y beeswarm de riesgo × gasto para los 12 sectores y 72 categorías.'}
-              </p>
+        {/* SPENDING CATEGORIES — restored 2026-05-05 from d-P1 cut.
+            User feedback: the bare link card 'shows nothing'; bringing back
+            the actual 2-row proportional treemap of top 8 categories. */}
+        <section className="mb-12" aria-labelledby="categories-title">
+          <div className="flex items-start justify-between mb-1">
+            <div id="categories-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
+              {lang === 'en' ? 'Where the money goes — top spending categories' : 'Dónde va el dinero — principales categorías de gasto'}
             </div>
-            <ArrowUpRight className="h-5 w-5 text-text-muted group-hover:text-text-primary transition-colors flex-shrink-0 ml-4" />
-          </a>
+            <button
+              onClick={() => navigate('/sectors?view=categories')}
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
+            >
+              {lang === 'en' ? 'All categories' : 'Todas'}
+              <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+            {lang === 'en'
+              ? 'Cell width = total spend; cell color = sector palette tinted by risk score. The top 8 categories cover the majority of federal spend.'
+              : 'Ancho de celda = gasto total; color de celda = paleta sectorial teñida por puntaje de riesgo. Las 8 categorías principales cubren la mayoría del gasto federal.'}
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <TopCategoriesChart lang={lang} />
+          </div>
         </section>
 
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}

@@ -40,12 +40,14 @@ const ERA_BANDS: Array<{ label: string; start: number; end: number; color: strin
   { label: 'SHEINBAUM',  start: 2025, end: 2025, color: '#7b2d8b' },
 ]
 
-// FT-style annotation callouts attached to the line at specific years
-const CALLOUTS: Array<{ year: number; en: string; es: string; offset: { dx: number; dy: number } }> = [
-  { year: 2014, en: 'Casa Blanca · Oceanografía', es: 'Casa Blanca · Oceanografía', offset: { dx:  0, dy: -42 } },
-  { year: 2017, en: 'Estafa Maestra surfaces',    es: 'Estafa Maestra',              offset: { dx:  0, dy: -42 } },
-  { year: 2020, en: 'COVID emergency procurement',es: 'Emergencia COVID',            offset: { dx:  0, dy: -28 } },
-  { year: 2023, en: 'Toka IT monopoly',           es: 'Monopolio TIC Toka',          offset: { dx:  0, dy:  44 } },
+// FT-style annotation callouts BELOW the data line (above-line collided with
+// admin band labels at the chart top — fixed 2026-05-05). Callouts staggered
+// vertically so they don't overlap each other. Leader lines connect dot to box.
+const CALLOUTS: Array<{ year: number; en: string; es: string; dy: number }> = [
+  { year: 2014, en: 'Casa Blanca · Oceanografía', es: 'Casa Blanca · Oceanografía', dy: 56 },
+  { year: 2017, en: 'Estafa Maestra surfaces',    es: 'Estafa Maestra',              dy: 78 },
+  { year: 2020, en: 'COVID emergency procurement',es: 'Emergencia COVID',            dy: 100 },
+  { year: 2023, en: 'Toka IT monopoly',           es: 'Monopolio TIC Toka',          dy: 56 },
 ]
 
 interface Props {
@@ -254,31 +256,38 @@ export function MacroArc({ lang }: Props) {
           )
         })()}
 
-        {/* FT-style annotation callouts with leader lines */}
+        {/* FT-style annotation callouts BELOW the line at staggered depths
+            so they don't collide with the admin band labels at the top.
+            Boxes anchor to the dot via a vertical leader. */}
         {CALLOUTS.map((c) => {
           const cx = xOf(c.year)
           const pt = YEARLY_DA.find((d) => d.year === c.year)
           if (!pt) return null
           const cy = yOf(pt.da)
-          const labelX = cx + c.offset.dx
-          const labelY = cy + c.offset.dy
           const label = isEs ? c.es : c.en
-          // Estimate text width for box (rough: 5.5px per char, 9px font)
-          const boxW = label.length * 5.4 + 12
+          // Estimate text width for box (rough: 5.4px per char + padding)
+          const boxW = label.length * 5.4 + 14
           const boxH = 16
-          const boxX = labelX - boxW / 2
-          const boxY = labelY - boxH / 2
+          // Anchor: the box top aligns at cy + dy (always BELOW the dot)
+          let boxX = cx - boxW / 2
+          // Clamp inside chart so labels don't fall off either edge
+          const minX = PAD_L + 2
+          const maxX = PAD_L + CW - boxW - 2
+          if (boxX < minX) boxX = minX
+          if (boxX > maxX) boxX = maxX
+          const boxY = cy + c.dy
+          const leaderEndX = boxX + boxW / 2
           return (
             <g key={c.year}>
-              {/* Leader line from data point to box */}
+              {/* Leader line from dot down to box top */}
               <line
                 x1={cx}
-                y1={cy}
-                x2={labelX}
-                y2={c.offset.dy < 0 ? boxY + boxH : boxY}
+                y1={cy + 2}
+                x2={leaderEndX}
+                y2={boxY}
                 stroke="var(--color-text-muted)"
                 strokeWidth={0.6}
-                opacity={0.5}
+                opacity={0.55}
               />
               {/* Callout box */}
               <rect
@@ -289,11 +298,11 @@ export function MacroArc({ lang }: Props) {
                 rx={2}
                 fill="var(--color-background-card)"
                 stroke="var(--color-border-hover)"
-                strokeWidth={0.6}
-                opacity={0.95}
+                strokeWidth={0.7}
+                opacity={0.96}
               />
               <text
-                x={labelX}
+                x={boxX + boxW / 2}
                 y={boxY + 11}
                 textAnchor="middle"
                 fontSize={9}
