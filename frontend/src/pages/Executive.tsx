@@ -114,186 +114,117 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
   ]
 }
 
-// Hamilton vertical ladder: 5 horizontal rungs of decreasing width stacked top→bottom.
-// Width ∝ log10(count). Each gap has a downward arrow annotated with the rejection reason.
-// Concentric rings, radial gradients, and compass ticks are gone.
-// The shape itself IS the filtering process — the cone narrows visually as you read down.
+// LensVisualization — concentric rings narrowing 3.06M → 314 T1 priorities.
+// Restored 2026-05-05 from omega-C-P2 Hamilton-ladder revert. The rings
+// genuinely worked ("filter from outer to inner"); the ladder did not.
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
-  const SVG_W = 280
-  const RUNG_H = 15
-  const GAP_H = 32 // space between rungs for the reduction arrow + label
-  const PAD_TOP = 8
-  const PAD_BOTTOM = 12
-
-  // 5 rungs from the lensTiers data. Map to Hamilton ladder entries.
-  // rung[0] = widest (all contracts), rung[4] = narrowest (T1).
-  // Width formula: clamp(28, log10(count) × 16, 240) centered in SVG_W.
-  const rungData = [
-    {
-      count: 3_051_294,
-      display: '3.06M',
-      label: { en: 'All federal contracts', es: 'Todos los contratos federales' },
-      color: 'var(--color-text-muted)',
-      fillOpacity: 0.35,
-      reject: null,
-    },
-    {
-      count: 198_944,
-      display: '198K',
-      label: { en: 'Vendors with risk score', es: 'Proveedores con puntaje de riesgo' },
-      color: 'var(--color-text-muted)',
-      fillOpacity: 0.45,
-      reject: {
-        count: '−2.85M',
-        reason: { en: 'ad-hoc · no risk score', es: 'ad-hoc · sin puntaje' },
-      },
-    },
-    {
-      count: 6_250,
-      display: '6.2K',
-      label: { en: 'Tier 1+2+3 investigation pool', es: 'Conjunto de investigación T1+T2+T3' },
-      color: '#f59e0b',
-      fillOpacity: 0.50,
-      reject: {
-        count: '−192K',
-        reason: { en: 'below T3 threshold', es: 'debajo del umbral T3' },
-      },
-    },
-    {
-      count: tiers[4]?.count ?? 314,
-      display: tiers[4]?.display ?? '314',
-      label: { en: 'T1 priority — dossier-ready', es: 'Prioridad T1 — listo para dossier' },
-      color: '#dc2626',
-      fillOpacity: 1.0,
-      reject: {
-        count: '−5.9K',
-        reason: { en: 'below T1 threshold', es: 'debajo del umbral T1' },
-      },
-    },
-  ]
-
-  const rungWidth = (count: number): number =>
-    Math.max(28, Math.min(240, Math.log10(Math.max(count, 2)) * 16))
-
-  const totalH = PAD_TOP + rungData.length * RUNG_H + (rungData.length - 1) * GAP_H + PAD_BOTTOM
+  const SIZE = 220
+  const CX = SIZE / 2
+  const CY = SIZE / 2
 
   return (
-    <svg
-      viewBox={`0 0 ${SVG_W} ${totalH}`}
-      width="100%"
-      style={{ maxHeight: 200 }}
-      role="img"
-      aria-label={
-        lang === 'en'
-          ? 'Hamilton ladder: funnel from 3.06M contracts to 314 T1 priorities'
-          : 'Escalera Hamilton: embudo de 3.06M contratos a 314 prioridades T1'
-      }
-    >
-      {rungData.map((rung, idx) => {
-        const w = rungWidth(rung.count)
-        const x = (SVG_W - w) / 2
-        const rungY = PAD_TOP + idx * (RUNG_H + GAP_H)
-        const isFinal = idx === rungData.length - 1
-        const arrowY = rungY + RUNG_H + 2 // top of gap region
+    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%" style={{ maxHeight: 240 }}>
+      <defs>
+        <radialGradient id="lens-core" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="1" />
+          <stop offset="60%" stopColor="#dc2626" stopOpacity="0.92" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.55" />
+        </radialGradient>
+        <radialGradient id="lens-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+        </radialGradient>
+      </defs>
 
+      {/* Soft red glow behind the core */}
+      <motion.circle
+        cx={CX} cy={CY}
+        fill="url(#lens-glow)"
+        initial={{ r: 0, opacity: 0 }}
+        whileInView={{ r: 50, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.9, delay: 0.6 }}
+      />
+
+      {/* Concentric rings — outer to inner */}
+      {tiers.slice(0, 4).map((t, i) => (
+        <motion.circle
+          key={i}
+          cx={CX} cy={CY}
+          r={t.ringR}
+          fill="none"
+          stroke={t.color}
+          strokeWidth={t.ringWidth}
+          initial={{ strokeOpacity: 0 }}
+          whileInView={{ strokeOpacity: t.ringOpacity }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.15 + i * 0.13, ease: 'easeOut' }}
+        />
+      ))}
+
+      {/* Tick marks on the outermost ring (compass-like) */}
+      {[0, 90, 180, 270].map((deg) => {
+        const rad = (deg * Math.PI) / 180
+        const r = tiers[0].ringR
+        const x1 = CX + Math.cos(rad) * (r - 3)
+        const y1 = CY + Math.sin(rad) * (r - 3)
+        const x2 = CX + Math.cos(rad) * (r + 3)
+        const y2 = CY + Math.sin(rad) * (r + 3)
         return (
-          <g key={idx}>
-            {/* Rung rectangle */}
-            <motion.rect
-              x={x} y={rungY}
-              width={w} height={RUNG_H}
-              rx={2}
-              fill={isFinal ? '#dc2626' : rung.color}
-              fillOpacity={isFinal ? 1 : rung.fillOpacity}
-              initial={{ scaleX: 0, opacity: 0 }}
-              whileInView={{ scaleX: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.2, delay: idx * 0.2, ease: 'easeOut' }}
-              style={{ transformOrigin: `${SVG_W / 2}px ${rungY + RUNG_H / 2}px` }}
-            />
-
-            {/* Inline label for final rung (T1 PRIORIDAD inside the bar) */}
-            {isFinal && (
-              <motion.text
-                x={SVG_W / 2} y={rungY + RUNG_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={8} fontWeight={800}
-                fill="white"
-                fontFamily="var(--font-family-mono, monospace)"
-                letterSpacing="0.08em"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.25, delay: idx * 0.2 + 0.15 }}
-              >
-                {lang === 'es' ? `T1 PRIORIDAD · ${rung.display}` : `T1 PRIORITY · ${rung.display}`}
-              </motion.text>
-            )}
-
-            {/* Count + label to the right of rung (non-final rungs) */}
-            {!isFinal && (
-              <motion.text
-                x={x + w + 6} y={rungY + RUNG_H / 2 + 1}
-                dominantBaseline="middle"
-                fontSize={8} fontWeight={700}
-                fill="var(--color-text-primary)"
-                fontFamily="var(--font-family-mono, monospace)"
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.25, delay: idx * 0.2 + 0.1 }}
-              >
-                {rung.display}
-              </motion.text>
-            )}
-
-            {/* Reduction arrow + reason (between this rung and the next) */}
-            {rung.reject && (
-              <motion.g
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.2, delay: idx * 0.2 + 0.18 }}
-              >
-                {/* Thin vertical stem */}
-                <line
-                  x1={SVG_W / 2} x2={SVG_W / 2}
-                  y1={arrowY} y2={arrowY + GAP_H - 10}
-                  stroke="var(--color-border)"
-                  strokeWidth={0.8}
-                  strokeOpacity={0.6}
-                />
-                {/* Downward triangle arrowhead */}
-                <polygon
-                  points={`${SVG_W / 2 - 4},${arrowY + GAP_H - 10} ${SVG_W / 2 + 4},${arrowY + GAP_H - 10} ${SVG_W / 2},${arrowY + GAP_H - 4}`}
-                  fill="var(--color-border)"
-                  fillOpacity={0.5}
-                />
-                {/* Rejection count (left of stem) */}
-                <text
-                  x={SVG_W / 2 - 7} y={arrowY + GAP_H / 2 - 1}
-                  textAnchor="end"
-                  fontSize={7.5} fontWeight={700}
-                  fill="var(--color-text-muted)"
-                  fontFamily="var(--font-family-mono, monospace)"
-                >
-                  {rung.reject.count}
-                </text>
-                {/* Rejection reason (right of stem) */}
-                <text
-                  x={SVG_W / 2 + 7} y={arrowY + GAP_H / 2 - 1}
-                  textAnchor="start"
-                  fontSize={7} fill="var(--color-text-muted)"
-                  fontFamily="var(--font-family-mono, monospace)"
-                >
-                  {rung.reject.reason[lang]}
-                </text>
-              </motion.g>
-            )}
-          </g>
+          <motion.line
+            key={deg}
+            x1={x1} y1={y1} x2={x2} y2={y2}
+            stroke="var(--color-text-muted)"
+            strokeWidth={0.7}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 0.6 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.7 }}
+          />
         )
       })}
+
+      {/* T1 core — filled crimson disk with gradient */}
+      <motion.circle
+        cx={CX} cy={CY}
+        fill="url(#lens-core)"
+        initial={{ r: 0 }}
+        whileInView={{ r: 16 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.55, delay: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
+      />
+      {/* Core count label */}
+      <motion.text
+        x={CX} y={CY + 1}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={12}
+        fontWeight={800}
+        fill="white"
+        fontFamily="var(--font-family-mono, monospace)"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3, delay: 1.15 }}
+      >
+        {tiers[4].display}
+      </motion.text>
+      {/* "T1" pill below the core */}
+      <motion.text
+        x={CX} y={CY + 30}
+        textAnchor="middle"
+        fontSize={8}
+        fontWeight={700}
+        fill="#dc2626"
+        fontFamily="var(--font-family-mono, monospace)"
+        letterSpacing="0.15em"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.3, delay: 1.25 }}
+      >
+        {lang === 'es' ? 'T1 PRIORIDAD' : 'T1 PRIORITY'}
+      </motion.text>
     </svg>
   )
 }
@@ -928,14 +859,17 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
                 transition={{ duration: 0.6, delay: 0.2 + idx * 0.08, ease: 'easeOut' }}
               />
 
-              {/* Baseline dot (hollow, neutral) */}
+              {/* Baseline dot — faded ghost of SAME pattern color (was neutral
+                  grey, which clashed with the vivid actual dot). User feedback
+                  2026-05-05: "those two different contrasts don't go with the
+                  colors". Both endpoints now belong to one color family. */}
               <motion.circle
                 cx={xBaseline} cy={y}
                 r={4}
                 fill="none"
-                stroke="var(--color-text-muted)"
+                stroke={p.color}
                 strokeWidth={1.5}
-                strokeOpacity={0.7}
+                strokeOpacity={0.45}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
