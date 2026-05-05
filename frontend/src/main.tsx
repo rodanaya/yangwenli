@@ -5,6 +5,13 @@ import './i18n' // Must be imported before App
 import './index.css'
 import App from './App.tsx'
 import { initExchangeRates } from './lib/exchangeRates'
+import { BUILD_ID } from './lib/constants'
+
+// Surface the build ID at runtime so bumping it actually changes the bundle
+// content hash. Without a runtime reference, Vite tree-shakes the export
+// and the bundle hash never changes — defeating the cache-bust intent.
+// eslint-disable-next-line no-console
+console.info(`%c[RUBLI] build ${BUILD_ID}`, 'color:#a06820;font-weight:bold')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Stale-chunk recovery
