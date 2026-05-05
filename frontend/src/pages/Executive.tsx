@@ -45,6 +45,8 @@ interface LensTier {
   display: string
   label: { en: string; es: string }
   sublabel: { en: string; es: string }
+  /** One-line "why this tier is narrower than the previous" — Pudding 'Margaret Hamilton' per-step reason */
+  narrowReason?: { en: string; es: string }
   ringR: number
   color: string
   ringWidth: number
@@ -60,6 +62,7 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: '3.1M',
       label: { en: 'contracts analyzed', es: 'contratos analizados' },
       sublabel: { en: 'every COMPRANET row · 2002–2025', es: 'cada registro COMPRANET · 2002–2025' },
+      narrowReason: { en: '→ scored by 18-feature risk model', es: '→ calificados por modelo de 18 variables' },
       ringR: 96,
       color: 'var(--color-text-muted)',
       ringWidth: 0.7,
@@ -71,6 +74,7 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: formatNumber(hcCount),
       label: { en: 'high + critical risk', es: 'riesgo alto + crítico' },
       sublabel: { en: '13.5% of all contracts · OECD compliant band', es: '13.5% del total · banda OCDE cumplida' },
+      narrowReason: { en: '→ enriched by ARIA pattern detection', es: '→ enriquecidos con detección de patrones ARIA' },
       ringR: 72,
       color: '#f59e0b',
       ringWidth: 1.1,
@@ -80,8 +84,9 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
     {
       count: 6_250,
       display: '6.2k',
-      label: { en: 'ARIA priority watch list', es: 'lista vigilancia ARIA' },
+      label: { en: 'ARIA priority watch list', es: 'lista de vigilancia ARIA' },
       sublabel: { en: 'Tier 2 + Tier 3 vendors', es: 'proveedores Tier 2 + Tier 3' },
+      narrowReason: { en: '→ matched against documented cases', es: '→ cruzados contra casos documentados' },
       ringR: 50,
       color: '#f59e0b',
       ringWidth: 1.5,
@@ -91,8 +96,9 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
     {
       count: gtCount,
       display: formatNumber(gtCount),
-      label: { en: 'documented corruption cases', es: 'casos documentados' },
-      sublabel: { en: 'anchor corpus for model training', es: 'corpus ancla para entrenamiento' },
+      label: { en: 'documented corruption cases', es: 'casos documentados de corrupción' },
+      sublabel: { en: 'GT-anchored · anchor corpus for model training', es: 'anclados en GT · corpus ancla para entrenamiento' },
+      narrowReason: { en: '→ top-priority subset, manually investigable', es: '→ subconjunto prioritario, investigable a mano' },
       ringR: 32,
       color: '#a06820',
       ringWidth: 1.7,
@@ -102,8 +108,8 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
     {
       count: t1Count,
       display: formatNumber(t1Count),
-      label: { en: 'T1 investigation leads', es: 'líderes T1' },
-      sublabel: { en: 'highest priority · dossier-ready', es: 'máxima prioridad · listo para dossier' },
+      label: { en: 'T1 priority vendors', es: 'proveedores prioritarios T1' },
+      sublabel: { en: 'dossier-ready · highest priority', es: 'listo para dossier · máxima prioridad' },
       ringR: 16,
       color: '#dc2626',
       ringWidth: 0,
@@ -114,7 +120,7 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
   ]
 }
 
-function LensVisualization({ tiers }: { tiers: LensTier[] }) {
+function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
   const SIZE = 220
   const CX = SIZE / 2
   const CY = SIZE / 2
@@ -220,7 +226,7 @@ function LensVisualization({ tiers }: { tiers: LensTier[] }) {
         viewport={{ once: true }}
         transition={{ duration: 0.3, delay: 1.25 }}
       >
-        T1 PRIORITY
+        {lang === 'es' ? 'T1 PRIORIDAD' : 'T1 PRIORITY'}
       </motion.text>
     </svg>
   )
@@ -1995,50 +2001,72 @@ export default function Executive() {
                 <div className="flex flex-col md:flex-row items-center md:items-stretch gap-6">
                   {/* Lens visualization on the left */}
                   <div className="flex-shrink-0" style={{ width: 220, height: 240 }}>
-                    <LensVisualization tiers={lensTiers} />
+                    <LensVisualization tiers={lensTiers} lang={lang} />
                   </div>
 
                   {/* Tier annotations on the right */}
-                  <div className="flex-1 flex flex-col justify-between gap-2.5 min-w-0">
-                    {lensTiers.map((t, i) => (
-                      <motion.a
-                        key={i}
-                        href={t.href}
-                        className="block group"
-                        initial={{ opacity: 0, x: 8 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="rounded-full flex-shrink-0"
-                            style={{
-                              width: t.filled ? 12 : 9,
-                              height: t.filled ? 12 : 9,
-                              background: t.filled ? t.color : 'transparent',
-                              border: t.filled ? 'none' : `1.6px solid ${t.color}`,
-                              boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
-                            }}
-                          />
-                          <span
-                            className="font-mono font-bold tabular-nums leading-none"
-                            style={{
-                              fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
-                              color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
-                            }}
+                  <div className="flex-1 flex flex-col min-w-0">
+                    {/* Pudding 'Margaret Hamilton' single-argument headline */}
+                    <div className="text-[10px] font-mono italic text-text-muted mb-3 leading-[1.5]">
+                      {lang === 'es'
+                        ? `De 3,051,294 contratos, ${formatNumber(lensTiers[4].count)} son investigables.`
+                        : `Of 3,051,294 contracts, ${formatNumber(lensTiers[4].count)} are dossier-ready.`}
+                    </div>
+                    <div className="flex flex-col gap-0">
+                      {lensTiers.map((t, i) => (
+                        <div key={i}>
+                          <motion.a
+                            href={t.href}
+                            className="block group"
+                            initial={{ opacity: 0, x: 8 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
                           >
-                            {t.display}
-                          </span>
-                          <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
-                            {t.label[lang]}
-                          </span>
+                            <div className="flex items-center gap-3">
+                              <span
+                                className="rounded-full flex-shrink-0"
+                                style={{
+                                  width: t.filled ? 12 : 9,
+                                  height: t.filled ? 12 : 9,
+                                  background: t.filled ? t.color : 'transparent',
+                                  border: t.filled ? 'none' : `1.6px solid ${t.color}`,
+                                  boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
+                                }}
+                              />
+                              <span
+                                className="font-mono font-bold tabular-nums leading-none"
+                                style={{
+                                  fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
+                                  color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
+                                }}
+                              >
+                                {t.display}
+                              </span>
+                              <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
+                                {t.label[lang]}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-text-muted ml-[24px] leading-[1.4] mt-0.5">
+                              {t.sublabel[lang]}
+                            </div>
+                          </motion.a>
+                          {/* Narrowing reason — Pudding 'Margaret Hamilton' per-step annotation */}
+                          {t.narrowReason && (
+                            <motion.div
+                              className="ml-[24px] mt-1 mb-2 text-[9px] font-mono italic leading-[1.3]"
+                              style={{ color: t.color, opacity: 0.7 }}
+                              initial={{ opacity: 0 }}
+                              whileInView={{ opacity: 0.7 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.3, delay: 0.55 + i * 0.13 }}
+                            >
+                              {t.narrowReason[lang]}
+                            </motion.div>
+                          )}
                         </div>
-                        <div className="text-[10px] text-text-muted ml-[24px] leading-[1.4] mt-0.5">
-                          {t.sublabel[lang]}
-                        </div>
-                      </motion.a>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               )
