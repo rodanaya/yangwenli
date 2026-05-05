@@ -1,19 +1,18 @@
 /**
- * MacroArc++ — Hero #2: 23-year direct-award rate trend
+ * MacroArc omega-C-P3 — Pudding "30 Years of American Anxieties" mechanic
  *
- * Upgrades over the original inline version:
- * 1. Persistent dashed cyan OECD ≤ 25% reference line (changed from 30%)
- * 2. 4 FT-style callout boxes with leader lines:
- *    - 2014 spike: Casa Blanca · Oceanografía
- *    - 2017 spike: Estafa Maestra surfaces
- *    - 2020 peak: COVID emergency procurement
- *    - 2023: Highest non-emergency rate ever recorded
- * 3. Direct labels at right edge for Mexico line and OECD ceiling
- * 4. Admin wash bands darkened 0.05 → 0.12 with mono 9px labels
+ * Layout: ONE huge typographic anchor (74% in Playfair Italic 800, ~200pt,
+ * crimson) IS the chart. The 23-year time-series collapses to a 320×80
+ * sparkline on the right. Number is the headline; line confirms it.
  *
- * Inspiration: John Burn-Murdoch / FT post-COVID line charts.
+ * Deleted: 820×280 SVG with 4 FT-style callout boxes + leader lines.
+ * Kept: YEARLY_DA + ERA_BANDS_MACRO data; OECD 25% reference; Bible §3.10
+ * neutral palette.
+ *
+ * Plan: docs/OMEGA_C_AMPLIFIED_REDESIGN.md omega-C-P3
  */
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 // Per-year direct-award rates — same data as original MacroArc
@@ -44,52 +43,21 @@ const YEARLY_DA: Array<{ year: number; da: number; covid?: boolean; transition?:
   { year: 2025, da: 74 },
 ]
 
-const ERA_BANDS: Array<{ label: string; start: number; end: number; color: string }> = [
-  { label: 'Fox',         start: 2002, end: 2006, color: '#1a5276' },
-  { label: 'Calderón',    start: 2007, end: 2012, color: '#1a5276' },
-  { label: 'Peña Nieto',  start: 2013, end: 2018, color: '#c41e3a' },
-  { label: 'AMLO',        start: 2019, end: 2024, color: '#7b2d8b' },
-  { label: 'Sheinbaum',   start: 2025, end: 2025, color: '#7b2d8b' },
+// Era bands for sparkline x-axis ticks
+const ERA_BANDS_MACRO: Array<{ label: string; start: number; end: number; color: string }> = [
+  { label: 'Fox',        start: 2002, end: 2006, color: '#1a5276' },
+  { label: 'Calderón',   start: 2007, end: 2012, color: '#1a5276' },
+  { label: 'Peña',       start: 2013, end: 2018, color: '#c41e3a' },
+  { label: 'AMLO',       start: 2019, end: 2024, color: '#7b2d8b' },
+  { label: 'Sheinbaum',  start: 2025, end: 2025, color: '#7b2d8b' },
 ]
 
-// FT-style callout annotations
-interface Callout {
-  year: number
-  label: { en: string; es: string }
-  offsetX: number   // horizontal nudge for the box
-  boxAnchor: 'start' | 'end' | 'middle'
-  leaderOffsetY: number  // vertical offset for leader endpoint from the data point
-}
-
-const CALLOUTS: Callout[] = [
-  {
-    year: 2014,
-    label: { en: 'Casa Blanca · Oceanografía', es: 'Casa Blanca · Oceanografía' },
-    offsetX: -4,
-    boxAnchor: 'end',
-    leaderOffsetY: -22,
-  },
-  {
-    year: 2017,
-    label: { en: 'Estafa Maestra surfaces', es: 'Estafa Maestra' },
-    offsetX: 4,
-    boxAnchor: 'start',
-    leaderOffsetY: -28,
-  },
-  {
-    year: 2020,
-    label: { en: 'COVID emergency', es: 'Emergencia COVID' },
-    offsetX: 0,
-    boxAnchor: 'middle',
-    leaderOffsetY: -36,
-  },
-  {
-    year: 2023,
-    label: { en: 'Toka IT monopoly', es: 'Monopolio TIC Toka' },
-    offsetX: -10,
-    boxAnchor: 'end',
-    leaderOffsetY: -26,
-  },
+// Inflection markers — tiny ▼ ticks; tooltip text only on hover
+const INFLECTIONS: Array<{ year: number; label: { en: string; es: string }; covid?: boolean }> = [
+  { year: 2014, label: { en: 'Casa Blanca · Oceanografía', es: 'Casa Blanca · Oceanografía' } },
+  { year: 2017, label: { en: 'Estafa Maestra surfaces', es: 'Estafa Maestra' } },
+  { year: 2020, label: { en: 'COVID emergency procurement', es: 'Emergencia COVID' }, covid: true },
+  { year: 2023, label: { en: 'Toka IT monopoly', es: 'Monopolio TIC Toka' } },
 ]
 
 interface Props {
@@ -97,359 +65,347 @@ interface Props {
 }
 
 export function MacroArc({ lang }: Props) {
-  const SVG_W = 820
-  const SVG_H = 280       // taller to accommodate callout boxes above
-  const PAD_L = 42
-  const PAD_R = 80        // extra right pad for direct labels
-  const PAD_TOP = 72      // extra top room for callout boxes
-  const PAD_BOT = 32
-  const CHART_H = SVG_H - PAD_TOP - PAD_BOT
-  const CHART_W = SVG_W - PAD_L - PAD_R
-  const OECD_CEILING = 25   // primary: OECD ≤ 25% recommended ceiling
-  // OECD_UPPER (30%) constant removed with the secondary line revert
+  const [tooltip, setTooltip] = useState<{
+    x: number; y: number; year: number; da: number; era: string; event?: string
+  } | null>(null)
+
+  const latest = YEARLY_DA[YEARLY_DA.length - 1]
+  const latestPct = `${latest.da}%`
+
+  // Sparkline geometry
+  const SW = 320
+  const SH = 80
+  const PAD_L = 4
+  const PAD_R = 4
+  const PAD_TOP = 12       // room for ▼ tick markers above line
+  const PAD_BOT = 20       // room for era tick band under x-axis
+  const CHART_W = SW - PAD_L - PAD_R
+  const CHART_H = SH - PAD_TOP - PAD_BOT
+
   const Y_MIN = 2002
   const Y_MAX = 2025
+  const OECD = 25
 
-  const yearToX = (y: number) => PAD_L + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
-  const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
-  const OECD_Y = daToY(OECD_CEILING)
-  // OECD_UPPER_Y (30% line position) removed with the secondary line revert
+  const xOf = (year: number) => PAD_L + ((year - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
+  const yOf = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
+  const OECD_Y = yOf(OECD)
   const AXIS_Y = PAD_TOP + CHART_H
 
-  // Most recent data point
-  const lastPoint = YEARLY_DA[YEARLY_DA.length - 1]
-  const lastX = yearToX(lastPoint.year)
-  const lastY = daToY(lastPoint.da)
-
-  // Build line path
   const linePath = YEARLY_DA
-    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${yearToX(d.year).toFixed(2)} ${daToY(d.da).toFixed(2)}`)
+    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${xOf(d.year).toFixed(2)} ${yOf(d.da).toFixed(2)}`)
     .join(' ')
 
-  // Build area path
-  const areaPath = `${linePath} L ${yearToX(Y_MAX).toFixed(2)} ${AXIS_Y} L ${yearToX(Y_MIN).toFixed(2)} ${AXIS_Y} Z`
+  const areaPath = `${linePath} L ${xOf(Y_MAX).toFixed(2)} ${AXIS_Y} L ${xOf(Y_MIN).toFixed(2)} ${AXIS_Y} Z`
+
+  function getEraAt(year: number): string {
+    return ERA_BANDS_MACRO.find((e) => year >= e.start && year <= e.end)?.label ?? ''
+  }
+
+  function getEventAt(year: number): string | undefined {
+    return INFLECTIONS.find((e) => e.year === year)?.label[lang]
+  }
+
+  function handleMouseMove(e: React.MouseEvent<SVGSVGElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const svgX = ((e.clientX - rect.left) / rect.width) * SW
+    const rawYear = Y_MIN + ((svgX - PAD_L) / CHART_W) * (Y_MAX - Y_MIN)
+    const year = Math.round(Math.max(Y_MIN, Math.min(Y_MAX, rawYear)))
+    const pt = YEARLY_DA.find((d) => d.year === year)
+    if (!pt) return
+    setTooltip({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      year: pt.year,
+      da: pt.da,
+      era: getEraAt(pt.year),
+      event: getEventAt(pt.year),
+    })
+  }
 
   return (
     <div>
-      <svg
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="w-full"
-        style={{ height: SVG_H }}
-        role="img"
-        aria-label={lang === 'en'
-          ? 'Yearly direct-award rate 2002–2025 versus OECD 25% ceiling. Annotations mark Casa Blanca 2014, Estafa Maestra 2017, COVID 2020, and Toka IT monopoly 2023.'
-          : 'Tasa anual de adjudicación directa 2002–2025 vs techo OCDE 25%. Anotaciones: Casa Blanca 2014, Estafa Maestra 2017, COVID 2020, Monopolio TIC Toka 2023.'}
-      >
-        <defs>
-          <linearGradient id="macroacpp-area" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-          </linearGradient>
-        </defs>
+      {/* Main layout: giant number LEFT, sparkline RIGHT */}
+      <div className="flex flex-row items-center gap-6 flex-wrap sm:flex-nowrap">
 
-        {/* Administration era wash bands — darkened to 0.12 opacity */}
-        {ERA_BANDS.map((era) => {
-          const x1 = yearToX(era.start)
-          const x2 = era.end > era.start
-            ? yearToX(era.end)
-            : Math.min(yearToX(era.start) + 28, PAD_L + CHART_W)
-          const midX = (x1 + x2) / 2
-          return (
-            <g key={era.label}>
-              <rect
-                x={x1}
-                y={PAD_TOP}
-                width={Math.max(1, x2 - x1)}
-                height={CHART_H}
-                fill={era.color}
-                opacity={0.12}
-              />
-              {/* Top tick bar */}
-              <rect
-                x={x1}
-                y={PAD_TOP}
-                width={Math.max(1, x2 - x1)}
-                height={2}
-                fill={era.color}
-                opacity={0.45}
-              />
-              {/* Admin name — mono 9px at top of band */}
-              <text
-                x={midX}
-                y={PAD_TOP + 13}
-                textAnchor="middle"
-                fontSize={9}
-                fill={era.color}
-                opacity={0.85}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="700"
-                letterSpacing="0.06em"
-              >
-                {era.label.toUpperCase()}
-              </text>
-            </g>
-          )
-        })}
-
-        {/* omega-P1 secondary 30% reference line REVERTED 2026-05-05 —
-            two reference lines on the same chart was clutter; the 25%
-            ceiling is the canonical platform threshold. */}
-
-        {/* OECD 25% ceiling — neutral dashed reference line (Bible §3.10: no green) */}
-        <line
-          x1={PAD_L}
-          x2={PAD_L + CHART_W}
-          y1={OECD_Y}
-          y2={OECD_Y}
-          stroke="var(--color-text-muted)"
-          strokeWidth={1.4}
-          strokeDasharray="6 4"
-          opacity={0.70}
-        />
-        {/* OECD 25% direct label at right edge */}
-        <text
-          x={PAD_L + CHART_W + 6}
-          y={OECD_Y + 3}
-          fontSize={8.5}
-          fill="var(--color-text-muted)"
-          opacity={0.90}
-          fontFamily="var(--font-family-mono, monospace)"
-          fontWeight="700"
+        {/* LEFT: Giant Playfair Italic 800 number */}
+        <motion.div
+          className="flex-none flex flex-col justify-center"
+          initial={{ opacity: 0, x: -24 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
         >
-          {lang === 'en' ? 'OECD 25% (recommended)' : 'OCDE 25% (recomendado)'}
-        </text>
+          {/* The number IS the chart */}
+          <div
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontWeight: 800,
+              fontSize: 'clamp(120px, 18vw, 220px)',
+              lineHeight: 0.85,
+              letterSpacing: '-0.02em',
+              fontVariantNumeric: 'tabular-nums',
+              color: '#dc2626',
+            }}
+            aria-label={lang === 'en'
+              ? `${latestPct} direct-award rate in 2025`
+              : `${latestPct} tasa de adjudicación directa en 2025`}
+          >
+            {latestPct}
+          </div>
 
-        {/* OECD safe-zone fill — neutral, not green (Bible §3.10) */}
-        <rect
-          x={PAD_L}
-          y={OECD_Y}
-          width={CHART_W}
-          height={AXIS_Y - OECD_Y}
-          fill="var(--color-text-muted)"
-          opacity={0.04}
-        />
+          {/* Sub-line: what the number means */}
+          <p
+            style={{
+              fontFamily: 'var(--font-family-mono, monospace)',
+              fontSize: 13,
+              color: 'var(--color-text-secondary)',
+              marginTop: '0.5rem',
+              letterSpacing: '0.04em',
+            }}
+          >
+            {lang === 'en'
+              ? "Mexico's 2025 direct-award rate"
+              : 'Tasa de adjudicación directa de México 2025'}
+          </p>
 
-        {/* Horizontal grid lines */}
-        {[0, 25, 50, 75, 100].map((pct) => {
-          const y = daToY(pct)
-          return (
-            <g key={pct}>
-              <line
-                x1={PAD_L}
-                x2={PAD_L + CHART_W}
-                y1={y}
-                y2={y}
-                stroke="var(--color-border)"
-                strokeWidth={pct === 0 ? 1 : 0.5}
-                strokeOpacity={pct === 0 ? 1 : 0.30}
-              />
-              <text
-                x={PAD_L - 6}
-                y={y + 3}
-                textAnchor="end"
-                fontSize={7.5}
-                fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono, monospace)"
-              >
-                {pct}%
-              </text>
-            </g>
-          )
-        })}
+          {/* Footer line: the streak */}
+          <p
+            style={{
+              fontFamily: 'var(--font-family-mono, monospace)',
+              fontSize: 11,
+              color: 'var(--color-text-muted)',
+              marginTop: '0.25rem',
+              fontStyle: 'italic',
+              letterSpacing: '0.03em',
+            }}
+          >
+            {lang === 'en'
+              ? '23 consecutive years above OECD\'s 25% ceiling'
+              : '23 años consecutivos sobre el techo OCDE de 25%'}
+          </p>
+        </motion.div>
 
-        {/* X-axis year ticks */}
-        {[2002, 2006, 2010, 2014, 2018, 2022, 2025].map((y) => (
-          <g key={y}>
+        {/* RIGHT: Compact 320×80 sparkline */}
+        <motion.div
+          className="flex-1 min-w-[200px] relative"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <svg
+            viewBox={`0 0 ${SW} ${SH}`}
+            width="100%"
+            style={{ height: SH, overflow: 'visible' }}
+            role="img"
+            aria-label={lang === 'en'
+              ? 'Sparkline: direct-award rate 2002–2025 versus OECD 25% ceiling'
+              : 'Minigráfico: tasa de adjudicación directa 2002–2025 vs techo OCDE 25%'}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <defs>
+              <linearGradient id="spark-area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#dc2626" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {/* OECD 25% safe zone fill — neutral (Bible §3.10) */}
+            <rect
+              x={PAD_L}
+              y={OECD_Y}
+              width={CHART_W}
+              height={AXIS_Y - OECD_Y}
+              fill="var(--color-text-muted)"
+              opacity={0.05}
+            />
+
+            {/* OECD 25% dashed reference */}
             <line
-              x1={yearToX(y)}
-              x2={yearToX(y)}
+              x1={PAD_L}
+              x2={PAD_L + CHART_W}
+              y1={OECD_Y}
+              y2={OECD_Y}
+              stroke="#22d3ee"
+              strokeWidth={0.8}
+              strokeDasharray="3 3"
+              opacity={0.70}
+            />
+
+            {/* Area under Mexico line */}
+            <path d={areaPath} fill="url(#spark-area-grad)" />
+
+            {/* Mexico DA-rate line */}
+            <motion.path
+              d={linePath}
+              fill="none"
+              stroke="#dc2626"
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.4, ease: 'easeOut', delay: 0.6 }}
+            />
+
+            {/* Inflection markers: tiny ▼ triangles above the data point */}
+            {INFLECTIONS.map((inf) => {
+              const cx = xOf(inf.year)
+              const cy = yOf(YEARLY_DA.find((d) => d.year === inf.year)?.da ?? 75)
+              const tx = cx
+              const ty = cy - 6  // just above the line
+              return (
+                <text
+                  key={inf.year}
+                  x={tx}
+                  y={ty}
+                  textAnchor="middle"
+                  fontSize={6}
+                  fill="var(--color-text-muted)"
+                  style={{ userSelect: 'none' }}
+                >
+                  ▼
+                </text>
+              )
+            })}
+
+            {/* X-axis baseline */}
+            <line
+              x1={PAD_L}
+              x2={PAD_L + CHART_W}
               y1={AXIS_Y}
-              y2={AXIS_Y + 4}
-              stroke="var(--color-border)"
+              y2={AXIS_Y}
+              stroke="var(--color-border-hover)"
               strokeWidth={1}
             />
-            <text
-              x={yearToX(y)}
-              y={AXIS_Y + 14}
-              textAnchor="middle"
-              fontSize={7.5}
-              fill="var(--color-text-muted)"
-              fontFamily="var(--font-family-mono, monospace)"
-            >
-              {y}
-            </text>
-          </g>
-        ))}
 
-        {/* Area under line */}
-        <motion.path
-          d={areaPath}
-          fill="url(#macroacpp-area)"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-        />
+            {/* Era tick rectangles under x-axis — 8×4 colored bands */}
+            {ERA_BANDS_MACRO.map((era) => {
+              const x1 = xOf(era.start)
+              const x2 = era.end > era.start
+                ? xOf(era.end)
+                : Math.min(xOf(era.start) + 10, PAD_L + CHART_W)
+              return (
+                <rect
+                  key={era.label}
+                  x={x1}
+                  y={AXIS_Y + 2}
+                  width={Math.max(1, x2 - x1 - 1)}
+                  height={4}
+                  rx={0.5}
+                  fill={era.color}
+                  opacity={0.75}
+                />
+              )
+            })}
 
-        {/* DA-rate line — draw-in animation */}
-        <motion.path
-          d={linePath}
-          fill="none"
-          stroke="#dc2626"
-          strokeWidth={2.2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.6, ease: 'easeOut', delay: 0.2 }}
-        />
-
-        {/* Year marker dots */}
-        {YEARLY_DA.map((d, i) => {
-          const cx = yearToX(d.year)
-          const cy = daToY(d.da)
-          const isAnnotated = CALLOUTS.some((c) => c.year === d.year)
-          const r = d.covid ? 4.5 : isAnnotated ? 3.5 : 2.2
-          return (
-            <motion.circle
-              key={d.year}
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill="#dc2626"
-              fillOpacity={d.covid ? 1 : isAnnotated ? 0.95 : 0.75}
-              stroke={d.covid || isAnnotated ? '#fff' : 'transparent'}
-              strokeWidth={d.covid || isAnnotated ? 1.2 : 0}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: 1.6 + i * 0.04 }}
-            />
-          )
-        })}
-
-        {/* FT-style callout boxes with leader lines */}
-        {CALLOUTS.map((callout, idx) => {
-          const pointX = yearToX(callout.year)
-          const pointY = daToY(YEARLY_DA.find((d) => d.year === callout.year)?.da ?? 75)
-          const boxY = pointY + callout.leaderOffsetY
-          const lines = callout.label[lang].split('\n')
-          const boxW = Math.max(...lines.map((l) => l.length)) * 5.6 + 14
-          const boxH = lines.length * 12 + 10
-          const boxX =
-            callout.boxAnchor === 'end'
-              ? pointX + callout.offsetX - boxW
-              : callout.boxAnchor === 'start'
-              ? pointX + callout.offsetX
-              : pointX + callout.offsetX - boxW / 2
-
-          return (
-            <motion.g
-              key={callout.year}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 2.2 + idx * 0.15 }}
-            >
-              {/* Leader line from box bottom to data point */}
-              <line
-                x1={pointX}
-                y1={pointY - 5}
-                x2={pointX}
-                y2={boxY + boxH}
-                stroke="#dc2626"
-                strokeWidth={0.8}
-                strokeOpacity={0.55}
-                strokeDasharray="2 2"
-              />
-              {/* Callout box */}
-              <rect
-                x={boxX}
-                y={boxY}
-                width={boxW}
-                height={boxH}
-                rx={2}
-                fill="var(--color-background)"
-                stroke="#dc2626"
-                strokeWidth={0.8}
-                strokeOpacity={0.55}
-              />
-              {/* Year label */}
-              <text
-                x={boxX + boxW / 2}
-                y={boxY + 9}
-                textAnchor="middle"
-                fontSize={7}
-                fill="#dc2626"
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="800"
-                opacity={0.80}
-              >
-                {callout.year}
-              </text>
-              {/* Callout text lines */}
-              {lines.map((line, li) => (
+            {/* Era labels under tick rectangles */}
+            {ERA_BANDS_MACRO.map((era) => {
+              const x1 = xOf(era.start)
+              const x2 = era.end > era.start
+                ? xOf(era.end)
+                : Math.min(xOf(era.start) + 10, PAD_L + CHART_W)
+              const midX = (x1 + x2) / 2
+              return (
                 <text
-                  key={li}
-                  x={boxX + boxW / 2}
-                  y={boxY + 20 + li * 12}
+                  key={`lbl-${era.label}`}
+                  x={midX}
+                  y={AXIS_Y + 16}
                   textAnchor="middle"
-                  fontSize={7.5}
-                  fill="var(--color-text-secondary)"
+                  fontSize={6}
+                  fill={era.color}
+                  opacity={0.80}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fontWeight="600"
+                  fontWeight="700"
+                  style={{ userSelect: 'none' }}
                 >
-                  {line}
+                  {era.label.toUpperCase()}
                 </text>
-              ))}
-            </motion.g>
-          )
-        })}
+              )
+            })}
 
-        {/* Mexico direct label at right edge */}
-        <motion.g
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 2.0 }}
-        >
-          <circle cx={lastX} cy={lastY} r={4} fill="#dc2626" stroke="#fff" strokeWidth={1.2} />
-          <text
-            x={lastX + 10}
-            y={lastY - 4}
-            fontSize={9}
-            fill="#dc2626"
-            fontFamily="var(--font-family-mono, monospace)"
-            fontWeight="800"
-          >
-            {lang === 'en' ? 'Mexico' : 'México'}
-          </text>
-          <text
-            x={lastX + 10}
-            y={lastY + 8}
-            fontSize={9}
-            fill="#dc2626"
-            fontFamily="var(--font-family-mono, monospace)"
-            fontWeight="600"
-            opacity={0.8}
-          >
-            {lastPoint.da}%
-          </text>
-        </motion.g>
+            {/* OECD label at right end */}
+            <text
+              x={PAD_L + CHART_W - 1}
+              y={OECD_Y - 2}
+              textAnchor="end"
+              fontSize={6}
+              fill="#22d3ee"
+              opacity={0.80}
+              fontFamily="var(--font-family-mono, monospace)"
+              fontWeight="700"
+            >
+              {lang === 'en' ? 'OECD 25%' : 'OCDE 25%'}
+            </text>
 
-        {/* Axis base */}
-        <line
-          x1={PAD_L}
-          x2={PAD_L + CHART_W}
-          y1={AXIS_Y}
-          y2={AXIS_Y}
-          stroke="var(--color-border-hover)"
-          strokeWidth={1.5}
-        />
-      </svg>
+            {/* Hover crosshair dot */}
+            {tooltip && (() => {
+              const pt = YEARLY_DA.find((d) => d.year === tooltip.year)
+              if (!pt) return null
+              return (
+                <circle
+                  cx={xOf(pt.year)}
+                  cy={yOf(pt.da)}
+                  r={3}
+                  fill="#dc2626"
+                  stroke="#fff"
+                  strokeWidth={1}
+                />
+              )
+            })()}
+          </svg>
 
-      <p className="text-[10px] font-mono text-text-muted mt-2 leading-[1.5]">
+          {/* Hover tooltip */}
+          {tooltip && (
+            <div
+              style={{
+                position: 'absolute',
+                left: Math.min(tooltip.x + 8, 260),
+                top: Math.max(tooltip.y - 48, 0),
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border-hover)',
+                borderRadius: 4,
+                padding: '4px 8px',
+                pointerEvents: 'none',
+                zIndex: 10,
+                minWidth: 120,
+              }}
+            >
+              <div style={{
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#dc2626',
+              }}>
+                {tooltip.year} · {tooltip.da}%
+              </div>
+              <div style={{
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: 10,
+                color: 'var(--color-text-muted)',
+              }}>
+                {tooltip.era}
+              </div>
+              {tooltip.event && (
+                <div style={{
+                  fontFamily: 'var(--font-family-mono, monospace)',
+                  fontSize: 10,
+                  color: 'var(--color-text-secondary)',
+                  marginTop: 2,
+                }}>
+                  {tooltip.event}
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Caption */}
+      <p className="text-[10px] font-mono text-text-muted mt-3 leading-[1.5]">
         {lang === 'en'
           ? 'Yearly direct-award rate · OECD ceiling 25% (recommended) — Mexican federal procurement has held above the OECD limit for 23 consecutive years. Sources: COMPRANET 2002–2025; OECD Government at a Glance 2023.'
           : 'Tasa anual de adjudicación directa · techo OCDE 25% (recomendado) — la contratación federal mexicana ha permanecido por encima del límite OCDE durante 23 años consecutivos. Fuentes: COMPRANET 2002–2025; OCDE Government at a Glance 2023.'}
