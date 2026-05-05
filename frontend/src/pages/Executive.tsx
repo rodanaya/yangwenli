@@ -45,8 +45,6 @@ interface LensTier {
   display: string
   label: { en: string; es: string }
   sublabel: { en: string; es: string }
-  /** One-line "why this tier is narrower than the previous" — Pudding 'Margaret Hamilton' per-step reason */
-  narrowReason?: { en: string; es: string }
   ringR: number
   color: string
   ringWidth: number
@@ -62,7 +60,6 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: '3.1M',
       label: { en: 'contracts analyzed', es: 'contratos analizados' },
       sublabel: { en: 'every COMPRANET row · 2002–2025', es: 'cada registro COMPRANET · 2002–2025' },
-      narrowReason: { en: '→ scored by 18-feature risk model', es: '→ calificados por modelo de 18 variables' },
       ringR: 96,
       color: 'var(--color-text-muted)',
       ringWidth: 0.7,
@@ -74,7 +71,6 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: formatNumber(hcCount),
       label: { en: 'high + critical risk', es: 'riesgo alto + crítico' },
       sublabel: { en: '13.5% of all contracts · OECD compliant band', es: '13.5% del total · banda OCDE cumplida' },
-      narrowReason: { en: '→ enriched by ARIA pattern detection', es: '→ enriquecidos con detección de patrones ARIA' },
       ringR: 72,
       color: '#f59e0b',
       ringWidth: 1.1,
@@ -86,7 +82,6 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: '6.2k',
       label: { en: 'ARIA priority watch list', es: 'lista de vigilancia ARIA' },
       sublabel: { en: 'Tier 2 + Tier 3 vendors', es: 'proveedores Tier 2 + Tier 3' },
-      narrowReason: { en: '→ matched against documented cases', es: '→ cruzados contra casos documentados' },
       ringR: 50,
       color: '#f59e0b',
       ringWidth: 1.5,
@@ -98,7 +93,6 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       display: formatNumber(gtCount),
       label: { en: 'documented corruption cases', es: 'casos documentados de corrupción' },
       sublabel: { en: 'GT-anchored · anchor corpus for model training', es: 'anclados en GT · corpus ancla para entrenamiento' },
-      narrowReason: { en: '→ top-priority subset, manually investigable', es: '→ subconjunto prioritario, investigable a mano' },
       ringR: 32,
       color: '#a06820',
       ringWidth: 1.7,
@@ -120,114 +114,186 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
   ]
 }
 
+// Hamilton vertical ladder: 5 horizontal rungs of decreasing width stacked top→bottom.
+// Width ∝ log10(count). Each gap has a downward arrow annotated with the rejection reason.
+// Concentric rings, radial gradients, and compass ticks are gone.
+// The shape itself IS the filtering process — the cone narrows visually as you read down.
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
-  const SIZE = 220
-  const CX = SIZE / 2
-  const CY = SIZE / 2
+  const SVG_W = 280
+  const RUNG_H = 15
+  const GAP_H = 32 // space between rungs for the reduction arrow + label
+  const PAD_TOP = 8
+  const PAD_BOTTOM = 12
+
+  // 5 rungs from the lensTiers data. Map to Hamilton ladder entries.
+  // rung[0] = widest (all contracts), rung[4] = narrowest (T1).
+  // Width formula: clamp(28, log10(count) × 16, 240) centered in SVG_W.
+  const rungData = [
+    {
+      count: 3_051_294,
+      display: '3.06M',
+      label: { en: 'All federal contracts', es: 'Todos los contratos federales' },
+      color: 'var(--color-text-muted)',
+      fillOpacity: 0.35,
+      reject: null,
+    },
+    {
+      count: 198_944,
+      display: '198K',
+      label: { en: 'Vendors with risk score', es: 'Proveedores con puntaje de riesgo' },
+      color: 'var(--color-text-muted)',
+      fillOpacity: 0.45,
+      reject: {
+        count: '−2.85M',
+        reason: { en: 'ad-hoc · no risk score', es: 'ad-hoc · sin puntaje' },
+      },
+    },
+    {
+      count: 6_250,
+      display: '6.2K',
+      label: { en: 'Tier 1+2+3 investigation pool', es: 'Conjunto de investigación T1+T2+T3' },
+      color: '#f59e0b',
+      fillOpacity: 0.50,
+      reject: {
+        count: '−192K',
+        reason: { en: 'below T3 threshold', es: 'debajo del umbral T3' },
+      },
+    },
+    {
+      count: tiers[4]?.count ?? 314,
+      display: tiers[4]?.display ?? '314',
+      label: { en: 'T1 priority — dossier-ready', es: 'Prioridad T1 — listo para dossier' },
+      color: '#dc2626',
+      fillOpacity: 1.0,
+      reject: {
+        count: '−5.9K',
+        reason: { en: 'below T1 threshold', es: 'debajo del umbral T1' },
+      },
+    },
+  ]
+
+  const rungWidth = (count: number): number =>
+    Math.max(28, Math.min(240, Math.log10(Math.max(count, 2)) * 16))
+
+  const totalH = PAD_TOP + rungData.length * RUNG_H + (rungData.length - 1) * GAP_H + PAD_BOTTOM
 
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%" style={{ maxHeight: 240 }}>
-      <defs>
-        <radialGradient id="lens-core" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#dc2626" stopOpacity="1" />
-          <stop offset="60%" stopColor="#dc2626" stopOpacity="0.92" />
-          <stop offset="100%" stopColor="#dc2626" stopOpacity="0.55" />
-        </radialGradient>
-        <radialGradient id="lens-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-        </radialGradient>
-      </defs>
+    <svg
+      viewBox={`0 0 ${SVG_W} ${totalH}`}
+      width="100%"
+      style={{ maxHeight: 200 }}
+      role="img"
+      aria-label={
+        lang === 'en'
+          ? 'Hamilton ladder: funnel from 3.06M contracts to 314 T1 priorities'
+          : 'Escalera Hamilton: embudo de 3.06M contratos a 314 prioridades T1'
+      }
+    >
+      {rungData.map((rung, idx) => {
+        const w = rungWidth(rung.count)
+        const x = (SVG_W - w) / 2
+        const rungY = PAD_TOP + idx * (RUNG_H + GAP_H)
+        const isFinal = idx === rungData.length - 1
+        const arrowY = rungY + RUNG_H + 2 // top of gap region
 
-      {/* Soft red glow behind the core */}
-      <motion.circle
-        cx={CX} cy={CY}
-        fill="url(#lens-glow)"
-        initial={{ r: 0, opacity: 0 }}
-        whileInView={{ r: 50, opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.9, delay: 0.6 }}
-      />
-
-      {/* Concentric rings — outer to inner */}
-      {tiers.slice(0, 4).map((t, i) => (
-        <motion.circle
-          key={i}
-          cx={CX} cy={CY}
-          r={t.ringR}
-          fill="none"
-          stroke={t.color}
-          strokeWidth={t.ringWidth}
-          initial={{ strokeOpacity: 0 }}
-          whileInView={{ strokeOpacity: t.ringOpacity }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.15 + i * 0.13, ease: 'easeOut' }}
-        />
-      ))}
-
-      {/* Tick marks on the outermost ring (compass-like) */}
-      {[0, 90, 180, 270].map((deg) => {
-        const rad = (deg * Math.PI) / 180
-        const r = tiers[0].ringR
-        const x1 = CX + Math.cos(rad) * (r - 3)
-        const y1 = CY + Math.sin(rad) * (r - 3)
-        const x2 = CX + Math.cos(rad) * (r + 3)
-        const y2 = CY + Math.sin(rad) * (r + 3)
         return (
-          <motion.line
-            key={deg}
-            x1={x1} y1={y1} x2={x2} y2={y2}
-            stroke="var(--color-text-muted)"
-            strokeWidth={0.7}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 0.6 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.7 }}
-          />
+          <g key={idx}>
+            {/* Rung rectangle */}
+            <motion.rect
+              x={x} y={rungY}
+              width={w} height={RUNG_H}
+              rx={2}
+              fill={isFinal ? '#dc2626' : rung.color}
+              fillOpacity={isFinal ? 1 : rung.fillOpacity}
+              initial={{ scaleX: 0, opacity: 0 }}
+              whileInView={{ scaleX: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.2, delay: idx * 0.2, ease: 'easeOut' }}
+              style={{ transformOrigin: `${SVG_W / 2}px ${rungY + RUNG_H / 2}px` }}
+            />
+
+            {/* Inline label for final rung (T1 PRIORIDAD inside the bar) */}
+            {isFinal && (
+              <motion.text
+                x={SVG_W / 2} y={rungY + RUNG_H / 2 + 1}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontSize={8} fontWeight={800}
+                fill="white"
+                fontFamily="var(--font-family-mono, monospace)"
+                letterSpacing="0.08em"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.25, delay: idx * 0.2 + 0.15 }}
+              >
+                {lang === 'es' ? `T1 PRIORIDAD · ${rung.display}` : `T1 PRIORITY · ${rung.display}`}
+              </motion.text>
+            )}
+
+            {/* Count + label to the right of rung (non-final rungs) */}
+            {!isFinal && (
+              <motion.text
+                x={x + w + 6} y={rungY + RUNG_H / 2 + 1}
+                dominantBaseline="middle"
+                fontSize={8} fontWeight={700}
+                fill="var(--color-text-primary)"
+                fontFamily="var(--font-family-mono, monospace)"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.25, delay: idx * 0.2 + 0.1 }}
+              >
+                {rung.display}
+              </motion.text>
+            )}
+
+            {/* Reduction arrow + reason (between this rung and the next) */}
+            {rung.reject && (
+              <motion.g
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.2, delay: idx * 0.2 + 0.18 }}
+              >
+                {/* Thin vertical stem */}
+                <line
+                  x1={SVG_W / 2} x2={SVG_W / 2}
+                  y1={arrowY} y2={arrowY + GAP_H - 10}
+                  stroke="var(--color-border)"
+                  strokeWidth={0.8}
+                  strokeOpacity={0.6}
+                />
+                {/* Downward triangle arrowhead */}
+                <polygon
+                  points={`${SVG_W / 2 - 4},${arrowY + GAP_H - 10} ${SVG_W / 2 + 4},${arrowY + GAP_H - 10} ${SVG_W / 2},${arrowY + GAP_H - 4}`}
+                  fill="var(--color-border)"
+                  fillOpacity={0.5}
+                />
+                {/* Rejection count (left of stem) */}
+                <text
+                  x={SVG_W / 2 - 7} y={arrowY + GAP_H / 2 - 1}
+                  textAnchor="end"
+                  fontSize={7.5} fontWeight={700}
+                  fill="var(--color-text-muted)"
+                  fontFamily="var(--font-family-mono, monospace)"
+                >
+                  {rung.reject.count}
+                </text>
+                {/* Rejection reason (right of stem) */}
+                <text
+                  x={SVG_W / 2 + 7} y={arrowY + GAP_H / 2 - 1}
+                  textAnchor="start"
+                  fontSize={7} fill="var(--color-text-muted)"
+                  fontFamily="var(--font-family-mono, monospace)"
+                >
+                  {rung.reject.reason[lang]}
+                </text>
+              </motion.g>
+            )}
+          </g>
         )
       })}
-
-      {/* T1 core — filled crimson disk with gradient */}
-      <motion.circle
-        cx={CX} cy={CY}
-        fill="url(#lens-core)"
-        initial={{ r: 0 }}
-        whileInView={{ r: 16 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.55, delay: 0.85, ease: [0.34, 1.56, 0.64, 1] }}
-      />
-      {/* Core count label */}
-      <motion.text
-        x={CX} y={CY + 1}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={12}
-        fontWeight={800}
-        fill="white"
-        fontFamily="var(--font-family-mono, monospace)"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3, delay: 1.15 }}
-      >
-        {tiers[4].display}
-      </motion.text>
-      {/* "T1" pill below the core */}
-      <motion.text
-        x={CX} y={CY + 30}
-        textAnchor="middle"
-        fontSize={8}
-        fontWeight={700}
-        fill="#dc2626"
-        fontFamily="var(--font-family-mono, monospace)"
-        letterSpacing="0.15em"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3, delay: 1.25 }}
-      >
-        {lang === 'es' ? 'T1 PRIORIDAD' : 'T1 PRIORITY'}
-      </motion.text>
     </svg>
   )
 }
@@ -714,129 +780,215 @@ interface PatternRiskEntry {
   code: string
   label: { en: string; es: string }
   pesosBn: number   // billions MXN at risk (estimated)
+  baselineMdp: number // counterfactual: if pattern were merely at sector median
   vendors: number
   color: string
 }
 
+// baselineMdp = estimated exposure if pattern operated at sector median price
+// rather than observed price. Gap = pesosBn - baselineMdp = "corruption premium".
 const PATTERN_RISK: PatternRiskEntry[] = [
-  { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, vendors: 3985,  color: '#dc2626' },
-  { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  vendors: 6034,  color: '#dc2626' },
-  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  vendors: 15923, color: '#dc2626' },
-  { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  vendors: 44,    color: '#dc2626' },
-  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  vendors: 2974,  color: '#f59e0b' },
-  { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  vendors: 257,   color: '#dc2626' },
-  { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  vendors: 220,   color: '#f59e0b' },
+  { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, baselineMdp: 10, vendors: 3985,  color: '#dc2626' },
+  { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  baselineMdp: 5,  vendors: 6034,  color: '#dc2626' },
+  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  baselineMdp: 12, vendors: 15923, color: '#dc2626' },
+  { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  baselineMdp: 3,  vendors: 44,    color: '#dc2626' },
+  { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2974,  color: '#f59e0b' },
+  { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  baselineMdp: 8,  vendors: 257,   color: '#dc2626' },
+  { code: 'P4', label: { en: 'Bid Collusion',            es: 'Colusión en Licitaciones' }, pesosBn: 18,  baselineMdp: 4,  vendors: 220,   color: '#f59e0b' },
 ]
 
+// Cleveland-pair chart: each row = hollow baseline dot ○ + filled actual dot ● + connector.
+// Rows ranked by GAP (actual − baseline), not by absolute exposure.
+// Shared log-scale X axis spanning 1B → 500B MXN across all rows.
 function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
-  const sorted = [...PATTERN_RISK].sort((a, b) => b.pesosBn - a.pesosBn)
-  const max = sorted[0].pesosBn
-  // total — used by the omega-P3 anchor stat which was reverted; kept for any
-  // future re-introduction. Currently unreferenced.
-  void sorted.reduce((s, p) => s + p.pesosBn, 0)
+  // Rank by gap width (the editorial question: which pattern has the largest corruption premium?)
+  const sorted = [...PATTERN_RISK].sort((a, b) => (b.pesosBn - b.baselineMdp) - (a.pesosBn - a.baselineMdp))
+
   const SVG_W = 820
-  const ROW_H = 30
-  const TOP = 12
-  const LABEL_W = 220
-  const RIGHT_PAD = 90
-  const trackW = SVG_W - LABEL_W - RIGHT_PAD
-  const SVG_H = TOP + ROW_H * sorted.length + 14
-  // Locale-aware split for the per-row value glyph: bold number + muted unit.
-  // pesosBn is "billion MXN" (10⁹) — multiply to recover the raw amount and
-  // hand to formatCompactMXN which renders Mexican-spec MDP/billones in ES.
-  // Crucially: in Spanish "B" reads as "billón" = 10¹² (English "trillion"),
-  // so suffixing a 10⁹ figure with "B MXN" was off by 3 orders of magnitude.
-  const splitMXN = (bn: number): { value: string; unit: string } => {
-    const formatted = formatCompactMXN(bn * 1_000_000_000)
-    const lastSpace = formatted.lastIndexOf(' ')
-    if (lang === 'en' && lastSpace !== -1) {
-      // EN: "240.0B MXN" → split before " MXN" to keep "240.0B" as the bold token
-      const idx = formatted.lastIndexOf(' MXN')
-      return idx !== -1
-        ? { value: formatted.slice(0, idx), unit: 'MXN' }
-        : { value: formatted.slice(0, lastSpace), unit: formatted.slice(lastSpace + 1) }
-    }
-    return lastSpace !== -1
-      ? { value: formatted.slice(0, lastSpace), unit: formatted.slice(lastSpace + 1) }
-      : { value: formatted, unit: '' }
+  const ROW_H = 46
+  const AXIS_H = 28
+  const LABEL_W = 215
+  const RIGHT_PAD = 120
+  const PLOT_W = SVG_W - LABEL_W - RIGHT_PAD
+  const SVG_H = AXIS_H + ROW_H * sorted.length + 8
+
+  // Log scale helpers — domain 1B → 500B MXN (pesosBn in billions so 1 → 500)
+  const LOG_MIN = Math.log10(1)
+  const LOG_MAX = Math.log10(500)
+  const xPos = (bn: number): number => {
+    const clamped = Math.max(1, Math.min(500, bn))
+    return LABEL_W + ((Math.log10(clamped) - LOG_MIN) / (LOG_MAX - LOG_MIN)) * PLOT_W
   }
 
-  // omega-P3 anchor stat REVERTED 2026-05-05 (decoration, not amplified
-  // redesign). The amplified Cleveland-pair geometry is queued for omega-C.
+  // Axis tick values (log-spaced)
+  const axisTicks = [1, 5, 10, 50, 100, 250, 500]
+
+  // Locale-aware label for right dot: "240 MDP" in ES, "240.0B MXN" in EN
+  const dotLabel = (bn: number): string => {
+    const formatted = formatCompactMXN(bn * 1_000_000_000)
+    return formatted
+  }
+
   return (
     <div>
-      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
-        aria-label={lang === 'en' ? 'Estimated pesos at risk by ARIA pattern.' : 'Pesos estimados en riesgo por patrón ARIA.'}>
-        {sorted.map((p, idx) => {
-          const y = TOP + idx * ROW_H + ROW_H / 2
-          const widthPct = p.pesosBn / max
-          const trackEnd = LABEL_W + trackW
+      {/* Axis legend header */}
+      <div className="flex items-center gap-4 mb-1 pl-0" style={{ paddingLeft: LABEL_W }}>
+        <div className="flex items-center gap-1.5 text-[9px] font-mono text-text-muted">
+          <svg width="18" height="10"><circle cx="4" cy="5" r="4" fill="none" stroke="currentColor" strokeWidth="1.5"/><line x1="8" y1="5" x2="14" y2="5" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.55"/><circle cx="16" cy="5" r="3" fill="currentColor"/></svg>
+          <span>{lang === 'es' ? 'base → exposición estimada' : 'baseline → estimated exposure'}</span>
+        </div>
+        <div className="text-[9px] font-mono text-text-muted opacity-70">
+          {lang === 'es' ? 'ordenado por premio sobre línea base' : 'ranked by premium over baseline'}
+        </div>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        className="w-full"
+        style={{ height: SVG_H }}
+        role="img"
+        aria-label={lang === 'en' ? 'Cleveland dot-pair chart: estimated pesos at risk by ARIA pattern, ranked by premium over baseline.' : 'Gráfica de pares Cleveland: pesos estimados en riesgo por patrón ARIA, ordenado por premio sobre línea base.'}
+      >
+        {/* Shared log-scale axis at top */}
+        <line x1={LABEL_W} x2={LABEL_W + PLOT_W} y1={AXIS_H - 4} y2={AXIS_H - 4}
+          stroke="var(--color-border)" strokeWidth={0.6} strokeOpacity={0.5} />
+        {axisTicks.map((t) => {
+          const x = xPos(t)
+          const label = t >= 1000 ? `${t / 1000}T` : t >= 100 ? `${t}` : `${t}`
+          const unit = lang === 'es' ? 'MDP' : 'B MXN'
           return (
-            <motion.g
-              key={p.code}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true, margin: '-30px' }}
-              transition={{ duration: 0.3, delay: 0.1 + idx * 0.08 }}
-            >
-              {/* Pattern code pill (left) */}
-              <rect x={6} y={y - 9} width={28} height={17} rx={2}
-                fill={p.color} fillOpacity={0.18} />
-              <text x={20} y={y + 3} textAnchor="middle"
-                fontSize={9} fontWeight="800" fill={p.color}
+            <g key={t}>
+              <line x1={x} x2={x} y1={AXIS_H - 8} y2={AXIS_H - 1}
+                stroke="var(--color-border)" strokeWidth={0.6} strokeOpacity={0.55} />
+              <text x={x} y={AXIS_H - 11} textAnchor="middle"
+                fontSize={7.5} fill="var(--color-text-muted)"
+                fontFamily="var(--font-family-mono, monospace)">
+                {label}
+              </text>
+              <text x={x} y={AXIS_H - 2} textAnchor="middle"
+                fontSize={6} fill="var(--color-text-muted)" fillOpacity={0.6}
+                fontFamily="var(--font-family-mono, monospace)">
+                {unit}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Vertical grid lines at tick positions */}
+        {axisTicks.map((t) => (
+          <line key={`grid-${t}`}
+            x1={xPos(t)} x2={xPos(t)} y1={AXIS_H - 1} y2={SVG_H - 2}
+            stroke="var(--color-border)" strokeWidth={0.4} strokeOpacity={0.25} />
+        ))}
+
+        {/* Cleveland-pair rows */}
+        {sorted.map((p, idx) => {
+          const y = AXIS_H + idx * ROW_H + ROW_H / 2
+          const xBaseline = xPos(p.baselineMdp)
+          const xActual = xPos(p.pesosBn)
+
+          return (
+            <g key={p.code}>
+              {/* Row hover band */}
+              <rect x={0} y={y - ROW_H / 2 + 2} width={SVG_W} height={ROW_H - 4}
+                fill={idx % 2 === 0 ? 'var(--color-surface)' : 'transparent'}
+                fillOpacity={0.3} rx={2} />
+
+              {/* Pattern code pill */}
+              <rect x={4} y={y - 9} width={28} height={17} rx={2}
+                fill={p.color} fillOpacity={0.15} />
+              <text x={18} y={y + 3} textAnchor="middle"
+                fontSize={8.5} fontWeight="800" fill={p.color}
                 fontFamily="var(--font-family-mono, monospace)">
                 {p.code}
               </text>
 
-              {/* Pattern label */}
-              <text x={42} y={y - 1}
-                fontSize={11} fontWeight="600" fill="var(--color-text-primary)"
+              {/* Pattern label (two lines) */}
+              <text x={38} y={y - 2}
+                fontSize={10.5} fontWeight="600" fill="var(--color-text-primary)"
                 fontFamily="var(--font-family-sans, sans-serif)">
                 {p.label[lang]}
               </text>
-              <text x={42} y={y + 11}
-                fontSize={8} fill="var(--color-text-muted)"
+              <text x={38} y={y + 10}
+                fontSize={7.5} fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono, monospace)">
                 {formatNumber(p.vendors)} {lang === 'en' ? 'vendors' : 'proveedores'}
               </text>
 
-              {/* Track baseline */}
-              <line x1={LABEL_W} x2={trackEnd} y1={y} y2={y}
-                stroke="var(--color-border)" strokeWidth={0.7} strokeOpacity={0.5} />
-
-              {/* Animated value river — wider at left, tapers right */}
-              <motion.path
-                d={`M ${LABEL_W} ${y - 8} L ${LABEL_W + trackW * widthPct} ${y - 2} L ${LABEL_W + trackW * widthPct} ${y + 2} L ${LABEL_W} ${y + 8} Z`}
-                fill={p.color}
-                fillOpacity={0.55}
-                initial={{ scaleX: 0 }}
-                whileInView={{ scaleX: 1 }}
+              {/* Connector line — animates left → right */}
+              <motion.line
+                x1={xBaseline} x2={xBaseline}
+                y1={y} y2={y}
+                stroke={p.color}
+                strokeWidth={2}
+                strokeOpacity={0.55}
+                initial={{ x2: xBaseline }}
+                whileInView={{ x2: xActual }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: 0.3 + idx * 0.08, ease: 'easeOut' }}
-                style={{ transformOrigin: `${LABEL_W}px ${y}px` }}
+                transition={{ duration: 0.6, delay: 0.2 + idx * 0.08, ease: 'easeOut' }}
               />
 
-              {/* Pesos value label (right) — locale-aware. EN bold token is
-                  "240.0B" with "MXN" muted; ES bold token is "240,000" with
-                  "MDP" muted (≥10⁹ → MDP, ≥10¹² → "billones MXN"). */}
-              {(() => {
-                const { value, unit } = splitMXN(p.pesosBn)
-                return (
-                  <text x={trackEnd + 6} y={y + 3}
-                    fontSize={14} fontWeight="800" fill={p.color}
-                    fontFamily="var(--font-family-mono, monospace)">
-                    {value}
-                    {unit && (
-                      <tspan fontSize={9} fontWeight="600" dx={2} fill="var(--color-text-muted)">
-                        {' '}{unit}
-                      </tspan>
-                    )}
-                  </text>
-                )
-              })()}
+              {/* Baseline dot (hollow, neutral) */}
+              <motion.circle
+                cx={xBaseline} cy={y}
+                r={4}
+                fill="none"
+                stroke="var(--color-text-muted)"
+                strokeWidth={1.5}
+                strokeOpacity={0.7}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: 0.15 + idx * 0.08 }}
+              />
 
-              {/* omega-P3 → Investigate links REVERTED 2026-05-05 — clutter */}
-            </motion.g>
+              {/* Actual dot (filled, pattern color, drop shadow) */}
+              <motion.circle
+                cx={xActual} cy={y}
+                r={6}
+                fill={p.color}
+                filter="drop-shadow(0 1px 3px rgba(0,0,0,0.35))"
+                initial={{ opacity: 0, r: 2 }}
+                whileInView={{ opacity: 1, r: 6 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: 0.55 + idx * 0.08, ease: [0.34, 1.56, 0.64, 1] }}
+              />
+
+              {/* Pesos label above actual dot */}
+              <motion.text
+                x={xActual} y={y - 10}
+                textAnchor="middle"
+                fontSize={11} fontWeight="800" fill={p.color}
+                fontFamily="var(--font-family-mono, monospace)"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: 0.65 + idx * 0.08 }}
+              >
+                {dotLabel(p.pesosBn)}
+              </motion.text>
+
+              {/* → Investigate chip */}
+              <motion.a
+                href={`/aria?pattern=${p.code}`}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 0.65 }}
+                whileHover={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.25, delay: 0.7 + idx * 0.08 }}
+              >
+                <text
+                  x={SVG_W - RIGHT_PAD + 6}
+                  y={y + 3}
+                  fontSize={8.5}
+                  fontWeight="600"
+                  fill={p.color}
+                  fontFamily="var(--font-family-mono, monospace)"
+                >
+                  {lang === 'es' ? '→ Investigar' : '→ Investigate'}
+                </text>
+              </motion.a>
+            </g>
           )
         })}
       </svg>
@@ -845,8 +997,8 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
       <div className="mt-3 pt-3 border-t border-border/40">
         <div className="text-[8px] font-mono text-text-muted leading-[1.4]">
           {lang === 'en'
-            ? 'ESTIMATES — overpayment per pattern × pattern volume. Methodology approximations: P5 = (price_ratio − 1) × value; P2 = full ghost volume; P6 = ~15% capture premium; P1 = ~12% monopoly discount lost; others scale with network volume.'
-            : 'ESTIMACIONES — sobreprecio por patrón × volumen del patrón. Aproximaciones: P5 = (razón_precio − 1) × valor; P2 = volumen fantasma completo; P6 = ~15% premio captura; P1 = ~12% descuento monopolio perdido; otros escalan con volumen de red.'}
+            ? 'ESTIMATES — rows ranked by premium over sector-median baseline (gap = actual exposure − counterfactual baseline). Methodology: P5 = (price_ratio − 1) × value; P2 = full ghost volume; P6 = ~15% capture premium; P1 = ~12% monopoly discount lost; others scale with network volume.'
+            : 'ESTIMACIONES — filas ordenadas por premio sobre línea base sectorial (brecha = exposición real − base contrafactual). Metodología: P5 = (razón_precio − 1) × valor; P2 = volumen fantasma completo; P6 = ~15% premio captura; P1 = ~12% descuento monopolio perdido; otros escalan con volumen de red.'}
         </div>
       </div>
     </div>
@@ -2004,7 +2156,6 @@ export default function Executive() {
 
                   {/* Tier annotations on the right */}
                   <div className="flex-1 flex flex-col min-w-0">
-                    {/* omega-P5 Pudding lede headline REVERTED 2026-05-05 — decoration */}
                     <div className="flex flex-col gap-0">
                       {lensTiers.map((t, i) => (
                         <div key={i}>
@@ -2044,7 +2195,6 @@ export default function Executive() {
                               {t.sublabel[lang]}
                             </div>
                           </motion.a>
-                          {/* omega-P5 narrowReason text REVERTED 2026-05-05 — decoration */}
                         </div>
                       ))}
                     </div>
