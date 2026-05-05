@@ -40,14 +40,15 @@ const ERA_BANDS: Array<{ label: string; start: number; end: number; color: strin
   { label: 'SHEINBAUM',  start: 2025, end: 2025, color: '#7b2d8b' },
 ]
 
-// FT-style annotation callouts BELOW the data line (above-line collided with
-// admin band labels at the chart top — fixed 2026-05-05). Callouts staggered
-// vertically so they don't overlap each other. Leader lines connect dot to box.
+// FT-style annotation callouts BELOW the data line. Stagger pattern is
+// HIGH/LOW/HIGH/LOW (zigzag) so adjacent callouts in years can't share Y space.
+// Labels also tightened to short phrases — long names ('COVID emergency
+// procurement') were 160px wide and crashed into Estafa Maestra's box.
 const CALLOUTS: Array<{ year: number; en: string; es: string; dy: number }> = [
-  { year: 2014, en: 'Casa Blanca · Oceanografía', es: 'Casa Blanca · Oceanografía', dy: 56 },
-  { year: 2017, en: 'Estafa Maestra surfaces',    es: 'Estafa Maestra',              dy: 78 },
-  { year: 2020, en: 'COVID emergency procurement',es: 'Emergencia COVID',            dy: 100 },
-  { year: 2023, en: 'Toka IT monopoly',           es: 'Monopolio TIC Toka',          dy: 56 },
+  { year: 2014, en: 'Casa Blanca',         es: 'Casa Blanca',         dy: 60 },
+  { year: 2017, en: 'Estafa Maestra',      es: 'Estafa Maestra',      dy: 110 },
+  { year: 2020, en: 'COVID emergency',     es: 'Emergencia COVID',    dy: 60 },
+  { year: 2023, en: 'Toka IT monopoly',    es: 'Toka IT monopoly',    dy: 110 },
 ]
 
 interface Props {

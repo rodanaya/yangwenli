@@ -114,28 +114,26 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
   ]
 }
 
-// LensVisualization — ICIJ-style Sankey reduction (2026-05-05).
-// User rejected concentric rings ("ugly") AND vertical bar ladder ("horrible
-// — looked better before"). This third design follows ICIJ's Pandora Papers
-// flow vocabulary: a single "kept" ribbon flows top-to-bottom narrowing at
-// each filter; "rejected" volume diverts off to the right at each stage as
-// a thin counter-ribbon. The shape itself enacts filtration — what flows
-// through vs what gets dropped — without metaphor decoding.
+// LensVisualization — slim ICIJ-style narrowing ribbon (refined 2026-05-05).
+// User feedback: "the breakdown design is great, but the numbers in the
+// graphic are not visible — toss them and align each tier with the text on
+// the right". So: NO inline count text, NO bottom pill. Just the shape.
+// SVG fills the container vertically (preserveAspectRatio="none") so the 5
+// stage tick lines line up with the 5 list rows on the right.
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
   const W = 220
-  const H = 220
+  const H = 220 // viewBox height; actual height is stretched by container
   const PAD_T = 8
-  const PAD_B = 14
+  const PAD_B = 8
   const CX = W / 2
   const CH = H - PAD_T - PAD_B
 
-  // Use 5 tiers (or fall back to whatever the data provides)
   const stages = tiers.slice(0, 5)
   const counts = stages.map(t => t.count)
   const maxCount = Math.max(...counts)
   // log scale so 3M and 165 both register
   const widthOf = (count: number) => {
-    const minW = 16
+    const minW = 14
     const maxW = 180
     const v = Math.log10(Math.max(count, 1))
     const vmax = Math.log10(maxCount)
@@ -145,7 +143,7 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
   }
   const stageY = (i: number) => PAD_T + (CH / (stages.length - 1)) * i
 
-  // Build "kept" ribbon polygon — connects each stage's width centered on CX
+  // "kept" funnel polygon
   const keptPath = (() => {
     const left: string[] = []
     const right: string[] = []
@@ -159,17 +157,23 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
   })()
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" style={{ maxHeight: 240 }} role="img" aria-label={lang === 'es'
-      ? 'Embudo de reducción: 3.06M contratos a 165 casos'
-      : 'Reduction funnel: 3.06M contracts down to 165 cases'}>
-      {/* Soft halo at the apex (T1 priority) — the surface payoff */}
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      height="100%"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label={lang === 'es'
+        ? 'Embudo de reducción: cinco etapas de filtrado de contratos'
+        : 'Reduction funnel: five stages of contract filtering'}
+    >
       <defs>
         <radialGradient id="lens-apex-glow" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#dc2626" stopOpacity="0.30" />
           <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
         </radialGradient>
         <linearGradient id="lens-kept" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="var(--color-text-muted)" stopOpacity="0.35" />
+          <stop offset="0%" stopColor="var(--color-text-muted)" stopOpacity="0.32" />
           <stop offset="55%" stopColor="#a06820" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#dc2626" stopOpacity="0.92" />
         </linearGradient>
@@ -177,10 +181,12 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
 
       {/* Apex glow behind the bottom row */}
       <motion.circle
-        cx={CX} cy={stageY(stages.length - 1)}
+        cx={CX}
+        cy={stageY(stages.length - 1)}
+        r={30}
         fill="url(#lens-apex-glow)"
-        initial={{ r: 0 }}
-        whileInView={{ r: 30 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.7, delay: 0.9 }}
       />
@@ -196,84 +202,29 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
         transition={{ duration: 0.8, delay: 0.2 }}
       />
 
-      {/* Stage tick marks at each level */}
+      {/* Stage tick marks ONLY — no count text, no pill. Right-side list
+          carries every numeric the reader needs. */}
       {stages.map((s, i) => {
         const w = widthOf(s.count)
         const y = stageY(i)
         const isFinal = i === stages.length - 1
         return (
-          <motion.g
+          <motion.line
             key={i}
+            x1={CX - w / 2}
+            x2={CX + w / 2}
+            y1={y}
+            y2={y}
+            stroke={isFinal ? '#dc2626' : 'var(--color-text-primary)'}
+            strokeWidth={isFinal ? 2.4 : 1}
+            strokeOpacity={isFinal ? 1 : 0.55}
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.4 + i * 0.12 }}
-          >
-            {/* Crisp horizontal stage line on top of the ribbon */}
-            <line
-              x1={CX - w / 2}
-              x2={CX + w / 2}
-              y1={y}
-              y2={y}
-              stroke={isFinal ? '#dc2626' : 'var(--color-text-muted)'}
-              strokeWidth={isFinal ? 2 : 0.8}
-              strokeOpacity={isFinal ? 1 : 0.7}
-            />
-            {/* Compact count label INSIDE the ribbon (centered) */}
-            <text
-              x={CX}
-              y={y - 3}
-              textAnchor="middle"
-              fontSize={isFinal ? 12 : 9}
-              fontWeight={isFinal ? 800 : 700}
-              fill={isFinal ? '#dc2626' : 'var(--color-text-primary)'}
-              fontFamily="var(--font-family-mono, monospace)"
-              style={{ fontVariantNumeric: 'tabular-nums' }}
-            >
-              {s.display}
-            </text>
-            {/* "Rejected" tick: right-side small dropped counter for stages 1-3 */}
-            {i > 0 && i < stages.length - 1 && (() => {
-              const prevW = widthOf(stages[i - 1].count)
-              const dropped = stages[i - 1].count - s.count
-              if (dropped <= 0) return null
-              const x1 = CX + prevW / 2
-              const xEnd = Math.min(W - 4, x1 + 12)
-              return (
-                <g opacity={0.55}>
-                  <line
-                    x1={x1}
-                    x2={xEnd}
-                    y1={y - (CH / (stages.length - 1)) * 0.4}
-                    y2={y - 1}
-                    stroke="var(--color-text-muted)"
-                    strokeWidth={0.6}
-                    strokeDasharray="1.5 1.5"
-                  />
-                </g>
-              )
-            })()}
-          </motion.g>
+          />
         )
       })}
-
-      {/* T1 PRIORIDAD pill below the apex */}
-      <motion.text
-        x={CX}
-        y={H - 2}
-        textAnchor="middle"
-        fontSize={8}
-        fontWeight={700}
-        fill="#dc2626"
-        fontFamily="var(--font-family-mono, monospace)"
-        letterSpacing="0.15em"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.3, delay: 1.1 }}
-      >
-        {lang === 'es' ? 'T1 PRIORIDAD' : 'T1 PRIORITY'}
-      </motion.text>
     </svg>
   )
 }
@@ -2337,8 +2288,9 @@ export default function Executive() {
               )
               return (
                 <div className="flex flex-col md:flex-row items-center md:items-stretch gap-6">
-                  {/* Lens visualization on the left */}
-                  <div className="flex-shrink-0" style={{ width: 220, height: 240 }}>
+                  {/* Lens visualization on the left — height matches the
+                      right-side tier list so stages align with rows. */}
+                  <div className="flex-shrink-0 self-stretch flex items-stretch" style={{ width: 220 }}>
                     <LensVisualization tiers={lensTiers} lang={lang} />
                   </div>
 
