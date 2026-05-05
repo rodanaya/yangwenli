@@ -117,6 +117,12 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'editorial-beeswarm': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'RiskSpendBeeswarmStory'),
   'editorial-swimlane': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategorySwimlaneStory'),
   'editorial-dumbbell': lazyChart(() => import('@/components/sectors/EditorialSectorStoryCharts'), 'CategoryDumbbellStory'),
+  // ---------------------------------------------------------------------------
+  // Volatilidad story — n-P3 (2026-05-04)
+  // Self-contained illustrative charts, no live API calls.
+  // ---------------------------------------------------------------------------
+  'vendor-price-trajectory': lazyChart(() => import('@/components/stories/VendorPriceTrajectory'), 'VendorPriceTrajectory'),
+  'venn-convergence':        lazyChart(() => import('@/components/stories/VennConvergence'), 'VennConvergence'),
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
@@ -142,6 +148,9 @@ const TYPE_TO_CHART_ID: Record<string, string> = {
   'editorial-beeswarm': 'editorial-beeswarm',
   'editorial-swimlane': 'editorial-swimlane',
   'editorial-dumbbell': 'editorial-dumbbell',
+  // n-P3 volatilidad charts (illustrative, self-contained)
+  'vendor-price-trajectory': 'vendor-price-trajectory',
+  'venn-convergence':        'venn-convergence',
 }
 
 // ---------------------------------------------------------------------------

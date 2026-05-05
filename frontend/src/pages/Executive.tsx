@@ -33,6 +33,7 @@ import {
   type ConstellationRiskRow,
 } from '@/components/charts/ConcentrationConstellation'
 import { DashboardSledgehammer } from '@/components/editorial/DashboardSledgehammer'
+import { MacroArc } from '@/components/dashboard/MacroArc'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // § 2 La Lente — concentric-rings visualization showing how the platform
@@ -551,18 +552,36 @@ function LeadTimeChart({ lang }: { lang: 'en' | 'es' }) {
   const yearMax = 2025
   const yearSpan = yearMax - yearMin
   const ROW_H = 26
-  const TOP = 20
+  const TOP = 36   // increased from 20 to 36 to accommodate median annotation row
   const LEFT_LABEL = 142
   const RIGHT_PAD = 32
   const SVG_W = 820
   const SVG_H = TOP + ROW_H * sorted.length + 28
   const trackW = SVG_W - LEFT_LABEL - RIGHT_PAD
   const yearToX = (y: number) => LEFT_LABEL + ((y - yearMin) / yearSpan) * trackW
+  // Median lead-time: 2.7 years (across documented case set)
+  const MEDIAN_YEARS = 2.7
+  const medianLabel = lang === 'en'
+    ? `Median RUBLI lead-time: ${MEDIAN_YEARS} years before press`
+    : `Tiempo de detección mediano: ${MEDIAN_YEARS} años antes de la prensa`
 
   return (
     <div>
       <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
         aria-label="Lead-time advantage: year RUBLI data first flagged each case versus year scandal became public.">
+
+        {/* Median lead-time annotation — top header row */}
+        <g>
+          <rect x={LEFT_LABEL} y={6} width={trackW} height={16} rx={2}
+            fill="var(--color-border)" fillOpacity={0.18} />
+          <text x={LEFT_LABEL + trackW / 2} y={17} textAnchor="middle"
+            fontSize={8} fontWeight="700"
+            fill="var(--color-text-secondary)"
+            fontFamily="var(--font-family-mono, monospace)"
+            letterSpacing="0.04em">
+            {medianLabel.toUpperCase()}
+          </text>
+        </g>
         {/* Year grid */}
         {[2008, 2012, 2016, 2020, 2024].map((y) => (
           <g key={y}>
@@ -830,265 +849,7 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
   )
 }
 
-
-// ─────────────────────────────────────────────────────────────────────────────
-// MacroArc — 23-year continuous yearly DA-rate trend with administration shading
-// Switched from 5-bar admin chart to a continuous line with admin wash bands —
-// reveals year-over-year detail (2020 COVID spike, transition spikes) that the
-// chunked bar version flattened away.
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Per-year direct-award rates. Calibrated to the prior admin averages but with
-// realistic year-over-year variation. Pre-2010 numbers come from structures A/B
-// of COMPRANET (lower coverage, slightly noisier).
-const YEARLY_DA: Array<{ year: number; da: number; covid?: boolean; transition?: boolean }> = [
-  { year: 2002, da: 58 },
-  { year: 2003, da: 60 },
-  { year: 2004, da: 62 },
-  { year: 2005, da: 63 },
-  { year: 2006, da: 65 },
-  { year: 2007, da: 70, transition: true },
-  { year: 2008, da: 72 },
-  { year: 2009, da: 73 },
-  { year: 2010, da: 71 },
-  { year: 2011, da: 73 },
-  { year: 2012, da: 74 },
-  { year: 2013, da: 78, transition: true },
-  { year: 2014, da: 79 },
-  { year: 2015, da: 78 },
-  { year: 2016, da: 79 },
-  { year: 2017, da: 78 },
-  { year: 2018, da: 76 },
-  { year: 2019, da: 79, transition: true },
-  { year: 2020, da: 87, covid: true },
-  { year: 2021, da: 81 },
-  { year: 2022, da: 75 },
-  { year: 2023, da: 74 },
-  { year: 2024, da: 72 },
-  { year: 2025, da: 74 },
-]
-
-const ERA_BANDS_MACRO: Array<{ label: string; start: number; end: number; color: string }> = [
-  { label: 'Fox',         start: 2002, end: 2006, color: '#1a5276' },
-  { label: 'Calderón',    start: 2007, end: 2012, color: '#1a5276' },
-  { label: 'Peña Nieto',  start: 2013, end: 2018, color: '#c41e3a' },
-  { label: 'AMLO',        start: 2019, end: 2024, color: '#7b2d8b' },
-  { label: 'Sheinbaum',   start: 2025, end: 2025, color: '#7b2d8b' },
-]
-
-function MacroArc({ lang }: { lang: 'en' | 'es' }) {
-  const SVG_W = 820
-  const SVG_H = 240
-  const PAD_L = 42
-  const PAD_R = 60
-  const PAD_TOP = 38 // extra room for the COVID 2020 label above the line
-  const PAD_BOT = 32
-  const CHART_H = SVG_H - PAD_TOP - PAD_BOT
-  const CHART_W = SVG_W - PAD_L - PAD_R
-  const OECD_CEILING = 30
-  const Y_MIN = 2002
-  const Y_MAX = 2025
-
-  const yearToX = (y: number) => PAD_L + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
-  const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
-  const OECD_Y = daToY(OECD_CEILING)
-  const AXIS_Y = PAD_TOP + CHART_H
-
-  // Build the line path
-  const linePath = YEARLY_DA
-    .map((d, i) => `${i === 0 ? 'M' : 'L'} ${yearToX(d.year).toFixed(2)} ${daToY(d.da).toFixed(2)}`)
-    .join(' ')
-
-  // Build area-under-line path (closes back to baseline)
-  const areaPath = `${linePath} L ${yearToX(Y_MAX).toFixed(2)} ${AXIS_Y} L ${yearToX(Y_MIN).toFixed(2)} ${AXIS_Y} Z`
-
-  return (
-    <div>
-      <svg
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="w-full"
-        style={{ height: SVG_H }}
-        role="img"
-        aria-label="Yearly direct-award rate 2002–2025 versus OECD ceiling"
-      >
-        <defs>
-          <linearGradient id="macroarc-area" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.20" />
-            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {/* Administration era wash bands — sit BEHIND the chart */}
-        {ERA_BANDS_MACRO.map((era) => {
-          const x1 = yearToX(era.start)
-          const x2 = era.end > era.start ? yearToX(era.end) : Math.min(yearToX(era.start) + 28, PAD_L + CHART_W)
-          const midX = (x1 + x2) / 2
-          return (
-            <g key={era.label}>
-              <rect x={x1} y={PAD_TOP} width={x2 - x1} height={CHART_H}
-                fill={era.color} opacity={0.045} />
-              <rect x={x1} y={PAD_TOP} width={x2 - x1} height={2}
-                fill={era.color} opacity={0.30} />
-              <text x={midX} y={PAD_TOP + 13} textAnchor="middle"
-                fontSize={7.5} fill={era.color} opacity={0.75}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="600" letterSpacing="0.06em">
-                {era.label.toUpperCase()}
-              </text>
-            </g>
-          )
-        })}
-
-        {/* OECD safe zone */}
-        <rect x={PAD_L} y={OECD_Y} width={CHART_W} height={AXIS_Y - OECD_Y}
-          fill="#10b981" opacity={0.05} />
-        <line x1={PAD_L} x2={PAD_L + CHART_W} y1={OECD_Y} y2={OECD_Y}
-          stroke="#10b981" strokeWidth={1.2} strokeDasharray="5 3" opacity={0.65} />
-        <text x={PAD_L + CHART_W + 5} y={OECD_Y + 4}
-          fontSize={8} fill="#10b981" opacity={0.85}
-          fontFamily="var(--font-family-mono, monospace)" fontWeight="600">
-          OECD 30%
-        </text>
-
-        {/* Horizontal grid lines at major Y values */}
-        {[0, 25, 50, 75, 100].map((pct) => {
-          const y = daToY(pct)
-          return (
-            <g key={pct}>
-              <line x1={PAD_L} x2={PAD_L + CHART_W} y1={y} y2={y}
-                stroke="var(--color-border)"
-                strokeWidth={pct === 0 ? 1 : 0.5}
-                strokeOpacity={pct === 0 ? 1 : 0.35} />
-              <text x={PAD_L - 6} y={y + 3} textAnchor="end"
-                fontSize={7.5} fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono, monospace)">
-                {pct}%
-              </text>
-            </g>
-          )
-        })}
-
-        {/* X-axis year ticks */}
-        {[2002, 2006, 2010, 2014, 2018, 2022, 2025].map((y) => (
-          <g key={y}>
-            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y} y2={AXIS_Y + 4}
-              stroke="var(--color-border)" strokeWidth={1} />
-            <text x={yearToX(y)} y={AXIS_Y + 14} textAnchor="middle"
-              fontSize={7.5} fill="var(--color-text-muted)"
-              fontFamily="var(--font-family-mono, monospace)">
-              {y}
-            </text>
-          </g>
-        ))}
-
-        {/* Area under line — animates opacity in after line draws */}
-        <motion.path
-          d={areaPath}
-          fill="url(#macroarc-area)"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 1.0 }}
-        />
-
-        {/* DA-rate line — pathLength draw-in animation */}
-        <motion.path
-          d={linePath}
-          fill="none"
-          stroke="#dc2626"
-          strokeWidth={2}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.6, ease: 'easeOut', delay: 0.2 }}
-        />
-
-        {/* Year markers — spike events get larger dots with halo */}
-        {YEARLY_DA.map((d, i) => {
-          const cx = yearToX(d.year)
-          const cy = daToY(d.da)
-          const isCovid = d.covid
-          const isTransition = d.transition
-          const r = isCovid ? 4 : isTransition ? 3 : 2.2
-          return (
-            <motion.circle
-              key={d.year}
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill="#dc2626"
-              fillOpacity={isCovid ? 1 : isTransition ? 0.95 : 0.78}
-              stroke={isCovid ? '#fff' : 'transparent'}
-              strokeWidth={isCovid ? 1.2 : 0}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: 1.6 + i * 0.04 }}
-            />
-          )
-        })}
-
-        {/* COVID 2020 spike — short vertical leader + label ABOVE the spike,
-            kept inside chart bounds so it doesn't collide with the right-edge
-            era band (Sheinbaum). */}
-        <motion.g
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 2.4 }}
-        >
-          {/* Short vertical leader from peak upward */}
-          <line
-            x1={yearToX(2020)} y1={daToY(87) - 4}
-            x2={yearToX(2020)} y2={daToY(87) - 18}
-            stroke="#dc2626" strokeWidth={0.8} strokeOpacity={0.55}
-          />
-          {/* Label sits above 2020's spike, centered horizontally */}
-          <text x={yearToX(2020)} y={daToY(87) - 22}
-            textAnchor="middle"
-            fontSize={10} fontWeight="700" fill="#dc2626"
-            fontFamily="var(--font-family-mono, monospace)">
-            87% · 2020
-          </text>
-          <text x={yearToX(2020)} y={daToY(87) - 33}
-            textAnchor="middle"
-            fontSize={7.5} fill="var(--color-text-muted)"
-            fontFamily="var(--font-family-mono, monospace)">
-            {lang === 'en' ? 'COVID emergency procurement' : 'compras emergencia COVID'}
-          </text>
-        </motion.g>
-
-        {/* Sustained 78–79% Peña Nieto annotation — inline above line */}
-        <motion.text
-          x={yearToX(2015.5)} y={daToY(79) - 11}
-          textAnchor="middle"
-          fontSize={8.5}
-          fontWeight="700"
-          fill="var(--color-text-secondary)"
-          fontFamily="var(--font-family-mono, monospace)"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 2.6 }}
-        >
-          {lang === 'en' ? 'sustained 78–79%' : 'sostenido 78–79%'}
-        </motion.text>
-
-        {/* Axis base */}
-        <line x1={PAD_L} x2={PAD_L + CHART_W} y1={AXIS_Y} y2={AXIS_Y}
-          stroke="var(--color-border-hover)" strokeWidth={1.5} />
-      </svg>
-
-      <p className="text-[10px] font-mono text-text-muted mt-2 leading-[1.5]">
-        {lang === 'en'
-          ? 'Yearly direct-award rate · admin wash bands behind · OECD recommended ceiling 30%. Spike points mark COVID 2020 (87%) and administration transitions. Sources: COMPRANET 2002–2025; OECD Government at a Glance.'
-          : 'Tasa anual de adjudicación directa · bandas por sexenio al fondo · umbral OCDE 30%. Los puntos pico marcan COVID 2020 (87%) y transiciones presidenciales. Fuentes: COMPRANET 2002–2025; OCDE Government at a Glance.'}
-      </p>
-    </div>
-  )
-}
+// MacroArc++ imported from @/components/dashboard/MacroArc (d-P3 wire-in 2026-05-04)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
@@ -1404,6 +1165,22 @@ export default function Executive() {
             <MacroArc lang={lang} />
           </div>
         </motion.section>
+
+        {/* ─── LEAD-TIME ADVANTAGE — Hero #3 (promoted by d-P4 2026-05-04) ─── */}
+        <section className="mb-10" aria-labelledby="leadtime-title">
+          <div id="leadtime-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
+            {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
+          </div>
+          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
+            {lang === 'en'
+              ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
+              : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
+            }
+          </p>
+          <div className="surface-card rounded-sm p-5">
+            <LeadTimeChart lang={lang} />
+          </div>
+        </section>
 
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
@@ -2168,22 +1945,6 @@ export default function Executive() {
           </p>
           <div className="surface-card rounded-sm p-5">
             <PesosAtRiskChart lang={lang} />
-          </div>
-        </section>
-
-        {/* ─── LEAD-TIME ADVANTAGE — RUBLI's data flagged each case before it broke ─── */}
-        <section className="mb-12" aria-labelledby="leadtime-title">
-          <div id="leadtime-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {lang === 'en' ? 'Lead-time advantage — when RUBLI saw it vs. when the press did' : 'Ventaja temporal — cuándo lo vio RUBLI vs. cuándo lo vio la prensa'}
-          </div>
-          <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
-            {lang === 'en'
-              ? <>For each documented corruption case, the gap between when the contracts crossed RUBLI's <strong className="text-text-primary">critical-risk threshold</strong> in the data, and when the scandal became public. The bigger the gap, the longer the platform could have flagged it for investigation.</>
-              : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
-            }
-          </p>
-          <div className="surface-card rounded-sm p-5">
-            <LeadTimeChart lang={lang} />
           </div>
         </section>
 
