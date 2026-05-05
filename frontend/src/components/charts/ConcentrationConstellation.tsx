@@ -21,6 +21,8 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { halton, mulberry32 } from '@/lib/particle'
+import { PatternGlyph } from '@/components/charts/cluster-glyphs'
+import type { GlyphProps } from '@/components/charts/cluster-glyphs'
 
 export interface ConstellationRiskRow {
   level: 'critical' | 'high' | 'medium' | 'low'
@@ -656,33 +658,65 @@ export function ConcentrationConstellation({
                 </>
               )}
 
-              {/* Outer ring — radius ∝ √T1 count */}
-              <circle
-                cx={a.x}
-                cy={a.y}
-                r={ringR}
-                fill="none"
-                stroke={meta.color}
-                strokeOpacity={isHovered || isPinned ? 0.85 : 0.30}
-                strokeWidth={isPinned ? 1.4 : 1}
-                style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
-              />
-
-              {/* Cluster label */}
-              <text
-                x={a.x}
-                y={a.y + ringR + 8}
-                fill={meta.color}
-                fillOpacity={isHovered ? 1 : 0.80}
-                fontSize={10}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight="bold"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{ transition: 'fill-opacity 160ms ease' }}
-              >
-                {shortLabel}
-              </text>
+              {/* ── omega-C-P4: patterns mode → distinct typographic glyph
+                      other modes → original ring rendering (sacred geometry)    */}
+              {mode === 'patterns' ? (
+                <g transform={`translate(${a.x - ringR}, ${a.y - ringR})`}>
+                  <PatternGlyph
+                    code={meta.code as GlyphProps['code']}
+                    size={ringR * 2}
+                    color={meta.color}
+                    isHovered={isHovered}
+                    isPinned={isPinned}
+                    ariaLabel={isEs
+                      ? `Glifo ${meta.label}`
+                      : `${meta.label} glyph`}
+                  />
+                  {/* Pattern code demoted below glyph — mono 7.5px */}
+                  <text
+                    x={ringR}
+                    y={ringR * 2 + 9}
+                    fill={meta.color}
+                    fillOpacity={isHovered ? 0.95 : 0.65}
+                    fontSize={7.5}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fontWeight="600"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{ transition: 'fill-opacity 160ms ease' }}
+                  >
+                    {meta.code}
+                  </text>
+                </g>
+              ) : (
+                <>
+                  {/* Non-patterns modes: original ring + short label */}
+                  <circle
+                    cx={a.x}
+                    cy={a.y}
+                    r={ringR}
+                    fill="none"
+                    stroke={meta.color}
+                    strokeOpacity={isHovered || isPinned ? 0.85 : 0.30}
+                    strokeWidth={isPinned ? 1.4 : 1}
+                    style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
+                  />
+                  <text
+                    x={a.x}
+                    y={a.y + ringR + 8}
+                    fill={meta.color}
+                    fillOpacity={isHovered ? 1 : 0.80}
+                    fontSize={10}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{ transition: 'fill-opacity 160ms ease' }}
+                  >
+                    {shortLabel}
+                  </text>
+                </>
+              )}
 
               {/* omega-P2 persistent sub-labels + worst-cluster ▲ marker
                   REVERTED 2026-05-05 — decoration. The constellation reads
