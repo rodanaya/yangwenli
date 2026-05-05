@@ -122,17 +122,21 @@ function SexenioDotColumns({
   color: string
   t: (key: string) => string
 }) {
+  // 2026-05-04 fix: column gap was 24px but admin labels like "Peña Nieto"
+  // are ~70px wide at fontSize 11 — neighbors overlapped into "CalderónPeña".
+  // Bumped gap 24 → 56 so even longest label fits cleanly between columns.
   const ROWS = 40
   const COL_W = 28
+  const COL_GAP = 56
   const DOT_GAP = 7
   const DOT_R = 2.5
   const LABEL_H = 28
   const TOOLTIP_H = 18
 
   const maxValue = Math.max(...data.map(d => d.value), 1)
-  const width = Math.max(380, data.length * (COL_W + 24) + 40)
+  const width = Math.max(380, data.length * (COL_W + COL_GAP) + 40)
   const height = ROWS * DOT_GAP + LABEL_H + TOOLTIP_H + 16
-  const colsTotalWidth = data.length * COL_W + (data.length - 1) * 24
+  const colsTotalWidth = data.length * COL_W + (data.length - 1) * COL_GAP
   const offsetX = (width - colsTotalWidth) / 2
 
   return (

@@ -85,7 +85,7 @@ const CALLOUTS: Callout[] = [
   },
   {
     year: 2023,
-    label: { en: 'Highest non-emergency\nrate ever', es: 'Mayor tasa fuera\nde emergencia' },
+    label: { en: 'Toka IT monopoly', es: 'Monopolio TIC Toka' },
     offsetX: -10,
     boxAnchor: 'end',
     leaderOffsetY: -26,
@@ -105,13 +105,15 @@ export function MacroArc({ lang }: Props) {
   const PAD_BOT = 32
   const CHART_H = SVG_H - PAD_TOP - PAD_BOT
   const CHART_W = SVG_W - PAD_L - PAD_R
-  const OECD_CEILING = 25  // corrected to OECD ≤ 25%
+  const OECD_CEILING = 25   // primary: OECD ≤ 25% recommended ceiling
+  const OECD_UPPER   = 30   // secondary: OECD 25–30% acceptable band upper bound
   const Y_MIN = 2002
   const Y_MAX = 2025
 
   const yearToX = (y: number) => PAD_L + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
   const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
   const OECD_Y = daToY(OECD_CEILING)
+  const OECD_UPPER_Y = daToY(OECD_UPPER)
   const AXIS_Y = PAD_TOP + CHART_H
 
   // Most recent data point
@@ -134,7 +136,9 @@ export function MacroArc({ lang }: Props) {
         className="w-full"
         style={{ height: SVG_H }}
         role="img"
-        aria-label="Yearly direct-award rate 2002–2025 versus OECD ≤25% ceiling. Annotations mark Casa Blanca 2014, Estafa Maestra 2017, COVID 2020, and the 2023 non-emergency peak."
+        aria-label={lang === 'en'
+          ? 'Yearly direct-award rate 2002–2025 versus OECD 25% ceiling. Annotations mark Casa Blanca 2014, Estafa Maestra 2017, COVID 2020, and Toka IT monopoly 2023.'
+          : 'Tasa anual de adjudicación directa 2002–2025 vs techo OCDE 25%. Anotaciones: Casa Blanca 2014, Estafa Maestra 2017, COVID 2020, Monopolio TIC Toka 2023.'}
       >
         <defs>
           <linearGradient id="macroacpp-area" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -187,37 +191,60 @@ export function MacroArc({ lang }: Props) {
           )
         })}
 
-        {/* OECD ceiling — cyan dashed line (FT annotation spec) */}
+        {/* OECD upper band — 30% thin secondary hairline (dysfunction floor) */}
+        <line
+          x1={PAD_L}
+          x2={PAD_L + CHART_W}
+          y1={OECD_UPPER_Y}
+          y2={OECD_UPPER_Y}
+          stroke="var(--color-text-muted)"
+          strokeWidth={0.8}
+          strokeDasharray="3 5"
+          opacity={0.45}
+        />
+        <text
+          x={PAD_L + CHART_W + 6}
+          y={OECD_UPPER_Y + 3}
+          fontSize={7.5}
+          fill="var(--color-text-muted)"
+          opacity={0.55}
+          fontFamily="var(--font-family-mono, monospace)"
+          fontWeight="600"
+        >
+          {lang === 'en' ? 'OECD 30% · dysfunction floor' : 'OCDE 30% · umbral disfunción'}
+        </text>
+
+        {/* OECD 25% ceiling — neutral dashed reference line (Bible §3.10: no green) */}
         <line
           x1={PAD_L}
           x2={PAD_L + CHART_W}
           y1={OECD_Y}
           y2={OECD_Y}
-          stroke="#22d3ee"
+          stroke="var(--color-text-muted)"
           strokeWidth={1.4}
           strokeDasharray="6 4"
-          opacity={0.80}
+          opacity={0.70}
         />
-        {/* OECD direct label at right edge */}
+        {/* OECD 25% direct label at right edge */}
         <text
           x={PAD_L + CHART_W + 6}
           y={OECD_Y + 3}
           fontSize={8.5}
-          fill="#22d3ee"
+          fill="var(--color-text-muted)"
           opacity={0.90}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="700"
         >
-          {lang === 'en' ? 'OECD ≤25%' : 'OCDE ≤25%'}
+          {lang === 'en' ? 'OECD 25% (recommended)' : 'OCDE 25% (recomendado)'}
         </text>
 
-        {/* OECD safe-zone fill */}
+        {/* OECD safe-zone fill — neutral, not green (Bible §3.10) */}
         <rect
           x={PAD_L}
           y={OECD_Y}
           width={CHART_W}
           height={AXIS_Y - OECD_Y}
-          fill="#22d3ee"
+          fill="var(--color-text-muted)"
           opacity={0.04}
         />
 
@@ -443,8 +470,8 @@ export function MacroArc({ lang }: Props) {
 
       <p className="text-[10px] font-mono text-text-muted mt-2 leading-[1.5]">
         {lang === 'en'
-          ? 'Yearly direct-award rate · administration wash bands (Fox / Calderón / Peña Nieto / AMLO / Sheinbaum) · OECD recommended ceiling ≤ 25% (cyan). Callouts mark major inflection points. Sources: COMPRANET 2002–2025; OECD Government at a Glance.'
-          : 'Tasa anual de adjudicación directa · bandas por sexenio · umbral recomendado OCDE ≤ 25% (cian). Las anotaciones marcan inflexiones clave. Fuentes: COMPRANET 2002–2025; OCDE Government at a Glance.'}
+          ? 'Yearly direct-award rate · OECD ceiling 25% (recommended) — Mexican federal procurement has held above the OECD limit for 23 consecutive years. Sources: COMPRANET 2002–2025; OECD Government at a Glance 2023.'
+          : 'Tasa anual de adjudicación directa · techo OCDE 25% (recomendado) — la contratación federal mexicana ha permanecido por encima del límite OCDE durante 23 años consecutivos. Fuentes: COMPRANET 2002–2025; OCDE Government at a Glance 2023.'}
       </p>
     </div>
   )
