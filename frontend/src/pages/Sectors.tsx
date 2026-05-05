@@ -711,10 +711,14 @@ export function Sectors() {
                 textAccent={topSectorTextColor}
                 headline={
                   <>
-                    {/* Sector name in headline: AA-safe darker color on warm-white */}
-                    <span style={{ color: topSectorTextColor }}>{topSectorName}</span>
+                    {/* Sector name in INK-BLACK, not sector color. The headline is a
+                        risk finding ("X leads in risk"); rendering "Treasury" in
+                        green-800 (Hacienda's text variant) reads as a Treasury
+                        promo and overclaims safety per Bible §3.10. The sector
+                        identity is already carried by the kicker above. */}
+                    <span className="text-text-primary">{topSectorName}</span>
                     {' '}{t('featured.leadsRisk')}{' '}
-                    <span className="font-mono tabular-nums">{topRiskPct}%</span>
+                    <span className="font-mono tabular-nums" style={{ color: topSectorTextColor }}>{topRiskPct}%</span>
                     {' '}{t('featured.avgRiskSuffix')}
                   </>
                 }

@@ -440,98 +440,47 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const cellH = y1 - y0
           if (cellW < 40 || cellH < 20) return null
 
-          // Anchor dot position (bottom-left of cell)
-          const dotX = x0 + 10
-          const dotY = y1 - 10
-
-          // Callout box: try to place it below the cell, or above if near bottom
-          const calloutX = Math.max(4, Math.min(dims.w - 232, x0))
-          const calloutY = y1 + 8 > dims.h - 60 ? y0 - 70 : y1 + 8
-          const calloutW = Math.min(228, dims.w - calloutX - 4)
-          const calloutH = 58
-
-          // Leader line end (top-center of callout)
-          const leaderEndX = calloutX + calloutW / 2
-          const leaderEndY = calloutY
-
+          // FIX 2026-05-04: previous always-on callout box rendered ON TOP of
+          // neighboring cell labels (Educacion, Agricultura, etc.), making
+          // the treemap unreadable. Replaced with an in-cell warning chip
+          // anchored to the bottom-right of the agriculture cell, plus a
+          // <title> hover tooltip that carries the full Segalmex narrative.
+          // The standalone caveat block in the FeaturedFinding lede still
+          // carries the full disclosure where the eye lands first.
           const es = lang === 'es'
-          const caveatText = es
-            ? 'Score inflado por Segalmex/GT → ver /thread/segalmex'
-            : 'Score inflated by Segalmex GT case → see /thread/segalmex'
-          const caveatLabel = es ? 'Artefacto · Segalmex' : 'Artifact · Segalmex'
-
-          // Determine if line goes up or down from dot
-          const lineGoesUp = calloutY < dotY
-
+          const chipLabel = es ? 'GT' : 'GT'
+          const chipTitle = es
+            ? 'Artefacto · Segalmex — score inflado por caso GT. Ver /thread/segalmex.'
+            : 'Artifact · Segalmex — score inflated by GT case. See /thread/segalmex.'
+          // Position chip in bottom-right of the agriculture cell
+          const chipW = 22
+          const chipH = 14
+          const chipX = x1 - chipW - 4
+          const chipY = y1 - chipH - 4
+          // Only render if the cell is large enough for the chip
+          if (cellW < chipW + 8 || cellH < chipH + 8) return null
           return (
-            <g key="agri-caveat" style={{ pointerEvents: 'none' }}>
-              {/* Leader line */}
-              <line
-                x1={dotX}
-                y1={dotY}
-                x2={leaderEndX}
-                y2={lineGoesUp ? leaderEndY + calloutH : leaderEndY}
-                stroke="#f59e0b"
-                strokeWidth={1}
-                strokeDasharray="3 2"
-                opacity={0.7}
-              />
-              {/* Arrow head */}
-              <polygon
-                points={`${dotX - 3},${lineGoesUp ? dotY - 4 : dotY + 4} ${dotX + 3},${lineGoesUp ? dotY - 4 : dotY + 4} ${dotX},${lineGoesUp ? dotY - 9 : dotY + 9}`}
-                fill="#f59e0b"
-                opacity={0.8}
-              />
-              {/* Callout box */}
+            <g key="agri-caveat">
+              <title>{chipTitle}</title>
               <rect
-                x={calloutX}
-                y={calloutY}
-                width={calloutW}
-                height={calloutH}
-                rx={3}
-                fill="var(--color-background-card)"
-                stroke="#f59e0b"
-                strokeWidth={1}
-                opacity={0.95}
+                x={chipX}
+                y={chipY}
+                width={chipW}
+                height={chipH}
+                rx={2}
+                fill="#f59e0b"
+                opacity={0.92}
               />
               <text
-                x={calloutX + 8}
-                y={calloutY + 14}
+                x={chipX + chipW / 2}
+                y={chipY + chipH / 2 + 3}
                 fontSize={8}
-                fontWeight={700}
+                fontWeight={800}
                 fontFamily="var(--font-family-mono)"
-                textAnchor="start"
-                fill="#f59e0b"
+                textAnchor="middle"
+                fill="#1a1714"
               >
-                {caveatLabel.toUpperCase()}
-              </text>
-              {/* Word-wrap the caveat text into two lines max */}
-              <text
-                x={calloutX + 8}
-                y={calloutY + 28}
-                fontSize={9}
-                fontFamily="var(--font-family-sans)"
-                fill="var(--color-text-secondary)"
-              >
-                {caveatText.length > 45 ? (
-                  <>
-                    <tspan x={calloutX + 8} dy={0}>{caveatText.slice(0, 44)}</tspan>
-                    <tspan x={calloutX + 8} dy={12}>{caveatText.slice(44)}</tspan>
-                  </>
-                ) : (
-                  caveatText
-                )}
-              </text>
-              {/* Segalmex link hint */}
-              <text
-                x={calloutX + 8}
-                y={calloutY + 52}
-                fontSize={8}
-                fontFamily="var(--font-family-mono)"
-                fill="#f59e0b"
-                textDecoration="underline"
-              >
-                {es ? 'Ver hilo Segalmex →' : 'See Segalmex thread →'}
+                {chipLabel}
               </text>
             </g>
           )
