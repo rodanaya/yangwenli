@@ -146,6 +146,11 @@ def _warmup_caches():
         "/api/v1/analysis/value-concentration",            # Value concentration widget (48s cold)
         "/api/v1/analysis/leads",                          # Investigation leads (169s cold!)
         *[f"/api/v1/reports/sector/{i}" for i in range(1, 13)],  # Sector reports (346s cold each)
+        # Categories capture-dumbbell — top categories by spend; the
+        # /sectors?view=categories dumbbell fans 12 of these in parallel
+        # and the slow ones (Medicamentos, Alimentos) timeout uncached.
+        # Pre-warm the top 15 categories observed in production.
+        *[f"/api/v1/categories/{i}/top-vendors?limit=2" for i in [26, 20, 57, 91, 88, 8, 30, 22, 73, 60, 5, 71, 63, 55, 24]],
         # Sector sub-pages — now use precomputed fast paths so safe to warm
         *[f"/api/v1/sectors/{i}/trends" for i in range(1, 13)],
         *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
@@ -160,6 +165,8 @@ def _warmup_caches():
                 timeout = 400  # 346s cold per audit; give headroom
             elif "analysis/leads" in ep:
                 timeout = 200  # 169s cold per audit
+            elif "/top-vendors" in ep:
+                timeout = 60  # biggest categories take ~30s cold
             elif "executive" in ep or "price-anomalies" in ep:
                 timeout = 120
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:

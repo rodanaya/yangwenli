@@ -5,7 +5,8 @@ Provides category-level statistics, contract lists, and yearly trends
 based on the Mexican government's partida-especifica classification.
 """
 import logging
-from typing import Optional
+import time as _time
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Query, HTTPException
 
@@ -14,6 +15,13 @@ from ..dependencies import get_db
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/categories", tags=["categories"])
+
+# 1h cache for /{id}/top-vendors. The biggest categories (Medicamentos,
+# Alimentos y Viveres, Mantenimiento General) take 25-30+ seconds to
+# aggregate uncached — well past the 30s axios timeout. Vendor shares per
+# category only change with new ETL, so stale-but-fast is the right tradeoff.
+_top_vendors_cache: Dict[str, Any] = {}
+_TOP_VENDORS_TTL = 3600
 
 
 def _table_exists(conn, table_name: str) -> bool:
@@ -785,6 +793,10 @@ def get_category_top_vendors(
     limit: int = Query(15, ge=1, le=30),
 ):
     """Return top vendors in a category with market share and HHI concentration."""
+    cache_key = f"tv:{category_id}:{limit}"
+    cached = _top_vendors_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _TOP_VENDORS_TTL:
+        return cached["data"]
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
@@ -845,7 +857,7 @@ def get_category_top_vendors(
 
     top3_share = sum(v["market_share_pct"] for v in vendors[:3])
 
-    return {
+    result = {
         "category_id": category_id,
         "category_name": cat["name_es"],
         "total_value": round(cat_total_value, 2),
@@ -855,6 +867,8 @@ def get_category_top_vendors(
         "top3_share_pct": round(top3_share, 1),
         "data": vendors,
     }
+    _top_vendors_cache[cache_key] = {"ts": _time.time(), "data": result}
+    return result
 
 
 @router.get("/trends")

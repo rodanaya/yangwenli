@@ -180,30 +180,50 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
   useEffect(() => {
     if (nodes.length === 0) return
 
-    // Create virtual "label nodes" that repel each other and are attracted
-    // back toward their anchor (right of parent circle).
-    type LNode = SimulationNodeDatum & { idx: number; anchorX: number; anchorY: number }
-    const labelNodes: LNode[] = nodes.map((n, idx) => ({
+    // Each entity becomes TWO simulation nodes:
+    //   1) a fixed-position circle obstacle (the actual data circle)
+    //   2) a movable label node anchored to the right of the circle
+    // The collide force repels labels away from BOTH other labels and other
+    // circles — this fixes the prior bug where "Salud" rendered on top of
+    // the Energia circle's body. Circle obstacles use fx/fy to stay pinned.
+    type SimNode = SimulationNodeDatum & {
+      idx: number
+      isLabel: boolean
+      anchorX: number
+      anchorY: number
+      collideR: number
+    }
+    const labelNodes: SimNode[] = nodes.map((n, idx) => ({
       idx,
+      isLabel: true,
       anchorX: n.cx + n.r + 5,
       anchorY: n.cy + 4,
       x: n.cx + n.r + 5,
       y: n.cy + 4,
+      collideR: 28,
     }))
+    const circleObstacles: SimNode[] = nodes.map((n, idx) => ({
+      idx: -idx - 1, // negative so we can ignore in the output
+      isLabel: false,
+      anchorX: n.cx,
+      anchorY: n.cy,
+      x: n.cx,
+      y: n.cy,
+      fx: n.cx,
+      fy: n.cy,
+      collideR: n.r + 6, // circle radius + label margin
+    }))
+    const allNodes = [...labelNodes, ...circleObstacles]
 
-    // Stronger collide + weaker anchors so labels can travel further from
-    // their anchor when the alternative is overlapping a neighbor. Previous
-    // tuning (r=18, strength=0.6) left Hacienda overlapping Educación and
-    // Defensa overlapping Gobernación in the prod beeswarm.
-    const sim = forceSimulation<LNode>(labelNodes)
-      .force('collideLabel', forceCollide<LNode>(28).strength(1).iterations(6))
-      .force('anchorX', forceX<LNode>((d) => d.anchorX).strength(0.18))
-      .force('anchorY', forceY<LNode>((d) => d.anchorY).strength(0.22))
+    const sim = forceSimulation<SimNode>(allNodes)
+      .force('collide', forceCollide<SimNode>((d) => d.collideR).strength(1).iterations(8))
+      .force('anchorX', forceX<SimNode>((d) => d.anchorX).strength((d) => (d.isLabel ? 0.18 : 0)))
+      .force('anchorY', forceY<SimNode>((d) => d.anchorY).strength((d) => (d.isLabel ? 0.22 : 0)))
       .alphaDecay(0.04)
       .stop()
 
     // Run synchronously (no animation needed for static positions)
-    for (let i = 0; i < 200; i++) sim.tick()
+    for (let i = 0; i < 250; i++) sim.tick()
 
     setLabelPositions(labelNodes.map((n) => ({ x: n.x ?? n.anchorX, y: n.y ?? n.anchorY })))
   }, [nodes])

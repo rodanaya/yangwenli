@@ -401,13 +401,44 @@ export function CompetitionSlopeChart() {
             />
           ))}
 
-        {/* Right-edge labels — only for crossers */}
-        {crossers.map((line) => {
-          const lastPt = line.points[line.points.length - 1]
-          if (!lastPt) return null
-          const y = scaleY(lastPt.da)
-          const x = scaleX(lastPt.year)
-          return (
+        {/* Right-edge labels — only for crossers, with greedy 1-D vertical
+            de-clustering. Without this, sectors that all end ~70-80% DA
+            overlap into a smear (Health/Education/Treasury/Technology/Other
+            stack on top of each other). Algorithm: sort by raw y, then walk
+            top→bottom and nudge any label that's within MIN_GAP of the one
+            above. Same for bottom→top, so the cluster spreads symmetrically
+            around its midpoint instead of all sliding down. */}
+        {(() => {
+          const MIN_GAP = 12
+          // Compute initial label positions
+          type LabelPos = { line: typeof crossers[0]; x: number; y: number }
+          const labels: LabelPos[] = crossers
+            .map((line) => {
+              const lastPt = line.points[line.points.length - 1]
+              if (!lastPt) return null
+              return { line, x: scaleX(lastPt.year), y: scaleY(lastPt.da) }
+            })
+            .filter((p): p is LabelPos => p !== null)
+            .sort((a, b) => a.y - b.y)
+
+          // Pass 1: top→bottom — if too close to the one above, push down
+          for (let i = 1; i < labels.length; i++) {
+            const above = labels[i - 1]
+            if (labels[i].y - above.y < MIN_GAP) {
+              labels[i].y = above.y + MIN_GAP
+            }
+          }
+          // Pass 2: bottom→top — if pushing down went off the chart, pull up
+          const chartBottom = MARGIN.top + CHART_HEIGHT - MARGIN.bottom - 4
+          for (let i = labels.length - 1; i > 0; i--) {
+            if (labels[i].y > chartBottom) labels[i].y = chartBottom
+            const below = labels[i]
+            if (below.y - labels[i - 1].y < MIN_GAP) {
+              labels[i - 1].y = below.y - MIN_GAP
+            }
+          }
+
+          return labels.map(({ line, x, y }) => (
             <text
               key={`label-${line.sectorId}`}
               x={x + 10}
@@ -423,8 +454,8 @@ export function CompetitionSlopeChart() {
             >
               {line.sectorName}
             </text>
-          )
-        })}
+          ))
+        })()}
 
         {/* Below-ceiling cluster label */}
         {belowCount > 0 && !showAll && (
