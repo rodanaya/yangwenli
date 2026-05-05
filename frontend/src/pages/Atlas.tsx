@@ -1471,42 +1471,9 @@ export default function Atlas() {
         </div>
       </div>
 
-      {/* ── Lens tagline — Pudding "Hip-Hop generations" pattern ─────── */}
-      {/* Each lens gets a one-line italic editorial statement explaining  */}
-      {/* what a "cluster" actually represents in this view. Fades on     */}
-      {/* lens change (200ms). Bilingual ES + EN inline ternary.          */}
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={mode}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="text-[14px] md:text-[16px] text-text-secondary mb-3 leading-snug"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic' }}
-        >
-          {mode === 'patterns' && (
-            lang === 'es'
-              ? 'Cada cúmulo es un patrón ARIA — el modelo agrupa contratos por anatomía de irregularidad'
-              : 'Each cluster is an ARIA pattern — the model groups contracts by irregularity anatomy'
-          )}
-          {mode === 'sectors' && (
-            lang === 'es'
-              ? 'Cada cúmulo es uno de los 12 sectores del gobierno federal'
-              : 'Each cluster is one of the 12 federal government sectors'
-          )}
-          {mode === 'categories' && (
-            lang === 'es'
-              ? 'Cada cúmulo es una de las 72 categorías de gasto activas'
-              : 'Each cluster is one of the 72 active spending categories'
-          )}
-          {mode === 'sexenios' && (
-            lang === 'es'
-              ? 'Cada cúmulo es un sexenio presidencial — Fox a Sheinbaum'
-              : 'Each cluster is a presidential term — Fox through Sheinbaum'
-          )}
-        </motion.p>
-      </AnimatePresence>
+      {/* omega-P6 lens tagline REVERTED 2026-05-05 — decoration. The actual
+          amplified redesign (animated dot morphing between lens layouts)
+          is queued for omega-C-P5. */}
 
       {/* ── Risk-floor filter row ─────────────────────────────────────── */}
       {/* Apr 2026: relabeled "X-RAY" → "RISK FLOOR / RIESGO MÍNIMO" — the

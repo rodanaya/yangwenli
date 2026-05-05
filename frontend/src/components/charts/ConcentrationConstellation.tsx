@@ -167,16 +167,8 @@ function buildCategoryMeta(isEs: boolean): ClusterMeta[] {
   ]
 }
 
-// Short bilingual labels for ARIA patterns — used in persistent sub-labels (omega-P2)
-const PATTERN_SHORT_LABEL: Record<string, { en: string; es: string }> = {
-  P1: { en: 'Monopoly',     es: 'Monopolio'     },
-  P2: { en: 'Ghost',        es: 'Fantasma'       },
-  P3: { en: 'Intermediary', es: 'Intermediaria'  },
-  P4: { en: 'Collusion',    es: 'Colusión'       },
-  P5: { en: 'Overpricing',  es: 'Sobreprecio'    },
-  P6: { en: 'Capture',      es: 'Captura'        },
-  P7: { en: 'Network',      es: 'Red'            },
-}
+// PATTERN_SHORT_LABEL removed with omega-P2 revert; bilingual labels are
+// already in the meta data above.
 
 // Meta label shown in tooltip kicker and caption
 function buildModeKickers(isEs: boolean): Record<ConstellationMode, { short: string; caption: string }> {
@@ -431,11 +423,7 @@ export function ConcentrationConstellation({
   const safeHover =
     hoveredCluster !== null && hoveredCluster < activeMeta.length ? hoveredCluster : null
 
-  // Worst cluster: highest highRiskPct — gets a static ▲ star marker (omega-P2)
-  const worstClusterIdx = activeMeta.reduce(
-    (best, m, i) => m.highRiskPct > activeMeta[best].highRiskPct ? i : best,
-    0
-  )
+  // worstClusterIdx removed with the omega-P2 ▲ star marker revert.
 
   const kickerLabel = MODE_KICKERS[mode]
   const modeAriaHint = mode === 'sectors'
@@ -696,41 +684,9 @@ export function ConcentrationConstellation({
                 {shortLabel}
               </text>
 
-              {/* Persistent bilingual sub-label below the code (patterns mode only) — omega-P2 */}
-              {mode === 'patterns' && PATTERN_SHORT_LABEL[meta.code] && (
-                <text
-                  x={a.x}
-                  y={a.y + ringR + 18}
-                  fill={meta.color}
-                  fillOpacity={isHovered ? 0.80 : 0.50}
-                  fontSize={8}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fontWeight="500"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  style={{ transition: 'fill-opacity 160ms ease' }}
-                >
-                  {isEs ? PATTERN_SHORT_LABEL[meta.code].es : PATTERN_SHORT_LABEL[meta.code].en}
-                </text>
-              )}
-
-              {/* Worst-cluster star marker — ▲ on highest-highRiskPct cluster (omega-P2) */}
-              {idx === worstClusterIdx && (
-                <text
-                  x={a.x + ringR + 3}
-                  y={a.y - ringR - 2}
-                  fill={meta.color}
-                  fillOpacity={0.90}
-                  fontSize={8}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fontWeight="900"
-                  textAnchor="start"
-                  dominantBaseline="middle"
-                  aria-label={isEs ? 'mayor concentración' : 'highest concentration'}
-                >
-                  ▲
-                </text>
-              )}
+              {/* omega-P2 persistent sub-labels + worst-cluster ▲ marker
+                  REVERTED 2026-05-05 — decoration. The constellation reads
+                  cleaner with hover-only labels. */}
 
               {/* Transparent hit target — larger than visible ring */}
               <circle
@@ -824,30 +780,7 @@ export function ConcentrationConstellation({
           1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} {isEs ? 'contratos' : 'contracts'} · {kickerLabel.caption}
         </text>
 
-        {/* ── Right-margin encoding glossary (omega-P2 Pudding "Birds" pattern) ─ */}
-        {/* Three lines explaining the visual encoding to cold readers */}
-        {(() => {
-          const gx = PAD_L + FIELD_W + 24
-          const gy = SVG_H - PAD_B - 40
-          return (
-            <g
-              className="atlas-anno"
-              style={{ animationDelay: '2200ms' }}
-            >
-              <text x={gx} y={gy}      fill="var(--color-text-muted)" fontSize={8.5} fontFamily="var(--font-family-mono, monospace)" opacity={0.65}>
-                {isEs
-                  ? `1 punto ≈ ${Math.round(totalContracts / N_DOTS).toLocaleString()} contratos`
-                  : `1 dot ≈ ${Math.round(totalContracts / N_DOTS).toLocaleString()} contracts`}
-              </text>
-              <text x={gx} y={gy + 12} fill="var(--color-text-muted)" fontSize={8.5} fontFamily="var(--font-family-mono, monospace)" opacity={0.65}>
-                {isEs ? 'color del punto = nivel de riesgo' : 'dot color = risk level'}
-              </text>
-              <text x={gx} y={gy + 24} fill="var(--color-text-muted)" fontSize={8.5} fontFamily="var(--font-family-mono, monospace)" opacity={0.65}>
-                {isEs ? 'tamaño del aro ∝ √proveedores T1' : 'ring size ∝ √T1 vendors'}
-              </text>
-            </g>
-          )
-        })()}
+        {/* omega-P2 right-margin encoding glossary REVERTED 2026-05-05 — decoration */}
 
         {/* close animated payload group */}
         </g>

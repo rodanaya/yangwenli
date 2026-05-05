@@ -106,14 +106,14 @@ export function MacroArc({ lang }: Props) {
   const CHART_H = SVG_H - PAD_TOP - PAD_BOT
   const CHART_W = SVG_W - PAD_L - PAD_R
   const OECD_CEILING = 25   // primary: OECD ≤ 25% recommended ceiling
-  const OECD_UPPER   = 30   // secondary: OECD 25–30% acceptable band upper bound
+  // OECD_UPPER (30%) constant removed with the secondary line revert
   const Y_MIN = 2002
   const Y_MAX = 2025
 
   const yearToX = (y: number) => PAD_L + ((y - Y_MIN) / (Y_MAX - Y_MIN)) * CHART_W
   const daToY = (pct: number) => PAD_TOP + CHART_H * (1 - pct / 100)
   const OECD_Y = daToY(OECD_CEILING)
-  const OECD_UPPER_Y = daToY(OECD_UPPER)
+  // OECD_UPPER_Y (30% line position) removed with the secondary line revert
   const AXIS_Y = PAD_TOP + CHART_H
 
   // Most recent data point
@@ -191,28 +191,9 @@ export function MacroArc({ lang }: Props) {
           )
         })}
 
-        {/* OECD upper band — 30% thin secondary hairline (dysfunction floor) */}
-        <line
-          x1={PAD_L}
-          x2={PAD_L + CHART_W}
-          y1={OECD_UPPER_Y}
-          y2={OECD_UPPER_Y}
-          stroke="var(--color-text-muted)"
-          strokeWidth={0.8}
-          strokeDasharray="3 5"
-          opacity={0.45}
-        />
-        <text
-          x={PAD_L + CHART_W + 6}
-          y={OECD_UPPER_Y + 3}
-          fontSize={7.5}
-          fill="var(--color-text-muted)"
-          opacity={0.55}
-          fontFamily="var(--font-family-mono, monospace)"
-          fontWeight="600"
-        >
-          {lang === 'en' ? 'OECD 30% · dysfunction floor' : 'OCDE 30% · umbral disfunción'}
-        </text>
+        {/* omega-P1 secondary 30% reference line REVERTED 2026-05-05 —
+            two reference lines on the same chart was clutter; the 25%
+            ceiling is the canonical platform threshold. */}
 
         {/* OECD 25% ceiling — neutral dashed reference line (Bible §3.10: no green) */}
         <line

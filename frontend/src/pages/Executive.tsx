@@ -731,7 +731,9 @@ const PATTERN_RISK: PatternRiskEntry[] = [
 function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
   const sorted = [...PATTERN_RISK].sort((a, b) => b.pesosBn - a.pesosBn)
   const max = sorted[0].pesosBn
-  const total = sorted.reduce((s, p) => s + p.pesosBn, 0)
+  // total — used by the omega-P3 anchor stat which was reverted; kept for any
+  // future re-introduction. Currently unreferenced.
+  void sorted.reduce((s, p) => s + p.pesosBn, 0)
   const SVG_W = 820
   const ROW_H = 30
   const TOP = 12
@@ -759,39 +761,10 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
       : { value: formatted, unit: '' }
   }
 
-  // Pudding 'Trolley Problem' anchor stat — total pesos compared to federal spend benchmark
-  const totalMXN = total * 1_000_000_000
-  const federalSpendMXN = 9_900_000_000_000  // 9.9T MXN validated federal spend
-  const pctOfFederal = ((totalMXN / federalSpendMXN) * 100).toFixed(1)
-
+  // omega-P3 anchor stat REVERTED 2026-05-05 (decoration, not amplified
+  // redesign). The amplified Cleveland-pair geometry is queued for omega-C.
   return (
     <div>
-      {/* Pudding 'Trolley Problem' single-anchor header — one reference number to orient the reader */}
-      <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-border/40 flex-wrap gap-3">
-        <div>
-          <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-            {lang === 'en' ? 'TOTAL ESTIMATED EXPOSURE' : 'EXPOSICIÓN ESTIMADA TOTAL'}
-          </div>
-          <div
-            className="tabular-nums leading-none"
-            style={{
-              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-              fontStyle: 'italic',
-              fontWeight: 800,
-              fontSize: 28,
-              color: '#dc2626',
-            }}
-          >
-            ~{formatCompactMXN(totalMXN)}
-          </div>
-        </div>
-        <div className="text-[10px] font-mono text-text-muted leading-[1.6] max-w-[320px]">
-          {lang === 'en'
-            ? `~${pctOfFederal}% of 9.9T MXN federal procurement · 23-year baseline`
-            : `~${pctOfFederal}% de los 9.9 billones MXN del gasto federal · base 23 años`}
-        </div>
-      </div>
-
       <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
         aria-label={lang === 'en' ? 'Estimated pesos at risk by ARIA pattern.' : 'Pesos estimados en riesgo por patrón ARIA.'}>
         {sorted.map((p, idx) => {
@@ -862,19 +835,7 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
                 )
               })()}
 
-              {/* → Investigate link (right margin) */}
-              <a href={`/aria?pattern=${p.code}`}>
-                <text
-                  x={SVG_W - 4} y={y + 3}
-                  textAnchor="end"
-                  fontSize={8} fontWeight="600"
-                  fill={p.color} fillOpacity={0.75}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  style={{ cursor: 'pointer' }}
-                >
-                  {lang === 'es' ? '→ Investigar' : '→ Investigate'}
-                </text>
-              </a>
+              {/* omega-P3 → Investigate links REVERTED 2026-05-05 — clutter */}
             </motion.g>
           )
         })}
@@ -2043,12 +2004,7 @@ export default function Executive() {
 
                   {/* Tier annotations on the right */}
                   <div className="flex-1 flex flex-col min-w-0">
-                    {/* Pudding 'Margaret Hamilton' single-argument headline */}
-                    <div className="text-[10px] font-mono italic text-text-muted mb-3 leading-[1.5]">
-                      {lang === 'es'
-                        ? `De 3,051,294 contratos, ${formatNumber(lensTiers[4].count)} son investigables.`
-                        : `Of 3,051,294 contracts, ${formatNumber(lensTiers[4].count)} are dossier-ready.`}
-                    </div>
+                    {/* omega-P5 Pudding lede headline REVERTED 2026-05-05 — decoration */}
                     <div className="flex flex-col gap-0">
                       {lensTiers.map((t, i) => (
                         <div key={i}>
@@ -2088,19 +2044,7 @@ export default function Executive() {
                               {t.sublabel[lang]}
                             </div>
                           </motion.a>
-                          {/* Narrowing reason — Pudding 'Margaret Hamilton' per-step annotation */}
-                          {t.narrowReason && (
-                            <motion.div
-                              className="ml-[24px] mt-1 mb-2 text-[9px] font-mono italic leading-[1.3]"
-                              style={{ color: t.color, opacity: 0.7 }}
-                              initial={{ opacity: 0 }}
-                              whileInView={{ opacity: 0.7 }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.3, delay: 0.55 + i * 0.13 }}
-                            >
-                              {t.narrowReason[lang]}
-                            </motion.div>
-                          )}
+                          {/* omega-P5 narrowReason text REVERTED 2026-05-05 — decoration */}
                         </div>
                       ))}
                     </div>
