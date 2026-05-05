@@ -192,31 +192,38 @@ function InstitutionList({
             key={i}
             className="rounded-lg px-3 py-2 hover:bg-background-elevated transition-all"
           >
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
-                  #{i + 1}
-                </span>
+            {/* Two-row layout: name on its own row (full width, no truncation
+                competing with the money pill) + KPIs on row 2. Previous
+                single-row flex squeezed institution names down to "Institu..."
+                because the money + risk pill claimed the right column. */}
+            <div className="flex items-baseline gap-2 min-w-0 mb-1">
+              <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
+                #{i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
                 <EntityIdentityChip
                   type="institution"
                   id={f.source_id}
                   name={f.source_name}
-                  size="xs"
+                  size="sm"
                 />
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
-                  {formatCompactMXN(f.value)}
+            </div>
+            <div className="flex items-center gap-2 ml-6">
+              <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
+                {formatCompactMXN(f.value)}
+              </span>
+              {f.avg_risk != null && (
+                <span
+                  className="rounded px-1.5 py-0.5 text-[10px] font-bold font-mono"
+                  style={{ color: riskColor, backgroundColor: `${riskColor}18` }}
+                >
+                  {Math.round(f.avg_risk * 100)}%
                 </span>
-                {f.avg_risk != null && (
-                  <span
-                    className="rounded px-1.5 py-0.5 text-[10px] font-bold font-mono"
-                    style={{ color: riskColor, backgroundColor: `${riskColor}18` }}
-                  >
-                    {Math.round(f.avg_risk * 100)}%
-                  </span>
-                )}
-              </div>
+              )}
+              <span className="text-[10px] font-mono text-text-muted ml-auto tabular-nums">
+                {formatNumber(f.contracts)} {f.contracts === 1 ? 'contrato' : 'contratos'}
+              </span>
             </div>
             <div className="ml-6">
               {(() => {
@@ -1345,16 +1352,15 @@ export function SectorProfile() {
               </div>
               <div className="rounded-sm border border-border bg-background/40 p-4">
                 <RiskTrendChart years={timelineData.years} />
-                <div className="flex items-center gap-4 mt-2 ml-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-4 rounded-full bg-amber-400" aria-hidden="true" />
-                    <span className="text-[10px] text-text-secondary">Avg Risk Score ×100</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-2 w-4 rounded-full bg-red-500" aria-hidden="true" />
-                    <span className="text-[10px] text-text-secondary">High-Risk %</span>
-                  </div>
-                </div>
+                {/* Editorial spec: direct labels at the right edge of the
+                    chart instead of a bottom legend (FT/JBM rule). The chart
+                    component itself owns its right-edge series labels; this
+                    block describes the dual-line encoding once. */}
+                <p className="text-[10px] font-mono text-text-muted mt-2 ml-1">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle mr-1" aria-hidden /> avg risk × 100
+                  <span className="mx-2 text-text-muted/40">·</span>
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle mr-1" aria-hidden /> high-risk %
+                </p>
               </div>
             </section>
           ) : null}

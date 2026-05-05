@@ -481,36 +481,17 @@ export function CompetitionSlopeChart() {
         </div>
       )}
 
-      {/* Below-chart: sector color legend for crossers */}
-      {crossers.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-          {crossers.map((line) => (
-            <button
-              key={line.sectorId}
-              type="button"
-              onClick={() => navigate(`/sectors/${line.sectorId}`)}
-              className="flex items-center gap-1.5 text-[10px] font-mono hover:opacity-80 transition-opacity"
-              style={{ color: SECTOR_TEXT_COLORS[line.sectorCode] ?? line.color }}
-            >
-              <span
-                className="inline-block w-4 h-px"
-                style={{ backgroundColor: line.color, height: 2 }}
-                aria-hidden
-              />
-              {line.sectorName}
-              <span style={{ color: MUTED_GRAY }}>
-                {line.endDa.toFixed(0)}%
-              </span>
-            </button>
-          ))}
-          {belowCount > 0 && (
-            <span className="text-[10px] font-mono" style={{ color: MUTED_GRAY }}>
-              {isEs
-                ? `${belowCount} sectores bajo el techo OCDE (gris)`
-                : `${belowCount} sectors below OECD ceiling (gray)`}
-            </span>
-          )}
-        </div>
+      {/* Editorial spec (FT slope vocabulary): direct labels at the right
+          edge of the chart are the legend. Below-chart legend deleted —
+          the percentages duplicated the right-edge labels and the visual
+          density read as Excel-export, not editorial. The "+N below ceiling"
+          cluster annotation lives inside the SVG. */}
+      {belowCount > 0 && (
+        <p className="mt-2 text-[10px] font-mono text-text-muted">
+          {isEs
+            ? `${belowCount} sectores bajo el techo OCDE (mostrados en gris)`
+            : `${belowCount} sectors below OECD ceiling (shown in gray)`}
+        </p>
       )}
     </div>
   )

@@ -191,15 +191,19 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
       y: n.cy + 4,
     }))
 
+    // Stronger collide + weaker anchors so labels can travel further from
+    // their anchor when the alternative is overlapping a neighbor. Previous
+    // tuning (r=18, strength=0.6) left Hacienda overlapping Educación and
+    // Defensa overlapping Gobernación in the prod beeswarm.
     const sim = forceSimulation<LNode>(labelNodes)
-      .force('collideLabel', forceCollide<LNode>(18).strength(0.6).iterations(3))
-      .force('anchorX', forceX<LNode>((d) => d.anchorX).strength(0.35))
-      .force('anchorY', forceY<LNode>((d) => d.anchorY).strength(0.5))
-      .alphaDecay(0.05)
+      .force('collideLabel', forceCollide<LNode>(28).strength(1).iterations(6))
+      .force('anchorX', forceX<LNode>((d) => d.anchorX).strength(0.18))
+      .force('anchorY', forceY<LNode>((d) => d.anchorY).strength(0.22))
+      .alphaDecay(0.04)
       .stop()
 
     // Run synchronously (no animation needed for static positions)
-    for (let i = 0; i < 120; i++) sim.tick()
+    for (let i = 0; i < 200; i++) sim.tick()
 
     setLabelPositions(labelNodes.map((n) => ({ x: n.x ?? n.anchorX, y: n.y ?? n.anchorY })))
   }, [nodes])
