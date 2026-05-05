@@ -721,7 +721,7 @@ interface PatternRiskEntry {
 const PATTERN_RISK: PatternRiskEntry[] = [
   { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, vendors: 3985,  color: '#dc2626' },
   { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  vendors: 6034,  color: '#dc2626' },
-  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  vendors: 15923, color: '#a06820' },
+  { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  vendors: 15923, color: '#dc2626' },
   { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  vendors: 44,    color: '#dc2626' },
   { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  vendors: 2974,  color: '#f59e0b' },
   { code: 'P7', label: { en: 'Contractor Network',       es: 'Red de Contratistas' },      pesosBn: 38,  vendors: 257,   color: '#dc2626' },
@@ -759,10 +759,41 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
       : { value: formatted, unit: '' }
   }
 
+  // Pudding 'Trolley Problem' anchor stat — total pesos compared to federal spend benchmark
+  const totalMXN = total * 1_000_000_000
+  const federalSpendMXN = 9_900_000_000_000  // 9.9T MXN validated federal spend
+  const pctOfFederal = ((totalMXN / federalSpendMXN) * 100).toFixed(1)
+
   return (
     <div>
+      {/* Pudding 'Trolley Problem' single-anchor header — one reference number to orient the reader */}
+      <div className="flex items-baseline justify-between mb-4 pb-3 border-b border-border/40 flex-wrap gap-3">
+        <div>
+          <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+            {lang === 'en' ? 'TOTAL ESTIMATED EXPOSURE' : 'EXPOSICIÓN ESTIMADA TOTAL'}
+          </div>
+          <div
+            className="tabular-nums leading-none"
+            style={{
+              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+              fontStyle: 'italic',
+              fontWeight: 800,
+              fontSize: 28,
+              color: '#dc2626',
+            }}
+          >
+            ~{formatCompactMXN(totalMXN)}
+          </div>
+        </div>
+        <div className="text-[10px] font-mono text-text-muted leading-[1.6] max-w-[320px]">
+          {lang === 'en'
+            ? `~${pctOfFederal}% of 9.9T MXN federal procurement · 23-year baseline`
+            : `~${pctOfFederal}% de los 9.9 billones MXN del gasto federal · base 23 años`}
+        </div>
+      </div>
+
       <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full" style={{ height: SVG_H }} role="img"
-        aria-label="Estimated pesos at risk by ARIA pattern.">
+        aria-label={lang === 'en' ? 'Estimated pesos at risk by ARIA pattern.' : 'Pesos estimados en riesgo por patrón ARIA.'}>
         {sorted.map((p, idx) => {
           const y = TOP + idx * ROW_H + ROW_H / 2
           const widthPct = p.pesosBn / max
@@ -830,22 +861,28 @@ function PesosAtRiskChart({ lang }: { lang: 'en' | 'es' }) {
                   </text>
                 )
               })()}
+
+              {/* → Investigate link (right margin) */}
+              <a href={`/aria?pattern=${p.code}`}>
+                <text
+                  x={SVG_W - 4} y={y + 3}
+                  textAnchor="end"
+                  fontSize={8} fontWeight="600"
+                  fill={p.color} fillOpacity={0.75}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {lang === 'es' ? '→ Investigar' : '→ Investigate'}
+                </text>
+              </a>
             </motion.g>
           )
         })}
       </svg>
 
-      {/* Total + methodology footnote */}
-      <div className="flex items-baseline justify-between mt-3 pt-3 border-t border-border/40 flex-wrap gap-2">
-        <div>
-          <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {lang === 'en' ? 'TOTAL ESTIMATED EXPOSURE' : 'EXPOSICIÓN ESTIMADA TOTAL'}
-          </div>
-          <div className="font-mono font-bold text-[24px] tabular-nums leading-none mt-1" style={{ color: '#dc2626' }}>
-            ~{formatCompactMXN(total * 1_000_000_000)}
-          </div>
-        </div>
-        <div className="text-[8px] font-mono text-text-muted leading-[1.4] max-w-[420px]">
+      {/* Methodology footnote */}
+      <div className="mt-3 pt-3 border-t border-border/40">
+        <div className="text-[8px] font-mono text-text-muted leading-[1.4]">
           {lang === 'en'
             ? 'ESTIMATES — overpayment per pattern × pattern volume. Methodology approximations: P5 = (price_ratio − 1) × value; P2 = full ghost volume; P6 = ~15% capture premium; P1 = ~12% monopoly discount lost; others scale with network volume.'
             : 'ESTIMACIONES — sobreprecio por patrón × volumen del patrón. Aproximaciones: P5 = (razón_precio − 1) × valor; P2 = volumen fantasma completo; P6 = ~15% premio captura; P1 = ~12% descuento monopolio perdido; otros escalan con volumen de red.'}
