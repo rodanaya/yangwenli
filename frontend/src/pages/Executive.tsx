@@ -2346,7 +2346,7 @@ export default function Executive() {
                               {t.label[lang]}
                             </span>
                           </div>
-                          <div className="text-[10px] text-text-muted ml-[24px] leading-[1.3] mt-0.5">
+                          <div className="text-[10px] text-text-muted ml-[24px] leading-[1.3] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                             {t.sublabel[lang]}
                           </div>
                         </div>
