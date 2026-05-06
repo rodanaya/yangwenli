@@ -5,8 +5,8 @@
  * Build: atlas-C-P1
  *
  * P1 ships the IDLE state only (§ 4.1) — global stats card.
- * HOVER_CLUSTER (§ 4.2), ZOOMED_CLUSTER (§ 4.3), SELECTING (§ 4.4)
- * states are implemented in P3.
+ * P2 adds the ZOOMED_CLUSTER placeholder (§ 4.3 shell, content lands P3).
+ * HOVER_CLUSTER (§ 4.2) and SELECTING (§ 4.4) states land in P3/P4.
  *
  * The ClusterDetailPanel modal still slides over this panel until P3.
  * That's expected — the plan explicitly calls it "visual ugly-but-shipping".
@@ -19,7 +19,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { DotBar } from '@/components/ui/DotBar'
-import { useAtlasState } from './AtlasContext'
+import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Static data for the IDLE panel — sourced from CLAUDE.md + memory
@@ -253,6 +253,67 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ZOOMED_CLUSTER state — P2 placeholder (§ 4.3)
+// P3 will replace this with the full vendor list, filter chips, and CTAs.
+// The state branch exists so P3 can drop in real content without structural changes.
+// ─────────────────────────────────────────────────────────────────────────────
+function ZoomedClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) {
+  const dispatch = useAtlasDispatch()
+  const ACCENT = '#a06820'
+
+  return (
+    <div className="px-4 pb-6">
+      {/* Eyebrow */}
+      <div
+        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
+        style={{ color: ACCENT }}
+      >
+        {lang === 'en' ? `${code} · CLUSTER` : `${code} · CÚMULO`}
+      </div>
+
+      {/* Back link — OpenCorporates Hierarchy vocabulary */}
+      <button
+        onClick={() => dispatch({ type: 'escape-zoom' })}
+        className="inline-flex items-center gap-1 text-[10px] font-mono mt-1 mb-4 transition-opacity hover:opacity-70"
+        style={{ color: ACCENT }}
+      >
+        ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
+      </button>
+
+      {/* Phase 3 placeholder */}
+      <div
+        className="rounded-sm p-4 text-[11px] font-mono leading-[1.6]"
+        style={{
+          background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-secondary)',
+        }}
+      >
+        <div
+          className="font-bold mb-2 text-[9px] uppercase tracking-[0.12em]"
+          style={{ color: ACCENT }}
+        >
+          {lang === 'en' ? 'PHASE 3: VENDOR LIST' : 'FASE 3: LISTA DE PROVEEDORES'}
+        </div>
+        <div style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en'
+            ? 'The vendor list for this cluster lands in atlas-C-P3. Vendor-level dots are visible in the chart above.'
+            : 'La lista de proveedores de este cúmulo llega en atlas-C-P3. Los puntos de proveedor son visibles en el gráfico arriba.'}
+        </div>
+      </div>
+
+      {/* ESC hint */}
+      <div
+        className="mt-4 text-[9px] font-mono"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        {lang === 'en' ? 'Press ESC or click background to zoom out' : 'Presiona ESC o haz clic en el fondo para alejar'}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AtlasRightPanel — routes to the correct state view
 // ─────────────────────────────────────────────────────────────────────────────
 export function AtlasRightPanel({ lang }: AtlasRightPanelProps) {
@@ -266,12 +327,11 @@ export function AtlasRightPanel({ lang }: AtlasRightPanelProps) {
         // P3 will add the hover-cluster variant.
         <IdlePanel lang={lang} />
       ) : view.kind === 'zoomed-cluster' ? (
-        // P3 will render the vendor list here.
-        // For P1: show idle content with a note.
-        <IdlePanel lang={lang} />
+        // P2: placeholder card. P3 will render the full vendor list.
+        <ZoomedClusterPanel lang={lang} code={view.code} />
       ) : view.kind === 'selecting' ? (
         // P4 will render the selection summary here.
-        // For P1: show idle content.
+        // For now: show idle content.
         <IdlePanel lang={lang} />
       ) : (
         <IdlePanel lang={lang} />

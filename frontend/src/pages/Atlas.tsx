@@ -47,6 +47,8 @@ import { AtlasContextProvider } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
+// atlas-C-P2: zoom state machine
+import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -1147,6 +1149,18 @@ export default function Atlas() {
   // because the meta arrays / attractor positions change entirely.
   const constellationKey = mode
 
+  // atlas-C-P2: the full meta array the constellation uses — needed by
+  // AtlasZoomLayer to look up attractor coords for semantic zoom.
+  // Mirrors the activeMeta logic inside ConcentrationConstellation.tsx.
+  const activeConstellationMeta: ClusterMeta[] = useMemo(() => {
+    if (atlasMeta && atlasMeta.length > 0) return atlasMeta
+    const isEs = lang === 'es'
+    if (mode === 'sectors')    return buildSectorMeta(isEs)
+    if (mode === 'sexenios')   return buildSexenioMeta(isEs)
+    if (mode === 'categories') return buildAtlasCategoriesMeta(isEs)
+    return buildPatternMeta(isEs)
+  }, [mode, lang, atlasMeta])
+
   // Resolve selected cluster meta from the active meta set — uses the same
   // builders as the constellation so vendor/T1/risk numbers render correctly.
   const selectedMeta: ClusterMeta | null = useMemo(() => {
@@ -1875,18 +1889,23 @@ export default function Atlas() {
         </div>
       )}
       <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
-        <ConcentrationConstellation
+        {/* atlas-C-P2: ConcentrationConstellation is now wrapped in AtlasZoomLayer
+            which owns the semantic zoom transform. The constellation engine is
+            NOT modified — AtlasZoomLayer wraps it per plan § 5.1. */}
+        <AtlasZoomLayer
           key={constellationKey}
+          mode={mode}
           rows={rows.length > 0 ? rows : fallbackRows}
           totalContracts={totalContractsForYear}
-          mode={mode}
           metaOverride={atlasMeta}
           /* Seed depends ONLY on mode — dots stay in place across years
              so CSS transitions can morph their fill-opacity smoothly as the
              critical/high/medium/low pcts shift per year. */
           seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
           pinnedCode={pinnedCode}
-          onClusterClick={handleClusterClick}
+          lang={lang}
+          activeMeta={activeConstellationMeta}
+          onClusterClickBridge={handleClusterClick}
         />
       </div>
 

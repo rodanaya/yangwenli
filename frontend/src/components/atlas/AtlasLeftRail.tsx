@@ -1,8 +1,8 @@
 /**
  * AtlasLeftRail — 240px command rail for the investigator console.
  *
- * Plan: docs/ATLAS_C_CONSOLE_PLAN.md § 3
- * Build: atlas-C-P1
+ * Plan: docs/ATLAS_C_CONSOLE_PLAN.md § 3, § 2.5
+ * Build: atlas-C-P1 (structure), atlas-C-P2 (breadcrumb-back chip)
  *
  * Sections (top → bottom):
  *   Header: OBSERVATORIO + subline + reset button
@@ -127,33 +127,74 @@ export function AtlasLeftRail({
   return (
     <div className="flex flex-col h-full">
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <div
-        className="px-4 pt-5 pb-3 border-b flex items-start justify-between gap-2"
-        style={{ borderColor: 'var(--color-border)' }}
-      >
-        <div className="min-w-0">
+      {/* P2: when zoomed, header becomes a breadcrumb-back chip per § 2.5.
+          Format: ATLAS · {LENS} · {CODE} {LABEL} · {N} vendors · [← zoom out]
+          OpenCorporates Hierarchy vocabulary: answers "where am I?" */}
+      {state.view.kind === 'zoomed-cluster' ? (
+        <div
+          className="px-4 pt-4 pb-3 border-b"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          {/* Breadcrumb path */}
           <div
-            className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] leading-none"
-            style={{ color: ACCENT }}
-          >
-            {lang === 'en' ? 'OBSERVATORY' : 'OBSERVATORIO'}
-          </div>
-          <div
-            className="text-[9px] font-mono mt-1 leading-tight"
+            className="text-[8px] font-mono uppercase tracking-[0.14em] mb-1.5"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            {lang === 'en' ? '3.06M contracts · 2002–2025' : '3.06M contratos · 2002–2025'}
+            {lang === 'en' ? 'ATLAS · ZOOMED' : 'ATLAS · AMPLIADO'}
+          </div>
+          {/* Code + label */}
+          <div
+            className="text-[12px] font-mono font-bold leading-tight mb-1"
+            style={{ color: ACCENT }}
+          >
+            {state.view.code}
+          </div>
+          {/* Back button */}
+          <button
+            onClick={() => dispatch({ type: 'escape-zoom' })}
+            className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-sm transition-colors text-[10px] font-mono font-bold uppercase tracking-[0.1em] hover:bg-background-elevated/40"
+            style={{ border: `1px solid ${ACCENT}`, color: ACCENT }}
+            aria-label={lang === 'en' ? 'Zoom out to full sky' : 'Volver al cielo completo'}
+          >
+            ← {lang === 'en' ? 'Zoom out' : 'Volver'}
+          </button>
+          {/* ESC hint */}
+          <div
+            className="mt-1.5 text-[8px] font-mono"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {lang === 'en' ? 'or press ESC' : 'o presiona ESC'}
           </div>
         </div>
-        <button
-          onClick={onReset}
-          className="flex-shrink-0 p-1 rounded-sm hover:bg-background-elevated/60 transition-colors mt-0.5"
-          aria-label={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
-          title={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
+      ) : (
+        <div
+          className="px-4 pt-5 pb-3 border-b flex items-start justify-between gap-2"
+          style={{ borderColor: 'var(--color-border)' }}
         >
-          <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} />
-        </button>
-      </div>
+          <div className="min-w-0">
+            <div
+              className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] leading-none"
+              style={{ color: ACCENT }}
+            >
+              {lang === 'en' ? 'OBSERVATORY' : 'OBSERVATORIO'}
+            </div>
+            <div
+              className="text-[9px] font-mono mt-1 leading-tight"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              {lang === 'en' ? '3.06M contracts · 2002–2025' : '3.06M contratos · 2002–2025'}
+            </div>
+          </div>
+          <button
+            onClick={onReset}
+            className="flex-shrink-0 p-1 rounded-sm hover:bg-background-elevated/60 transition-colors mt-0.5"
+            aria-label={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
+            title={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
+          >
+            <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} />
+          </button>
+        </div>
+      )}
 
       {/* ── Scrollable body ─────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">

@@ -97,7 +97,7 @@ export const RISK_COLORS = {
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-05-atlas-C-P1'
+export const BUILD_ID = '2026-05-05-atlas-C-P2'
 
 // Risk thresholds (v0.6.5 — medium raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.
