@@ -49,6 +49,7 @@ import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
 // omega-N: story-chart binding + named-outlier data hook
@@ -1466,23 +1467,82 @@ export default function Atlas() {
           />
         }
         center={
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      {/* ── Hero header ─────────────────────────────────────────────────── */}
-      <header className="mb-6">
-        <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 inline-flex items-center gap-1.5">
-          <Sparkles className="h-3 w-3" />
-          {lang === 'en' ? 'PLATFORM · EXPLORATION' : 'PLATAFORMA · EXPLORACIÓN'}
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+      {/* ── folio-skin: paper-grain texture overlay ─────────────────────────
+          A very low-opacity SVG fractal noise sits behind the page content
+          so the entire atlas surface reads as a printed plate, not a glossy
+          screen. Pointer-events:none so it never blocks interaction. */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="atlas-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#atlas-paper-grain)" />
+      </svg>
+      {/* All page content sits above the grain overlay */}
+      <div className="relative" style={{ zIndex: 1 }}>
+      {/* ── Hero header ─ folio aesthetic ──────────────────────────────────
+          Eyebrow becomes an archival index line: Folio·IX · Atlas of contracting.
+          Headline is set as a small-caps EB Garamond italic display — feels
+          closer to a bound atlas plate than a generic dashboard title.
+          Lede sits in a narrower measure with EB Garamond regular italic for
+          the inline emphasis tokens. */}
+      <header className="mb-8">
+        <div
+          className="mb-3 flex items-center gap-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
+          <span style={{ width: 28, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
+          </span>
         </div>
         <h1
-          className="font-serif font-extrabold text-[32px] sm:text-[44px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3 text-balance"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          className="text-[36px] sm:text-[52px] md:text-[68px] leading-[0.96] text-text-primary mb-4 text-balance"
+          style={{
+            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 500,
+            letterSpacing: '-0.012em',
+          }}
         >
-          {lang === 'en' ? <>The Observatory. <span style={{ color: '#a06820' }}>Every contract</span> in the universe.</> : <>El Observatorio. <span style={{ color: '#a06820' }}>Cada contrato</span> en el universo.</>}
+          {lang === 'en' ? (
+            <>
+              An Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>of nine&#8202;trillion&#8202;pesos</span><br />
+              <span style={{ fontStyle: 'normal' }}>in federal procurement.</span>
+            </>
+          ) : (
+            <>
+              Un Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>de nueve&#8202;billones&#8202;de pesos</span><br />
+              <span style={{ fontStyle: 'normal' }}>en contratación federal.</span>
+            </>
+          )}
         </h1>
-        <p className="text-base leading-[1.7] text-text-secondary text-pretty">
+        <p
+          className="max-w-[68ch]"
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontSize: '17px',
+            lineHeight: 1.55,
+            color: 'var(--color-text-secondary, var(--color-text-muted))',
+            letterSpacing: '0.005em',
+          }}
+        >
           {lang === 'en'
-            ? <>Each dot is a slice of Mexican federal procurement. Toggle the <strong className="text-text-primary">lens</strong> to re-organize them around patterns, sectors, categories, or presidential terms. Drag the <strong className="text-text-primary">year scrubber</strong> below — or hit autoplay — to watch the universe evolve through 18 years of contracts. Click any cluster to open its investigation surface.</>
-            : <>Cada punto es una porción de la contratación federal mexicana. Cambia la <strong className="text-text-primary">lente</strong> para reorganizar el campo por patrones, sectores, categorías o sexenios. Arrastra el <strong className="text-text-primary">selector de año</strong> debajo — o pulsa reproducir — para ver el universo evolucionar a través de 18 años de contratos. Haz clic en cualquier cúmulo para abrir su superficie de investigación.</>
+            ? <>Each mark in the plate below stands for a slice of the federal contract record. Choose a <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lens</em> in the rail at left to reorder them by pattern, sector, category, or presidential term. Drag the <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>year</em> below to watch the field shift across eighteen years. Click a cluster to open the dossier.</>
+            : <>Cada marca en la lámina inferior representa una fracción del registro federal de contratos. Selecciona una <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lente</em> en el panel izquierdo para reordenarlas por patrón, sector, categoría o sexenio. Arrastra el <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>año</em> abajo para ver el campo desplazarse a través de dieciocho años. Haz clic en un cúmulo para abrir el expediente.</>
           }
         </p>
       </header>
@@ -2077,7 +2137,13 @@ export default function Atlas() {
       {/* ── atlas-C-P4: Selection count badge ──────────────────────────── */}
       <SelectionBadge lang={lang} />
 
-      <div className="surface-card rounded-sm p-3 md:p-4 mb-4 relative">
+      <PlateFrame
+        lens={mode}
+        year={snapshot.year}
+        clusterCount={activeConstellationMeta.length}
+        totalContracts={totalContractsForYear}
+        lang={lang}
+      >
         {/* omega-N: chapter strip overlay — pinned over the chart while a story is playing.
             Cites NYT "How the Virus Got Out" — the camera follows the narrative, with a
             persistent chapter indicator so the reader never loses orientation. */}
@@ -2104,7 +2170,9 @@ export default function Atlas() {
         {/* atlas-C-P2: ConcentrationConstellation is now wrapped in AtlasZoomLayer
             which owns the semantic zoom transform. omega-N: engine itself was
             modified (named outliers + dim layers + bigger labels) per user
-            authorization to break the sacred-engine rule. */}
+            authorization to break the sacred-engine rule.
+            folio-skin: PlateFrame above gives this card investigative-folio
+            chrome (corner crops, archival folio number, italic plate caption). */}
         <AtlasZoomLayer
           key={constellationKey}
           mode={mode}
@@ -2122,7 +2190,7 @@ export default function Atlas() {
           namedVendors={namedVendors}
           highlightedClusterCodes={highlightedClusterCodes}
         />
-      </div>
+      </PlateFrame>
 
       {/* ── Year scrubber A ─────────────────────────────────────────── */}
       <YearScrubber
@@ -2239,6 +2307,7 @@ export default function Atlas() {
           />
         )
       })()}
+          </div>{/* /folio-skin content wrapper */}
           </div>
         }
         rightPanel={<AtlasRightPanel lang={lang} />}
