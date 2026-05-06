@@ -122,9 +122,15 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
 // stage tick lines line up with the 5 list rows on the right.
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
   const W = 220
-  const H = 220 // viewBox height; actual height is stretched by container
-  const PAD_T = 8
-  const PAD_B = 8
+  const H = 220 // viewBox height; container stretches to match list height
+  // PAD values chosen so that, when the SVG is rendered at the wrapper's
+  // 280px height (5 rows × 56px ROW_H) via preserveAspectRatio="none", the
+  // 5 evenly-spaced stage tick centers land at the SAME y as the centers
+  // of the 5 right-side list rows (28, 84, 140, 196, 252 px).
+  // Row centers in viewBox space = 28/280 * 220 = 22, 66, 110, 154, 198.
+  // So PAD_T = 22, last stage at 198 → CH = 198 - 22 = 176, spacing 44.
+  const PAD_T = 22
+  const PAD_B = 22
   const CX = W / 2
   const CH = H - PAD_T - PAD_B
 
@@ -2286,58 +2292,67 @@ export default function Executive() {
                 caseStats?.total_cases ?? 1_380,
                 stats.highCriticalCount,
               )
+              // Fixed total height — both columns lock to ROWS×ROW_H so the
+              // SVG's 5 evenly-spaced stage ticks (PAD_T + (CH/4)×i) sit at
+              // the SAME Y as the 5 list rows. Each list row is a flex
+              // container with items-center, so the row's text baseline ↔
+              // the SVG tick share an exact y center.
+              const ROW_H = 56
+              const TOTAL_H = ROW_H * 5
               return (
-                <div className="flex flex-col md:flex-row items-center md:items-stretch gap-6">
-                  {/* Lens visualization on the left — height matches the
-                      right-side tier list so stages align with rows. */}
-                  <div className="flex-shrink-0 self-stretch flex items-stretch" style={{ width: 220 }}>
+                <div className="flex flex-col md:flex-row md:items-start gap-6" style={{ height: TOTAL_H }}>
+                  {/* Lens — width fixed, height locked to TOTAL_H. SVG fills
+                      via preserveAspectRatio="none" so 5 stages map 1:1 to
+                      the 5 list rows on the right. */}
+                  <div className="flex-shrink-0" style={{ width: 220, height: TOTAL_H }}>
                     <LensVisualization tiers={lensTiers} lang={lang} />
                   </div>
 
-                  {/* Tier annotations on the right */}
+                  {/* Right-side tier list — 5 equal-height rows, each centered
+                      vertically so the dot/number lines up with the SVG tick. */}
                   <div className="flex-1 flex flex-col min-w-0">
-                    <div className="flex flex-col gap-0">
-                      {lensTiers.map((t, i) => (
-                        <div key={i}>
-                          <motion.a
-                            href={t.href}
-                            className="block group"
-                            initial={{ opacity: 0, x: 8 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span
-                                className="rounded-full flex-shrink-0"
-                                style={{
-                                  width: t.filled ? 12 : 9,
-                                  height: t.filled ? 12 : 9,
-                                  background: t.filled ? t.color : 'transparent',
-                                  border: t.filled ? 'none' : `1.6px solid ${t.color}`,
-                                  boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
-                                }}
-                              />
-                              <span
-                                className="font-mono font-bold tabular-nums leading-none"
-                                style={{
-                                  fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
-                                  color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
-                                }}
-                              >
-                                {t.display}
-                              </span>
-                              <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
-                                {t.label[lang]}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-text-muted ml-[24px] leading-[1.4] mt-0.5">
-                              {t.sublabel[lang]}
-                            </div>
-                          </motion.a>
+                    {lensTiers.map((t, i) => (
+                      <motion.a
+                        key={i}
+                        href={t.href}
+                        className="group flex items-center"
+                        style={{ height: ROW_H }}
+                        initial={{ opacity: 0, x: 8 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
+                      >
+                        <div className="flex flex-col w-full">
+                          <div className="flex items-center gap-3">
+                            <span
+                              className="rounded-full flex-shrink-0"
+                              style={{
+                                width: t.filled ? 12 : 9,
+                                height: t.filled ? 12 : 9,
+                                background: t.filled ? t.color : 'transparent',
+                                border: t.filled ? 'none' : `1.6px solid ${t.color}`,
+                                boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
+                              }}
+                            />
+                            <span
+                              className="font-mono font-bold tabular-nums leading-none"
+                              style={{
+                                fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
+                                color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
+                              }}
+                            >
+                              {t.display}
+                            </span>
+                            <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
+                              {t.label[lang]}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-text-muted ml-[24px] leading-[1.3] mt-0.5">
+                            {t.sublabel[lang]}
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      </motion.a>
+                    ))}
                   </div>
                 </div>
               )
