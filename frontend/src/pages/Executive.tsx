@@ -2336,17 +2336,21 @@ export default function Executive() {
                             <span
                               className="font-mono font-bold tabular-nums leading-none"
                               style={{
-                                fontSize: i === 4 ? 22 : i === 0 ? 18 : 16,
+                                // Reduced font sizes 2026-05-05: previous 22/18/16
+                                // pushed the label past the column width and wrapped
+                                // 'documented corruption cases' to 2 lines, drifting
+                                // the dot up. Now 18/15/14 keeps everything on one line.
+                                fontSize: i === 4 ? 18 : i === 0 ? 15 : 14,
                                 color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
                               }}
                             >
                               {t.display}
                             </span>
-                            <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight">
+                            <span className="text-[10px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight whitespace-nowrap overflow-hidden text-ellipsis min-w-0">
                               {t.label[lang]}
                             </span>
                           </div>
-                          <div className="text-[10px] text-text-muted ml-[24px] leading-[1.3] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                          <div className="text-[9px] text-text-muted ml-[24px] leading-[1.3] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                             {t.sublabel[lang]}
                           </div>
                         </div>
