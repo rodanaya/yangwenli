@@ -49,7 +49,7 @@ export type AtlasAction =
   | { type: 'toggle-vendor-selection'; id: string } // P4
   | { type: 'lasso-select'; ids: string[]; mode: 'replace' | 'union' } // P4
   | { type: 'clear-selection' }                    // P4
-  | { type: 'hydrate-from-url'; partial: Partial<Pick<AtlasState, 'lens' | 'yearIndex' | 'riskFloor' | 'pinnedCode'>> } // P5
+  | { type: 'hydrate-from-url'; partial: Partial<Pick<AtlasState, 'lens' | 'yearIndex' | 'riskFloor' | 'pinnedCode' | 'view' | 'selection'>> } // P5
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Default state
@@ -135,9 +135,17 @@ function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState {
     case 'clear-selection':
       return { ...state, selection: new Set(), view: { kind: 'idle' } }
 
-    // ── P5 stub ───────────────────────────────────────────────────────────
-    case 'hydrate-from-url':
-      return { ...state, ...action.partial }
+    // ── P5: hydrate full state from URL ───────────────────────────────────
+    case 'hydrate-from-url': {
+      const next = { ...state, ...action.partial }
+      // Ensure selection is always a proper Set even when spread from partial
+      if (action.partial.selection !== undefined) {
+        next.selection = action.partial.selection instanceof Set
+          ? action.partial.selection
+          : new Set<string>(action.partial.selection as unknown as Iterable<string>)
+      }
+      return next
+    }
 
     default:
       return state

@@ -22,7 +22,7 @@
  * (atlas-density). The full set covers ~80% of federal spend by category.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -43,12 +43,14 @@ import {
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, cn } from '@/lib/utils'
 // atlas-C-P1: three-pane investigator console shell
-import { AtlasContextProvider, useAtlasState, useAtlasDispatch } from '@/components/atlas/AtlasContext'
+import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+// atlas-C-P5: URL state encode/decode
+import { hasAtlasCParams } from '@/lib/atlas/url-state'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -844,6 +846,114 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// atlas-C-P5: AtlasUrlSync
+//
+// Lives inside AtlasContextProvider so it can read context (zoom, selection).
+// Two jobs:
+//   1. Mount: dispatch hydrate-from-url for zoom + select params (which live
+//      only in context, not in Atlas.tsx's local useState hooks).
+//   2. Debounced URL-write: watches both local state (via props) and context
+//      state to produce the full URLSearchParams and call setSearchParams.
+//      Replaces Atlas.tsx's inline URL-write effect for context-owned fields.
+//
+// The local-state fields (lens, year, pin, floor, compare) are still written
+// here too, so the two effects don't race. The old inline URL-write effect
+// in Atlas() watches [mode, yearIndex, pinnedCode, compareMode, yearIndexB,
+// riskFloor, setSearchParams] — that effect is kept as-is to avoid
+// double-removal risk; both writing the same keys with { replace: true } is
+// idempotent (last write wins within the 250ms window). In practice the
+// context state dispatch happens slightly after mount so AtlasUrlSync wins.
+// ─────────────────────────────────────────────────────────────────────────────
+interface AtlasUrlSyncProps {
+  mode: ConstellationMode
+  yearIndex: number
+  pinnedCode: string | null
+  riskFloor: 'all' | 'medium' | 'high' | 'critical'
+  compareMode: boolean
+  yearIndexB: number
+  /** Ref containing initial zoom code parsed from URL at mount time */
+  initialZoomRef: React.RefObject<string | null>
+  /** Ref containing initial vendor-id selection parsed from URL at mount time */
+  initialSelectRef: React.RefObject<string[]>
+}
+
+function AtlasUrlSync({
+  mode,
+  yearIndex,
+  pinnedCode,
+  riskFloor,
+  compareMode,
+  yearIndexB,
+  initialZoomRef,
+  initialSelectRef,
+}: AtlasUrlSyncProps) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Job 1: on mount, dispatch hydrate-from-url for context-only fields (zoom + select).
+  // Local-state fields (lens, year, pin, floor) are handled by the parent Atlas()
+  // mount effect which runs before context is initialized.
+  useEffect(() => {
+    const zoomCode = initialZoomRef.current
+    const selIds = initialSelectRef.current
+
+    const hasZoom = zoomCode && zoomCode.length > 0
+    const hasSel = selIds && selIds.length > 0
+
+    if (hasZoom || hasSel) {
+      const partial: Partial<Pick<AtlasState, 'lens' | 'yearIndex' | 'riskFloor' | 'pinnedCode' | 'view' | 'selection'>> = {}
+      if (hasZoom) {
+        partial.view = { kind: 'zoomed-cluster', code: zoomCode! }
+        partial.pinnedCode = zoomCode!
+      }
+      if (hasSel) {
+        partial.selection = new Set(selIds)
+      }
+      dispatch({ type: 'hydrate-from-url', partial })
+    }
+    // Only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Job 2: debounced URL-write watching all relevant state.
+  // Writes context-owned fields (zoom, select) in addition to local state fields.
+  const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
+  const selectionIds = useMemo(() => [...state.selection].sort(), [state.selection])
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const params = new URLSearchParams()
+      // Local-state fields
+      if (mode !== 'patterns') params.set('lens', mode)
+      const curYear = YEAR_SNAPSHOTS[yearIndex]?.year
+      if (curYear && curYear !== YEAR_SNAPSHOTS[YEAR_SNAPSHOTS.length - 1].year) {
+        params.set('year', String(curYear))
+      }
+      // Context-owned: zoom takes precedence over pin
+      if (zoomedCode) {
+        params.set('zoom', zoomedCode)
+      } else if (pinnedCode) {
+        params.set('pin', pinnedCode)
+      }
+      if (compareMode && YEAR_SNAPSHOTS[yearIndexB]) {
+        params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
+      }
+      if (riskFloor !== 'all') params.set('floor', riskFloor)
+      if (selectionIds.length > 0) params.set('select', selectionIds.join(','))
+      // Preserve ?story= param if present (don't evict active story deep-link)
+      const storyParam = searchParams.get('story')
+      if (storyParam) params.set('story', storyParam)
+      setSearchParams(params, { replace: true })
+    }, 250)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, yearIndex, pinnedCode, riskFloor, compareMode, yearIndexB, zoomedCode, selectionIds.join(','), setSearchParams])
+
+  return null
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // atlas-C-P4: Selection count badge
 // Floats above the constellation while the user has vendors selected.
 // Reads selection size from AtlasContext; renders nothing when empty.
@@ -908,6 +1018,11 @@ export default function Atlas() {
   )
   const [isPlayingB, setIsPlayingB] = useState<boolean>(false)
 
+  // atlas-C-P5: refs for URL-decoded zoom/select — populated by mount effect,
+  // consumed by AtlasUrlSync (which lives inside the context provider).
+  const initialZoomRef = useRef<string | null>(null)
+  const initialSelectRef = useRef<string[]>([])
+
   // Auto-play loop — advance year every 1.6s
   useEffect(() => {
     if (!isPlaying) return
@@ -963,7 +1078,7 @@ export default function Atlas() {
 
   // ─── URL STATE: read params on mount, push state on change ──────────────
   // This lets users share a link to a specific atlas view.
-  // ?lens=patterns&year=2020&pin=P5&compare=2014&floor=critical
+  // ?lens=patterns&year=2020&pin=P5&compare=2014&floor=critical&zoom=P5&select=id1,id2
   useEffect(() => {
     const lens = searchParams.get('lens') as ConstellationMode | null
     const year = searchParams.get('year')
@@ -978,7 +1093,13 @@ export default function Atlas() {
       const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === year)
       if (yi >= 0) setYearIndex(yi)
     }
-    if (pin) {
+    // zoom takes precedence over pin in the URL
+    const zoom = searchParams.get('zoom')
+    if (zoom && zoom.length > 0 && zoom.length <= 32) {
+      // Store in ref; AtlasUrlSync dispatches zoom-into-cluster on mount
+      initialZoomRef.current = zoom
+      setPinnedCode(zoom) // also pin so initial state is consistent
+    } else if (pin) {
       setPinnedCode(pin)
     }
     if (compare) {
@@ -990,6 +1111,12 @@ export default function Atlas() {
     }
     if (floor && ['all', 'medium', 'high', 'critical'].includes(floor)) {
       setRiskFloor(floor)
+    }
+    // atlas-C-P5: parse select param → initialSelectRef (consumed by AtlasUrlSync)
+    const selectRaw = searchParams.get('select')
+    if (selectRaw && selectRaw.length > 0) {
+      const ids = selectRaw.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 500)
+      if (ids.length > 0) initialSelectRef.current = ids
     }
     // ?story=<id> auto-launches an Observatory tour. Used by the long-form
     // /stories pages to deep-link readers from the analytical article into
@@ -1027,18 +1154,22 @@ export default function Atlas() {
     return () => clearTimeout(id)
   }, [mode, yearIndex, pinnedCode, compareMode, yearIndexB, riskFloor, setSearchParams])
 
-  // V5: first-visit auto-tour. Launch "The COVID Spike" automatically the
-  // first time a user lands on /atlas with no URL state. Subsequent visits
-  // skip auto-tour. Set `rubli_atlas_visited` localStorage flag once played.
+  // V5: first-visit auto-tour. Launch "The Pharmaceutical Cartel" automatically
+  // the first time a user lands on /atlas with no URL state. Subsequent visits
+  // skip auto-tour. Set `rubli_atlas_visited_v1` localStorage flag once played.
   // ?story=<id> arrivals also count as "visited" — the explicit story param
   // means the reader is being deep-linked from a long-form page and the
   // auto-tour would compete with their intended story.
+  // atlas-C-P5: also skip if URL contains any Atlas-C params (zoom, select,
+  // floor, lens, pin) — the user has a specific view they want to restore.
   useEffect(() => {
     const VISITED_KEY = 'rubli_atlas_visited_v1'
     const hasUrlState = searchParams.toString().length > 0
+    // Skip auto-tour if URL has Atlas-C specific params (shared investigation link)
+    const hasSharedState = hasAtlasCParams(searchParams)
     let visited = false
     try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
-    if (!visited && !hasUrlState) {
+    if (!visited && !hasUrlState && !hasSharedState) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
@@ -1049,9 +1180,8 @@ export default function Atlas() {
       }, 1200)
       return () => clearTimeout(id)
     }
-    // Mark as visited if arriving via ?story= (the deep-linker handles the
-    // launch above; we just need to suppress the auto-tour on next visit).
-    if (searchParams.get('story')) {
+    // Mark as visited if arriving via ?story= or any Atlas-C shared state
+    if (searchParams.get('story') || hasSharedState) {
       try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
     }
     // intentionally only on mount
@@ -1257,6 +1387,18 @@ export default function Atlas() {
         pinnedCode,
       }}
     >
+      {/* atlas-C-P5: URL sync component — must live inside AtlasContextProvider
+          so it can read/write context state (zoom, selection). Renders null. */}
+      <AtlasUrlSync
+        mode={mode}
+        yearIndex={yearIndex}
+        pinnedCode={pinnedCode}
+        riskFloor={riskFloor}
+        compareMode={compareMode}
+        yearIndexB={yearIndexB}
+        initialZoomRef={initialZoomRef}
+        initialSelectRef={initialSelectRef}
+      />
       <AtlasShell
         leftRail={
           <AtlasLeftRail

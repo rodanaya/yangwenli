@@ -812,6 +812,8 @@ function SelectingPanel({ lang, selectedIds, cachedVendors, lens, code }: Select
     const existing: typeof entry[] = raw ? JSON.parse(raw) : []
     existing.push(entry)
     localStorage.setItem('rubli_atlas_investigations_v1', JSON.stringify(existing))
+    // Notify same-tab listeners (useSavedInvestigations hook in AtlasLeftRail)
+    window.dispatchEvent(new Event('atlas-investigation-saved'))
 
     const msg = lang === 'en' ? 'Saved' : 'Guardado'
     setSaveMsg(msg)
