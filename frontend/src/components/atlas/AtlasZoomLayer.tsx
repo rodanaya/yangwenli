@@ -25,7 +25,7 @@
  * interact with the constellation while it animates).
  */
 
-import React, { useMemo, useRef } from 'react'
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { ConcentrationConstellation } from '@/components/charts/ConcentrationConstellation'
 import type {
   ConstellationMode,
@@ -35,7 +35,7 @@ import type {
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 import type { AtlasAction } from './AtlasContext'
 import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
 const SVG_W = 840
@@ -227,14 +227,10 @@ export function AtlasZoomLayer({
         {isZoomed && zoomedMeta && (
           <VendorDotOverlay
             dots={vendorDots}
-            zoomedMeta={zoomedMeta}
             transform={transform}
             lang={lang}
-            onDotClick={(vendorId, isMock) => {
-              if (!isMock) {
-                window.open(`/vendors/${vendorId}`, '_blank', 'noopener')
-              }
-            }}
+            selection={state.selection}
+            dispatch={dispatch}
           />
         )}
       </div>
@@ -304,32 +300,132 @@ function ClusterHoverOverlay({ activeMeta, dispatch }: ClusterHoverOverlayProps)
   )
 }
 
+// ── LassoRect — in original SVG viewport coordinates (pre-transform) ─────────
+interface LassoRect {
+  x0: number; y0: number; x1: number; y1: number
+}
+
+// Convert a screen-space point back to original SVG viewport coordinates
+// by reversing the transform: orig = (screen - tx) / s
+function screenToSVG(sx: number, sy: number, transform: { tx: number; ty: number; s: number }) {
+  return {
+    ox: (sx - transform.tx) / transform.s,
+    oy: (sy - transform.ty) / transform.s,
+  }
+}
+
 // ── VendorDotOverlay ─────────────────────────────────────────────────────────
+//
+// Handles:
+//   • Dot click → dispatch toggle-vendor-selection (always; no navigation on dots)
+//   • Selection halos — stroke ring using RISK_COLORS for the dot's risk level
+//   • Shift+drag → rectangular lasso, dispatches lasso-select on mouseup
+//   • ESC during lasso → cancel
+//
+// Lasso math:
+//   Mouse events on the overlay SVG give screen-space coords relative to the
+//   overlay element. The dots' x/y are in original SVG viewport space (pre-zoom).
+//   We convert lasso rect from screen-space back to original space by reversing
+//   the CSS transform: orig = (screen - tx) / s.
+//   Then dot inclusion: dot.x in [min(rx0,rx1), max(rx0,rx1)] etc.
 
 interface VendorDotOverlayProps {
   dots: ReturnType<typeof useVendorLevelDots>
-  zoomedMeta: ClusterMeta
   transform: { tx: number; ty: number; s: number }
   lang: 'en' | 'es'
-  onDotClick: (vendorId: string, isMock: boolean) => void
+  selection: Set<string>
+  dispatch: React.Dispatch<AtlasAction>
 }
 
 function VendorDotOverlay({
   dots,
   transform,
   lang,
-  onDotClick,
+  selection,
+  dispatch,
 }: VendorDotOverlayProps) {
-  const [hoveredId, setHoveredId] = React.useState<string | null>(null)
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [lasso, setLasso] = useState<LassoRect | null>(null)
+  const isDraggingRef = useRef(false)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   // The vendor dots are already in original viewport coordinates.
   // Apply the same transform as the constellation to place them correctly.
-  const toScreen = (x: number, y: number) => ({
+  const toScreen = useCallback((x: number, y: number) => ({
     sx: x * transform.s + transform.tx,
     sy: y * transform.s + transform.ty,
-  })
+  }), [transform])
+
+  // Get SVG-relative coordinates from a mouse event
+  const getSVGCoords = useCallback((e: React.MouseEvent<SVGSVGElement> | MouseEvent) => {
+    const svg = svgRef.current
+    if (!svg) return { sx: 0, sy: 0 }
+    const rect = svg.getBoundingClientRect()
+    // Scale from DOM pixels to SVG viewBox pixels
+    const scaleX = SVG_W / rect.width
+    const scaleY = SVG_H / rect.height
+    return {
+      sx: (e.clientX - rect.left) * scaleX,
+      sy: (e.clientY - rect.top) * scaleY,
+    }
+  }, [])
+
+  // ESC cancels lasso
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isDraggingRef.current) {
+        isDraggingRef.current = false
+        setLasso(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!e.shiftKey) return
+    e.preventDefault()
+    e.stopPropagation()
+    const { sx, sy } = getSVGCoords(e)
+    isDraggingRef.current = true
+    setLasso({ x0: sx, y0: sy, x1: sx, y1: sy })
+  }, [getSVGCoords])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDraggingRef.current) return
+    e.preventDefault()
+    const { sx, sy } = getSVGCoords(e)
+    setLasso((prev) => prev ? { ...prev, x1: sx, y1: sy } : null)
+  }, [getSVGCoords])
+
+  const handleMouseUp = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDraggingRef.current || !lasso) return
+    isDraggingRef.current = false
+
+    // Convert lasso screen rect → original SVG viewport space
+    const { ox: ox0, oy: oy0 } = screenToSVG(Math.min(lasso.x0, lasso.x1), Math.min(lasso.y0, lasso.y1), transform)
+    const { ox: ox1, oy: oy1 } = screenToSVG(Math.max(lasso.x0, lasso.x1), Math.max(lasso.y0, lasso.y1), transform)
+
+    const captured = dots
+      .filter((d) => d.x >= ox0 && d.x <= ox1 && d.y >= oy0 && d.y <= oy1 && !d.isMock)
+      .map((d) => d.id)
+
+    if (captured.length > 0) {
+      dispatch({ type: 'lasso-select', ids: captured, mode: 'union' })
+    }
+    setLasso(null)
+    e.stopPropagation()
+  }, [lasso, dots, transform, dispatch])
 
   const hoveredDot = dots.find((d) => d.id === hoveredId)
+
+  // Lasso display rect in screen space
+  const lassoScreenRect = lasso ? {
+    x: Math.min(lasso.x0, lasso.x1),
+    y: Math.min(lasso.y0, lasso.y1),
+    w: Math.abs(lasso.x1 - lasso.x0),
+    h: Math.abs(lasso.y1 - lasso.y0),
+  } : null
 
   return (
     <div
@@ -341,43 +437,113 @@ function VendorDotOverlay({
       }}
     >
       <svg
+        ref={svgRef}
         width="100%"
         height="100%"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        style={{ position: 'absolute', top: 0, left: 0 }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          // Enable pointer events on the SVG itself so we can capture shift+drag
+          pointerEvents: lasso !== null || isDraggingRef.current ? 'auto' : 'none',
+          cursor: isDraggingRef.current ? 'crosshair' : undefined,
+        }}
         preserveAspectRatio="xMidYMid meet"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={() => {
+          if (isDraggingRef.current) {
+            isDraggingRef.current = false
+            setLasso(null)
+          }
+        }}
       >
         {dots.map((dot) => {
           const level = getRiskLevelFromScore(dot.riskScore)
           const style = VENDOR_DOT_STYLE[level] ?? VENDOR_DOT_STYLE.low
           const { sx, sy } = toScreen(dot.x, dot.y)
           const isHovered = dot.id === hoveredId
+          const isSelected = !dot.isMock && selection.has(dot.id)
+          const riskColor = RISK_COLORS[level]
           return (
-            <circle
-              key={dot.id}
-              cx={sx}
-              cy={sy}
-              r={isHovered ? style.r * 1.6 : style.r}
-              fill={dot.sectorColor}
-              opacity={style.opacity}
-              stroke={isHovered ? '#a06820' : 'none'}
-              strokeWidth={isHovered ? 1.5 : 0}
-              style={{ cursor: 'pointer', pointerEvents: 'auto', transition: 'r 120ms ease' }}
-              data-vendor-id={dot.id}
-              aria-label={`${dot.name} · ${(dot.riskScore * 100).toFixed(0)}%`}
-              onClick={(e) => {
-                e.stopPropagation()
-                onDotClick(dot.id, dot.isMock)
-              }}
-              onMouseEnter={() => setHoveredId(dot.id)}
-              onMouseLeave={() => setHoveredId(null)}
-            />
+            <g key={dot.id}>
+              {/* Selection halo */}
+              {isSelected && (
+                <circle
+                  cx={sx}
+                  cy={sy}
+                  r={style.r * 2.2}
+                  fill="none"
+                  stroke={riskColor}
+                  strokeWidth={1.5}
+                  opacity={1}
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
+              <circle
+                cx={sx}
+                cy={sy}
+                r={isHovered || isSelected ? style.r * 1.6 : style.r}
+                fill={dot.sectorColor}
+                opacity={style.opacity}
+                stroke={isHovered && !isSelected ? '#a06820' : 'none'}
+                strokeWidth={isHovered && !isSelected ? 1.5 : 0}
+                style={{ cursor: 'pointer', pointerEvents: 'auto', transition: 'r 120ms ease' }}
+                data-vendor-id={dot.id}
+                aria-label={`${dot.name} · ${(dot.riskScore * 100).toFixed(0)}%${isSelected ? (lang === 'en' ? ' · selected' : ' · seleccionado') : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (!dot.isMock) {
+                    dispatch({ type: 'toggle-vendor-selection', id: dot.id })
+                  }
+                }}
+                onMouseEnter={() => setHoveredId(dot.id)}
+                onMouseLeave={() => setHoveredId(null)}
+              />
+            </g>
           )
         })}
+
+        {/* Lasso rectangle */}
+        {lassoScreenRect && (
+          <>
+            <rect
+              x={lassoScreenRect.x}
+              y={lassoScreenRect.y}
+              width={lassoScreenRect.w}
+              height={lassoScreenRect.h}
+              fill="rgba(56, 189, 248, 0.08)"
+              stroke="#38bdf8"
+              strokeWidth={1.2}
+              strokeDasharray="4 3"
+              style={{ pointerEvents: 'none' }}
+            />
+          </>
+        )}
       </svg>
 
+      {/* Shift+drag hint when zoomed — shown when no lasso active */}
+      {!lasso && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 4,
+            right: 4,
+            pointerEvents: 'none',
+            fontSize: 8,
+            fontFamily: 'monospace',
+            color: 'var(--color-text-muted)',
+            opacity: 0.7,
+          }}
+        >
+          {lang === 'en' ? 'Shift+drag to lasso' : 'Shift+arrastrar para lazo'}
+        </div>
+      )}
+
       {/* Hover tooltip */}
-      {hoveredDot && (() => {
+      {hoveredDot && !lasso && (() => {
         const { sx, sy } = toScreen(hoveredDot.x, hoveredDot.y)
         // Convert SVG viewport coords to percentage for positioning
         const leftPct = (sx / SVG_W) * 100
@@ -389,6 +555,7 @@ function VendorDotOverlay({
           medium:   { en: 'Medium',   es: 'Medio' },
           low:      { en: 'Low',      es: 'Bajo' },
         }
+        const isSelected = !hoveredDot.isMock && selection.has(hoveredDot.id)
         return (
           <div
             style={{
@@ -418,7 +585,10 @@ function VendorDotOverlay({
             </span>
             {!hoveredDot.isMock && (
               <span style={{ color: '#a06820', marginLeft: 6 }}>
-                {lang === 'en' ? '→ open' : '→ abrir'}
+                {isSelected
+                  ? (lang === 'en' ? '✓ selected' : '✓ seleccionado')
+                  : (lang === 'en' ? 'click to select' : 'clic para seleccionar')
+                }
               </span>
             )}
           </div>

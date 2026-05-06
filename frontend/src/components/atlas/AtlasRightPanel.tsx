@@ -18,7 +18,7 @@
  * Color via style={{ color: hex }} — NEVER via className (silently stripped).
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -332,39 +332,69 @@ function RiskPill({ score }: { score: number }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VendorRow — single row in the zoomed-cluster vendor list
+//
+// Default click → navigate to /vendors/:id (Link behavior).
+// Cmd-click (Mac) / Ctrl-click (Win/Linux) → toggle selection, no navigation.
 // ─────────────────────────────────────────────────────────────────────────────
 interface VendorRowProps {
   vendor: AtlasClusterVendorItem
   rank: number
   lang: 'en' | 'es'
   isMock?: boolean
+  isSelected?: boolean
 }
 
-function VendorRow({ vendor, rank, lang, isMock }: VendorRowProps) {
+function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
+  const dispatch = useAtlasDispatch()
+  const vendorIdStr = String(vendor.vendor_id)
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey) {
+      e.preventDefault()
+      e.stopPropagation()
+      dispatch({ type: 'toggle-vendor-selection', id: vendorIdStr })
+    }
+    // default click falls through to Link navigation
+  }
+
   return (
     <Link
       to={`/vendors/${vendor.vendor_id}`}
       className="block group"
       tabIndex={0}
-      aria-label={`${vendor.name} — ${lang === 'en' ? 'open vendor dossier' : 'abrir expediente'}`}
+      onClick={handleClick}
+      aria-label={`${vendor.name} — ${lang === 'en' ? 'open vendor dossier' : 'abrir expediente'}${isSelected ? (lang === 'en' ? ' (selected)' : ' (seleccionado)') : ''}`}
+      style={isSelected ? { outline: '2px solid var(--color-accent, #a06820)', outlineOffset: -1, borderRadius: 3 } : undefined}
     >
       <div
         className="flex items-center gap-2 py-1.5 px-2 rounded-sm transition-colors"
-        style={{ background: 'transparent' }}
+        style={{
+          background: isSelected ? 'rgba(160, 104, 32, 0.10)' : 'transparent',
+        }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.background = 'var(--color-background-elevated, rgba(160,104,32,0.06))'
+          if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'var(--color-background-elevated, rgba(160,104,32,0.06))'
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+          if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'transparent'
         }}
       >
-        {/* Rank chip */}
-        <span
-          className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-right"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          {rank}
-        </span>
+        {/* Rank chip / checkbox indicator */}
+        {isSelected ? (
+          <span
+            className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-center flex items-center justify-center"
+            style={{ color: '#a06820' }}
+            aria-hidden="true"
+          >
+            ✓
+          </span>
+        ) : (
+          <span
+            className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-right"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {rank}
+          </span>
+        )}
 
         {/* Entity chip — canonical, no plain <Link> */}
         <div className="flex-1 min-w-0">
@@ -454,6 +484,7 @@ function ZoomedClusterPanel({
   lens: string
 }) {
   const dispatch = useAtlasDispatch()
+  const state = useAtlasState()
   const ACCENT = '#a06820'
   const [cursor, setCursor] = useState<number | undefined>(undefined)
   const [allVendors, setAllVendors] = useState<AtlasClusterVendorItem[]>([])
@@ -644,6 +675,7 @@ function ZoomedClusterPanel({
               rank={idx + 1}
               lang={lang}
               isMock={isFallback}
+              isSelected={state.selection.has(String(vendor.vendor_id))}
             />
           ))}
         </div>
@@ -664,34 +696,357 @@ function ZoomedClusterPanel({
         </button>
       )}
 
-      {/* ESC hint */}
+      {/* ESC + Cmd-click hints */}
       <div
-        className="mt-4 text-[9px] font-mono"
+        className="mt-4 text-[9px] font-mono space-y-0.5"
         style={{ color: 'var(--color-text-muted)' }}
       >
-        {lang === 'en' ? 'Press ESC or click background to zoom out' : 'Presiona ESC o haz clic en el fondo para alejar'}
+        <div>{lang === 'en' ? 'Press ESC or click background to zoom out' : 'Presiona ESC o haz clic en el fondo para alejar'}</div>
+        <div>
+          {lang === 'en'
+            ? '⌘/Ctrl+click a vendor to add to selection'
+            : '⌘/Ctrl+clic en proveedor para seleccionar'}
+        </div>
       </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SELECTING state — P4 placeholder (§ 4.4)
+// SELECTING state — P4 bulk action panel (§ 4.4)
+//
+// Header: "{N} selected" + Clear button
+// Actions: Export CSV · Open all in ARIA · Save investigation
+// Mini-table: top 10 selected vendor names (+ N more)
 // ─────────────────────────────────────────────────────────────────────────────
-function SelectingPanel({ lang, selectedCount }: { lang: 'en' | 'es'; selectedCount: number }) {
+
+interface SelectingPanelProps {
+  lang: 'en' | 'es'
+  selectedIds: string[]
+  // Vendor data from the zoomed-cluster query cache for enrichment
+  cachedVendors?: AtlasClusterVendorItem[]
+  lens?: string
+  code?: string
+}
+
+function SelectingPanel({ lang, selectedIds, cachedVendors, lens, code }: SelectingPanelProps) {
+  const dispatch = useAtlasDispatch()
+  const ACCENT = '#a06820'
+  const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const count = selectedIds.length
+
+  // Enrich selected IDs with vendor data from cache where available
+  const enrichedMap = new Map<string, AtlasClusterVendorItem>(
+    (cachedVendors ?? []).map((v) => [String(v.vendor_id), v])
+  )
+
+  const enrichedList = selectedIds.map((id) => enrichedMap.get(id) ?? null)
+
+  // ── Export CSV ────────────────────────────────────────────────────────────
+  const handleExportCSV = () => {
+    const rows: string[] = [
+      lang === 'en'
+        ? 'vendor_id,name,risk_score,risk_level,total_contracts,total_amount_mxn'
+        : 'id_proveedor,nombre,indicador_riesgo,nivel_riesgo,total_contratos,monto_total_mxn',
+    ]
+    for (const id of selectedIds) {
+      const v = enrichedMap.get(id)
+      if (v) {
+        const safeName = `"${v.name.replace(/"/g, '""')}"`
+        rows.push(`${v.vendor_id},${safeName},${v.risk_score.toFixed(4)},${v.risk_level},${v.total_contracts},${v.total_amount_mxn}`)
+      } else {
+        rows.push(`${id},"",,,, `)
+      }
+    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const today = new Date().toISOString().slice(0, 10)
+    a.href = url
+    a.download = `atlas-investigation-${today}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // ── Open all in ARIA ──────────────────────────────────────────────────────
+  const handleOpenARIA = () => {
+    const CAP = 10
+    const openFn = () => {
+      const targets = selectedIds.slice(0, CAP)
+      for (const id of targets) {
+        window.open(`/aria?vendor=${id}`, '_blank', 'noopener,noreferrer')
+      }
+    }
+    if (count > CAP) {
+      const msg = lang === 'en'
+        ? `This will open ${CAP} tabs (capped from ${count}). Proceed?`
+        : `Esto abrirá ${CAP} pestañas (de ${count} seleccionados). ¿Continuar?`
+      if (window.confirm(msg)) openFn()
+    } else {
+      openFn()
+    }
+  }
+
+  // ── Save investigation ────────────────────────────────────────────────────
+  const handleSave = () => {
+    const defaultName = lang === 'en'
+      ? `Investigation ${new Date().toLocaleDateString('en-MX')}`
+      : `Investigación ${new Date().toLocaleDateString('es-MX')}`
+    const name = window.prompt(
+      lang === 'en' ? 'Investigation name:' : 'Nombre de la investigación:',
+      defaultName,
+    )
+    if (!name) return
+
+    const entry = {
+      id: Date.now().toString(36),
+      name,
+      lens: lens ?? '',
+      code: code ?? '',
+      vendor_ids: selectedIds,
+      created_at: new Date().toISOString(),
+    }
+    const raw = localStorage.getItem('rubli_atlas_investigations_v1')
+    const existing: typeof entry[] = raw ? JSON.parse(raw) : []
+    existing.push(entry)
+    localStorage.setItem('rubli_atlas_investigations_v1', JSON.stringify(existing))
+
+    const msg = lang === 'en' ? 'Saved' : 'Guardado'
+    setSaveMsg(msg)
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => setSaveMsg(null), 2500)
+  }
+
+  const PREVIEW_CAP = 10
+  const previewList = enrichedList.slice(0, PREVIEW_CAP)
+  const overflowCount = count - PREVIEW_CAP
+
   return (
     <div className="px-4 pb-6 pt-5">
+      {/* ── Header: count + clear ─────────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div
+            className="text-[9px] font-mono font-bold uppercase tracking-[0.14em]"
+            style={{ color: ACCENT }}
+          >
+            {lang === 'en' ? 'SELECTION' : 'SELECCIÓN'}
+          </div>
+          <div
+            className="tabular-nums leading-none mt-0.5"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontWeight: 800,
+              fontStyle: 'italic',
+              fontSize: 28,
+              color: ACCENT,
+            }}
+          >
+            {count}
+          </div>
+          <div
+            className="text-[10px] font-mono"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {lang === 'en' ? 'vendors selected' : 'proveedores seleccionados'}
+          </div>
+        </div>
+        <button
+          onClick={() => dispatch({ type: 'clear-selection' })}
+          className="text-[9px] font-mono font-bold uppercase tracking-[0.1em] px-2.5 py-1.5 rounded-sm transition-opacity hover:opacity-70"
+          style={{ border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+          aria-label={lang === 'en' ? 'Clear selection' : 'Limpiar selección'}
+        >
+          {lang === 'en' ? 'Clear' : 'Limpiar'}
+        </button>
+      </div>
+
+      {/* ── Mini vendor preview ───────────────────────────────────────── */}
       <div
-        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pb-3"
+        className="rounded-sm mb-3 overflow-hidden"
+        style={{ border: '1px solid var(--color-border)' }}
+      >
+        {previewList.map((v, i) => {
+          const id = selectedIds[i]
+          const name = v?.name ?? (lang === 'en' ? `Vendor ${id}` : `Proveedor ${id}`)
+          const score = v?.risk_score ?? 0
+          const level = getRiskLevelFromScore(score)
+          const color = RISK_COLORS[level]
+          return (
+            <div
+              key={id}
+              className="flex items-center gap-2 px-2.5 py-1.5 border-b"
+              style={{
+                borderColor: 'var(--color-border)',
+                borderBottomWidth: i < previewList.length - 1 ? 1 : 0,
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                style={{ background: color }}
+                aria-hidden="true"
+              />
+              <span
+                className="text-[10px] font-mono truncate flex-1 min-w-0"
+                style={{ color: 'var(--color-text-secondary)' }}
+              >
+                {name}
+              </span>
+              {v && (
+                <span
+                  className="text-[9px] font-mono tabular-nums flex-shrink-0"
+                  style={{ color }}
+                >
+                  {(score * 100).toFixed(0)}%
+                </span>
+              )}
+            </div>
+          )
+        })}
+        {overflowCount > 0 && (
+          <div
+            className="px-2.5 py-1.5 text-[9px] font-mono"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            + {overflowCount} {lang === 'en' ? 'more' : 'más'}
+          </div>
+        )}
+      </div>
+
+      {/* ── Bulk action buttons ───────────────────────────────────────── */}
+      <div className="space-y-2">
+        {/* Export CSV */}
+        <button
+          onClick={handleExportCSV}
+          className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-sm transition-opacity hover:opacity-80"
+          style={{
+            background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
+            border: '1px solid var(--color-border)',
+          }}
+          aria-label={lang === 'en' ? 'Export CSV' : 'Exportar CSV'}
+        >
+          <span style={{ color: ACCENT }} className="text-[13px] leading-none flex-shrink-0">↓</span>
+          <div>
+            <div
+              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              {lang === 'en' ? 'Export CSV' : 'Exportar CSV'}
+            </div>
+            <div
+              className="text-[9px] font-mono"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              {lang === 'en' ? 'Download vendor list' : 'Descargar lista de proveedores'}
+            </div>
+          </div>
+        </button>
+
+        {/* Open all in ARIA */}
+        <button
+          onClick={handleOpenARIA}
+          className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-sm transition-opacity hover:opacity-80"
+          style={{
+            background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
+            border: '1px solid var(--color-border)',
+          }}
+          aria-label={lang === 'en' ? 'Open all in ARIA' : 'Abrir todos en ARIA'}
+        >
+          <ArrowUpRight
+            className="flex-shrink-0 h-3.5 w-3.5"
+            style={{ color: ACCENT }}
+            aria-hidden="true"
+          />
+          <div>
+            <div
+              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              {lang === 'en' ? 'Open all in ARIA' : 'Abrir todos en ARIA'}
+            </div>
+            <div
+              className="text-[9px] font-mono"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              {count > 10
+                ? (lang === 'en' ? `${count} selected · first 10 tabs` : `${count} seleccionados · primeras 10 pestañas`)
+                : (lang === 'en' ? `Opens ${count} tab${count === 1 ? '' : 's'}` : `Abre ${count} pestaña${count === 1 ? '' : 's'}`)}
+            </div>
+          </div>
+        </button>
+
+        {/* Save investigation */}
+        <button
+          onClick={handleSave}
+          className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-sm transition-opacity hover:opacity-80"
+          style={{
+            background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
+            border: '1px solid var(--color-border)',
+          }}
+          aria-label={lang === 'en' ? 'Save investigation' : 'Guardar investigación'}
+        >
+          <span style={{ color: ACCENT }} className="text-[13px] leading-none flex-shrink-0">▣</span>
+          <div className="flex-1 min-w-0">
+            <div
+              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              {lang === 'en' ? 'Save investigation' : 'Guardar investigación'}
+            </div>
+            <div
+              className="text-[9px] font-mono"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              {saveMsg
+                ? <span style={{ color: ACCENT }}>{saveMsg}</span>
+                : (lang === 'en' ? 'Store locally (P5 surfaces in rail)' : 'Guarda local (P5 muestra en barra)')
+              }
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ── ESC hint ─────────────────────────────────────────────────── */}
+      <div
+        className="mt-4 text-[9px] font-mono"
         style={{ color: 'var(--color-text-muted)' }}
       >
-        P4 {lang === 'en' ? 'placeholder' : 'marcador'}
-        {' · '}
-        {selectedCount}
-        {' '}
-        {lang === 'en' ? 'selected' : 'seleccionados'}
+        {lang === 'en'
+          ? 'Press ESC to clear selection'
+          : 'Presiona ESC para limpiar selección'}
       </div>
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SelectingPanelWrapper — reads cached vendor data from the query cache
+// so SelectingPanel can enrich selected vendor names + risk scores.
+// ─────────────────────────────────────────────────────────────────────────────
+function SelectingPanelWrapper({ lang, selectedIds }: { lang: 'en' | 'es'; selectedIds: string[] }) {
+  const state = useAtlasState()
+  // Try to find a zoomed cluster's vendor data in the query cache to enrich
+  // the selection panel — it works even if the user has since cleared zoom.
+  // We look at recent cluster state from view history.
+  // The last zoomed code may be stored in state.pinnedCode or view.code.
+  const lastCode = state.pinnedCode ?? ''
+  const { data } = useQuery({
+    queryKey: ['atlas-cluster-vendors', state.lens, lastCode, undefined],
+    queryFn: () => api.atlas.getClusterVendors({ lens: state.lens, code: lastCode, limit: 50 }),
+    enabled: false, // read from cache only — don't fire a new request
+    staleTime: 5 * 60 * 1000,
+  })
+
+  return (
+    <SelectingPanel
+      lang={lang}
+      selectedIds={selectedIds}
+      cachedVendors={data?.vendors}
+      lens={state.lens}
+      code={lastCode}
+    />
   )
 }
 
@@ -711,7 +1066,7 @@ export function AtlasRightPanel({ lang }: AtlasRightPanelProps) {
       ) : view.kind === 'zoomed-cluster' ? (
         <ZoomedClusterPanel lang={lang} code={view.code} lens={state.lens} />
       ) : view.kind === 'selecting' ? (
-        <SelectingPanel lang={lang} selectedCount={view.ids.length} />
+        <SelectingPanelWrapper lang={lang} selectedIds={view.ids} />
       ) : (
         <IdlePanel lang={lang} />
       )}

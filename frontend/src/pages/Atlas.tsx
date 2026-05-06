@@ -43,7 +43,7 @@ import {
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, cn } from '@/lib/utils'
 // atlas-C-P1: three-pane investigator console shell
-import { AtlasContextProvider } from '@/components/atlas/AtlasContext'
+import { AtlasContextProvider, useAtlasState, useAtlasDispatch } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
@@ -839,6 +839,32 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// atlas-C-P4: Selection count badge
+// Floats above the constellation while the user has vendors selected.
+// Reads selection size from AtlasContext; renders nothing when empty.
+// ─────────────────────────────────────────────────────────────────────────────
+function SelectionBadge({ lang }: { lang: 'en' | 'es' }) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const count = state.selection.size
+  if (count === 0) return null
+  return (
+    <div className="mb-2 inline-flex items-center gap-2 rounded-sm border border-accent/40 bg-accent/10 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.12em] text-accent">
+      <span className="font-bold">{count}</span>
+      <span>{lang === 'en' ? 'selected' : 'seleccionados'}</span>
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'clear-selection' })}
+        className="ml-1 rounded-sm border border-accent/30 px-1.5 py-0.5 text-[9px] hover:bg-accent/20"
+        aria-label={lang === 'en' ? 'Clear selection' : 'Limpiar selección'}
+      >
+        {lang === 'en' ? 'Clear' : 'Limpiar'}
+      </button>
     </div>
   )
 }
@@ -1888,6 +1914,9 @@ export default function Atlas() {
           <span>{snapshot.year}</span>
         </div>
       )}
+      {/* ── atlas-C-P4: Selection count badge ──────────────────────────── */}
+      <SelectionBadge lang={lang} />
+
       <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
         {/* atlas-C-P2: ConcentrationConstellation is now wrapped in AtlasZoomLayer
             which owns the semantic zoom transform. The constellation engine is
