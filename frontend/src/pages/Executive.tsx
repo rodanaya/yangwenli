@@ -26,6 +26,7 @@ import type { ContractListItem, ContractListResponse, RiskDistribution } from '@
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   ConcentrationConstellation,
@@ -1462,9 +1463,16 @@ export default function Executive() {
               ? 'Direct award rate — share of contracts awarded without competitive bidding — has remained 2–3× the OECD ceiling under every Mexican administration since 2001. The AI model trained on this systemic pattern now detects its variants automatically.'
               : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
           </p>
-          <div className="surface-card rounded-sm p-4 md:p-6">
+          <PlateFrame
+            lang={lang}
+            folio="III"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Direct-award rate stays 2–3× above the OECD ceiling across five administrations.'
+              : 'Lámina — La tasa de adjudicación directa permanece 2–3× sobre el techo OCDE en cinco administraciones.'}
+          >
             <MacroArc lang={lang} />
-          </div>
+          </PlateFrame>
         </motion.section>
 
         {/* ─── LEAD-TIME ADVANTAGE — Hero #3 (promoted by d-P4 2026-05-04) ─── */}
@@ -1478,13 +1486,17 @@ export default function Executive() {
               : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
             }
           </p>
-          <div className="surface-card rounded-sm p-5">
+          <PlateFrame
+            lang={lang}
+            folio="IV"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Time between the data first crossing the critical-risk threshold and the scandal becoming public.'
+              : 'Lámina — Tiempo entre el primer cruce del umbral crítico en los datos y la cobertura pública del escándalo.'}
+          >
             <LeadTimeChart lang={lang} />
-          </div>
+          </PlateFrame>
         </section>
-
-        {/* ─── Amber divider ─── */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
 
         {/* DashboardSledgehammer DELETED 2026-05-05 per user critique:
             "delete it. We already have that same figure below." The MacroArc
@@ -1492,11 +1504,17 @@ export default function Executive() {
             duplicated giant Playfair number was redundant. */}
 
         {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
-            micro-visualization. Replaces the bland mono-stat tile grid. ─── */}
+            micro-visualization. Replaces the bland mono-stat tile grid.
+            E5: PlateFrame replaces the standalone eyebrow + amber divider. ─── */}
         <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? 'Headline Numbers' : 'Cifras Clave'}
-          </div>
+          <PlateFrame
+            lang={lang}
+            folio="V"
+            contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
+            caption={lang === 'en'
+              ? 'Plate — Four anchor figures from the 2002–2025 record: total spend, direct awards, high+critical share, model accuracy.'
+              : 'Lámina — Cuatro cifras ancla del registro 2002–2025: gasto total, adjudicación directa, alto+crítico, precisión del modelo.'}
+          >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
             {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
@@ -1704,6 +1722,7 @@ export default function Executive() {
             </motion.div>
 
           </div>
+          </PlateFrame>
         </section>
 
         {/* ─── KEY FINDINGS — specific discoveries with animated visualizations ─── */}

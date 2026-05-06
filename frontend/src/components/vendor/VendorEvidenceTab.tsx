@@ -99,7 +99,37 @@ export function VendorEvidenceTab({
         {waterfallLoading ? (
           <Skeleton className="h-[260px] w-full rounded-sm" />
         ) : waterfall && waterfall.length > 0 ? (
-          <WaterfallRiskChart features={waterfall} />
+          <>
+            <WaterfallRiskChart features={waterfall} />
+            {/* ── V5: italic plate caption beneath the risk figure ───────────
+                EB Garamond italic 13.5px / 1.45 / 64ch. Wording per CLAUDE.md
+                hard rule: "indicador de riesgo" / "risk indicator" only —
+                never "X% probability of corruption". */}
+            {(() => {
+              const first = vendor.first_contract_year
+              const last = vendor.last_contract_year ?? new Date().getUTCFullYear()
+              const yearsActive = first ? Math.max(1, last - first + 1) : new Date().getUTCFullYear() - 2002
+              return (
+                <figcaption
+                  className="mt-4 pt-3"
+                  style={{
+                    borderTop: '1px solid rgba(160, 104, 32, 0.18)',
+                    fontFamily: '"EB Garamond", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontSize: '13.5px',
+                    lineHeight: 1.45,
+                    color: 'var(--color-text-secondary, var(--color-text-muted))',
+                    letterSpacing: '0.005em',
+                    maxWidth: '64ch',
+                  }}
+                >
+                  {isEs
+                    ? `Indicador de riesgo · modelo v0.8.5 · derivado de ${yearsActive} año${yearsActive === 1 ? '' : 's'} de contratos. Una puntuación alta no constituye prueba de irregularidad.`
+                    : `Risk indicator · v0.8.5 model · derived from ${yearsActive} year${yearsActive === 1 ? '' : 's'} of contracts. A high score does not constitute proof of wrongdoing.`}
+                </figcaption>
+              )
+            })()}
+          </>
         ) : (
           <p className="text-sm text-text-muted italic">
             {isEs
