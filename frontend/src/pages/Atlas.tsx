@@ -53,7 +53,7 @@ import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
 // omega-N: story-chart binding + named-outlier data hook
 import { AtlasStoryBinding } from '@/components/atlas/AtlasStoryBinding'
-import { useTopVendorsByCluster } from '@/lib/atlas/use-top-vendors'
+import { useTopVendorsForCluster } from '@/lib/atlas/use-top-vendors'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -1350,15 +1350,11 @@ export default function Atlas() {
     return buildPatternMeta(isEs)
   }, [mode, lang, atlasMeta])
 
-  // omega-N N1: named vendor outlier dots — fetch top 3 per cluster.
-  // Only fetch for the active mode's clusters (not all modes simultaneously).
-  // Graceful fallback: if backend returns 0 or errors, constellation renders
-  // without named vendors.
-  const activeClusterCodes = useMemo(
-    () => activeConstellationMeta.map((m) => m.code),
-    [activeConstellationMeta],
-  )
-  const namedVendors = useTopVendorsByCluster(mode, activeClusterCodes)
+  // omega-N-FIX2: named outliers ONLY when a cluster is selected.
+  // Macro view stays clean (anonymous dots only); zoom into a cluster to
+  // see its top 3 named vendors. selectedClusterCode is set on cluster
+  // click via the existing handleClusterClick path.
+  const namedVendors = useTopVendorsForCluster(mode, selectedClusterCode)
 
   // Resolve selected cluster meta from the active meta set — uses the same
   // builders as the constellation so vendor/T1/risk numbers render correctly.

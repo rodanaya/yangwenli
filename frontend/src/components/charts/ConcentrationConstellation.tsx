@@ -694,12 +694,12 @@ export function ConcentrationConstellation({
           // Ring radius ∝ √T1 so high-t1 nodes read larger.
           // Floor at 4 so small clusters remain visible; cap at 16.
           const ringR = Math.max(4, Math.min(16, Math.sqrt(meta.t1)))
-          // Persistent full label below attractor ring (omega-N).
-          // Full cluster name truncated at 24 chars + ellipsis + T1 count.
-          // Bilingual via isEs; rendered in 11-12px mono 600.
-          const fullName = meta.label
-          const truncName = fullName.length > 24 ? fullName.slice(0, 23) + '…' : fullName
-          const persistentLabel = `${truncName} · ${meta.t1} T1`
+          // omega-N-FIX2: revert to short label (P5 / SAL / etc) at idle macro.
+          // Full names + T1 count read as overload at the constellation scale —
+          // the user sees them all at once instead of focusing on one cluster.
+          // Full names land in the right panel + cluster detail when zoomed.
+          const shortLabel =
+            mode === 'patterns' ? meta.code : meta.label.slice(0, 3).toUpperCase()
           return (
             <g
               key={`attractor-${meta.code}-${idx}`}
@@ -750,22 +750,22 @@ export function ConcentrationConstellation({
                       ? `Glifo ${meta.label}`
                       : `${meta.label} glyph`}
                   />
-                  {/* omega-N: persistent full label below glyph — 11px mono 600
-                      Replaces the old 7.5px abbreviated code label.
-                      Ref: Reuters "Forever Pollution" persistent cluster labels. */}
+                  {/* omega-N-FIX2: short code label (P5 etc) — 7.5px mono 600.
+                      Full name + T1 count moved to the cluster detail panel
+                      (right rail when zoomed) so the macro view stays clean. */}
                   <text
                     x={ringR}
-                    y={ringR * 2 + 13}
+                    y={ringR * 2 + 9}
                     fill={meta.color}
-                    fillOpacity={isHovered ? 1.0 : 0.85}
-                    fontSize={11}
+                    fillOpacity={isHovered ? 0.95 : 0.65}
+                    fontSize={7.5}
                     fontFamily="var(--font-family-mono, monospace)"
                     fontWeight="600"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     style={{ transition: 'fill-opacity 160ms ease' }}
                   >
-                    {persistentLabel}
+                    {shortLabel}
                   </text>
                 </g>
               ) : (
@@ -781,38 +781,22 @@ export function ConcentrationConstellation({
                     strokeWidth={isPinned ? 1.4 : 1}
                     style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
                   />
-                  {/* omega-N: persistent full label — 12px mono 600, with T1 count
-                      Ref: Reuters "Forever Pollution" persistent label pattern. */}
+                  {/* omega-N-FIX2: short label restored (3-char abbrev) — 10px mono bold.
+                      Full name in cluster detail panel when zoomed. */}
                   <text
                     x={a.x}
-                    y={a.y + ringR + 13}
+                    y={a.y + ringR + 8}
                     fill={meta.color}
-                    fillOpacity={isHovered ? 1.0 : 0.85}
-                    fontSize={12}
+                    fillOpacity={isHovered ? 1 : 0.80}
+                    fontSize={10}
                     fontFamily="var(--font-family-mono, monospace)"
-                    fontWeight="600"
+                    fontWeight="bold"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     style={{ transition: 'fill-opacity 160ms ease' }}
                   >
-                    {persistentLabel}
+                    {shortLabel}
                   </text>
-                  {/* Sexenio kicker below the main label */}
-                  {meta.kicker && (
-                    <text
-                      x={a.x}
-                      y={a.y + ringR + 25}
-                      fill={meta.color}
-                      fillOpacity={0.60}
-                      fontSize={9}
-                      fontFamily="var(--font-family-mono, monospace)"
-                      fontWeight="400"
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                    >
-                      {meta.kicker}
-                    </text>
-                  )}
                 </>
               )}
 
