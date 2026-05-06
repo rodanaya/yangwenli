@@ -105,6 +105,7 @@ from .routers.collusion import router as collusion_router
 from .routers.intersection import router as intersection_router
 from .routers.capture import router as capture_router
 from .routers.dossier import router as dossier_export_router
+from .routers.atlas import router as atlas_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -460,6 +461,7 @@ app.include_router(subnational_router, prefix="/api/v1")
 app.include_router(issues_router, prefix="/api/v1")
 app.include_router(ai_router, prefix="/api/v1")
 app.include_router(aria_router, prefix="/api/v1")
+app.include_router(atlas_router, prefix="/api/v1")
 app.include_router(alerts_router, prefix="/api/v1")
 app.include_router(phi_router)  # PHI has its own /api/v1/procurement-health prefix
 app.include_router(scorecards_router)  # Scorecards has its own /api/v1/scorecards prefix
