@@ -42,6 +42,11 @@ import {
   type ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, cn } from '@/lib/utils'
+// atlas-C-P1: three-pane investigator console shell
+import { AtlasContextProvider } from '@/components/atlas/AtlasContext'
+import { AtlasShell } from '@/components/atlas/AtlasShell'
+import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
+import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -1166,8 +1171,67 @@ export default function Atlas() {
 
   const totalContractsForYear = snapshot.totalContracts
 
+  // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
+  // The left rail dispatches into AtlasContext AND calls these bridge
+  // callbacks to keep Atlas.tsx's existing useState hooks in sync.
+  // When P2-P5 progressively migrate state into context, these callbacks
+  // will be removed one by one.
+  const handleRailYearChange = (idx: number) => setYearIndex(idx)
+  const handleRailPlayChange = (playing: boolean) => setIsPlaying(playing)
+  const handleRailVendorSearch = (query: string) => {
+    // Proxy into the existing VendorSearchBox logic by finding a match
+    const matches = searchKnownVendors(query)
+    if (matches[0]) {
+      if (mode === 'sexenios') setMode('patterns')
+      const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
+      setPinnedCode(code)
+      setFoundVendor(matches[0])
+      setSelectedClusterCode(code)
+    }
+  }
+  const handleRailStoryOpen = (storyId: string) => {
+    const story = ATLAS_STORIES.find((s) => s.id === storyId)
+    if (story) {
+      setActiveStory(story)
+      setActiveChapter(0)
+      setStoryPlaying(true)
+      setStoryEnded(false)
+    }
+  }
+  const handleRailReset = () => {
+    setMode('patterns')
+    setYearIndex(YEAR_SNAPSHOTS.length - 1)
+    setIsPlaying(false)
+    setPinnedCode(null)
+    setRiskFloor('all')
+    setSelectedClusterCode(null)
+    setFoundVendor(null)
+  }
+
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <AtlasContextProvider
+      initialState={{
+        lens: mode,
+        yearIndex,
+        riskFloor,
+        pinnedCode,
+      }}
+    >
+      <AtlasShell
+        leftRail={
+          <AtlasLeftRail
+            lang={lang}
+            yearSnapshots={YEAR_SNAPSHOTS}
+            isPlaying={isPlaying}
+            onYearChange={handleRailYearChange}
+            onPlayChange={handleRailPlayChange}
+            onVendorSearchPick={handleRailVendorSearch}
+            onStoryOpen={handleRailStoryOpen}
+            onReset={handleRailReset}
+          />
+        }
+        center={
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* ── Hero header ─────────────────────────────────────────────────── */}
       <header className="mb-6">
         <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 inline-flex items-center gap-1.5">
@@ -1941,6 +2005,10 @@ export default function Atlas() {
           />
         )
       })()}
-    </div>
+          </div>
+        }
+        rightPanel={<AtlasRightPanel lang={lang} />}
+      />
+    </AtlasContextProvider>
   )
 }
