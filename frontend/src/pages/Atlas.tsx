@@ -954,6 +954,34 @@ function AtlasUrlSync({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// atlas-C-FIX: Context-to-local bridge
+// AtlasLeftRail dispatches into AtlasContext (state.lens, state.yearIndex,
+// state.riskFloor, state.pinnedCode), but the constellation reads Atlas.tsx's
+// LOCAL state (mode, yearIndex, ...). Without this bridge, clicking the lens
+// in the left rail updates context but the constellation doesn't re-render.
+// React's setState dedupes by reference equality, so calling unconditionally
+// is a no-op when values haven't changed.
+// ─────────────────────────────────────────────────────────────────────────────
+function AtlasContextBridge({
+  setMode,
+  setYearIndex,
+  setRiskFloor,
+  setPinnedCode,
+}: {
+  setMode: (m: ConstellationMode) => void
+  setYearIndex: (i: number) => void
+  setRiskFloor: (f: 'all' | 'medium' | 'high' | 'critical') => void
+  setPinnedCode: (c: string | null) => void
+}) {
+  const state = useAtlasState()
+  useEffect(() => { setMode(state.lens) }, [state.lens, setMode])
+  useEffect(() => { setYearIndex(state.yearIndex) }, [state.yearIndex, setYearIndex])
+  useEffect(() => { setRiskFloor(state.riskFloor) }, [state.riskFloor, setRiskFloor])
+  useEffect(() => { setPinnedCode(state.pinnedCode) }, [state.pinnedCode, setPinnedCode])
+  return null
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // atlas-C-P4: Selection count badge
 // Floats above the constellation while the user has vendors selected.
 // Reads selection size from AtlasContext; renders nothing when empty.
@@ -1389,6 +1417,12 @@ export default function Atlas() {
     >
       {/* atlas-C-P5: URL sync component — must live inside AtlasContextProvider
           so it can read/write context state (zoom, selection). Renders null. */}
+      <AtlasContextBridge
+        setMode={setMode}
+        setYearIndex={setYearIndex}
+        setRiskFloor={setRiskFloor}
+        setPinnedCode={setPinnedCode}
+      />
       <AtlasUrlSync
         mode={mode}
         yearIndex={yearIndex}
@@ -1621,43 +1655,8 @@ export default function Atlas() {
         )}
       </div>
 
-      {/* ── Toolbar: mode toggle + active stats ─────────────────────────── */}
-      <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
-        <div
-          className="flex items-center text-[10px] font-mono uppercase tracking-[0.1em] rounded-sm overflow-hidden"
-          role="tablist"
-          aria-label={lang === 'en' ? 'Observatory lens' : 'Lente del Observatorio'}
-          style={{ border: '1px solid var(--color-border)' }}
-        >
-          {(
-            [
-              { id: 'patterns',   en: 'PATTERNS',   es: 'PATRONES' },
-              { id: 'sectors',    en: 'SECTORS',    es: 'SECTORES' },
-              { id: 'categories', en: 'CATEGORIES', es: 'CATEGORÍAS' },
-              { id: 'sexenios',   en: 'TERMS',      es: 'SEXENIOS' },
-            ] as Array<{ id: ConstellationMode; en: string; es: string }>
-          ).map((m, i, arr) => {
-            const isActive = mode === m.id
-            return (
-              <button
-                key={m.id}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => { setMode(m.id); setSelectedClusterCode(null) }}
-                className="px-3.5 py-2 transition-colors"
-                style={{
-                  background: isActive ? '#a06820' : 'transparent',
-                  color: isActive ? 'var(--color-background)' : 'var(--color-text-muted)',
-                  borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
-                  fontWeight: isActive ? 700 : 500,
-                }}
-              >
-                {lang === 'en' ? m.en : m.es}
-              </button>
-            )
-          })}
-        </div>
-
+      {/* ── Toolbar: lens picker moved to left rail; only Pinned/Compare/Reset badges remain here ── */}
+      <div className="flex items-center justify-end mb-3 gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
           {/* Pinned cluster badge */}
           {pinnedCode && (
