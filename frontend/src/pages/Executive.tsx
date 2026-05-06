@@ -123,14 +123,13 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
 function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'es' }) {
   const W = 220
   const H = 220 // viewBox height; container stretches to match list height
-  // PAD values chosen so that, when the SVG is rendered at the wrapper's
-  // 280px height (5 rows × 56px ROW_H) via preserveAspectRatio="none", the
-  // 5 evenly-spaced stage tick centers land at the SAME y as the centers
-  // of the 5 right-side list rows (28, 84, 140, 196, 252 px).
-  // Row centers in viewBox space = 28/280 * 220 = 22, 66, 110, 154, 198.
-  // So PAD_T = 22, last stage at 198 → CH = 198 - 22 = 176, spacing 44.
-  const PAD_T = 22
-  const PAD_B = 22
+  // PAD values chosen so SVG stage ticks align with right-list dot centers.
+  // The dots sit ABOVE row geometric center (row holds dot+number+label on
+  // top line, sublabel on bottom line). Empirical measurement: dots are
+  // 8px above row mid. To match, shift the ticks UP 6.3px in viewBox space
+  // (6.3 × 280/220 = 8px rendered). PAD_T 22-6 = 16, PAD_B 22+6 = 28.
+  const PAD_T = 16
+  const PAD_B = 28
   const CX = W / 2
   const CH = H - PAD_T - PAD_B
 
