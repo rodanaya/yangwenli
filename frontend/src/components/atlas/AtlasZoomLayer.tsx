@@ -33,6 +33,7 @@ import type {
   ClusterMeta,
 } from '@/components/charts/ConcentrationConstellation'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
+import type { AtlasAction } from './AtlasContext'
 import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
 import { getRiskLevelFromScore } from '@/lib/constants'
 
@@ -213,6 +214,15 @@ export function AtlasZoomLayer({
           />
         </div>
 
+        {/* ── Cluster hover-circle overlay — transparent hit areas on each attractor ── */}
+        {/* Only active when NOT zoomed, so cluster clicks still reach the constellation. */}
+        {!isZoomed && (
+          <ClusterHoverOverlay
+            activeMeta={activeMeta}
+            dispatch={dispatch}
+          />
+        )}
+
         {/* ── Vendor-level dot overlay — visible only when zoomed ─────── */}
         {isZoomed && zoomedMeta && (
           <VendorDotOverlay
@@ -241,6 +251,55 @@ export function AtlasZoomLayer({
           }}
         />
       )}
+    </div>
+  )
+}
+
+// ── ClusterHoverOverlay ──────────────────────────────────────────────────────
+// Transparent SVG circles positioned on each cluster's attractor centre.
+// Fires hover-cluster actions so the right panel's HOVER_CLUSTER branch
+// activates without touching the sacred ConcentrationConstellation engine.
+// Hit area: 40px radius; constellation dots remain underneath and clickable.
+
+interface ClusterHoverOverlayProps {
+  activeMeta: ClusterMeta[]
+  dispatch: React.Dispatch<AtlasAction>
+}
+
+function ClusterHoverOverlay({ activeMeta, dispatch }: ClusterHoverOverlayProps) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        style={{ position: 'absolute', top: 0, left: 0 }}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {activeMeta.map((meta) => {
+          const { cx, cy } = attractorToViewport(meta.fx, meta.fy)
+          return (
+            <circle
+              key={meta.code}
+              cx={cx}
+              cy={cy}
+              r={40}
+              fill="transparent"
+              style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+              aria-label={`Hover cluster ${meta.code}`}
+              onMouseEnter={() => dispatch({ type: 'hover-cluster', code: meta.code })}
+              onMouseLeave={() => dispatch({ type: 'hover-cluster', code: null })}
+            />
+          )
+        })}
+      </svg>
     </div>
   )
 }

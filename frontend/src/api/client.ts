@@ -3170,6 +3170,52 @@ export const collusionApi = {
   },
 }
 
+// ── Atlas cluster-vendor types ────────────────────────────────────────────────
+
+export interface AtlasClusterVendorItem {
+  vendor_id: number
+  name: string
+  size_category: string | null
+  risk_score: number
+  risk_level: 'critical' | 'high' | 'medium' | 'low'
+  tier: number
+  total_contracts: number
+  total_amount_mxn: number
+  primary_sector_code: string
+  primary_sector_name: string
+  is_gt: boolean
+}
+
+export interface AtlasClusterVendorsResponse {
+  lens: string
+  code: string
+  label_es: string
+  label_en: string
+  total: number
+  vendors: AtlasClusterVendorItem[]
+  next_cursor: number | null
+}
+
+// ── Atlas API module ──────────────────────────────────────────────────────────
+
+const atlasApi = {
+  async getClusterVendors(params: {
+    lens: string
+    code: string
+    limit?: number
+    cursor?: number
+  }): Promise<AtlasClusterVendorsResponse> {
+    const q = buildQueryParams({
+      lens: params.lens,
+      code: params.code,
+      limit: params.limit ?? 50,
+      ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
+    })
+    const { data } = await api.get<AtlasClusterVendorsResponse>(`/atlas/cluster-vendors?${q}`)
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -3197,4 +3243,5 @@ export default {
   scorecards: scorecardApi,
   stories: storiesApi,
   collusion: collusionApi,
+  atlas: atlasApi,
 }

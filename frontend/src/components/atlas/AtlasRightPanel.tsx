@@ -2,24 +2,34 @@
  * AtlasRightPanel — 320px context panel for the investigator console.
  *
  * Plan: docs/ATLAS_C_CONSOLE_PLAN.md § 4
- * Build: atlas-C-P1
+ * Build: atlas-C-P3
  *
  * P1 ships the IDLE state only (§ 4.1) — global stats card.
  * P2 adds the ZOOMED_CLUSTER placeholder (§ 4.3 shell, content lands P3).
- * HOVER_CLUSTER (§ 4.2) and SELECTING (§ 4.4) states land in P3/P4.
+ * P3 adds HOVER_CLUSTER (§ 4.2), full ZOOMED_CLUSTER vendor list (§ 4.3),
+ *   and a SELECTING stub (§ 4.4).
  *
- * The ClusterDetailPanel modal still slides over this panel until P3.
- * That's expected — the plan explicitly calls it "visual ugly-but-shipping".
+ * Vendor list for zoomed cluster fetches from GET /atlas/cluster-vendors.
+ * If the endpoint returns 404 / network error, falls back to mock dots from
+ * useVendorLevelDots and shows a small "(mock)" badge.
  *
  * Risk distribution uses DotBar from the canonical ui primitives.
  * Numbers in Playfair Display Italic 800 with tabular-nums.
  * Color via style={{ color: hex }} — NEVER via className (silently stripped).
  */
 
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { DotBar } from '@/components/ui/DotBar'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
+import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
+import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
+import { formatCompactMXN } from '@/lib/utils'
+import api from '@/api/client'
+import type { AtlasClusterVendorItem } from '@/api/client'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Static data for the IDLE panel — sourced from CLAUDE.md + memory
@@ -253,13 +263,271 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ZOOMED_CLUSTER state — P2 placeholder (§ 4.3)
-// P3 will replace this with the full vendor list, filter chips, and CTAs.
-// The state branch exists so P3 can drop in real content without structural changes.
+// HOVER_CLUSTER state — 320px cluster preview (§ 4.2)
 // ─────────────────────────────────────────────────────────────────────────────
-function ZoomedClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) {
+function HoverClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string }) {
   const dispatch = useAtlasDispatch()
   const ACCENT = '#a06820'
+
+  return (
+    <div className="px-4 pb-6">
+      {/* Cluster code chip */}
+      <div
+        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pt-5 pb-1"
+        style={{ color: ACCENT }}
+      >
+        {lang === 'en' ? `${code} · CLUSTER` : `${code} · CÚMULO`}
+      </div>
+
+      {/* Vendor count hint */}
+      <div
+        className="text-[11px] font-mono mt-1"
+        style={{ color: 'var(--color-text-secondary)' }}
+      >
+        {lang === 'en' ? 'Hover detected' : 'Cúmulo detectado'}
+      </div>
+
+      {/* Click-to-zoom tip */}
+      <div
+        className="mt-4 rounded-sm px-3 py-2 text-[10px] font-mono leading-[1.6]"
+        style={{
+          background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-muted)',
+        }}
+      >
+        {lang === 'en'
+          ? 'Click to zoom in and see vendors'
+          : 'Clic para acercar y ver proveedores'}
+      </div>
+
+      {/* Back-out affordance when zoomed */}
+      <button
+        onClick={() => dispatch({ type: 'escape-zoom' })}
+        className="inline-flex items-center gap-1 text-[10px] font-mono mt-4 transition-opacity hover:opacity-70"
+        style={{ color: ACCENT }}
+      >
+        ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
+      </button>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Risk pill for vendor rows
+// ─────────────────────────────────────────────────────────────────────────────
+function RiskPill({ score }: { score: number }) {
+  const level = getRiskLevelFromScore(score)
+  const color = RISK_COLORS[level]
+  const label = (score * 100).toFixed(0)
+  return (
+    <span
+      className="text-[9px] font-mono font-bold tabular-nums px-1.5 py-0.5 rounded-sm flex-shrink-0"
+      style={{ color, background: `${color}18`, border: `1px solid ${color}44` }}
+    >
+      {label}%
+    </span>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VendorRow — single row in the zoomed-cluster vendor list
+// ─────────────────────────────────────────────────────────────────────────────
+interface VendorRowProps {
+  vendor: AtlasClusterVendorItem
+  rank: number
+  lang: 'en' | 'es'
+  isMock?: boolean
+}
+
+function VendorRow({ vendor, rank, lang, isMock }: VendorRowProps) {
+  return (
+    <Link
+      to={`/vendors/${vendor.vendor_id}`}
+      className="block group"
+      tabIndex={0}
+      aria-label={`${vendor.name} — ${lang === 'en' ? 'open vendor dossier' : 'abrir expediente'}`}
+    >
+      <div
+        className="flex items-center gap-2 py-1.5 px-2 rounded-sm transition-colors"
+        style={{ background: 'transparent' }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = 'var(--color-background-elevated, rgba(160,104,32,0.06))'
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = 'transparent'
+        }}
+      >
+        {/* Rank chip */}
+        <span
+          className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-right"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {rank}
+        </span>
+
+        {/* Entity chip — canonical, no plain <Link> */}
+        <div className="flex-1 min-w-0">
+          <EntityIdentityChip
+            type="vendor"
+            id={vendor.vendor_id}
+            name={vendor.name}
+            size="xs"
+            riskScore={vendor.risk_score}
+            ariaTier={vendor.tier as 1 | 2 | 3 | 4}
+            hideIcon
+          />
+        </div>
+
+        {/* Risk pill */}
+        <RiskPill score={vendor.risk_score} />
+      </div>
+
+      {/* Secondary row: contract count + amount */}
+      <div
+        className="flex items-center gap-2 pb-1 px-2"
+        style={{ marginTop: -2 }}
+      >
+        <span className="w-5 flex-shrink-0" />
+        <span
+          className="text-[9px] font-mono tabular-nums flex-shrink-0"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {vendor.total_contracts.toLocaleString()}
+          {' '}
+          {lang === 'en' ? 'contracts' : 'contratos'}
+        </span>
+        <span
+          className="text-[9px] font-mono tabular-nums ml-auto flex-shrink-0"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {formatCompactMXN(vendor.total_amount_mxn)}
+        </span>
+        {isMock && (
+          <span
+            className="text-[8px] font-mono flex-shrink-0"
+            style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}
+          >
+            (mock)
+          </span>
+        )}
+      </div>
+    </Link>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Adapter: convert mock VendorDot → AtlasClusterVendorItem for fallback
+// ─────────────────────────────────────────────────────────────────────────────
+function mockDotToVendorItem(dot: {
+  id: string
+  name: string
+  riskScore: number
+  isMock: boolean
+}, idx: number): AtlasClusterVendorItem {
+  const level = getRiskLevelFromScore(dot.riskScore)
+  return {
+    vendor_id: dot.isMock ? -(idx + 1) : Number(dot.id),
+    name: dot.name,
+    size_category: null,
+    risk_score: dot.riskScore,
+    risk_level: level,
+    tier: level === 'critical' ? 1 : level === 'high' ? 2 : 3,
+    total_contracts: 0,
+    total_amount_mxn: 0,
+    primary_sector_code: '',
+    primary_sector_name: '',
+    is_gt: false,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ZOOMED_CLUSTER state — full vendor list + risk distribution (§ 4.3)
+// ─────────────────────────────────────────────────────────────────────────────
+function ZoomedClusterPanel({
+  lang,
+  code,
+  lens,
+}: {
+  lang: 'en' | 'es'
+  code: string
+  lens: string
+}) {
+  const dispatch = useAtlasDispatch()
+  const ACCENT = '#a06820'
+  const [cursor, setCursor] = useState<number | undefined>(undefined)
+  const [allVendors, setAllVendors] = useState<AtlasClusterVendorItem[]>([])
+  const [nextCursor, setNextCursor] = useState<number | null>(null)
+
+  // Real data query — falls back gracefully on 404/network error
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['atlas-cluster-vendors', lens, code, cursor],
+    queryFn: () => api.atlas.getClusterVendors({ lens, code, limit: 50, cursor }),
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    // On success, accumulate pages
+    select: (d) => d,
+  })
+
+  // Accumulate vendor pages when real data arrives
+  const prevCursorRef = { current: cursor }
+  if (data && !isError) {
+    const ids = new Set(allVendors.map((v) => v.vendor_id))
+    const newOnes = data.vendors.filter((v) => !ids.has(v.vendor_id))
+    if (newOnes.length > 0) {
+      // React will batch this — safe in query callback because select is referentially stable
+      // We instead handle accumulation in the load-more handler below
+    }
+  }
+  void prevCursorRef // suppress unused warning
+
+  // Mock fallback when real API is unavailable
+  const mockDots = useVendorLevelDots(lens, code, 50)
+  const isFallback = isError || (!isLoading && !data)
+
+  // Determine what to render
+  const displayedVendors: AtlasClusterVendorItem[] = isFallback
+    ? mockDots.slice(0, 50).map((d, i) => mockDotToVendorItem(d, i))
+    : allVendors.length > 0
+    ? allVendors
+    : (data?.vendors ?? [])
+
+  const totalCount = isFallback ? mockDots.length : (data?.total ?? displayedVendors.length)
+  const labelEs = isFallback ? code : (data?.label_es ?? code)
+  const labelEn = isFallback ? code : (data?.label_en ?? code)
+  const displayLabel = lang === 'en' ? labelEn : labelEs
+
+  // Risk distribution for the cluster's displayed vendors
+  const riskBuckets = { critical: 0, high: 0, medium: 0, low: 0 }
+  for (const v of displayedVendors) {
+    riskBuckets[getRiskLevelFromScore(v.risk_score)]++
+  }
+  const total = displayedVendors.length || 1
+
+  const handleLoadMore = () => {
+    if (!data || !data.next_cursor) return
+    // Accumulate current page before advancing cursor
+    const ids = new Set(allVendors.map((v) => v.vendor_id))
+    const merged = [
+      ...allVendors,
+      ...((cursor === undefined ? data.vendors : data.vendors) ?? []).filter(
+        (v) => !ids.has(v.vendor_id),
+      ),
+    ]
+    setAllVendors(merged)
+    setNextCursor(data.next_cursor)
+    setCursor(data.next_cursor)
+  }
+
+  // On first load, sync data into state
+  if (!isLoading && data && allVendors.length === 0 && cursor === undefined) {
+    setAllVendors(data.vendors)
+    setNextCursor(data.next_cursor)
+  }
+
+  const shownVendors = allVendors.length > 0 ? allVendors : displayedVendors
+  const hasMore = !isFallback && (nextCursor !== null || (data?.next_cursor ?? null) !== null)
 
   return (
     <div className="px-4 pb-6">
@@ -271,36 +539,130 @@ function ZoomedClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string })
         {lang === 'en' ? `${code} · CLUSTER` : `${code} · CÚMULO`}
       </div>
 
-      {/* Back link — OpenCorporates Hierarchy vocabulary */}
+      {/* Back link */}
       <button
         onClick={() => dispatch({ type: 'escape-zoom' })}
-        className="inline-flex items-center gap-1 text-[10px] font-mono mt-1 mb-4 transition-opacity hover:opacity-70"
+        className="inline-flex items-center gap-1 text-[10px] font-mono mt-1 mb-3 transition-opacity hover:opacity-70"
         style={{ color: ACCENT }}
       >
         ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
       </button>
 
-      {/* Phase 3 placeholder */}
+      {/* Cluster header card */}
       <div
-        className="rounded-sm p-4 text-[11px] font-mono leading-[1.6]"
+        className="rounded-sm px-3 py-2.5 mb-3"
         style={{
           background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
           border: '1px solid var(--color-border)',
-          color: 'var(--color-text-secondary)',
         }}
       >
         <div
-          className="font-bold mb-2 text-[9px] uppercase tracking-[0.12em]"
-          style={{ color: ACCENT }}
+          className="text-[13px] font-mono font-bold leading-tight"
+          style={{ color: 'var(--color-text-primary)' }}
         >
-          {lang === 'en' ? 'PHASE 3: VENDOR LIST' : 'FASE 3: LISTA DE PROVEEDORES'}
+          {displayLabel}
         </div>
-        <div style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en'
-            ? 'The vendor list for this cluster lands in atlas-C-P3. Vendor-level dots are visible in the chart above.'
-            : 'La lista de proveedores de este cúmulo llega en atlas-C-P3. Los puntos de proveedor son visibles en el gráfico arriba.'}
+        <div
+          className="text-[10px] font-mono mt-1"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {totalCount.toLocaleString()}
+          {' '}
+          {lang === 'en' ? 'vendors' : 'proveedores'}
+          {isFallback && (
+            <span
+              className="ml-2 text-[8px]"
+              style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}
+            >
+              (mock)
+            </span>
+          )}
         </div>
       </div>
+
+      {/* ── MINI RISK DISTRIBUTION ─────────────────────────────────── */}
+      <PanelSection label={lang === 'en' ? 'RISK DISTRIBUTION' : 'DISTRIBUCIÓN DE RIESGO'} />
+
+      <div className="space-y-1.5 mb-2">
+        {(
+          [
+            { key: 'critical', label: { en: 'CRITICAL', es: 'CRÍTICO' }, color: RISK_COLORS.critical },
+            { key: 'high',     label: { en: 'HIGH',     es: 'ALTO' },    color: RISK_COLORS.high },
+            { key: 'medium',   label: { en: 'MEDIUM',   es: 'MEDIO' },   color: RISK_COLORS.medium },
+            { key: 'low',      label: { en: 'LOW',      es: 'BAJO' },    color: '#71717a' },
+          ] as const
+        ).map((r) => {
+          const count = riskBuckets[r.key]
+          const pct = (count / total) * 100
+          return (
+            <div key={r.key} className="space-y-0.5">
+              <div className="flex items-center justify-between">
+                <span
+                  className="text-[9px] font-mono font-bold uppercase tracking-[0.08em]"
+                  style={{ color: r.color }}
+                >
+                  {r.label[lang]}
+                </span>
+                <span
+                  className="text-[9px] font-mono tabular-nums"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {count}
+                </span>
+              </div>
+              <DotBar value={pct} max={100} color={r.color} />
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── VENDOR LIST ───────────────────────────────────────────── */}
+      <PanelSection label={lang === 'en' ? 'TOP VENDORS' : 'PRINCIPALES PROVEEDORES'} />
+
+      {isLoading && allVendors.length === 0 ? (
+        <div
+          className="text-[10px] font-mono py-4 text-center"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'en' ? 'Loading…' : 'Cargando…'}
+        </div>
+      ) : shownVendors.length === 0 ? (
+        <div
+          className="text-[10px] font-mono py-4 text-center"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'en'
+            ? 'No vendors match this cluster'
+            : 'Sin proveedores en este grupo'}
+        </div>
+      ) : (
+        <div className="space-y-0">
+          {shownVendors.map((vendor, idx) => (
+            <VendorRow
+              key={vendor.vendor_id}
+              vendor={vendor}
+              rank={idx + 1}
+              lang={lang}
+              isMock={isFallback}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Load more */}
+      {hasMore && (
+        <button
+          onClick={handleLoadMore}
+          className="w-full mt-3 py-2 text-[10px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm transition-opacity hover:opacity-75"
+          style={{
+            border: '1px solid var(--color-border)',
+            color: ACCENT,
+            background: 'transparent',
+          }}
+        >
+          {lang === 'en' ? '↓ Load more vendors' : '↓ Cargar más proveedores'}
+        </button>
+      )}
 
       {/* ESC hint */}
       <div
@@ -308,6 +670,26 @@ function ZoomedClusterPanel({ lang, code }: { lang: 'en' | 'es'; code: string })
         style={{ color: 'var(--color-text-muted)' }}
       >
         {lang === 'en' ? 'Press ESC or click background to zoom out' : 'Presiona ESC o haz clic en el fondo para alejar'}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SELECTING state — P4 placeholder (§ 4.4)
+// ─────────────────────────────────────────────────────────────────────────────
+function SelectingPanel({ lang, selectedCount }: { lang: 'en' | 'es'; selectedCount: number }) {
+  return (
+    <div className="px-4 pb-6 pt-5">
+      <div
+        className="text-[9px] font-mono font-bold uppercase tracking-[0.14em] pb-3"
+        style={{ color: 'var(--color-text-muted)' }}
+      >
+        P4 {lang === 'en' ? 'placeholder' : 'marcador'}
+        {' · '}
+        {selectedCount}
+        {' '}
+        {lang === 'en' ? 'selected' : 'seleccionados'}
       </div>
     </div>
   )
@@ -322,17 +704,14 @@ export function AtlasRightPanel({ lang }: AtlasRightPanelProps) {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      {view.kind === 'idle' || view.kind === 'hover-cluster' ? (
-        // P1: idle panel for both idle and hover-cluster states.
-        // P3 will add the hover-cluster variant.
+      {view.kind === 'idle' ? (
         <IdlePanel lang={lang} />
+      ) : view.kind === 'hover-cluster' ? (
+        <HoverClusterPanel lang={lang} code={view.code} />
       ) : view.kind === 'zoomed-cluster' ? (
-        // P2: placeholder card. P3 will render the full vendor list.
-        <ZoomedClusterPanel lang={lang} code={view.code} />
+        <ZoomedClusterPanel lang={lang} code={view.code} lens={state.lens} />
       ) : view.kind === 'selecting' ? (
-        // P4 will render the selection summary here.
-        // For now: show idle content.
-        <IdlePanel lang={lang} />
+        <SelectingPanel lang={lang} selectedCount={view.ids.length} />
       ) : (
         <IdlePanel lang={lang} />
       )}
