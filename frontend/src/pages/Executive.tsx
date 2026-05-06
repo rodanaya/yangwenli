@@ -2300,7 +2300,7 @@ export default function Executive() {
               const ROW_H = 56
               const TOTAL_H = ROW_H * 5
               return (
-                <div className="flex flex-col md:flex-row md:items-start gap-6" style={{ height: TOTAL_H }}>
+                <div className="flex flex-row items-start gap-6" style={{ height: TOTAL_H }}>
                   {/* Lens — width fixed, height locked to TOTAL_H. SVG fills
                       via preserveAspectRatio="none" so 5 stages map 1:1 to
                       the 5 list rows on the right. */}
