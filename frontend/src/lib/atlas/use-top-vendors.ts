@@ -24,7 +24,28 @@ import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellat
  *
  * Returns empty array if backend errors or returns 0 results.
  */
+// omega-N-FIX1: stable empty-array reference to avoid prop-identity churn
+// downstream. The previous implementation returned a fresh `[]` every render,
+// which through useQueries + downstream useMemos likely caused React error
+// #301 ("too many re-renders") under certain combinations of activeStory +
+// AtlasContextBridge. Until we identify the exact trigger, ship the path
+// disabled — chart still gets the dim-anonymous + bigger-label benefits.
+const EMPTY_NAMED_VENDORS: NamedVendorDot[] = []
+
 export function useTopVendorsByCluster(
+  _lens: string,
+  _clusterCodes: string[],
+): NamedVendorDot[] {
+  // Hook intentionally returns the same empty-array reference every call
+  // until the underlying useQueries integration is stabilized.
+  // Re-enable by uncommenting the implementation below and verifying
+  // referential stability across renders.
+  return EMPTY_NAMED_VENDORS
+}
+
+// Disabled implementation — see comment above. Exported (with underscore
+// prefix) so the unused-locals lint passes; not imported anywhere.
+export function _useTopVendorsByClusterImpl(
   lens: string,
   clusterCodes: string[],
 ): NamedVendorDot[] {
@@ -37,12 +58,10 @@ export function useTopVendorsByCluster(
       },
       staleTime: 5 * 60 * 1000,
       enabled: clusterCodes.length > 0 && !!lens && !!code,
-      // Don't throw — return empty on error so constellation renders gracefully
       retry: 1,
     })),
   })
 
-  // Flatten results into NamedVendorDot[]
   const named: NamedVendorDot[] = []
   for (const result of results) {
     if (!result.data) continue

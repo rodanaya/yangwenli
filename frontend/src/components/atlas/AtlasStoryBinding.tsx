@@ -35,6 +35,14 @@ export function AtlasStoryBinding({
   activeChapterIndex,
   onHighlightChange,
 }: AtlasStoryBindingProps) {
+  // omega-N-FIX1: behavior disabled while we isolate the React #301 cause.
+  // The chapter strip overlay + engine label upgrades remain functional;
+  // this binding (auto-zoom + dim non-chapter clusters) is paused.
+  void activeStory
+  void activeChapterIndex
+  void onHighlightChange
+  return null
+  // eslint-disable-next-line @typescript-eslint/no-unreachable, no-unreachable
   const dispatch = useAtlasDispatch()
 
   // Track previous chapter so we only fire dispatch when chapter actually changes
