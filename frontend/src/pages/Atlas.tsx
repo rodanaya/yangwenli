@@ -51,6 +51,9 @@ import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
+// omega-N: story-chart binding + named-outlier data hook
+import { AtlasStoryBinding } from '@/components/atlas/AtlasStoryBinding'
+import { useTopVendorsByCluster } from '@/lib/atlas/use-top-vendors'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VENDOR LOOKUP — known-vendor → cluster mappings across modes.
@@ -1030,6 +1033,8 @@ export default function Atlas() {
   const [activeChapter, setActiveChapter] = useState<number>(0)
   const [storyPlaying, setStoryPlaying] = useState<boolean>(false)
   const [storyEnded, setStoryEnded] = useState<boolean>(false)
+  // omega-N N2: cluster codes to highlight (driven by AtlasStoryBinding)
+  const [highlightedClusterCodes, setHighlightedClusterCodes] = useState<string[]>([])
   const [storiesMenuOpen, setStoriesMenuOpen] = useState<boolean>(false)
   // URL-state sharing
   const [searchParams, setSearchParams] = useSearchParams()
@@ -1345,6 +1350,16 @@ export default function Atlas() {
     return buildPatternMeta(isEs)
   }, [mode, lang, atlasMeta])
 
+  // omega-N N1: named vendor outlier dots — fetch top 3 per cluster.
+  // Only fetch for the active mode's clusters (not all modes simultaneously).
+  // Graceful fallback: if backend returns 0 or errors, constellation renders
+  // without named vendors.
+  const activeClusterCodes = useMemo(
+    () => activeConstellationMeta.map((m) => m.code),
+    [activeConstellationMeta],
+  )
+  const namedVendors = useTopVendorsByCluster(mode, activeClusterCodes)
+
   // Resolve selected cluster meta from the active meta set — uses the same
   // builders as the constellation so vendor/T1/risk numbers render correctly.
   const selectedMeta: ClusterMeta | null = useMemo(() => {
@@ -1432,6 +1447,14 @@ export default function Atlas() {
         yearIndexB={yearIndexB}
         initialZoomRef={initialZoomRef}
         initialSelectRef={initialSelectRef}
+      />
+      {/* omega-N N2: story-chart binding — headless, renders null.
+          Wires active chapter's pinnedCode to zoom dispatch + highlight state.
+          Ref: NYT "How the Virus Got Out" + ICIJ Pandora Papers. */}
+      <AtlasStoryBinding
+        activeStory={activeStory}
+        activeChapterIndex={activeChapter}
+        onHighlightChange={setHighlightedClusterCodes}
       />
       <AtlasShell
         leftRail={
@@ -2058,10 +2081,34 @@ export default function Atlas() {
       {/* ── atlas-C-P4: Selection count badge ──────────────────────────── */}
       <SelectionBadge lang={lang} />
 
-      <div className="surface-card rounded-sm p-3 md:p-4 mb-4">
+      <div className="surface-card rounded-sm p-3 md:p-4 mb-4 relative">
+        {/* omega-N: chapter strip overlay — pinned over the chart while a story is playing.
+            Cites NYT "How the Virus Got Out" — the camera follows the narrative, with a
+            persistent chapter indicator so the reader never loses orientation. */}
+        {activeStory && !storyEnded && activeStory.chapters[activeChapter] && (
+          <div
+            className="absolute top-2 left-2 z-10 inline-flex items-center gap-2 rounded-sm px-2 py-1 text-[10px] font-mono uppercase tracking-[0.12em]"
+            style={{
+              background: 'var(--color-background)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text-primary)',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+            }}
+          >
+            <span style={{ color: '#a06820' }}>▶</span>
+            <span className="font-bold">
+              {lang === 'en' ? 'Ch' : 'Cap'} {activeChapter + 1}/{activeStory.chapters.length}
+            </span>
+            <span style={{ color: 'var(--color-text-muted)' }}>·</span>
+            <span className="truncate max-w-[280px]" style={{ color: 'var(--color-text-primary)' }}>
+              {activeStory.title[lang]}
+            </span>
+          </div>
+        )}
         {/* atlas-C-P2: ConcentrationConstellation is now wrapped in AtlasZoomLayer
-            which owns the semantic zoom transform. The constellation engine is
-            NOT modified — AtlasZoomLayer wraps it per plan § 5.1. */}
+            which owns the semantic zoom transform. omega-N: engine itself was
+            modified (named outliers + dim layers + bigger labels) per user
+            authorization to break the sacred-engine rule. */}
         <AtlasZoomLayer
           key={constellationKey}
           mode={mode}
@@ -2076,6 +2123,8 @@ export default function Atlas() {
           lang={lang}
           activeMeta={activeConstellationMeta}
           onClusterClickBridge={handleClusterClick}
+          namedVendors={namedVendors}
+          highlightedClusterCodes={highlightedClusterCodes}
         />
       </div>
 

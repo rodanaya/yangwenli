@@ -31,6 +31,7 @@ import type {
   ConstellationMode,
   ConstellationRiskRow,
   ClusterMeta,
+  NamedVendorDot,
 } from '@/components/charts/ConcentrationConstellation'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 import type { AtlasAction } from './AtlasContext'
@@ -101,6 +102,16 @@ export interface AtlasZoomLayerProps {
    * P3 removes this once the modal is replaced by the right panel.
    */
   onClusterClickBridge?: (clusterCode: string) => void
+  /**
+   * omega-N N1: named vendor outlier dots — passed through to ConcentrationConstellation.
+   * Top critical vendors per cluster rendered as large labeled dots.
+   */
+  namedVendors?: NamedVendorDot[]
+  /**
+   * omega-N N2: clusters to highlight — others dim to 0.15.
+   * Driven by AtlasStoryBinding based on the active chapter's pinnedCode.
+   */
+  highlightedClusterCodes?: string[]
 }
 
 // ── AtlasZoomLayer ────────────────────────────────────────────────────────────
@@ -115,6 +126,8 @@ export function AtlasZoomLayer({
   lang,
   activeMeta,
   onClusterClickBridge,
+  namedVendors,
+  highlightedClusterCodes,
 }: AtlasZoomLayerProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -210,6 +223,8 @@ export function AtlasZoomLayer({
             metaOverride={metaOverride}
             seedOverride={seedOverride}
             pinnedCode={pinnedCode}
+            namedVendors={namedVendors}
+            highlightedClusterCodes={highlightedClusterCodes}
             onClusterClick={handleClusterClick}
           />
         </div>

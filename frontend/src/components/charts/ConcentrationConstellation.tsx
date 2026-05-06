@@ -32,6 +32,14 @@ export interface ConstellationRiskRow {
 
 export type ConstellationMode = 'patterns' | 'sectors' | 'sexenios' | 'categories'
 
+/** Named vendor to display as a large labeled outlier dot near its cluster attractor. */
+export interface NamedVendorDot {
+  clusterCode: string
+  vendorId: number
+  name: string
+  riskScore: number
+}
+
 interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
   totalContracts: number
@@ -53,6 +61,21 @@ interface ConcentrationConstellationProps {
    * to mark it across mode/year changes. Used by /atlas pin feature.
    */
   pinnedCode?: string | null
+  /**
+   * Named vendor outliers — top critical vendors per cluster, rendered as
+   * large (r=4) labeled dots near the attractor. Dims anonymous dots to 0.30.
+   * Reuters "Forever Pollution" pattern: named outliers paired with persistent
+   * labels; NYT Upshot annotated dot strip.
+   * Max 3 per cluster (if >5 provided for a cluster, only top 3 by riskScore).
+   */
+  namedVendors?: NamedVendorDot[]
+  /**
+   * When set, only clusters in this list render at full opacity; all others
+   * dim to 0.15. Used by story-chart binding (N2) to focus the constellation
+   * on the chapter's subject cluster.
+   * ICIJ Pandora Papers / NYT "How the Virus Got Out" pattern.
+   */
+  highlightedClusterCodes?: string[]
   onClusterClick?: (clusterCode: string) => void
   className?: string
 }
@@ -231,6 +254,8 @@ export function ConcentrationConstellation({
   metaOverride,
   seedOverride,
   pinnedCode,
+  namedVendors,
+  highlightedClusterCodes,
   onClusterClick,
   className,
 }: ConcentrationConstellationProps) {
@@ -248,6 +273,33 @@ export function ConcentrationConstellation({
   }, [mode, isEs, metaOverride])
 
   const MODE_KICKERS = useMemo(() => buildModeKickers(isEs), [isEs])
+
+  // ── Named vendor outlier prep ────────────────────────────────────────────
+  // Ref: Reuters "Forever Pollution" (named outliers + persistent labels) +
+  //      NYT Upshot annotated dot strip.
+  // Cap each cluster to top 3 by riskScore; skip clusters with >5 named
+  // vendors by only taking top 3 (no label collision).
+  const namedVendorsByCluster = useMemo(() => {
+    if (!namedVendors || namedVendors.length === 0) return new Map<string, NamedVendorDot[]>()
+    const byCluster = new Map<string, NamedVendorDot[]>()
+    for (const nv of namedVendors) {
+      const arr = byCluster.get(nv.clusterCode) ?? []
+      arr.push(nv)
+      byCluster.set(nv.clusterCode, arr)
+    }
+    // Sort descending by riskScore, cap at 3
+    for (const [code, arr] of byCluster) {
+      byCluster.set(code, arr.sort((a, b) => b.riskScore - a.riskScore).slice(0, 3))
+    }
+    return byCluster
+  }, [namedVendors])
+
+  const hasNamedVendors = namedVendorsByCluster.size > 0
+  const hasHighlight = highlightedClusterCodes !== undefined && highlightedClusterCodes.length > 0
+  const highlightSet = useMemo(
+    () => new Set(highlightedClusterCodes ?? []),
+    [highlightedClusterCodes],
+  )
 
   const { dots, criticalEdges, marginAnchors, attractors } = useMemo(() => {
     // Reset hover when mode changes — avoid stale index referencing old meta
@@ -582,6 +634,10 @@ export function ConcentrationConstellation({
         })}
 
         {/* ── Dots, painted in order: low → medium → high → critical (on top) ── */}
+        {/* Dimming rules (omega-N):
+            - namedVendors provided → anonymous dot fill-opacity → 0.30
+            - highlightedClusterCodes → clusters not in the set dim to 0.15
+              Both can be active simultaneously; the more restrictive wins. */}
         {(['low', 'medium', 'high', 'critical'] as const).flatMap((paintLevel) =>
           dots.map((d, idx) => {
             if (d.level !== paintLevel) return null
@@ -595,6 +651,20 @@ export function ConcentrationConstellation({
               : 600 // critical
             const indexJitter = (idx / N_DOTS) * 380
             const delay = levelOffset + indexJitter
+
+            // Compute effective opacity based on omega-N dimming rules
+            let effectiveAlpha = s.alpha
+            if (hasHighlight && d.cluster >= 0) {
+              const clusterCode = activeMeta[d.cluster]?.code
+              if (clusterCode && !highlightSet.has(clusterCode)) {
+                effectiveAlpha = 0.15
+              }
+            } else if (hasNamedVendors) {
+              effectiveAlpha = s.alpha * 0.30 / s.alpha < 0.30 ? s.alpha * 0.30 : 0.30
+              // Simplification: dim all anonymous dots to 0.30
+              effectiveAlpha = 0.30
+            }
+
             return (
               <circle
                 key={`dot-${paintLevel}-${idx}`}
@@ -602,7 +672,7 @@ export function ConcentrationConstellation({
                 cy={d.y}
                 r={s.r}
                 fill={s.fill}
-                fillOpacity={s.alpha}
+                fillOpacity={effectiveAlpha}
                 className="atlas-dot"
                 style={{ animationDelay: `${delay}ms` }}
               />
@@ -611,22 +681,30 @@ export function ConcentrationConstellation({
         )}
 
         {/* ── Attractor rings, labels, hit targets (above dots) ───────────── */}
+        {/* omega-N: highlight dimming — clusters not in highlightedClusterCodes
+            render at reduced opacity (0.20 on ring, 0.12 on label).
+            Ref: ICIJ Pandora Papers + NYT "How the Virus Got Out" — story chapters
+            drive entity highlights so the camera follows the narrative. */}
         {attractors.map((a, idx) => {
           const isHovered = safeHover === idx
           const meta = activeMeta[idx]
           const isPinned = pinnedCode === meta.code
+          const isHighlighted = !hasHighlight || highlightSet.has(meta.code)
+          const ringOpacityBase = isHighlighted ? 1.0 : 0.15
           // Ring radius ∝ √T1 so high-t1 nodes read larger.
           // Floor at 4 so small clusters remain visible; cap at 16.
           const ringR = Math.max(4, Math.min(16, Math.sqrt(meta.t1)))
-          // Short label inside/above the ring. For patrones it's the code
-          // ("P5"); for sectores/sexenios use first 3 chars of the label.
-          const shortLabel =
-            mode === 'patterns' ? meta.code : meta.label.slice(0, 3).toUpperCase()
+          // Persistent full label below attractor ring (omega-N).
+          // Full cluster name truncated at 24 chars + ellipsis + T1 count.
+          // Bilingual via isEs; rendered in 11-12px mono 600.
+          const fullName = meta.label
+          const truncName = fullName.length > 24 ? fullName.slice(0, 23) + '…' : fullName
+          const persistentLabel = `${truncName} · ${meta.t1} T1`
           return (
             <g
               key={`attractor-${meta.code}-${idx}`}
               className="atlas-ring"
-              style={{ animationDelay: `${1300 + idx * 70}ms` }}
+              style={{ animationDelay: `${1300 + idx * 70}ms`, opacity: ringOpacityBase, transition: 'opacity 400ms ease' }}
             >
               {/* Pinned outer halo — pulsing ring around pinned cluster */}
               {isPinned && (
@@ -672,25 +750,27 @@ export function ConcentrationConstellation({
                       ? `Glifo ${meta.label}`
                       : `${meta.label} glyph`}
                   />
-                  {/* Pattern code demoted below glyph — mono 7.5px */}
+                  {/* omega-N: persistent full label below glyph — 11px mono 600
+                      Replaces the old 7.5px abbreviated code label.
+                      Ref: Reuters "Forever Pollution" persistent cluster labels. */}
                   <text
                     x={ringR}
-                    y={ringR * 2 + 9}
+                    y={ringR * 2 + 13}
                     fill={meta.color}
-                    fillOpacity={isHovered ? 0.95 : 0.65}
-                    fontSize={7.5}
+                    fillOpacity={isHovered ? 1.0 : 0.85}
+                    fontSize={11}
                     fontFamily="var(--font-family-mono, monospace)"
                     fontWeight="600"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     style={{ transition: 'fill-opacity 160ms ease' }}
                   >
-                    {meta.code}
+                    {persistentLabel}
                   </text>
                 </g>
               ) : (
                 <>
-                  {/* Non-patterns modes: original ring + short label */}
+                  {/* Non-patterns modes: original ring + persistent full label */}
                   <circle
                     cx={a.x}
                     cy={a.y}
@@ -701,26 +781,40 @@ export function ConcentrationConstellation({
                     strokeWidth={isPinned ? 1.4 : 1}
                     style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
                   />
+                  {/* omega-N: persistent full label — 12px mono 600, with T1 count
+                      Ref: Reuters "Forever Pollution" persistent label pattern. */}
                   <text
                     x={a.x}
-                    y={a.y + ringR + 8}
+                    y={a.y + ringR + 13}
                     fill={meta.color}
-                    fillOpacity={isHovered ? 1 : 0.80}
-                    fontSize={10}
+                    fillOpacity={isHovered ? 1.0 : 0.85}
+                    fontSize={12}
                     fontFamily="var(--font-family-mono, monospace)"
-                    fontWeight="bold"
+                    fontWeight="600"
                     textAnchor="middle"
                     dominantBaseline="middle"
                     style={{ transition: 'fill-opacity 160ms ease' }}
                   >
-                    {shortLabel}
+                    {persistentLabel}
                   </text>
+                  {/* Sexenio kicker below the main label */}
+                  {meta.kicker && (
+                    <text
+                      x={a.x}
+                      y={a.y + ringR + 25}
+                      fill={meta.color}
+                      fillOpacity={0.60}
+                      fontSize={9}
+                      fontFamily="var(--font-family-mono, monospace)"
+                      fontWeight="400"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                    >
+                      {meta.kicker}
+                    </text>
+                  )}
                 </>
               )}
-
-              {/* omega-P2 persistent sub-labels + worst-cluster ▲ marker
-                  REVERTED 2026-05-05 — decoration. The constellation reads
-                  cleaner with hover-only labels. */}
 
               {/* Transparent hit target — larger than visible ring */}
               <circle
@@ -751,6 +845,59 @@ export function ConcentrationConstellation({
               />
             </g>
           )
+        })}
+
+        {/* ── Named vendor outlier dots (omega-N N1) ──────────────────────────
+            Large (r=4) labeled dots placed near each cluster's attractor.
+            Deterministic angle derived from vendorId for stability.
+            Ref: Reuters "Forever Pollution" + NYT Upshot annotated dot strip. */}
+        {hasNamedVendors && Array.from(namedVendorsByCluster.entries()).flatMap(([clusterCode, vendors]) => {
+          const clusterIdx = activeMeta.findIndex((m) => m.code === clusterCode)
+          if (clusterIdx < 0) return []
+          const meta = activeMeta[clusterIdx]
+          const a = attractors[clusterIdx]
+          if (!a) return []
+          const isHighlighted = !hasHighlight || highlightSet.has(clusterCode)
+          const dotOpacity = isHighlighted ? 0.95 : 0.20
+          return vendors.map((nv, vi) => {
+            // Deterministic angle from vendorId so placement is stable across re-renders
+            const angle = ((nv.vendorId * 137.508) % 360) * (Math.PI / 180) + vi * (Math.PI * 2 / 3)
+            const jitterR = 14 + vi * 5 // slight spiral so labels don't stack
+            const nx = a.x + Math.cos(angle) * jitterR
+            const ny = a.y + Math.sin(angle) * jitterR
+            // Label offset: push name to the right unless near the right edge
+            const labelX = nx + 6
+            const labelAnchor = 'start'
+            return (
+              <g key={`named-${clusterCode}-${nv.vendorId}`}>
+                {/* Named-outlier dot: r=4, cluster color */}
+                <circle
+                  cx={nx}
+                  cy={ny}
+                  r={4}
+                  fill={meta.color}
+                  fillOpacity={dotOpacity}
+                  stroke="var(--color-background, #faf9f6)"
+                  strokeWidth={0.8}
+                />
+                {/* Vendor name label — 9px mono */}
+                <text
+                  x={labelX}
+                  y={ny + 1}
+                  fill={meta.color}
+                  fillOpacity={dotOpacity}
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontWeight="600"
+                  textAnchor={labelAnchor}
+                  dominantBaseline="middle"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {nv.name.length > 20 ? nv.name.slice(0, 19) + '…' : nv.name}
+                </text>
+              </g>
+            )
+          })
         })}
 
         {/* ── Margin annotations: count + label, with leader to a real dot ─── */}
