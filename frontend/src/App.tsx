@@ -33,31 +33,32 @@ const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
 const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
-const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
-const Investigation = lazy(() => import('@/pages/Investigation'))
-const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
+// v1.0 launch cuts — components retained on disk for v1.1, no longer imported.
+// See docs/RUBLI_v1.0_LAUNCH_PLAN.md for the cut list.
+//   ModelTransparency        → /methodology
+//   Investigation/Case       → /aria
+//   CapturaHeatmap           → /captura
+//   YearInReview             → /
+//   VendorCompare            → /sectors
+//   InstitutionCompare       → /institutions
+//   CorruptionClusters       → /atlas
+//   ProcurementCalendar      → /
 const Executive = lazy(() => import('@/pages/Executive'))
 const Atlas = lazy(() => import('@/pages/Atlas'))
 // SpendingCategories removed; /categories now redirects to /sectors?view=categories
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
-const CapturaHeatmap = lazy(() => import('@/pages/CapturaHeatmap'))
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
-const YearInReview = lazy(() => import('@/pages/YearInReview'))
-const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
-const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Intersection = lazy(() => import('@/pages/Intersection'))
 const CaptureCreep = lazy(() => import('@/pages/CaptureCreep'))
-const CorruptionClusters = lazy(() => import('@/pages/CorruptionClusters'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
-const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
@@ -212,22 +213,10 @@ function App() {
                 }
               />
               <Route path="watchlist" element={<Navigate to="/workspace" replace />} />
-              <Route
-                path="investigation/:caseId"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InvestigationCaseDetail />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="investigation"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Investigation />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — Investigation surfaces overlap with /aria.
+                  Component files preserved for v1.1. See docs/RUBLI_v1.0_LAUNCH_PLAN.md. */}
+              <Route path="investigation/:caseId" element={<Navigate to="/aria" replace />} />
+              <Route path="investigation" element={<Navigate to="/aria" replace />} />
               <Route
                 path="aria"
                 element={
@@ -270,14 +259,8 @@ function App() {
               />
               {/* Spanish-first rename per docs/SITE_IA.md — preserve old URL */}
               <Route path="capture" element={<Navigate to="/captura" replace />} />
-              <Route
-                path="clusters"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CorruptionClusters />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
+              <Route path="clusters" element={<Navigate to="/atlas" replace />} />
               <Route
                 path="atlas"
                 element={
@@ -336,22 +319,9 @@ function App() {
               <Route path="ground-truth" element={<Navigate to="/model" replace />} />
               <Route path="state-expenditure" element={<Navigate to="/administrations" replace />} />
               <Route path="state-expenditure/:code" element={<Navigate to="/administrations" replace />} />
-              <Route
-                path="year-in-review"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <YearInReview />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="year-in-review/:year"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <YearInReview />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — YearInReview not core to journalism MVP. */}
+              <Route path="year-in-review" element={<Navigate to="/" replace />} />
+              <Route path="year-in-review/:year" element={<Navigate to="/" replace />} />
               <Route path="institutions/health" element={<Navigate to="/institutions" replace />} />
               <Route path="institutions/scorecards" element={<Navigate to="/institutions?tab=fichas" replace />} />
               <Route path="institutions/fichas" element={<Navigate to="/institutions?tab=fichas" replace />} />
@@ -365,14 +335,8 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="model"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ModelTransparency />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — ModelTransparency subsumed by /methodology. */}
+              <Route path="model" element={<Navigate to="/methodology" replace />} />
               <Route
                 path="vendors/:id"
                 element={
@@ -399,34 +363,15 @@ function App() {
               />
 
               {/* Redirects from merged/renamed pages */}
-              <Route
-                path="money-flow"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CapturaHeatmap />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — CapturaHeatmap duplicate of /captura. */}
+              <Route path="money-flow" element={<Navigate to="/captura" replace />} />
               {/* Plural/singular + recent-rename aliases kept for external links */}
               <Route path="networks" element={<Navigate to="/network" replace />} />
               <Route path="institution-health" element={<Navigate to="/institutions" replace />} />
 
-              <Route
-                path="vendors/compare"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <VendorCompare />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="procurement-calendar"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ProcurementCalendar />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cuts — vendor compare + procurement calendar deferred to v1.1. */}
+              <Route path="vendors/compare" element={<Navigate to="/sectors" replace />} />
+              <Route path="procurement-calendar" element={<Navigate to="/" replace />} />
               <Route
                 path="journalists"
                 element={
@@ -446,14 +391,8 @@ function App() {
                 }
               />
 
-              <Route
-                path="institutions/compare"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <InstitutionCompare />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — InstitutionCompare deferred to v1.1. */}
+              <Route path="institutions/compare" element={<Navigate to="/institutions" replace />} />
 
               {/* Route aliases — singular/plural spelling variants */}
               <Route path="sector" element={<Navigate to="/sectors" replace />} />
