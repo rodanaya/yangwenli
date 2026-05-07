@@ -252,6 +252,57 @@ we don't touch them until 2026-06-14.
 - **Effort:** ~1 hour.
 - **Linked commit:** _(open)_
 
+### #017 — PENDING DECISION — Drop `/workspace` (Watchlist) entirely
+
+- **Filed:** 2026-05-07 (user — "we might have to drop the personal
+  investigation workplace since I don't feel that journalists will
+  work on my website... we are merely informative")
+- **Surface:** `frontend/src/pages/Watchlist.tsx` (1,366 LOC) +
+  sidebar entry + Atlas right-panel "Save investigation" feature
+- **Decision needed:** is RUBLI a publication or a workbench?
+- **If drop:**
+  1. Redirect `/workspace` and `/watchlist` → `/atlas` (or `/`).
+  2. Remove "Workspace" entry from sidebar (`AtlasLeftRail.tsx`
+     and the main `Sidebar.tsx`).
+  3. Remove "Save investigation" from Atlas right panel
+     (`AtlasRightPanel.tsx` selecting view).
+  4. ~1,366 LOC + ~80 LOC of localStorage hook becomes dead code
+     (delete file, remove imports, gates pass).
+- **If keep:** invest in making it actually useful — which is at
+  least 2 agent-days of polish, plus authentication for cross-device
+  saves (currently localStorage only).
+- **Recommended:** drop. Replace with shareable URL state (which
+  already exists in Atlas via `?lens=&zoom=&select=`) — that gives
+  a journalist exactly what they need (a sharable bookmark) without
+  pretending to be a workbench.
+- **Effort to drop:** ~30 minutes.
+- **Linked commit:** _(pending decision)_
+
+### #018 — PENDING DECISION — Haiku-scrape T2/T3 ARIA tiers for richer dossiers
+
+- **Filed:** 2026-05-07 (user — "this is why I suggested in doing
+  scrapping the aria tiers with haiku")
+- **Surface:** Backend (`backend/scripts/centinela_web*.py`) +
+  data layer (no UI work)
+- **Description:** ARIA T1 (314 vendors) has rich web evidence
+  per existing `centinela_web` runs. T2 (1,462) and T3 (5,471) are
+  thinner. If RUBLI is read-only (per #017), the consumption
+  experience needs richer per-vendor evidence on more tiers.
+- **What this means:**
+  1. Run `centinela_web --tier 2` and `--tier 3` against latest
+     `aria_queue` snapshot.
+  2. Backend already supports this; per memory T2 was last 53.4%
+     done. Resume + finish T2, then T3.
+  3. Expected output: filling `aria_web_evidence` table for ~7K
+     more vendors, surfacing real news links + verdict on per-
+     vendor profile pages.
+- **Effort:** ~4-8 hours of compute (Haiku calls) + monitoring.
+  Requires the WAL-lock fix (commit `453e80e` per memory) to be
+  intact — verify before running.
+- **Sequenced:** parallel track to frontend work. Can run on the
+  VPS overnight if pre-approval handled.
+- **Linked commit:** _(pending decision)_
+
 ### #016 — P2 — Merge Networks/Intersection/Capture into one `/relationships` surface
 
 - **Filed:** 2026-05-07 (user — "I don't know if we should come up
