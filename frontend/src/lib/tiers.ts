@@ -32,18 +32,25 @@ export interface TierStyle {
   border: string
 }
 
+// Audit fix 2026-05-07 — Bible §3.10: a procurement-only model cannot
+// certify integrity. Excelente was green (#16a34a) and Satisfactorio
+// was teal (#0d9488); both read as "this institution is good" — exactly
+// what the rule forbids on a corruption platform. Replaced with neutral
+// slate tones that read as "no immediate red flag" without certifying
+// anything. The warm-color escalation (amber → orange → red) for
+// Regular/Deficiente/Critico stays intact.
 export const TIER_STYLES: Record<TierKey, TierStyle> = {
   Excelente: {
     key: 'Excelente',
-    color: '#16a34a',
-    bg: 'rgba(22,163,74,0.12)',
-    border: 'rgba(22,163,74,0.30)',
+    color: '#334155',  // slate-700 — neutral, not a certification
+    bg: 'rgba(51,65,85,0.10)',
+    border: 'rgba(51,65,85,0.30)',
   },
   Satisfactorio: {
     key: 'Satisfactorio',
-    color: '#0d9488',
-    bg: 'rgba(13,148,136,0.12)',
-    border: 'rgba(13,148,136,0.30)',
+    color: '#64748b',  // slate-500 — slightly lighter neutral
+    bg: 'rgba(100,116,139,0.10)',
+    border: 'rgba(100,116,139,0.30)',
   },
   Regular: {
     key: 'Regular',

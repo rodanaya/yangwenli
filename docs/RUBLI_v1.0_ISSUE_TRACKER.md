@@ -365,6 +365,37 @@ we don't touch them until 2026-06-14.
 
 ## CLOSED
 
+### Issue #001 — `/categories/:id` institutional ranking scope filter
+- Closed 2026-05-07 by commit `68f96e6` (deployed bundle `index-DygV5ZIQ.js`).
+- Backend `/categories/{id}/vendor-institution` gains `scope` Query param,
+  defaults to `'federal'`. Excludes `state_agency`, `state_government`,
+  `state_enterprise_*`, `municipal`, `other` (~3,000 rows that previously
+  dominated rankings vs ~325 federal-tier rows).
+- API response now includes `scope` field for client-side label clarity.
+- Verified live: filter param honored.
+- Known follow-up (v1.1 candidate): the endpoint takes 200-280s under
+  load — pre-existing slowness from JOIN+GROUP BY over 3M contracts,
+  NOT caused by this change. Needs an index or precomputed materialization.
+
+### Issue #012 — `ProcedureBreakdown` green-400 violation
+- Closed 2026-05-07 by commit `68f96e6`.
+- `COLORS.tender` swapped from `#4ade80` (green-400) to `#71717a`
+  (zinc-500, RISK_COLORS.low). Bible §3.10: green cannot certify
+  integrity on a corruption platform.
+
+### Issue #017 quick-cut — `/price-analysis` orphan
+- Closed 2026-05-07 by commit `68f96e6`.
+- Route now redirects to `/sectors`. Lazy import removed from App.tsx.
+- PriceIntelligence.tsx component preserved on disk for v1.1 if a
+  real consumer surfaces.
+
+### Audit Fix N — missing `administrations.multiple` i18n key
+- Closed 2026-05-07 by commit `68f96e6`.
+- Added `multiple` and `unknown` keys to en/es cases.json.
+- Defensive fallback in `CaseLibrary.tsx`: if a translation key
+  doesn't resolve, renders the raw lowercase value instead of the
+  uppercase echoed key.
+
 ### Audit Fix B — homepage hero hardcoded "1,363" → live API read
 - Closed 2026-05-07 by commit `be9536b` (deployed bundle `index-d27POOkj.js`).
 - Replaced literal `1,363` (Executive.tsx 1425+1434, EN+ES) with
