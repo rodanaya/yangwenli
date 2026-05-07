@@ -1188,10 +1188,38 @@ export default function AriaPage() {
             stats, plus a methodology popover. No serif headline,
             no kicker, no editorial paragraph competing with the data.
            ════════════════════════════════════════════════════════════════ */}
-        <header className="mb-5 pb-4 border-b border-border">
+        <header className="mb-5 pb-5 border-b border-border">
+          {/* folio-v1-P5: archival eyebrow */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·V</span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {isEs ? 'Cola de investigación · ARIA' : 'Investigation queue · ARIA'}
+            </span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 38px)',
+                  lineHeight: 0.98,
+                  letterSpacing: '-0.012em',
+                }}
+              >
                 {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">

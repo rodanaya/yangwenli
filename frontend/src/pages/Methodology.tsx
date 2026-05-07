@@ -724,25 +724,27 @@ export function Methodology() {
               <span className="text-text-primary">·</span>
               <span className="font-mono tabular-nums">v0.8.5</span>
             </div>
-            <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>
             <h1
-              className="text-text-primary leading-[1.05]"
+              className="text-text-primary"
               style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 700,
-                letterSpacing: '-0.025em',
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(36px, 5.5vw, 60px)',
+                lineHeight: 0.98,
+                letterSpacing: '-0.012em',
               }}
             >
               {t('pageHeadline')}
             </h1>
             <p
-              className="mt-4 text-text-secondary max-w-2xl"
+              className="mt-5 max-w-[68ch]"
               style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontStyle: 'italic',
-                fontSize: 'clamp(1rem, 1.3vw, 1.2rem)',
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '17px',
                 lineHeight: 1.55,
+                color: 'var(--color-text-secondary, var(--color-text-muted))',
+                letterSpacing: '0.005em',
               }}
             >
               {t('pageSubline')}

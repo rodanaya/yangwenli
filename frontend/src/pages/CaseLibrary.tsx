@@ -384,10 +384,38 @@ export default function CaseLibrary() {
             not a magazine cover; the impact-statement that lived in the
             42px serif headline is now compressed into the dateline so it
             still reads but doesn't crowd the data. */}
-        <header className="mb-3 pb-4 border-b" style={{ borderColor: BORDER_STRONG }}>
+        <header className="mb-3 pb-5 border-b" style={{ borderColor: BORDER_STRONG }}>
+          {/* folio-v1-P5: archival eyebrow */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·CA</span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {i18n.language === 'es' ? 'Casos documentados · biblioteca' : 'Documented cases · library'}
+            </span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 38px)',
+                  lineHeight: 0.98,
+                  letterSpacing: '-0.012em',
+                }}
+              >
                 {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
