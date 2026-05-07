@@ -17,10 +17,15 @@ interface ProcedureBreakdownProps {
 // Dots per 100%: 50 dots = 100%, each dot ≈ 2%
 const N_DOTS = 50
 
+// Audit Issue #012 — Bible §3.10: never green for "low risk" / "all clear" /
+// "fairly priced." Even competitive tender, on a corruption platform, cannot
+// be visually certified as "safe" — the model has execution-phase blind
+// spots and PU SCAR violation. Tender now uses neutral zinc (the noise-floor
+// color) which reads as "no immediate red flag" without claiming integrity.
 const COLORS = {
   direct:  '#f87171',  // red-400 — most restrictive
   single:  '#fb923c',  // orange-400 — concerning
-  tender:  '#4ade80',  // green-400 — most competitive
+  tender:  '#71717a',  // zinc-500 (RISK_COLORS.low) — competitive, no green
 }
 
 export const ProcedureBreakdown = memo(function ProcedureBreakdown({

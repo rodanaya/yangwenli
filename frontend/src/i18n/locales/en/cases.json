@@ -23,7 +23,9 @@
     "calderon": "Calderón (2006–2012)",
     "epn": "Peña Nieto (2012–2018)",
     "amlo": "AMLO (2018–2024)",
-    "sheinbaum": "Sheinbaum (2024–)"
+    "sheinbaum": "Sheinbaum (2024–)",
+    "multiple": "Multiple administrations",
+    "unknown": "Unknown administration"
   },
   "severity": {
     "1": "Low",

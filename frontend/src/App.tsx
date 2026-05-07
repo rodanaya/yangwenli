@@ -32,7 +32,9 @@ const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
-const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
+// PriceIntelligence — orphan removed 2026-05-07 (Audit Fix M); /price-analysis
+// route now redirects to /sectors. Component file preserved for v1.1 if a
+// real consumer surfaces.
 // v1.0 launch cuts — components retained on disk for v1.1, no longer imported.
 // See docs/RUBLI_v1.0_LAUNCH_PLAN.md for the cut list.
 //   ModelTransparency        → /methodology
@@ -327,14 +329,11 @@ function App() {
               <Route path="institutions/fichas" element={<Navigate to="/institutions?tab=fichas" replace />} />
               <Route path="price-intelligence" element={<Navigate to="/price-analysis" replace />} />
               <Route path="model-transparency" element={<Navigate to="/model" replace />} />
-              <Route
-                path="price-analysis"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <PriceIntelligence />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — PriceIntelligence is fully built but
+                  has zero inbound links anywhere in the codebase (per audit
+                  Issue #003 in chart inventory). Redirected to /sectors;
+                  component preserved for v1.1 if a real consumer surfaces. */}
+              <Route path="price-analysis" element={<Navigate to="/sectors" replace />} />
               {/* v1.0 launch cut — ModelTransparency subsumed by /methodology. */}
               <Route path="model" element={<Navigate to="/methodology" replace />} />
               <Route

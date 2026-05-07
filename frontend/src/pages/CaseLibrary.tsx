@@ -171,7 +171,15 @@ function CaseRow({
                   border: `1px solid ${BORDER_STRONG}`,
                 }}
               >
-                {t(`administrations.${cas.administration}`)}
+                {/* Audit fix 2026-05-07: defensive — if an administration value
+                    has no i18n entry, show the raw value lowercase rather than
+                    echoing the uppercase key. Pluck the last segment so users
+                    never see "ADMINISTRATIONS.FOO". */}
+                {(() => {
+                  const key = `administrations.${cas.administration}`
+                  const tr = t(key)
+                  return tr === key || tr.includes('.') ? cas.administration : tr
+                })()}
               </span>
             )}
             {/* Ground truth indicator */}
