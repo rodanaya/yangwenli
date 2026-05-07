@@ -1,5 +1,7 @@
 # RUBLI v1.0 — Launch Plan
 
+**Launch date: Friday 2026-05-15 (8 days).** Locked 2026-05-07.
+
 **Status:** drafted 2026-05-07. Replaces the implicit "next session"
 backlog with a concrete ship-this-month plan.
 
@@ -74,14 +76,14 @@ v1 (P4) treatment; they ship as supporting surfaces, not headline ones.
 
 ---
 
-## 7-day timeline
+## 8-day timeline (locked: launch Friday 2026-05-15)
 
-### Day 1 (today, 2026-05-07) — scope freeze
+### Day 1 — Thu 2026-05-07 (today) — scope freeze ✓
 - ✓ Write this plan doc.
-- ✓ Cut the 10 routes in `App.tsx` (single commit, this PR).
-- Pick a launch date. Sticky note. Visible.
+- ✓ Cut the 10 routes in `App.tsx` (commit `4fd4ea8`, deployed).
+- ✓ Pick the launch date: **Fri 2026-05-15**.
 
-### Day 2 — Methodology + 5 stories selected
+### Day 2 — Fri 2026-05-08 — Methodology + 5 stories selected
 - Pick the 5 stories that ship with v1.0. Recommended:
   1. `el-ejercito-fantasma` (ghost army / P2 vendors)
   2. `el-monopolio-invisible` (pharma cartel / IMSS)
@@ -91,7 +93,7 @@ v1 (P4) treatment; they ship as supporting surfaces, not headline ones.
 - Identify the chart components those 5 stories use (~12 components).
 - Bilingual sweep on `Methodology.tsx` body (~150 strings, ~3 hours).
 
-### Day 3-4 — chart i18n batch
+### Day 3-4 — Sat-Sun 2026-05-09 / 10 — chart i18n batch
 - Translate the ~12 chart components used by the 5 launch stories.
 - Pattern: `useTranslation()` + `isEs` ternary, exactly like
   `StoryAnoSinExcusas.tsx` and `StoryCartelCorazon.tsx` (already
@@ -100,7 +102,7 @@ v1 (P4) treatment; they ship as supporting surfaces, not headline ones.
   with stories not in the launch set (those stories are deindexed
   via robots.txt + remove from sidebar story menu).
 
-### Day 5 — pre-launch checklist
+### Day 5 — Mon 2026-05-11 — pre-launch checklist
 - [ ] **Uptime monitoring** — UptimeRobot free tier, ping
       `/api/v1/health` every 5 min. SMS/email alert on down.
 - [ ] **Error tracking** — Sentry free tier or Caddy log digest cron.
@@ -116,7 +118,20 @@ v1 (P4) treatment; they ship as supporting surfaces, not headline ones.
       LOC, ~30 min).
 - [ ] **Security headers** — verify Caddy sets HSTS, CSP, X-Frame-Options.
 
-### Day 6 — launch
+### Day 6-7 — Tue-Wed 2026-05-12 / 13 — buffer + fix soak findings
+- Bug fixes only. No new surfaces.
+- Read the 5 stories end-to-end on a fresh device.
+- Open every Tier 1 surface on mobile + desktop.
+- Triage the v1.1 candidate list (write down, don't build).
+
+### Day 7 — Thu 2026-05-14 — final smoke + announcement draft
+- Final 4-gate green run (`tsc strict + tsc lenient + lint:tokens + build`).
+- Final prod deploy from `origin/main` HEAD.
+- Verify bundle hash flip, /api/v1/health ok, all 10 surfaces 200.
+- Draft launch announcement copy in ES + EN.
+- Draft outreach email template.
+
+### Day 8 — Fri 2026-05-15 — LAUNCH
 - Public announcement post — LinkedIn + Twitter + Bluesky + Spanish-
   language outlets. One paragraph: what RUBLI does + link to a
   specific story + link to methodology.
@@ -127,9 +142,12 @@ v1 (P4) treatment; they ship as supporting surfaces, not headline ones.
 - DON'T ask for hot takes. ASK for: "What's the first vendor or
   contract you tried to look up?" That tells you what people want.
 
-### Day 7 — soak
+### Day 9 onward — Sat 2026-05-16+ — soak
 - No new features. Watch error rate, watch feedback queue, fix
   the bug-of-the-day. Sleep.
+
+### 30-day lockdown ends — Sun 2026-06-14
+- Triage v1.1 candidate list. Pick top 3. Build only those.
 
 ---
 
@@ -212,14 +230,12 @@ gets written based on launch feedback, not pre-imagined.
 
 ---
 
-## The one thing I have to do today
+## The launch date is set
 
-Pick a launch date. Write it on a sticky note.
+**Friday 2026-05-15.** 8 days from scope freeze. Locked 2026-05-07.
 
-Recommended: **Friday May 15** (8 days from today) or
-**Monday May 18** (11 days from today).
-
-Friday gives a soak weekend before any potential viral attention.
-Monday lets the press release land mid-week.
-
-Either way: pick. Today.
+Why this date:
+- Long enough to actually finish the bilingual sweep + checklist.
+- Short enough to enforce real cuts (no time to redesign anything).
+- Friday landing → weekend soak before any viral attention.
+- 30-day lockdown ends Sun 2026-06-14 — clean cycle for v1.1 planning.
