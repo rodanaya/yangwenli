@@ -365,7 +365,33 @@ we don't touch them until 2026-06-14.
 
 ## CLOSED
 
-_(none yet — opened 2026-05-07)_
+### Audit Fix B — homepage hero hardcoded "1,363" → live API read
+- Closed 2026-05-07 by commit `be9536b` (deployed bundle `index-d27POOkj.js`).
+- Replaced literal `1,363` (Executive.tsx 1425+1434, EN+ES) with
+  `gtCaseCount.toLocaleString(...)` reading from
+  `analysisApi.getExecutiveSummary().ground_truth.cases`.
+- Verified live: API returns 1,401. Frontend interpolates that
+  number into the hero copy.
+
+### Audit Fix C — `/api/v1/cases?vendor_id=` silently ignored filter
+- Closed 2026-05-07 by commit `be9536b`.
+- Added `vendor_id` Query param to `list_cases` endpoint
+  (`backend/api/routers/cases.py`). Filter joins via
+  `ground_truth_vendors`.
+- Verified: with `vendor_id=4325`: 0 cases. Without: 43 cases.
+  Filter now works (and surfaces a separate data-curation gap —
+  Vitalmex GT cases haven't been promoted to public scandals;
+  filed as v1.1 candidate, not a launch blocker).
+
+### Audit Fix A — routing redirects → FALSE ALARM
+- Closed 2026-05-07 (no commit needed).
+- Agent 5 reported `/methodology` → `/vendors/4325`,
+  `/institutions` → `/vendors/1`, `/atlas` → `/captura`.
+- Direct verification via Chrome MCP and curl: NONE of these
+  redirects exist. All routes return 200 and stable URLs. Likely
+  Playwright stale state in agent's session, or click navigations
+  reported as auto-redirects.
+- Removed from P0 list.
 
 ---
 
