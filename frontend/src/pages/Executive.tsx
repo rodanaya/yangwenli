@@ -1193,6 +1193,17 @@ export default function Executive() {
     retry: 0,
   })
 
+  // Fix B (audit 2026-05-07) — live GT case count for the homepage hero.
+  // Was hardcoded as "1,363" in two places below. The ground-truth corpus
+  // grows over time; this ensures the headline number drifts with the data.
+  const { data: executiveSummary } = useQuery({
+    queryKey: ['executive', 'summary-gt'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1401
+
   // § 2 La Lente — GT case corpus growth signal
   const { data: caseStats } = useQuery({
     queryKey: ['executive', 'case-stats-v3'],
@@ -1422,7 +1433,7 @@ export default function Executive() {
                   {' '}<em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>two to three times the OECD recommended ceiling</em>.
                   This is not an aberration — it is the structural condition of Mexican federal spending.
                   RUBLI analyzed <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contracts</em> across 23 years,
-                  trained its risk model on <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>1,363 documented corruption cases</em> — Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement, and more —
+                  trained its risk model on <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{gtCaseCount.toLocaleString('en-US')} documented corruption cases</em> — Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement, and more —
                   and now flags <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.highCriticalCount)} contracts</em> matching those patterns.
                   {' '}These are investigation signals, not verdicts.
                 </>
@@ -1431,7 +1442,7 @@ export default function Executive() {
                   {' '}<em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>dos o tres veces el límite recomendado por la OCDE</em>.
                   No es una anomalía — es la condición estructural del gasto federal mexicano.
                   RUBLI analizó <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contratos</em> en 23 años,
-                  entrenó su modelo de riesgo en <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>1,363 casos documentados</em> — Segalmex, Odebrecht, Fantasmas IMSS, emergencia COVID y más —
+                  entrenó su modelo de riesgo en <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{gtCaseCount.toLocaleString('es-MX')} casos documentados</em> — Segalmex, Odebrecht, Fantasmas IMSS, emergencia COVID y más —
                   y ahora señala <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.highCriticalCount)} contratos</em> con esas huellas.
                   {' '}Son señales de investigación, no veredictos.
                 </>

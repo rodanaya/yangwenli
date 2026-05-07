@@ -1,6 +1,11 @@
 # RUBLI v1.0 — Launch Plan
 
-**Launch date: Friday 2026-05-15 (8 days).** Locked 2026-05-07.
+**Launch date: Friday 2026-05-22 (15 days).** Re-locked 2026-05-07
+after the 5-agent honest audit revealed P0 routing + data lies. Was
+2026-05-15; pushed +7 days to actually close audit findings honestly.
+
+See `docs/RUBLI_v1.0_HONEST_AUDIT.md` for the audit synthesis and
+`docs/RUBLI_v1.0_ISSUE_TRACKER.md` for the full P0/P1 list.
 
 **Status:** drafted 2026-05-07. Replaces the implicit "next session"
 backlog with a concrete ship-this-month plan.

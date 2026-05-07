@@ -87,9 +87,17 @@ def list_cases(
     severity_min: Optional[int] = Query(None, ge=1, le=4),
     compranet_visibility: Optional[str] = Query(None),
     search: Optional[str] = Query(None, max_length=100),
+    vendor_id: Optional[int] = Query(None),
 ):
-    """List documented procurement scandals with optional filters."""
-    cache_key = f"list:{fraud_type}:{administration}:{sector_id}:{legal_status}:{severity_min}:{compranet_visibility}:{search}"
+    """List documented procurement scandals with optional filters.
+
+    `vendor_id` filters via the ground-truth vendor map: returns scandals
+    whose `ground_truth_case_id` appears in `ground_truth_vendors` for the
+    given vendor. (Audit fix C, 2026-05-07: param was previously
+    silently ignored, returning the global list — see
+    docs/RUBLI_v1.0_HONEST_AUDIT.md.)
+    """
+    cache_key = f"list:{fraud_type}:{administration}:{sector_id}:{legal_status}:{severity_min}:{compranet_visibility}:{search}:{vendor_id}"
     cached = _get(cache_key)
     if cached is not None:
         return cached
@@ -127,6 +135,17 @@ def list_cases(
         pattern = f"%{search}%"
         conditions.append("(name_en LIKE ? OR name_es LIKE ? OR summary_en LIKE ?)")
         params.extend([pattern, pattern, pattern])
+    if vendor_id is not None:
+        # Filter scandals to those linked (via GT case_id) to a vendor in
+        # ground_truth_vendors. If the table doesn't exist or has no row
+        # for this vendor, returns empty — which is honest.
+        conditions.append(
+            "ground_truth_case_id IS NOT NULL AND "
+            "ground_truth_case_id IN ("
+            "  SELECT case_id FROM ground_truth_vendors WHERE vendor_id = ?"
+            ")"
+        )
+        params.append(vendor_id)
 
     where = "WHERE " + " AND ".join(conditions)
     sql = f"""
