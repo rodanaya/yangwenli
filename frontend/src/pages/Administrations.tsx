@@ -71,6 +71,7 @@ const AdminConcentrationTimeline = lazy(() => import('@/components/charts/AdminC
 const AdminRiskTrajectory = lazy(() => import('@/components/charts/AdminRiskTrajectory').then(m => ({ default: m.AdminRiskTrajectory })))
 import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 // =============================================================================
 // Constants
@@ -766,7 +767,7 @@ function AdminDossierPanel({
 }
 
 export default function Administrations() {
-  const { t } = useTranslation('administrations')
+  const { t, i18n } = useTranslation('administrations')
   const { t: ts } = useTranslation('sectors')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
@@ -1080,38 +1081,110 @@ export default function Administrations() {
     )
   }
 
+  const isEs = (i18n.language?.startsWith('es') ?? false)
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Utility header — closes out the redesign sweep. /administrations
-            is the cross-sexenio comparison surface. The compact header here
-            still carries the editorial hook ("Six administrations, one
-            pattern.") because the page IS framed as a finding, not just a
-            data table — but the kicker / paragraph / stat tile spread is
-            collapsed into a one-line dateline + 3 inline anchor stats. */}
-        <header className="mb-5 pb-4 border-b border-border">
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                Six administrations,{' '}
-                <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
+    <div className="min-h-screen bg-background relative">
+      {/* Page paper-grain — scoped to this contemplative cross-sexenio
+          surface. Pattern from rubli-folio-aesthetic § "Atmosphere —
+          paper-grain overlay". */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="administrations-page-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="19" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#administrations-page-paper-grain)" />
+      </svg>
+      <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8" style={{ zIndex: 1 }}>
+        {/* Folio·XI hero — replaces the prior utility header. EB Garamond
+            italic 500 + ochre normal-weight fragment per
+            rubli-folio-aesthetic § Typography. Named precedent: NYT
+            Upshot multi-administration grouped comparison; FT small
+            multiples for the radar-fingerprint grid. Cited in plan
+            docs/FOLIO_V1_PHASE4_2026_05_07.md § 1. */}
+        <header className="mb-8 pb-5 border-b border-border">
+          <div
+            className="flex items-center gap-3 mb-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XI</span>
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span>
+                {isEs
+                  ? 'Análisis sexenal · 2002–2025'
+                  : 'Cross-administration analysis · 2002–2025'}
+              </span>
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between gap-6 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <h1
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(30px, 4.4vw, 52px)',
+                  lineHeight: 1.02,
+                  letterSpacing: '-0.012em',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {isEs ? (
+                  <>
+                    Seis administraciones,{' '}
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                      un solo patrón.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Six administrations,{' '}
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                      one pattern.
+                    </span>
+                  </>
+                )}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                ADMINISTRATIONS · SEXENIO ANALYSIS · 2002–2025
+              <p
+                className="mt-4"
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontSize: '17px',
+                  lineHeight: 1.55,
+                  maxWidth: '68ch',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '0.005em',
+                }}
+              >
+                {isEs
+                  ? 'Cinco gobiernos federales, tres partidos, una métrica constante: la adjudicación directa permanece sobre el techo OCDE en cada sexenio. La lámina central muestra la huella de cada administración a lo largo de las mismas seis dimensiones.'
+                  : "Five federal administrations, three parties, one constant: the direct-award rate stays above the OECD ceiling under every term. The plate below shows each administration's fingerprint across the same six dimensions."}
               </p>
             </div>
-            <div className="flex items-baseline gap-5">
+            <div className="flex items-baseline gap-5 flex-shrink-0">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">6</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Administrations</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Administraciones' : 'Administrations'}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>9.9T MXN</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Gasto total' : 'Total spend'}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">3.1M</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Contratos' : 'Contracts'}</div>
               </div>
             </div>
           </div>
@@ -1462,10 +1535,23 @@ export default function Administrations() {
         </div>
       </details>
 
-      {/* Administration Fingerprints — radar comparison */}
-      <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
-        <AdministrationFingerprints />
-      </Suspense>
+      {/* Administration Fingerprints — radar comparison.
+          Folio·XI plate: NYT Upshot multi-administration grouped
+          comparison; FT small multiples per-admin radar. */}
+      <PlateFrame
+        lang={isEs ? 'es' : 'en'}
+        folio="XI"
+        contextLabel={{ en: 'Administrations atlas', es: 'Atlas de administraciones' }}
+        caption={
+          isEs
+            ? 'Lámina — Seis dimensiones, cinco huellas presidenciales. La participación adjudicada directamente, los proveedores únicos, la concentración de gasto y el riesgo medio se grafican sobre un eje común. La forma de cada radar es la "huella" de la administración.'
+            : "Plate — Six dimensions, five presidential fingerprints. Direct-award share, single-bidder share, spend concentration and mean risk are plotted on a shared axis. Each radar's shape is the administration's fingerprint."
+        }
+      >
+        <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
+          <AdministrationFingerprints />
+        </Suspense>
+      </PlateFrame>
 
       {/* ── PROCUREMENT INTENSITY HEATMAP ── */}
       {sectorYearData.length > 0 && (
