@@ -617,10 +617,15 @@ export default function DataPullquote({
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontStyle: 'italic',
                     fontWeight: 800,
-                    fontSize: 'clamp(4.5rem, 12vw, 7rem)',
-                    lineHeight: 0.88,
-                    letterSpacing: '-0.03em',
+                    // 2026-05-07: shrunk from clamp(4.5rem, 12vw, 7rem) — multi-character
+                    // strings like "1,200-2,400" wrapped onto two lines and crashed into
+                    // the surrounding chapter text at typical column widths.
+                    fontSize: 'clamp(3rem, 7.5vw, 4.75rem)',
+                    lineHeight: 0.92,
+                    letterSpacing: '-0.025em',
                     color: accent,
+                    // Allow long ranges to fit even at narrower columns
+                    whiteSpace: 'nowrap',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >
@@ -701,10 +706,13 @@ export default function DataPullquote({
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontStyle: 'italic',
                     fontWeight: 800,
-                    fontSize: 'clamp(2.4rem, 5.6vw, 3.6rem)',
+                    // 2026-05-07: trimmed from clamp(2.4rem, 5.6vw, 3.6rem) so
+                    // multi-character ranges sit on one line at narrow columns.
+                    fontSize: 'clamp(2rem, 4.4vw, 2.9rem)',
                     lineHeight: 0.95,
                     letterSpacing: '-0.02em',
                     color: accent,
+                    whiteSpace: 'nowrap',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >
