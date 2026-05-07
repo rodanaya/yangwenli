@@ -112,15 +112,15 @@ export function StoryRedFantasma() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">11,208</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">11,208</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">empresas EFOS definitivo (SAT)</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">38</div>
+          <div className="text-xl font-mono font-bold text-orange-400">38</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">confirmadas por RFC en COMPRANET</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high">0.28</div>
+          <div className="text-xl font-mono font-bold text-risk-high">0.28</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">score promedio · subdetectadas</div>
         </div>
       </div>

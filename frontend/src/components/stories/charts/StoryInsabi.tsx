@@ -93,19 +93,19 @@ export function StoryInsabi() {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical tabular-nums">~95%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">~95%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             adj. directa INSABI · vs. ~78% promedio salud
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high tabular-nums">18.2B</div>
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">18.2B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN sin trazabilidad · ASF 2023
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400 tabular-nums">12B</div>
+          <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">12B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN sobreprecio estimado vs. licitación
           </div>

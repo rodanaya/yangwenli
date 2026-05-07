@@ -38,11 +38,11 @@ export function CovidEmergencyChart() {
       {/* Key stat callout */}
       <div className="flex gap-4 mb-4">
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-risk-critical)' }}>
-          <p className="text-2xl font-mono font-bold" style={{ color: 'var(--color-risk-critical)' }}>+5.7 pts</p>
+          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-risk-critical)' }}>+5.7 pts</p>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">DA 2017 a 2023</p>
         </div>
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-sector-trabajo)' }}>
-          <p className="text-2xl font-mono font-bold" style={{ color: 'var(--color-sector-trabajo)' }}>19.1%</p>
+          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-sector-trabajo)' }}>19.1%</p>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Licitacion unica pico 2021</p>
         </div>
       </div>

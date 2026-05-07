@@ -70,7 +70,7 @@ export function ThresholdSplittingChart() {
       </p>
 
       <div className="border-l-2 pl-3 py-1 mb-4" style={{ borderColor: RISK_COLORS.high }}>
-        <div className="text-2xl font-mono font-bold" style={{ color: RISK_COLORS.high }}>
+        <div className="text-lg font-mono font-bold" style={{ color: RISK_COLORS.high }}>
           $17.3B MXN
         </div>
         <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">

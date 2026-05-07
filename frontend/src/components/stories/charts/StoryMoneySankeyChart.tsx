@@ -72,7 +72,7 @@ export function StoryMoneySankeyChart() {
       {/* Key stats row */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">
+          <div className="text-lg font-mono font-bold text-risk-critical">
             MXN {(TOTAL_MXN / 1e9).toFixed(0)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
@@ -80,7 +80,7 @@ export function StoryMoneySankeyChart() {
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-high">
+          <div className="text-lg font-mono font-bold text-risk-high">
             {TOTAL_CONTRACTS.toLocaleString()}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
@@ -88,7 +88,7 @@ export function StoryMoneySankeyChart() {
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">97%</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">97%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             avg risk score · all critical
           </div>

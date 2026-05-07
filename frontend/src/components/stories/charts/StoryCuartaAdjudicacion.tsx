@@ -155,7 +155,7 @@ export function StoryCuartaAdjudicacion() {
               style={{ borderColor: ring.color }}
             >
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-mono font-bold" style={{ color: ring.color }}>
+                <span className="text-lg font-mono font-bold" style={{ color: ring.color }}>
                   {ring.rate}%
                 </span>
                 <span className="text-[10px] font-mono text-text-muted">

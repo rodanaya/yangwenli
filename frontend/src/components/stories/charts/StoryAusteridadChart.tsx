@@ -65,11 +65,11 @@ export function StoryAusteridadChart() {
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-border pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-text-secondary">-10%</div>
+          <div className="text-lg font-mono font-bold text-text-secondary">-10%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">gasto Pena a AMLO</div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-risk-critical">+8.6pp</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">+8.6pp</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">opacidad Pena a AMLO</div>
         </div>
       </div>

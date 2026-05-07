@@ -62,13 +62,13 @@ export function StoryCartelCorazon() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">$50B</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">$50B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             en contratos cardíacos · un solo proveedor
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high">$10-20B</div>
+          <div className="text-xl font-mono font-bold text-risk-high">$10-20B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             sobrepago estimado · prima OCDE 20-40%
           </div>

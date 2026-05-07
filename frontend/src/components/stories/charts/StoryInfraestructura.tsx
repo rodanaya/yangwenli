@@ -84,19 +84,19 @@ export function StoryInfraestructura() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">$2.1T</div>
+          <div className="text-xl font-mono font-bold text-orange-400">$2.1T</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             con un solo oferente · 196,540 contratos
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">{avgBidders}</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{avgBidders}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             oferentes promedio / licitación
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)]">{oecdBidders}+</div>
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)]">{oecdBidders}+</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             oferentes OCDE (Corea, Chile, UE)
           </div>

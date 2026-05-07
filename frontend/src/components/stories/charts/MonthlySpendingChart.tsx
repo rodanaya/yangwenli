@@ -82,7 +82,7 @@ export function MonthlySpendingChart() {
 
       {/* Hero stat */}
       <div className="border-l-2 pl-3 py-0.5 mb-4" style={{ borderColor: ALERT_COLOR }}>
-        <p className="text-3xl font-mono font-bold" style={{ color: ALERT_COLOR }}>$71B</p>
+        <p className="text-xl font-mono font-bold" style={{ color: ALERT_COLOR }}>$71B</p>
         <p className="text-[10px] text-text-muted uppercase tracking-wide">Gasto Diciembre 2023 — 1.5x el mes promedio</p>
       </div>
 

@@ -110,7 +110,7 @@ export function StoryNuevosRicos() {
       </p>
 
       <div className="border-l-2 border-red-500 pl-4 py-1 mb-4">
-        <div className="text-3xl font-mono font-bold text-risk-critical">+25pp</div>
+        <div className="text-xl font-mono font-bold text-risk-critical">+25pp</div>
         <div className="text-[11px] text-text-secondary mt-0.5">
           DA promedio Calderón → AMLO —{' '}
           <span className="text-[color:var(--color-oecd)]">{(eraCentroids[2].daPct / 25).toFixed(1)}x el límite OCDE</span>

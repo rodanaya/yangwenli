@@ -65,11 +65,11 @@ export function StoryGraneroVacio() {
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-risk-critical">93.5%</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">93.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">adj. directa en el sector</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-risk-high">6</div>
+          <div className="text-lg font-mono font-bold text-risk-high">6</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">proveedores dominan</div>
         </div>
       </div>

@@ -64,19 +64,19 @@ export function StoryAnoSinExcusas() {
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical tabular-nums">82.2%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">82.2%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             adj. directa 2023 · récord verificable
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             sobre el máximo OCDE de 25%
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high tabular-nums">+3.0pp</div>
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">+3.0pp</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             vs. 2022 · sin emergencia que justifique
           </div>

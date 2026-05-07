@@ -100,19 +100,19 @@ export function StoryCommunityBubbles() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">{criticalCount}</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{criticalCount}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             proveedores de riesgo crítico
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-orange-400">{highCount}</div>
+          <div className="text-lg font-mono font-bold text-orange-400">{highCount}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             de riesgo alto
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-high">22</div>
+          <div className="text-lg font-mono font-bold text-risk-high">22</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             miembros de la comunidad detectada
           </div>

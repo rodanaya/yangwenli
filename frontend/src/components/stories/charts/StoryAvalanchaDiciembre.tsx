@@ -70,15 +70,15 @@ export function StoryAvalanchaDiciembre() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">$51.4B</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">$51.4B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">DIC 2014 · pico histórico</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">7,215</div>
+          <div className="text-xl font-mono font-bold text-orange-400">7,215</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos en 31 días</div>
         </div>
         <div className="border-l-2 border-border pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-text-secondary">233/día</div>
+          <div className="text-xl font-mono font-bold text-text-secondary">233/día</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">incluye sábados y domingos</div>
         </div>
       </div>

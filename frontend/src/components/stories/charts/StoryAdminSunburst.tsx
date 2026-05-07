@@ -36,19 +36,19 @@ export function StoryAdminSunburst() {
       {/* Key comparison stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-text-muted">MXN 3.1T</div>
+          <div className="text-lg font-mono font-bold text-text-muted">MXN 3.1T</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Pena Nieto · largest spender
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-high">79.5%</div>
+          <div className="text-lg font-mono font-bold text-risk-high">79.5%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             AMLO direct awards · highest ever
           </div>
         </div>
         <div className="border-l-2 border-pink-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-pink-400">12.0%</div>
+          <div className="text-lg font-mono font-bold text-pink-400">12.0%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Sheinbaum high-risk rate (early)
           </div>

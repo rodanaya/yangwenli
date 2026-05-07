@@ -90,19 +90,19 @@ export function StoryTrianguloFarmaceutico() {
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$128B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">$128B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Fármacos Especializados · score 0.89
           </div>
         </div>
         <div className="border-l-2 border-red-400 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$92B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">$92B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Maypo Internacional · score 0.84
           </div>
         </div>
         <div className="border-l-2 border-red-300 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$65B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">$65B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             DIMM · score 0.81
           </div>
