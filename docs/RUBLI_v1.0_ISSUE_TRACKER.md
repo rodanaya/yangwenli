@@ -252,7 +252,41 @@ we don't touch them until 2026-06-14.
 - **Effort:** ~1 hour.
 - **Linked commit:** _(open)_
 
-### #015 — P1 — `VendorFingerprintChart` lang prop missing at story call site
+### #016 — P2 — Merge Networks/Intersection/Capture into one `/relationships` surface
+
+- **Filed:** 2026-05-07 (user — "I don't know if we should come up
+  with something better that may combine aspects of these three")
+- **Surface (target):** `/relationships` (or keep `/networks` URL,
+  rebuild the page)
+- **Surfaces (deprecated):** `Networks.tsx` (was redirected to
+  `/network`), `Intersection.tsx`, `CaptureCreep.tsx` (= `/captura`)
+- **Description:** All three pages today are "broken or static" per
+  user. They each answer one editorial question — *who is connected
+  to whom, and how does that produce risk?* — but split it across
+  three weak surfaces. Collapse to ONE surface with three sections,
+  each in a PlateFrame:
+  1. **Network graph** — vendor ↔ institution edges, weighted by
+     amount, top 50 (source: existing Networks page).
+  2. **Pattern overlap** — vendors flagged for ≥2 ARIA patterns
+     (P5+P6, P2+P3, etc.) (source: existing Intersection page).
+  3. **Institutional capture** — institutions where one vendor
+     dominates ≥50% of spend (source: existing CaptureCreep).
+- **Out of scope:** `/patterns/:code` (Risk Patterns) stays — it's
+  the per-pattern reference dossier and already works.
+- **Acceptance criteria:**
+  1. New page at `/relationships` (or rebuilt `/networks`) with the
+     three sections in PlateFrame chrome.
+  2. Old routes (`/networks`, `/intersection`, `/captura`) redirect
+     to the new surface.
+  3. Bilingual ES + EN throughout. All four gates green.
+  4. Quality fingerprint matches the quality bar (folio chrome,
+     EB Garamond italic H1, no Card chrome, editorial primitives).
+- **Effort:** ~1-2 agent-days. Mostly composition — the data
+  fetchers and chart primitives already exist on the deprecated
+  pages.
+- **Sequenced:** flexible. Can run alongside #003 / #004 reworks
+  via `/ui` parallel-agent skill if launched in worktree isolation.
+- **Linked commit:** _(open)_
 
 - **Filed:** 2026-05-07 (chart inventory agent)
 - **Surface:** Wherever the story chart map dispatches
