@@ -21,6 +21,7 @@ import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 function RegistryBadges({ v }: { v: IntersectionVendor }) {
   const badges: Array<{ label: string; color: string; title: string }> = []
@@ -219,26 +220,94 @@ export default function Intersection() {
   })
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Utility header — same pattern as the rest of the redesign sweep. */}
-      <header className="mb-5 pb-4 border-b border-border">
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-              {data && !isLoading ? (
+    <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Page paper-grain — scoped to this contemplative pitch surface.
+          Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
+          overlay". */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="intersection-page-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#intersection-page-paper-grain)" />
+      </svg>
+      <div className="relative" style={{ zIndex: 1 }}>
+      {/* Folio·XIII hero — replaces the prior utility header. EB Garamond
+          italic 500 + ochre fragment per rubli-folio-aesthetic. The page
+          IS a dumbbell-style comparison (model vs regulators), so the
+          named precedent for the framing is FT Visual Vocabulary
+          dumbbell, cited in plan docs/FOLIO_V1_PHASE4_2026_05_07.md § 3. */}
+      <header className="mb-8 pb-5 border-b border-border">
+        <div
+          className="flex items-center gap-3 mb-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIII</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span>
+              {lang === 'es' ? 'La intersección · RUBLI vs reguladores' : 'The intersection · RUBLI vs regulators'}
+            </span>
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-6 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h1
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(28px, 4vw, 48px)',
+                lineHeight: 1.04,
+                letterSpacing: '-0.012em',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              {lang === 'es' ? (
                 <>
-                  {lang === 'es' ? 'RUBLI señala ' : 'RUBLI flags '}
-                  <span style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(data.counts.novelty)}</span>
-                  {lang === 'es' ? ' proveedores que los reguladores aún no.' : ' vendors regulators haven\'t.'}
+                  El modelo señala lo que{' '}
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    los reguladores todavía no.
+                  </span>
                 </>
-              ) : (lang === 'es' ? 'Modelo contra reguladores' : 'Model versus regulators')}
+              ) : (
+                <>
+                  The model flags what{' '}
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    regulators don't yet.
+                  </span>
+                </>
+              )}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              {lang === 'es' ? 'RUBLI · LA INTERSECCIÓN' : 'RUBLI · THE INTERSECTION'}
+            <p
+              className="mt-4"
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '17px',
+                lineHeight: 1.55,
+                maxWidth: '68ch',
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.005em',
+              }}
+            >
+              {lang === 'es'
+                ? 'Tres cuadrantes triangulan dos métodos independientes: el patrón cuantitativo del modelo y el registro oficial de los reguladores. Donde divergen — proveedores que un método ve y el otro no — está la materia prima de una investigación.'
+                : "Three quadrants triangulate two independent methods: the model's quantitative pattern and the regulators' official register. Where they diverge — vendors that one method sees and the other does not — is the raw material of an investigation."}
             </p>
           </div>
           {!isLoading && data && (
-            <div className="flex items-baseline gap-5">
+            <div className="flex items-baseline gap-5 flex-shrink-0">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {formatNumber(data.counts.novelty)}
@@ -303,6 +372,17 @@ export default function Intersection() {
               </p>
             </div>
 
+            <PlateFrame
+              lang={lang}
+              folio="XIII"
+              contextLabel={{ en: 'Intersection atlas', es: 'Atlas de la intersección' }}
+              caption={
+                lang === 'es'
+                  ? 'Lámina — Tres cuadrantes RUBLI × reguladores. Novedad: alto riesgo del modelo, sin marca externa. Confirmado: ambos métodos coinciden. Punto ciego: el modelo no detecta lo que el regulador sí registró.'
+                  : 'Plate — Three RUBLI × regulator quadrants. Novelty: high model risk, no external mark. Confirmed: methods agree. Blind spot: model misses what the regulator registered.'
+              }
+            >
+              <div className="space-y-6">
             {/* NOVELTY — the pitch quadrant */}
             <QuadrantCard
               eyebrow={lang === 'es' ? 'Cuadrante I · Novedad' : 'Quadrant I · Novelty'}
@@ -368,6 +448,8 @@ export default function Intersection() {
               ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
               ctaTo="/intersection/blindspot"
             />
+              </div>
+            </PlateFrame>
 
             {/* Methodology footer */}
             <div className="mt-4 pt-6 border-t border-border">
@@ -388,6 +470,7 @@ export default function Intersection() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
