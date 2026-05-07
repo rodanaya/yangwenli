@@ -618,14 +618,16 @@ export default function DataPullquote({
                     fontStyle: 'italic',
                     fontWeight: 800,
                     // 2026-05-07: shrunk from clamp(4.5rem, 12vw, 7rem) — multi-character
-                    // strings like "1,200-2,400" wrapped onto two lines and crashed into
-                    // the surrounding chapter text at typical column widths.
-                    fontSize: 'clamp(3rem, 7.5vw, 4.75rem)',
-                    lineHeight: 0.92,
+                    // strings like "1,200-2,400" overflowed at narrow side-column widths.
+                    // Container-query-style sizing: cap at 3.5rem so 9-character strings
+                    // (~"1,200-2,400") fit in a 380px sidebar column.
+                    fontSize: 'clamp(2.4rem, 5.5vw, 3.5rem)',
+                    lineHeight: 0.95,
                     letterSpacing: '-0.025em',
                     color: accent,
-                    // Allow long ranges to fit even at narrower columns
-                    whiteSpace: 'nowrap',
+                    // Allow long ranges to wrap rather than overflow if a column is even narrower
+                    overflowWrap: 'anywhere',
+                    maxWidth: '100%',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >
@@ -708,11 +710,12 @@ export default function DataPullquote({
                     fontWeight: 800,
                     // 2026-05-07: trimmed from clamp(2.4rem, 5.6vw, 3.6rem) so
                     // multi-character ranges sit on one line at narrow columns.
-                    fontSize: 'clamp(2rem, 4.4vw, 2.9rem)',
+                    fontSize: 'clamp(1.85rem, 4vw, 2.6rem)',
                     lineHeight: 0.95,
                     letterSpacing: '-0.02em',
                     color: accent,
-                    whiteSpace: 'nowrap',
+                    overflowWrap: 'anywhere',
+                    maxWidth: '100%',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >
