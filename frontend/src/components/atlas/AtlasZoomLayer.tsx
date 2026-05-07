@@ -235,6 +235,7 @@ export function AtlasZoomLayer({
           <ClusterHoverOverlay
             activeMeta={activeMeta}
             dispatch={dispatch}
+            onClusterClick={handleClusterClick}
           />
         )}
 
@@ -275,9 +276,18 @@ export function AtlasZoomLayer({
 interface ClusterHoverOverlayProps {
   activeMeta: ClusterMeta[]
   dispatch: React.Dispatch<AtlasAction>
+  /**
+   * 2026-05-07 fix — the overlay circles sit ON TOP of the constellation's
+   * own click targets and (with `pointerEvents: 'auto'` for hover) absorb
+   * clicks before they reach the underlying constellation. This callback
+   * forwards the click to the same handler the constellation would have
+   * received, so cluster-click works whether the user lands on the
+   * underlying attractor hit-target or on this hover halo.
+   */
+  onClusterClick?: (clusterCode: string) => void
 }
 
-function ClusterHoverOverlay({ activeMeta, dispatch }: ClusterHoverOverlayProps) {
+function ClusterHoverOverlay({ activeMeta, dispatch, onClusterClick }: ClusterHoverOverlayProps) {
   return (
     <div
       style={{
@@ -304,9 +314,23 @@ function ClusterHoverOverlay({ activeMeta, dispatch }: ClusterHoverOverlayProps)
               r={40}
               fill="transparent"
               style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-              aria-label={`Hover cluster ${meta.code}`}
+              aria-label={`Cluster ${meta.code}`}
+              role="button"
+              tabIndex={0}
               onMouseEnter={() => dispatch({ type: 'hover-cluster', code: meta.code })}
               onMouseLeave={() => dispatch({ type: 'hover-cluster', code: null })}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onClusterClick?.(meta.code)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onClusterClick?.(meta.code)
+                }
+              }}
             />
           )
         })}
