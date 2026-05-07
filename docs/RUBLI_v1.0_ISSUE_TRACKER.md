@@ -44,35 +44,46 @@ we don't touch them until 2026-06-14.
 ### #001 — P1 — `/categories/:id` — institutional ranking skewed by state institutions
 
 - **Filed:** 2026-05-07 (user)
-- **Surface:** `frontend/src/pages/CategoryProfile.tsx`
-- **Description:** The "top institutions by category" ranking on the
-  category page includes state-level (estatal) institutions that have
-  far fewer contracts than federal institutions. The result: the
-  ranking reads as broken / unfair because state institutions show
-  up at the top despite having a tiny denominator.
+- **Surface:** `frontend/src/pages/CategoryProfile.tsx` lines 706-905
+  (concentration table + vendor-institution pairs)
+- **Backend bug source:** `categoriesApi.getTopVendors` and
+  `categoriesApi.getVendorInstitution` — neither filters by
+  institution scope (federal vs state). The "skew" is a real data
+  bug surfacing as UI ugliness, NOT a design issue.
+- **Description:** The "top institutions by category" ranking
+  includes state-level (estatal) institutions that have far fewer
+  contracts than federal institutions. The ranking reads as broken
+  because state institutions show up at the top despite a tiny
+  denominator.
 - **Acceptance criteria:**
-  1. State institutions are excluded from the top-ranking by default
-     (filter on `institution_type = 'federal'` or whichever field
-     identifies federal scope), OR
-  2. A toggle exists to switch between "federal only" / "all" with
-     "federal only" as default.
-  3. The ranking title and subtitle make scope explicit: "Top federal
-     institutions by spend in this category" / "Top instituciones
-     federales por gasto en esta categoría".
+  1. Backend filter applied: `categoriesApi.getTopVendors` and
+     `getVendorInstitution` accept a `scope` parameter (default
+     `'federal'`). State institutions excluded by default.
+  2. UI subtitle made explicit: "Top federal institutions by spend
+     in this category" / "Top instituciones federales por gasto en
+     esta categoría".
+  3. (Optional v1.1) toggle for `'all'` scope.
+- **Effort:** 0.5 day (backend filter + UI label).
+- **Sequenced:** Day 1 — Fri 2026-05-08.
 - **Linked commit:** _(open)_
 
-### #002 — P1 — `/categories/:id` — full conceptual rework
+### #002 — DEFER → v1.1 — `/categories/:id` — full conceptual rework
 
 - **Filed:** 2026-05-07 (user — "the worst element")
 - **Surface:** `frontend/src/pages/CategoryProfile.tsx` (1,944 LOC)
-- **Description:** User flagged this page as the worst on the
-  platform. Beyond the ranking issue (#001), the page has structural
-  problems with how spending categories are presented. Needs
-  conceptual rework, not just polish.
-- **Acceptance criteria:** _Pending visual audit + design-visionary
-  pass. Will be filled in after Day 2 audit._
-- **Effort estimate:** ~1 day rework
-- **Linked commit:** _(open)_
+- **Decision:** **Deferred to v1.1.** The quality bar audit found
+  the page lacks an editorial spine — 8+ data queries, 10 charts,
+  no single hero finding. Picking the one finding to feature
+  ("vendor concentration over time"? "spend trajectory"? "top
+  intermediaries"?) is a **2-hour editorial decision the user
+  has to make** — not an agent's call. That decision plus 2-3
+  agent-days of build is past the launch window.
+- **In v1.0:** #001 (the ranking skew, half-day data fix) ships,
+  closing the actively-misinforming part. The page stays accessible.
+- **In v1.1:** full editorial-spine rework, after launch feedback
+  tells us which finding readers actually want.
+- **Effort if attempted now:** 4-5 agent-days. Won't fit.
+- **Linked commit:** _(deferred)_
 
 ### #003 — P1 — `/vendors/:id` — does not match RedThread quality bar
 
@@ -165,20 +176,93 @@ we don't touch them until 2026-06-14.
 - **Effort estimate:** 5 minutes (with you).
 - **Linked commit:** _(open)_
 
-### #009 — P2 — Story chart components — visual quality
+### #009 — P3 — Story chart components — visual quality (DOWNGRADED)
 
-- **Filed:** 2026-05-07 (user — "the design of our graphs is
-  pathetic")
-- **Surface:** Same as #007.
-- **Description:** Beyond bilingual coverage, the user feels many
-  story charts look amateur. Distinct from #007 (translation gap).
-  This is a quality gap.
-- **Acceptance criteria:** _Pending chart inventory (background
-  agent running)._ Once the inventory tags each chart Gold/Decent/
-  Pathetic, target only the Pathetic-tier charts referenced by the
-  5 launch stories.
-- **Dependency:** chart inventory + #008.
-- **Effort estimate:** ~half-day per pathetic chart × N — TBD.
+- **Filed:** 2026-05-07 (user) — REVISED 2026-05-07 after audit.
+- **Surface:** `frontend/src/components/stories/charts/`
+- **Description:** Initial diagnosis ("most graphs look like
+  PowerPoint") was over-broad. The inventory found **only 3 of 86
+  chart files are truly pathetic** (`AdminVendorBreakdown`,
+  `CategoryHotspot`, `PatternTypology`). The "pathetic" feeling
+  is actually **Card chrome on Institution/Category profiles** —
+  covered by #003 + #004 — not the chart components themselves.
+- **Acceptance criteria:** Replace the 3 pathetic charts only IF
+  they appear on a launch surface. `AdminVendorBreakdown` is on
+  /administrations (cull will likely delete it via #005).
+  `CategoryHotspot` is an orphan (kill via #011).
+  `PatternTypology` is on /patterns/:code (Tier 2 — defer to
+  v1.1).
+- **Effort estimate:** Likely ZERO additional work after #003,
+  #004, #005, #011 land.
+- **Linked commit:** _(open)_
+
+### #011 — P2 — Kill 10 orphan chart components (no callers)
+
+- **Filed:** 2026-05-07 (chart inventory agent)
+- **Surface:** `frontend/src/components/charts/` + `editorial/`
+- **Description:** 10 chart files have zero importers in the
+  codebase. Built and forgotten. They add bundle weight and
+  cognitive overhead. Kill list (per inventory):
+  `StackedArea`, `VendorConcentrationTreemap`, `CategoryRanking`,
+  `CategoryHotspot`, `AdminsSledgehammer`, `EditorialMasthead`,
+  `LeagueRow`, `QuotedPattern`, plus 2 more in the inventory.
+- **Acceptance criteria:** Files deleted, imports removed,
+  `tsc --noEmit` clean, `npm run build` clean. Bundle size delta
+  reported in commit body.
+- **Effort:** 0.5 day.
+- **Linked commit:** _(open)_
+
+### #012 — P1 — `ProcedureBreakdown` uses green (Bible §3.10 violation)
+
+- **Filed:** 2026-05-07 (chart inventory agent)
+- **Surface:** `frontend/src/components/charts/ProcedureBreakdown.tsx`
+- **Description:** Uses `#4ade80` (green-400). Per CLAUDE.md Bible
+  §3.10, green is forbidden — a procurement-only model cannot
+  certify integrity. The violation flows into stories via
+  `StoryProcedureBreakdown`.
+- **Acceptance criteria:** Green hex replaced with `RISK_COLORS.low`
+  (zinc-500 `#71717a`) or with another non-green token.
+  `npm run lint:tokens` passes.
+- **Effort:** ~30 minutes.
+- **Linked commit:** _(open)_
+
+### #013 — P2 — `SectorRiskHeatmap` English-only month labels
+
+- **Filed:** 2026-05-07 (chart inventory agent)
+- **Surface:** `frontend/src/components/charts/SectorRiskHeatmap.tsx`
+- **Description:** Month axis labels hardcoded English ("Jan",
+  "Feb", etc). Page-level i18n flips around it but the chart
+  doesn't.
+- **Acceptance criteria:** Bilingual month labels via `lang === 'es'`
+  ternary or `Intl.DateTimeFormat`. Count parity check passes.
+- **Effort:** ~30 minutes.
+- **Linked commit:** _(open)_
+
+### #014 — P2 — `StoryRiskPyramid` duplicates `RiskPyramid` geometry
+
+- **Filed:** 2026-05-07 (chart inventory agent)
+- **Surface:** `frontend/src/components/stories/charts/StoryRiskPyramid.tsx`
+  + `frontend/src/components/charts/RiskPyramid.tsx`
+- **Description:** Two implementations of the same dot-pyramid
+  geometry. Story version should delegate to the canonical
+  `RiskPyramid` primitive.
+- **Acceptance criteria:** `StoryRiskPyramid` becomes a thin
+  wrapper passing story-specific props to `RiskPyramid`. Zero
+  visual regression.
+- **Effort:** ~1 hour.
+- **Linked commit:** _(open)_
+
+### #015 — P1 — `VendorFingerprintChart` lang prop missing at story call site
+
+- **Filed:** 2026-05-07 (chart inventory agent)
+- **Surface:** Wherever the story chart map dispatches
+  `VendorFingerprintChart` in `pages/StoryNarrative.tsx`.
+- **Description:** Chart accepts a `lang` prop but caller doesn't
+  pass it. Falls back to default. Bilingual gap on a Gold-tier
+  launch-critical chart.
+- **Acceptance criteria:** Caller passes `lang={lang}`. Story
+  renders bilingually.
+- **Effort:** ~15 minutes.
 - **Linked commit:** _(open)_
 
 ### #010 — P2 — `/aria/:vendorId` style coherence with VendorProfile
