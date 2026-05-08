@@ -416,14 +416,38 @@ plus one earlier same-day commit. All deployed to https://rubli.xyz with
   (`gap-x-3 sm:gap-x-6`). Audit's "Contratos/Valor/Adj/Instituciones
   collide at 80px each" fixed.
 
+**Day-2 closeout + polish (commits `6f56652`, `0601446`)**
+After the main sprint a quality review caught 6 leftover hardcoded
+strings in touched files (4 EN, 2 inverse leaks):
+- AriaQueue FilterChip aria-label `Clear filter` → `Quitar filtro`.
+- AriaQueue REVIEW_GLYPH titles (4 statuses × literal EN) →
+  `{titleEn, titleEs}` shape; row picks via existing `isEs` prop.
+- CaseLibrary search clear aria-label `Clear search` → `Limpiar búsqueda`.
+- Investigation table aria-label `Investigation cases` → `Casos de
+  investigación` (dead code on `/aria`-redirected route, but kept
+  correct for v1.1).
+- AriaQueue SFP chip title `Sancionado SFP` → bilingual
+  `Sancionado por la SFP` / `Sanctioned by SFP` (was inverse leak —
+  ES on EN locale).
+
 **Verified live**
-- Bundle hashes advance with each deploy (`Dggi7Q_l` → `3Ir-H_HG` →
-  `cN6yfmbM` → `B8eFAhhP` → batch 4 in flight).
-- Atlas chunk `Atlas-C_S4dD7V.js` contains all 5 new HUD strings
-  ("drag to pan", "wheel to zoom", "reset view", "arrastra para
-  desplazar", "reiniciar").
+- Bundle hashes advance on each deploy: `Dggi7Q_l` → `3Ir-H_HG` →
+  `cN6yfmbM` → `DJSNlK9_` → `CBckmNxX` → `ZQCH0RaV` → `Ck5Sm6K0`.
+- Atlas chunk contains all 5 HUD strings (`drag to pan`, `wheel to
+  zoom`, `reset view`, `arrastra para desplazar`, `reiniciar`).
+- AriaQueue chunk `AriaQueue-C15HgAnM.js` contains all 6 ES strings
+  (`Corrupción confirmada`, `Descartado`, `En revisión`, `Quitar
+  filtro`, `Revisión pendiente`, `Sancionado por la SFP`).
+- CaseLibrary chunk contains `MDP`, `billones`, `documentados`,
+  `Limpiar búsqueda`.
 - Sectors chunk contains `titleCategories` + "What Mexico Is Buying".
-- CaseLibrary chunk contains `MDP` + `billones` + `documentados`.
+- Main bundle contains all 6 ES sector names (Educación, Energía,
+  Gobernación, Hacienda, Infraestructura, Tecnología).
+- Backend health remains green: `db_connected:true,
+  contract_count:3058286, response_ms:6.6`.
+
+**Day 2 final tally:** 7 commits, all gates clean (TS 0 errors, build
+clean, lint:tokens 0 forbidden patterns), all deployed and verified.
 
 ### Issue #001 — `/categories/:id` institutional ranking scope filter
 - Closed 2026-05-07 by commit `68f96e6` (deployed bundle `index-DygV5ZIQ.js`).
