@@ -16,7 +16,7 @@
  * the contextual right panel states.
  */
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 
 interface AtlasShellProps {
@@ -25,9 +25,32 @@ interface AtlasShellProps {
   rightPanel: React.ReactNode
 }
 
+const RIGHT_PANEL_OPEN_KEY = 'rubli_atlas_right_panel_open_v1'
+
 export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
+
+  // 2026-05-09: right panel now collapsible. Default OFF so the map
+  // gets ~1300px of viewport width on a 1700px screen instead of being
+  // squeezed to ~870px. User can re-open via the floating toggle when
+  // they want the meta stats. Persisted in localStorage so the choice
+  // sticks across sessions.
+  const [rightPanelOpen, setRightPanelOpen] = useState<boolean>(() => {
+    try {
+      const stored = window.localStorage.getItem(RIGHT_PANEL_OPEN_KEY)
+      return stored === '1'
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(RIGHT_PANEL_OPEN_KEY, rightPanelOpen ? '1' : '0')
+    } catch {
+      /* localStorage unavailable */
+    }
+  }, [rightPanelOpen])
 
   // ── ESC key handler (§ 2.5) ──────────────────────────────────────────────
   // Global keydown that dispatches escape-zoom when zoomed or selecting.
@@ -40,7 +63,14 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
 
-      if (state.view.kind === 'zoomed-cluster' || state.view.kind === 'selecting') {
+      // 2026-05-09 spatial-nav: also pop zoomed-sector and zoomed-institution
+      const kind = state.view.kind
+      if (
+        kind === 'zoomed-cluster' ||
+        kind === 'zoomed-sector' ||
+        kind === 'zoomed-institution' ||
+        kind === 'selecting'
+      ) {
         dispatch({ type: 'escape-zoom' })
       }
     }
@@ -49,9 +79,12 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.view, dispatch])
 
+  // Grid columns flip between 2 and 3 based on rightPanelOpen.
+  const gridCols = rightPanelOpen ? 'lg:grid-cols-[240px_1fr_320px]' : 'lg:grid-cols-[240px_1fr]'
+
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-[240px_1fr_320px] gap-0"
+      className={`grid grid-cols-1 ${gridCols} gap-0 relative`}
       style={{ minHeight: 'calc(100vh - var(--topbar-h, 64px))' }}
     >
       {/* ── Left rail ──────────────────────────────────────────────── */}
@@ -69,22 +102,40 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
       {/* ── Center pane — the constellation lives here ─────────────── */}
       <main
         className="overflow-hidden min-w-0"
-        style={{ borderRight: '1px solid var(--color-border)' }}
+        style={{ borderRight: rightPanelOpen ? '1px solid var(--color-border)' : 'none' }}
       >
         {center}
       </main>
 
-      {/* ── Right panel ─────────────────────────────────────────────── */}
-      <aside
-        className="hidden lg:flex flex-col border-l border-border overflow-y-auto"
+      {/* ── Right panel — collapsible ──────────────────────────────── */}
+      {rightPanelOpen && (
+        <aside
+          className="hidden lg:flex flex-col border-l border-border overflow-y-auto"
+          style={{
+            position: 'sticky',
+            top: 'var(--topbar-h, 64px)',
+            height: 'calc(100vh - var(--topbar-h, 64px))',
+          }}
+        >
+          {rightPanel}
+        </aside>
+      )}
+
+      {/* Floating toggle — top-right, hidden on mobile */}
+      <button
+        type="button"
+        onClick={() => setRightPanelOpen((v) => !v)}
+        className="hidden lg:flex items-center justify-center fixed top-[80px] right-3 z-30 h-8 w-8 rounded-sm hover:bg-background-elevated transition-colors"
         style={{
-          position: 'sticky',
-          top: 'var(--topbar-h, 64px)',
-          height: 'calc(100vh - var(--topbar-h, 64px))',
+          background: 'var(--color-background-card)',
+          border: '1px solid var(--color-border)',
+          color: 'var(--color-text-secondary)',
         }}
+        aria-label={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
+        title={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
       >
-        {rightPanel}
-      </aside>
+        <span className="text-[14px] leading-none font-mono">{rightPanelOpen ? '›' : '‹'}</span>
+      </button>
     </div>
   )
 }

@@ -950,6 +950,12 @@ function AtlasUrlSync({
       // Preserve ?story= param if present (don't evict active story deep-link)
       const storyParam = searchParams.get('story')
       if (storyParam) params.set('story', storyParam)
+      // 2026-05-09: also preserve ?z1=true so the spatial-nav feature flag
+      // doesn't get evicted by the URL-state writer 250ms after the user
+      // navigates with the flag set. Without this, /atlas?z1=true was
+      // collapsing to /atlas?lens=... and the Z1 drill-in never fired.
+      const z1Param = searchParams.get('z1')
+      if (z1Param) params.set('z1', z1Param)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
@@ -1234,6 +1240,9 @@ export default function Atlas() {
         params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
       }
       if (riskFloor !== 'all') params.set('floor', riskFloor)
+      // 2026-05-09: preserve z1 flag (see same fix in the other URL writer above)
+      const z1Param = searchParams.get('z1')
+      if (z1Param) params.set('z1', z1Param)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
