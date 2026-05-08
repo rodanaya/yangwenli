@@ -137,8 +137,9 @@ ROUTES: list[tuple[str, int]] = [
     ("/cases/segalmex", 2),
     ("/cases/odebrecht", 2),
 
-    # Catch-all
-    ("/explore", 2),
+    # Catch-all + spatial-nav rebuild
+    ("/explore", 8),  # bumped weight: this is the surface under active iteration
+    ("/explore/legacy", 1),
     ("/networks", 2),
     ("/captura", 2),
     ("/intersection", 2),
@@ -294,7 +295,7 @@ async def behavior_click_random(page: Page, state: RunState) -> str:
         return f"click_failed:{type(e).__name__}"
 
 
-async def behavior_scroll(page: Page) -> str:
+async def behavior_scroll(page: Page, _state: RunState) -> str:
     direction = random.choice(["up", "down", "down", "down", "left", "right"])
     delta = random.randint(120, 720)
     try:
@@ -311,7 +312,7 @@ async def behavior_scroll(page: Page) -> str:
         return f"scroll_failed:{type(e).__name__}"
 
 
-async def behavior_hover(page: Page) -> str:
+async def behavior_hover(page: Page, _state: RunState) -> str:
     elements = await page.query_selector_all(
         "svg circle, [data-vendor-id], [aria-label*='cluster'], a[href], button"
     )
@@ -326,7 +327,7 @@ async def behavior_hover(page: Page) -> str:
         return f"hover_failed:{type(e).__name__}"
 
 
-async def behavior_press_key(page: Page) -> str:
+async def behavior_press_key(page: Page, _state: RunState) -> str:
     key = random.choice(KEYS)
     try:
         await page.keyboard.press(key)
@@ -335,7 +336,7 @@ async def behavior_press_key(page: Page) -> str:
         return f"key_failed:{type(e).__name__}"
 
 
-async def behavior_type_search(page: Page) -> str:
+async def behavior_type_search(page: Page, _state: RunState) -> str:
     inputs = await page.query_selector_all(
         "input[type='search'], input[placeholder*='Buscar'], input[placeholder*='Search']"
     )
