@@ -32,9 +32,12 @@ const PAD_B = 28
 const FIELD_W = SVG_W - PAD_L - PAD_R
 const FIELD_H = SVG_H - PAD_T - PAD_B
 
-// Body radius range — heaviest spender ~6px, smallest ~1.6px.
-const R_MIN = 1.6
-const R_MAX = 6
+// Body radius range — bumped 2026-05-09: dots felt like dust, not planets.
+// Heaviest spender now ~22px, smallest ~5px in viewBox units (which scales
+// proportionally with the SVG width). At 1300px container width that's
+// ~34px / ~8px on screen — actually visible bodies.
+const R_MIN = 5
+const R_MAX = 22
 
 interface Z1SectorMapProps {
   sectorId: number
@@ -194,19 +197,36 @@ export const Z1SectorMap = memo(function Z1SectorMap({
                 onMouseLeave={() => onInstitutionHover?.(null)}
                 aria-label={`${inst.name} · ${formatCompactMXN(inst.total_amount_mxn)} · ${formatNumber(inst.total_contracts)} ${lang === 'en' ? 'contracts' : 'contratos'}`}
               />
-              {/* Big spenders get an inline label so the eye anchors */}
-              {inst.size > 0.55 && (
+              {/* Label every body that's at least medium-size, plus the
+                  top spenders. Threshold 0.35 lets ~6-8 bodies in a typical
+                  20-institution sector get an inline acronym so the reader
+                  can identify them without hovering. */}
+              {inst.size > 0.35 && (
                 <text
                   x={cx}
-                  y={cy - r - 3}
+                  y={cy - r - 4}
                   textAnchor="middle"
-                  fontSize={7}
+                  fontSize={inst.size > 0.7 ? 11 : 9}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontWeight={700}
-                  fill="var(--color-text-secondary)"
+                  fill="var(--color-text-primary)"
                   style={{ pointerEvents: 'none' }}
                 >
                   {shortLabel(inst.name)}
+                </text>
+              )}
+              {/* Sub-label: contract count for the heaviest bodies */}
+              {inst.size > 0.6 && (
+                <text
+                  x={cx}
+                  y={cy + r + 11}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-muted)"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {formatNumber(inst.total_contracts)}
                 </text>
               )}
             </motion.g>

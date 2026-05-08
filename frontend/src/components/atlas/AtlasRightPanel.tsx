@@ -1088,6 +1088,13 @@ export function AtlasRightPanel({ lang }: AtlasRightPanelProps) {
         <HoverClusterPanel lang={lang} code={view.code} />
       ) : view.kind === 'zoomed-cluster' ? (
         <ZoomedClusterPanel lang={lang} code={view.code} lens={state.lens} />
+      ) : view.kind === 'zoomed-sector' ? (
+        // 2026-05-09 spatial-nav Z1: when the user has drilled into a
+        // sector via the new ?z1=true flag, the Z1SectorMap component
+        // dominates the center pane. The right rail goes idle so the
+        // map isn't covered. Phase 1.4 will replace this with a real
+        // institution-focus briefing when the user hovers a body.
+        <IdlePanel lang={lang} />
       ) : view.kind === 'selecting' ? (
         <SelectingPanelWrapper lang={lang} selectedIds={view.ids} />
       ) : (
