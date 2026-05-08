@@ -301,8 +301,27 @@ export function AtlasZoomLayer({
         The constellation is allowed to overflow its container during zoom
         (the clip is on the outer div).
       */}
+      {/* 2026-05-08: when zoomed, counter-scale the constellation's <text>
+          elements. The CSS transform on the inner div scales EVERYTHING
+          including text (9–13px labels become 32–47px at 3.6× zoom and
+          dominate the view). User report: "the names of the constellations,
+          the names of the companies are too big and they occupy most of
+          the space." Inline <style> targets the constellation root we
+          opt-in via `data-atlas-constellation`, applying counter-scaled
+          font sizes only when the wrapper is in zoomed state. */}
+      {isZoomed && (
+        <style>{`
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text {
+            font-size: 3.5px !important;
+          }
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
+            display: none;
+          }
+        `}</style>
+      )}
       <div
         ref={wrapperRef}
+        data-atlas-zoom-layer={isZoomed ? 'true' : 'false'}
         style={{
           overflow: 'hidden',
           position: 'relative',

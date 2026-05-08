@@ -528,7 +528,13 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
       >
         {/* ─── LINE 1 ─────────────────────────────────────────────────── */}
 
-        {/* Vendor name — EntityIdentityChip; stopPropagation so row-click → thread still works */}
+        {/* Vendor name — EntityIdentityChip with narrative=true so the chip
+            link target (/thread/:id) matches the row's onClick. Without
+            this the chip routes to /vendors/:id and the user's first
+            instinct (click the name) lands on the vendor profile instead
+            of the Red Thread, contradicting the row's affordance.
+            stopPropagation still prevents double-navigation if the chip
+            and row both fire. */}
         <div className="min-w-0 flex items-center gap-2">
           <div onClick={(e) => e.stopPropagation()} className="min-w-0">
             <EntityIdentityChip
@@ -538,6 +544,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               size="sm"
               riskScore={item.avg_risk_score}
               ariaTier={item.ips_tier}
+              narrative
               hideIcon
             />
           </div>

@@ -499,6 +499,7 @@ export function ConcentrationConstellation({
         width="100%"
         preserveAspectRatio="xMidYMid meet"
         className={className}
+        data-atlas-constellation="true"
         role="img"
         aria-label={isEs
           ? `Constelación de ${totalContracts.toLocaleString()} contratos. ${modeAriaHint} Pasa el cursor o haz clic en un grupo para abrir su página.`
@@ -864,7 +865,9 @@ export function ConcentrationConstellation({
                   stroke="var(--color-background, #faf9f6)"
                   strokeWidth={0.8}
                 />
-                {/* Vendor name label — 9px mono */}
+                {/* Vendor name label — 9px mono. atlas-named-vendor-label
+                    class lets AtlasZoomLayer hide these when zoomed (the
+                    right panel shows the same vendor list more legibly). */}
                 <text
                   x={labelX}
                   y={ny + 1}
@@ -875,6 +878,7 @@ export function ConcentrationConstellation({
                   fontWeight="600"
                   textAnchor={labelAnchor}
                   dominantBaseline="middle"
+                  className="atlas-named-vendor-label"
                   style={{ pointerEvents: 'none' }}
                 >
                   {nv.name.length > 20 ? nv.name.slice(0, 19) + '…' : nv.name}

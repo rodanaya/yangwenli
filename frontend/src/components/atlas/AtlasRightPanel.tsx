@@ -19,7 +19,7 @@
  */
 
 import { useState, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { DotBar } from '@/components/ui/DotBar'
@@ -333,7 +333,14 @@ function RiskPill({ score }: { score: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // VendorRow — single row in the zoomed-cluster vendor list
 //
-// Default click → navigate to /vendors/:id (Link behavior).
+// 2026-05-08: row click now routes to /thread/:id (Red Thread = the
+// "Investigate" surface) rather than /vendors/:id. Two reasons:
+//   1. The user clicked from the cluster INVESTIGATION context, so the
+//      narrative thread is what they want, not the static vendor profile.
+//   2. The outer `<Link>` previously caused a `<a> inside <a>` hydration
+//      warning because EntityIdentityChip itself is a Link. Switching the
+//      outer wrapper to a clickable div + setting `narrative` on the chip
+//      removes the nested-anchor invariant violation.
 // Cmd-click (Mac) / Ctrl-click (Win/Linux) → toggle selection, no navigation.
 // ─────────────────────────────────────────────────────────────────────────────
 interface VendorRowProps {
@@ -346,6 +353,7 @@ interface VendorRowProps {
 
 function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
   const dispatch = useAtlasDispatch()
+  const navigate = useNavigate()
   const vendorIdStr = String(vendor.vendor_id)
 
   const handleClick = (e: React.MouseEvent) => {
@@ -353,17 +361,24 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
       e.preventDefault()
       e.stopPropagation()
       dispatch({ type: 'toggle-vendor-selection', id: vendorIdStr })
+      return
     }
-    // default click falls through to Link navigation
+    navigate(`/thread/${vendor.vendor_id}`)
   }
 
   return (
-    <Link
-      to={`/vendors/${vendor.vendor_id}`}
-      className="block group"
+    <div
+      role="link"
       tabIndex={0}
       onClick={handleClick}
-      aria-label={`${vendor.name} — ${lang === 'en' ? 'open vendor dossier' : 'abrir expediente'}${isSelected ? (lang === 'en' ? ' (selected)' : ' (seleccionado)') : ''}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          handleClick(e as unknown as React.MouseEvent)
+        }
+      }}
+      className="block group cursor-pointer"
+      aria-label={`${vendor.name} — ${lang === 'en' ? 'open Red Thread' : 'abrir Hilo'}${isSelected ? (lang === 'en' ? ' (selected)' : ' (seleccionado)') : ''}`}
       style={isSelected ? { outline: '2px solid var(--color-accent, #a06820)', outlineOffset: -1, borderRadius: 3 } : undefined}
     >
       <div
@@ -396,8 +411,9 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
           </span>
         )}
 
-        {/* Entity chip — canonical, no plain <Link> */}
-        <div className="flex-1 min-w-0">
+        {/* Entity chip — canonical, no plain <Link>. `narrative` so the
+            chip's link target matches the row's onClick (/thread/:id). */}
+        <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
           <EntityIdentityChip
             type="vendor"
             id={vendor.vendor_id}
@@ -405,6 +421,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
             size="xs"
             riskScore={vendor.risk_score}
             ariaTier={vendor.tier as 1 | 2 | 3 | 4}
+            narrative
             hideIcon
           />
         </div>
@@ -442,7 +459,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
           </span>
         )}
       </div>
-    </Link>
+    </div>
   )
 }
 
@@ -579,22 +596,26 @@ function ZoomedClusterPanel({
         ← {lang === 'en' ? 'Back to whole sky' : 'Volver al cielo completo'}
       </button>
 
-      {/* Cluster header card */}
+      {/* Cluster header card — 2026-05-08: shrunk header from text-[13px] to
+          text-[11px] and tightened paddings; the right panel is ~280px wide
+          so the cluster label was wrapping to 3 lines and pushing the vendor
+          list below the fold. line-clamp-2 caps verbose names. */}
       <div
-        className="rounded-sm px-3 py-2.5 mb-3"
+        className="rounded-sm px-2.5 py-2 mb-2.5"
         style={{
           background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
           border: '1px solid var(--color-border)',
         }}
       >
         <div
-          className="text-[13px] font-mono font-bold leading-tight"
+          className="text-[11px] font-mono font-bold leading-snug line-clamp-2"
           style={{ color: 'var(--color-text-primary)' }}
+          title={displayLabel}
         >
           {displayLabel}
         </div>
         <div
-          className="text-[10px] font-mono mt-1"
+          className="text-[9px] font-mono mt-0.5"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {totalCount.toLocaleString()}
