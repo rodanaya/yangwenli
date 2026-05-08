@@ -60,8 +60,8 @@
   "vendorFlags": {
     "groundTruth": {
       "headline": "Documentado en un caso de corrupción conocido",
-      "detail_one": "Este proveedor aparece en {{count}} caso de la base de entrenamiento del modelo v0.6.5.",
-      "detail_other": "Este proveedor aparece en {{count}} casos de la base de entrenamiento del modelo v0.6.5."
+      "detail_one": "Este proveedor aparece en {{count}} caso de la base de entrenamiento del modelo {{version}}.",
+      "detail_other": "Este proveedor aparece en {{count}} casos de la base de entrenamiento del modelo {{version}}."
     },
     "efosDefinitivo": {
       "headline": "Empresa fantasma confirmada por el SAT (EFOS Definitivo)",

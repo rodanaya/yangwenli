@@ -1201,9 +1201,16 @@ export default function Atlas() {
     const hasUrlState = searchParams.toString().length > 0
     // Skip auto-tour if URL has Atlas-C specific params (shared investigation link)
     const hasSharedState = hasAtlasCParams(searchParams)
+    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
+    // constellation off-screen — the chart it's narrating becomes invisible
+    // until the reader scrolls past several hundred pixels of editorial copy.
+    // Suppress the first-visit auto-launch on mobile; the user can still tap
+    // "Play story" explicitly. Don't set the visited flag so they still get
+    // the tour when they later open the same URL on desktop.
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
     let visited = false
     try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
-    if (!visited && !hasUrlState && !hasSharedState) {
+    if (!visited && !hasUrlState && !hasSharedState && !isMobile) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
