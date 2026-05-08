@@ -49,8 +49,17 @@ const FIELD_W = SVG_W - PAD_L - PAD_R
 const FIELD_H = SVG_H - PAD_T - PAD_B
 
 // Zoom parameters — per plan § 2.3
-const ZOOM_SCALE = 2.4
+// 2026-05-08: bumped from 2.4× to 3.6× — at 2.4× the cluster only fills ~40%
+// of the viewport, so dots scattered by Halton draw still look "spread out"
+// rather than centralised. 3.6× pulls the active attractor much closer to
+// the centre and leaves room for user wheel-zoom on top.
+const ZOOM_SCALE = 3.6
 const ZOOM_TRANSITION = 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)'
+
+// User-driven zoom multiplier bounds (composed with ZOOM_SCALE)
+const USER_ZOOM_MIN = 0.6   // can zoom out to ~2.16× total
+const USER_ZOOM_MAX = 2.5   // can zoom in to 9× total
+const WHEEL_ZOOM_STEP = 0.0015 // wheel deltaY → zoom multiplier delta
 
 // Dot radius by risk level when zoomed in
 const VENDOR_DOT_STYLE: Record<string, { r: number; opacity: number }> = {
@@ -156,6 +165,91 @@ export function AtlasZoomLayer({
   // unscaled dots on top of the pre-zoom field)
   const isAnimatingRef = useRef(false)
 
+  // ── User pan + wheel-zoom (2026-05-08) ─────────────────────────────────────
+  // Pan offset (in SVG viewport pixels) and user-driven zoom multiplier are
+  // applied ON TOP of the cluster-centric base transform. Both reset to 0/1
+  // whenever the active zoomedCode changes (or zoom escapes).
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [userZoom, setUserZoom] = useState(1)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStateRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Reset pan/zoom whenever the active cluster changes (or zoom exits)
+  useEffect(() => {
+    setPanOffset({ x: 0, y: 0 })
+    setUserZoom(1)
+  }, [zoomedCode])
+
+  // Convert a screen-space pixel delta to SVG-viewport pixel delta
+  const screenToSvgScale = useCallback(() => {
+    const el = wrapperRef.current
+    if (!el) return 1
+    const rect = el.getBoundingClientRect()
+    if (rect.width === 0) return 1
+    return SVG_W / rect.width
+  }, [])
+
+  const handlePanMouseDown = useCallback((e: React.MouseEvent) => {
+    if (!isZoomed) return
+    // Don't start drag on right-click or modifier keys
+    if (e.button !== 0 || e.shiftKey) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragStateRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      baseX: panOffset.x,
+      baseY: panOffset.y,
+    }
+    setIsDragging(true)
+  }, [isZoomed, panOffset])
+
+  // Window-level mousemove/mouseup so dragging continues if cursor leaves the
+  // wrapper (Mapbox-style — drag doesn't break when you cross the chart edge)
+  useEffect(() => {
+    if (!isDragging) return
+    const onMove = (e: MouseEvent) => {
+      const drag = dragStateRef.current
+      if (!drag) return
+      const scale = screenToSvgScale()
+      // Pan moves in original SVG coords; we want screen-pixel feel, so
+      // multiply the screen delta by SVG/screen ratio
+      const dx = (e.clientX - drag.startX) * scale
+      const dy = (e.clientY - drag.startY) * scale
+      setPanOffset({ x: drag.baseX + dx, y: drag.baseY + dy })
+    }
+    const onUp = () => {
+      dragStateRef.current = null
+      setIsDragging(false)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isDragging, screenToSvgScale])
+
+  // Wheel zoom — only active when zoomed. Scrolling up zooms in.
+  // React onWheel is passive by default (preventDefault is a no-op). We attach
+  // a native non-passive listener via the ref so the page doesn't scroll
+  // while the user wheels over the zoomed atlas.
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el || !isZoomed) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const delta = -e.deltaY * WHEEL_ZOOM_STEP
+      setUserZoom((z) => {
+        const next = z * (1 + delta)
+        return Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, next))
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [isZoomed])
+
   // Cluster click handler — dispatches zoom-into-cluster
   const handleClusterClick = (clusterCode: string) => {
     // Bridge to Atlas.tsx's selectedClusterCode for the old ClusterDetailPanel
@@ -167,17 +261,29 @@ export function AtlasZoomLayer({
     setTimeout(() => { isAnimatingRef.current = false }, 640)
   }
 
-  // Click-outside handler — dispatches escape-zoom when zoomed
+  // Click-outside handler — dispatches escape-zoom when zoomed.
+  // Suppress when the user just finished a drag (so panning doesn't escape).
   const handleFieldClick = () => {
+    if (isDragging) return
+    if (dragStateRef.current) return
     if (isZoomed) {
       dispatch({ type: 'escape-zoom' })
     }
   }
 
+  // Compose base zoom transform with user pan + user wheel-zoom
+  const effectiveScale = transform.s * (isZoomed ? userZoom : 1)
+  const effectiveTx = transform.tx + (isZoomed ? panOffset.x : 0)
+  const effectiveTy = transform.ty + (isZoomed ? panOffset.y : 0)
+
   const transformStr =
-    transform.s === 1
+    effectiveScale === 1 && effectiveTx === 0 && effectiveTy === 0
       ? 'translate(0px, 0px) scale(1)'
-      : `translate(${transform.tx}px, ${transform.ty}px) scale(${transform.s})`
+      : `translate(${effectiveTx}px, ${effectiveTy}px) scale(${effectiveScale})`
+
+  // Disable the smooth CSS transition during user pan/zoom so dragging feels direct.
+  // The 600ms ease only runs on the initial zoom-in animation.
+  const transitionStr = isDragging || (isZoomed && userZoom !== 1) ? 'none' : ZOOM_TRANSITION
 
   return (
     <div
@@ -196,20 +302,24 @@ export function AtlasZoomLayer({
         (the clip is on the outer div).
       */}
       <div
+        ref={wrapperRef}
         style={{
           overflow: 'hidden',
           position: 'relative',
+          cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'default',
           // Click-outside: if zoomed and user clicks the container (background)
           // but NOT a vendor dot or the constellation clusters, escape zoom.
+          touchAction: isZoomed ? 'none' : undefined,
         }}
         onClick={handleFieldClick}
+        onMouseDown={handlePanMouseDown}
       >
         {/* Transform layer — the constellation animates here */}
         <div
           style={{
             transform: transformStr,
             transformOrigin: '0 0',
-            transition: ZOOM_TRANSITION,
+            transition: transitionStr,
             // Keep pointer events on during animation (Mapbox flyTo model)
             pointerEvents: 'auto',
           }}
@@ -253,15 +363,62 @@ export function AtlasZoomLayer({
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
       {isZoomed && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            border: '1.5px solid rgba(160, 104, 32, 0.40)',
-            borderRadius: 2,
-          }}
-        />
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              border: '1.5px solid rgba(160, 104, 32, 0.40)',
+              borderRadius: 2,
+            }}
+          />
+          {/* Pan + wheel-zoom hint (bottom-left), and reset chip (bottom-right) */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 6,
+              left: 8,
+              pointerEvents: 'none',
+              fontSize: 9,
+              fontFamily: 'monospace',
+              color: 'var(--color-text-muted)',
+              opacity: 0.85,
+              letterSpacing: 0.4,
+            }}
+          >
+            {lang === 'en'
+              ? 'drag to pan · wheel to zoom · esc to exit'
+              : 'arrastra para desplazar · rueda para acercar · esc para salir'}
+          </div>
+          {(panOffset.x !== 0 || panOffset.y !== 0 || userZoom !== 1) && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                setPanOffset({ x: 0, y: 0 })
+                setUserZoom(1)
+              }}
+              style={{
+                position: 'absolute',
+                bottom: 6,
+                right: 8,
+                fontSize: 9,
+                fontFamily: 'monospace',
+                color: 'var(--color-text-muted)',
+                background: 'rgba(255,255,255,0.85)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 2,
+                padding: '2px 6px',
+                cursor: 'pointer',
+                letterSpacing: 0.4,
+              }}
+              aria-label={lang === 'en' ? 'Reset pan and zoom' : 'Reiniciar desplazamiento y zoom'}
+            >
+              {lang === 'en' ? 'reset view' : 'reiniciar vista'}
+            </button>
+          )}
+        </>
       )}
     </div>
   )
