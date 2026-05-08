@@ -1531,7 +1531,10 @@ export default function Atlas() {
           />
         }
         center={
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+          // 2026-05-09: bumped max-w 1200→1680 + py-6/8→py-3/4 so the
+          // constellation canvas fills more of the viewport. User
+          // feedback: "make it bigger… you can barely see shit".
+          <div className="max-w-[1680px] mx-auto px-4 sm:px-6 py-3 sm:py-4 relative">
       {/* ── folio-skin: paper-grain texture overlay ─────────────────────────
           A very low-opacity SVG fractal noise sits behind the page content
           so the entire atlas surface reads as a printed plate, not a glossy

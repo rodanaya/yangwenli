@@ -39,8 +39,12 @@ import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
+// 2026-05-09: SVG_H bumped 220 → 540 to give the constellation real
+// canvas. Must stay in sync with ConcentrationConstellation.tsx and
+// the spatial-nav components — the pre-zoom transform math depends on
+// the exact SVG_W/SVG_H pair below.
 const SVG_W = 840
-const SVG_H = 220
+const SVG_H = 540
 const PAD_L = 16
 const PAD_R = 200
 const PAD_T = 16

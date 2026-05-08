@@ -22,8 +22,9 @@ import { useQuery } from '@tanstack/react-query'
 import { RISK_COLORS, getRiskLevelFromScore, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
+// 2026-05-09: matches the new 840×540 canvas in ConcentrationConstellation.
 const SVG_W = 840
-const SVG_H = 220
+const SVG_H = 540
 const PAD_L = 16
 const PAD_R = 200
 const PAD_T = 16
