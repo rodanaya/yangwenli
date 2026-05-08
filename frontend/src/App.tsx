@@ -23,7 +23,7 @@ const EntityProfileDrawer = lazy(() =>
 // Lazy load all page components for code splitting
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
-const Explore = lazy(() => import('@/pages/explore'))
+const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
 const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
@@ -31,6 +31,12 @@ const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 // 2,312-LOC card grid. Old page kept on /institutions/:id/legacy for
 // quick revert if the new shape needs more work.
 const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
+// 2026-05-09: spatial-nav rebuild — the Star Fox map. Lives at /explore
+// while it iterates; will be promoted to / when stable.
+// File is named SpatialMap.tsx (not Explore.tsx) to avoid a Windows
+// case-insensitive clash with the legacy `pages/explore.tsx` page.
+// See docs/SPATIAL_NAV_PLAN.md for the zoom hierarchy.
+const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -160,11 +166,13 @@ function App() {
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
               {/* Retired: /dashboard merged into / (Executive landing). */}
               <Route path="dashboard" element={<Navigate to="/" replace />} />
+              {/* Legacy /explore page (CardGrid catalog) — moved to /explore/legacy
+                  to free /explore for the spatial-nav rebuild. */}
               <Route
-                path="explore"
+                path="explore/legacy"
                 element={
                   <SuspenseBoundary fallback={<CardGridSkeleton />}>
-                    <Explore />
+                    <ExploreLegacy />
                   </SuspenseBoundary>
                 }
               />
@@ -367,6 +375,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionThread />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="explore"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <SpatialMap />
                   </SuspenseBoundary>
                 }
               />
