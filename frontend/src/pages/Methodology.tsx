@@ -165,7 +165,7 @@ const MODEL_EVOLUTION_STEPS = [
     overlay: false,
   },
   {
-    version: 'v0.6.5',
+    version: 'v0.8.5',
     date: 'Mar 25, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
@@ -360,7 +360,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   })), [t])
 
   // Scale: v0.8.5 coefficients range from -0.39 to +0.56. Symmetric 0-based axis.
-  // (v5.x had ±1.3; v0.6.5 max was price_volatility +0.534, v0.8.5 max is +0.558;
+  // (v5.x had ±1.3; v0.8.5 max was price_volatility +0.534, v0.8.5 max is +0.558;
   // min is institution_diversity -0.3821.)
   const RANGE_MIN = -0.55
   const RANGE_MAX = 0.55

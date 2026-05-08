@@ -80,7 +80,7 @@ export function CovidEmergencyChart() {
         </div>
       </div>
       <p className="mt-1 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2017-2023 · RUBLI v0.6.5
+        Fuente: COMPRANET 2017-2023 · RUBLI v0.8.5
       </p>
     </motion.div>
   )

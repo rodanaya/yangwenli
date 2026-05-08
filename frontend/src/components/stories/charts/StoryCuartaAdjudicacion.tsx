@@ -181,7 +181,7 @@ export function StoryCuartaAdjudicacion() {
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · Análisis RUBLI v0.6.5
+        Fuente: COMPRANET · Análisis RUBLI v0.8.5
       </p>
     </motion.div>
   )

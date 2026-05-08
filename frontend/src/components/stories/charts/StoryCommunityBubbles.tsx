@@ -237,7 +237,7 @@ export function StoryCommunityBubbles() {
 
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-text-muted font-mono">
-          Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.6.5
+          Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.8.5
         </p>
         <a
           href="/network"

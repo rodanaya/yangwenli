@@ -189,7 +189,7 @@ export function StoryGraneroVacio() {
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.6.5
+        Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.8.5
       </p>
     </motion.div>
   )

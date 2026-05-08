@@ -186,7 +186,7 @@ export function StorySectorParadox() {
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Tamaño = gasto total (MXN T) · Fuente: COMPRANET · 12 sectores · RUBLI v0.6.5
+        Tamaño = gasto total (MXN T) · Fuente: COMPRANET · 12 sectores · RUBLI v0.8.5
       </p>
     </motion.div>
   )

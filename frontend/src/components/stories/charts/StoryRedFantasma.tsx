@@ -107,7 +107,7 @@ export function StoryRedFantasma() {
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Constelación de proveedores EFOS definitivo que comparten un puñado de
         direcciones fiscales. Cada nodo es un proveedor; tamaño = número de
-        contratos; color = score de riesgo v0.6.5.
+        contratos; color = score de riesgo v0.8.5.
       </p>
 
       <div className="grid grid-cols-3 gap-3">
@@ -274,7 +274,7 @@ export function StoryRedFantasma() {
         <p className="text-sm text-text-secondary">
           Los EFOS definitivo comparten una firma estructural: pocos contratos
           (típicamente 2-5), vida corta (2-3 años) y domicilios fiscales compartidos.
-          El modelo v0.6.5 los subdetecta (score 0.28) porque fue entrenado con
+          El modelo v0.8.5 los subdetecta (score 0.28) porque fue entrenado con
           casos grandes (IMSS, SEGALMEX) — una brecha de detección sistemática.
         </p>
       </div>

@@ -42,7 +42,7 @@ function isTemplatedMemo(text: string): boolean {
   )
 }
 
-// Heuristic: detect memos written before the Mar 25 v0.6.5 rescore.
+// Heuristic: detect memos written before the Mar 25 v0.8.5 rescore.
 // Per docs/DATA_INTEGRITY_PLAN.md task N.4.
 function hasStaleModelReference(text: string): boolean {
   if (!text) return false

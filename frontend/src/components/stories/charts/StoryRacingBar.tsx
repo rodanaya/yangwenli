@@ -225,7 +225,7 @@ export function StoryRacingBar() {
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · sector 9 (Agricultura) · RUBLI v0.6.5
+        Fuente: COMPRANET · sector 9 (Agricultura) · RUBLI v0.8.5
       </p>
     </motion.div>
   )

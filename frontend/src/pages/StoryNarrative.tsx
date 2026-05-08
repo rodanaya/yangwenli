@@ -1331,7 +1331,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           {/* Analysis-as-of timestamp — editorial honesty about freshness.
               These pieces are not "live" — the underlying analysis was
               performed on a frozen snapshot of COMPRANET data. The
-              timestamp matches the most recent v0.6.5 model rescore +
+              timestamp matches the most recent v0.8.5 model rescore +
               ARIA pipeline run (March 25 2026). */}
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span

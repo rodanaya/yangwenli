@@ -184,7 +184,7 @@ export function RiskBySectorChart() {
       </div>
 
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v0.6.5 · Each dot = 0.5pp · Sectors above avg at full opacity
+        Source: COMPRANET 2002-2025 · RUBLI v0.8.5 · Each dot = 0.5pp · Sectors above avg at full opacity
       </p>
     </motion.div>
   )

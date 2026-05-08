@@ -67,7 +67,7 @@ function PatternBadge({ pattern }: { pattern: string | null }) {
 
 function IPSBar({ score }: { score: number }) {
   // IPS thresholds are bespoke (>0.7 / >0.5) — they're queue-priority bands,
-  // not the v0.6.5 model thresholds. Colors come from the canonical risk
+  // not the v0.8.5 model thresholds. Colors come from the canonical risk
   // palette so the visual grammar matches the rest of the platform.
   const color =
     score > 0.7

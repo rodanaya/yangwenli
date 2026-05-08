@@ -2,7 +2,7 @@
  * Model Transparency Page — Editorial 3-tab Layout
  *
  * Summary · Metrics · Audit Trail
- * Explains the v0.6.5 risk scoring model in plain language.
+ * Explains the v0.8.5 risk scoring model in plain language.
  */
 
 import { useMemo } from 'react'
@@ -25,7 +25,7 @@ const POSITIVE = 'var(--color-risk-high)'   // amber: risk-increasing factors
 const NEGATIVE = 'var(--color-oecd)'        // cyan: protective factors
 
 // ============================================================================
-// Static model data (v0.6.5)
+// Static model data (v0.8.5)
 // ============================================================================
 
 interface Coefficient {
@@ -65,7 +65,7 @@ interface VersionEntry {
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: 'v0.6.5',
+    version: 'v0.8.5',
     date: '2026-03-25',
     auc: 0.828,
     hr: 13.49,
@@ -206,7 +206,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           <StatCard
             value={formatNumber(nContracts || 3_051_294)}
             label="Contracts scored"
-            sub="All v0.6.5-tagged records, 2002–2025."
+            sub="All v0.8.5-tagged records, 2002–2025."
           />
           <StatCard
             value={GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}
@@ -377,7 +377,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
       {/* Feature coefficients — editorial divergent bar */}
       <section>
         <SectionHeadline
-          eyebrow="Active coefficients · v0.6.5 global model"
+          eyebrow="Active coefficients · v0.8.5 global model"
           headline="Nine features survive L1 regularization"
           deck="Positive coefficients (amber) push contracts toward higher scores. Protective coefficients (blue) pull toward lower. Seven features in the architecture regularize to zero."
         />

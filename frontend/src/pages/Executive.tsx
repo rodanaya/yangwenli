@@ -764,7 +764,7 @@ interface CategoryCell {
   avg_risk: number
 }
 
-// Curated fallback — illustrative figures that round to the v0.6.5 distribution.
+// Curated fallback — illustrative figures that round to the v0.8.5 distribution.
 // Used only when category_stats is unavailable (the table doesn't exist on
 // every environment yet — precompute job ships separately).
 const FALLBACK_CATEGORIES: CategoryCell[] = [
@@ -1244,7 +1244,7 @@ export default function Executive() {
   const handlePrint = () => window.print()
 
   // § 1 The Atlas — risk distribution rows for the constellation field
-  // Falls back to the v0.6.5 calibrated proportions if the live API is empty
+  // Falls back to the v0.8.5 calibrated proportions if the live API is empty
   const atlasRows: ConstellationRiskRow[] = useMemo(() => {
     const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
       ? (dashboard!.risk_distribution as RiskDistribution[])
@@ -1256,7 +1256,7 @@ export default function Executive() {
         pct: r.percentage,
       }))
     }
-    // v0.6.5 calibrated fallback (Mar 25 2026)
+    // v0.8.5 calibrated fallback (Mar 25 2026)
     return [
       { level: 'critical', count: 184_031, pct: 6.01 },
       { level: 'high',     count: 228_814, pct: 7.48 },

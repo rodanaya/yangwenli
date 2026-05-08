@@ -307,14 +307,14 @@ export function StoryTrianguloFarmaceutico() {
         </p>
         <p className="text-sm text-text-secondary">
           Los tres proveedores comparten el mismo patrón: adjudicación directa por
-          encima del 75% — más de 3x el límite OCDE — y scores de riesgo v0.6.5
+          encima del 75% — más de 3x el límite OCDE — y scores de riesgo v0.8.5
           superiores a 0.81. Fármacos Especializados concentró el 45% del gasto
           farmacéutico federal rastreable entre 2019-2023.
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2019-2023 · análisis RUBLI · modelo v0.6.5 · COFECE DE-011-2016
+        Fuente: COMPRANET 2019-2023 · análisis RUBLI · modelo v0.8.5 · COFECE DE-011-2016
       </p>
     </motion.div>
   )

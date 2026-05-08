@@ -236,7 +236,7 @@ export function VendorContractBreakdown({
             {riskData.length === 0 ? (
               <div className="h-44 flex flex-col items-center justify-center px-4 text-center">
                 <p className="text-xs text-text-muted">
-                  {lang === 'en' ? 'No v0.6.5 risk scores.' : 'Sin puntuaciones de riesgo v0.6.5.'}
+                  {lang === 'en' ? 'No v0.8.5 risk scores.' : 'Sin puntuaciones de riesgo v0.8.5.'}
                 </p>
                 <p className="text-[10px] text-text-muted mt-1">
                   {lang === 'en'

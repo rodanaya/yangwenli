@@ -76,7 +76,7 @@ export function StoryRiskCalendar() {
 
       {/* Source */}
       <p className="text-[10px] text-text-muted">
-        Source: COMPRANET 2016-2025 · monthly average risk scores · RUBLI v0.6.5
+        Source: COMPRANET 2016-2025 · monthly average risk scores · RUBLI v0.8.5
       </p>
     </motion.div>
   )

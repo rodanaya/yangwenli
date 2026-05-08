@@ -62,7 +62,7 @@ function formatRiskPct(score: number | null | undefined): string {
   return `${(score * 100).toFixed(1)}%`
 }
 
-// Canonical thresholds via getRiskLevelFromScore (v0.6.5: 0.60/0.40/0.25).
+// Canonical thresholds via getRiskLevelFromScore (v0.8.5: 0.60/0.40/0.25).
 // Trust manifest invariant 3: never inline thresholds — always go through @/lib/constants.
 const RISK_COLOR_CLASS: Record<'critical' | 'high' | 'medium' | 'low', string> = {
   critical: 'text-risk-critical',

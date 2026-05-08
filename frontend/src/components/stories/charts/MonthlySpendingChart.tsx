@@ -197,7 +197,7 @@ export function MonthlySpendingChart() {
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.6.5
+        Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.8.5
       </p>
     </motion.div>
   )

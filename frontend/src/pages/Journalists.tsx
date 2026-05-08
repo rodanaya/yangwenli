@@ -139,7 +139,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'volatilidad-el-precio-del-riesgo',
     headline: "Price Volatility: The Algorithm's Smoking Gun",
-    sub: 'Strongest predictor in v0.6.5 model · coefficient +0.5343 across 3M contracts',
+    sub: 'Strongest predictor in v0.8.5 model · coefficient +0.5343 across 3M contracts',
     type: 'overpricing',
     status: 'solo_datos',
     amount: 0,

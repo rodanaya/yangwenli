@@ -21,7 +21,7 @@ interface EditorialPageShellProps {
   headline: ReactNode               // serif, can contain accented spans
   paragraph?: ReactNode             // optional 2–3 sentence editorial paragraph
   stats?: StatItem[]                // 3–4 inline stats
-  meta?: ReactNode                  // top-right "v0.6.5 · synced 2m ago"
+  meta?: ReactNode                  // top-right "v0.8.5 · synced 2m ago"
   actions?: ReactNode               // optional CTA row below stat strip
   dateline?: ReactNode              // byline/publisher stamp; defaults to canonical
   loading?: boolean

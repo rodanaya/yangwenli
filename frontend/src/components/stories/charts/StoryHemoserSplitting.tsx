@@ -176,7 +176,7 @@ export function StoryHemoserSplitting() {
 
       {/* Source */}
       <p className="text-[10px] text-text-muted mt-3">
-        * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.6.5
+        * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.8.5
       </p>
     </motion.div>
   )

@@ -157,7 +157,7 @@ export function StoryRiskPyramid() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            HR = 13.49% · modelo RUBLI v0.6.5 · AUC test 0.828
+            HR = 13.49% · modelo RUBLI v0.8.5 · AUC test 0.828
           </text>
         </svg>
       </div>
@@ -175,7 +175,7 @@ export function StoryRiskPyramid() {
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: 3.05M contratos · RUBLI v0.6.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25
+        Fuente: 3.05M contratos · RUBLI v0.8.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25
       </p>
     </motion.div>
   )

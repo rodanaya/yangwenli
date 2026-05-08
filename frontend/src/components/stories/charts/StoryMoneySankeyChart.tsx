@@ -115,7 +115,7 @@ export function StoryMoneySankeyChart() {
       {/* Source line */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-text-muted">
-          Source: COMPRANET 2019-2023 · RUBLI risk model v0.6.5
+          Source: COMPRANET 2019-2023 · RUBLI risk model v0.8.5
         </p>
         <a
           href="/aria"

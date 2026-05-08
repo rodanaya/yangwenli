@@ -214,7 +214,7 @@ export function StoryCeroCompetenciaChart() {
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.6.5
+        Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.8.5
       </p>
     </motion.div>
   )

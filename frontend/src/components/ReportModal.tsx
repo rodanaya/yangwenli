@@ -46,7 +46,7 @@ function isVendorReport(
   return type === 'vendor'
 }
 
-/** Risk level color from score (v0.6.5 thresholds) */
+/** Risk level color from score (active model thresholds — see RISK_THRESHOLDS) */
 function riskColor(score: number): string {
   if (score >= 0.60) return RISK_COLORS.critical
   if (score >= 0.40) return RISK_COLORS.high

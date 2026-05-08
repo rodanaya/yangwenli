@@ -269,7 +269,7 @@ export function StoryNuevosRicos() {
       </div>
 
       <p className="text-[10px] text-text-muted font-mono mt-3">
-        Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.6.5
+        Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.8.5
       </p>
     </motion.div>
   )

@@ -137,10 +137,18 @@ export const CURRENT_MODEL_VERSION = 'v0.8.5'
 // Update on every retraining unless we wire `useGroundTruthCount()` (v1.1).
 export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1401
 
-// Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-08-day1-review-gaps'
+// Ground-truth vendor count fallback (vendors linked to ≥1 GT case).
+// Same fallback contract as GROUND_TRUTH_CASE_COUNT_FALLBACK — updates
+// on each retraining and is referenced by methodology/intersection
+// editorial copy. Live source: `/api/v1/executive/summary` →
+// `ground_truth.vendors`.
+export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 861
 
-// Risk thresholds (v0.6.5 — medium raised from 0.15→0.25 to make medium actionable)
+// Build identifier — bump to force Vite content hash change and bust CDN/browser cache
+export const BUILD_ID = '2026-05-08-day1-completeness'
+
+// Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
+// retraining — medium was raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.
 // At 0.25, medium is 26.8% of contracts (investigable) and low is 59.4% (noise floor).
 // Structural FP vendors (pharma OEMs) capped at medium via DB risk_level override.

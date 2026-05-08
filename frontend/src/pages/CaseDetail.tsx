@@ -990,7 +990,7 @@ function SimilarPatternsTeaser({
 // VISUAL — Pattern Fingerprint
 // Shown in Section 03 (Risk Signature) when this case has no matched
 // vendors with model scores. Instead of an empty "data unavailable"
-// card, this draws on the live ARIA queue to show how the v0.6.5
+// card, this draws on the live ARIA queue to show how the v0.8.5
 // model actually characterizes the case's mapped pattern (P1-P7) at
 // the population level: vendor count, IPS distribution, sector spread.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1016,7 +1016,7 @@ function PatternFingerprint({
   const total = data?.pagination?.total ?? 0
 
   // Compute the pattern's IPS distribution + sector mix client-side.
-  // Bucket scores into the 4 risk levels matching the v0.6.5 thresholds.
+  // Bucket scores into the 4 risk levels matching the v0.8.5 thresholds.
   const ipsValues = items.map((i) => i.ips_final ?? 0)
   const avgIps = ipsValues.length > 0 ? ipsValues.reduce((s, v) => s + v, 0) / ipsValues.length : 0
   const tierCounts = { critical: 0, high: 0, medium: 0, low: 0 }
@@ -1789,7 +1789,7 @@ function CaseBody({
         </Section>
 
         {/* NEW — Model Provenance: explicit transparency about how this
-            case actually fed into the v0.6.5 model. Shows the data flow
+            case actually fed into the v0.8.5 model. Shows the data flow
             from documented vendors → matched COMPRANET contracts →
             positive training labels. The user called out the prior
             "Training Corpus" framing as rhetoric without evidence — this

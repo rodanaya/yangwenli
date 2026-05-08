@@ -264,7 +264,7 @@ export function DaRateTrendChart() {
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2010-2024 · RUBLI v0.6.5
+        Fuente: COMPRANET 2010-2024 · RUBLI v0.8.5
       </p>
     </motion.div>
   )

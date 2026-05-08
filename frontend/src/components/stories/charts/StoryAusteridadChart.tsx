@@ -214,7 +214,7 @@ export function StoryAusteridadChart() {
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Análisis RUBLI v0.6.5
+        Fuente: COMPRANET · Análisis RUBLI v0.8.5
       </p>
     </motion.div>
   )

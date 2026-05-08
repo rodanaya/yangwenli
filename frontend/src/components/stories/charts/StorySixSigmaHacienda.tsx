@@ -50,7 +50,7 @@ export function StorySixSigmaHacienda() {
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         SixSigma ganaba tras licitar en procesos nominalmente competitivos. El
-        modelo v0.6.5 detecta la anomalía sin conocer el expediente: tasa de éxito
+        modelo v0.8.5 detecta la anomalía sin conocer el expediente: tasa de éxito
         atípica y concentración institucional que sobresale contra la línea base
         del sector Hacienda.
       </p>
@@ -169,7 +169,7 @@ export function StorySixSigmaHacienda() {
         {/* 147 contracts strip */}
         <div className="rounded-lg bg-background-card border border-border p-4">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-            Los 147 contratos · distribución de riesgo v0.6.5
+            Los 147 contratos · distribución de riesgo v0.8.5
           </p>
           <svg viewBox="0 0 420 260" className="w-full h-auto" role="img" aria-label="147 SixSigma contracts colored by risk level">
             {CONTRACT_DOTS.map((level, i) => {
@@ -229,7 +229,7 @@ export function StorySixSigmaHacienda() {
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.6.5 score promedio 0.756
+        Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.8.5 score promedio 0.756
       </p>
     </motion.div>
   )

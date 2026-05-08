@@ -499,7 +499,7 @@ export default function CaseLibrary() {
             These cases were documented by Mexican investigative
             journalism, federal audits, and court records — not by
             RUBLI. The platform aggregates them as the training
-            corpus for the v0.6.5 risk model. Putting that on the
+            corpus for the v0.8.5 risk model. Putting that on the
             tin avoids the misimpression that "Cases" = our work. */}
         <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
           <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">

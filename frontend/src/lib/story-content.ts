@@ -4,7 +4,7 @@
  * These stories START from what RUBLI's algorithms discovered in 3,051,294 contracts
  * (2002-2025). External sources are cited to CORROBORATE findings — not the other way.
  *
- * Risk scores from v0.6.5 model (AUC 0.828 test, vendor-stratified split).
+ * Risk scores from v0.8.5 model (AUC 0.828 test, vendor-stratified split).
  * All statistics are verified against RUBLI_NORMALIZED.db (verified Apr 2026).
  */
 
@@ -579,7 +579,7 @@ export const STORIES: StoryDef[] = [
         title: 'The Risk Ladder',
         subtitle: 'Every size bracket tells the same story',
         prose: [
-          'RUBLI\'s v0.6.5 risk model scores every federal contract on a 0-to-1 scale calibrated against 748 documented corruption cases. The model knows nothing about contract size when it assigns scores — it processes features like vendor concentration, price volatility, and procurement mechanism. Yet when contracts are grouped by size after scoring, the relationship between size and risk is nearly monotonic.',
+          'RUBLI\'s v0.8.5 risk model scores every federal contract on a 0-to-1 scale calibrated against 748 documented corruption cases. The model knows nothing about contract size when it assigns scores — it processes features like vendor concentration, price volatility, and procurement mechanism. Yet when contracts are grouped by size after scoring, the relationship between size and risk is nearly monotonic.',
           'Contracts under 100,000 pesos — small-value transactions that dominate Mexican procurement by count — average 0.25 risk. Contracts between 1 million and 10 million pesos average 0.29. Between 10 million and 50 million: 0.41, already crossing RUBLI\'s high-risk threshold. Between 50 million and 500 million: 0.68. Between 500 million and 5 billion: 0.91. Above 5 billion pesos: 0.94.',
           'The 112 contracts in the top bracket — each a single procurement event worth more than 5 billion pesos — represent 1.32 trillion pesos in total contracting. Their average risk score of 0.94 places every one of them, on average, deep inside the model\'s critical tier. This is not a statistical curiosity. It is a pattern that should structurally reshape how Mexican oversight institutions allocate audit resources.',
         ],
@@ -603,8 +603,8 @@ export const STORIES: StoryDef[] = [
             referenceLine2: { value: 0.40, label: 'High risk threshold', label_es: 'Umbral de alto riesgo', color: '#f97316' },
             unit: 'risk score',
             maxValue: 1.0,
-            yLabel: 'Average v0.6.5 risk score',
-            yLabel_es: 'Riesgo promedio v0.6.5',
+            yLabel: 'Average v0.8.5 risk score',
+            yLabel_es: 'Riesgo promedio v0.8.5',
             annotation: 'The largest contracts in Mexican federal procurement are, on average, the riskiest.',
             annotation_es: 'Los contratos más grandes de la contratación federal mexicana son, en promedio, los más riesgosos.',
           },
@@ -618,7 +618,7 @@ export const STORIES: StoryDef[] = [
           vizTemplate: 'redline-gauge',
         },
         sources: [
-          'RUBLI v0.6.5 risk model. Contract-level scoring, 3,051,294 records. Query: April 2026.',
+          'RUBLI v0.8.5 risk model. Contract-level scoring, 3,051,294 records. Query: April 2026.',
           'COMPRANET (SHCP). Federal procurement records 2002-2025.',
         ],
       },
@@ -816,7 +816,7 @@ export const STORIES: StoryDef[] = [
         title: 'Four Vendors, 328 Billion Pesos',
         title_es: 'Cuatro proveedores, 328 mil millones de pesos',
         prose: [
-          'A monopoly does not have to be one company. Four pharmaceutical distributors — GRUPO FÁRMACOS ESPECIALIZADOS, FARMACÉUTICOS MAYPO, LABORATORIOS PISA, and DIMM (Distribuidora Internacional de Medicamentos y Equipo Médico) — collected 328.6 billion pesos from Mexico\'s federal government between 2003 and 2025. Their combined risk-score average is 0.69, solidly critical in RUBLI\'s v0.6.5 model. Three of the four sit at the top of RUBLI\'s entire vendor risk ladder.',
+          'A monopoly does not have to be one company. Four pharmaceutical distributors — GRUPO FÁRMACOS ESPECIALIZADOS, FARMACÉUTICOS MAYPO, LABORATORIOS PISA, and DIMM (Distribuidora Internacional de Medicamentos y Equipo Médico) — collected 328.6 billion pesos from Mexico\'s federal government between 2003 and 2025. Their combined risk-score average is 0.69, solidly critical in RUBLI\'s v0.8.5 model. Three of the four sit at the top of RUBLI\'s entire vendor risk ladder.',
           'No competitive market produces this. The four vendors are not competing for distinct slices of demand; they are sharing one. They funnel their revenue through the same dominant customer, they appear in each other\'s losing-bid records by the thousands, and their peak years line up like sprinters in a relay — one rises as another falls. By the architecture of the data, this is one cartel that takes turns, not four monopolists in different lanes.',
           'The framework that produced these contracts has shifted three times — IMSS-direct procurement under Calderón, INSABI/BIRMEX under AMLO, IMSS-Bienestar consolidated tendering under Sheinbaum — and the four vendors have rotated through each architecture without losing their dominant share. The mechanism changed; the recipients did not.',
         ],
@@ -1908,7 +1908,7 @@ export const STORIES: StoryDef[] = [
         number: 1,
         title: 'What the Model Finds Across Administrations',
         prose: [
-          'RUBLI\'s v0.6.5 risk model was not calibrated to any single administration. It was trained on 748 documented corruption cases spanning multiple presidencies and scores contracts based on their structural similarity to known-bad patterns: vendor concentration, price volatility, single-bidder conditions, network membership, institution diversity, and procurement mechanism. The model has no partisan attachment and no political knowledge. It sees only patterns.',
+          'RUBLI\'s v0.8.5 risk model was not calibrated to any single administration. It was trained on 748 documented corruption cases spanning multiple presidencies and scores contracts based on their structural similarity to known-bad patterns: vendor concentration, price volatility, single-bidder conditions, network membership, institution diversity, and procurement mechanism. The model has no partisan attachment and no political knowledge. It sees only patterns.',
           'When we apply this politically blind model across the four complete administrations in RUBLI\'s dataset, the results show a remarkably consistent upward trend. Under Fox (2001-2006), the high-risk rate was 7.94 percent across 206,333 contracts — below OECD\'s 15 percent benchmark. Under Calderón (2007-2012), it reached 9.67 percent across 481,450 contracts. Under Peña Nieto (2013-2018), it climbed to 12.43 percent across 1,228,625 contracts. Under AMLO (2019-2024), it reached 17.63 percent across 1,050,552 contracts — the highest of any administration in the dataset and 2.5 percentage points above the OECD upper limit.',
           'The counts behind these percentages are as telling as the rates themselves. Fox flagged 16,382 contracts as high-risk. Calderón flagged 46,576. Peña Nieto flagged 152,683. AMLO flagged 185,248. Each administration has produced more high-risk contracts than the previous one — a function both of rising rates and of growing procurement volume.',
           'Each administration also had its own procurement context. Fox governed with limited COMPRANET coverage (Structure A, 2001-2006), so the Fox-era rate should be read with caution: the dataset under-reports the period. Calderón\'s rate of 9.7 percent fell in the middle of OECD\'s acceptable range. Peña Nieto\'s 12.4 percent crossed into concerning territory. AMLO\'s 17.6 percent is the first time any administration in the dataset has broken the OECD ceiling.',

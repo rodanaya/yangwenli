@@ -155,7 +155,7 @@ export function DaBySectorChart() {
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2002-2025 · 3.05M contratos · RUBLI v0.6.5
+        Fuente: COMPRANET 2002-2025 · 3.05M contratos · RUBLI v0.8.5
       </p>
     </motion.div>
   )

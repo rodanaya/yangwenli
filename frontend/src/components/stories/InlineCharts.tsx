@@ -124,7 +124,7 @@ function ChartCard({
         }}
       >
         <span>{localizedEyebrow}</span>
-        <span aria-hidden>v0.6.5</span>
+        <span aria-hidden>v0.8.5</span>
       </div>
       <figcaption className="px-5 pb-2">
         <h3

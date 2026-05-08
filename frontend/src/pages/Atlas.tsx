@@ -2284,7 +2284,7 @@ export default function Atlas() {
         if (selectedMeta && yearIndex > 0) {
           const prevSnap = effectiveSnapshot(yearIndex - 1)
           const curSnap = snapshot
-          // T1 scales with critical+high pct vs the v0.6.5 baseline (13.49%)
+          // T1 scales with critical+high pct vs the v0.8.5 baseline (13.49%)
           const BASELINE = 13.49
           const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
           const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
