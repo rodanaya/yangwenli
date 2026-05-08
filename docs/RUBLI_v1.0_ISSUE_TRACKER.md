@@ -508,11 +508,30 @@ clean, lint:tokens 0 forbidden patterns), all deployed and verified.
   reported as auto-redirects.
 - Removed from P0 list.
 
+### Day 1 review-gap closeout — 8 leftover 1,363 hardcodes
+- Closed 2026-05-08 by commit `e97275d` (deployed bundle pending verification).
+- Day 1 Fix B closed the homepage hero only; this caught the siblings:
+  CaseDetail.tsx (1×), Intersection.tsx (2×), ModelTransparency.tsx (4×),
+  watchlist.json (1× via {{n}} interpolation).
+- Single source of truth `GROUND_TRUTH_CASE_COUNT_FALLBACK = 1401` added
+  to lib/constants.ts so the next retraining only updates one literal.
+- Bonus: Intersection.tsx body copy `v0.6.5` → `CURRENT_MODEL_VERSION`.
+- Bonus: dead `/price-analysis` breadcrumb entry removed from Header.tsx
+  ROUTE_I18N_KEYS (route was redirected on Day 1 but the map entry stayed).
+
 ---
 
 ## v1.1 CANDIDATES (do not touch before 2026-06-14)
 
 ### Backlog from prior sessions
+- **ModelTransparency `v0.6.5` → `v0.8.5` rewrite**. Caught in
+  Day 1 review (2026-05-08): pages/ModelTransparency.tsx body copy
+  describes coefficients for 9 active features (v0.6.5), but the live
+  model is v0.8.5 with 18 active features. Swapping the version label
+  alone would mislead readers — the coefficient table at lines 28-100
+  needs the v0.8.5 numbers. Estimated 2-3h to update copy + table +
+  any chart that pulls from MODEL_DATA. Cosmetic-only on a Tier-2
+  internal-transparency surface, defer to v1.1.
 - StoryNarrative chapter PlateFrames (Phase 6 of folio v1).
 - Bilingual sweep on the remaining 27 chart components (the ones not
   used by the 5 launch stories).
