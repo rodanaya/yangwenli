@@ -359,6 +359,8 @@ function FilterChip({
   onClear: () => void
   accent?: string
 }) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es')
   return (
     <span
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[10px] font-mono font-medium"
@@ -372,7 +374,7 @@ function FilterChip({
       <button
         onClick={onClear}
         className="inline-flex items-center justify-center w-3 h-3 rounded-full hover:bg-background-card transition-colors"
-        aria-label="Clear filter"
+        aria-label={isEs ? 'Quitar filtro' : 'Clear filter'}
         type="button"
       >
         <XIcon className="w-2.5 h-2.5" />
@@ -452,11 +454,12 @@ function LollipopScore({ ips, tier }: { ips: number; tier: 1 | 2 | 3 | 4 }) {
   )
 }
 
-const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; title: string }> = {
-  pending:    { char: '○', color: 'var(--color-text-muted)',     title: 'Pending review' },
-  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      title: 'Under review' },
-  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  title: 'Confirmed corrupt' },
-  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     title: 'Dismissed' },
+// 2026-05-08 audit fix: title was monolingual EN — now picks ES on `es` locale.
+const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; titleEn: string; titleEs: string }> = {
+  pending:    { char: '○', color: 'var(--color-text-muted)',     titleEn: 'Pending review',      titleEs: 'Revisión pendiente' },
+  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      titleEn: 'Under review',         titleEs: 'En revisión' },
+  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  titleEn: 'Confirmed corrupt',    titleEs: 'Corrupción confirmada' },
+  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     titleEn: 'Dismissed',            titleEs: 'Descartado' },
 }
 
 function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }) {
@@ -570,7 +573,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
             style={{ color: reviewGlyph.color }}
             aria-label={t('reviewPopover.updateTitle')}
-            title={`${reviewGlyph.title} — ${t('reviewPopover.updateTitle')}`}
+            title={`${isEs ? reviewGlyph.titleEs : reviewGlyph.titleEn} — ${t('reviewPopover.updateTitle')}`}
           >
             {reviewGlyph.char}
           </button>

@@ -536,7 +536,7 @@ export default function CaseLibrary() {
                   type="button"
                   onClick={() => setSearch(null)}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
-                  aria-label="Clear search"
+                  aria-label={i18n.language === 'es' ? 'Limpiar búsqueda' : 'Clear search'}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
