@@ -256,7 +256,16 @@ function InstitutionBriefing({
       <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(totalContracts)} />
       <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(totalSpend)} />
       {vendorCount != null && <Stat label={lang === 'en' ? 'Vendors' : 'Proveedores'} value={formatNumber(vendorCount)} />}
-      {directAwardPct != null && <Stat label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'} value={`${(directAwardPct * 100).toFixed(0)}%`} />}
+      {directAwardPct != null && (
+        <Stat
+          label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'}
+          // Backend is inconsistent: institutionApi.getById returns
+          // direct_award_rate as a 0–100 percentage (e.g. 67.78 for IMSS),
+          // while atlasApi.getSectorInstitutionsSpatial returns
+          // direct_award_pct as a 0–1 fraction. Heuristic: > 1 → already %.
+          value={`${(directAwardPct > 1 ? directAwardPct : directAwardPct * 100).toFixed(0)}%`}
+        />
+      )}
       <RiskPill score={risk} />
       <p className="mt-3 text-[11px] text-text-muted leading-relaxed">
         {lang === 'en'
