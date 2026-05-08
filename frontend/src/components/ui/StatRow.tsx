@@ -29,10 +29,13 @@ interface StatRowProps {
   className?: string
 }
 
+// 2026-05-08 audit fix: at 390px viewport with 4 stats the desktop md value
+// font (`text-2xl` = 24px) + uppercase tracking-widest label collide.
+// Step the value down on small screens so the 2x2 grid breathes.
 const VALUE_SIZE: Record<NonNullable<StatRowProps['size']>, string> = {
-  sm: 'text-lg',
-  md: 'text-2xl',
-  lg: 'text-3xl',
+  sm: 'text-base sm:text-lg',
+  md: 'text-lg sm:text-2xl',
+  lg: 'text-xl sm:text-3xl',
 }
 
 const COL_CLASS: Record<number, string> = {
@@ -52,7 +55,7 @@ export function StatRow({
 
   return (
     <div
-      className={`grid ${gridCols} gap-x-6 gap-y-4 ${className ?? ''}`}
+      className={`grid ${gridCols} gap-x-3 sm:gap-x-6 gap-y-4 ${className ?? ''}`}
       role="list"
     >
       {stats.map((s, i) => (

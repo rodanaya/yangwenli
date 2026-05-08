@@ -62,9 +62,40 @@ export const SECTOR_NAMES_EN: Record<string, string> = {
   otros: 'Other',
 } as const
 
+// Spanish sector name translations (proper case, with diacritics).
+// Backend codes are normalised to lowercase ascii (`salud`, `educacion`,
+// `gobernacion`) so `getSectorNameES` is what callers should use to render
+// the user-facing label — never just `code.toUpperCase()` which drops accents
+// and reads as a backend identifier.
+export const SECTOR_NAMES_ES: Record<string, string> = {
+  salud: 'Salud',
+  educacion: 'Educación',
+  infraestructura: 'Infraestructura',
+  energia: 'Energía',
+  defensa: 'Defensa',
+  tecnologia: 'Tecnología',
+  hacienda: 'Hacienda',
+  gobernacion: 'Gobernación',
+  agricultura: 'Agricultura',
+  ambiente: 'Ambiente',
+  trabajo: 'Trabajo',
+  otros: 'Otros',
+} as const
+
 // Helper function to translate sector code to English name
 export function getSectorNameEN(sectorCode: string): string {
   return SECTOR_NAMES_EN[sectorCode] || sectorCode
+}
+
+// Spanish counterpart — used by ARIA queue, vendor profiles, and any chip
+// that previously called getSectorNameEN unconditionally.
+export function getSectorNameES(sectorCode: string): string {
+  return SECTOR_NAMES_ES[sectorCode] || sectorCode
+}
+
+/** Lang-aware sector label — pass the i18n language to pick ES or EN. */
+export function getSectorName(sectorCode: string, lang: 'en' | 'es'): string {
+  return lang === 'es' ? getSectorNameES(sectorCode) : getSectorNameEN(sectorCode)
 }
 
 // Sector metadata with professional colors
@@ -97,7 +128,7 @@ export const RISK_COLORS = {
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-08-day2-bilingual'
+export const BUILD_ID = '2026-05-08-day2-aria-mobile'
 
 // Risk thresholds (v0.6.5 — medium raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.

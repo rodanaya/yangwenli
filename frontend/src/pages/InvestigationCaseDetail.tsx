@@ -26,7 +26,7 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCompactMXN, formatDate, formatNumber, toTitleCase } from '@/lib/utils'
-import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/constants'
 import type {
   InvestigationValidationStatus,
   InvestigationVendor,
@@ -171,7 +171,8 @@ export function InvestigationCaseDetail() {
   const { caseId } = useParams<{ caseId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { t } = useTranslation('investigation')
+  const { t, i18n } = useTranslation('investigation')
+  const isEs = i18n.language?.startsWith('es')
 
   // Modals / forms
   const [showStatusModal, setShowStatusModal] = useState(false)
@@ -454,7 +455,7 @@ export function InvestigationCaseDetail() {
                     border: `1px solid ${sectorColor}33`,
                   }}
                 >
-                  {getSectorNameEN(detail.sector_name)}
+                  {getSectorName(detail.sector_name, isEs ? 'es' : 'en')}
                 </span>
               </div>
             </div>

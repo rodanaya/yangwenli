@@ -26,7 +26,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorNameEN, SECTORS, RISK_COLORS } from '@/lib/constants'
+import { getSectorName, SECTORS, RISK_COLORS } from '@/lib/constants'
 import { EditorialDistribution, DotStrip } from '@/components/charts/editorial'
 import {
   Search,
@@ -595,8 +595,9 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {sector && (
             <span className="inline-flex items-center gap-1 max-w-[160px]">
               <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" />
-              <span className="uppercase tracking-[0.06em] truncate" title={getSectorNameEN(sector)}>
-                {getSectorNameEN(sector)}
+              {/* 2026-05-08 audit fix: sector chips were force-EN; now follow lang */}
+              <span className="uppercase tracking-[0.06em] truncate" title={getSectorName(sector, isEs ? 'es' : 'en')}>
+                {getSectorName(sector, isEs ? 'es' : 'en')}
               </span>
             </span>
           )}
