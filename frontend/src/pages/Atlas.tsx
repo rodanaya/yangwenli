@@ -2352,8 +2352,13 @@ export default function Atlas() {
         }
       </div>
 
-      {/* ── Cluster detail side panel ────────────────────────────────── */}
-      {(() => {
+      {/* ── Cluster detail side panel — legacy modal ────────────────────
+           2026-05-09: suppressed when ?z1=true and lens=sectors so the
+           Z1 sub-constellation isn't covered by a 420px modal. Without
+           this guard, clicking a sector cluster fired BOTH the spatial
+           drill-into-sector dispatch AND the legacy selectedClusterCode
+           setter — and the legacy modal popped over the new map. */}
+      {!(z1Enabled && mode === 'sectors') && (() => {
         // V5: compute year-delta vs previous year using yearly_trends + scaled
         // critical/high pcts. Best-effort, illustrative when live data missing.
         let deltaT1: number | undefined = undefined
