@@ -1567,9 +1567,9 @@ export default function Atlas() {
           closer to a bound atlas plate than a generic dashboard title.
           Lede sits in a narrower measure with EB Garamond regular italic for
           the inline emphasis tokens. */}
-      <header className="mb-8">
+      <header className="mb-3">
         <div
-          className="mb-3 flex items-center gap-3"
+          className="mb-1 flex items-center gap-3"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
             fontSize: '10px',
@@ -1585,8 +1585,12 @@ export default function Atlas() {
             {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
           </span>
         </div>
+        {/* 2026-05-09: hero compressed from 3-line italic Garamond + 4-line
+            sub-paragraph (~300px tall) to a single-line title + one-line
+            sub. The map should be the first thing the reader sees, not
+            an editorial preamble that hides it below the fold. */}
         <h1
-          className="text-[36px] sm:text-[52px] md:text-[68px] leading-[0.96] text-text-primary mb-4 text-balance"
+          className="text-[24px] sm:text-[28px] md:text-[32px] leading-[1.1] text-text-primary mb-1 text-balance"
           style={{
             fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
             fontStyle: 'italic',
@@ -1596,29 +1600,26 @@ export default function Atlas() {
         >
           {lang === 'en' ? (
             <>
-              An Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>of nine&#8202;trillion&#8202;pesos</span><br />
-              <span style={{ fontStyle: 'normal' }}>in federal procurement.</span>
+              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine&#8202;trillion pesos</span> in federal procurement.
             </>
           ) : (
             <>
-              Un Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>de nueve&#8202;billones&#8202;de pesos</span><br />
-              <span style={{ fontStyle: 'normal' }}>en contratación federal.</span>
+              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve&#8202;billones de pesos</span> en contratación federal.
             </>
           )}
         </h1>
         <p
-          className="max-w-[68ch]"
+          className="max-w-[80ch] text-[12px]"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontSize: '17px',
-            lineHeight: 1.55,
-            color: 'var(--color-text-secondary, var(--color-text-muted))',
+            lineHeight: 1.4,
+            color: 'var(--color-text-muted)',
             letterSpacing: '0.005em',
           }}
         >
           {lang === 'en'
-            ? <>Each mark in the plate below stands for a slice of the federal contract record. Choose a <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lens</em> in the rail at left to reorder them by pattern, sector, category, or presidential term. Drag the <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>year</em> below to watch the field shift across eighteen years. Click a cluster to open the dossier.</>
-            : <>Cada marca en la lámina inferior representa una fracción del registro federal de contratos. Selecciona una <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lente</em> en el panel izquierdo para reordenarlas por patrón, sector, categoría o sexenio. Arrastra el <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>año</em> abajo para ver el campo desplazarse a través de dieciocho años. Haz clic en un cúmulo para abrir el expediente.</>
+            ? <>Each mark = a slice of the federal contract record. Choose a <em style={{ color: 'var(--color-text-secondary)' }}>lens</em>, drag the year, click a cluster to drill in.</>
+            : <>Cada marca = una fracción del registro federal. Elige una <em style={{ color: 'var(--color-text-secondary)' }}>lente</em>, arrastra el año, haz clic para profundizar.</>
           }
         </p>
       </header>
