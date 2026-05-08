@@ -27,6 +27,10 @@ const Explore = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
 const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
+// 2026-05-09 Day 3: new editorial 3-chapter dossier replacing the
+// 2,312-LOC card grid. Old page kept on /institutions/:id/legacy for
+// quick revert if the new shape needs more work.
+const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -346,6 +350,14 @@ function App() {
               />
               <Route
                 path="institutions/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionThread />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions/:id/legacy"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionProfile />
