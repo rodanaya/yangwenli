@@ -602,10 +602,13 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             </span>
           )}
 
-          {/* Contract count */}
+          {/* Contract count — pluralized so it never reads "1 contratos" */}
           {contracts > 0 && (
             <span className="tabular-nums">
-              {formatNumber(contracts)} {isEs ? 'contratos' : 'contracts'}
+              {formatNumber(contracts)}{' '}
+              {isEs
+                ? (contracts === 1 ? 'contrato' : 'contratos')
+                : (contracts === 1 ? 'contract' : 'contracts')}
             </span>
           )}
 
