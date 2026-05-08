@@ -524,14 +524,24 @@ clean, lint:tokens 0 forbidden patterns), all deployed and verified.
 ## v1.1 CANDIDATES (do not touch before 2026-06-14)
 
 ### Backlog from prior sessions
-- **ModelTransparency `v0.6.5` → `v0.8.5` rewrite**. Caught in
-  Day 1 review (2026-05-08): pages/ModelTransparency.tsx body copy
-  describes coefficients for 9 active features (v0.6.5), but the live
-  model is v0.8.5 with 18 active features. Swapping the version label
-  alone would mislead readers — the coefficient table at lines 28-100
-  needs the v0.8.5 numbers. Estimated 2-3h to update copy + table +
-  any chart that pulls from MODEL_DATA. Cosmetic-only on a Tier-2
-  internal-transparency surface, defer to v1.1.
+- **Model-coefficient surfaces still describe v0.6.5 specifics**.
+  Caught in Day 1 review (2026-05-08): three surfaces still reference
+  v0.6.5-specific coefficients/active-features that differ in v0.8.5
+  (which has 18 active vs 9). Bulk version-label swap was completed
+  on 2026-05-08 (commits `88cb0dd` + `008534a`) but the per-feature
+  facts still need real model lookups, not literal swaps:
+  - `pages/ModelTransparency.tsx` body — `ACTIVE_COEFFICIENTS` array
+    + version-history `change` notes describe the v0.6.5 model
+  - `components/sectors/SectorModelCoefficients.tsx` — chart visualises
+    v0.6.5 logistic regression coefficients; needs new data wiring
+  - `i18n/locales/{en,es}/glossary.json` per-feature `mexico_note`,
+    `validation_strength`, `coefficient` fields (~14 features × 2
+    locales). Swapping "Active in v0.6.5" → "Active in v0.8.5" is
+    fine for some features but wrong for others (direct_award flipped
+    sign; cobid_herfindahl is new).
+  Estimated 2-3h to do correctly with the v0.8.5 calibration JSON.
+  Cosmetic-only on Tier-2 transparency/glossary surfaces, defer to
+  v1.1.
 - StoryNarrative chapter PlateFrames (Phase 6 of folio v1).
 - Bilingual sweep on the remaining 27 chart components (the ones not
   used by the 5 launch stories).
