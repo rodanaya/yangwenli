@@ -352,15 +352,21 @@ function App() {
                 path="institutions/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InstitutionThread />
+                    <InstitutionProfile />
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-09: InstitutionThread reverted off the canonical
+                  route after user feedback. The page-shaped editorial
+                  dossier was the wrong concept — the platform is a
+                  spatial-exploration map (Star Fox-style zoom hierarchy),
+                  not a CMS of pages. See docs/SPATIAL_NAV_PLAN.md. The
+                  draft remains addressable here for reference only. */}
               <Route
-                path="institutions/:id/legacy"
+                path="institutions/:id/thread-draft"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InstitutionProfile />
+                    <InstitutionThread />
                   </SuspenseBoundary>
                 }
               />
