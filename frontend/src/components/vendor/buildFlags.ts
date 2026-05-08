@@ -59,7 +59,9 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
       headline: t('vendorFlags.groundTruth.headline'),
       detail:
         caseCount > 0
-          ? t('vendorFlags.groundTruth.detail', { n: caseCount })
+          // i18next plural — count drives detail_one vs detail_other so the
+          // string never reads "1 caso(s)" / "1 cases" again.
+          ? t('vendorFlags.groundTruth.detail', { count: caseCount })
           : undefined,
       // § 7 dossier spec: GT case flag must be clickable → /cases/:slug
       linkTo: firstSlug ? `/cases/${firstSlug}` : undefined,

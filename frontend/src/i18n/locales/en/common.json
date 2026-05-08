@@ -258,7 +258,8 @@
     "hintSelect": "select",
     "hintClose": "close",
     "rfcTip": "Tip: type an RFC (e.g. ABC123456789) to find a vendor",
-    "contractsCount": "{{count}} contracts",
+    "contractsCount_one": "{{count}} contract",
+    "contractsCount_other": "{{count}} contracts",
     "applySavedSearch": "Apply saved search: {{label}}",
     "removeSavedSearch": "Remove saved search: {{label}}",
     "saveCurrentSearch": "Save search “{{query}}”"

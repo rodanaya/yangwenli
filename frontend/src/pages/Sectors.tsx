@@ -291,12 +291,27 @@ export function Sectors() {
   const totalValue = data?.total_value_mxn ?? 0
   const totalContracts = data?.total_contracts ?? 0
 
-  const subtitleText = totalValue > 0
-    ? t('page.subtitle', {
-        totalValue: formatSpend(totalValue),
-        years: '23',
-      })
-    : t('page.subtitleFallback')
+  // 2026-05-08 audit fix: when sidebar lands the user on `?view=categories`,
+  // the page was still titled "12 Sectores …". Switch title + subtitle so the
+  // sidebar item and the page agree.
+  const titleText = view === 'categories'
+    ? t('page.titleCategories', { defaultValue: 'What Mexico Is Buying — by Category' })
+    : t('page.title')
+  const subtitleText = view === 'categories'
+    ? (totalValue > 0
+        ? t('page.subtitleCategories', {
+            totalValue: formatSpend(totalValue),
+            defaultValue: '{{totalValue}} routed through 72 procurement categories',
+          })
+        : t('page.subtitleCategoriesFallback', {
+            defaultValue: '72 procurement categories covering 99.7% of federal spend',
+          }))
+    : (totalValue > 0
+        ? t('page.subtitle', {
+            totalValue: formatSpend(totalValue),
+            years: '23',
+          })
+        : t('page.subtitleFallback'))
 
   return (
     <div className="min-h-screen">
@@ -345,7 +360,7 @@ export function Sectors() {
                   letterSpacing: '-0.012em',
                 }}
               >
-                {t('page.title')}
+                {titleText}
               </h1>
             </div>
             {!isLoading && (

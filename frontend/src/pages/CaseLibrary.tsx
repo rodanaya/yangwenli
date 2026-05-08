@@ -63,7 +63,19 @@ function formatMXN(n?: number | null): string {
   return formatCompactMXN(n)
 }
 
-function formatMXNHero(n: number): string {
+// 2026-05-08 audit fix: hero formatter must respect Mexican Spanish convention
+// (CLAUDE.md: never `B MXN` in ES; use `MDP` for 10⁹ and `billones` for 10¹²).
+// `lang` is passed in instead of reading i18n at module scope so the call sites
+// stay reactive to language toggles.
+function formatMXNHero(n: number, lang: 'en' | 'es'): string {
+  if (lang === 'es') {
+    if (n >= 1e12) return `${(n / 1e12).toFixed(2)} billones`
+    if (n >= 1e9) {
+      const mdp = Math.round(n / 1e6)
+      return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(mdp)} MDP`
+    }
+    return `${(n / 1e6).toFixed(0)} MDP`
+  }
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
   return `$${(n / 1e6).toFixed(0)}M`
@@ -427,9 +439,10 @@ export default function CaseLibrary() {
                 {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {/* ES: formatMXNHero already returns "X MDP" / "X billones" — don't double-tag with MXN */}
                 {i18n.language === 'es'
-                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss)} MXN documentados</>
-                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss)} MXN documented</>
+                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss, 'es')} documentados</>
+                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss, 'en')} MXN documented</>
                 }
               </p>
             </div>
@@ -444,7 +457,7 @@ export default function CaseLibrary() {
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#a06820' }}>
-                  {totalLoss > 0 ? formatMXNHero(totalLoss) : '—'}
+                  {totalLoss > 0 ? formatMXNHero(totalLoss, i18n.language === 'es' ? 'es' : 'en') : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   {i18n.language === 'es' ? 'Pérdidas MXN' : 'Losses MXN'}

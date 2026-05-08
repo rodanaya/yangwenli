@@ -13,8 +13,11 @@
   "otros": "Other",
   "page": {
     "title": "12 Sectors of Mexican Federal Procurement",
+    "titleCategories": "What Mexico Is Buying — by Category",
     "subtitle": "{{totalValue}} across {{years}} years of COMPRANET data",
+    "subtitleCategories": "{{totalValue}} routed through 72 procurement categories",
     "subtitleFallback": "~9.9T MXN across 23 years of COMPRANET data",
+    "subtitleCategoriesFallback": "72 procurement categories covering 99.7% of federal spend",
     "rankedBy": "Ranked by avg risk score — click to inspect",
     "sortBy": "Sort by",
     "sortValue": "Total Spend",

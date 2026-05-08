@@ -66,6 +66,7 @@
   },
   "viewCards": "Vista de tarjetas",
   "viewTable": "Vista de tabla",
+  "caseCount_one": "{{count}} caso",
   "caseCount_other": "{{count}} casos",
   "noInvestigationCasesFound": "No se encontraron casos de investigación",
   "tryAdjustingFilters": "Intenta ajustar tus filtros",

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { FileText } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 
 // ReportModal (308 LOC + PDF generation deps) only loads on first click.
@@ -21,12 +22,14 @@ export function GenerateReportButton({
   variant = 'outline',
 }: GenerateReportButtonProps) {
   const [open, setOpen] = useState(false)
+  const { i18n } = useTranslation()
+  const isEs = i18n.language === 'es'
 
   return (
     <>
       <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
         <FileText className="h-3.5 w-3.5 mr-1" />
-        Generate Report
+        {isEs ? 'Generar Reporte' : 'Generate Report'}
       </Button>
 
       {open && (

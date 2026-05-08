@@ -163,9 +163,10 @@ export function VendorHero({
                 ) : (
                   <ChevronDown className="h-3 w-3" aria-hidden="true" />
                 )}
+                {/* Pluralized — Spanish never uses (s); English uses singular for n=1 */}
                 {isEs
-                  ? `${nameVariants.length} variante(s) del nombre`
-                  : `${nameVariants.length} name variant(s)`}
+                  ? `${nameVariants.length} ${nameVariants.length === 1 ? 'variante del nombre' : 'variantes del nombre'}`
+                  : `${nameVariants.length} ${nameVariants.length === 1 ? 'name variant' : 'name variants'}`}
               </button>
               {variantsOpen && (
                 <ul

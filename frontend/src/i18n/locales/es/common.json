@@ -267,7 +267,8 @@
     "hintSelect": "seleccionar",
     "hintClose": "cerrar",
     "rfcTip": "Consejo: escribe un RFC (p. ej. ABC123456789) para encontrar un proveedor",
-    "contractsCount": "{{count}} contratos",
+    "contractsCount_one": "{{count}} contrato",
+    "contractsCount_other": "{{count}} contratos",
     "applySavedSearch": "Aplicar búsqueda guardada: {{label}}",
     "removeSavedSearch": "Eliminar búsqueda guardada: {{label}}",
     "saveCurrentSearch": "Guardar búsqueda “{{query}}”"
