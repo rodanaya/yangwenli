@@ -365,6 +365,66 @@ we don't touch them until 2026-06-14.
 
 ## CLOSED
 
+### Day 2 sprint — Atlas pan-zoom + bilingual sweep (2026-05-08)
+
+Closed in 4 commits (`f137197`, `c1aee6b`, `bb022f6`, `b5a2473`, `f122f2a`)
+plus one earlier same-day commit. All deployed to https://rubli.xyz with
+`BUILD_ID` bumped each time so CDN cache busts.
+
+**Atlas / Observatory (commit `f137197`)**
+- Cluster click on `/atlas` was being absorbed by the hover halo overlay
+  before reaching the constellation's click target. Added a click handler
+  on the overlay circles that forwards to the same dispatcher.
+- Bumped `ZOOM_SCALE` 2.4× → 3.6× so a clicked cluster fills more of the
+  viewport (audit complaint: "dots still scattered after zoom").
+- Added drag-to-pan + wheel-zoom + reset chip + HUD hint inside the zoomed
+  view. Window-level mousemove/mouseup so dragging continues across the
+  chart edge (Mapbox model). Native non-passive wheel listener so
+  `preventDefault` actually works.
+- First-visit auto-tour suppressed on viewports < 768px so the chapter
+  card doesn't push the constellation off-screen on phones; user can
+  still tap "Play story" explicitly. Visited flag NOT set so the tour
+  still plays the next time the same browser opens /atlas on desktop.
+
+**Bilingual sweep (commits `c1aee6b`, `bb022f6`, `b5a2473`, `f122f2a`)**
+- Sectors page title now follows `?view=categories` ("Qué Compra México
+  por Categoría" vs "12 Sectores ..."). Sidebar label and page heading
+  finally agree.
+- Real i18next pluralization on `caseCount`, `contractsCount`,
+  `vendorFlags.groundTruth.detail` — Spanish never reads "1 contratos" or
+  "1 caso(s)" anywhere we control.
+- Inline-string pluralization on AriaQueue contract count and
+  VendorActivityTab year-row title/subtitle (where the strings weren't
+  behind i18next keys).
+- ARIA queue + Investigation list + InvestigationCaseDetail sector chips
+  now render `SALUD` / `INFRAESTRUCTURA` / `HACIENDA` in ES (was always-EN
+  `HEALTH` / `INFRASTRUCTURE` / `TREASURY`). Added `SECTOR_NAMES_ES` +
+  `getSectorNameES` + lang-aware `getSectorName(code, lang)` to constants.
+- `Generate Report` button now bilingual ("Generar Reporte" / "Generate
+  Report").
+- VendorHero "(s)" name-variants count replaced with proper singular vs
+  plural branching.
+- `formatMXNHero` on CaseLibrary now locale-aware (Bible §3.10: never
+  `B MXN` in ES). Spanish hero reads "208,400 MDP" or "2.84 billones".
+- Vendor groundTruth detail unhardcoded the model version — now threads
+  `CURRENT_MODEL_VERSION` (currently v0.8.5) so the flag tracks active
+  scoring runs automatically.
+
+**Mobile (commit `bb022f6`)**
+- StatRow primitive (used by VendorHero KPI row) value font now
+  responsive (`text-lg sm:text-2xl`) and gap tightened on mobile
+  (`gap-x-3 sm:gap-x-6`). Audit's "Contratos/Valor/Adj/Instituciones
+  collide at 80px each" fixed.
+
+**Verified live**
+- Bundle hashes advance with each deploy (`Dggi7Q_l` → `3Ir-H_HG` →
+  `cN6yfmbM` → `B8eFAhhP` → batch 4 in flight).
+- Atlas chunk `Atlas-C_S4dD7V.js` contains all 5 new HUD strings
+  ("drag to pan", "wheel to zoom", "reset view", "arrastra para
+  desplazar", "reiniciar").
+- Sectors chunk contains `titleCategories` + "What Mexico Is Buying".
+- CaseLibrary chunk contains `MDP` + `billones` + `documentados`.
+
 ### Issue #001 — `/categories/:id` institutional ranking scope filter
 - Closed 2026-05-07 by commit `68f96e6` (deployed bundle `index-DygV5ZIQ.js`).
 - Backend `/categories/{id}/vendor-institution` gains `scope` Query param,
