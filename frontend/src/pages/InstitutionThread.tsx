@@ -33,7 +33,7 @@ import {
   SECTORS,
   SECTOR_COLORS,
 } from '@/lib/constants'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -194,15 +194,24 @@ export function InstitutionThread() {
   const sectorColor = SECTOR_COLORS[sectorCode] ?? '#64748b'
   const totalSpend = institution.total_amount_mxn ?? 0
   const totalContracts = institution.total_contracts ?? 0
-  const vendorCount = institution.vendor_count ?? 0
-  const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
-  // Year span derived from the timeline payload (which has first/last via min/max).
+  const vendorCount = institution.vendor_count
+  const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate ?? null
+  // 2026-05-09 review fix: backend returns the timeline wrapped in an
+  // envelope `{ institution_id, institution_name, timeline: [...] }`, not
+  // a flat array. Extract the array from the wrapper.
+  const timelineArray = useMemo(
+    () => (timeline && Array.isArray(timeline.timeline) ? timeline.timeline : []),
+    [timeline],
+  )
+  // Year span derived from the timeline payload (min/max year in the array).
   const yearSpan = useMemo(() => {
-    if (!timeline || !Array.isArray(timeline) || timeline.length === 0) return null
-    const years = timeline.map((t) => t.year).filter((y) => typeof y === 'number')
+    if (timelineArray.length === 0) return null
+    const years = timelineArray.map((t) => t.year).filter((y) => typeof y === 'number')
     if (years.length === 0) return null
     return Math.max(...years) - Math.min(...years) + 1
-  }, [timeline])
+  }, [timelineArray])
+  // Title-case the institution name (DB stores ALL CAPS).
+  const displayName = useMemo(() => toTitleCase(institution.name), [institution.name])
 
   return (
     <motion.div
@@ -234,10 +243,10 @@ export function InstitutionThread() {
                 letterSpacing: '-0.018em',
               }}
             >
-              {institution.name}
+              {displayName}
             </h1>
           </div>
-          {institution.siglas && institution.siglas !== institution.name && (
+          {institution.siglas && institution.siglas !== institution.name && institution.siglas !== displayName && (
             <p className="ml-10 text-sm font-mono uppercase tracking-[0.16em] text-text-muted mt-1">
               {institution.siglas}
             </p>
@@ -260,18 +269,26 @@ export function InstitutionThread() {
             lineHeight: 1.6,
           }}
         >
-          {isEs
-            ? `${institution.name} ha contratado ${formatNumber(totalContracts)} veces por un valor combinado de ${formatCompactMXN(totalSpend)} con ${formatNumber(vendorCount)} proveedores distintos${yearSpan ? ` a lo largo de ${yearSpan} años` : ''}. ${(directAwardPct * 100).toFixed(0)}% de los contratos se adjudicaron directamente, sin licitación.`
-            : `${institution.name} has signed ${formatNumber(totalContracts)} contracts for a combined value of ${formatCompactMXN(totalSpend)} with ${formatNumber(vendorCount)} distinct vendors${yearSpan ? ` over ${yearSpan} years` : ''}. ${(directAwardPct * 100).toFixed(0)}% of contracts were awarded directly, without a competitive procedure.`}
+          {buildLede({
+            name: displayName,
+            contracts: totalContracts,
+            spend: totalSpend,
+            vendors: vendorCount,
+            yearSpan,
+            directAwardPct,
+            lang,
+          })}
         </p>
 
-        {/* Hero KPIs — 4 stats in a clean strip */}
+        {/* Hero KPIs — 4 stats in a clean strip. "—" when the backend
+            doesn't have the metric (vendor_count and direct_award_pct
+            are nullable on InstitutionDetailResponse). */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-4 mb-2">
           {[
             { label: isEs ? 'Contratos' : 'Contracts', value: formatNumber(totalContracts) },
             { label: isEs ? 'Valor total' : 'Total value', value: formatCompactMXN(totalSpend) },
-            { label: isEs ? 'Adj. directas' : 'Direct awards', value: `${(directAwardPct * 100).toFixed(0)}%` },
-            { label: isEs ? 'Proveedores' : 'Vendors', value: formatNumber(vendorCount) },
+            { label: isEs ? 'Adj. directas' : 'Direct awards', value: directAwardPct != null ? `${(directAwardPct * 100).toFixed(0)}%` : '—' },
+            { label: isEs ? 'Proveedores' : 'Vendors', value: vendorCount != null ? formatNumber(vendorCount) : '—' },
           ].map((s) => (
             <div key={s.label} className="min-w-0">
               <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
@@ -358,14 +375,14 @@ export function InstitutionThread() {
           title={isEs ? 'Patrón temporal y verdicto' : 'Temporal pattern and verdict'}
           accent={sectorColor}
         />
-        {timeline && Array.isArray(timeline) && timeline.length > 0 ? (
+        {timelineArray.length > 0 ? (
           <>
             <p className="text-text-secondary max-w-3xl mb-6 text-sm leading-relaxed">
               {isEs
                 ? 'Cada año se muestra coloreado por su indicador de riesgo promedio. Un patrón ascendente sugiere captura institucional o concentración creciente.'
                 : 'Each year is colored by its average risk indicator. An ascending pattern suggests institutional capture or growing concentration.'}
             </p>
-            <RiskYearStrip timeline={timeline} lang={lang} />
+            <RiskYearStrip timeline={timelineArray} lang={lang} />
           </>
         ) : (
           <p className="text-text-muted italic">{isEs ? 'Sin datos de línea de tiempo.' : 'No timeline data available.'}</p>
@@ -389,7 +406,7 @@ export function InstitutionThread() {
               lineHeight: 1.4,
             }}
           >
-            {buildVerdict(institution.name, riskLevel, directAwardPct, vendorCount, totalContracts, lang)}
+            {buildVerdict(displayName, riskLevel, directAwardPct, vendorCount, totalContracts, lang)}
           </p>
         </div>
       </ChapterShell>
@@ -522,17 +539,61 @@ function RiskYearStrip({
   )
 }
 
+function buildLede(input: {
+  name: string
+  contracts: number
+  spend: number
+  vendors: number | null | undefined
+  yearSpan: number | null
+  directAwardPct: number | null | undefined
+  lang: 'en' | 'es'
+}): string {
+  const { name, contracts, spend, vendors, yearSpan, directAwardPct, lang } = input
+  const vendorPart =
+    vendors != null
+      ? lang === 'es'
+        ? ` con ${formatNumber(vendors)} proveedores distintos`
+        : ` with ${formatNumber(vendors)} distinct vendors`
+      : ''
+  const yearPart = yearSpan ? (lang === 'es' ? ` a lo largo de ${yearSpan} años` : ` over ${yearSpan} years`) : ''
+  const daPart =
+    directAwardPct != null
+      ? lang === 'es'
+        ? ` ${(directAwardPct * 100).toFixed(0)}% de los contratos se adjudicaron directamente, sin licitación.`
+        : ` ${(directAwardPct * 100).toFixed(0)}% of contracts were awarded directly, without a competitive procedure.`
+      : ''
+  if (lang === 'es') {
+    return `${name} ha contratado ${formatNumber(contracts)} veces por un valor combinado de ${formatCompactMXN(spend)}${vendorPart}${yearPart}.${daPart}`
+  }
+  return `${name} has signed ${formatNumber(contracts)} contracts for a combined value of ${formatCompactMXN(spend)}${vendorPart}${yearPart}.${daPart}`
+}
+
 function buildVerdict(
   name: string,
   level: 'critical' | 'high' | 'medium' | 'low',
-  daPct: number,
-  vendorCount: number,
+  daPct: number | null | undefined,
+  vendorCount: number | null | undefined,
   contractCount: number,
   lang: 'en' | 'es',
 ): string {
-  const daLabel = `${(daPct * 100).toFixed(0)}%`
-  const vc = vendorCount.toLocaleString()
+  const daLabel = daPct != null ? `${(daPct * 100).toFixed(0)}%` : (lang === 'es' ? 'sin datos de' : 'no data on')
+  const vc = vendorCount != null ? vendorCount.toLocaleString() : '?'
   const cc = contractCount.toLocaleString()
+  // When DA% data is missing, the verdict has to read coherently without
+  // the percentage anchor. Each level gets a "no-DA" variant.
+  if (daPct == null) {
+    if (lang === 'es') {
+      if (level === 'critical') return `${name} muestra un patrón crítico en sus ${cc} contratos. Sin datos sobre tasa de adjudicación directa, pero el indicador de riesgo agregado supera el umbral del 60%. Revisión prioritaria.`
+      if (level === 'high') return `${name} muestra señales preocupantes en sus ${cc} contratos. La tasa de adjudicación directa no está disponible para esta institución. Revisar la concentración por proveedor.`
+      if (level === 'medium') return `${name} muestra señales moderadas en sus ${cc} contratos. Datos parciales — revisar antes de descartar.`
+      return `${name} no muestra señales de riesgo destacadas en sus ${cc} contratos. Dentro del rango habitual del sector.`
+    }
+    if (level === 'critical') return `${name} shows a critical pattern across ${cc} contracts. No data on direct-award rate, but the aggregate risk indicator clears the 60% threshold. Priority review.`
+    if (level === 'high') return `${name} shows concerning signals across ${cc} contracts. Direct-award rate data not available for this institution. Review vendor concentration.`
+    if (level === 'medium') return `${name} shows moderate signals across ${cc} contracts. Partial data — review before dismissing.`
+    return `${name} does not show prominent risk signals across ${cc} contracts. Within the sector's normal range.`
+  }
+  // DA% present — full editorial copy.
   if (lang === 'es') {
     if (level === 'critical')
       return `${name} muestra un patrón crítico: ${daLabel} de ${cc} contratos adjudicados directamente a ${vc} proveedores. La concentración y el tipo de adjudicación sugieren captura institucional probable. Revisión prioritaria.`
