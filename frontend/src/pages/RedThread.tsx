@@ -1060,8 +1060,13 @@ function PatternDiagnostic({
   diagnosisLabel: string
 }) {
   // Chart dimensions per row (SVG, scales to container width)
+  // 2026-05-08: ROW_H 30 → 24 and the dot is rendered as an absolute-
+  // positioned HTML circle outside the SVG so `preserveAspectRatio="none"`
+  // can stretch the lab-axis horizontally without squashing the marker
+  // into a flat ellipse. User feedback: "the pattern should be way
+  // smaller" + "I can't see the dot. It's like as if it was squashed."
   const SCALE_W = 380
-  const ROW_H = 30
+  const ROW_H = 24
   const Z_RANGE = 3 // axis spans -3σ to +3σ
 
   // For each row, compute marker position and color
@@ -1126,7 +1131,11 @@ function PatternDiagnostic({
                 </div>
               </div>
 
-              {/* Lab scale */}
+              {/* Lab scale — relative wrapper so the circular marker dot
+                  can sit on top of the stretched SVG without inheriting
+                  the horizontal stretch (which made it look "squashed"
+                  per user feedback). */}
+              <div className="relative w-full" style={{ height: ROW_H }}>
               <svg
                 viewBox={`0 0 ${SCALE_W} ${ROW_H}`}
                 className="w-full"
@@ -1184,17 +1193,25 @@ function PatternDiagnostic({
                     fillOpacity={0.10}
                   />
                 )}
-                {/* Vendor marker dot */}
-                <circle
-                  cx={markerX}
-                  cy={ROW_H / 2}
-                  r={5}
-                  fill={markerColor}
-                  stroke="var(--color-background)"
-                  strokeWidth={1.5}
-                  style={isAnomalous ? { filter: `drop-shadow(0 0 3px ${markerColor}aa)` } : undefined}
-                />
               </svg>
+              {/* Vendor marker dot — rendered as an absolutely-positioned
+                  HTML circle so it stays a circle even when the SVG above
+                  is horizontally stretched by preserveAspectRatio="none". */}
+              <span
+                className="absolute rounded-full pointer-events-none"
+                style={{
+                  left: `${(markerX / SCALE_W) * 100}%`,
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 9,
+                  height: 9,
+                  backgroundColor: markerColor,
+                  border: '1.5px solid var(--color-background)',
+                  boxShadow: isAnomalous ? `0 0 3px ${markerColor}aa` : undefined,
+                }}
+                aria-hidden="true"
+              />
+              </div>
 
               {/* SHAP contribution */}
               <div className="text-right">
@@ -1561,9 +1578,11 @@ function InstitutionalRibbon({
 
   return (
     <div>
-      {/* Year axis at top */}
+      {/* Year axis at top — 2026-05-08: widened institution column 160→200
+          and value column 80→110 because long institution names were getting
+          truncated mid-word and "$133.2B MXN" was clipping the unit. */}
       <div className="relative pb-2 border-b border-border mb-2">
-        <div className="grid items-end" style={{ gridTemplateColumns: '160px 1fr 80px', gap: '12px' }}>
+        <div className="grid items-end" style={{ gridTemplateColumns: '200px 1fr 110px', gap: '12px' }}>
           <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
             {i18n.language.startsWith('es') ? 'Institución' : 'Institution'}
           </span>
@@ -1592,8 +1611,14 @@ function InstitutionalRibbon({
         {sorted.map((inst, idx) => {
           const start = inst.first_year ?? minYear
           const end = inst.last_year ?? maxYear
-          const startPct = ((start - minYear) / (yearSpan - 1)) * 100
-          const widthPct = Math.max(2.5, ((end - start + 1) / yearSpan) * 100)
+          // 2026-05-08: clamp startPct to [0, 100] and cap width so a single-year
+          // ribbon at the very last year (or a year_span = 1 vendor) doesn't
+          // overflow the chart frame. Both bugs were visible on long-running
+          // vendors where the ribbon spilled past the right edge.
+          const startPctRaw = ((start - minYear) / Math.max(yearSpan - 1, 1)) * 100
+          const startPct = Math.max(0, Math.min(100, startPctRaw))
+          const widthRaw = Math.max(2.5, ((end - start + 1) / yearSpan) * 100)
+          const widthPct = Math.max(2.5, Math.min(widthRaw, 100 - startPct))
           const risk = inst.avg_risk_score ?? 0
           const color = colorOf(risk)
           const height = ribbonHeight(inst.total_value_mxn)
@@ -1611,15 +1636,17 @@ function InstitutionalRibbon({
                   'grid items-center py-1 px-1 rounded-sm transition-colors',
                   isHover ? 'bg-background-elevated' : ''
                 )}
-                style={{ gridTemplateColumns: '160px 1fr 80px', gap: '12px' }}
+                style={{ gridTemplateColumns: '200px 1fr 110px', gap: '12px' }}
               >
-                {/* Institution name */}
+                {/* Institution name — sm chip (24-char truncation) so "Comisión
+                    Nacional para el Desarrollo de los Pueblos Indígenas" doesn't
+                    cut at "Comisión Nacional pa…" the way xs (16) did. */}
                 <div className="min-w-0">
                   <EntityIdentityChip
                     type="institution"
                     id={inst.institution_id}
                     name={inst.institution_name}
-                    size="xs"
+                    size="sm"
                     hideIcon
                   />
                   {inst.institution_type && (
@@ -1867,7 +1894,10 @@ function MoneyStaircase({
   const totalCum = cum
   if (totalCum === 0) return null
 
-  const top3Jumps = [...points].sort((a, b) => b.delta - a.delta).slice(0, 3).map((p) => p.year)
+  // 2026-05-08: top-3 → top-2 jumps. User feedback: "too much text" on
+  // the money graph. Two callouts is enough to tell the story (biggest
+  // year + second-biggest); the third was visual noise.
+  const top3Jumps = [...points].sort((a, b) => b.delta - a.delta).slice(0, 2).map((p) => p.year)
 
   const W = 720
   const H = 300
@@ -1928,7 +1958,7 @@ function MoneyStaircase({
           d += ` L ${xOfNext(points[points.length - 1].year)} ${yOf(0)} L ${xOf(points[0].year)} ${yOf(0)} Z`
           return d
         })()}
-        fill="var(--color-risk-critical)"
+        fill="var(--color-accent)"
         fillOpacity={0.05}
       />
 
@@ -1952,8 +1982,10 @@ function MoneyStaircase({
         )
       })}
 
-      {/* Annotation pins — top 3 jumps. Hidden when the user is actively
-          inspecting a year (their hover/pin cursor takes precedence). */}
+      {/* Annotation pins — top-2 jumps. 2026-05-08: text now in neutral
+          slate (text-secondary) instead of risk-colored red — the connector
+          line + circle still encode risk via stepColor, but the values
+          themselves don't shout. User feedback: "get rid of the red text". */}
       {activeYear == null && points.filter((p) => top3Jumps.includes(p.year)).map((p, idx) => {
         const x = xOf(p.year)
         const yTop = yOf(p.end)
@@ -1963,7 +1995,7 @@ function MoneyStaircase({
           <g key={`pin-${p.year}`} style={{ pointerEvents: 'none' }}>
             <line x1={x} y1={yTop} x2={x} y2={pinY + 6} stroke={stepColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.6} />
             <circle cx={x} cy={yTop} r={3.2} fill={stepColor} stroke="var(--color-background)" strokeWidth={1} />
-            <text x={x} y={pinY} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={700} fill={stepColor}>
+            <text x={x} y={pinY} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-secondary)">
               +{formatCompactMXN(p.delta)}
             </text>
             <text x={x} y={pinY + 9} textAnchor="middle" fontSize={8} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)">
@@ -1978,14 +2010,16 @@ function MoneyStaircase({
         <circle cx={xOf(selectedYear)} cy={PAD.top - 4} r={2.6} fill="var(--color-text-primary)" style={{ pointerEvents: 'none' }} />
       )}
 
-      {/* Final cumulative callout */}
+      {/* Final cumulative callout — 2026-05-08: dot now uses accent gold
+          instead of risk-critical red, removing one more red element from
+          the chart per user request "get rid of the red text in there". */}
       {(() => {
         const last = points[points.length - 1]
         const x = xOfNext(last.year)
         const y = yOf(last.end)
         return (
           <g style={{ pointerEvents: 'none' }}>
-            <circle cx={x} cy={y} r={4} fill="var(--color-risk-critical)" stroke="var(--color-background)" strokeWidth={1.5} />
+            <circle cx={x} cy={y} r={4} fill="var(--color-accent)" stroke="var(--color-background)" strokeWidth={1.5} />
             <text x={x - 6} y={y - 8} textAnchor="end" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
               {formatCompactMXN(last.end)}
             </text>
