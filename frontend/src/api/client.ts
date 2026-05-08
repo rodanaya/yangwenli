@@ -3198,7 +3198,32 @@ export interface AtlasClusterVendorsResponse {
 
 // ── Atlas API module ──────────────────────────────────────────────────────────
 
-const atlasApi = {
+// 2026-05-09: Spatial-nav Z1 — institutions inside a sector with a
+// pre-computed (fx, fy) layout. Backend endpoint added in same sprint.
+export interface SpatialInstitution {
+  institution_id: number
+  name: string
+  institution_type: string | null
+  fx: number
+  fy: number
+  size: number
+  risk: number
+  total_contracts: number
+  total_amount_mxn: number
+  direct_award_pct: number | null
+  high_risk_pct: number | null
+}
+
+export interface SectorInstitutionsSpatialResponse {
+  sector_id: number
+  sector_code: string
+  sector_name_es: string
+  sector_name_en: string
+  total: number
+  institutions: SpatialInstitution[]
+}
+
+export const atlasApi = {
   async getClusterVendors(params: {
     lens: string
     code: string
@@ -3212,6 +3237,20 @@ const atlasApi = {
       ...(params.cursor !== undefined ? { cursor: params.cursor } : {}),
     })
     const { data } = await api.get<AtlasClusterVendorsResponse>(`/atlas/cluster-vendors?${q}`)
+    return data
+  },
+
+  async getSectorInstitutionsSpatial(params: {
+    sectorId: number
+    limit?: number
+    minContracts?: number
+  }): Promise<SectorInstitutionsSpatialResponse> {
+    const q = buildQueryParams({
+      sector_id: params.sectorId,
+      limit: params.limit ?? 60,
+      min_contracts: params.minContracts ?? 50,
+    })
+    const { data } = await api.get<SectorInstitutionsSpatialResponse>(`/atlas/sector-institutions?${q}`)
     return data
   },
 }

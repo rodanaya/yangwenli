@@ -128,6 +128,19 @@ export interface AtlasZoomLayerProps {
    * Driven by AtlasStoryBinding based on the active chapter's pinnedCode.
    */
   highlightedClusterCodes?: string[]
+  /**
+   * 2026-05-09 spatial-nav Phase 1.3: when true AND `mode === 'sectors'`,
+   * cluster click escalates from the legacy zoom-into-cluster (CSS scale)
+   * to drill-into-sector (real Z1 sub-constellation render). Off by default
+   * so existing /atlas behavior is unchanged. Toggled by /atlas?z1=true.
+   */
+  z1Enabled?: boolean
+  /**
+   * Required when `z1Enabled` is true and `mode === 'sectors'` so
+   * AtlasZoomLayer can resolve a sector code to its numeric id (the
+   * payload the drill-into-sector reducer needs).
+   */
+  resolveSectorId?: (code: string) => number | null
 }
 
 // ── AtlasZoomLayer ────────────────────────────────────────────────────────────
@@ -144,6 +157,8 @@ export function AtlasZoomLayer({
   onClusterClickBridge,
   namedVendors,
   highlightedClusterCodes,
+  z1Enabled = false,
+  resolveSectorId,
 }: AtlasZoomLayerProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -257,12 +272,27 @@ export function AtlasZoomLayer({
     return () => el.removeEventListener('wheel', onWheel)
   }, [isZoomed])
 
-  // Cluster click handler — dispatches zoom-into-cluster
+  // Cluster click handler — dispatches zoom-into-cluster (legacy) OR
+  // drill-into-sector (spatial nav Z1) depending on `z1Enabled` + lens.
   const handleClusterClick = (clusterCode: string) => {
     // Bridge to Atlas.tsx's selectedClusterCode for the old ClusterDetailPanel
     // (removed in P3; tolerated during P1→P3 transitional period)
     onClusterClickBridge?.(clusterCode)
     isAnimatingRef.current = true
+
+    // 2026-05-09 spatial-nav Phase 1.3 escalation. When the feature flag
+    // is on and the user is viewing the sectors lens, the click drills
+    // into Z1 (real institution sub-constellation) instead of the
+    // legacy CSS-scale zoom-into-cluster.
+    if (z1Enabled && mode === 'sectors' && resolveSectorId) {
+      const sectorId = resolveSectorId(clusterCode)
+      if (sectorId !== null) {
+        dispatch({ type: 'drill-into-sector', sectorCode: clusterCode, sectorId })
+        setTimeout(() => { isAnimatingRef.current = false }, 640)
+        return
+      }
+    }
+
     dispatch({ type: 'zoom-into-cluster', code: clusterCode })
     // Animation duration matches the CSS transition (600ms)
     setTimeout(() => { isAnimatingRef.current = false }, 640)

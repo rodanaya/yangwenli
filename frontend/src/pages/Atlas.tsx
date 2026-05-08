@@ -49,6 +49,8 @@ import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
+import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
@@ -966,6 +968,55 @@ function AtlasUrlSync({
 // React's setState dedupes by reference equality, so calling unconditionally
 // is a no-op when values haven't changed.
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Z1Overlay — renders the spatial-nav Z1 sub-constellation when the user
+ * has drilled into a sector via the ?z1=true flag. Sits as an absolute
+ * overlay above the AtlasZoomLayer so the legacy CSS-scale zoom is still
+ * available behind it and we can A/B between them during iteration.
+ */
+function Z1Overlay({ lang }: { lang: 'en' | 'es' }) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const navigate = useNavigate()
+  if (state.view.kind !== 'zoomed-sector') return null
+  const view = state.view
+  return (
+    <div
+      className="absolute inset-0 z-10"
+      style={{ background: 'var(--color-background, #faf9f6)' }}
+    >
+      <div className="relative h-full">
+        <Z1SectorMap
+          sectorId={view.sectorId}
+          sectorCode={view.sectorCode}
+          lang={lang}
+          onInstitutionClick={(institutionId, institutionName) => {
+            // Phase 1.3: institution click deep-links to the legacy
+            // /institutions/:id page until Z2 lands. This proves the
+            // navigation primitive end-to-end without committing to the
+            // Z2 sub-constellation render in this commit.
+            dispatch({ type: 'drill-into-institution', institutionId, institutionName })
+            navigate(`/institutions/${institutionId}`)
+          }}
+        />
+        {/* Back button — top-right, always visible */}
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'escape-zoom' })}
+          className="absolute top-2 right-2 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm hover:bg-background-elevated transition-colors"
+          style={{
+            color: 'var(--color-accent)',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-background-card)',
+          }}
+        >
+          {lang === 'en' ? '← Zoom out' : '← Alejar'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function AtlasContextBridge({
   setMode,
   setYearIndex,
@@ -1385,6 +1436,12 @@ export default function Atlas() {
   const handleClusterClick = (clusterCode: string) => {
     setSelectedClusterCode(clusterCode)
   }
+  // 2026-05-09 spatial-nav Phase 1.3 — feature flag for the Z1 sub-
+  // constellation render. When set on /atlas?z1=true AND the user is on
+  // the sectors lens, AtlasZoomLayer additionally dispatches
+  // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
+  // as an overlay on the zoomed view.
+  const z1Enabled = searchParams.get('z1') === 'true'
 
   const totalContractsForYear = snapshot.totalContracts
 
@@ -2196,7 +2253,14 @@ export default function Atlas() {
           onClusterClickBridge={handleClusterClick}
           namedVendors={namedVendors}
           highlightedClusterCodes={highlightedClusterCodes}
+          z1Enabled={z1Enabled}
+          resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
         />
+        {/* 2026-05-09 spatial-nav Phase 1.3 — Z1 sub-constellation overlay.
+            Renders institutions as bodies in space when the user has
+            drilled into a sector. Only mounted when ?z1=true so the
+            existing /atlas behavior is preserved. */}
+        {z1Enabled && <Z1Overlay lang={lang} />}
       </PlateFrame>
 
       {/* ── Year scrubber A ─────────────────────────────────────────── */}
