@@ -20,7 +20,9 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/explore': 'explore',
   '/money-flow': 'captureHeatmap',
   '/administrations': 'administrations',
-  '/price-analysis': 'priceAnalysis',
+  // /price-analysis was an orphan route cut on 2026-05-07 (Issue #017
+  // quick-cut). The route now redirects to /sectors via App.tsx, so the
+  // breadcrumb map entry was dead and is removed in this Day-1 closeout.
   '/contracts': 'contracts',
   '/network': 'network',
   '/workspace': 'workspace',

@@ -101,7 +101,7 @@
     "exploreDesc": "Encuentra proveedores o instituciones y usa el ícono de ojo para empezar a seguirlos.",
     "exploreCta": "Buscar proveedores",
     "caseTitle": "Abrir un caso documentado",
-    "caseDesc": "Explora 1,363 casos documentados y agrega a los involucrados a tu espacio.",
+    "caseDesc": "Explora {{n}} casos documentados y agrega a los involucrados a tu espacio.",
     "caseCta": "Ver casos"
   },
   "dossierEmpty": {

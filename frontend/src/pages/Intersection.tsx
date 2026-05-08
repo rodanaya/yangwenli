@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -459,11 +459,11 @@ export default function Intersection() {
               <p className="text-[12px] leading-[1.7] text-text-secondary max-w-prose">
                 {lang === 'es' ? (
                   <>
-                    Los cuadrantes se computan sobre aria_queue (318K proveedores federales). Puntaje RUBLI = score v0.6.5 calibrado OCDE por sector (ver <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología</Link>). Registros externos: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (sanciones firmes del comptroller federal, 544 registros), <span className="font-mono">Corpus RUBLI</span> (1,363 casos de verdad fundamental con 911 proveedores vinculados).
+                    Los cuadrantes se computan sobre aria_queue (318K proveedores federales). Puntaje RUBLI = score {CURRENT_MODEL_VERSION} calibrado OCDE por sector (ver <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología</Link>). Registros externos: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (sanciones firmes del comptroller federal, 544 registros), <span className="font-mono">Corpus RUBLI</span> ({GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString('es-MX')} casos de verdad fundamental con 911 proveedores vinculados).
                   </>
                 ) : (
                   <>
-                    Quadrants computed over aria_queue (318K federal vendors). RUBLI score = v0.6.5 OECD-calibrated per-sector (see <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">methodology</Link>). External registries: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (final federal-comptroller sanctions, 544 records), <span className="font-mono">RUBLI corpus</span> (1,363 ground-truth cases covering 911 vendors).
+                    Quadrants computed over aria_queue (318K federal vendors). RUBLI score = {CURRENT_MODEL_VERSION} OECD-calibrated per-sector (see <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">methodology</Link>). External registries: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (final federal-comptroller sanctions, 544 records), <span className="font-mono">RUBLI corpus</span> ({GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} ground-truth cases covering 911 vendors).
                   </>
                 )}
               </p>

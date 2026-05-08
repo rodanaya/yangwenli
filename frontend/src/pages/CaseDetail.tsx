@@ -6,7 +6,7 @@ import { caseLibraryApi, ariaApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { ArrowLeft, ExternalLink, ArrowUpRight } from 'lucide-react'
-import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
@@ -1872,8 +1872,8 @@ function CaseBody({
                 <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
                   Across {riskDist.totalVendors} {riskDist.totalVendors === 1 ? 'vendor' : 'vendors'}{' '}
                   with COMPRANET contracts. The v0.8.5 model uses 18 features — price volatility,
-                  vendor concentration, institution diversity — calibrated against 1,363 confirmed
-                  corruption cases.
+                  vendor concentration, institution diversity — calibrated against{' '}
+                  {GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} confirmed corruption cases.
                   {avgRiskScore < 0.3 && (
                     <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 11 }}>
                       Low score flag: this pattern is structurally different from the training set.
