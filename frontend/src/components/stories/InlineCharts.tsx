@@ -358,19 +358,34 @@ export function InlineDotGrid({
 export function InlineBarChart({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  /** 2026-05-08: locale-aware bar labels. When `lang='en'` and a point
+   *  has `label_en`, the English label renders; otherwise falls back
+   *  to `label_es` (when es) or `label` (default). Without this prop
+   *  Spanish display names like "Infraestructura" leaked into EN locale. */
+  lang?: 'en' | 'es'
 }) {
   const mx = maxVal(data.points, data.maxValue)
   const BAR_HEIGHT = 22
   const LABEL_W = 140
-  const VALUE_W = 60
+  // 2026-05-08: bumped VALUE_W 60 → 90 so 12-character values like
+  // "179.5 B MXN" don't clip the rightmost characters when the bar is
+  // long. User report: "in infrastructure, I don't see the n."
+  const VALUE_W = 90
   const BAR_AREA = 340
   const ROW_GAP = 8
   const svgH = data.points.length * (BAR_HEIGHT + ROW_GAP) + 20
   const svgW = LABEL_W + BAR_AREA + VALUE_W + 8
   const unit = data.unit ?? ''
+
+  // Pick lang-aware label per point.
+  const labelFor = (pt: { label: string; label_en?: string; label_es?: string }) => {
+    if (lang === 'en') return pt.label_en ?? pt.label
+    return pt.label_es ?? pt.label
+  }
 
   const refX = (v: number) => LABEL_W + (v / mx) * BAR_AREA
 
@@ -379,7 +394,7 @@ export function InlineBarChart({
   const anchor = highlightedPt
     ? {
         value: `${highlightedPt.value.toLocaleString()}${unit ? ` ${unit}` : ''}`,
-        label: highlightedPt.label,
+        label: labelFor(highlightedPt),
         color: highlightedPt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR,
       }
     : undefined
@@ -428,6 +443,7 @@ export function InlineBarChart({
           const color = pt.highlight ? HIGHLIGHT_COLOR : getColor(pt, i)
           const opacity = pt.highlight ? 0.95 : 0.65
 
+          const lbl = labelFor(pt)
           return (
             <g key={i}>
               <text
@@ -439,7 +455,7 @@ export function InlineBarChart({
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-secondary)"
               >
-                {pt.label.length > 18 ? pt.label.slice(0, 17) + '…' : pt.label}
+                {lbl.length > 18 ? lbl.slice(0, 17) + '…' : lbl}
               </text>
 
               <rect
@@ -1495,13 +1511,21 @@ export function InlineNetwork({
 export function InlineStackedBar({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryStackedBarData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const { rows, unit, anchor, annotation, highlightColor, baseColor } = data
   const hi = highlightColor ?? HIGHLIGHT_COLOR
   const base = baseColor ?? 'var(--color-text-muted)'
+
+  // Lang-aware row label
+  const rowLabel = (r: { label: string; label_en?: string; label_es?: string }) => {
+    if (lang === 'en') return r.label_en ?? r.label
+    return r.label_es ?? r.label
+  }
 
   const ROW_H = 26
   const ROW_GAP = 14
@@ -1544,7 +1568,7 @@ export function InlineStackedBar({
                 fill="var(--color-text-secondary)"
                 fontWeight={700}
               >
-                {r.label}
+                {rowLabel(r)}
               </text>
 
               {/* Base bar (full total) */}

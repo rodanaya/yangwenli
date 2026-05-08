@@ -96,6 +96,10 @@ export interface StoryChartPoint {
   label: string
   /** Optional Spanish translation of `label`. */
   label_es?: string
+  /** Optional English translation of `label` — use when `label` is the
+   *  Spanish default (sector names, common categories) and the EN
+   *  reader needs a translated version. Falls back to `label`. */
+  label_en?: string
   value: number
   value2?: number
   color?: string
@@ -187,6 +191,8 @@ export interface StoryStackedBarData {
   rows: Array<{
     label: string
     label_es?: string
+    /** Optional English translation of `label` — fallback to `label`. */
+    label_en?: string
     /** Total bar value. */
     total: number
     /** Sub-segment that gets the highlight color (e.g. IMSS portion). */
@@ -1440,14 +1446,14 @@ export const STORIES: StoryDef[] = [
           chartId: 'p3-by-sector',
           data: {
             points: [
-              { label: 'Infraestructura', value: 179.5, color: '#ea580c' },
-              { label: 'Energía',         value: 130.6, color: '#eab308' },
-              { label: 'Salud',           value: 104.2, color: '#dc2626', highlight: true },
-              { label: 'Hacienda',        value: 40.9,  color: '#16a34a' },
-              { label: 'Educación',       value: 19.1,  color: '#3b82f6' },
-              { label: 'Agricultura',     value: 18.8,  color: '#22c55e' },
-              { label: 'Gobernación',     value: 17.8,  color: '#be123c' },
-              { label: 'Defensa',         value: 15.9,  color: '#1e3a5f' },
+              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, color: '#ea580c' },
+              { label: 'Energía',         label_en: 'Energy',          value: 130.6, color: '#eab308' },
+              { label: 'Salud',           label_en: 'Health',          value: 104.2, color: '#dc2626', highlight: true },
+              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  color: '#16a34a' },
+              { label: 'Educación',       label_en: 'Education',       value: 19.1,  color: '#3b82f6' },
+              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  color: '#22c55e' },
+              { label: 'Gobernación',     label_en: 'Governance',      value: 17.8,  color: '#be123c' },
+              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  color: '#1e3a5f' },
             ],
             unit: 'B MXN',
             annotation: '2,974 intermediary-pattern vendors across 526.8B MXN of federal spending.',
@@ -1946,15 +1952,15 @@ export const STORIES: StoryDef[] = [
           chartId: 'amlo-vs-pena-sectors',
           stacked: {
             rows: [
-              { label: 'Salud',           total: 1201.4, highlight: 1201.4, annotation: '+47% vs Peña',  annotation_es: '+47% vs Peña' },
-              { label: 'Infraestructura', total: 326.4,  highlight: 326.4,  annotation: '−65% vs Peña',  annotation_es: '−65% vs Peña' },
-              { label: 'Hacienda',        total: 392.9,  highlight: 392.9,  annotation: '+70% vs Peña',  annotation_es: '+70% vs Peña' },
-              { label: 'Defensa',         total: 168.9,  highlight: 168.9,  annotation: '+186% vs Peña', annotation_es: '+186% vs Peña' },
-              { label: 'Gobernación',     total: 190.4,  highlight: 190.4,  annotation: '+100% vs Peña', annotation_es: '+100% vs Peña' },
-              { label: 'Agricultura',     total: 166.2,  highlight: 166.2,  annotation: '+36% vs Peña',  annotation_es: '+36% vs Peña' },
-              { label: 'Educación',       total: 114.9,  highlight: 114.9,  annotation: '−26% vs Peña',  annotation_es: '−26% vs Peña' },
-              { label: 'Medio Ambiente',  total: 94.2,   highlight: 94.2,   annotation: '−31% vs Peña',  annotation_es: '−31% vs Peña' },
-              { label: 'Energía',         total: 50.1,   highlight: 50.1,   annotation: '−88% vs Peña',  annotation_es: '−88% vs Peña' },
+              { label: 'Salud',           label_en: 'Health',         total: 1201.4, highlight: 1201.4, annotation: '+47% vs Peña',  annotation_es: '+47% vs Peña' },
+              { label: 'Infraestructura', label_en: 'Infrastructure', total: 326.4,  highlight: 326.4,  annotation: '−65% vs Peña',  annotation_es: '−65% vs Peña' },
+              { label: 'Hacienda',        label_en: 'Treasury',       total: 392.9,  highlight: 392.9,  annotation: '+70% vs Peña',  annotation_es: '+70% vs Peña' },
+              { label: 'Defensa',         label_en: 'Defense',        total: 168.9,  highlight: 168.9,  annotation: '+186% vs Peña', annotation_es: '+186% vs Peña' },
+              { label: 'Gobernación',     label_en: 'Governance',     total: 190.4,  highlight: 190.4,  annotation: '+100% vs Peña', annotation_es: '+100% vs Peña' },
+              { label: 'Agricultura',     label_en: 'Agriculture',    total: 166.2,  highlight: 166.2,  annotation: '+36% vs Peña',  annotation_es: '+36% vs Peña' },
+              { label: 'Educación',       label_en: 'Education',      total: 114.9,  highlight: 114.9,  annotation: '−26% vs Peña',  annotation_es: '−26% vs Peña' },
+              { label: 'Medio Ambiente',  label_en: 'Environment',    total: 94.2,   highlight: 94.2,   annotation: '−31% vs Peña',  annotation_es: '−31% vs Peña' },
+              { label: 'Energía',         label_en: 'Energy',         total: 50.1,   highlight: 50.1,   annotation: '−88% vs Peña',  annotation_es: '−88% vs Peña' },
             ],
             unit: 'B MXN',
             anchor: {
@@ -2065,14 +2071,14 @@ export const STORIES: StoryDef[] = [
           chartId: 'amlo-categories-risk',
           data: {
             points: [
-              { label: 'Medicamentos',        value: 327.6, color: '#dc2626', highlight: true, annotation: '22.4% hi-risk', annotation_es: '22.4% riesgo' },
-              { label: 'Construcción Edif.', value: 269.4, color: '#a06820',                   annotation: '8.5% hi-risk',  annotation_es: '8.5% riesgo' },
-              { label: 'Servicios Generales', value: 245.7, color: '#a06820',                   annotation: '14.3% hi-risk', annotation_es: '14.3% riesgo' },
-              { label: 'Material Curación',   value: 228.1, color: '#a06820',                   annotation: '12.1% hi-risk', annotation_es: '12.1% riesgo' },
-              { label: 'Alimentos y Víveres', value: 224.9, color: '#dc2626', highlight: true, annotation: '32.4% hi-risk', annotation_es: '32.4% riesgo' },
-              { label: 'Mantenimiento',       value: 177.2, color: '#a06820',                   annotation: '9.4% hi-risk',  annotation_es: '9.4% riesgo' },
-              { label: 'Servicios Hospital.', value: 164.4, color: '#dc2626', highlight: true, annotation: '19.4% hi-risk', annotation_es: '19.4% riesgo' },
-              { label: 'Carreteras',          value: 105.0, color: '#a06820',                   annotation: '12.2% hi-risk', annotation_es: '12.2% riesgo' },
+              { label: 'Medicamentos',        label_en: 'Pharmaceuticals',  value: 327.6, color: '#dc2626', highlight: true, annotation: '22.4% hi-risk', annotation_es: '22.4% riesgo' },
+              { label: 'Construcción Edif.', label_en: 'Building Constr.',  value: 269.4, color: '#a06820',                   annotation: '8.5% hi-risk',  annotation_es: '8.5% riesgo' },
+              { label: 'Servicios Generales', label_en: 'General Services', value: 245.7, color: '#a06820',                   annotation: '14.3% hi-risk', annotation_es: '14.3% riesgo' },
+              { label: 'Material Curación',   label_en: 'Medical Supplies', value: 228.1, color: '#a06820',                   annotation: '12.1% hi-risk', annotation_es: '12.1% riesgo' },
+              { label: 'Alimentos y Víveres', label_en: 'Food & Provisions', value: 224.9, color: '#dc2626', highlight: true, annotation: '32.4% hi-risk', annotation_es: '32.4% riesgo' },
+              { label: 'Mantenimiento',       label_en: 'Maintenance',      value: 177.2, color: '#a06820',                   annotation: '9.4% hi-risk',  annotation_es: '9.4% riesgo' },
+              { label: 'Servicios Hospital.', label_en: 'Hospital Services', value: 164.4, color: '#dc2626', highlight: true, annotation: '19.4% hi-risk', annotation_es: '19.4% riesgo' },
+              { label: 'Carreteras',          label_en: 'Highways',         value: 105.0, color: '#a06820',                   annotation: '12.2% hi-risk', annotation_es: '12.2% riesgo' },
             ],
             unit: 'B MXN',
             annotation: 'Top 8 spending categories under AMLO. Red rows = categories where the high-risk rate exceeds the OECD ceiling (15%). Alimentos at 32.4% is the highest-risk concentration of any major category.',

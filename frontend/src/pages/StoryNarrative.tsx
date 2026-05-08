@@ -45,7 +45,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 // Inline chart map — type string → component
 // ---------------------------------------------------------------------------
 
-type InlineChartComponent = React.ComponentType<{ data: StoryInlineChartData; title: string }>
+type InlineChartComponent = React.ComponentType<{ data: StoryInlineChartData; title: string; lang?: 'en' | 'es' }>
 
 const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
   'inline-dot-grid': InlineDotGrid,
@@ -278,6 +278,7 @@ function pickChapterVariant(
 function renderChartBlock(
   chapter: StoryChapterDef,
   className = 'my-8',
+  lang: 'en' | 'es' = 'en',
 ) {
   if (!chapter.chartConfig) return null
   const cfg = chapter.chartConfig
@@ -300,7 +301,7 @@ function renderChartBlock(
   if (cfg.type === 'inline-stacked-bar' && cfg.stacked) {
     return (
       <ScrollReveal className={className}>
-        <InlineStackedBar data={cfg.stacked} title={cfg.title} />
+        <InlineStackedBar data={cfg.stacked} title={cfg.title} lang={lang} />
       </ScrollReveal>
     )
   }
@@ -309,7 +310,7 @@ function renderChartBlock(
     return (
       <ScrollReveal className={className}>
         {InlineChart ? (
-          <InlineChart data={cfg.data} title={cfg.title} />
+          <InlineChart data={cfg.data} title={cfg.title} lang={lang} />
         ) : (
           <div
             className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
@@ -635,7 +636,8 @@ function ChapterDivider({ accentColor }: { accentColor: string }) {
 // ── Variant: HERO (chapter 1) ─────────────────────────────────────────────
 
 function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const paddedNumber = String(chapter.number).padStart(2, '0')
   return (
     <section
@@ -734,7 +736,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
         {/* Chart, if any — wider than text column */}
         {chapter.chartConfig && (
           <div className="my-10 -mx-4 sm:mx-[-10%] md:mx-[-15%]">
-            {renderChartBlock(chapter, '')}
+            {renderChartBlock(chapter, '', lang)}
           </div>
         )}
       </div>
@@ -745,7 +747,8 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 // ── Variant: FEATURE (rich content chapter) ───────────────────────────────
 
 function FeatureChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -795,7 +798,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
       {/* Chart spans full editorial width below */}
       {chapter.chartConfig && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8">
-          {renderChartBlock(chapter, '')}
+          {renderChartBlock(chapter, '', lang)}
         </div>
       )}
     </section>
@@ -851,7 +854,7 @@ function DataSpotlightChapter({ chapter, story, accentColor, isFirst = false }: 
               borderTop: `2px solid ${accentColor}`,
             }}
           >
-            {renderChartBlock(chapter, 'p-3 sm:p-5 bg-background rounded-md')}
+            {renderChartBlock(chapter, 'p-3 sm:p-5 bg-background rounded-md', lang)}
           </div>
         </ScrollReveal>
       </div>
@@ -1094,7 +1097,7 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 
       {chapter.chartConfig && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-10">
-          {renderChartBlock(chapter, '')}
+          {renderChartBlock(chapter, '', lang)}
         </div>
       )}
 
@@ -1118,7 +1121,8 @@ function ClosingChapter({ chapter, story, accentColor }: ChapterRenderProps) {
 // ── Variant: STANDARD (current default, refined) ──────────────────────────
 
 function StandardChapter({ chapter, story, accentColor, isFirst = false }: ChapterRenderProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <section
       id={`chapter-${chapter.id}`}
@@ -1152,7 +1156,7 @@ function StandardChapter({ chapter, story, accentColor, isFirst = false }: Chapt
           <ChapterSources sources={chapter.sources} />
         )}
 
-        {chapter.chartConfig && renderChartBlock(chapter)}
+        {chapter.chartConfig && renderChartBlock(chapter, 'my-8', lang)}
         {chapter.pullquote && (
           <div className="my-10">
             <ScrollReveal>{renderPullquote(chapter, story, '', isFirst)}</ScrollReveal>
