@@ -428,7 +428,8 @@ function SortHeader({
 
 export function Investigation() {
   const navigate = useNavigate()
-  const { t } = useTranslation('investigation')
+  const { t, i18n } = useTranslation('investigation')
+  const isEs = i18n.language?.startsWith('es')
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState<InvestigationValidationStatus | 'all'>('all')
@@ -759,7 +760,7 @@ export function Investigation() {
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" aria-label="Investigation cases">
+                <table className="w-full text-sm" aria-label={isEs ? 'Casos de investigación' : 'Investigation cases'}>
                   <thead className="border-b border-border/40 bg-background-elevated/60">
                     <tr>
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />

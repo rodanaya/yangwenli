@@ -689,7 +689,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               {item.is_sfp_sanctioned && (
                 <span
                   className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-high/10 text-risk-high border border-risk-high/30"
-                  title="Sancionado SFP"
+                  title={isEs ? 'Sancionado por la SFP' : 'Sanctioned by SFP'}
                 >
                   SFP
                 </span>
