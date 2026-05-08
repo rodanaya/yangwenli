@@ -654,7 +654,19 @@ def get_vendor(
 
     Returns vendor details, classification, statistics, and metrics.
     Uses pre-computed vendor_stats for performance.
+
+    2026-05-08: wrapped in the existing vendor TTL cache (1h). The handler
+    runs ~74 serialised queries — for heavy T1 vendors (e.g. id 29277,
+    6,303 contracts) this measured 2.2s cold. The /thread page fires 6
+    concurrent queries and the slowest dominates wall time. With cache
+    on, the second visit drops to <50ms; cold first visit unchanged.
+    Cache key includes the vendor_id only — no per-user state.
     """
+    cache_key = f"vendor:detail:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
     with get_db() as conn:
         detail = vendor_service.get_vendor_detail(conn, vendor_id)
         if not detail:
@@ -902,7 +914,7 @@ def get_vendor(
         except Exception as e:
             logger.debug("sector_risk_percentile unavailable for vendor %s: %s", vendor_id, e)
 
-        return VendorDetailResponse(
+        response = VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
             rfc=_mask_personal_rfc(detail.get("rfc")),
@@ -952,6 +964,8 @@ def get_vendor(
             avg_confidence_upper=avg_confidence_upper,
             sector_risk_percentile=sector_risk_percentile,
         )
+        _set_vendor_cache(cache_key, response)
+        return response
 
 
 class ContractHistogramBucket(BaseModel):

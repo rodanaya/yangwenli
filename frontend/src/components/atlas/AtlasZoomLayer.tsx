@@ -61,12 +61,19 @@ const USER_ZOOM_MIN = 0.6   // can zoom out to ~2.16× total
 const USER_ZOOM_MAX = 2.5   // can zoom in to 9× total
 const WHEEL_ZOOM_STEP = 0.0015 // wheel deltaY → zoom multiplier delta
 
-// Dot radius by risk level when zoomed in
+// Dot radius by risk level when zoomed in.
+// 2026-05-08: bumped 3-4× from previous values (was 2.4/1.7/1.2/0.7).
+// User report on /atlas: "instead of giving me a closer look and seeing
+// more dots it just zooms in and doesn't do anything." The vendor-level
+// dots WERE rendering correctly but at sub-pixel sizes (r=0.7 at viewBox
+// 840-wide ≈ 1px on screen) — invisible. The overlay also dims the
+// constellation lattice via CSS so the vendor dots dominate the zoomed
+// view, matching the "more dots, more detail" mental model.
 const VENDOR_DOT_STYLE: Record<string, { r: number; opacity: number }> = {
-  critical: { r: 2.4, opacity: 0.95 },
-  high:     { r: 1.7, opacity: 0.82 },
-  medium:   { r: 1.2, opacity: 0.68 },
-  low:      { r: 0.7, opacity: 0.50 },
+  critical: { r: 8.0, opacity: 1.00 },
+  high:     { r: 6.0, opacity: 0.92 },
+  medium:   { r: 4.5, opacity: 0.82 },
+  low:      { r: 3.0, opacity: 0.65 },
 }
 
 // Attractor coordinate map — derives attractor centre (cx, cy) in viewport space
@@ -316,6 +323,14 @@ export function AtlasZoomLayer({
           }
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
             display: none;
+          }
+          /* Dim the constellation lattice when zoomed so the vendor-level
+             dots overlay (which IS more granular detail) dominates the view.
+             User report: "instead of giving me a closer look and seeing
+             more dots it just zooms in." Vendor overlay r-values bumped
+             3-4× alongside this rule. */
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle {
+            opacity: 0.18;
           }
         `}</style>
       )}
