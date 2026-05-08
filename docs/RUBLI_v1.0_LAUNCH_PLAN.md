@@ -1,14 +1,26 @@
 # RUBLI v1.0 — Launch Plan
 
-**Launch date: Friday 2026-05-22 (15 days).** Re-locked 2026-05-07
-after the 5-agent honest audit revealed P0 routing + data lies. Was
-2026-05-15; pushed +7 days to actually close audit findings honestly.
+**Launch date: Friday 2026-06-12 (34 days).** Re-locked 2026-05-09
+after the user identified that the entire conceptual model was wrong:
+the platform is not a CMS of dossier pages, it's a Star-Fox-64-style
+spatial map of the procurement universe (`docs/SPATIAL_NAV_PLAN.md`).
+The previous date (2026-05-22) assumed page-shaped polish on the
+existing surfaces; that is now scope cut. New scope is a working
+spatial-zoom prototype (Z0 → Z3) plus the existing Atlas / Stories /
+ARIA tools. Roughly 11–12 focused frontend sessions of substantive
+work.
 
-See `docs/RUBLI_v1.0_HONEST_AUDIT.md` for the audit synthesis and
+Was 2026-05-15 → 2026-05-22 (audit-fix push) → 2026-06-12 (spatial
+rebuild). The 21-day extension is honest about how much remains.
+
+See `docs/SPATIAL_NAV_PLAN.md` for the new conceptual model,
+`docs/RUBLI_v1.0_HONEST_AUDIT.md` for the prior audit, and
 `docs/RUBLI_v1.0_ISSUE_TRACKER.md` for the full P0/P1 list.
 
-**Status:** drafted 2026-05-07. Replaces the implicit "next session"
-backlog with a concrete ship-this-month plan.
+**Status:** drafted 2026-05-07, rescoped 2026-05-09. Replaces the
+implicit "next session" backlog with a concrete ship-this-month plan
+that matches the actual product concept rather than what was
+incrementally inherited.
 
 **Working hypothesis:** The platform isn't broken. It's *unfinished*.
 That's a scope problem, not a code problem. Cut scope, define done,

@@ -20,12 +20,26 @@ import type { ConstellationMode } from '@/components/charts/ConcentrationConstel
 // State shape
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type AtlasViewKind = 'idle' | 'hover-cluster' | 'zoomed-cluster' | 'selecting'
+// 2026-05-09: extended for spatial-nav rebuild (docs/SPATIAL_NAV_PLAN.md).
+// The Atlas now supports multiple zoom levels (Z0 system → Z1 sector →
+// Z2 institution → Z3 vendor). The legacy `zoomed-cluster` state is the
+// Z0→Z1 transition for the patterns/sectors/categories/sexenios lenses
+// already shipped. New `zoomed-sector` and `zoomed-institution` states
+// extend the same primitive into the deeper levels of the map.
+export type AtlasViewKind =
+  | 'idle'
+  | 'hover-cluster'
+  | 'zoomed-cluster'      // Z0→Z1 (legacy, retained)
+  | 'zoomed-sector'       // Z1→Z2 (NEW)
+  | 'zoomed-institution'  // Z2→Z3 (NEW, future)
+  | 'selecting'
 
 export type AtlasView =
   | { kind: 'idle' }
   | { kind: 'hover-cluster'; code: string }
   | { kind: 'zoomed-cluster'; code: string }
+  | { kind: 'zoomed-sector'; sectorCode: string; sectorId: number }
+  | { kind: 'zoomed-institution'; institutionId: number; institutionName: string }
   | { kind: 'selecting'; ids: string[] }
 
 export interface AtlasState {
@@ -44,8 +58,10 @@ export type AtlasAction =
   | { type: 'set-risk-floor'; floor: AtlasState['riskFloor'] }
   | { type: 'pin-cluster'; code: string | null }
   | { type: 'hover-cluster'; code: string | null }
-  | { type: 'zoom-into-cluster'; code: string }   // P2
-  | { type: 'escape-zoom' }                        // P2
+  | { type: 'zoom-into-cluster'; code: string }   // P2 — Z0→Z1
+  | { type: 'drill-into-sector'; sectorCode: string; sectorId: number }       // SPATIAL — Z1→Z2
+  | { type: 'drill-into-institution'; institutionId: number; institutionName: string } // SPATIAL — Z2→Z3
+  | { type: 'escape-zoom' }                        // P2 — pops one level
   | { type: 'toggle-vendor-selection'; id: string } // P4
   | { type: 'lasso-select'; ids: string[]; mode: 'replace' | 'union' } // P4
   | { type: 'clear-selection' }                    // P4
@@ -94,7 +110,7 @@ function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState {
         view: state.view.kind === 'idle' ? { kind: 'hover-cluster', code: action.code } : state.view,
       }
 
-    // ── P2 stubs — accept action so callers compile; wiring lands in P2 ──
+    // ── Z0→Z1 ─────────────────────────────────────────────────────────────
     case 'zoom-into-cluster':
       return {
         ...state,
@@ -102,11 +118,35 @@ function atlasReducer(state: AtlasState, action: AtlasAction): AtlasState {
         hoveredCluster: null,
       }
 
+    // ── Z1→Z2 (NEW spatial nav) ───────────────────────────────────────────
+    case 'drill-into-sector':
+      return {
+        ...state,
+        view: { kind: 'zoomed-sector', sectorCode: action.sectorCode, sectorId: action.sectorId },
+        hoveredCluster: null,
+      }
+
+    // ── Z2→Z3 (NEW spatial nav) ───────────────────────────────────────────
+    case 'drill-into-institution':
+      return {
+        ...state,
+        view: {
+          kind: 'zoomed-institution',
+          institutionId: action.institutionId,
+          institutionName: action.institutionName,
+        },
+        hoveredCluster: null,
+      }
+
+    // ── escape-zoom now pops ONE level (Z3→Z2→Z1→idle) ────────────────────
     case 'escape-zoom': {
       if (state.selection.size > 0) {
         // First ESC clears selection (VS Code / Figma pattern)
         return { ...state, selection: new Set(), view: { kind: 'idle' } }
       }
+      // Pop one zoom level. We don't keep a navigation stack yet, so each
+      // pop returns to idle for now. Future improvement: keep a breadcrumb
+      // stack so Z3→escape goes back to Z2 (sector view) not idle.
       return { ...state, view: { kind: 'idle' }, hoveredCluster: null }
     }
 
