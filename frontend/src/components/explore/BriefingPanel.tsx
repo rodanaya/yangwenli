@@ -300,6 +300,8 @@ function InstitutionBriefing({
   const vendorCount = inst.vendor_count
   const directAwardPct = inst.direct_award_pct ?? inst.direct_award_rate ?? null
   const risk = inst.avg_risk_score ?? 0
+  const highRiskPct = inst.high_risk_percentage ?? null
+  const longestTenured = (inst.longest_tenured_vendors ?? [])[0]
 
   return (
     <div>
@@ -318,11 +320,27 @@ function InstitutionBriefing({
           value={`${(directAwardPct > 1 ? directAwardPct : directAwardPct * 100).toFixed(0)}%`}
         />
       )}
+      {highRiskPct != null && (
+        <Stat
+          label={lang === 'en' ? 'High-risk contracts' : 'Contratos alto riesgo'}
+          value={`${(highRiskPct > 1 ? highRiskPct : highRiskPct * 100).toFixed(1)}%`}
+        />
+      )}
+      {longestTenured && (
+        <Stat
+          label={lang === 'en' ? 'Longest tenure' : 'Mayor antigüedad'}
+          value={
+            (longestTenured as { vendor_name?: string }).vendor_name
+              ? toTitleCase((longestTenured as { vendor_name: string }).vendor_name)
+              : '—'
+          }
+        />
+      )}
       <RiskPill score={risk} />
       <p className="mt-3 text-[11px] text-text-muted leading-relaxed">
         {lang === 'en'
-          ? 'Hover a vendor body to preview. Click to open the Red Thread.'
-          : 'Pasa el cursor sobre un proveedor para previsualizar. Clic para abrir el Hilo.'}
+          ? 'Hover a vendor body to preview. Click to drill into Z3 (the contract scatter).'
+          : 'Pasa el cursor sobre un proveedor para previsualizar. Clic para profundizar a Z3.'}
       </p>
     </div>
   )
