@@ -628,6 +628,11 @@ function Z1Layer({
   const yOf = (fy: number) => PAD + fy * (SVG_H - PAD * 2)
   const rOf = (size: number) => 8 + size * 32 // 8..40 px in viewBox units
 
+  // Sector-tinted radial gradient — reinforces sector identity by tinting
+  // the canvas backdrop with the sector's accent. Each Z1 instance gets its
+  // own gradient ID so multiple cached layers don't share a defs node.
+  const gradId = `z1-bg-${sectorCode}`
+
   return (
     <motion.g
       initial={{ opacity: 0, scale: 0.92 }}
@@ -635,6 +640,15 @@ function Z1Layer({
       exit={{ opacity: 0, scale: 1.08 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
     >
+      <defs>
+        <radialGradient id={gradId} cx="50%" cy="50%" r="65%">
+          <stop offset="0%" stopColor={sectorAccent} stopOpacity={0.10} />
+          <stop offset="60%" stopColor={sectorAccent} stopOpacity={0.04} />
+          <stop offset="100%" stopColor={sectorAccent} stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <rect x={0} y={0} width={SVG_W} height={SVG_H} fill={`url(#${gradId})`} pointerEvents="none" />
+
       {/* Eyebrow */}
       <text
         x={PAD}
