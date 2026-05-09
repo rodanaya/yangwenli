@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
 import {
   RISK_COLORS,
@@ -259,6 +260,14 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 triggerDrill={triggerCameraDrill}
               />
             )}
+            {focus.kind === 'vendor' && (
+              <Z3Layer
+                key={`z3-${focus.vendorId}`}
+                vendorId={focus.vendorId}
+                vendorName={focus.vendorName}
+                lang={lang}
+              />
+            )}
           </AnimatePresence>
         </g>
       </svg>
@@ -415,6 +424,20 @@ function Z1Layer({
     )
   }
 
+  // 2026-05-09 Phase 4: filter institutions by the risk floor in
+  // ExploreState. Drops anything below the chosen threshold so the
+  // user can focus on high-risk planets only.
+  const exploreState = useExploreState()
+  const riskFloor = exploreState.riskFloor
+  const passesFloor = (risk: number) => {
+    if (riskFloor === 'all') return true
+    if (riskFloor === 'medium') return risk >= 0.25
+    if (riskFloor === 'high') return risk >= 0.40
+    if (riskFloor === 'critical') return risk >= 0.60
+    return true
+  }
+  const filteredInstitutions = data.institutions.filter((i) => passesFloor(i.risk))
+
   const xOf = (fx: number) => PAD + fx * (SVG_W - PAD * 2)
   const yOf = (fy: number) => PAD + fy * (SVG_H - PAD * 2)
   const rOf = (size: number) => 8 + size * 32 // 8..40 px in viewBox units
@@ -436,7 +459,7 @@ function Z1Layer({
         letterSpacing={1.4}
         fill={sectorAccent}
       >
-        {`Z1 · ${(lang === 'en' ? data.sector_name_en : data.sector_name_es).toUpperCase()} · ${data.total} ${lang === 'en' ? 'INSTITUTIONS' : 'INSTITUCIONES'}`}
+        {`Z1 · ${(lang === 'en' ? data.sector_name_en : data.sector_name_es).toUpperCase()} · ${filteredInstitutions.length}/${data.total} ${lang === 'en' ? 'INSTITUTIONS' : 'INSTITUCIONES'}`}
       </text>
       <text
         x={PAD}
@@ -448,7 +471,7 @@ function Z1Layer({
         {lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
       </text>
 
-      {data.institutions.map((inst) => {
+      {filteredInstitutions.map((inst) => {
         const cx = xOf(inst.fx)
         const cy = yOf(inst.fy)
         return (
@@ -657,6 +680,120 @@ function Z2Layer({
                 {shortLabel(v.vendor_name)}
               </text>
             )}
+          </g>
+        )
+      })}
+    </motion.g>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z3 — vendor view (contracts plotted by year × amount)
+// ────────────────────────────────────────────────────────────────────────────
+
+function Z3Layer({
+  vendorId,
+  vendorName,
+  lang,
+}: {
+  vendorId: number
+  vendorName: string
+  lang: 'en' | 'es'
+}) {
+  const navigate = useNavigate()
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['explore', 'z3', vendorId],
+    queryFn: async () => {
+      const { vendorApi } = await import('@/api/client')
+      return vendorApi.getContracts(vendorId, { per_page: 100 })
+    },
+    enabled: vendorId > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return (
+      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
+        {lang === 'en' ? 'Loading vendor contracts…' : 'Cargando contratos…'}
+      </text>
+    )
+  }
+  if (isError || !data || !data.data || data.data.length === 0) {
+    return (
+      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
+        {lang === 'en' ? 'No contracts available.' : 'Sin contratos disponibles.'}
+      </text>
+    )
+  }
+
+  // Layout: x = year (linear), y = log(amount).
+  const contracts = data.data.slice(0, 100)
+  const years = contracts.map((c) => Number(c.contract_year ?? 0)).filter((y) => y > 1990)
+  const minYear = Math.min(...years, 2002)
+  const maxYear = Math.max(...years, 2025)
+  const ySpan = Math.max(maxYear - minYear, 1)
+  const amounts = contracts.map((c) => Math.max(1, Number(c.amount_mxn ?? 0)))
+  const maxLogAmt = Math.log10(Math.max(...amounts))
+  const minLogAmt = Math.log10(Math.min(...amounts))
+  const ampSpan = Math.max(maxLogAmt - minLogAmt, 0.5)
+
+  const xOf = (year: number) => PAD + ((year - minYear) / ySpan) * (SVG_W - PAD * 2)
+  const yOf = (amt: number) => SVG_H - PAD - ((Math.log10(amt) - minLogAmt) / ampSpan) * (SVG_H - PAD * 3)
+  const rOf = (amt: number) => 4 + ((Math.log10(amt) - minLogAmt) / ampSpan) * 18
+
+  return (
+    <motion.g
+      initial={{ opacity: 0, scale: 0.85 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1.10 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <text
+        x={PAD}
+        y={PAD}
+        fontSize={11}
+        fontFamily="var(--font-family-mono, monospace)"
+        fontWeight={700}
+        letterSpacing={1.4}
+        fill="var(--color-accent)"
+      >
+        {`Z3 · ${shortLabel(vendorName).toUpperCase()} · ${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}`}
+      </text>
+      <text
+        x={PAD}
+        y={SVG_H - PAD * 0.5}
+        fontSize={10}
+        fontFamily="var(--font-family-mono, monospace)"
+        fill="var(--color-text-muted)"
+      >
+        {lang === 'en' ? 'x = year · y = log(amount) · click → contract detail · esc to zoom out' : 'x = año · y = log(monto) · clic → detalle · esc para alejar'}
+      </text>
+
+      {/* Year axis ticks */}
+      {[minYear, Math.round((minYear + maxYear) / 2), maxYear].map((y) => (
+        <g key={y}>
+          <line x1={xOf(y)} x2={xOf(y)} y1={SVG_H - PAD - 4} y2={SVG_H - PAD} stroke="var(--color-border)" strokeWidth={1} />
+          <text x={xOf(y)} y={SVG_H - PAD + 12} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
+            {y}
+          </text>
+        </g>
+      ))}
+
+      {contracts.map((c) => {
+        const yr = Number(c.contract_year ?? minYear) || minYear
+        const amt = Math.max(1, Number(c.amount_mxn ?? 0))
+        const cx = xOf(yr)
+        const cy = yOf(amt)
+        const r = rOf(amt)
+        const risk = Number(c.risk_score ?? 0)
+        const fill = RISK_COLORS[getRiskLevelFromScore(risk)]
+        return (
+          <g
+            key={c.id}
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(`/contracts/${c.id}`)}
+          >
+            <circle cx={cx} cy={cy} r={r} fill={fill} fillOpacity={0.85} stroke="var(--color-background)" strokeWidth={1} />
           </g>
         )
       })}

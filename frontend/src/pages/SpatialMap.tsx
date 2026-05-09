@@ -22,6 +22,7 @@ import { ExploreProvider } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
+import { YearScrubber, RiskFloorToggle } from '@/components/explore/CanvasControls'
 
 export function Explore() {
   const { i18n } = useTranslation()
@@ -51,6 +52,8 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       {/* The map — fills available space */}
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
+        <RiskFloorToggle lang={lang} />
+        <YearScrubber lang={lang} />
       </div>
       {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}
       <div className="hidden lg:block">
