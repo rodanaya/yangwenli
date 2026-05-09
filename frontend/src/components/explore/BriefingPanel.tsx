@@ -69,9 +69,9 @@ function Breadcrumbs({ lang }: { lang: 'en' | 'es' }) {
             <button
               type="button"
               onClick={() => {
-                // Pop the stack until we land on this index
-                const target = state.stack.length - 1 - i
-                for (let n = 0; n < target; n++) dispatch({ type: 'pop-focus' })
+                // 2026-05-09 Phase 3: single dispatch instead of looping
+                // pop-focus, so the URL writer only fires once.
+                dispatch({ type: 'pop-to-level', level: i })
               }}
               className={isLast ? 'text-text-primary' : 'hover:text-text-secondary transition-colors'}
               style={{ cursor: isLast ? 'default' : 'pointer', background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 'inherit', textTransform: 'inherit', letterSpacing: 'inherit', color: 'inherit' }}

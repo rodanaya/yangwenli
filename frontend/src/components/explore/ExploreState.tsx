@@ -46,10 +46,12 @@ export type ExploreAction =
   | { type: 'drill-into-vendor'; vendorId: number; vendorName: string }
   | { type: 'drill-into-contract'; contractId: number }
   | { type: 'pop-focus' }
+  | { type: 'pop-to-level'; level: number } // for breadcrumbs / browser back
   | { type: 'reset-to-system' }
   | { type: 'set-hover'; hover: ExploreState['hover'] }
   | { type: 'set-year'; year: number | null }
   | { type: 'set-risk-floor'; floor: ExploreState['riskFloor'] }
+  | { type: 'hydrate-from-url'; stack: Focus[] }
 
 export const EXPLORE_DEFAULT_STATE: ExploreState = {
   stack: [{ level: 0, kind: 'system' }],
@@ -91,8 +93,23 @@ function reducer(state: ExploreState, action: ExploreAction): ExploreState {
     case 'pop-focus':
       if (state.stack.length <= 1) return state
       return { ...state, stack: state.stack.slice(0, -1), hover: null }
+    case 'pop-to-level': {
+      // Used by Breadcrumbs — keep entries up to and including `level`.
+      const target = Math.max(0, Math.min(action.level, state.stack.length - 1))
+      return { ...state, stack: state.stack.slice(0, target + 1), hover: null }
+    }
     case 'reset-to-system':
       return { ...state, stack: [{ level: 0, kind: 'system' }], hover: null }
+    case 'hydrate-from-url':
+      // Replace the entire stack with the URL-derived one. Always starts
+      // with a system root so even an empty incoming stack lands on Z0.
+      return {
+        ...state,
+        stack: action.stack.length > 0 && action.stack[0].kind === 'system'
+          ? action.stack
+          : [{ level: 0, kind: 'system' }, ...action.stack],
+        hover: null,
+      }
     case 'set-hover':
       return { ...state, hover: action.hover }
     case 'set-year':

@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { ExploreProvider } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
+import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
 
 export function Explore() {
   const { i18n } = useTranslation()
@@ -28,24 +29,34 @@ export function Explore() {
 
   return (
     <ExploreProvider>
-      <div
-        className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
-        style={{
-          height: 'calc(100vh - var(--topbar-h, 64px))',
-          background: 'var(--color-background, #faf9f6)',
-        }}
-      >
-        {/* The map — fills available space */}
-        <div className="relative overflow-hidden">
-          <ExploreCanvas lang={lang} />
-        </div>
-
-        {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}
-        <div className="hidden lg:block">
-          <BriefingPanel lang={lang} />
-        </div>
-      </div>
+      <ExploreInner lang={lang} />
     </ExploreProvider>
+  )
+}
+
+// Sits inside the provider so useExploreState/Dispatch are valid.
+function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
+  // 2026-05-09 Phase 3: URL state sync — focus stack survives reload
+  // and is shareable. /explore?s=salud&i=251&v=29277 deep-links into
+  // vendor 29277 inside IMSS inside Salud.
+  useExploreUrlSync()
+  return (
+    <div
+      className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
+      style={{
+        height: 'calc(100vh - var(--topbar-h, 64px))',
+        background: 'var(--color-background, #faf9f6)',
+      }}
+    >
+      {/* The map — fills available space */}
+      <div className="relative overflow-hidden">
+        <ExploreCanvas lang={lang} />
+      </div>
+      {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}
+      <div className="hidden lg:block">
+        <BriefingPanel lang={lang} />
+      </div>
+    </div>
   )
 }
 
