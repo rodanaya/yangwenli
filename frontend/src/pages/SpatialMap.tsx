@@ -22,7 +22,7 @@ import { ExploreProvider } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
-import { YearScrubber, RiskFloorToggle } from '@/components/explore/CanvasControls'
+import { YearScrubber, RiskFloorToggle, ShareViewButton } from '@/components/explore/CanvasControls'
 import { SearchOverlay } from '@/components/explore/SearchOverlay'
 
 export function Explore() {
@@ -55,6 +55,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
         <ExploreCanvas lang={lang} />
         <SearchOverlay lang={lang} />
         <RiskFloorToggle lang={lang} />
+        <ShareViewButton lang={lang} />
         <YearScrubber lang={lang} />
       </div>
       {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}

@@ -7,6 +7,7 @@
  * fields. Nothing here knows about the canvas SVG; both controls sit
  * above it via position: absolute on the canvas wrapper.
  */
+import { useState } from 'react'
 import { useExploreState, useExploreDispatch } from './ExploreState'
 
 const YEAR_MIN = 2002
@@ -117,5 +118,48 @@ export function RiskFloorToggle({ lang }: { lang: 'en' | 'es' }) {
         )
       })}
     </div>
+  )
+}
+
+/**
+ * ShareViewButton — copies the current /explore URL (with focus stack
+ * encoded by useExploreUrlSync) to the clipboard. Sits below the risk
+ * floor toggle so the controls stack vertically along the top-right.
+ */
+export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
+  const [copied, setCopied] = useState(false)
+  const onShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      // Older browsers / non-secure contexts — fall back to selection prompt
+      window.prompt(lang === 'en' ? 'Copy this URL:' : 'Copia esta URL:', window.location.href)
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={onShare}
+      className="absolute top-12 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
+      style={{
+        background: 'var(--color-background-card, #fff)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 4,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        color: copied ? 'var(--color-accent)' : 'var(--color-text-secondary)',
+        cursor: 'pointer',
+        fontSize: 10,
+        fontFamily: 'var(--font-family-mono, monospace)',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+      }}
+      aria-label={lang === 'en' ? 'Copy view URL to clipboard' : 'Copiar URL al portapapeles'}
+    >
+      {copied
+        ? (lang === 'en' ? '✓ Copied' : '✓ Copiado')
+        : (lang === 'en' ? '⤴ Share' : '⤴ Compartir')}
+    </button>
   )
 }
