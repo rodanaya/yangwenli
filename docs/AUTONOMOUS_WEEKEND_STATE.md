@@ -32,7 +32,7 @@ to do on wakeup is re-launch both. See "Relaunch playbook" below.
 
 - [x] Phase 1 (Z0+Z1+Z2): commit `5a6a8bf`
 - [x] Phase 2 (cinematic fly-in zoom): commit `4063c16`
-- [ ] Phase 3 (URL state sync): focus stack persisted to `?focus=salud,251,29277` so reload doesn't reset to Z0
+- [x] Phase 3 (URL state sync — `?s=&i=&v=`): commit `55f07b5`
 - [ ] Phase 4 (year scrubber + risk floor controls overlaid on canvas)
 - [ ] Phase 5 (Z3 contracts-in-space — vendor → contracts radial layout)
 - [ ] Phase 6 (mobile pinch + two-finger pan)
@@ -112,3 +112,4 @@ Otherwise: stay autonomous. The user is sleeping / weekend mode.
 | Wakeup # | Time (UTC) | What I did |
 |---|---|---|
 | 0 (initial) | 2026-05-09 06:29 | Restart 72h harness, fix CaseDetail null + dead case slugs, ship Phase 2 cinematic fly-in zoom on /explore (commit `4063c16`), schedule first wakeup at +1h |
+| 1 (continue) | 2026-05-09 06:55 | Ship Phase 3 URL state sync (commit `55f07b5`) — `/explore?s=salud&i=251&v=29277` now deep-links to focused vendor inside institution inside sector. New `useExploreUrlSync` hook, new `hydrate-from-url` + `pop-to-level` actions. Breadcrumbs use single-dispatch pop. Next: Phase 4 year scrubber + risk floor controls overlay |
