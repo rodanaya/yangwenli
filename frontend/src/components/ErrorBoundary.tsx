@@ -82,7 +82,12 @@ export class ErrorBoundary extends Component<Props, State> {
     if (
       /Failed to fetch dynamically imported module/i.test(msg) ||
       /Loading chunk \d+ failed/i.test(msg) ||
-      /Importing a module script failed/i.test(msg)
+      /Importing a module script failed/i.test(msg) ||
+      // 2026-05-09: post-deploy stale-chunk symptom — vendor-i18n bundle
+      // loads from cache but its .default export is undefined because
+      // the chunk hash changed. Also seen with other vendor bundles.
+      // Reload to pull the fresh chunk graph.
+      /Cannot read propert(?:y|ies) of undefined \(reading ['"](?:default|exports)['"]\)/i.test(msg)
     ) {
       const RELOAD_GUARD_KEY = 'rubli_chunk_reload_at'
       const last = Number(sessionStorage.getItem(RELOAD_GUARD_KEY) ?? '0')
