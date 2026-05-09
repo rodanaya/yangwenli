@@ -1027,6 +1027,11 @@ function Z3Layer({
   const yOf = (amt: number) => SVG_H - PAD - ((Math.log10(amt) - minLogAmt) / ampSpan) * (SVG_H - PAD * 3)
   const rOf = (amt: number) => 4 + ((Math.log10(amt) - minLogAmt) / ampSpan) * 18
 
+  // Year-filtered count for the eyebrow subtitle.
+  const visibleCount = yearFilter != null
+    ? contracts.filter((c) => Number(c.contract_year ?? 0) === yearFilter).length
+    : contracts.length
+
   return (
     <motion.g
       initial={{ opacity: 0, scale: 0.85 }}
@@ -1043,7 +1048,9 @@ function Z3Layer({
         letterSpacing={1.4}
         fill="var(--color-accent)"
       >
-        {`Z3 · ${shortLabel(vendorName).toUpperCase()} · ${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}`}
+        {yearFilter != null
+          ? `Z3 · ${shortLabel(vendorName).toUpperCase()} · ${visibleCount}/${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'} · ${yearFilter}`
+          : `Z3 · ${shortLabel(vendorName).toUpperCase()} · ${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}`}
       </text>
       <text
         x={PAD}
@@ -1090,14 +1097,22 @@ function Z3Layer({
         const cy = yOf(amt)
         const r = rOf(amt)
         const risk = Number(c.risk_score ?? 0)
-        const fill = RISK_COLORS[getRiskLevelFromScore(risk)]
+        const level = getRiskLevelFromScore(risk)
+        const fill = RISK_COLORS[level]
         const dim = yearFilter != null && yr !== yearFilter
+        // Tooltip body — read by the browser via SVG <title>. Keeps a
+        // hover preview without React state churn on a 100-circle scatter.
+        const tooltipLines = [
+          `${yr} · ${formatCompactMXN(amt)}`,
+          `${level.toUpperCase()} · ${(risk * 100).toFixed(1)}%`,
+        ]
         return (
           <g
             key={c.id}
             style={{ cursor: 'pointer' }}
             onClick={() => navigate(`/contracts/${c.id}`)}
           >
+            <title>{tooltipLines.join('\n')}</title>
             <circle
               cx={cx}
               cy={cy}
