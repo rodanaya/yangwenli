@@ -776,6 +776,15 @@ function Z2Layer({
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
+  // Pull the parent sector from the focus stack so the canvas keeps its
+  // sector-tinted backdrop one level deeper (Salud→IMSS still glows red).
+  // Hooks must run unconditionally — same rules-of-hooks fix as Z1.
+  const exploreState = useExploreState()
+  const parentSector = exploreState.stack.find((f) => f.kind === 'sector') as
+    | { kind: 'sector'; sectorCode: string }
+    | undefined
+  const sectorAccent = parentSector ? SECTOR_COLORS[parentSector.sectorCode] : null
+
   // Reuse existing endpoint — institutionApi.getVendors
   // Falls back gracefully on 404.
   const { data, isLoading, isError } = useQuery({
@@ -809,6 +818,9 @@ function Z2Layer({
   const cxC = SVG_W / 2
   const cyC = SVG_H / 2
 
+  // Sector-tinted backdrop (lighter than Z1, since this is a child surface).
+  const z2GradId = parentSector ? `z2-bg-${parentSector.sectorCode}` : null
+
   return (
     <motion.g
       initial={{ opacity: 0, scale: 0.88 }}
@@ -816,6 +828,18 @@ function Z2Layer({
       exit={{ opacity: 0, scale: 1.10 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
     >
+      {sectorAccent && z2GradId && (
+        <>
+          <defs>
+            <radialGradient id={z2GradId} cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stopColor={sectorAccent} stopOpacity={0.07} />
+              <stop offset="60%" stopColor={sectorAccent} stopOpacity={0.025} />
+              <stop offset="100%" stopColor={sectorAccent} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          <rect x={0} y={0} width={SVG_W} height={SVG_H} fill={`url(#${z2GradId})`} pointerEvents="none" />
+        </>
+      )}
       <text
         x={PAD}
         y={PAD}
@@ -823,7 +847,7 @@ function Z2Layer({
         fontFamily="var(--font-family-mono, monospace)"
         fontWeight={700}
         letterSpacing={1.4}
-        fill="var(--color-accent)"
+        fill={sectorAccent ?? 'var(--color-accent)'}
       >
         {`Z2 · ${shortLabel(institutionName).toUpperCase()} · ${vendors.length} ${lang === 'en' ? 'VENDORS' : 'PROVEEDORES'}`}
       </text>
