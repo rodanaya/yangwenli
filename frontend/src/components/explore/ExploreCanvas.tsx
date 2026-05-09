@@ -194,43 +194,107 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.hover])
 
-  // ── Mouse interactions ────────────────────────────────────────────────────
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      baseX: pan.x,
-      baseY: pan.y,
-    }
-    setDragging(true)
-  }, [pan])
+  // ── Pointer interactions (mouse + touch + pen unified) ───────────────────
+  // Active pointers — by pointerId. 1 pointer = drag, 2 pointers = pinch.
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  // Pinch baseline — distance + center + zoom at pinch start
+  const pinchRef = useRef<{ baseDist: number; baseZoom: number; baseCenterX: number; baseCenterY: number; basePanX: number; basePanY: number } | null>(null)
 
-  useEffect(() => {
-    if (!dragging) return
-    const onMove = (e: MouseEvent) => {
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    // Only left button for mouse — touch/pen reports button 0 too
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    const wrapper = wrapperRef.current
+    if (wrapper) wrapper.setPointerCapture?.(e.pointerId)
+
+    if (pointersRef.current.size === 1) {
+      // Single pointer — start drag
+      dragRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        baseX: pan.x,
+        baseY: pan.y,
+      }
+      setDragging(true)
+    } else if (pointersRef.current.size === 2) {
+      // Two pointers — start pinch. Cancel any drag in progress.
+      dragRef.current = null
+      setDragging(false)
+      const pts = Array.from(pointersRef.current.values())
+      const dx = pts[1].x - pts[0].x
+      const dy = pts[1].y - pts[0].y
+      const dist = Math.hypot(dx, dy)
+      pinchRef.current = {
+        baseDist: dist,
+        baseZoom: zoom,
+        baseCenterX: (pts[0].x + pts[1].x) / 2,
+        baseCenterY: (pts[0].y + pts[1].y) / 2,
+        basePanX: pan.x,
+        basePanY: pan.y,
+      }
+    }
+  }, [pan, zoom])
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pointersRef.current.has(e.pointerId)) return
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    const wrapper = wrapperRef.current
+    if (!wrapper) return
+    const rect = wrapper.getBoundingClientRect()
+    const scale = SVG_W / Math.max(rect.width, 1)
+
+    if (pointersRef.current.size === 2 && pinchRef.current) {
+      // Pinch — adjust zoom by ratio of current to base distance, and pan
+      // by movement of pinch midpoint so pinch feels anchored to fingers.
+      const pts = Array.from(pointersRef.current.values())
+      const dx = pts[1].x - pts[0].x
+      const dy = pts[1].y - pts[0].y
+      const dist = Math.hypot(dx, dy)
+      const cx = (pts[0].x + pts[1].x) / 2
+      const cy = (pts[0].y + pts[1].y) / 2
+      const ratio = dist / Math.max(pinchRef.current.baseDist, 1)
+      const newZoom = Math.max(0.5, Math.min(3.5, pinchRef.current.baseZoom * ratio))
+      setZoom(newZoom)
+      setPan({
+        x: pinchRef.current.basePanX + (cx - pinchRef.current.baseCenterX) * scale,
+        y: pinchRef.current.basePanY + (cy - pinchRef.current.baseCenterY) * scale,
+      })
+      return
+    }
+
+    if (pointersRef.current.size === 1 && dragRef.current) {
       const d = dragRef.current
-      if (!d) return
-      const wrapper = wrapperRef.current
-      if (!wrapper) return
-      const rect = wrapper.getBoundingClientRect()
-      const scale = SVG_W / Math.max(rect.width, 1)
       setPan({
         x: d.baseX + (e.clientX - d.startX) * scale,
         y: d.baseY + (e.clientY - d.startY) * scale,
       })
     }
-    const onUp = () => {
+  }, [])
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    pointersRef.current.delete(e.pointerId)
+    const wrapper = wrapperRef.current
+    if (wrapper) wrapper.releasePointerCapture?.(e.pointerId)
+
+    if (pointersRef.current.size < 2) {
+      pinchRef.current = null
+    }
+    if (pointersRef.current.size === 0) {
       dragRef.current = null
       setDragging(false)
+    } else if (pointersRef.current.size === 1) {
+      // Pinch ended but one finger still down — promote to drag
+      const remaining = Array.from(pointersRef.current.values())[0]
+      dragRef.current = {
+        startX: remaining.x,
+        startY: remaining.y,
+        baseX: pan.x,
+        baseY: pan.y,
+      }
+      setDragging(true)
     }
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    return () => {
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-  }, [dragging])
+  }, [pan])
 
   // Wheel zoom — clamp 0.5..3.5
   useEffect(() => {
@@ -276,7 +340,10 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
         touchAction: 'none',
         height: '100%',
       }}
-      onMouseDown={onMouseDown}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       <svg
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
