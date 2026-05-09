@@ -112,15 +112,7 @@ function SystemBriefing({ lang, hoverId }: { lang: 'en' | 'es'; hoverId: number 
     const sector = SECTORS.find((s) => s.id === hoverId)
     if (sector) {
       const accent = SECTOR_COLORS[sector.code] ?? '#64748b'
-      return (
-        <div>
-          <Eyebrow color={accent}>{lang === 'en' ? 'Hovering · sector' : 'Hover · sector'}</Eyebrow>
-          <h2 className="text-lg font-bold mb-1" style={{ color: accent }}>{getSectorName(sector.code, lang)}</h2>
-          <p className="text-xs text-text-muted">
-            {lang === 'en' ? 'Click to drill into the institutions of this sector.' : 'Clic para profundizar en las instituciones del sector.'}
-          </p>
-        </div>
-      )
+      return <SectorHoverPreview sector={sector} accent={accent} lang={lang} />
     }
   }
   return (
@@ -133,6 +125,66 @@ function SystemBriefing({ lang, hoverId }: { lang: 'en' | 'es'; hoverId: number 
           : 'Cada cuerpo es un sector. Pasa el cursor para una vista previa. Haz clic para profundizar.'}
       </p>
       <Tip lang={lang} />
+    </div>
+  )
+}
+
+/**
+ * Live sector preview — fetched on hover. The query key is per-sector so the
+ * panel only loads what the user is actually pointing at; cache is shared
+ * across the rest of the app via TanStack Query so subsequent visits to
+ * /sectors/:id are instant.
+ */
+function SectorHoverPreview({
+  sector,
+  accent,
+  lang,
+}: {
+  sector: typeof SECTORS[number]
+  accent: string
+  lang: 'en' | 'es'
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['explore', 'sector-preview', sector.id],
+    queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId: sector.id, limit: 1 }),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Aggregate from the spatial endpoint's sector header (it ships totals).
+  const totals = data
+    ? {
+        institutions: data.total ?? 0,
+        contracts: data.institutions.reduce((s, i) => s + (i.total_contracts || 0), 0),
+        value: data.institutions.reduce((s, i) => s + (i.total_amount_mxn || 0), 0),
+        avgRisk:
+          data.institutions.length > 0
+            ? data.institutions.reduce((s, i) => s + (i.risk || 0), 0) / data.institutions.length
+            : 0,
+      }
+    : null
+
+  return (
+    <div>
+      <Eyebrow color={accent}>{lang === 'en' ? 'Hovering · sector' : 'Hover · sector'}</Eyebrow>
+      <h2 className="text-lg font-bold mb-2" style={{ color: accent }}>
+        {getSectorName(sector.code, lang)}
+      </h2>
+      {isLoading && (
+        <div className="text-[10px] font-mono text-text-muted opacity-70 py-1">
+          {lang === 'en' ? 'loading preview…' : 'cargando vista…'}
+        </div>
+      )}
+      {totals && (
+        <>
+          <Stat label={lang === 'en' ? 'Institutions' : 'Instituciones'} value={formatNumber(totals.institutions)} />
+          <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(totals.contracts)} />
+          <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(totals.value)} />
+          <RiskPill score={totals.avgRisk} />
+        </>
+      )}
+      <p className="mt-3 text-[11px] text-text-muted leading-relaxed">
+        {lang === 'en' ? 'Click to drill into institutions.' : 'Clic para profundizar a instituciones.'}
+      </p>
     </div>
   )
 }
@@ -358,27 +410,49 @@ function Stat({ label, value }: { label: string; value: string }) {
 function RiskPill({ score }: { score: number }) {
   const level = getRiskLevelFromScore(score)
   const color = RISK_COLORS[level]
+  // Score bar — 22 dots, score×22 filled. Mirrors the DotBar primitive
+  // rhythm used elsewhere in the app, just inline so this stays a single
+  // briefing-panel atom.
+  const N = 22
+  const filled = Math.max(0, Math.min(N, Math.round(score * N)))
   return (
-    <div className="mt-2 flex items-center gap-2">
-      <span
-        className="text-[9px] font-mono uppercase tracking-[0.16em] px-2 py-0.5 rounded-sm"
-        style={{ color, background: `${color}1a`, border: `1px solid ${color}40` }}
-      >
-        {level}
-      </span>
-      <span className="text-sm font-mono font-bold tabular-nums" style={{ color }}>
-        {(score * 100).toFixed(1)}%
-      </span>
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-1">
+        <span
+          className="text-[9px] font-mono uppercase tracking-[0.16em] px-1.5 py-0.5 rounded-sm"
+          style={{ color, background: `${color}1a`, border: `1px solid ${color}40` }}
+        >
+          {level}
+        </span>
+        <span className="text-sm font-mono font-bold tabular-nums" style={{ color }}>
+          {(score * 100).toFixed(1)}%
+        </span>
+      </div>
+      <svg width="100%" height={6} viewBox={`0 0 ${N * 5} 6`} preserveAspectRatio="none">
+        {Array.from({ length: N }, (_, i) => (
+          <rect
+            key={i}
+            x={i * 5}
+            y={1}
+            width={3}
+            height={4}
+            rx={1}
+            fill={i < filled ? color : 'var(--color-border)'}
+            opacity={i < filled ? 1 : 0.6}
+          />
+        ))}
+      </svg>
     </div>
   )
 }
 
 function Tip({ lang }: { lang: 'en' | 'es' }) {
   return (
-    <div className="text-[9px] font-mono text-text-muted opacity-70 leading-relaxed mt-3 pt-3 border-t border-border/40">
-      <div>{lang === 'en' ? 'drag to pan' : 'arrastra para desplazar'}</div>
-      <div>{lang === 'en' ? 'wheel to zoom' : 'rueda para acercar'}</div>
-      <div>{lang === 'en' ? 'esc to zoom out' : 'esc para alejar'}</div>
+    <div className="text-[9px] font-mono text-text-muted opacity-70 leading-relaxed mt-3 pt-3 border-t border-border/40 grid grid-cols-2 gap-x-3">
+      <div>{lang === 'en' ? 'drag · pan' : 'arrastra · desplazar'}</div>
+      <div>{lang === 'en' ? 'wheel · zoom' : 'rueda · acercar'}</div>
+      <div>{lang === 'en' ? 'pinch · zoom' : 'pellizca · acercar'}</div>
+      <div>{lang === 'en' ? 'esc · back' : 'esc · atrás'}</div>
     </div>
   )
 }
