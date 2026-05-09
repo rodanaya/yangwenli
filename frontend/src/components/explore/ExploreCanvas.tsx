@@ -345,6 +345,34 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
+      {/* Back button — visible at every non-system level. Mirrors the
+          breadcrumb pop in BriefingPanel but lives on the canvas itself
+          so mobile users (briefing panel hidden on lg-) can still walk
+          back without using ESC. */}
+      {focus.kind !== 'system' && (
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'pop-focus' })}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
+          style={{
+            background: 'var(--color-background-card, #fff)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 4,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+            fontSize: 11,
+            fontFamily: 'var(--font-family-mono, monospace)',
+            letterSpacing: '0.06em',
+          }}
+          aria-label={lang === 'en' ? 'Back one level' : 'Volver un nivel'}
+        >
+          ← {lang === 'en' ? 'Back' : 'Atrás'}
+          <span className="ml-1 px-1 py-0.5 text-[8px] font-mono opacity-70 border border-current rounded-sm">
+            ESC
+          </span>
+        </button>
+      )}
       <svg
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         className="w-full h-full"
