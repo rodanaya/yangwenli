@@ -984,6 +984,9 @@ function Z3Layer({
   lang: 'en' | 'es'
 }) {
   const navigate = useNavigate()
+  // Hooks first (rules of hooks).
+  const exploreState = useExploreState()
+  const yearFilter = exploreState.year
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z3', vendorId],
     queryFn: async () => {
@@ -1062,6 +1065,24 @@ function Z3Layer({
         </g>
       ))}
 
+      {/* Year-filter veil — when a single year is selected, contracts
+          outside that year render with a fade so the user keeps spatial
+          context but can read the active year as the highlighted set.
+          Pure visual; clicking still navigates to the contract. */}
+      {yearFilter != null && (
+        <line
+          x1={xOf(yearFilter)}
+          x2={xOf(yearFilter)}
+          y1={PAD * 1.5}
+          y2={SVG_H - PAD - 4}
+          stroke="var(--color-accent)"
+          strokeWidth={1}
+          strokeDasharray="4 4"
+          opacity={0.55}
+          pointerEvents="none"
+        />
+      )}
+
       {contracts.map((c) => {
         const yr = Number(c.contract_year ?? minYear) || minYear
         const amt = Math.max(1, Number(c.amount_mxn ?? 0))
@@ -1070,13 +1091,22 @@ function Z3Layer({
         const r = rOf(amt)
         const risk = Number(c.risk_score ?? 0)
         const fill = RISK_COLORS[getRiskLevelFromScore(risk)]
+        const dim = yearFilter != null && yr !== yearFilter
         return (
           <g
             key={c.id}
             style={{ cursor: 'pointer' }}
             onClick={() => navigate(`/contracts/${c.id}`)}
           >
-            <circle cx={cx} cy={cy} r={r} fill={fill} fillOpacity={0.85} stroke="var(--color-background)" strokeWidth={1} />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={r}
+              fill={fill}
+              fillOpacity={dim ? 0.18 : 0.85}
+              stroke="var(--color-background)"
+              strokeWidth={1}
+            />
           </g>
         )
       })}
