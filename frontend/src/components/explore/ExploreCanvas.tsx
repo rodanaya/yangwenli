@@ -407,6 +407,25 @@ function Z0Layer({
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
+  // Phase 2.5 (May 9): size sector bodies by total spend so the system
+  // view encodes scale, not just position. Falls back to a uniform layout
+  // if the API call fails (cached for 30 minutes — sectors are slow-moving).
+  const { data: sectorStats } = useQuery({
+    queryKey: ['explore', 'z0-sector-stats'],
+    queryFn: () => sectorApi.getAll(),
+    staleTime: 30 * 60 * 1000,
+  })
+  const sizeByCode = useMemo(() => {
+    if (!sectorStats?.data) return null
+    const max = Math.max(...sectorStats.data.map((s) => s.total_value_mxn || 0), 1)
+    const map = new Map<string, number>()
+    for (const s of sectorStats.data) {
+      // sqrt scale so the visual difference is perceptible without
+      // making one sector dwarf the rest.
+      map.set(s.sector_code, Math.sqrt((s.total_value_mxn || 0) / max))
+    }
+    return map
+  }, [sectorStats])
   const bodies = useMemo(() => z0SectorBodies(lang), [lang])
   return (
     <motion.g
@@ -446,11 +465,18 @@ function Z0Layer({
       {bodies.map((b) => {
         const cx = PAD + b.fx * (SVG_W - PAD * 2)
         const cy = PAD + b.fy * (SVG_H - PAD * 2)
+        // Body radius blends a uniform baseline (so even small sectors
+        // are clickable) with a sqrt(spend) scaling factor when stats are
+        // loaded. Otherwise every body would be 32px and the system view
+        // would be uniform — dull and uninformative.
+        const sizeFactor = sizeByCode?.get(b.code) ?? null
+        const r = sizeFactor != null ? 22 + sizeFactor * 28 : 32
         return (
           <SectorBodyVisual
             key={b.code}
             cx={cx}
             cy={cy}
+            r={r}
             color={b.color}
             label={b.name}
             onClick={() =>
@@ -471,6 +497,7 @@ function Z0Layer({
 function SectorBodyVisual({
   cx,
   cy,
+  r,
   color,
   label,
   onClick,
@@ -478,23 +505,27 @@ function SectorBodyVisual({
 }: {
   cx: number
   cy: number
+  r: number
   color: string
   label: string
   onClick: () => void
   onHover: (hovering: boolean) => void
 }) {
   const [hovered, setHovered] = useState(false)
-  const r = hovered ? 38 : 32
+  const rEffective = hovered ? r + 6 : r
+  // Adaptive font: smaller bodies get smaller labels so the text doesn't
+  // overflow the circle on Energy / Otros etc.
+  const fontSize = Math.max(10, Math.min(15, Math.round(r / 2.6)))
   return (
     <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
       {/* Halo */}
-      {hovered && <circle cx={cx} cy={cy} r={r + 8} fill={color} fillOpacity={0.15} />}
-      <circle cx={cx} cy={cy} r={r} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
+      {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
+      <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
       <text
         x={cx}
-        y={cy + 5}
+        y={cy + Math.round(fontSize * 0.36)}
         textAnchor="middle"
-        fontSize={14}
+        fontSize={fontSize}
         fontFamily="var(--font-family-mono, monospace)"
         fontWeight={700}
         fill="white"
