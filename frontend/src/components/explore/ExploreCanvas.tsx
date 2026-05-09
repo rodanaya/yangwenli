@@ -104,6 +104,21 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
   const dragRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const [dragging, setDragging] = useState(false)
 
+  // 2026-05-09 spatial Phase 2: cinematic camera fly-in.
+  // When user clicks a body, capture its (cx, cy) in SVG viewport coords +
+  // schedule the drill action 350ms later. The transform between now and
+  // then animates "into" that body, then the layer swap kicks in and the
+  // new layer enters from a "settling" scale. Reads more like Star Fox
+  // planet approach than a hard cross-fade.
+  const [cameraTarget, setCameraTarget] = useState<{ x: number; y: number } | null>(null)
+  const triggerCameraDrill = useCallback((bodyX: number, bodyY: number, drill: () => void) => {
+    setCameraTarget({ x: bodyX, y: bodyY })
+    setTimeout(() => {
+      drill()
+      setCameraTarget(null)
+    }, 350)
+  }, [])
+
   // Reset pan + zoom when the focus level changes — each level gets a fresh view.
   useEffect(() => {
     setPan({ x: 0, y: 0 })
@@ -191,7 +206,12 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
   }, [dispatch])
 
   // ── Camera transform ─────────────────────────────────────────────────────
-  const transform = `translate(${pan.x}, ${pan.y}) scale(${zoom})`
+  // When cameraTarget is set, override pan + zoom to fly into that body.
+  // Translate so the target body sits at SVG center, scale up 3x.
+  const flyingIn = cameraTarget !== null
+  const effectiveTransform = flyingIn
+    ? `translate(${SVG_W / 2 - cameraTarget!.x * 3}, ${SVG_H / 2 - cameraTarget!.y * 3}) scale(3)`
+    : `translate(${pan.x}, ${pan.y}) scale(${zoom})`
 
   return (
     <div
@@ -210,9 +230,15 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
         className="w-full h-full"
         preserveAspectRatio="xMidYMid meet"
       >
-        <g transform={transform}>
+        <g
+          transform={effectiveTransform}
+          style={{
+            transition: flyingIn ? 'transform 350ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+            transformOrigin: '0 0',
+          }}
+        >
           <AnimatePresence mode="wait">
-            {focus.kind === 'system' && <Z0Layer key="z0" lang={lang} dispatch={dispatch} />}
+            {focus.kind === 'system' && <Z0Layer key="z0" lang={lang} dispatch={dispatch} triggerDrill={triggerCameraDrill} />}
             {focus.kind === 'sector' && (
               <Z1Layer
                 key={`z1-${focus.sectorId}`}
@@ -220,6 +246,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 sectorCode={focus.sectorCode}
                 lang={lang}
                 dispatch={dispatch}
+                triggerDrill={triggerCameraDrill}
               />
             )}
             {focus.kind === 'institution' && (
@@ -229,6 +256,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 institutionName={focus.institutionName}
                 lang={lang}
                 dispatch={dispatch}
+                triggerDrill={triggerCameraDrill}
               />
             )}
           </AnimatePresence>
@@ -245,9 +273,11 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
 function Z0Layer({
   lang,
   dispatch,
+  triggerDrill,
 }: {
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
+  triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
   const bodies = useMemo(() => z0SectorBodies(lang), [lang])
   return (
@@ -291,7 +321,11 @@ function Z0Layer({
             cy={cy}
             color={b.color}
             label={b.name}
-            onClick={() => dispatch({ type: 'drill-into-sector', sectorId: b.id, sectorCode: b.code })}
+            onClick={() =>
+              triggerDrill(cx, cy, () =>
+                dispatch({ type: 'drill-into-sector', sectorId: b.id, sectorCode: b.code }),
+              )
+            }
             onHover={(hovering) =>
               dispatch({ type: 'set-hover', hover: hovering ? { kind: 'sector', id: b.id } : null })
             }
@@ -349,11 +383,13 @@ function Z1Layer({
   sectorCode,
   lang,
   dispatch,
+  triggerDrill,
 }: {
   sectorId: number
   sectorCode: string
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
+  triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
@@ -412,29 +448,35 @@ function Z1Layer({
         {lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
       </text>
 
-      {data.institutions.map((inst) => (
-        <InstitutionBodyVisual
-          key={inst.institution_id}
-          inst={inst}
-          cx={xOf(inst.fx)}
-          cy={yOf(inst.fy)}
-          r={rOf(inst.size)}
-          showLabel={inst.size > 0.35}
-          onClick={() =>
-            dispatch({
-              type: 'drill-into-institution',
-              institutionId: inst.institution_id,
-              institutionName: inst.name,
-            })
-          }
-          onHover={(hovering) =>
-            dispatch({
-              type: 'set-hover',
-              hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
-            })
-          }
-        />
-      ))}
+      {data.institutions.map((inst) => {
+        const cx = xOf(inst.fx)
+        const cy = yOf(inst.fy)
+        return (
+          <InstitutionBodyVisual
+            key={inst.institution_id}
+            inst={inst}
+            cx={cx}
+            cy={cy}
+            r={rOf(inst.size)}
+            showLabel={inst.size > 0.35}
+            onClick={() =>
+              triggerDrill(cx, cy, () =>
+                dispatch({
+                  type: 'drill-into-institution',
+                  institutionId: inst.institution_id,
+                  institutionName: inst.name,
+                }),
+              )
+            }
+            onHover={(hovering) =>
+              dispatch({
+                type: 'set-hover',
+                hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
+              })
+            }
+          />
+        )
+      })}
     </motion.g>
   )
 }
@@ -503,11 +545,13 @@ function Z2Layer({
   institutionName,
   lang,
   dispatch,
+  triggerDrill,
 }: {
   institutionId: number
   institutionName: string
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
+  triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
   // Reuse existing endpoint — institutionApi.getVendors
   // Falls back gracefully on 404.
@@ -585,11 +629,13 @@ function Z2Layer({
             key={v.vendor_id}
             style={{ cursor: 'pointer' }}
             onClick={() =>
-              dispatch({
-                type: 'drill-into-vendor',
-                vendorId: v.vendor_id,
-                vendorName: v.vendor_name,
-              })
+              triggerDrill(cx, cy, () =>
+                dispatch({
+                  type: 'drill-into-vendor',
+                  vendorId: v.vendor_id,
+                  vendorName: v.vendor_name,
+                }),
+              )
             }
             onMouseEnter={() =>
               dispatch({ type: 'set-hover', hover: { kind: 'vendor', id: v.vendor_id } })

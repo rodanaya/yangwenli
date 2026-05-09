@@ -172,7 +172,13 @@ function formatCompact(n: number): string {
   return String(n)
 }
 
-function titleCase(s: string): string {
+function titleCase(s: string | null | undefined): string {
+  // 2026-05-09: harness-found bug — null was being passed in 11 separate
+  // production sessions (TypeError: Cannot read properties of null at M).
+  // Most likely culprits: data.administration, data.fraud_type, vendor.role,
+  // vendor.evidence_strength, sector — any backend nullable field reaching
+  // this function blows the page via ErrorBoundary. Now defaults to '—'.
+  if (s == null || s === '') return '—'
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 

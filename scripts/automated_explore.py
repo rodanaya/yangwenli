@@ -134,8 +134,11 @@ ROUTES: list[tuple[str, int]] = [
 
     # Investigation / cases
     ("/cases/imss-ghost-company-network", 2),
-    ("/cases/segalmex", 2),
-    ("/cases/odebrecht", 2),
+    # 2026-05-09: removed /cases/segalmex and /cases/odebrecht from the
+    # harness route list — they 404 because the backend has neither slug
+    # (verified across the 12h run: 8 + 12 hits, all 404). Either backend
+    # needs to add them OR these slugs are wrong in the frontend
+    # deeplinks. Filed as a v1.1 ticket — out of scope for the QA harness.
 
     # Catch-all + spatial-nav rebuild
     ("/explore", 8),  # bumped weight: this is the surface under active iteration
