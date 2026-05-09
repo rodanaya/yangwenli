@@ -17,6 +17,7 @@
  * Tools (year, risk floor, search) are floated as overlays inside the
  * canvas surface — Phase 2 work; today the canvas is just the bodies.
  */
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ExploreProvider } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
@@ -24,6 +25,8 @@ import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
 import { YearScrubber, RiskFloorToggle, ShareViewButton } from '@/components/explore/CanvasControls'
 import { SearchOverlay } from '@/components/explore/SearchOverlay'
+
+const FIRST_VISIT_KEY = 'rubli_explore_visited_v1'
 
 export function Explore() {
   const { i18n } = useTranslation()
@@ -42,6 +45,30 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
   // and is shareable. /explore?s=salud&i=251&v=29277 deep-links into
   // vendor 29277 inside IMSS inside Salud.
   useExploreUrlSync()
+
+  // First-visit hint — one-time educational chip pointing at the canvas.
+  // Auto-dismisses after 8s or on user click. Persisted via localStorage
+  // (rubli_explore_visited_v1).
+  const [showHint, setShowHint] = useState(false)
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(FIRST_VISIT_KEY)) {
+        setShowHint(true)
+        const t = setTimeout(() => {
+          setShowHint(false)
+          localStorage.setItem(FIRST_VISIT_KEY, '1')
+        }, 8000)
+        return () => clearTimeout(t)
+      }
+    } catch {
+      // Private mode or storage disabled — quietly skip.
+    }
+  }, [])
+  const dismissHint = () => {
+    setShowHint(false)
+    try { localStorage.setItem(FIRST_VISIT_KEY, '1') } catch { /* ignore */ }
+  }
+
   return (
     <div
       className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
@@ -57,6 +84,34 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
         <RiskFloorToggle lang={lang} />
         <ShareViewButton lang={lang} />
         <YearScrubber lang={lang} />
+        {showHint && (
+          <button
+            type="button"
+            onClick={dismissHint}
+            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10 max-w-md text-left px-4 py-3 transition-opacity"
+            style={{
+              background: 'var(--color-background-card, #fff)',
+              border: '1px solid var(--color-border)',
+              borderLeft: '3px solid var(--color-accent)',
+              borderRadius: 4,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+              cursor: 'pointer',
+            }}
+            aria-label={lang === 'en' ? 'Dismiss hint' : 'Cerrar pista'}
+          >
+            <div className="text-[9px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted mb-1">
+              {lang === 'en' ? 'Spatial Map · Z0 → Z3' : 'Mapa Espacial · Z0 → Z3'}
+            </div>
+            <div className="text-sm text-text-primary leading-snug">
+              {lang === 'en'
+                ? 'Click any sector to drill into its institutions, then a vendor, then a single contract.'
+                : 'Haz clic en un sector para ver sus instituciones, luego un proveedor, luego un contrato.'}
+            </div>
+            <div className="text-[10px] text-text-muted mt-1.5 font-mono">
+              {lang === 'en' ? 'esc · back · ⌘K · search' : 'esc · atrás · ⌘K · buscar'}
+            </div>
+          </button>
+        )}
       </div>
       {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}
       <div className="hidden lg:block">
