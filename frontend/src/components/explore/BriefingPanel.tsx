@@ -144,9 +144,12 @@ function SectorHoverPreview({
   accent: string
   lang: 'en' | 'es'
 }) {
+  // Reuse the same query key + limit as Z1Layer so the cache is shared —
+  // hovering a sector pre-warms the drill-in. Backend requires limit >= 10
+  // (422 if smaller); we use 60 to match Z1's call exactly.
   const { data, isLoading } = useQuery({
-    queryKey: ['explore', 'sector-preview', sector.id],
-    queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId: sector.id, limit: 1 }),
+    queryKey: ['explore', 'z1', sector.id],
+    queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId: sector.id, limit: 60 }),
     staleTime: 10 * 60 * 1000,
   })
 
