@@ -56,7 +56,7 @@ export function EditorialRadarChart({
   })
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       <RadarChart data={data} outerRadius="75%">
         <PolarGrid stroke={CHART_TOKENS.grid.stroke} opacity={0.5} />
         <PolarAngleAxis

@@ -234,7 +234,7 @@ export default function VendorContractTimeline({
           variable dot sizing is core to this widget's value semantics. Tokens
           migrated to bible-aligned values; structural migration deferred. */}
       <div aria-hidden="true">
-        <ResponsiveContainer width="100%" height={160}>
+        <ResponsiveContainer width="100%" minWidth={0} height={160}>
           <ScatterChart margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
             {/* Scandal reference lines */}
             {SCANDAL_LINES.map(({ year, label, color }) => (

@@ -22,7 +22,7 @@ export function EditorialSparkline<T extends object>({
   const color = tokenColor(colorToken)
 
   const chart = (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       {kind === 'area' ? (
         <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
           <YAxis hide domain={['auto', 'auto']} />

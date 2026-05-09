@@ -138,7 +138,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
           if (isBrushing) handleMouseUp()
         }}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" minWidth={0} height="100%">
           <ComposedChart
             data={chartData}
             onMouseDown={handleMouseDown}

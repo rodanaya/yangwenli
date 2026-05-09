@@ -44,7 +44,7 @@ export function EditorialScatterChart<T extends object>({
   }))
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       <ScatterChart margin={{ top: 16, right: 24, left: 0, bottom: 16 }}>
         <CartesianGrid
           stroke={CHART_TOKENS.grid.stroke}

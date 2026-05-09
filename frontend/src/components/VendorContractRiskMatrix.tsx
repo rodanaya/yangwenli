@@ -279,7 +279,7 @@ export function VendorContractRiskMatrix({
           doesn't expose. Tokens already align with bible §2; structural
           migration deferred. */}
       <div style={{ height: 280 }}>
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" minWidth={0} height="100%">
           <ScatterChart margin={{ top: 8, right: 24, bottom: 40, left: 16 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, rgba(255,255,255,0.06))" />
 

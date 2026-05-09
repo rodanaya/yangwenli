@@ -89,7 +89,7 @@ export function EditorialLineChart<T extends object>({
     : 12
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       <LineChart data={data} margin={{ top: 8, right: rightMargin, left: 0, bottom: 4 }}>
         <CartesianGrid
           stroke={CHART_TOKENS.grid.stroke}
