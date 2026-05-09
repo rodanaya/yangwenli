@@ -523,6 +523,13 @@ function Z1Layer({
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
 }) {
+  // ⚠️ Hooks must come before any early return — moved useExploreState here
+  // (was below the loading/error returns, which violated rules-of-hooks and
+  // would throw "Rendered more hooks than during the previous render" when
+  // the query transitioned from loading → ready).
+  const exploreState = useExploreState()
+  const riskFloor = exploreState.riskFloor
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
     queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId, limit: 60 }),
@@ -547,11 +554,8 @@ function Z1Layer({
     )
   }
 
-  // 2026-05-09 Phase 4: filter institutions by the risk floor in
-  // ExploreState. Drops anything below the chosen threshold so the
-  // user can focus on high-risk planets only.
-  const exploreState = useExploreState()
-  const riskFloor = exploreState.riskFloor
+  // Phase 4: filter institutions by risk floor — drops anything below the
+  // chosen threshold so the user can focus on high-risk planets only.
   const passesFloor = (risk: number) => {
     if (riskFloor === 'all') return true
     if (riskFloor === 'medium') return risk >= 0.25
