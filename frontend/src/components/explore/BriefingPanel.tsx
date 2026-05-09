@@ -353,13 +353,59 @@ function VendorBriefing({
   const risk = vendor?.avg_risk_score ?? 0
   const totalSpend = vendor?.total_value_mxn ?? 0
   const totalContracts = vendor?.total_contracts ?? 0
+  const directAwardPct = vendor?.direct_award_pct ?? null
+  const yearsActive = vendor?.years_active ?? null
+  const firstYear = vendor?.first_contract_year
+  const lastYear = vendor?.last_contract_year
+  const topInstitution = vendor?.top_institutions?.[0]
+  const isEfos = vendor?.is_efos_ghost === true
+  const isSfp = vendor?.is_sfp_sanctioned === true
 
   return (
     <div>
       <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Vendor · Z3' : 'Proveedor · Z3'}</Eyebrow>
       <h2 className="text-lg font-bold mb-2 text-text-primary leading-tight">{displayName}</h2>
+
+      {/* External-watchlist red flags — only render if true */}
+      {(isEfos || isSfp) && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {isEfos && (
+            <span className="text-[9px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-sm bg-risk-critical/10 text-risk-critical border border-risk-critical/30">
+              EFOS
+            </span>
+          )}
+          {isSfp && (
+            <span className="text-[9px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-sm bg-risk-high/10 text-risk-high border border-risk-high/30">
+              SFP
+            </span>
+          )}
+        </div>
+      )}
+
       <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(totalContracts)} />
       <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(totalSpend)} />
+      {directAwardPct != null && (
+        <Stat
+          label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'}
+          value={`${(directAwardPct > 1 ? directAwardPct : directAwardPct * 100).toFixed(0)}%`}
+        />
+      )}
+      {yearsActive != null && firstYear != null && lastYear != null && (
+        <Stat
+          label={lang === 'en' ? 'Active' : 'Activo'}
+          value={`${firstYear}–${lastYear} (${yearsActive}y)`}
+        />
+      )}
+      {topInstitution && (
+        <Stat
+          label={lang === 'en' ? 'Top client' : 'Cliente top'}
+          value={
+            (topInstitution as { institution_name?: string; name?: string }).institution_name ??
+            (topInstitution as { institution_name?: string; name?: string }).name ??
+            '—'
+          }
+        />
+      )}
       <RiskPill score={risk} />
       <button
         type="button"
@@ -376,8 +422,8 @@ function VendorBriefing({
       </button>
       <p className="mt-2 text-[10px] text-text-muted leading-relaxed">
         {lang === 'en'
-          ? 'Z3 (contracts in space) is on the rebuild plan; for now Red Thread is the deep-dive.'
-          : 'Z3 (contratos en espacio) está en el plan; por ahora el Hilo Rojo es el análisis profundo.'}
+          ? 'Click a contract on the canvas for the contract detail view.'
+          : 'Clic en un contrato en el lienzo para el detalle.'}
       </p>
     </div>
   )
