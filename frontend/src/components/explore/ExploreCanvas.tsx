@@ -764,10 +764,33 @@ function Z2Layer({
         {lang === 'en' ? 'click a vendor → opens Red Thread · esc to zoom out' : 'clic en proveedor → abre Hilo · esc para alejar'}
       </text>
 
+      {/* Centre marker — represents the institution itself, with a soft
+          pulse so the user reads the radial composition as "vendors orbit
+          this institution" rather than "random circles in space". */}
+      <g style={{ pointerEvents: 'none' }}>
+        <motion.circle
+          cx={cxC}
+          cy={cyC}
+          r={14}
+          fill="none"
+          stroke="var(--color-text-muted)"
+          strokeWidth={1}
+          strokeDasharray="2 3"
+          opacity={0.5}
+          animate={{ r: [14, 22, 14], opacity: [0.5, 0.15, 0.5] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <circle cx={cxC} cy={cyC} r={4} fill="var(--color-text-muted)" opacity={0.7} />
+      </g>
+
       {vendors.map((v, i) => {
-        // Spiral-out radial layout — biggest in centre.
-        const angle = (i / vendors.length) * Math.PI * 2
-        const ring = i === 0 ? 0 : 100 + Math.floor(i / 8) * 100
+        // Spiral-out radial layout — bumped first ring to 70 so the
+        // smallest vendor doesn't overlap the centre institution marker.
+        // 8 vendors per ring; rings step by 100px.
+        const ringIdx = Math.floor(i / 8)
+        const inRingPos = i % 8
+        const angle = (inRingPos / 8) * Math.PI * 2 + (ringIdx % 2) * (Math.PI / 8) // alternate offset for rings
+        const ring = 80 + ringIdx * 95
         const cx = cxC + Math.cos(angle) * ring
         const cy = cyC + Math.sin(angle) * ring
         const sizeRatio = (v.total_value_mxn ?? 0) / max
@@ -775,9 +798,13 @@ function Z2Layer({
         const risk = v.avg_risk_score ?? 0
         const fill = RISK_COLORS[getRiskLevelFromScore(risk)]
         return (
-          <g
+          <VendorBodyVisual
             key={v.vendor_id}
-            style={{ cursor: 'pointer' }}
+            cx={cx}
+            cy={cy}
+            r={r}
+            fill={fill}
+            label={sizeRatio > 0.18 ? shortLabel(v.vendor_name) : null}
             onClick={() =>
               triggerDrill(cx, cy, () =>
                 dispatch({
@@ -787,30 +814,62 @@ function Z2Layer({
                 }),
               )
             }
-            onMouseEnter={() =>
-              dispatch({ type: 'set-hover', hover: { kind: 'vendor', id: v.vendor_id } })
+            onHover={(hovering) =>
+              dispatch({
+                type: 'set-hover',
+                hover: hovering ? { kind: 'vendor', id: v.vendor_id } : null,
+              })
             }
-            onMouseLeave={() => dispatch({ type: 'set-hover', hover: null })}
-          >
-            <circle cx={cx} cy={cy} r={r} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.2} />
-            {sizeRatio > 0.18 && (
-              <text
-                x={cx}
-                y={cy - r - 4}
-                textAnchor="middle"
-                fontSize={9}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontWeight={700}
-                fill="var(--color-text-primary)"
-                style={{ pointerEvents: 'none' }}
-              >
-                {shortLabel(v.vendor_name)}
-              </text>
-            )}
-          </g>
+          />
         )
       })}
     </motion.g>
+  )
+}
+
+function VendorBodyVisual({
+  cx,
+  cy,
+  r,
+  fill,
+  label,
+  onClick,
+  onHover,
+}: {
+  cx: number
+  cy: number
+  r: number
+  fill: string
+  label: string | null
+  onClick: () => void
+  onHover: (hovering: boolean) => void
+}) {
+  const [hovered, setHovered] = useState(false)
+  const rEffective = hovered ? r * 1.18 : r
+  return (
+    <g
+      style={{ cursor: 'pointer' }}
+      onClick={onClick}
+      onMouseEnter={() => { setHovered(true); onHover(true) }}
+      onMouseLeave={() => { setHovered(false); onHover(false) }}
+    >
+      {hovered && <circle cx={cx} cy={cy} r={rEffective + 5} fill={fill} fillOpacity={0.18} />}
+      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.2} />
+      {label && (
+        <text
+          x={cx}
+          y={cy - rEffective - 4}
+          textAnchor="middle"
+          fontSize={9}
+          fontFamily="var(--font-family-mono, monospace)"
+          fontWeight={700}
+          fill="var(--color-text-primary)"
+          style={{ pointerEvents: 'none' }}
+        >
+          {label}
+        </text>
+      )}
+    </g>
   )
 }
 
