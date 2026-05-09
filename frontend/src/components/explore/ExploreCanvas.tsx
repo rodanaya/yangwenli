@@ -722,10 +722,15 @@ function InstitutionBodyVisual({
   onHover: (hovering: boolean) => void
 }) {
   const [hovered, setHovered] = useState(false)
-  const fill = RISK_COLORS[getRiskLevelFromScore(inst.risk)]
+  const level = getRiskLevelFromScore(inst.risk)
+  const fill = RISK_COLORS[level]
   const rEffective = hovered ? r * 1.15 : r
+  // Native browser tooltip — gives the full institution name + key stats
+  // even when the on-canvas label is hidden (showLabel=false for small bodies).
+  const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
   return (
     <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
+      <title>{tooltip}</title>
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.5} />
       {showLabel && (
@@ -893,7 +898,9 @@ function Z2Layer({
         const sizeRatio = (v.total_value_mxn ?? 0) / max
         const r = 8 + Math.sqrt(sizeRatio) * 30
         const risk = v.avg_risk_score ?? 0
-        const fill = RISK_COLORS[getRiskLevelFromScore(risk)]
+        const level = getRiskLevelFromScore(risk)
+        const fill = RISK_COLORS[level]
+        const tooltip = `${v.vendor_name}\n${formatNumber(v.contract_count)} contracts · ${formatCompactMXN(v.total_value_mxn ?? 0)}\n${level.toUpperCase()} · ${(risk * 100).toFixed(1)}%`
         return (
           <VendorBodyVisual
             key={v.vendor_id}
@@ -901,6 +908,7 @@ function Z2Layer({
             cy={cy}
             r={r}
             fill={fill}
+            tooltip={tooltip}
             label={sizeRatio > 0.18 ? shortLabel(v.vendor_name) : null}
             onClick={() =>
               triggerDrill(cx, cy, () =>
@@ -930,6 +938,7 @@ function VendorBodyVisual({
   r,
   fill,
   label,
+  tooltip,
   onClick,
   onHover,
 }: {
@@ -938,6 +947,7 @@ function VendorBodyVisual({
   r: number
   fill: string
   label: string | null
+  tooltip?: string
   onClick: () => void
   onHover: (hovering: boolean) => void
 }) {
@@ -950,6 +960,7 @@ function VendorBodyVisual({
       onMouseEnter={() => { setHovered(true); onHover(true) }}
       onMouseLeave={() => { setHovered(false); onHover(false) }}
     >
+      {tooltip && <title>{tooltip}</title>}
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 5} fill={fill} fillOpacity={0.18} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.2} />
       {label && (
