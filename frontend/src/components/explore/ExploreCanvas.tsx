@@ -84,6 +84,58 @@ function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// BackgroundStars — decorative star field for Z0 atmosphere.
+// Deterministic Halton-derived scatter so the layout is stable across renders.
+// Pure decoration: pointer-events: none, no interaction, no labels.
+// ────────────────────────────────────────────────────────────────────────────
+
+const STAR_COUNT = 140
+
+function haltonSeq(index: number, base: number): number {
+  let f = 1
+  let r = 0
+  let i = index
+  while (i > 0) {
+    f /= base
+    r += f * (i % base)
+    i = Math.floor(i / base)
+  }
+  return r
+}
+
+const BACKGROUND_STARS = Array.from({ length: STAR_COUNT }, (_, i) => {
+  const fx = haltonSeq(i + 1, 2)
+  const fy = haltonSeq(i + 1, 3)
+  // Vary radius and opacity by index — deterministic but visually organic
+  const seed = ((i * 9301 + 49297) % 233280) / 233280
+  const r = 0.4 + seed * 1.2 // 0.4 → 1.6 px
+  const opacity = 0.10 + seed * 0.35 // 0.10 → 0.45
+  return {
+    cx: fx * SVG_W,
+    cy: fy * SVG_H,
+    r,
+    opacity,
+  }
+})
+
+function BackgroundStars() {
+  return (
+    <g style={{ pointerEvents: 'none' }} aria-hidden="true">
+      {BACKGROUND_STARS.map((s, i) => (
+        <circle
+          key={i}
+          cx={s.cx}
+          cy={s.cy}
+          r={s.r}
+          fill="var(--color-text-muted)"
+          opacity={s.opacity}
+        />
+      ))}
+    </g>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // ExploreCanvas
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -296,6 +348,10 @@ function Z0Layer({
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
     >
+      {/* Background particles — decorative star field for atmosphere.
+          Pure decoration, deterministic, no interaction. */}
+      <BackgroundStars />
+
       {/* Eyebrow */}
       <text
         x={PAD}
