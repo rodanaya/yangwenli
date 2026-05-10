@@ -553,5 +553,22 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Ningún contrato individual despierta sospecha — montos razonables, plazos en regla, formato de licitación pública. La anomalía emerge del conjunto: el mismo proveedor gana licitación tras licitación, con un win_rate de 92% contra una línea base sectorial de 16%.",
     "footer": "Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.8.5 score promedio 0.756"
+  },
+  "oceanografia": {
+    "kicker": "RUBLI · Cronología de contratos PEMEX → Oceanografía",
+    "headline": "Once años de contratos offshore a un solo proveedor — hasta que estalló el fraude",
+    "lede": "De 2003 a febrero de 2014, Oceanografía S.A. acumuló contratos con subsidiarias de PEMEX en la región marina del Golfo. La relación creció año tras año hasta el arresto de Amado Yáñez Osuna y la pérdida de USD 235M registrada por Citigroup.",
+    "stat1Label": "MXN total · 11 años · un solo proveedor",
+    "stat2LabelPrefix": "año pico ·",
+    "stat2LabelSuffix": "B MXN",
+    "stat3Value": "02/2014",
+    "stat3Label": "arresto de Yáñez · fin del esquema",
+    "ariaLabel": "Cronología de contratos Oceanografía-PEMEX 2003–2014",
+    "yAxisLabel": "MXN MIL MILLONES",
+    "arrestAnnotation": "FEB 2014 · ARRESTO",
+    "legendNote": "contratos anuales · número = contratos firmados",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "El esquema no fue accidente: fue un flujo continuo de 11 años amparado por la baja competencia en servicios offshore de PEMEX. Banamex descontó facturas falsas por USD 585M. Nadie cruzó facturas vs. contratos hasta que los controles internos de Citigroup lo detectaron en 2014.",
+    "footer": "Fuente: COMPRANET · Case 8 (Oceanografía-PEMEX) · SEC filings Citigroup 2014 · valores aproximados"
   }
 }

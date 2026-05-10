@@ -553,5 +553,22 @@
     "findingLabel": "FINDING",
     "findingBody": "No individual contract raises suspicion — reasonable amounts, deadlines in order, public tender format. The anomaly emerges from the set: the same vendor wins tender after tender, with a 92% win rate against a 16% sector baseline.",
     "footer": "Source: COMPRANET · 147 SAT-SixSigma contracts · v0.8.5 model average score 0.756"
+  },
+  "oceanografia": {
+    "kicker": "RUBLI · Timeline of PEMEX → Oceanografía contracts",
+    "headline": "Eleven years of offshore contracts to a single vendor — until the fraud broke",
+    "lede": "From 2003 to February 2014, Oceanografía S.A. amassed contracts with PEMEX subsidiaries in the Gulf marine region. The relationship grew year after year until the arrest of Amado Yáñez Osuna and the USD 235M loss recorded by Citigroup.",
+    "stat1Label": "MXN total · 11 years · single vendor",
+    "stat2LabelPrefix": "peak year ·",
+    "stat2LabelSuffix": "B MXN",
+    "stat3Value": "02/2014",
+    "stat3Label": "Yáñez arrest · end of scheme",
+    "ariaLabel": "Oceanografía PEMEX contract timeline 2003–2014",
+    "yAxisLabel": "MXN BILLIONS",
+    "arrestAnnotation": "FEB 2014 · ARREST",
+    "legendNote": "annual contracts · number = signed contracts",
+    "findingLabel": "FINDING",
+    "findingBody": "The scheme was no accident: it was an 11-year continuous flow protected by low competition in PEMEX offshore services. Banamex discounted USD 585M in false invoices. No one cross-checked invoices vs. contracts until Citigroup's internal controls caught it in 2014.",
+    "footer": "Source: COMPRANET · Case 8 (Oceanografía-PEMEX) · Citigroup 2014 SEC filings · approximate values"
   }
 }

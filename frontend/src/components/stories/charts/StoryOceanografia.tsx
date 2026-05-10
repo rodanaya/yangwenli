@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface YearRow {
   year: number
@@ -44,6 +45,7 @@ const ARREST_YEAR = 2014
 const PEAK = Math.max(...TIMELINE.map((r) => r.valueB))
 
 export function StoryOceanografia() {
+  const { t } = useTranslation('storyCharts')
   const xFor = (i: number) => PAD_L + (i / (TIMELINE.length - 1)) * CHART_W
   const yFor = (v: number) => PAD_T + CHART_H - (v / PEAK) * CHART_H
   const barW = (CHART_W / TIMELINE.length) * 0.62
@@ -59,16 +61,14 @@ export function StoryOceanografia() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Cronología de contratos PEMEX → Oceanografía
+        {t('oceanografia.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Once años de contratos offshore a un solo proveedor — hasta que estalló el fraude
+        {t('oceanografia.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        De 2003 a febrero de 2014, Oceanografía S.A. acumuló contratos con subsidiarias de
-        PEMEX en la región marina del Golfo. La relación creció año tras año hasta el arresto
-        de Amado Yáñez Osuna y la pérdida de USD 235M registrada por Citigroup.
+        {t('oceanografia.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
@@ -77,7 +77,7 @@ export function StoryOceanografia() {
             {total.toFixed(1)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            MXN total · 11 años · un solo proveedor
+            {t('oceanografia.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
@@ -85,15 +85,15 @@ export function StoryOceanografia() {
             {peakYear.year}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            año pico · {peakYear.valueB.toFixed(1)}B MXN
+            {`${t('oceanografia.stat2LabelPrefix')} ${peakYear.valueB.toFixed(1)}${t('oceanografia.stat2LabelSuffix')}`}
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
           <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">
-            02/2014
+            {t('oceanografia.stat3Value')}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            arresto de Yáñez · fin del esquema
+            {t('oceanografia.stat3Label')}
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export function StoryOceanografia() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Oceanografia PEMEX contract timeline 2003-2014"
+          aria-label={t('oceanografia.ariaLabel')}
         >
           {/* Y axis gridlines */}
           {[0, 1, 2, 3].map((v) => {
@@ -136,7 +136,7 @@ export function StoryOceanografia() {
             letterSpacing="0.1em"
             transform={`rotate(-90 14 ${PAD_T + CHART_H / 2})`}
           >
-            MXN BILLIONS
+            {t('oceanografia.yAxisLabel')}
           </text>
 
           {/* Bars */}
@@ -207,7 +207,7 @@ export function StoryOceanografia() {
               fontWeight={700}
               letterSpacing="0.08em"
             >
-              FEB 2014 · ARRESTO
+              {t('oceanografia.arrestAnnotation')}
             </text>
           </g>
 
@@ -215,7 +215,7 @@ export function StoryOceanografia() {
           <g transform={`translate(${PAD_L}, ${H - 14})`}>
             <rect width={10} height={8} fill="var(--color-risk-medium)" fillOpacity={0.75} />
             <text x={14} y={7} fill="#a8a29e" fontSize={9} fontFamily="var(--font-family-mono)">
-              contratos anuales · número = contratos firmados
+              {t('oceanografia.legendNote')}
             </text>
           </g>
         </svg>
@@ -223,18 +223,15 @@ export function StoryOceanografia() {
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('oceanografia.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          El esquema no fue accidente: fue un flujo continuo de 11 años amparado por la baja
-          competencia en servicios offshore de PEMEX. Banamex descontó facturas falsas por
-          USD 585M. Nadie cruzó facturas vs. contratos hasta que los controles internos de
-          Citigroup lo detectaron en 2014.
+          {t('oceanografia.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · Case 8 (Oceanografía-PEMEX) · SEC filings Citigroup 2014 · valores aproximados
+        {t('oceanografia.footer')}
       </p>
     </motion.div>
   )
