@@ -90,5 +90,18 @@
     "peakHeader": "PICO % DA",
     "oecdLabel": "OCDE 25%",
     "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 1pp · RUBLI v0.8.5"
+  },
+  "sexenioComp": {
+    "kicker": "RUBLI · Diagnóstico sexenal",
+    "headline": "Todos los indicadores empeoran con cada sexenio",
+    "sublinePrefix": "Mayor deterioro:",
+    "ariaLabel": "Cuatro indicadores por sexenio, matriz de puntos, cada punto 1pp",
+    "indicatorHeader": "INDICADOR / SEXENIO",
+    "valueHeader": "VALOR",
+    "metricDirectAward": "Adj. Directa",
+    "metricSingleBid": "Licit. única",
+    "metricHighRisk": "Riesgo alto",
+    "metricConcentration": "Concentración",
+    "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 1pp · RUBLI v0.8.5"
   }
 }

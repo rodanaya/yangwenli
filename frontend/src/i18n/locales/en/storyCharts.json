@@ -90,5 +90,18 @@
     "peakHeader": "PEAK % DA",
     "oecdLabel": "OECD 25%",
     "footer": "Source: COMPRANET 2002–2025 · Each dot = 1pp · RUBLI v0.8.5"
+  },
+  "sexenioComp": {
+    "kicker": "RUBLI · Sexenio diagnostic",
+    "headline": "Every indicator worsens with each presidential term",
+    "sublinePrefix": "Greatest deterioration:",
+    "ariaLabel": "Four metrics by sexenio, dot matrix, each dot 1pp",
+    "indicatorHeader": "INDICATOR / TERM",
+    "valueHeader": "VALUE",
+    "metricDirectAward": "Direct Award",
+    "metricSingleBid": "Single Bid",
+    "metricHighRisk": "High Risk",
+    "metricConcentration": "Concentration",
+    "footer": "Source: COMPRANET 2002–2025 · Each dot = 1pp · RUBLI v0.8.5"
   }
 }
