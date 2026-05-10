@@ -67,5 +67,18 @@
     "oecdLabel": "OECD max 25%",
     "averagePrefix": "average",
     "footer": "Source: COMPRANET 2010–2024 · RUBLI v0.8.5"
+  },
+  "covidEmergency": {
+    "kicker": "RUBLI · Health emergency",
+    "headline": "COVID-19 didn't create the crisis — it accelerated it",
+    "subline": "Direct award rose during the pandemic but never came back down. Single-bid hit 19.1% in 2021.",
+    "stat1Value": "+5.7 pts",
+    "stat1Label": "DA 2017 to 2023",
+    "stat2Value": "19.1%",
+    "stat2Label": "Single-bid peak 2021",
+    "daSeries": "Direct Award %",
+    "singleBidSeries": "Single Bid %",
+    "covidBand": "COVID-19",
+    "footer": "Source: COMPRANET 2017–2023 · RUBLI v0.8.5"
   }
 }

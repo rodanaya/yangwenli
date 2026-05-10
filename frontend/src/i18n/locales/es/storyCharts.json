@@ -67,5 +67,18 @@
     "oecdLabel": "OCDE máx. 25%",
     "averagePrefix": "promedio",
     "footer": "Fuente: COMPRANET 2010–2024 · RUBLI v0.8.5"
+  },
+  "covidEmergency": {
+    "kicker": "RUBLI · Emergencia sanitaria",
+    "headline": "COVID-19 no creó la crisis — la aceleró",
+    "subline": "Adj. Directa subió durante la pandemia pero nunca bajó después. Licitación única alcanzó 19.1% en 2021.",
+    "stat1Value": "+5.7 pts",
+    "stat1Label": "DA 2017 a 2023",
+    "stat2Value": "19.1%",
+    "stat2Label": "Licitación única pico 2021",
+    "daSeries": "Adj. Directa %",
+    "singleBidSeries": "Licitación única %",
+    "covidBand": "COVID-19",
+    "footer": "Fuente: COMPRANET 2017–2023 · RUBLI v0.8.5"
   }
 }

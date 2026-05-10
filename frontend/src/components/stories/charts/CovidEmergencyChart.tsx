@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import {
   EditorialComposedChart,
   type ComposedLayer,
@@ -18,6 +19,7 @@ const data = [
 type CovidRow = (typeof data)[number]
 
 export function CovidEmergencyChart() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -26,24 +28,24 @@ export function CovidEmergencyChart() {
       className="rounded-sm bg-background-card p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Emergencia sanitaria
+        {t('covidEmergency.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        COVID-19 no creo la crisis — la acelero
+        {t('covidEmergency.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Adj. Directa subio durante la pandemia pero nunca bajo despues. Licitacion unica alcanzo 19.1% en 2021.
+        {t('covidEmergency.subline')}
       </p>
 
       {/* Key stat callout */}
       <div className="flex gap-4 mb-4">
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-risk-critical)' }}>
-          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-risk-critical)' }}>+5.7 pts</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">DA 2017 a 2023</p>
+          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-risk-critical)' }}>{t('covidEmergency.stat1Value')}</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('covidEmergency.stat1Label')}</p>
         </div>
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-sector-trabajo)' }}>
-          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-sector-trabajo)' }}>19.1%</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Licitacion unica pico 2021</p>
+          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-sector-trabajo)' }}>{t('covidEmergency.stat2Value')}</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('covidEmergency.stat2Label')}</p>
         </div>
       </div>
 
@@ -52,8 +54,8 @@ export function CovidEmergencyChart() {
         xKey="year"
         layers={
           [
-            { kind: 'area', key: 'da', label: 'Adj. Directa %', colorToken: 'risk-critical', axis: 'left' },
-            { kind: 'line', key: 'single_bid', label: 'Licitacion unica %', colorToken: 'sector-trabajo', axis: 'right' },
+            { kind: 'area', key: 'da', label: t('covidEmergency.daSeries'), colorToken: 'risk-critical', axis: 'left' },
+            { kind: 'line', key: 'single_bid', label: t('covidEmergency.singleBidSeries'), colorToken: 'sector-trabajo', axis: 'right' },
           ] as ComposedLayer<CovidRow>[]
         }
         yFormat="pct"
@@ -62,7 +64,7 @@ export function CovidEmergencyChart() {
         rightYDomain={[14, 22]}
         annotations={
           [
-            { kind: 'band', x1: '2020', x2: '2021', label: 'COVID-19', tone: 'crisis' },
+            { kind: 'band', x1: '2020', x2: '2021', label: t('covidEmergency.covidBand'), tone: 'crisis' },
           ] as ChartAnnotation[]
         }
         height={260}
@@ -72,15 +74,15 @@ export function CovidEmergencyChart() {
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
           <span className="h-0.5 w-4 rounded-full" style={{ background: 'var(--color-risk-critical)' }} />
-          <span className="text-[10px] font-mono text-text-muted">Adj. Directa %</span>
+          <span className="text-[10px] font-mono text-text-muted">{t('covidEmergency.daSeries')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-sector-trabajo)' }} />
-          <span className="text-[10px] font-mono text-text-muted">Licitacion unica %</span>
+          <span className="text-[10px] font-mono text-text-muted">{t('covidEmergency.singleBidSeries')}</span>
         </div>
       </div>
       <p className="mt-1 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2017-2023 · RUBLI v0.8.5
+        {t('covidEmergency.footer')}
       </p>
     </motion.div>
   )
