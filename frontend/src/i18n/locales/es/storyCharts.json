@@ -233,5 +233,26 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Ningún sector alcanza la meta OCDE de 75% competitivo. Los 4 peores sectores (Agricultura, Educación, Trabajo, Hacienda) están 60+ puntos debajo del estándar.",
     "footer": "Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.8.5"
+  },
+  "riskPyramid": {
+    "kicker": "RUBLI · Distribución de riesgo",
+    "headline": "6% de los contratos concentran 42% del dinero — y son todos de riesgo crítico",
+    "lede": "Cada punto representa 2% del total de contratos. Los niveles se angostan hacia arriba: la cima crítica es estrecha por número, pero la más ancha por valor.",
+    "stat1Value": "MXN 4.1B",
+    "stat1Label": "en contratos críticos",
+    "stat2Value": "6.9×",
+    "stat2Label": "ratio valor / volumen (crítico)",
+    "stat3Value": "13.5%",
+    "stat3Label": "tasa de alto riesgo · OCDE máx 15%",
+    "ariaLabel": "Pirámide de puntos con 4 niveles de riesgo, crítico arriba con 6%, bajo en la base con 59.4%",
+    "levelHeader": "NIVEL",
+    "contractsHeader": "% DE CONTRATOS (cada punto = 2%)",
+    "valueHeader": "% DEL VALOR",
+    "summaryLine": "HR = 13.49% · modelo RUBLI v0.8.5 · AUC test 0.828",
+    "findingLabel": "HALLAZGO",
+    "findingPrefix": "La forma de la pirámide se invierte cuando la medida cambia de número a valor:",
+    "findingStrong": "6% de contratos cargan 42% del dinero",
+    "findingSuffix": ". El patrón es consistente en los 12 sectores — la corrupción gravita hacia los contratos grandes.",
+    "footer": "Fuente: 3.05M contratos · RUBLI v0.8.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25"
   }
 }
