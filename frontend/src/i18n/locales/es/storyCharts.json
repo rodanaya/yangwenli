@@ -460,5 +460,25 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Contrato promedio: $1,439M MXN. Brecha promedio bajo el umbral: $61M (4.1%). El agrupamiento uniforme debajo de $1,500M es estadísticamente improbable bajo adjudicación legítima — consistente con fraccionamiento deliberado.",
     "footer": "Fuente: COMPRANET 2023 · Cada punto = $20M MXN · Detección mismo día RUBLI"
+  },
+  "trenMaya": {
+    "kicker": "RUBLI · Tren Maya · adjudicación por tramo",
+    "headline": "1,525 kilómetros de vía, cero licitaciones públicas abiertas",
+    "lede": "Cada fila es un tramo del trazado. La tira de puntos muestra la tasa de adjudicación directa de ese tramo. El último tramo — bajo contratación SEDENA por declaratoria de seguridad nacional — queda fuera de COMPRANET.",
+    "stat1Label": "adj. directa promedio · ponderada por km",
+    "stat2Label": "MXN visibles · resto en SEDENA clasificado",
+    "stat3Label": "km total · 6 tramos · 0 licitaciones abiertas",
+    "ariaLabel": "Tasa de adjudicación directa Tren Maya por tramo",
+    "sectionHeader": "TRAMO",
+    "axisHeader": "TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)",
+    "valueExecutorHeader": "VALOR · EJECUTOR",
+    "oecdLabel": "OCDE 25%",
+    "sedenaBox": "SEDENA · FUERA DE COMPRANET · SEGURIDAD NACIONAL",
+    "estimatedLabel": "estimado",
+    "riskWord": "riesgo",
+    "bottomLegend": "cada punto = 2pp · color = intensidad de adjudicación directa",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Los cinco tramos bajo FONATUR promediaron 97.6% de adjudicación directa. Los tramos 6 y 7 se movieron a SEDENA bajo declaratoria de seguridad nacional, exentándolos de la Ley de Obras Públicas. El resultado: el megaproyecto más caro del sexenio ejecutado sin una sola licitación pública abierta.",
+    "footer": "Fuente: COMPRANET FONATUR 2019–2024 · DOF 22/11/2021 · ASF Auditoría de Desempeño 2023 · cifras aprox."
   }
 }

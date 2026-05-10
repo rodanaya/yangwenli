@@ -460,5 +460,25 @@
     "findingLabel": "FINDING",
     "findingBody": "Average contract: $1,439M MXN. Average gap below threshold: $61M (4.1%). The uniform clustering below $1,500M is statistically improbable under legitimate procurement — consistent with deliberate threshold splitting.",
     "footer": "Source: COMPRANET 2023 · Each dot = $20M MXN · RUBLI same-day detection"
+  },
+  "trenMaya": {
+    "kicker": "RUBLI · Tren Maya · award by section",
+    "headline": "1,525 kilometers of track, zero open public tenders",
+    "lede": "Each row is a section of the route. The dot strip shows that section's direct-award rate. The last segment — under SEDENA contracting due to national-security designation — falls outside COMPRANET.",
+    "stat1Label": "average direct award · weighted by km",
+    "stat2Label": "MXN visible · rest classified at SEDENA",
+    "stat3Label": "total km · 6 sections · 0 open tenders",
+    "ariaLabel": "Tren Maya direct award rate by section",
+    "sectionHeader": "SECTION",
+    "axisHeader": "DIRECT AWARD RATE (0% → 100%)",
+    "valueExecutorHeader": "VALUE · EXECUTOR",
+    "oecdLabel": "OECD 25%",
+    "sedenaBox": "SEDENA · OUTSIDE COMPRANET · NATIONAL SECURITY",
+    "estimatedLabel": "estimated",
+    "riskWord": "risk",
+    "bottomLegend": "each dot = 2pp · color = direct-award intensity",
+    "findingLabel": "FINDING",
+    "findingBody": "The five FONATUR sections averaged 97.6% direct award. Sections 6 and 7 were moved to SEDENA under national-security designation, exempting them from the Public Works Law. The result: the most expensive megaproject of the sexenio executed without a single open public tender.",
+    "footer": "Source: COMPRANET FONATUR 2019–2024 · DOF 22/11/2021 · ASF Performance Audit 2023 · approximate figures"
   }
 }
