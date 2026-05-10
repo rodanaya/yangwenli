@@ -419,5 +419,16 @@
     "findingBody": "A single vendor — Farmacos Especializados — received MXN 136B from two institutions (IMSS + ISSSTE), equivalent to 50% of total identified flow. This level of concentration far exceeds OECD procurement diversification guidelines.",
     "footer": "Source: COMPRANET 2019–2023 · RUBLI risk model v0.8.5",
     "ariaLink": "Investigate vendors"
+  },
+  "riskBySector": {
+    "kicker": "RUBLI · Sector Risk Distribution",
+    "headline": "Agriculture and Energy lead with 2× the national risk average",
+    "sublinePrefix": "% of contracts rated critical + high · National avg:",
+    "ariaLabel": "High-risk contract percentage by sector, dot matrix, each dot 0.5pp",
+    "sectorHeader": "SECTOR",
+    "highRiskHeader": "% HIGH RISK",
+    "avgPrefix": "Avg",
+    "legend": "National average (OECD HR benchmark: 2–15%)",
+    "footer": "Source: COMPRANET 2002–2025 · RUBLI v0.8.5 · Each dot = 0.5pp · Sectors above avg at full opacity"
   }
 }

@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 interface SectorRow {
@@ -47,6 +48,7 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 44 + DATA.length * ROW_H + 14
 
 export function RiskBySectorChart() {
+  const { t } = useTranslation('storyCharts')
   const oecdDot = Math.round(OECD_AVG * DOT_PER_PCT) // = 18
 
   return (
@@ -57,13 +59,13 @@ export function RiskBySectorChart() {
       className="bg-background-card rounded-sm p-4 border border-border"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Sector Risk Distribution
+        {t('riskBySector.kicker')}
       </p>
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        Agriculture and Energy lead with 2x the national risk average
+        {t('riskBySector.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        % of contracts rated critical + high · National avg: {OECD_AVG}%
+        {`${t('riskBySector.sublinePrefix')} ${OECD_AVG}%`}
       </p>
 
       <div className="rounded-sm border border-border bg-background p-4">
@@ -71,7 +73,7 @@ export function RiskBySectorChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="High-risk contract percentage by sector, dot matrix, each dot 0.5pp"
+          aria-label={t('riskBySector.ariaLabel')}
         >
           {/* Headers */}
           <text
@@ -83,7 +85,7 @@ export function RiskBySectorChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            SECTOR
+            {t('riskBySector.sectorHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -94,7 +96,7 @@ export function RiskBySectorChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            % ALTO RIESGO
+            {t('riskBySector.highRiskHeader')}
           </text>
 
           {/* OECD reference line */}
@@ -115,7 +117,7 @@ export function RiskBySectorChart() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            Avg {OECD_AVG}%
+            {`${t('riskBySector.avgPrefix')} ${OECD_AVG}%`}
           </text>
 
           {/* Rows */}
@@ -179,12 +181,12 @@ export function RiskBySectorChart() {
       <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
         <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
         <span className="text-[10px] font-mono text-text-muted">
-          National average (OECD HR benchmark: 2-15%)
+          {t('riskBySector.legend')}
         </span>
       </div>
 
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v0.8.5 · Each dot = 0.5pp · Sectors above avg at full opacity
+        {t('riskBySector.footer')}
       </p>
     </motion.div>
   )

@@ -419,5 +419,16 @@
     "findingBody": "Un solo proveedor — Farmacos Especializados — recibió MXN 136B de dos instituciones (IMSS + ISSSTE), equivalente al 50% del flujo total identificado. Este nivel de concentración excede por mucho las guías de diversificación de adjudicaciones de la OCDE.",
     "footer": "Fuente: COMPRANET 2019–2023 · modelo de riesgo RUBLI v0.8.5",
     "ariaLink": "Investigar proveedores"
+  },
+  "riskBySector": {
+    "kicker": "RUBLI · Distribución de riesgo por sector",
+    "headline": "Agricultura y Energía lideran con 2× el promedio nacional de riesgo",
+    "sublinePrefix": "% de contratos crítico + alto · Promedio nacional:",
+    "ariaLabel": "Porcentaje de contratos de alto riesgo por sector, matriz de puntos, cada punto 0.5pp",
+    "sectorHeader": "SECTOR",
+    "highRiskHeader": "% ALTO RIESGO",
+    "avgPrefix": "Prom.",
+    "legend": "Promedio nacional (referencia HR OCDE: 2–15%)",
+    "footer": "Fuente: COMPRANET 2002–2025 · RUBLI v0.8.5 · Cada punto = 0.5pp · Sectores arriba del promedio en opacidad completa"
   }
 }
