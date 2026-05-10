@@ -189,5 +189,19 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "El centroide de AMLO (nodo naranja) se ubica arriba y a la derecha: más valor capturado con mayor opacidad. Los cohortes cruzan hacia zonas de riesgo alto (rojo) a medida que el eje X avanza.",
     "footer": "Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.8.5"
+  },
+  "austeridad": {
+    "kicker": "RUBLI · Austeridad",
+    "headline": "El gasto bajó 10%. La opacidad subió 8 puntos.",
+    "subline": "Gasto total y tasa de adjudicación directa por administración · COMPRANET 2007–2024",
+    "stat1Value": "-10%",
+    "stat1Label": "gasto Peña a AMLO",
+    "stat2Value": "+8.6pp",
+    "stat2Label": "opacidad Peña a AMLO",
+    "ariaLabel": "Gasto vs tasa DA por administración, matriz de puntos",
+    "spendLegend": "GASTO TOTAL (cada punto = 0.1T MXN)",
+    "daLegend": "ADJ. DIRECTA (cada punto = 2pp)",
+    "daSuffix": "DA",
+    "footer": "Fuente: COMPRANET · Análisis RUBLI v0.8.5"
   }
 }

@@ -189,5 +189,19 @@
     "findingLabel": "FINDING",
     "findingBody": "AMLO's centroid (orange node) sits up and to the right: more value captured with greater opacity. Cohorts move into high-risk territory (red) as the X axis advances.",
     "footer": "Source: COMPRANET · cohorts by year of first federal registration · RUBLI v0.8.5"
+  },
+  "austeridad": {
+    "kicker": "RUBLI · Austerity",
+    "headline": "Spending fell 10%. Opacity rose 8 points.",
+    "subline": "Total spend and direct-award rate by administration · COMPRANET 2007–2024",
+    "stat1Value": "-10%",
+    "stat1Label": "spend Peña to AMLO",
+    "stat2Value": "+8.6pp",
+    "stat2Label": "opacity Peña to AMLO",
+    "ariaLabel": "Spend vs DA rate by administration, dot matrix",
+    "spendLegend": "TOTAL SPEND (each dot = 0.1T MXN)",
+    "daLegend": "DIRECT AWARD (each dot = 2pp)",
+    "daSuffix": "DA",
+    "footer": "Source: COMPRANET · RUBLI v0.8.5 analysis"
   }
 }
