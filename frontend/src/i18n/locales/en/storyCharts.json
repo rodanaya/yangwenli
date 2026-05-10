@@ -499,5 +499,20 @@
     "findingLabel": "FINDING",
     "findingBody": "The three vendors share the same pattern: direct award above 75% — more than 3× the OECD limit — and v0.8.5 risk scores above 0.81. Fármacos Especializados concentrated 45% of federal traceable pharma spending 2019–2023.",
     "footer": "Source: COMPRANET 2019–2023 · RUBLI analysis · v0.8.5 model · COFECE DE-011-2016"
+  },
+  "sectorParadox": {
+    "kicker": "RUBLI · The direct-award paradox",
+    "headline": "Agriculture has 93% direct award — but only 2% high risk",
+    "subline": "Infrastructure has the lowest DA rate but the highest concentration of structural risk",
+    "ariaLabel": "Sector scatter: direct-award rate on X-axis, high-risk contract percentage on Y-axis",
+    "xAxisLabel": "DIRECT AWARD RATE →",
+    "yAxisLabel": "% OF CONTRACTS AT HIGH RISK →",
+    "annotationLeft": "← LOW DA · HIGH RISK",
+    "annotationRight": "HIGH DA · LOW RISK →",
+    "findingLabel": "FINDING",
+    "findingPrefix": "The position of",
+    "findingStrong": "Infrastructure",
+    "findingSuffix": " (low DA, high risk) refutes the shortcut \"direct award = corruption\". The model detects structural patterns the binary flag does not capture.",
+    "footer": "Size = total spend (MXN T) · Source: COMPRANET · 12 sectors · RUBLI v0.8.5"
   }
 }

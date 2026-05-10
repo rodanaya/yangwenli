@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 interface Pt {
@@ -56,6 +57,7 @@ function colorFor(code: string): string {
 }
 
 export function StorySectorParadox() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -64,21 +66,21 @@ export function StorySectorParadox() {
       className="rounded-sm bg-background border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · La paradoja de la adjudicación directa
+        {t('sectorParadox.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Agricultura tiene 93% de adjudicación directa — pero solo 2% de riesgo alto
+        {t('sectorParadox.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        Infraestructura tiene la menor tasa de DA, pero la mayor concentración de riesgo estructural
+        {t('sectorParadox.subline')}
       </p>
 
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Sector scatter: direct-award rate on X-axis, high-risk contract percentage on Y-axis"
+        aria-label={t('sectorParadox.ariaLabel')}
       >
         {/* Quadrant guides */}
         <rect x={xFor(75)} y={yFor(20)} width={xFor(100) - xFor(75)} height={yFor(10) - yFor(20)} fill="var(--color-sector-salud)" fillOpacity={0.04} />
@@ -112,7 +114,7 @@ export function StorySectorParadox() {
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
-          TASA DE ADJUDICACIÓN DIRECTA →
+          {t('sectorParadox.xAxisLabel')}
         </text>
         <text
           x={15}
@@ -124,7 +126,7 @@ export function StorySectorParadox() {
           letterSpacing="0.1em"
           transform={`rotate(-90, 15, ${PAD.top + PLOT_H / 2})`}
         >
-          % DE CONTRATOS EN RIESGO ALTO →
+          {t('sectorParadox.yAxisLabel')}
         </text>
 
         {/* Points */}
@@ -166,27 +168,25 @@ export function StorySectorParadox() {
         {/* Paradox annotations */}
         <g>
           <text x={xFor(74)} y={yFor(18)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
-            ← BAJA DA · ALTO RIESGO
+            {t('sectorParadox.annotationLeft')}
           </text>
           <text x={xFor(92)} y={yFor(3)} fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600} textAnchor="end">
-            ALTA DA · BAJO RIESGO →
+            {t('sectorParadox.annotationRight')}
           </text>
         </g>
       </svg>
 
       <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('sectorParadox.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          La posición de <strong className="text-orange-300">Infraestructura</strong> (baja DA, alto
-          riesgo) desmiente el atajo "adjudicación directa = corrupción". El modelo detecta
-          patrones estructurales que el flag binario no captura.
+          {t('sectorParadox.findingPrefix')} <strong className="text-orange-300">{t('sectorParadox.findingStrong')}</strong>{t('sectorParadox.findingSuffix')}
         </p>
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Tamaño = gasto total (MXN T) · Fuente: COMPRANET · 12 sectores · RUBLI v0.8.5
+        {t('sectorParadox.footer')}
       </p>
     </motion.div>
   )
