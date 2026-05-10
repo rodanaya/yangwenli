@@ -444,5 +444,21 @@
     "legendMedium": "Medium",
     "legendOecd": "OECD benchmark",
     "footer": "Source: COMPRANET 2002–2025 · Each dot = 0.25pp · RUBLI v0.8.5 risk model"
+  },
+  "thresholdSplitting": {
+    "kicker": "RUBLI · Threshold Splitting",
+    "headline": "12 contracts in 6 hours, all below the $1,500M oversight limit",
+    "sublinePrefix": "HEMOSER · 2 Aug 2023 · Total: $",
+    "sublineMid": "M MXN (",
+    "sublineSuffix": "× threshold if combined)",
+    "heroValue": "$17.3B MXN",
+    "heroLabel": "Total split across 12 contracts to avoid oversight",
+    "ariaLabel": "Dot matrix of 12 contracts all clustering just below 1500M threshold",
+    "contractHeader": "CONTRACT",
+    "amountHeader": "MXN AMOUNT",
+    "thresholdLabel": "Threshold $1,500M",
+    "findingLabel": "FINDING",
+    "findingBody": "Average contract: $1,439M MXN. Average gap below threshold: $61M (4.1%). The uniform clustering below $1,500M is statistically improbable under legitimate procurement — consistent with deliberate threshold splitting.",
+    "footer": "Source: COMPRANET 2023 · Each dot = $20M MXN · RUBLI same-day detection"
   }
 }

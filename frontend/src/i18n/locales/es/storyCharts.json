@@ -444,5 +444,21 @@
     "legendMedium": "Medio",
     "legendOecd": "Referencia OCDE",
     "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 0.25pp · modelo de riesgo RUBLI v0.8.5"
+  },
+  "thresholdSplitting": {
+    "kicker": "RUBLI · Fraccionamiento",
+    "headline": "12 contratos en 6 horas, todos por debajo del umbral de supervisión de $1,500M",
+    "sublinePrefix": "HEMOSER · 2 Ago 2023 · Total: $",
+    "sublineMid": "M MXN (",
+    "sublineSuffix": "× del umbral si se combinaran)",
+    "heroValue": "$17.3B MXN",
+    "heroLabel": "Total fraccionado en 12 contratos para evitar supervisión",
+    "ariaLabel": "Matriz de puntos de 12 contratos agrupados justo bajo el umbral de 1500M",
+    "contractHeader": "CONTRATO",
+    "amountHeader": "MONTO MXN",
+    "thresholdLabel": "Umbral $1,500M",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Contrato promedio: $1,439M MXN. Brecha promedio bajo el umbral: $61M (4.1%). El agrupamiento uniforme debajo de $1,500M es estadísticamente improbable bajo adjudicación legítima — consistente con fraccionamiento deliberado.",
+    "footer": "Fuente: COMPRANET 2023 · Cada punto = $20M MXN · Detección mismo día RUBLI"
   }
 }

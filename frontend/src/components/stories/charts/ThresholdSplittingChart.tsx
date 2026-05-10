@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { RISK_COLORS } from '@/lib/constants'
 
 interface ContractRow {
@@ -49,6 +50,7 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 46 + DATA.length * ROW_H + 16
 
 export function ThresholdSplittingChart() {
+  const { t } = useTranslation('storyCharts')
   const thresholdDot = Math.round(THRESHOLD * DOT_PER_M) // = 75
 
   return (
@@ -59,22 +61,21 @@ export function ThresholdSplittingChart() {
       className="bg-background-card rounded-sm p-4 border border-border"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Threshold Splitting
+        {t('thresholdSplitting.kicker')}
       </p>
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        12 contracts in 6 hours, all below the $1,500M oversight limit
+        {t('thresholdSplitting.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        HEMOSER · 2 Aug 2023 · Total: ${totalValue.toLocaleString()}M MXN
-        ({Math.round((totalValue / THRESHOLD) * 100) / 100}x threshold if combined)
+        {`${t('thresholdSplitting.sublinePrefix')}${totalValue.toLocaleString()}${t('thresholdSplitting.sublineMid')}${Math.round((totalValue / THRESHOLD) * 100) / 100}${t('thresholdSplitting.sublineSuffix')}`}
       </p>
 
       <div className="border-l-2 pl-3 py-1 mb-4" style={{ borderColor: RISK_COLORS.high }}>
         <div className="text-lg font-mono font-bold" style={{ color: RISK_COLORS.high }}>
-          $17.3B MXN
+          {t('thresholdSplitting.heroValue')}
         </div>
         <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-          Total split across 12 contracts to avoid oversight
+          {t('thresholdSplitting.heroLabel')}
         </div>
       </div>
 
@@ -83,7 +84,7 @@ export function ThresholdSplittingChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Dot matrix of 12 contracts all clustering just below 1500M threshold"
+          aria-label={t('thresholdSplitting.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -95,7 +96,7 @@ export function ThresholdSplittingChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            CONTRATO
+            {t('thresholdSplitting.contractHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -106,7 +107,7 @@ export function ThresholdSplittingChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            MONTO MXN
+            {t('thresholdSplitting.amountHeader')}
           </text>
 
           {/* Supervision threshold line */}
@@ -128,7 +129,7 @@ export function ThresholdSplittingChart() {
             fontFamily="var(--font-family-mono)"
             fontWeight={600}
           >
-            Umbral $1,500M
+            {t('thresholdSplitting.thresholdLabel')}
           </text>
 
           {/* Rows */}
@@ -191,17 +192,15 @@ export function ThresholdSplittingChart() {
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-0.5">
-          HALLAZGO
+          {t('thresholdSplitting.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          Average contract: $1,439M MXN. Average gap below threshold: $61M (4.1%).
-          The uniform clustering below $1,500M is statistically improbable under
-          legitimate procurement — consistent with deliberate threshold splitting.
+          {t('thresholdSplitting.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2023 · Each dot = $20M MXN · RUBLI same-day detection
+        {t('thresholdSplitting.footer')}
       </p>
     </motion.div>
   )
