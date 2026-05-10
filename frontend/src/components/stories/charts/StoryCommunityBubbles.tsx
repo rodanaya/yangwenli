@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
 
 interface Node {
@@ -74,6 +75,7 @@ function layout(nodes: Node[]) {
 }
 
 export function StoryCommunityBubbles() {
+  const { t } = useTranslation('storyCharts')
   const positioned = layout(NODES)
   const criticalCount = NODES.filter((n) => n.risk >= 0.6).length
   const highCount = NODES.filter((n) => n.risk >= 0.4 && n.risk < 0.6).length
@@ -86,35 +88,33 @@ export function StoryCommunityBubbles() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Red de proveedores vinculados
+        {t('communityBubbles.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        22 proveedores co-contratan con una sola institución pública
+        {t('communityBubbles.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada nodo es un proveedor; el tamaño es su participación en el valor total; el color
-        es su tier de riesgo. Los de alto riesgo se agrupan cerca del hub — patrón consistente
-        con captura institucional.
+        {t('communityBubbles.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-lg font-mono font-bold text-risk-critical">{criticalCount}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            proveedores de riesgo crítico
+            {t('communityBubbles.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-lg font-mono font-bold text-orange-400">{highCount}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            de riesgo alto
+            {t('communityBubbles.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-lg font-mono font-bold text-risk-high">22</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            miembros de la comunidad detectada
+            {t('communityBubbles.stat3Label')}
           </div>
         </div>
       </div>
@@ -124,7 +124,7 @@ export function StoryCommunityBubbles() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Network graph of 22 vendors connected to a central institution hub, colored by risk tier"
+          aria-label={t('communityBubbles.ariaLabel')}
         >
           {/* Radial grid */}
           {[80, 140, 200, 250].map((r) => (
@@ -165,10 +165,10 @@ export function StoryCommunityBubbles() {
           >
             <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="var(--color-text-muted)" strokeWidth={2} />
             <text x={CX} y={CY - 4} textAnchor="middle" fill="var(--color-background-elevated)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono)">
-              INSTITUCIÓN
+              {t('communityBubbles.centerLabel')}
             </text>
             <text x={CX} y={CY + 10} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              hub
+              {t('communityBubbles.centerSubLabel')}
             </text>
           </motion.g>
 
@@ -210,41 +210,39 @@ export function StoryCommunityBubbles() {
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           {[
-            { label: 'Crítico ≥ 0.60', color: 'var(--color-sector-salud)' },
-            { label: 'Alto ≥ 0.40',    color: 'var(--color-sector-infraestructura)' },
-            { label: 'Medio ≥ 0.25',   color: 'var(--color-sector-energia)' },
-            { label: 'Bajo < 0.25',    color: 'var(--color-sector-hacienda)' },
+            { label: t('communityBubbles.legendCritical'), color: 'var(--color-sector-salud)' },
+            { label: t('communityBubbles.legendHigh'),     color: 'var(--color-sector-infraestructura)' },
+            { label: t('communityBubbles.legendMedium'),   color: 'var(--color-sector-energia)' },
+            { label: t('communityBubbles.legendLow'),      color: 'var(--color-sector-hacienda)' },
           ].map(({ label, color }) => (
             <span key={label} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
               {label}
             </span>
           ))}
-          <span className="text-text-muted ml-auto">Tamaño = participación en valor</span>
+          <span className="text-text-muted ml-auto">{t('communityBubbles.legendSizeNote')}</span>
         </div>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('communityBubbles.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Los proveedores de mayor riesgo orbitan cerca del hub — direcciones compartidas,
-          representantes legales comunes, o patrones de co-licitación indican posibles redes
-          de empresas fantasma.
+          {t('communityBubbles.findingBody')}
         </p>
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-text-muted font-mono">
-          Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.8.5
+          {t('communityBubbles.footer')}
         </p>
         <a
           href="/network"
           className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
         >
           <ExternalLink className="h-3 w-3" />
-          Explorar mapa completo
+          {t('communityBubbles.exploreLink')}
         </a>
       </div>
     </motion.div>

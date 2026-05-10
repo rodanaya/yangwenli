@@ -332,5 +332,25 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "En 14 años la licitación abierta en obra pública cayó del 66% al 32%. Tren Maya, Dos Bocas y AIFA se ejecutaron a través de entidades militares exentas de las reglas normales de contratación — moviendo cientos de miles de millones de pesos fuera del marco competitivo.",
     "footer": "Fuente: COMPRANET 2010–2024 · sector infraestructura · 196,540 contratos con oferente único"
+  },
+  "communityBubbles": {
+    "kicker": "RUBLI · Red de proveedores vinculados",
+    "headline": "22 proveedores co-contratan con una sola institución pública",
+    "lede": "Cada nodo es un proveedor; el tamaño es su participación en el valor total; el color es su tier de riesgo. Los de alto riesgo se agrupan cerca del hub — patrón consistente con captura institucional.",
+    "stat1Label": "proveedores de riesgo crítico",
+    "stat2Label": "de riesgo alto",
+    "stat3Label": "miembros de la comunidad detectada",
+    "ariaLabel": "Grafo de red de 22 proveedores conectados a un hub institucional central, coloreado por tier de riesgo",
+    "centerLabel": "INSTITUCIÓN",
+    "centerSubLabel": "hub",
+    "legendCritical": "Crítico ≥ 0.60",
+    "legendHigh": "Alto ≥ 0.40",
+    "legendMedium": "Medio ≥ 0.25",
+    "legendLow": "Bajo < 0.25",
+    "legendSizeNote": "Tamaño = participación en valor",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Los proveedores de mayor riesgo orbitan cerca del hub — direcciones compartidas, representantes legales comunes, o patrones de co-licitación indican posibles redes de empresas fantasma.",
+    "footer": "Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.8.5",
+    "exploreLink": "Explorar mapa completo"
   }
 }

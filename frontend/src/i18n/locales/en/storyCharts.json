@@ -332,5 +332,25 @@
     "findingLabel": "FINDING",
     "findingBody": "Over 14 years open competitive tendering in public works dropped from 66% to 32%. Tren Maya, Dos Bocas and AIFA were executed through military entities exempt from normal procurement rules — moving hundreds of billions of pesos outside the competitive framework.",
     "footer": "Source: COMPRANET 2010–2024 · infrastructure sector · 196,540 single-bidder contracts"
+  },
+  "communityBubbles": {
+    "kicker": "RUBLI · Linked vendor network",
+    "headline": "22 vendors co-contract with a single public institution",
+    "lede": "Each node is a vendor; size is its share of total value; color is its risk tier. High-risk vendors cluster near the hub — a pattern consistent with institutional capture.",
+    "stat1Label": "critical-risk vendors",
+    "stat2Label": "high-risk vendors",
+    "stat3Label": "members of the detected community",
+    "ariaLabel": "Network graph of 22 vendors connected to a central institution hub, colored by risk tier",
+    "centerLabel": "INSTITUTION",
+    "centerSubLabel": "hub",
+    "legendCritical": "Critical ≥ 0.60",
+    "legendHigh": "High ≥ 0.40",
+    "legendMedium": "Medium ≥ 0.25",
+    "legendLow": "Low < 0.25",
+    "legendSizeNote": "Size = value share",
+    "findingLabel": "FINDING",
+    "findingBody": "The highest-risk vendors orbit close to the hub — shared addresses, common legal representatives, or co-bidding patterns indicate possible ghost-company networks.",
+    "footer": "Source: Louvain community detection · 200K+ vendors · RUBLI v0.8.5",
+    "exploreLink": "Explore the full map"
   }
 }
