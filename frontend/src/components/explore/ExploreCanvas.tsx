@@ -309,13 +309,30 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     return () => el.removeEventListener('wheel', onWheel)
   }, [])
 
-  // ESC pops one level
+  // Keyboard shortcuts:
+  //   Esc / Backspace / b → pop one level
+  //   0 / Home → reset to system view
+  //   + / -    → zoom in/out (10% per press, clamped 0.5..3.5)
+  // All ignored when typing into an input or textarea.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        const tag = (e.target as HTMLElement)?.tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      // Cmd/Ctrl+K is the search shortcut — owned by SearchOverlay; skip here.
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') return
+
+      if (e.key === 'Escape' || e.key === 'Backspace' || e.key.toLowerCase() === 'b') {
+        e.preventDefault()
         dispatch({ type: 'pop-focus' })
+      } else if (e.key === '0' || e.key === 'Home') {
+        e.preventDefault()
+        dispatch({ type: 'reset-to-system' })
+      } else if (e.key === '+' || e.key === '=') {
+        e.preventDefault()
+        setZoom((z) => Math.max(0.5, Math.min(3.5, z * 1.1)))
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        setZoom((z) => Math.max(0.5, Math.min(3.5, z * 0.9)))
       }
     }
     window.addEventListener('keydown', onKey)

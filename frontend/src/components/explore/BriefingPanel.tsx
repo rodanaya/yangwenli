@@ -519,7 +519,10 @@ function Tip({ lang }: { lang: 'en' | 'es' }) {
       <div>{lang === 'en' ? 'drag · pan' : 'arrastra · desplazar'}</div>
       <div>{lang === 'en' ? 'wheel · zoom' : 'rueda · acercar'}</div>
       <div>{lang === 'en' ? 'pinch · zoom' : 'pellizca · acercar'}</div>
+      <div>{lang === 'en' ? '+ / − · zoom' : '+ / − · acercar'}</div>
       <div>{lang === 'en' ? 'esc · back' : 'esc · atrás'}</div>
+      <div>{lang === 'en' ? '0 · home' : '0 · inicio'}</div>
+      <div>{lang === 'en' ? '⌘K · search' : '⌘K · buscar'}</div>
     </div>
   )
 }
