@@ -570,5 +570,24 @@
     "findingLabel": "FINDING",
     "findingBody": "The scheme was no accident: it was an 11-year continuous flow protected by low competition in PEMEX offshore services. Banamex discounted USD 585M in false invoices. No one cross-checked invoices vs. contracts until Citigroup's internal controls caught it in 2014.",
     "footer": "Source: COMPRANET · Case 8 (Oceanografía-PEMEX) · Citigroup 2014 SEC filings · approximate values"
+  },
+  "racingBar": {
+    "kicker": "RUBLI · Vendor constellation · AMLO 2019–2024",
+    "headline": "Six vendors orbit SEGALMEX — four never competed for a contract",
+    "lede": "Each bubble is an agricultural vendor. Size is total contract value; color is direct-award rate.",
+    "stat1Label": "Cluster total (6 vendors)",
+    "stat2Value": "4 of 6",
+    "stat2Label": "with ≥99% direct award",
+    "stat3Value": "93.5%",
+    "stat3Label": "sector DA average · OECD 25%",
+    "ariaLabel": "SEGALMEX at center with five vendor bubbles orbiting, sized by contract value and colored by direct-award rate",
+    "valueDaSep": "DA",
+    "legend100": "100% direct",
+    "legend60": "60–99% direct",
+    "legendUnder": "< 60% direct",
+    "legendSizeNote": "Size = total value · MXN B",
+    "findingLabel": "FINDING",
+    "findingBody": "ILAS México and Productos Loneg received 100% of their contracts without bidding — average 275–302 million per contract. SEGALMEX, the central vendor, was intervened by ASF after MXN 9.5B in shortfalls were detected.",
+    "footer": "Source: COMPRANET · sector 9 (Agriculture) · RUBLI v0.8.5"
   }
 }

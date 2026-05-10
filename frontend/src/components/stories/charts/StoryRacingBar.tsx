@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Vendor {
   name: string
@@ -53,6 +54,7 @@ const POSITIONS: Array<{ x: number; y: number }> = [
 ]
 
 export function StoryRacingBar() {
+  const { t } = useTranslation('storyCharts')
   const totalValue = VENDORS.reduce((s, v) => s + v.valueB, 0)
 
   return (
@@ -63,34 +65,33 @@ export function StoryRacingBar() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Constelación de proveedores · AMLO 2019-2024
+        {t('racingBar.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Seis proveedores orbitan SEGALMEX — cuatro nunca compitieron por un contrato
+        {t('racingBar.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada burbuja es un proveedor agrícola. El tamaño es el valor total de sus contratos;
-        el color es su tasa de adjudicación directa.
+        {t('racingBar.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-lg font-mono font-bold text-risk-critical">MXN {totalValue.toFixed(1)}B</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Total del clúster (6 proveedores)
+            {t('racingBar.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-orange-400">4 de 6</div>
+          <div className="text-lg font-mono font-bold text-orange-400">{t('racingBar.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            con ≥99% adjudicación directa
+            {t('racingBar.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-text-muted">93.5%</div>
+          <div className="text-lg font-mono font-bold text-text-muted">{t('racingBar.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            DA promedio del sector · OCDE 25%
+            {t('racingBar.stat3Label')}
           </div>
         </div>
       </div>
@@ -100,7 +101,7 @@ export function StoryRacingBar() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="SEGALMEX at center with five vendor bubbles orbiting, sized by contract value and colored by direct-award rate"
+          aria-label={t('racingBar.ariaLabel')}
         >
           {/* Radial grid */}
           {[80, 160, 240].map((r) => (
@@ -176,7 +177,7 @@ export function StoryRacingBar() {
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
                 >
-                  {v.valueB.toFixed(1)}B · {v.daPct.toFixed(0)}% DA
+                  {`${v.valueB.toFixed(1)}B · ${v.daPct.toFixed(0)}% ${t('racingBar.valueDaSep')}`}
                 </text>
                 {v.avgMxn && (
                   <text
@@ -199,33 +200,31 @@ export function StoryRacingBar() {
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-salud)', opacity: 0.5 }} />
-            100% adj. directa
+            {t('racingBar.legend100')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-infraestructura)', opacity: 0.5 }} />
-            60-99% directa
+            {t('racingBar.legend60')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-agricultura)', opacity: 0.5 }} />
-            {'< 60% directa'}
+            {t('racingBar.legendUnder')}
           </span>
-          <span className="text-text-muted ml-auto">Tamaño = valor total · MXN B</span>
+          <span className="text-text-muted ml-auto">{t('racingBar.legendSizeNote')}</span>
         </div>
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('racingBar.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          ILAS México y Productos Loneg recibieron 100% de sus contratos sin licitación —
-          promedio 275-302 millones por contrato. SEGALMEX, el proveedor central, fue intervenido
-          por la ASF tras detectar faltantes por MXN 9.5B.
+          {t('racingBar.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · sector 9 (Agricultura) · RUBLI v0.8.5
+        {t('racingBar.footer')}
       </p>
     </motion.div>
   )
