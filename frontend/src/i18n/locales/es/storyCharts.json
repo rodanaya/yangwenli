@@ -48,5 +48,24 @@
     "legend60": "60–99% DA",
     "legendUnder": "< 60% DA",
     "footer": "Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.8.5"
+  },
+  "daBySector": {
+    "kicker": "RUBLI · Por sector",
+    "headline": "Cada fila es un sector — cada punto vale 2 puntos porcentuales",
+    "subline": "Todos cruzan la línea OCDE. Agricultura llega a 93% · Otros, el menor, triplica el límite.",
+    "ariaLabel": "Tasa de adjudicación directa por sector como tira de puntos, 12 sectores, techo OCDE en 25%",
+    "oecdLabel": "OCDE 25%",
+    "legendBelow": "Debajo de OCDE",
+    "legendAbove": "Sobre OCDE — riesgo",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · RUBLI v0.8.5"
+  },
+  "daRateTrend": {
+    "kicker": "RUBLI · Tendencia histórica",
+    "headline": "La adjudicación directa subió de 63% a 82% en tres sexenios",
+    "subline": "3.3× el límite OCDE del 25% — cada administración peor que la anterior",
+    "ariaLabel": "Tasa de adjudicación directa por año 2010 a 2024, coloreado por sexenio presidencial",
+    "oecdLabel": "OCDE máx. 25%",
+    "averagePrefix": "promedio",
+    "footer": "Fuente: COMPRANET 2010–2024 · RUBLI v0.8.5"
   }
 }

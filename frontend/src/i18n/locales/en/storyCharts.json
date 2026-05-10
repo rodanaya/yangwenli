@@ -48,5 +48,24 @@
     "legend60": "60–99% DA",
     "legendUnder": "< 60% DA",
     "footer": "Source: COMPRANET · Each dot = $100M MXN · RUBLI v0.8.5 analysis"
+  },
+  "daBySector": {
+    "kicker": "RUBLI · By sector",
+    "headline": "Each row is a sector — each dot is 2 percentage points",
+    "subline": "All cross the OECD line. Agriculture reaches 93% · Other, the lowest, triples the limit.",
+    "ariaLabel": "Direct award rate by sector as dot strip, 12 sectors, OECD ceiling at 25%",
+    "oecdLabel": "OECD 25%",
+    "legendBelow": "Below OECD",
+    "legendAbove": "Above OECD — risk",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · RUBLI v0.8.5"
+  },
+  "daRateTrend": {
+    "kicker": "RUBLI · Historical trend",
+    "headline": "Direct award rose from 63% to 82% across three presidential terms",
+    "subline": "3.3× the OECD limit of 25% — every administration worse than the last",
+    "ariaLabel": "Direct award rate by year 2010 to 2024, colored by presidential term",
+    "oecdLabel": "OECD max 25%",
+    "averagePrefix": "average",
+    "footer": "Source: COMPRANET 2010–2024 · RUBLI v0.8.5"
   }
 }

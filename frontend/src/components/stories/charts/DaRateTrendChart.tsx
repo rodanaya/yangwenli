@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const DATA = [
   { year: 2010, rate: 62.7, era: 'calderon' },
@@ -78,6 +79,7 @@ function eraBands() {
 }
 
 export function DaRateTrendChart() {
+  const { t } = useTranslation('storyCharts')
   const bands = eraBands()
   const linePath = DATA.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i)} ${yFor(d.rate)}`).join(' ')
   const oecdY = yFor(25)
@@ -91,20 +93,20 @@ export function DaRateTrendChart() {
       className="rounded-sm bg-background border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Tendencia historica
+        {t('daRateTrend.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        La adjudicación directa subió de 63% a 82% en tres sexenios
+        {t('daRateTrend.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        3.3x el límite OCDE del 25% — cada administración peor que la anterior
+        {t('daRateTrend.subline')}
       </p>
 
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Direct award rate by year 2010 to 2024, colored by presidential term"
+        aria-label={t('daRateTrend.ariaLabel')}
       >
         {/* Presidential era bands */}
         {bands.map((b) => {
@@ -180,7 +182,7 @@ export function DaRateTrendChart() {
           fontSize={9}
           fontFamily="var(--font-family-mono)"
         >
-          OCDE máx. 25%
+          {t('daRateTrend.oecdLabel')}
         </text>
 
         {/* Connecting line */}
@@ -257,14 +259,14 @@ export function DaRateTrendChart() {
             <span key={era} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: ERA_DOT[era] }} />
               <span className="text-text-secondary font-semibold">{ERA_LABEL[era]}</span>
-              <span className="text-text-muted">promedio {avg.toFixed(1)}%</span>
+              <span className="text-text-muted">{`${t('daRateTrend.averagePrefix')} ${avg.toFixed(1)}%`}</span>
             </span>
           )
         })}
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2010-2024 · RUBLI v0.8.5
+        {t('daRateTrend.footer')}
       </p>
     </motion.div>
   )

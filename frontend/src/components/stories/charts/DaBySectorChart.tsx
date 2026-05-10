@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 const SECTORS = [
@@ -40,6 +41,7 @@ function colorFor(code: string): string {
 }
 
 export function DaBySectorChart() {
+  const { t } = useTranslation('storyCharts')
   const oecdDots = Math.round(25 / 2) // = 13 dots (at 2pp each)
 
   return (
@@ -50,20 +52,20 @@ export function DaBySectorChart() {
       className="rounded-sm bg-background border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Por sector
+        {t('daBySector.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Cada fila es un sector — cada punto vale 2 puntos porcentuales
+        {t('daBySector.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Todos cruzan la línea OCDE. Agricultura llega a 93% · Otros, el menor, triplica el límite.
+        {t('daBySector.subline')}
       </p>
 
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Direct award rate by sector as dot strip, 12 sectors, OECD ceiling at 25%"
+        aria-label={t('daBySector.ariaLabel')}
       >
         {/* OECD ceiling line */}
         <line
@@ -84,7 +86,7 @@ export function DaBySectorChart() {
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
         >
-          OCDE 25%
+          {t('daBySector.oecdLabel')}
         </text>
 
         {/* Rows */}
@@ -146,16 +148,16 @@ export function DaBySectorChart() {
       <div className="mt-3 flex items-center gap-4 text-[10px] text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full opacity-50" style={{ background: 'var(--color-sector-otros)' }} />
-          Debajo de OCDE
+          {t('daBySector.legendBelow')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-sector-otros)' }} />
-          Sobre OCDE — riesgo
+          {t('daBySector.legendAbove')}
         </span>
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2002-2025 · 3.05M contratos · RUBLI v0.8.5
+        {t('daBySector.footer')}
       </p>
     </motion.div>
   )
