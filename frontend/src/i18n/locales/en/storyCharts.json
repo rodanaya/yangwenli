@@ -480,5 +480,24 @@
     "findingLabel": "FINDING",
     "findingBody": "The five FONATUR sections averaged 97.6% direct award. Sections 6 and 7 were moved to SEDENA under national-security designation, exempting them from the Public Works Law. The result: the most expensive megaproject of the sexenio executed without a single open public tender.",
     "footer": "Source: COMPRANET FONATUR 2019–2024 · DOF 22/11/2021 · ASF Performance Audit 2023 · approximate figures"
+  },
+  "trianguloFarmaceutico": {
+    "kicker": "RUBLI · Pharmaceutical Triangle",
+    "headline": "Three institutions, three vendors, 285 billion pesos",
+    "lede": "The bulk of federal pharma spending 2019–2023 flowed from IMSS, ISSSTE and the Secretaría de Salud to three dominant vendors. Edge width is proportional to contracted value.",
+    "stat1Value": "$128B",
+    "stat1Label": "Fármacos Especializados · score 0.89",
+    "stat2Value": "$92B",
+    "stat2Label": "Maypo Internacional · score 0.84",
+    "stat3Value": "$65B",
+    "stat3Label": "DIMM · score 0.81",
+    "ariaLabel": "Pharmaceutical triangle showing flow from IMSS, ISSSTE, and SS to three dominant vendors",
+    "spendSuffix": "spend",
+    "legendInstitutions": "Federal institutions",
+    "legendVendor": "Dominant vendor",
+    "daStripsLabel": "Direct award by vendor · each dot = 2pp · OECD max 25%",
+    "findingLabel": "FINDING",
+    "findingBody": "The three vendors share the same pattern: direct award above 75% — more than 3× the OECD limit — and v0.8.5 risk scores above 0.81. Fármacos Especializados concentrated 45% of federal traceable pharma spending 2019–2023.",
+    "footer": "Source: COMPRANET 2019–2023 · RUBLI analysis · v0.8.5 model · COFECE DE-011-2016"
   }
 }

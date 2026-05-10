@@ -480,5 +480,24 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Los cinco tramos bajo FONATUR promediaron 97.6% de adjudicación directa. Los tramos 6 y 7 se movieron a SEDENA bajo declaratoria de seguridad nacional, exentándolos de la Ley de Obras Públicas. El resultado: el megaproyecto más caro del sexenio ejecutado sin una sola licitación pública abierta.",
     "footer": "Fuente: COMPRANET FONATUR 2019–2024 · DOF 22/11/2021 · ASF Auditoría de Desempeño 2023 · cifras aprox."
+  },
+  "trianguloFarmaceutico": {
+    "kicker": "RUBLI · Triángulo Farmacéutico",
+    "headline": "Tres instituciones, tres proveedores, 285 mil millones de pesos",
+    "lede": "El grueso del gasto farmacéutico federal 2019–2023 fluyó desde IMSS, ISSSTE y la Secretaría de Salud hacia tres proveedores dominantes. El ancho de cada arista es proporcional al valor contratado.",
+    "stat1Value": "$128B",
+    "stat1Label": "Fármacos Especializados · score 0.89",
+    "stat2Value": "$92B",
+    "stat2Label": "Maypo Internacional · score 0.84",
+    "stat3Value": "$65B",
+    "stat3Label": "DIMM · score 0.81",
+    "ariaLabel": "Triángulo farmacéutico mostrando flujo de IMSS, ISSSTE y SS a tres proveedores dominantes",
+    "spendSuffix": "gasto",
+    "legendInstitutions": "Instituciones federales",
+    "legendVendor": "Proveedor dominante",
+    "daStripsLabel": "Adjudicación directa por proveedor · cada punto = 2pp · OCDE máx 25%",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Los tres proveedores comparten el mismo patrón: adjudicación directa por encima del 75% — más de 3× el límite OCDE — y scores de riesgo v0.8.5 superiores a 0.81. Fármacos Especializados concentró el 45% del gasto farmacéutico federal rastreable entre 2019–2023.",
+    "footer": "Fuente: COMPRANET 2019–2023 · análisis RUBLI · modelo v0.8.5 · COFECE DE-011-2016"
   }
 }
