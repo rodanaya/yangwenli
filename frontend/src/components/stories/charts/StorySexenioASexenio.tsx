@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface SexenioCol {
   president: string
@@ -48,6 +49,7 @@ function colorForRate(rate: number): string {
 }
 
 export function StorySexenioASexenio() {
+  const { t } = useTranslation('storyCharts')
   const oecdDotIdx = Math.round(OECD_LIMIT / 2) // 12.5 → 13 dots from bottom
 
   return (
@@ -58,35 +60,33 @@ export function StorySexenioASexenio() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Adjudicación directa por sexenio
+        {t('sexenioASexenio.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Cinco presidentes, tres partidos, una sola dirección: más adjudicación directa
+        {t('sexenioASexenio.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada columna es un sexenio. Cada punto vale 2 puntos porcentuales de tasa de
-        adjudicación directa. La línea cian marca el máximo OCDE de 25%. El patrón
-        trasciende partidos.
+        {t('sexenioASexenio.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">80%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">{t('sexenioASexenio.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            AMLO · pico de adjudicación directa
+            {t('sexenioASexenio.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">+39pp</div>
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">{t('sexenioASexenio.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            incremento Fox → AMLO en 24 años
+            {t('sexenioASexenio.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">25%</div>
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">{t('sexenioASexenio.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            máximo OCDE · todas superan 1.6x o más
+            {t('sexenioASexenio.stat3Label')}
           </div>
         </div>
       </div>
@@ -96,7 +96,7 @@ export function StorySexenioASexenio() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[640px]"
           role="img"
-          aria-label="Direct award rate by presidential administration"
+          aria-label={t('sexenioASexenio.ariaLabel')}
         >
           {/* Y axis gridlines */}
           {[0, 25, 50, 75, 100].map((pct) => {
@@ -135,7 +135,7 @@ export function StorySexenioASexenio() {
                     fontFamily="var(--font-family-mono)"
                     fontWeight={700}
                   >
-                    OCDE máx
+                    {t('sexenioASexenio.oecdLabel')}
                   </text>
                 )}
               </g>
@@ -242,7 +242,7 @@ export function StorySexenioASexenio() {
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                 >
-                  {(sex.daRate / OECD_LIMIT).toFixed(1)}x OCDE
+                  {`${(sex.daRate / OECD_LIMIT).toFixed(1)}${t('sexenioASexenio.oecdMultiplierSuffix')}`}
                 </text>
               </g>
             )
@@ -280,25 +280,22 @@ export function StorySexenioASexenio() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            cada punto = 2pp · tasa de adjudicación directa federal
+            {t('sexenioASexenio.bottomLegend')}
           </text>
         </svg>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('sexenioASexenio.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          PAN, PRI y MORENA — izquierda, centro y derecha — todas gobernaron bajo el mismo
-          patrón: la tasa de adjudicación directa subió con cada administración. AMLO la
-          llevó al pico histórico (80%), pero la tendencia no comenzó con él. La inercia
-          burocrática pesa más que el partido en el poder.
+          {t('sexenioASexenio.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2002-2025 · 3.05M contratos · OCDE Public Procurement Report 2023
+        {t('sexenioASexenio.footer')}
       </p>
     </motion.div>
   )

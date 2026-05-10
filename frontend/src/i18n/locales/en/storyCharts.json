@@ -589,5 +589,23 @@
     "findingLabel": "FINDING",
     "findingBody": "ILAS México and Productos Loneg received 100% of their contracts without bidding — average 275–302 million per contract. SEGALMEX, the central vendor, was intervened by ASF after MXN 9.5B in shortfalls were detected.",
     "footer": "Source: COMPRANET · sector 9 (Agriculture) · RUBLI v0.8.5"
+  },
+  "sexenioASexenio": {
+    "kicker": "RUBLI · Direct award by sexenio",
+    "headline": "Five presidents, three parties, one direction: more direct award",
+    "lede": "Each column is a sexenio. Each dot is 2 percentage points of direct-award rate. The cyan line marks the OECD max of 25%. The pattern transcends parties.",
+    "stat1Value": "80%",
+    "stat1Label": "AMLO · direct-award peak",
+    "stat2Value": "+39pp",
+    "stat2Label": "Fox → AMLO increase over 24 years",
+    "stat3Value": "25%",
+    "stat3Label": "OECD max · all exceed 1.6× or more",
+    "ariaLabel": "Direct award rate by presidential administration",
+    "oecdLabel": "OECD max",
+    "oecdMultiplierSuffix": "× OECD",
+    "bottomLegend": "each dot = 2pp · federal direct-award rate",
+    "findingLabel": "FINDING",
+    "findingBody": "PAN, PRI and MORENA — left, center and right — all governed under the same pattern: the direct-award rate rose with every administration. AMLO took it to the historic peak (80%), but the trend did not start with him. Bureaucratic inertia weighs more than the ruling party.",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · OECD Public Procurement Report 2023"
   }
 }

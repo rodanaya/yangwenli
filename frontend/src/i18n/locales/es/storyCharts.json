@@ -589,5 +589,23 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "ILAS México y Productos Loneg recibieron 100% de sus contratos sin licitación — promedio 275–302 millones por contrato. SEGALMEX, el proveedor central, fue intervenido por la ASF tras detectar faltantes por MXN 9.5B.",
     "footer": "Fuente: COMPRANET · sector 9 (Agricultura) · RUBLI v0.8.5"
+  },
+  "sexenioASexenio": {
+    "kicker": "RUBLI · Adjudicación directa por sexenio",
+    "headline": "Cinco presidentes, tres partidos, una sola dirección: más adjudicación directa",
+    "lede": "Cada columna es un sexenio. Cada punto vale 2 puntos porcentuales de tasa de adjudicación directa. La línea cian marca el máximo OCDE de 25%. El patrón trasciende partidos.",
+    "stat1Value": "80%",
+    "stat1Label": "AMLO · pico de adjudicación directa",
+    "stat2Value": "+39pp",
+    "stat2Label": "incremento Fox → AMLO en 24 años",
+    "stat3Value": "25%",
+    "stat3Label": "máximo OCDE · todas superan 1.6× o más",
+    "ariaLabel": "Tasa de adjudicación directa por administración presidencial",
+    "oecdLabel": "OCDE máx",
+    "oecdMultiplierSuffix": "× OCDE",
+    "bottomLegend": "cada punto = 2pp · tasa de adjudicación directa federal",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "PAN, PRI y MORENA — izquierda, centro y derecha — todas gobernaron bajo el mismo patrón: la tasa de adjudicación directa subió con cada administración. AMLO la llevó al pico histórico (80%), pero la tendencia no comenzó con él. La inercia burocrática pesa más que el partido en el poder.",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · OCDE Public Procurement Report 2023"
   }
 }
