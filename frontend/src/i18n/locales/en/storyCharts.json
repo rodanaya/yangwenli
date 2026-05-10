@@ -1,0 +1,14 @@
+{
+  "monthly": {
+    "kicker": "RUBLI · Seasonality",
+    "headline": "December concentrates $71B — 48% more than the monthly average",
+    "subline": "The year-end \"rush\": Oct–Dec accumulate 30% of annual spend in just 3 months",
+    "heroStat": "$71B",
+    "heroLabel": "December 2023 spend — 1.5× the monthly average",
+    "ariaLabel": "Monthly federal spending dot matrix, Jan to Dec 2023, each dot 1.6B MXN",
+    "monthHeader": "MONTH",
+    "valueHeader": "MXN (B)",
+    "avgPrefix": "Avg.",
+    "footer": "Source: COMPRANET 2023 · Each dot = 1.6B MXN · RUBLI v0.8.5"
+  }
+}

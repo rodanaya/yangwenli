@@ -1,0 +1,14 @@
+{
+  "monthly": {
+    "kicker": "RUBLI · Estacionalidad",
+    "headline": "Diciembre concentra $71B — 48% más que el promedio mensual",
+    "subline": "El \"rush\" de fin de año: Oct–Dic acumulan el 30% del gasto anual en solo 3 meses",
+    "heroStat": "$71B",
+    "heroLabel": "Gasto Diciembre 2023 — 1.5× el mes promedio",
+    "ariaLabel": "Matriz de puntos del gasto federal mensual, Ene a Dic 2023, cada punto 1.6B MXN",
+    "monthHeader": "MES",
+    "valueHeader": "MXN (B)",
+    "avgPrefix": "Prom.",
+    "footer": "Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.8.5"
+  }
+}
