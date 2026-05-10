@@ -218,5 +218,20 @@
     "annotationPeak": "2023: 20,512 contratos — máximo del sexenio",
     "annotationVendor": "MOLINOS AZTECA 2021: 1,340 contratos, MXN 945M",
     "footer": "* 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.8.5"
+  },
+  "ceroCompetencia": {
+    "kicker": "RUBLI · Competencia por Sector",
+    "headline": "Menos de 1 de cada 10 contratos en Agricultura y Educación tuvo competencia real",
+    "subline": "% de contratos con procedimiento competitivo por sector · AMLO 2019–2024",
+    "stat1Label": "sectores bajo 25%",
+    "stat2Value": "0",
+    "stat2Label": "sectores cumplen OCDE 75%",
+    "ariaLabel": "% competitivo por sector, matriz de puntos, meta OCDE 75%",
+    "sectorHeader": "SECTOR",
+    "competitiveHeader": "% COMPETITIVO",
+    "oecdLabel": "OCDE 75%",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Ningún sector alcanza la meta OCDE de 75% competitivo. Los 4 peores sectores (Agricultura, Educación, Trabajo, Hacienda) están 60+ puntos debajo del estándar.",
+    "footer": "Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.8.5"
   }
 }

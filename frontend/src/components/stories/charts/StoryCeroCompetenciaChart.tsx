@@ -5,6 +5,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 interface SectorRow {
@@ -64,6 +65,7 @@ function getSectorColor(code: string): string {
 }
 
 export function StoryCeroCompetenciaChart() {
+  const { t } = useTranslation('storyCharts')
   const criticalSectors = DATA.filter(d => d.competitive < 25).length
 
   return (
@@ -74,24 +76,24 @@ export function StoryCeroCompetenciaChart() {
       className="rounded-sm bg-background-card border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Competencia por Sector
+        {t('ceroCompetencia.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Menos de 1 de cada 10 contratos en Agricultura y Educación tuvo competencia real
+        {t('ceroCompetencia.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        % de contratos con procedimiento competitivo por sector · AMLO 2019-2024
+        {t('ceroCompetencia.subline')}
       </p>
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-lg font-mono font-bold text-risk-critical">{criticalSectors}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores bajo 25%</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ceroCompetencia.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-cyan-400 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-[color:var(--color-oecd)]">0</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores cumplen OCDE 75%</div>
+          <div className="text-lg font-mono font-bold text-[color:var(--color-oecd)]">{t('ceroCompetencia.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ceroCompetencia.stat2Label')}</div>
         </div>
       </div>
 
@@ -100,7 +102,7 @@ export function StoryCeroCompetenciaChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Competitive % by sector, dot matrix, OECD 75% target"
+          aria-label={t('ceroCompetencia.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -112,7 +114,7 @@ export function StoryCeroCompetenciaChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            SECTOR
+            {t('ceroCompetencia.sectorHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -123,7 +125,7 @@ export function StoryCeroCompetenciaChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            % COMPETITIVO
+            {t('ceroCompetencia.competitiveHeader')}
           </text>
 
           {/* OECD target line */}
@@ -145,7 +147,7 @@ export function StoryCeroCompetenciaChart() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            OCDE 75%
+            {t('ceroCompetencia.oecdLabel')}
           </text>
 
           {/* Rows */}
@@ -205,16 +207,15 @@ export function StoryCeroCompetenciaChart() {
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('ceroCompetencia.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          Ningún sector alcanza la meta OCDE de 75% competitivo. Los 4 peores sectores
-          (Agricultura, Educación, Trabajo, Hacienda) están 60+ puntos debajo del estándar.
+          {t('ceroCompetencia.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.8.5
+        {t('ceroCompetencia.footer')}
       </p>
     </motion.div>
   )

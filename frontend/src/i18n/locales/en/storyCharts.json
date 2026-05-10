@@ -218,5 +218,20 @@
     "annotationPeak": "2023: 20,512 contracts — sexenio peak",
     "annotationVendor": "MOLINOS AZTECA 2021: 1,340 contracts, MXN 945M",
     "footer": "* 2024 partial year · Splitting = multiple same-day contracts to the same vendor · Source: RUBLI v0.8.5"
+  },
+  "ceroCompetencia": {
+    "kicker": "RUBLI · Competition by Sector",
+    "headline": "Fewer than 1 in 10 Agriculture and Education contracts had real competition",
+    "subline": "% of contracts with competitive procedure by sector · AMLO 2019–2024",
+    "stat1Label": "sectors below 25%",
+    "stat2Value": "0",
+    "stat2Label": "sectors meet OECD 75%",
+    "ariaLabel": "Competitive % by sector, dot matrix, OECD 75% target",
+    "sectorHeader": "SECTOR",
+    "competitiveHeader": "% COMPETITIVE",
+    "oecdLabel": "OECD 75%",
+    "findingLabel": "FINDING",
+    "findingBody": "No sector meets the OECD 75% competitive target. The 4 worst sectors (Agriculture, Education, Labor, Treasury) are 60+ points below the standard.",
+    "footer": "Source: COMPRANET · OECD target: 75% competitive · Each dot = 1pp · RUBLI v0.8.5"
   }
 }
