@@ -271,5 +271,24 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Diciembre concentra entre 2.5 y 4× el gasto mensual promedio en los últimos 23 años — patrón bipartidista. La urgencia es contable, no operativa: entregas se programan para febrero o marzo del año siguiente.",
     "footer": "Fuente: COMPRANET 2014 · 7,215 contratos · Ley Federal de Presupuesto y Responsabilidad Hacendaria"
+  },
+  "casaContratos": {
+    "kicker": "RUBLI · Captura institucional · red Grupo Higa",
+    "headline": "La casa de los contratos: una institución, siete proveedores, 85 mil millones",
+    "lede": "Cada satélite es una empresa vinculada a Juan Armando Hinojosa Cantú. El tamaño refleja el número de contratos; el color, el nivel de riesgo estadístico. El patrón de captura es visible: un círculo cerrado de proveedores orbitando dos instituciones.",
+    "stat1Suffix": "MXN · red Higa total",
+    "stat2Suffix": "empresas vinculadas · misma órbita",
+    "stat3Suffix": "contratos · red completa",
+    "ariaLabel": "Patrón de captura de proveedores alrededor de las instituciones SCT/SHCP",
+    "centerLabel": "INSTITUCIÓN",
+    "legendHeader": "TAMAÑO = CONTRATOS · COLOR = RIESGO",
+    "legendLow": "bajo",
+    "legendMedium": "medio",
+    "legendHigh": "alto",
+    "legendCritical": "crítico",
+    "riskWord": "riesgo",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Siete empresas con domicilios compartidos, representantes legales cruzados y un solo beneficiario económico final concentraron MXN 85B en obras federales. En COMPRANET cada contrato luce legal. Sumados, revelan un patrón de captura institucional que ninguna licitación aislada podría haber detectado.",
+    "footer": "Fuente: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · valores aproximados de red"
   }
 }

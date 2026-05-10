@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Vendor {
   name: string
@@ -47,6 +48,7 @@ function colorForRisk(risk: number): string {
 }
 
 export function StoryCasaContratos() {
+  const { t } = useTranslation('storyCharts')
   const maxContracts = Math.max(...VENDORS.map((v) => v.contracts))
   const totalValue = VENDORS.reduce((s, v) => s + v.valueB, 0)
   const totalContracts = VENDORS.reduce((s, v) => s + v.contracts, 0)
@@ -61,16 +63,14 @@ export function StoryCasaContratos() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Captura institucional · red Grupo Higa
+        {t('casaContratos.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        La casa de los contratos: una institución, siete proveedores, 85 mil millones
+        {t('casaContratos.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada satélite es una empresa vinculada a Juan Armando Hinojosa Cantú. El tamaño
-        refleja el número de contratos; el color, el nivel de riesgo estadístico. El patrón
-        de captura es visible: un círculo cerrado de proveedores orbitando dos instituciones.
+        {t('casaContratos.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
@@ -79,7 +79,7 @@ export function StoryCasaContratos() {
             {totalValue.toFixed(0)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            MXN · red Higa total
+            {t('casaContratos.stat1Suffix')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
@@ -87,7 +87,7 @@ export function StoryCasaContratos() {
             {VENDORS.length}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            empresas vinculadas · misma orbita
+            {t('casaContratos.stat2Suffix')}
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
@@ -95,7 +95,7 @@ export function StoryCasaContratos() {
             {totalContracts}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            contratos · red completa
+            {t('casaContratos.stat3Suffix')}
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export function StoryCasaContratos() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Vendor capture pattern around SCT/SHCP institutions"
+          aria-label={t('casaContratos.ariaLabel')}
         >
           {/* Atmospheric rings */}
           <circle cx={CX} cy={CY} r={ORBIT_R + 40} fill="none" stroke="var(--color-border-hover)" strokeWidth={0.5} />
@@ -212,7 +212,7 @@ export function StoryCasaContratos() {
                   fontSize={9}
                   fontFamily="var(--font-family-mono)"
                 >
-                  {v.valueB.toFixed(1)}B · risk {v.riskScore.toFixed(2)}
+                  {`${v.valueB.toFixed(1)}B · ${t('casaContratos.riskWord')} ${v.riskScore.toFixed(2)}`}
                 </text>
               </motion.g>
             )
@@ -246,24 +246,24 @@ export function StoryCasaContratos() {
               fontFamily="var(--font-family-mono)"
               letterSpacing="0.05em"
             >
-              INSTITUCIÓN
+              {t('casaContratos.centerLabel')}
             </text>
           </motion.g>
 
           {/* Legend */}
           <g transform={`translate(20, ${H - 28})`}>
             <text fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
-              TAMAÑO = CONTRATOS  ·  COLOR = RIESGO
+              {t('casaContratos.legendHeader')}
             </text>
             <g transform="translate(0, 14)">
               <circle cx={5} cy={0} r={4} fill="var(--color-sector-hacienda)" />
-              <text x={14} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">bajo</text>
+              <text x={14} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendLow')}</text>
               <circle cx={56} cy={0} r={4} fill="var(--color-risk-high)" />
-              <text x={65} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">medio</text>
+              <text x={65} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendMedium')}</text>
               <circle cx={116} cy={0} r={4} fill="var(--color-sector-infraestructura)" />
-              <text x={125} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">alto</text>
+              <text x={125} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendHigh')}</text>
               <circle cx={160} cy={0} r={4} fill="var(--color-sector-salud)" />
-              <text x={169} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">crítico</text>
+              <text x={169} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendCritical')}</text>
             </g>
           </g>
         </svg>
@@ -271,18 +271,15 @@ export function StoryCasaContratos() {
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('casaContratos.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Siete empresas con domicilios compartidos, representantes legales cruzados y un
-          solo beneficiario económico final concentraron MXN 85B en obras federales. En
-          COMPRANET cada contrato luce legal. Sumados, revelan un patrón de captura
-          institucional que ninguna licitación aislada podría haber detectado.
+          {t('casaContratos.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · valores aproximados de red
+        {t('casaContratos.footer')}
       </p>
     </motion.div>
   )

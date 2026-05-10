@@ -271,5 +271,24 @@
     "findingLabel": "FINDING",
     "findingBody": "December concentrates 2.5–4× the monthly average spending across the last 23 years — a bipartisan pattern. The urgency is accounting-driven, not operational: deliveries are scheduled for February or March of the following year.",
     "footer": "Source: COMPRANET 2014 · 7,215 contracts · Federal Budget and Treasury Responsibility Law"
+  },
+  "casaContratos": {
+    "kicker": "RUBLI · Institutional capture · Grupo Higa network",
+    "headline": "The contract house: one institution, seven vendors, 85 billion",
+    "lede": "Each satellite is a company linked to Juan Armando Hinojosa Cantú. Size reflects contract count; color, statistical risk. The capture pattern is visible: a closed circle of vendors orbiting two institutions.",
+    "stat1Suffix": "MXN · Higa network total",
+    "stat2Suffix": "linked companies · same orbit",
+    "stat3Suffix": "contracts · full network",
+    "ariaLabel": "Vendor capture pattern around SCT/SHCP institutions",
+    "centerLabel": "INSTITUTION",
+    "legendHeader": "SIZE = CONTRACTS · COLOR = RISK",
+    "legendLow": "low",
+    "legendMedium": "medium",
+    "legendHigh": "high",
+    "legendCritical": "critical",
+    "riskWord": "risk",
+    "findingLabel": "FINDING",
+    "findingBody": "Seven companies with shared addresses, crossed legal representatives, and a single ultimate beneficial owner concentrated MXN 85B in federal works. In COMPRANET each contract looks legal. Summed, they reveal an institutional capture pattern that no isolated bid could have detected.",
+    "footer": "Source: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · approximate network values"
   }
 }
