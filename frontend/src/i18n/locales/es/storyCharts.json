@@ -30,5 +30,23 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Los EFOS definitivo comparten una firma estructural: pocos contratos (típicamente 2–5), vida corta (2–3 años) y domicilios fiscales compartidos. El modelo v0.8.5 los subdetecta (score 0.28) porque fue entrenado con casos grandes (IMSS, SEGALMEX) — una brecha de detección sistemática.",
     "footer": "Fuente: SAT Art. 69-B CFF · cruce con COMPRANET 2018–2024 · 38 RFC confirmados + 125 por nombre"
+  },
+  "emptyGranary": {
+    "kicker": "RUBLI · Sector Agricultura",
+    "headline": "Cuatro empresas, MXN $14.8B, cero competencia",
+    "subline": "Principales proveedores por valor total · AMLO 2019–24",
+    "stat1Value": "93.5%",
+    "stat1Label": "adj. directa en el sector",
+    "stat2Value": "6",
+    "stat2Label": "proveedores dominan",
+    "ariaLabel": "Matriz de puntos de proveedores principales del sector agrícola, cada punto 100M MXN",
+    "vendorHeader": "PROVEEDOR",
+    "valueHeader": "VALOR / DA",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "ILAS Mexico y Productos Loneg recibieron 100% de sus contratos sin licitación. Promedio por contrato: MXN 275M y MXN 302M respectivamente.",
+    "legend100": "100% DA",
+    "legend60": "60–99% DA",
+    "legendUnder": "< 60% DA",
+    "footer": "Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.8.5"
   }
 }

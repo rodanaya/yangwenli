@@ -30,5 +30,23 @@
     "findingLabel": "FINDING",
     "findingBody": "Definitive EFOS vendors share a structural signature: few contracts (typically 2–5), short lifespan (2–3 years), and shared fiscal addresses. The v0.8.5 model underdetects them (score 0.28) because it was trained on large cases (IMSS, SEGALMEX) — a systematic detection gap.",
     "footer": "Source: SAT Art. 69-B CFF · cross-referenced with COMPRANET 2018–2024 · 38 RFC confirmed + 125 by name"
+  },
+  "emptyGranary": {
+    "kicker": "RUBLI · Agriculture Sector",
+    "headline": "Four companies, MXN $14.8B, zero competition",
+    "subline": "Top vendors by total value · AMLO 2019–24",
+    "stat1Value": "93.5%",
+    "stat1Label": "direct-award rate in the sector",
+    "stat2Value": "6",
+    "stat2Label": "vendors dominate",
+    "ariaLabel": "Top agriculture vendors dot matrix, each dot 100M MXN",
+    "vendorHeader": "VENDOR",
+    "valueHeader": "VALUE / DA",
+    "findingLabel": "FINDING",
+    "findingBody": "ILAS Mexico and Productos Loneg received 100% of their contracts without bidding. Average per contract: MXN 275M and MXN 302M respectively.",
+    "legend100": "100% DA",
+    "legend60": "60–99% DA",
+    "legendUnder": "< 60% DA",
+    "footer": "Source: COMPRANET · Each dot = $100M MXN · RUBLI v0.8.5 analysis"
   }
 }

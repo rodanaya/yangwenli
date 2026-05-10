@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 interface VendorRow {
@@ -45,6 +46,7 @@ function getVendorColor(daPct: number): string {
 }
 
 export function StoryGraneroVacio() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,24 +55,24 @@ export function StoryGraneroVacio() {
       className="rounded-sm bg-background-card border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Sector Agricultura
+        {t('emptyGranary.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Cuatro empresas, MXN $14.8B, cero competencia
+        {t('emptyGranary.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        Principales proveedores por valor total · AMLO 2019-24
+        {t('emptyGranary.subline')}
       </p>
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">93.5%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">adj. directa en el sector</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('emptyGranary.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('emptyGranary.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-high">6</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">proveedores dominan</div>
+          <div className="text-lg font-mono font-bold text-risk-high">{t('emptyGranary.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('emptyGranary.stat2Label')}</div>
         </div>
       </div>
 
@@ -79,7 +81,7 @@ export function StoryGraneroVacio() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Top agriculture vendors dot matrix, each dot 100M MXN"
+          aria-label={t('emptyGranary.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -91,7 +93,7 @@ export function StoryGraneroVacio() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            PROVEEDOR
+            {t('emptyGranary.vendorHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -102,7 +104,7 @@ export function StoryGraneroVacio() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            VALOR / DA
+            {t('emptyGranary.valueHeader')}
           </text>
 
           {/* Rows */}
@@ -165,31 +167,30 @@ export function StoryGraneroVacio() {
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-4">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('emptyGranary.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          ILAS Mexico y Productos Loneg recibieron 100% de sus contratos sin licitación.
-          Promedio por contrato: MXN 275M y MXN 302M respectivamente.
+          {t('emptyGranary.findingBody')}
         </p>
       </div>
 
       <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-salud)' }} />
-          100% DA
+          {t('emptyGranary.legend100')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-infraestructura)' }} />
-          60-99% DA
+          {t('emptyGranary.legend60')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: SECTOR_COLORS.agricultura }} />
-          {'< 60% DA'}
+          {t('emptyGranary.legendUnder')}
         </span>
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.8.5
+        {t('emptyGranary.footer')}
       </p>
     </motion.div>
   )
