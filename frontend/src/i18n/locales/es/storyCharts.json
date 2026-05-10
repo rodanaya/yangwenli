@@ -352,5 +352,23 @@
     "findingBody": "Los proveedores de mayor riesgo orbitan cerca del hub — direcciones compartidas, representantes legales comunes, o patrones de co-licitación indican posibles redes de empresas fantasma.",
     "footer": "Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.8.5",
     "exploreLink": "Explorar mapa completo"
+  },
+  "sectorRiskHeatmap": {
+    "kicker": "RUBLI · Mapa de riesgo 24 años",
+    "headline": "El riesgo se concentra en Salud y Agricultura durante el sexenio de AMLO",
+    "subline": "12 sectores · 2002–2025 · Intensidad de celda = puntaje de riesgo · 5 administraciones",
+    "footer": "Fuente: COMPRANET 2002–2025 · RUBLI v0.8.5 · Límites de administración desde registros del INE"
+  },
+  "sectorRiskTrends": {
+    "kicker": "RUBLI · Trayectorias sectoriales",
+    "headline": "El riesgo en Agricultura se duplicó después de Segalmex — Salud subió durante COVID y se mantuvo elevado",
+    "subline": "Tasa de alto riesgo por sector · 2010–2025 · Activa sectores para comparar",
+    "footer": "Fuente: COMPRANET 2010–2025 · modelos sectoriales RUBLI v0.8.5 · Fechas de escándalos del registro público"
+  },
+  "temporalRisk": {
+    "kicker": "RUBLI · Línea de tiempo de riesgo",
+    "headline": "COVID-19 disparó el riesgo en adjudicaciones 30% — y nunca volvió a bajar del todo",
+    "subline": "Tasa de alto riesgo y puntaje promedio · 2010–2025 · Anotaciones de escándalos marcadas",
+    "footer": "Fuente: COMPRANET 2010–2025 · modelo de riesgo RUBLI v0.8.5 · Fechas de escándalos del registro público"
   }
 }

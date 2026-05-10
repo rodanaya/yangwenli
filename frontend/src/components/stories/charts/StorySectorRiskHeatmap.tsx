@@ -6,9 +6,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SectorRiskHeatmap } from '@/components/charts/SectorRiskHeatmap'
 
 export function StorySectorRiskHeatmap() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,21 +20,21 @@ export function StorySectorRiskHeatmap() {
     >
       {/* Editorial overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · 24-Year Risk Map
+        {t('sectorRiskHeatmap.kicker')}
       </p>
       {/* Finding headline */}
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        Risk concentrates in Salud and Agricultura during the AMLO sexenio
+        {t('sectorRiskHeatmap.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        12 sectors · 2002-2025 · Cell intensity = avg risk score · 5 administrations
+        {t('sectorRiskHeatmap.subline')}
       </p>
 
       <SectorRiskHeatmap />
 
       {/* Source */}
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v0.8.5 · Administration boundaries from INE records
+        {t('sectorRiskHeatmap.footer')}
       </p>
     </motion.div>
   )
