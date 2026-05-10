@@ -203,5 +203,20 @@
     "daLegend": "DIRECT AWARD (each dot = 2pp)",
     "daSuffix": "DA",
     "footer": "Source: COMPRANET · RUBLI v0.8.5 analysis"
+  },
+  "hemoserSplitting": {
+    "kicker": "RUBLI · Threshold splitting",
+    "headline": "Splitting isn't an accident: 93K suspicious contracts under AMLO",
+    "subline": "Same-day threshold-splitting contracts · 2019–2024",
+    "stat1Value": "93K",
+    "stat1Label": "split contracts",
+    "stat2Value": "20.5K",
+    "stat2Label": "2023 peak",
+    "ariaLabel": "Threshold-split contracts by year, 2019–2024",
+    "tooltipSuffix": "split contracts",
+    "tooltipPercentSuffix": "% of AMLO total",
+    "annotationPeak": "2023: 20,512 contracts — sexenio peak",
+    "annotationVendor": "MOLINOS AZTECA 2021: 1,340 contracts, MXN 945M",
+    "footer": "* 2024 partial year · Splitting = multiple same-day contracts to the same vendor · Source: RUBLI v0.8.5"
   }
 }

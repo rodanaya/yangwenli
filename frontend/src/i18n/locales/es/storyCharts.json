@@ -203,5 +203,20 @@
     "daLegend": "ADJ. DIRECTA (cada punto = 2pp)",
     "daSuffix": "DA",
     "footer": "Fuente: COMPRANET · Análisis RUBLI v0.8.5"
+  },
+  "hemoserSplitting": {
+    "kicker": "RUBLI · Fraccionamiento",
+    "headline": "El fraccionamiento no es un accidente: 93K contratos sospechosos bajo AMLO",
+    "subline": "Contratos con patrón de fraccionamiento en el mismo día · 2019–2024",
+    "stat1Value": "93K",
+    "stat1Label": "contratos fraccionados",
+    "stat2Value": "20.5K",
+    "stat2Label": "pico en 2023",
+    "ariaLabel": "Contratos fraccionados por año, 2019–2024",
+    "tooltipSuffix": "contratos fraccionados",
+    "tooltipPercentSuffix": "% del total AMLO",
+    "annotationPeak": "2023: 20,512 contratos — máximo del sexenio",
+    "annotationVendor": "MOLINOS AZTECA 2021: 1,340 contratos, MXN 945M",
+    "footer": "* 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.8.5"
   }
 }

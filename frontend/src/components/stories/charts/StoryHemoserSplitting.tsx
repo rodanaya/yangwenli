@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const data = [
   { year: '2019', contracts: 18025 },
@@ -29,6 +30,7 @@ function formatK(v: number): string {
 }
 
 export function StoryHemoserSplitting() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,26 +40,26 @@ export function StoryHemoserSplitting() {
     >
       {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Fraccionamiento
+        {t('hemoserSplitting.kicker')}
       </p>
 
       {/* Editorial headline */}
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        El fraccionamiento no es un accidente: 93K contratos sospechosos bajo AMLO
+        {t('hemoserSplitting.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        Contratos con patrón de fraccionamiento en el mismo día · 2019-2024
+        {t('hemoserSplitting.subline')}
       </p>
 
       {/* Hero stats row */}
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">93K</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos fraccionados</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('hemoserSplitting.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('hemoserSplitting.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-high">20.5K</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">pico en 2023</div>
+          <div className="text-lg font-mono font-bold text-risk-high">{t('hemoserSplitting.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('hemoserSplitting.stat2Label')}</div>
         </div>
       </div>
 
@@ -66,7 +68,7 @@ export function StoryHemoserSplitting() {
         viewBox={`0 0 ${CHART_W} ${CHART_H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Contratos fraccionados por año, 2019-2024"
+        aria-label={t('hemoserSplitting.ariaLabel')}
       >
         {/* Y-axis guide labels (25K / 12.5K / 0) */}
         {[0, 0.5, 1].map((frac) => {
@@ -156,7 +158,7 @@ export function StoryHemoserSplitting() {
 
               {/* Hidden title for hover on the whole column */}
               <title>
-                {item.year}: {item.contracts.toLocaleString('es-MX')} contratos fraccionados ({pctOfTotal}% del total AMLO)
+                {`${item.year}: ${item.contracts.toLocaleString('es-MX')} ${t('hemoserSplitting.tooltipSuffix')} (${pctOfTotal}${t('hemoserSplitting.tooltipPercentSuffix')})`}
               </title>
             </g>
           )
@@ -167,16 +169,16 @@ export function StoryHemoserSplitting() {
       <div className="mt-4 flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-risk-critical/10 border border-red-500/20 text-[10px] text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          2023: 20,512 contratos — máximo del sexenio
+          {t('hemoserSplitting.annotationPeak')}
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-background-elevated border border-border text-[10px] text-text-secondary">
-          MOLINOS AZTECA 2021: 1,340 contratos, MXN 945M
+          {t('hemoserSplitting.annotationVendor')}
         </span>
       </div>
 
       {/* Source */}
       <p className="text-[10px] text-text-muted mt-3">
-        * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.8.5
+        {t('hemoserSplitting.footer')}
       </p>
     </motion.div>
   )
