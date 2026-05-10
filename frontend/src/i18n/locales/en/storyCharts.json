@@ -525,5 +525,33 @@
     "findingLabel": "FINDING",
     "findingBody": "Average direct award went from 42% under Calderón to 82% in 2023 under AMLO — a doubling in sixteen years. Each ring breaks the previous record.",
     "footer": "Source: COMPRANET · RUBLI v0.8.5 analysis"
+  },
+  "sixSigma": {
+    "kicker": "RUBLI · SixSigma at Hacienda",
+    "headline": "SAT chases fraud — and was a victim of one: 147 tenders designed to lose",
+    "lede": "SixSigma kept winning after bidding in nominally competitive processes. The v0.8.5 model detects the anomaly without knowing the file: atypical success rate and institutional concentration that stands out against the Hacienda sector baseline.",
+    "stat1Value": "92%",
+    "stat1Label": "SixSigma win rate",
+    "stat2Value": "~16%",
+    "stat2Label": "Hacienda sector baseline",
+    "stat3Value": "87.8%",
+    "stat3Label": "contracts in high/critical risk",
+    "winRateHeader": "Win rate — 50 simulated tenders",
+    "ssLabel": "SIXSIGMA",
+    "baselineLabel": "BASELINE",
+    "wonSuffix": "won",
+    "calloutMain": "5.7× above expected",
+    "calloutLine1": "pattern consistent with",
+    "calloutLine2": "technical requirements written",
+    "calloutLine3": "for a single vendor",
+    "contractsHeader": "The 147 contracts · v0.8.5 risk distribution",
+    "contractsAria": "147 SixSigma contracts colored by risk level",
+    "legendCritical": "Critical · 84 (57%)",
+    "legendHigh": "High · 45 (31%)",
+    "legendMedium": "Medium · 13",
+    "legendLow": "Low · 5",
+    "findingLabel": "FINDING",
+    "findingBody": "No individual contract raises suspicion — reasonable amounts, deadlines in order, public tender format. The anomaly emerges from the set: the same vendor wins tender after tender, with a 92% win rate against a 16% sector baseline.",
+    "footer": "Source: COMPRANET · 147 SAT-SixSigma contracts · v0.8.5 model average score 0.756"
   }
 }

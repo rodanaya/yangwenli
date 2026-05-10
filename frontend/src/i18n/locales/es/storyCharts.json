@@ -525,5 +525,33 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "La adjudicación directa promedio pasó de 42% bajo Calderón a 82% en 2023 bajo AMLO — una duplicación en dieciséis años. Cada anillo rompe el récord del anterior.",
     "footer": "Fuente: COMPRANET · Análisis RUBLI v0.8.5"
+  },
+  "sixSigma": {
+    "kicker": "RUBLI · SixSigma en Hacienda",
+    "headline": "El SAT persigue el fraude — y fue víctima de uno: 147 licitaciones diseñadas para perder",
+    "lede": "SixSigma ganaba tras licitar en procesos nominalmente competitivos. El modelo v0.8.5 detecta la anomalía sin conocer el expediente: tasa de éxito atípica y concentración institucional que sobresale contra la línea base del sector Hacienda.",
+    "stat1Value": "92%",
+    "stat1Label": "win rate SixSigma",
+    "stat2Value": "~16%",
+    "stat2Label": "línea base sector Hacienda",
+    "stat3Value": "87.8%",
+    "stat3Label": "contratos en riesgo alto/crítico",
+    "winRateHeader": "Tasa de éxito — 50 procesos simulados",
+    "ssLabel": "SIXSIGMA",
+    "baselineLabel": "LÍNEA BASE",
+    "wonSuffix": "ganadas",
+    "calloutMain": "5.7× sobre lo esperado",
+    "calloutLine1": "patrón consistente con",
+    "calloutLine2": "requisitos técnicos escritos",
+    "calloutLine3": "para un solo proveedor",
+    "contractsHeader": "Los 147 contratos · distribución de riesgo v0.8.5",
+    "contractsAria": "147 contratos SixSigma coloreados por nivel de riesgo",
+    "legendCritical": "Crítico · 84 (57%)",
+    "legendHigh": "Alto · 45 (31%)",
+    "legendMedium": "Medio · 13",
+    "legendLow": "Bajo · 5",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Ningún contrato individual despierta sospecha — montos razonables, plazos en regla, formato de licitación pública. La anomalía emerge del conjunto: el mismo proveedor gana licitación tras licitación, con un win_rate de 92% contra una línea base sectorial de 16%.",
+    "footer": "Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.8.5 score promedio 0.756"
   }
 }

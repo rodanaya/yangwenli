@@ -9,6 +9,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const TOTAL_ATTEMPTS = 50 // visualization scale (not actual count)
 const SIXSIGMA_WINS = 46 // ~92% win rate visualization
@@ -34,6 +35,7 @@ const COLORS = {
 }
 
 export function StorySixSigmaHacienda() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -42,31 +44,28 @@ export function StorySixSigmaHacienda() {
       className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · SixSigma en Hacienda
+        {t('sixSigma.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        El SAT persigue el fraude — y fue víctima de uno: 147 licitaciones diseñadas para perder
+        {t('sixSigma.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        SixSigma ganaba tras licitar en procesos nominalmente competitivos. El
-        modelo v0.8.5 detecta la anomalía sin conocer el expediente: tasa de éxito
-        atípica y concentración institucional que sobresale contra la línea base
-        del sector Hacienda.
+        {t('sixSigma.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">92%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">win rate SixSigma</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{t('sixSigma.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)]">~16%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">línea base sector Hacienda</div>
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)]">{t('sixSigma.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat2Label')}</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high">87.8%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos en riesgo alto/crítico</div>
+          <div className="text-xl font-mono font-bold text-risk-high">{t('sixSigma.stat3Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat3Label')}</div>
         </div>
       </div>
 
@@ -75,15 +74,15 @@ export function StorySixSigmaHacienda() {
         {/* Two columns comparison */}
         <div className="rounded-lg bg-background-card border border-border p-4">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-            Tasa de éxito — 50 procesos simulados
+            {t('sixSigma.winRateHeader')}
           </p>
-          <svg viewBox="0 0 280 310" className="w-full h-auto" role="img" aria-label="Win rate comparison: SixSigma versus sector baseline">
+          <svg viewBox="0 0 280 310" className="w-full h-auto" role="img" aria-label={t('sixSigma.winRateHeader')}>
             {/* Titles */}
             <text x={65} y={20} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
-              SIXSIGMA
+              {t('sixSigma.ssLabel')}
             </text>
             <text x={215} y={20} textAnchor="middle" fill="var(--color-oecd)" fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700}>
-              LÍNEA BASE
+              {t('sixSigma.baselineLabel')}
             </text>
 
             {/* SixSigma column — 50 dots, 46 red (won) */}
@@ -137,14 +136,14 @@ export function StorySixSigmaHacienda() {
               92%
             </text>
             <text x={65} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              ganadas
+              {t('sixSigma.wonSuffix')}
             </text>
 
             <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
               16%
             </text>
             <text x={215} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              ganadas
+              {t('sixSigma.wonSuffix')}
             </text>
 
             {/* Divider */}
@@ -152,16 +151,16 @@ export function StorySixSigmaHacienda() {
 
             {/* Callout */}
             <text x={140} y={230} textAnchor="middle" fill="var(--color-risk-medium)" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              5.7× sobre lo esperado
+              {t('sixSigma.calloutMain')}
             </text>
             <text x={140} y={248} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              patrón consistente con
+              {t('sixSigma.calloutLine1')}
             </text>
             <text x={140} y={262} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              requisitos técnicos escritos
+              {t('sixSigma.calloutLine2')}
             </text>
             <text x={140} y={276} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-              para un solo proveedor
+              {t('sixSigma.calloutLine3')}
             </text>
           </svg>
         </div>
@@ -169,9 +168,9 @@ export function StorySixSigmaHacienda() {
         {/* 147 contracts strip */}
         <div className="rounded-lg bg-background-card border border-border p-4">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-            Los 147 contratos · distribución de riesgo v0.8.5
+            {t('sixSigma.contractsHeader')}
           </p>
-          <svg viewBox="0 0 420 260" className="w-full h-auto" role="img" aria-label="147 SixSigma contracts colored by risk level">
+          <svg viewBox="0 0 420 260" className="w-full h-auto" role="img" aria-label={t('sixSigma.contractsAria')}>
             {CONTRACT_DOTS.map((level, i) => {
               const col = i % 15
               const row = Math.floor(i / 15)
@@ -198,19 +197,19 @@ export function StorySixSigmaHacienda() {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-text-muted mt-3 pt-2 border-t border-border">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-600"></div>
-              <span>Crítico · 84 (57%)</span>
+              <span>{t('sixSigma.legendCritical')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-orange-600"></div>
-              <span>Alto · 45 (31%)</span>
+              <span>{t('sixSigma.legendHigh')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <span>Medio · 13</span>
+              <span>{t('sixSigma.legendMedium')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-green-600"></div>
-              <span>Bajo · 5</span>
+              <span>{t('sixSigma.legendLow')}</span>
             </div>
           </div>
         </div>
@@ -218,18 +217,15 @@ export function StorySixSigmaHacienda() {
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('sixSigma.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Ningún contrato individual despierta sospecha — montos razonables,
-          plazos en regla, formato de licitación pública. La anomalía emerge del
-          conjunto: el mismo proveedor gana licitación tras licitación, con un
-          win_rate de 92% contra una línea base sectorial de 16%.
+          {t('sixSigma.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.8.5 score promedio 0.756
+        {t('sixSigma.footer')}
       </p>
     </motion.div>
   )
