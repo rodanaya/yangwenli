@@ -382,5 +382,28 @@
     "oecdLabel": "REFERENCIA OCDE",
     "oecdBody": "La OCDE recomienda distribución uniforme de las compras a lo largo del año fiscal. Los picos de gasto a fin de año son un indicador reconocido de riesgo de corrupción en todos los marcos de integridad de la OCDE — el patrón de diciembre en México está entre los más extremos de los miembros de la OCDE.",
     "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · puntajes de riesgo RUBLI v0.8.5"
+  },
+  "vendorFingerprint": {
+    "kicker": "RUBLI · Forense de proveedores",
+    "criticalPill": "Riesgo crítico",
+    "headline": "12 contratos en un día: la huella de riesgo de HEMOSER",
+    "ledePrefix": "El 2 de agosto de 2023, ISSSTE adjudicó a HEMOSER 12 contratos separados de suministro cardiaco — un patrón clásico de \"fraccionamiento\" diseñado para mantener cada contrato por debajo del umbral de licitación competitiva. El modelo SHAP asigna a HEMOSER un puntaje de riesgo de",
+    "ledeSuffix": "— en el top 2% de los más de 200K proveedores activos.",
+    "factor1Label": "Mismo día",
+    "factor1Note": "señal más fuerte",
+    "factor2Label": "Concentración",
+    "factor2Note": "participación de mercado",
+    "factor3Label": "Volatilidad de precio",
+    "factor3Note": "tamaños de contrato varían",
+    "factor4Label": "Diversidad inst.",
+    "factor4Note": "factor protector",
+    "readGuideLabel": "CÓMO LEER ESTE GRÁFICO",
+    "readGuidePrefix": "Cada pétalo representa una de las 9 características activas del modelo de riesgo.",
+    "readGuideRedLabel": " Los pétalos rojos",
+    "readGuideRedSuffix": " son factores que aumentan el riesgo;",
+    "readGuideTealLabel": " los pétalos turquesa",
+    "readGuideTealSuffix": " son protectores. El tamaño del pétalo es proporcional a la contribución SHAP — pétalos más grandes elevan el puntaje. El centro muestra el puntaje global.",
+    "footer": "Fuente: explicaciones SHAP RUBLI v6.5 · tabla vendor_shap_v52",
+    "ariaLink": "Ver cola de investigación ARIA"
   }
 }
