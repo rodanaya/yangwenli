@@ -514,5 +514,16 @@
     "findingStrong": "Infraestructura",
     "findingSuffix": " (baja DA, alto riesgo) desmiente el atajo \"adjudicación directa = corrupción\". El modelo detecta patrones estructurales que el flag binario no captura.",
     "footer": "Tamaño = gasto total (MXN T) · Fuente: COMPRANET · 12 sectores · RUBLI v0.8.5"
+  },
+  "cuartaAdjudicacion": {
+    "kicker": "RUBLI · Hallazgo",
+    "headline": "Cada sexenio batió el récord del anterior",
+    "subline": "Cuatro anillos, cuatro administraciones — el arco crece con cada era",
+    "ariaLabel": "Cuatro anillos concéntricos mostrando la tasa de adjudicación directa creciendo a través de Calderón, Peña Nieto, promedio AMLO y pico AMLO 2023",
+    "centerLabel": "OCDE MÁX",
+    "ringMultiplierSuffix": "× OCDE",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "La adjudicación directa promedio pasó de 42% bajo Calderón a 82% en 2023 bajo AMLO — una duplicación en dieciséis años. Cada anillo rompe el récord del anterior.",
+    "footer": "Fuente: COMPRANET · Análisis RUBLI v0.8.5"
   }
 }

@@ -9,6 +9,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const RINGS = [
   { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: 'var(--color-sector-educacion)', track: '#1e3a8a' },
@@ -36,6 +37,7 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
 }
 
 export function StoryCuartaAdjudicacion() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -44,14 +46,14 @@ export function StoryCuartaAdjudicacion() {
       className="rounded-sm bg-background border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Hallazgo
+        {t('cuartaAdjudicacion.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Cada sexenio batió el récord del anterior
+        {t('cuartaAdjudicacion.headline')}
       </p>
       <p className="text-xs text-text-muted mb-5">
-        Cuatro anillos, cuatro administraciones — el arco crece con cada era
+        {t('cuartaAdjudicacion.subline')}
       </p>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
@@ -61,7 +63,7 @@ export function StoryCuartaAdjudicacion() {
             viewBox="0 0 440 440"
             className="w-full max-w-md h-auto"
             role="img"
-            aria-label="Four concentric rings showing direct award rate rising across Calderón, Peña Nieto, AMLO average, and AMLO 2023 peak"
+            aria-label={t('cuartaAdjudicacion.ariaLabel')}
           >
             {/* OECD 25% reference ring (faint dashed) */}
             <circle
@@ -127,7 +129,7 @@ export function StoryCuartaAdjudicacion() {
               fontFamily="var(--font-family-mono)"
               letterSpacing="0.1em"
             >
-              OCDE MÁX
+              {t('cuartaAdjudicacion.centerLabel')}
             </text>
             <text
               x={CX}
@@ -159,7 +161,7 @@ export function StoryCuartaAdjudicacion() {
                   {ring.rate}%
                 </span>
                 <span className="text-[10px] font-mono text-text-muted">
-                  {(ring.rate / 25).toFixed(1)}x OCDE
+                  {`${(ring.rate / 25).toFixed(1)}${t('cuartaAdjudicacion.ringMultiplierSuffix')}`}
                 </span>
               </div>
               <div className="text-xs text-text-secondary font-semibold">{ring.era}</div>
@@ -172,16 +174,15 @@ export function StoryCuartaAdjudicacion() {
       {/* Finding */}
       <div className="mt-5 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-critical mb-1">
-          HALLAZGO
+          {t('cuartaAdjudicacion.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          La adjudicación directa promedio pasó de 42% bajo Calderón a 82% en 2023 bajo AMLO
-          — una duplicación en dieciséis años. Cada anillo rompe el récord del anterior.
+          {t('cuartaAdjudicacion.findingBody')}
         </p>
       </div>
 
       <p className="mt-3 text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET · Análisis RUBLI v0.8.5
+        {t('cuartaAdjudicacion.footer')}
       </p>
     </motion.div>
   )

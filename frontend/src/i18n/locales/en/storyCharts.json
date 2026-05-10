@@ -514,5 +514,16 @@
     "findingStrong": "Infrastructure",
     "findingSuffix": " (low DA, high risk) refutes the shortcut \"direct award = corruption\". The model detects structural patterns the binary flag does not capture.",
     "footer": "Size = total spend (MXN T) · Source: COMPRANET · 12 sectors · RUBLI v0.8.5"
+  },
+  "cuartaAdjudicacion": {
+    "kicker": "RUBLI · Finding",
+    "headline": "Each sexenio broke the previous record",
+    "subline": "Four rings, four administrations — the arc grows with every era",
+    "ariaLabel": "Four concentric rings showing direct award rate rising across Calderón, Peña Nieto, AMLO average, and AMLO 2023 peak",
+    "centerLabel": "OECD MAX",
+    "ringMultiplierSuffix": "× OECD",
+    "findingLabel": "FINDING",
+    "findingBody": "Average direct award went from 42% under Calderón to 82% in 2023 under AMLO — a doubling in sixteen years. Each ring breaks the previous record.",
+    "footer": "Source: COMPRANET · RUBLI v0.8.5 analysis"
   }
 }
