@@ -10,5 +10,25 @@
     "valueHeader": "MXN (B)",
     "avgPrefix": "Prom.",
     "footer": "Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.8.5"
+  },
+  "ghostNetwork": {
+    "kicker": "RUBLI · Red Fantasma",
+    "headline": "42 empresas, 5 domicilios — la geografía del fraude de facturación",
+    "lede": "Constelación de proveedores EFOS definitivo que comparten un puñado de direcciones fiscales. Cada nodo es un proveedor; tamaño = número de contratos; color = score de riesgo v0.8.5.",
+    "stat1Value": "11,208",
+    "stat1Label": "empresas EFOS definitivo (SAT)",
+    "stat2Value": "38",
+    "stat2Label": "confirmadas por RFC en COMPRANET",
+    "stat3Value": "0.28",
+    "stat3Label": "score promedio · subdetectadas",
+    "ariaLabel": "Red de 42 proveedores fantasma agrupados en 5 domicilios compartidos",
+    "legendTop": "score ≥ 0.85",
+    "legendHigh": "0.75–0.85",
+    "legendMid": "0.65–0.75",
+    "legendLow": "0.55–0.65",
+    "legendUnder": "< 0.55 · subdetectado",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Los EFOS definitivo comparten una firma estructural: pocos contratos (típicamente 2–5), vida corta (2–3 años) y domicilios fiscales compartidos. El modelo v0.8.5 los subdetecta (score 0.28) porque fue entrenado con casos grandes (IMSS, SEGALMEX) — una brecha de detección sistemática.",
+    "footer": "Fuente: SAT Art. 69-B CFF · cruce con COMPRANET 2018–2024 · 38 RFC confirmados + 125 por nombre"
   }
 }
