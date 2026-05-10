@@ -30,6 +30,7 @@ import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { watchlistApi, caseLibraryApi, ariaApi } from '@/api/client'
+import { useAuth } from '@/contexts/AuthContext'
 // ReportIssueDialog is lazy — only loads when user clicks the issue button
 const ReportIssueDialog = lazy(() =>
   import('@/components/ReportIssueDialog').then((m) => ({ default: m.ReportIssueDialog }))
@@ -142,6 +143,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const location = useLocation()
   const { t, i18n } = useTranslation('nav')
   const { t: tc } = useTranslation('common')
+  const { user } = useAuth()
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
@@ -151,10 +153,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   // On mobile: use mobileOpen for collapse decision (always show full sidebar when open)
   const isCollapsed = collapsed && !mobileOpen
 
-  // Watchlist alert count (5 min stale)
+  // Watchlist alert count (5 min stale).
+  // Gated on auth — endpoint requires JWT, anonymous visitors got 17×
+  // 502/401 per harness hour. Skipping the call when there's no user
+  // is correct UX (badge would always be 0 anyway) and stops the noise.
   const { data: alerts } = useQuery({
     queryKey: ['watchlist-alerts-check'],
     queryFn: () => watchlistApi.checkAlerts(),
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
