@@ -10,6 +10,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface SectorRow {
   name: string
@@ -51,6 +52,7 @@ const W = LABEL_W + COL_W + 70
 const H = 50 + DATA.length * TRIO_H + 10
 
 export function StoryProcedureBreakdown() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -59,29 +61,27 @@ export function StoryProcedureBreakdown() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Procedimiento por sector
+        {t('procedureBreakdown.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        9 de 12 sectores adjudican más de la mitad de sus contratos sin competencia
+        {t('procedureBreakdown.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada sector es un bloque con tres bandas: roja = adjudicación directa,
-        naranja = licitación con un solo oferente, verde = licitación abierta.
-        Cada punto vale 2 puntos porcentuales.
+        {t('procedureBreakdown.lede')}
       </p>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">93.4%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{t('procedureBreakdown.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Agricultura · adj. directa · <span className="text-[color:var(--color-oecd)]">OCDE máx 25%</span>
+            {t('procedureBreakdown.stat1Label')} <span className="text-[color:var(--color-oecd)]">{t('procedureBreakdown.stat1Oecd')}</span>
           </div>
         </div>
         <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-text-muted">59.9%</div>
+          <div className="text-xl font-mono font-bold text-text-muted">{t('procedureBreakdown.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Infraestructura · licitación abierta · único sector {'>'}50%
+            {t('procedureBreakdown.stat2Label')}
           </div>
         </div>
       </div>
@@ -91,24 +91,24 @@ export function StoryProcedureBreakdown() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Procedure breakdown dot matrix: 12 sectors, 3 strips each (direct award, single bid, open tender)"
+          aria-label={t('procedureBreakdown.ariaLabel')}
         >
           {/* Header */}
           <text x={LABEL_W - 8} y={24} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            SECTOR
+            {t('procedureBreakdown.sectorHeader')}
           </text>
           <g transform={`translate(${LABEL_W}, 20)`}>
             <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
             <text x={11} y={6} fill="var(--color-sector-salud)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              DIRECTA
+              {t('procedureBreakdown.directLabel')}
             </text>
             <circle cx={80} cy={2} r={3} fill={COLORS.single} />
             <text x={88} y={6} fill="var(--color-sector-infraestructura)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              UN SOLO OFERENTE
+              {t('procedureBreakdown.singleLabel')}
             </text>
             <circle cx={205} cy={2} r={3} fill={COLORS.open} />
             <text x={213} y={6} fill="var(--color-sector-hacienda)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              LICITACIÓN ABIERTA
+              {t('procedureBreakdown.openLabel')}
             </text>
           </g>
 
@@ -179,18 +179,15 @@ export function StoryProcedureBreakdown() {
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('procedureBreakdown.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Defensa tiene la tasa más alta de licitación con un solo oferente (22.1%) —
-          casi una cuarta parte de sus "competencias" reciben una sola propuesta.
-          Combinado con 56.3% de adjudicación directa, efectivamente el 78.4% de los
-          contratos de Defensa carecen de competencia real.
+          {t('procedureBreakdown.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2002-2025 · 3.05M contratos · OCDE Public Procurement Report 2023
+        {t('procedureBreakdown.footer')}
       </p>
     </motion.div>
   )

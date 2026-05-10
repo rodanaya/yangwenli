@@ -151,5 +151,23 @@
     "decemberLabel": "DECEMBER PATTERN",
     "decemberBody": "Year-end budget exhaustion is visible in every single row. December risk averages are 64% higher than the October trough — the most reliable seasonal signal in the data.",
     "footer": "Source: COMPRANET 2016–2025 · monthly average risk scores · RUBLI v0.8.5"
+  },
+  "procedureBreakdown": {
+    "kicker": "RUBLI · Procedure by sector",
+    "headline": "9 of 12 sectors award more than half their contracts without competition",
+    "lede": "Each sector is a block with three bands: red = direct award, orange = single-bidder tender, green = open tender. Each dot is 2 percentage points.",
+    "stat1Value": "93.4%",
+    "stat1Label": "Agriculture · direct award ·",
+    "stat1Oecd": "OECD max 25%",
+    "stat2Value": "59.9%",
+    "stat2Label": "Infrastructure · open tender · only sector >50%",
+    "ariaLabel": "Procedure breakdown dot matrix: 12 sectors, 3 strips each (direct award, single bid, open tender)",
+    "sectorHeader": "SECTOR",
+    "directLabel": "DIRECT",
+    "singleLabel": "SINGLE BIDDER",
+    "openLabel": "OPEN TENDER",
+    "findingLabel": "FINDING",
+    "findingBody": "Defense has the highest single-bidder tender rate (22.1%) — nearly a quarter of its \"competitive\" tenders receive only one proposal. Combined with 56.3% direct award, effectively 78.4% of Defense contracts lack real competition.",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · OECD Public Procurement Report 2023"
   }
 }

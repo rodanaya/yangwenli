@@ -151,5 +151,23 @@
     "decemberLabel": "PATRÓN DE DICIEMBRE",
     "decemberBody": "El agotamiento del presupuesto a fin de año es visible en cada fila. Los promedios de riesgo de diciembre son 64% más altos que el mínimo de octubre — la señal estacional más confiable en los datos.",
     "footer": "Fuente: COMPRANET 2016–2025 · puntajes promedio mensuales de riesgo · RUBLI v0.8.5"
+  },
+  "procedureBreakdown": {
+    "kicker": "RUBLI · Procedimiento por sector",
+    "headline": "9 de 12 sectores adjudican más de la mitad de sus contratos sin competencia",
+    "lede": "Cada sector es un bloque con tres bandas: roja = adjudicación directa, naranja = licitación con un solo oferente, verde = licitación abierta. Cada punto vale 2 puntos porcentuales.",
+    "stat1Value": "93.4%",
+    "stat1Label": "Agricultura · adj. directa ·",
+    "stat1Oecd": "OCDE máx 25%",
+    "stat2Value": "59.9%",
+    "stat2Label": "Infraestructura · licitación abierta · único sector >50%",
+    "ariaLabel": "Matriz de procedimientos: 12 sectores, 3 bandas cada uno (adjudicación directa, un solo oferente, licitación abierta)",
+    "sectorHeader": "SECTOR",
+    "directLabel": "DIRECTA",
+    "singleLabel": "UN SOLO OFERENTE",
+    "openLabel": "LICITACIÓN ABIERTA",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Defensa tiene la tasa más alta de licitación con un solo oferente (22.1%) — casi una cuarta parte de sus \"competencias\" reciben una sola propuesta. Combinado con 56.3% de adjudicación directa, efectivamente el 78.4% de los contratos de Defensa carecen de competencia real.",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · OCDE Public Procurement Report 2023"
   }
 }
