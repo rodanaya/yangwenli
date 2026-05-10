@@ -120,5 +120,22 @@
     "caveatLabel": "CAVEAT",
     "caveatBody": "Sheinbaum data covers only 2025 (partial year). The 12.0% high-risk rate may normalize as more contracts are recorded. Fox-era data (2002–2006) has the lowest data quality (Structure A), making risk comparisons less reliable for that period.",
     "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · RUBLI v0.8.5 model · 5 administrations"
+  },
+  "adminSunburst": {
+    "kicker": "RUBLI · Administration Comparison",
+    "headline": "MXN 9.9 trillion across 5 presidents — where did the money go?",
+    "lede": "Each administration left a distinct procurement fingerprint. Peña Nieto's administration was the largest spender at MXN 3.1T, while AMLO's government shifted spending toward health and social programs. The inner ring shows each president's share; the outer ring breaks it down by sector.",
+    "stat1Value": "MXN 3.1T",
+    "stat1Label": "Peña Nieto · largest spender",
+    "stat2Value": "79.5%",
+    "stat2Label": "AMLO direct awards · highest ever",
+    "stat3Value": "12.0%",
+    "stat3Label": "Sheinbaum high-risk rate (early)",
+    "readGuideLabel": "HOW TO READ THIS CHART",
+    "readGuideInnerLabel": "Inner ring:",
+    "readGuideInnerBody": " each arc represents one presidential administration, sized by total procurement spending.",
+    "readGuideOuterLabel": "Outer ring:",
+    "readGuideOuterBody": " each segment is one of 12 sectors, sized by that sector's spending under the corresponding president. Hover to see exact values.",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · 12 sectors"
   }
 }

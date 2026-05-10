@@ -120,5 +120,22 @@
     "caveatLabel": "ADVERTENCIA",
     "caveatBody": "Los datos de Sheinbaum cubren solo 2025 (año parcial). La tasa de 12.0% de alto riesgo podría normalizarse al registrarse más contratos. Los datos de la era Fox (2002–2006) tienen la menor calidad (Estructura A), haciendo menos confiables las comparaciones de riesgo en ese período.",
     "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · modelo RUBLI v0.8.5 · 5 administraciones"
+  },
+  "adminSunburst": {
+    "kicker": "RUBLI · Comparación de Administraciones",
+    "headline": "MXN 9.9 billones a lo largo de 5 presidentes — ¿a dónde fue el dinero?",
+    "lede": "Cada administración dejó una huella distinta de adjudicación. La administración de Peña Nieto fue la mayor en gasto con MXN 3.1B, mientras que el gobierno de AMLO desplazó el gasto hacia salud y programas sociales. El anillo interior muestra la participación de cada presidente; el exterior lo desglosa por sector.",
+    "stat1Value": "MXN 3.1B",
+    "stat1Label": "Peña Nieto · mayor gasto",
+    "stat2Value": "79.5%",
+    "stat2Label": "Adj. directa AMLO · máxima histórica",
+    "stat3Value": "12.0%",
+    "stat3Label": "Tasa alto riesgo Sheinbaum (inicial)",
+    "readGuideLabel": "CÓMO LEER ESTE GRÁFICO",
+    "readGuideInnerLabel": "Anillo interior:",
+    "readGuideInnerBody": " cada arco representa una administración presidencial, dimensionada por gasto total de adjudicación.",
+    "readGuideOuterLabel": "Anillo exterior:",
+    "readGuideOuterBody": " cada segmento es uno de 12 sectores, dimensionado por el gasto del sector bajo el presidente correspondiente. Pasa el cursor para ver valores exactos.",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · 12 sectores"
   }
 }
