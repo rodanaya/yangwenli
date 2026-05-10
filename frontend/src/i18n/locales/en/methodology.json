@@ -300,5 +300,17 @@
     "tierIIISay": "\"statistical pattern consistent with\" · \"flagged for investigation\" · \"behavioral anomaly\"",
     "criticalRuleLabel": "Critical rule:",
     "criticalRuleBody": " Never use Tier I language (\"confirmed,\" \"proven\") for Tier III findings. The RUBLI risk score is not a verdict — it is a triage signal. A score of 0.90 means strong resemblance to documented corruption patterns, not a 90% probability of guilt. Shell company behavioral pattern flags (P2 pattern) have a 0.7% SAT confirmation rate — the other 99.3% are unconfirmed algorithmic detections."
+  },
+  "limitations": {
+    "intro": "These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform. Understanding them is essential to interpreting risk scores correctly.",
+    "highImpact": "High Impact",
+    "mediumImpact": "Medium Impact",
+    "lowImpact": "Low Impact",
+    "tableAria": "Model limitations summary",
+    "colLimitation": "Limitation",
+    "colImpact": "Impact",
+    "colPath": "Path to Fix",
+    "interpretationLabel": "Interpretation guidance:",
+    "interpretationBody": " Risk scores are statistical indicators — not verdicts. A high score means strong similarity to documented corruption patterns. A low score does not certify a contract is clean. Use scores for investigation triage only; follow-up with primary sources to establish facts."
   }
 }

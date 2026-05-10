@@ -300,5 +300,17 @@
     "tierIIISay": "\"patrón estadístico consistente con\" · \"señalado para investigación\" · \"anomalía conductual\"",
     "criticalRuleLabel": "Regla crítica:",
     "criticalRuleBody": " Nunca uses lenguaje de Nivel I (\"confirmado\", \"probado\") para hallazgos de Nivel III. El puntaje de RUBLI no es un veredicto — es una señal de triaje. Un puntaje de 0.90 significa fuerte semejanza a patrones documentados de corrupción, no una probabilidad de culpabilidad del 90%. Las alertas conductuales de empresa fantasma (patrón P2) tienen una tasa de confirmación SAT del 0.7% — el otro 99.3% son detecciones algorítmicas no confirmadas."
+  },
+  "limitations": {
+    "intro": "Estas limitaciones son inherentes a las fuentes de datos, el enfoque de modelado y las restricciones legales de la plataforma. Comprenderlas es esencial para interpretar correctamente los puntajes de riesgo.",
+    "highImpact": "Alto impacto",
+    "mediumImpact": "Impacto medio",
+    "lowImpact": "Bajo impacto",
+    "tableAria": "Resumen de limitaciones del modelo",
+    "colLimitation": "Limitación",
+    "colImpact": "Impacto",
+    "colPath": "Camino a la solución",
+    "interpretationLabel": "Guía de interpretación:",
+    "interpretationBody": " Los puntajes de riesgo son indicadores estadísticos — no veredictos. Un puntaje alto significa fuerte semejanza con patrones de corrupción documentados. Un puntaje bajo no certifica que un contrato esté limpio. Usa los puntajes solo para triaje de investigación; haz seguimiento con fuentes primarias para establecer hechos."
   }
 }

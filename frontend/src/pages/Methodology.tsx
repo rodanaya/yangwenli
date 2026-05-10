@@ -1509,8 +1509,7 @@ export function Methodology() {
           <CollapsibleSection id="limitations" number="11" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
             <div className="space-y-6">
               <p className="text-xs text-text-secondary leading-relaxed">
-                These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform.
-                Understanding them is essential to interpreting risk scores correctly.
+                {t('limitations.intro')}
               </p>
 
               {/* Severity summary */}
@@ -1519,33 +1518,33 @@ export function Methodology() {
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">High Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">Medium Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
-                    <span className="text-xs text-text-muted ml-1.5">Low Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Summary table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" aria-label="Model limitations summary">
+                <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
                   <thead className="border-b border-border">
                     <tr>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">Limitation</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">Impact</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">Path to Fix</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
@@ -1579,10 +1578,8 @@ export function Methodology() {
               {/* Interpretive guidance */}
               <div className="p-3 rounded-md bg-border/10 border border-border/40">
                 <p className="text-xs text-text-muted leading-relaxed">
-                  <span className="font-medium text-text-primary">Interpretation guidance: </span>
-                  Risk scores are statistical indicators — not verdicts. A high score means strong similarity
-                  to documented corruption patterns. A low score does not certify a contract is clean.
-                  Use scores for investigation triage only; follow-up with primary sources to establish facts.
+                  <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
+                  {t('limitations.interpretationBody')}
                 </p>
               </div>
             </div>
