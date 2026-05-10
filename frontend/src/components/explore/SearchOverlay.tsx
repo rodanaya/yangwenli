@@ -22,11 +22,47 @@ interface Result {
   sectorId?: number
 }
 
+// Recent-jumps history — persists last 8 picks across sessions so the
+// overlay opens with a "RECENT" pill list when the input is empty.
+// Stored under the same `rubli_explore_*` namespace as the URL sync.
+const RECENT_KEY = 'rubli_explore_recent_v1'
+const RECENT_MAX = 8
+
+function readRecent(): Result[] {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY)
+    if (!raw) return []
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr.slice(0, RECENT_MAX) : []
+  } catch {
+    return []
+  }
+}
+
+function pushRecent(r: Result): void {
+  try {
+    const cur = readRecent()
+    // De-dup by kind+id; prepend the new one.
+    const filtered = cur.filter((x) => !(x.kind === r.kind && x.id === r.id))
+    const next = [r, ...filtered].slice(0, RECENT_MAX)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next))
+  } catch {
+    /* private mode — quietly skip */
+  }
+}
+
 export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const [recent, setRecent] = useState<Result[]>(() => readRecent())
   const inputRef = useRef<HTMLInputElement>(null)
   const dispatch = useExploreDispatch()
+
+  // Refresh recent every time the overlay opens — picks up changes from
+  // other tabs (rare but possible).
+  useEffect(() => {
+    if (open) setRecent(readRecent())
+  }, [open])
 
   // Cmd/Ctrl-K to open
   useEffect(() => {
@@ -121,6 +157,8 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
       // Vendor jump — leave context as-is, just drill into vendor at current level
       dispatch({ type: 'drill-into-vendor', vendorId: r.id, vendorName: r.label })
     }
+    pushRecent(r)
+    setRecent(readRecent())
     setOpen(false)
     setQ('')
   }
@@ -184,10 +222,32 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
                   {lang === 'en' ? 'No matches.' : 'Sin coincidencias.'}
                 </div>
               )}
-              {allResults.length === 0 && q.length < 2 && (
+              {allResults.length === 0 && q.length < 2 && recent.length === 0 && (
                 <div className="px-4 py-3 text-xs text-text-muted">
                   {lang === 'en' ? 'Type at least 2 characters.' : 'Escribe al menos 2 caracteres.'}
                 </div>
+              )}
+              {q.length < 2 && recent.length > 0 && (
+                <>
+                  <div className="px-4 pt-3 pb-1 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                    {lang === 'en' ? 'Recent' : 'Reciente'}
+                  </div>
+                  {recent.map((r, i) => (
+                    <button
+                      key={`recent-${r.kind}-${r.id}-${i}`}
+                      type="button"
+                      onClick={() => onPick(r)}
+                      className="w-full text-left px-4 py-2 hover:bg-background-elevated transition-colors flex items-center gap-3"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted w-20">
+                        {r.kind === 'sector' ? (lang === 'en' ? 'Sector' : 'Sector') : r.kind === 'institution' ? (lang === 'en' ? 'Inst.' : 'Inst.') : (lang === 'en' ? 'Vendor' : 'Prov.')}
+                      </span>
+                      <span className="text-sm text-text-primary flex-1 truncate">{r.label}</span>
+                      <span className="text-[9px] text-text-muted opacity-50">↻</span>
+                    </button>
+                  ))}
+                </>
               )}
               {allResults.map((r) => (
                 <button
