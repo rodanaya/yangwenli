@@ -244,6 +244,7 @@ function SectorBriefing({
           ? `${data?.total ?? '—'} institutions in this sector. Hover any body for a preview, click to drill into vendors.`
           : `${data?.total ?? '—'} instituciones en este sector. Pasa el cursor para una vista previa, clic para profundizar.`}
       </p>
+      <SectorStoryChip sectorCode={sectorCode} lang={lang} />
       <Tip lang={lang} />
     </div>
   )
@@ -511,6 +512,59 @@ function RiskPill({ score }: { score: number }) {
       </svg>
     </div>
   )
+}
+
+/**
+ * SectorStoryChip — surfaces a curated long-form narrative when the user
+ * has drilled into a sector that has one. Maps sector code → story slug
+ * so the briefing rail becomes an entry point into the editorial layer
+ * for journalists who want context, not just data.
+ *
+ * Coverage today: salud (pharma cartel) · agricultura + hacienda (estafa
+ * maestra) · salud also gets covid-year as a secondary suggestion. Other
+ * sectors get no chip (rather than a noisy "no story available" line).
+ */
+function SectorStoryChip({ sectorCode, lang }: { sectorCode: string; lang: 'en' | 'es' }) {
+  const story = SECTOR_STORY_MAP[sectorCode]
+  if (!story) return null
+  return (
+    <a
+      href={`/stories/${story.slug}`}
+      className="block mt-3 mb-2 px-3 py-2 transition-colors"
+      style={{
+        background: 'var(--color-background-elevated)',
+        border: '1px solid var(--color-border)',
+        borderLeft: `3px solid ${SECTOR_COLORS[sectorCode] ?? 'var(--color-accent)'}`,
+        borderRadius: 4,
+        textDecoration: 'none',
+      }}
+    >
+      <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-0.5">
+        {lang === 'en' ? '📖 read · related story' : '📖 lectura · historia relacionada'}
+      </div>
+      <div className="text-[12px] font-bold text-text-primary leading-snug">
+        {lang === 'en' ? story.titleEn : story.titleEs}
+      </div>
+    </a>
+  )
+}
+
+const SECTOR_STORY_MAP: Record<string, { slug: string; titleEn: string; titleEs: string }> = {
+  salud: {
+    slug: 'the-pharmaceutical-cartel',
+    titleEn: 'The Pharmaceutical Cartel',
+    titleEs: 'El cártel farmacéutico',
+  },
+  agricultura: {
+    slug: 'la-estafa-maestra',
+    titleEn: 'La Estafa Maestra',
+    titleEs: 'La Estafa Maestra',
+  },
+  hacienda: {
+    slug: 'la-estafa-maestra',
+    titleEn: 'La Estafa Maestra',
+    titleEs: 'La Estafa Maestra',
+  },
 }
 
 function Tip({ lang }: { lang: 'en' | 'es' }) {
