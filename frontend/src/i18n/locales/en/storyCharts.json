@@ -80,5 +80,15 @@
     "singleBidSeries": "Single Bid %",
     "covidBand": "COVID-19",
     "footer": "Source: COMPRANET 2017–2023 · RUBLI v0.8.5"
+  },
+  "amloEra": {
+    "kicker": "RUBLI · Sexenio comparison",
+    "headline": "AMLO averaged 79.4% — every administration tops the last",
+    "subline": "+15.9 pts vs Fox era. The 81.9% peak is 3.3× the OECD limit.",
+    "ariaLabel": "DA peak rate by sexenio, dot matrix, each dot 1pp",
+    "sexenioHeader": "TERM",
+    "peakHeader": "PEAK % DA",
+    "oecdLabel": "OECD 25%",
+    "footer": "Source: COMPRANET 2002–2025 · Each dot = 1pp · RUBLI v0.8.5"
   }
 }

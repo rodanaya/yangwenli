@@ -80,5 +80,15 @@
     "singleBidSeries": "Licitación única %",
     "covidBand": "COVID-19",
     "footer": "Fuente: COMPRANET 2017–2023 · RUBLI v0.8.5"
+  },
+  "amloEra": {
+    "kicker": "RUBLI · Comparación sexenal",
+    "headline": "AMLO promedio 79.4% — cada sexenio supera al anterior",
+    "subline": "+15.9 pts vs era Fox. El pico de 81.9% es 3.3× el límite OCDE.",
+    "ariaLabel": "Tasa pico de DA por sexenio, matriz de puntos, cada punto 1pp",
+    "sexenioHeader": "SEXENIO",
+    "peakHeader": "PICO % DA",
+    "oecdLabel": "OCDE 25%",
+    "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 1pp · RUBLI v0.8.5"
   }
 }
