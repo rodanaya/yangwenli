@@ -315,5 +315,22 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "INSABI operó cuatro años. En los cuatro, todos los indicadores de salud del sistema de compras empeoraron: menos competencia, más riesgo, más desabasto, mayor concentración de gasto a fin de año. El instituto desapareció en 2023; las consecuencias para los pacientes — niños sin quimioterapia, adultos sin insulina — no.",
     "footer": "Fuente: COMPRANET 2015–2023 · ASF Cuenta Pública 2020–2023 · reportes PAHO UNOPS"
+  },
+  "infraestructura": {
+    "kicker": "RUBLI · Infraestructura sin competencia",
+    "headline": "La obra pública perdió competencia real durante 14 años",
+    "lede": "Cada barra muestra cómo se adjudicaron los contratos de infraestructura ese año: rojo = adjudicación directa, naranja = licitación con un solo oferente, verde = licitación abierta competida. Los bloques verdes se redujeron del 66% al 32% entre 2010 y 2024.",
+    "stat1Value": "$2.1T",
+    "stat1Label": "con un solo oferente · 196,540 contratos",
+    "stat2Label": "oferentes promedio / licitación",
+    "stat3Label": "oferentes OCDE (Corea, Chile, UE)",
+    "ariaLabel": "Adjudicación de infraestructura por año 2010–2024: adj. directa, un oferente, licitación abierta",
+    "directLabel": "DIRECTA",
+    "singleLabel": "UN OFERENTE",
+    "openLabel": "LICITACIÓN ABIERTA",
+    "referenceLine": "50% · línea de referencia",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "En 14 años la licitación abierta en obra pública cayó del 66% al 32%. Tren Maya, Dos Bocas y AIFA se ejecutaron a través de entidades militares exentas de las reglas normales de contratación — moviendo cientos de miles de millones de pesos fuera del marco competitivo.",
+    "footer": "Fuente: COMPRANET 2010–2024 · sector infraestructura · 196,540 contratos con oferente único"
   }
 }

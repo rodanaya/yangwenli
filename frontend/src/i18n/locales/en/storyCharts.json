@@ -315,5 +315,22 @@
     "findingLabel": "FINDING",
     "findingBody": "INSABI ran four years. In all four, every health-system procurement indicator worsened: less competition, more risk, more shortage, greater year-end spend concentration. The institute was dissolved in 2023; the consequences for patients — children without chemo, adults without insulin — were not.",
     "footer": "Source: COMPRANET 2015–2023 · ASF Cuenta Pública 2020–2023 · PAHO UNOPS reports"
+  },
+  "infraestructura": {
+    "kicker": "RUBLI · Infrastructure without competition",
+    "headline": "Public works lost real competition over 14 years",
+    "lede": "Each bar shows how infrastructure contracts were awarded that year: red = direct award, orange = single-bidder tender, green = open competitive tender. Green blocks shrank from 66% to 32% between 2010 and 2024.",
+    "stat1Value": "$2.1T",
+    "stat1Label": "single bidder · 196,540 contracts",
+    "stat2Label": "average bidders / tender",
+    "stat3Label": "OECD bidders (Korea, Chile, EU)",
+    "ariaLabel": "Infrastructure contracting by year 2010–2024: direct award, single bidder, open tender percentages",
+    "directLabel": "DIRECT",
+    "singleLabel": "SINGLE BIDDER",
+    "openLabel": "OPEN TENDER",
+    "referenceLine": "50% · reference line",
+    "findingLabel": "FINDING",
+    "findingBody": "Over 14 years open competitive tendering in public works dropped from 66% to 32%. Tren Maya, Dos Bocas and AIFA were executed through military entities exempt from normal procurement rules — moving hundreds of billions of pesos outside the competitive framework.",
+    "footer": "Source: COMPRANET 2010–2024 · infrastructure sector · 196,540 single-bidder contracts"
   }
 }
