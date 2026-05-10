@@ -144,18 +144,32 @@ function App() {
               }
             />
             <Route path="/" element={<MainLayout />}>
-              {/* Front page — Executive briefing + the galleries map. */}
+              {/* 2026-05-10 Phase 7: Spatial Map IS the homepage.
+                  The Star-Fox-style /explore drill experience replaces the
+                  static Executive briefing as the front door. Executive
+                  moved to /dashboard so external links keep working via
+                  the redirects below. Spatial-nav rebuild plan:
+                  docs/SPATIAL_NAV_PLAN.md. */}
               <Route
                 index
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <SpatialMap />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* Executive briefing kept available at /dashboard. */}
+              <Route
+                path="dashboard"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Executive />
                   </SuspenseBoundary>
                 }
               />
-              {/* Retired: /executive is now /. Keep redirect for external links. */}
-              <Route path="executive" element={<Navigate to="/" replace />} />
-              <Route path="executive-summary" element={<Navigate to="/" replace />} />
+              {/* Legacy aliases — all funnel into /dashboard. */}
+              <Route path="executive" element={<Navigate to="/dashboard" replace />} />
+              <Route path="executive-summary" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="report-card"
                 element={<Navigate to="/institutions?tab=reporte" replace />}
@@ -164,8 +178,6 @@ function App() {
               <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
               <Route path="league" element={<Navigate to="/institutions" replace />} />
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
-              {/* Retired: /dashboard merged into / (Executive landing). */}
-              <Route path="dashboard" element={<Navigate to="/" replace />} />
               {/* Legacy /explore page (CardGrid catalog) — moved to /explore/legacy
                   to free /explore for the spatial-nav rebuild. */}
               <Route

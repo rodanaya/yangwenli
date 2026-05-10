@@ -69,13 +69,13 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.discover',
     items: [
-      { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
+      // 2026-05-10 Phase 7: Spatial Map promoted to /. The spatial nav is
+      // now the homepage, listed first in Discover. Executive briefing kept
+      // available at /dashboard. The Observatory storytelling surface
+      // remains at /atlas.
+      { i18nKey: 'explore', href: '/', icon: Map },
+      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'atlas', href: '/atlas', icon: Sparkles },
-      // 2026-05-09 Phase 7: spatial-nav rebuild — add the Star Fox map as
-      // a first-class entry in the Discover section, parallel to the
-      // Observatory storytelling surface. Uses the new "explore" i18n key
-      // (added to nav.json the same day).
-      { i18nKey: 'explore', href: '/explore', icon: Map },
       { i18nKey: 'newsroom', href: '/journalists', icon: Newspaper },
     ],
   },
