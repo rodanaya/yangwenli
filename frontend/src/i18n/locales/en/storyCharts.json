@@ -430,5 +430,19 @@
     "avgPrefix": "Avg",
     "legend": "National average (OECD HR benchmark: 2–15%)",
     "footer": "Source: COMPRANET 2002–2025 · RUBLI v0.8.5 · Each dot = 0.5pp · Sectors above avg at full opacity"
+  },
+  "vendorConcentration": {
+    "kicker": "RUBLI · Market Concentration",
+    "headline": "Top 20 vendors control 46.8% of federal spending",
+    "subline": "Concentration by vendor category · % of total spend · OECD limit: 5%",
+    "ariaLabel": "Vendor market concentration dot matrix, each dot 0.25pp, OECD 5% line",
+    "categoryHeader": "CATEGORY",
+    "spendHeader": "% SPEND",
+    "oecdLabel": "OECD 5%",
+    "legendCritical": "Critical",
+    "legendHigh": "High",
+    "legendMedium": "Medium",
+    "legendOecd": "OECD benchmark",
+    "footer": "Source: COMPRANET 2002–2025 · Each dot = 0.25pp · RUBLI v0.8.5 risk model"
   }
 }

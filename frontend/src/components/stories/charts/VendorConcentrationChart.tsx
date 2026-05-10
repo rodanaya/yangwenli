@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { RISK_COLORS } from '@/lib/constants'
 
 interface VendorRow {
@@ -50,6 +51,7 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 46 + DATA.length * ROW_H + 16
 
 export function VendorConcentrationChart() {
+  const { t } = useTranslation('storyCharts')
   const oecdDot = Math.round(OECD_LIMIT * DOT_PER_PCT) // = 20
 
   return (
@@ -60,13 +62,13 @@ export function VendorConcentrationChart() {
       className="bg-background-card rounded-sm p-4 border border-border"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Market Concentration
+        {t('vendorConcentration.kicker')}
       </p>
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        Top 20 vendors control 46.8% of federal spending
+        {t('vendorConcentration.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        Concentration by vendor category · % of total spend · OECD limit: 5%
+        {t('vendorConcentration.subline')}
       </p>
 
       <div className="rounded-sm border border-border bg-background p-4">
@@ -74,7 +76,7 @@ export function VendorConcentrationChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Vendor market concentration dot matrix, each dot 0.25pp, OECD 5% line"
+          aria-label={t('vendorConcentration.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -86,7 +88,7 @@ export function VendorConcentrationChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            CATEGORÍA
+            {t('vendorConcentration.categoryHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -97,7 +99,7 @@ export function VendorConcentrationChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            % GASTO
+            {t('vendorConcentration.spendHeader')}
           </text>
 
           {/* OECD 5% line */}
@@ -118,7 +120,7 @@ export function VendorConcentrationChart() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            OECD 5%
+            {t('vendorConcentration.oecdLabel')}
           </text>
 
           {/* Rows */}
@@ -179,23 +181,27 @@ export function VendorConcentrationChart() {
       </div>
 
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
-        {(['critical', 'high', 'medium'] as const).map((level) => (
-          <div key={level} className="flex items-center gap-1.5">
+        {([
+          { key: 'critical', label: t('vendorConcentration.legendCritical') },
+          { key: 'high', label: t('vendorConcentration.legendHigh') },
+          { key: 'medium', label: t('vendorConcentration.legendMedium') },
+        ] as const).map((entry) => (
+          <div key={entry.key} className="flex items-center gap-1.5">
             <div
               className="w-2 h-2 rounded-sm"
-              style={{ backgroundColor: CHART_RISK_COLORS[level] }}
+              style={{ backgroundColor: CHART_RISK_COLORS[entry.key] }}
             />
-            <span className="text-[10px] font-mono text-text-muted capitalize">{level}</span>
+            <span className="text-[10px] font-mono text-text-muted">{entry.label}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5 ml-auto">
           <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
-          <span className="text-[10px] font-mono text-text-muted">OECD benchmark</span>
+          <span className="text-[10px] font-mono text-text-muted">{t('vendorConcentration.legendOecd')}</span>
         </div>
       </div>
 
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · Each dot = 0.25pp · RUBLI v0.8.5 risk model
+        {t('vendorConcentration.footer')}
       </p>
     </motion.div>
   )

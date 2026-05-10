@@ -430,5 +430,19 @@
     "avgPrefix": "Prom.",
     "legend": "Promedio nacional (referencia HR OCDE: 2–15%)",
     "footer": "Fuente: COMPRANET 2002–2025 · RUBLI v0.8.5 · Cada punto = 0.5pp · Sectores arriba del promedio en opacidad completa"
+  },
+  "vendorConcentration": {
+    "kicker": "RUBLI · Concentración de mercado",
+    "headline": "Top 20 proveedores controlan 46.8% del gasto federal",
+    "subline": "Concentración por categoría de proveedor · % del gasto total · Límite OCDE: 5%",
+    "ariaLabel": "Matriz de puntos de concentración de mercado de proveedores, cada punto 0.25pp, línea OCDE 5%",
+    "categoryHeader": "CATEGORÍA",
+    "spendHeader": "% GASTO",
+    "oecdLabel": "OCDE 5%",
+    "legendCritical": "Crítico",
+    "legendHigh": "Alto",
+    "legendMedium": "Medio",
+    "legendOecd": "Referencia OCDE",
+    "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 0.25pp · modelo de riesgo RUBLI v0.8.5"
   }
 }
