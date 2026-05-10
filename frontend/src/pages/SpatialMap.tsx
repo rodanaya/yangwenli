@@ -117,6 +117,74 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       <div className="hidden lg:block">
         <BriefingPanel lang={lang} />
       </div>
+      {/* Mobile briefing drawer — slide-up bottom sheet on < lg breakpoints.
+          Renders the same BriefingPanel content but as a drawer the user can
+          peek (closed: 56px tab visible) or expand (open: 60vh). Touch
+          devices get the entity preview that desktop lg-grid users see in
+          the right rail. */}
+      <MobileBriefingDrawer lang={lang} />
+    </div>
+  )
+}
+
+function MobileBriefingDrawer({ lang }: { lang: 'en' | 'es' }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div
+      className="lg:hidden fixed inset-x-0 bottom-0 z-20 transition-transform duration-300 ease-out"
+      style={{
+        transform: open ? 'translateY(0)' : 'translateY(calc(100% - 44px))',
+        maxHeight: '60vh',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--color-background-card, #fff)',
+          borderTop: '1px solid var(--color-border)',
+          borderTopLeftRadius: 12,
+          borderTopRightRadius: 12,
+          boxShadow: '0 -4px 16px rgba(0,0,0,0.12)',
+          maxHeight: '60vh',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Drag handle / toggle */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="w-full flex flex-col items-center justify-center py-2 transition-colors"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--color-text-muted)',
+          }}
+          aria-label={open
+            ? (lang === 'en' ? 'Collapse briefing' : 'Cerrar resumen')
+            : (lang === 'en' ? 'Open briefing' : 'Abrir resumen')}
+        >
+          <div
+            style={{
+              width: 36,
+              height: 4,
+              borderRadius: 2,
+              background: 'var(--color-border)',
+              marginBottom: 6,
+            }}
+          />
+          <div className="text-[9px] font-mono uppercase tracking-[0.18em]">
+            {open
+              ? (lang === 'en' ? 'tap to close' : 'tocar para cerrar')
+              : (lang === 'en' ? 'briefing · tap to open' : 'resumen · tocar para abrir')}
+          </div>
+        </button>
+        {open && (
+          <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+            <BriefingPanel lang={lang} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
