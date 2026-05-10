@@ -169,5 +169,25 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Defensa tiene la tasa más alta de licitación con un solo oferente (22.1%) — casi una cuarta parte de sus \"competencias\" reciben una sola propuesta. Combinado con 56.3% de adjudicación directa, efectivamente el 78.4% de los contratos de Defensa carecen de competencia real.",
     "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · OCDE Public Procurement Report 2023"
+  },
+  "nuevosRicos": {
+    "kicker": "RUBLI · Cohortes de proveedores",
+    "headline": "Los proveedores nuevos bajo AMLO nacen más opacos — y con más dinero",
+    "subline": "Cada punto es el cohorte de un año de registro · eje X = adj. directa · eje Y = valor capturado",
+    "deltaValue": "+25pp",
+    "deltaPrefix": "DA promedio Calderón → AMLO —",
+    "deltaSuffix": "× el límite OCDE",
+    "ariaLabel": "Diagrama de dispersión de cohortes de proveedores por año de registro: tasa de adjudicación directa vs valor total capturado",
+    "oecdLabel": "OCDE máx 25% →",
+    "xAxisLabel": "TASA DE ADJUDICACIÓN DIRECTA →",
+    "yAxisLabel": "VALOR CAPTURADO (MXN B) →",
+    "legendCritical": "Riesgo crítico",
+    "legendHigh": "Alto",
+    "legendMedium": "Medio",
+    "legendLow": "Bajo",
+    "legendSizeNote": "Tamaño del punto = volumen de contratos",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "El centroide de AMLO (nodo naranja) se ubica arriba y a la derecha: más valor capturado con mayor opacidad. Los cohortes cruzan hacia zonas de riesgo alto (rojo) a medida que el eje X avanza.",
+    "footer": "Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.8.5"
   }
 }

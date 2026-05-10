@@ -169,5 +169,25 @@
     "findingLabel": "FINDING",
     "findingBody": "Defense has the highest single-bidder tender rate (22.1%) — nearly a quarter of its \"competitive\" tenders receive only one proposal. Combined with 56.3% direct award, effectively 78.4% of Defense contracts lack real competition.",
     "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · OECD Public Procurement Report 2023"
+  },
+  "nuevosRicos": {
+    "kicker": "RUBLI · Vendor cohorts",
+    "headline": "Vendors created under AMLO are born more opaque — and richer",
+    "subline": "Each point is one registration-year cohort · X = direct award · Y = value captured",
+    "deltaValue": "+25pp",
+    "deltaPrefix": "Average DA Calderón → AMLO —",
+    "deltaSuffix": "× the OECD limit",
+    "ariaLabel": "Scatter plot of vendor cohorts by registration year: direct award rate versus total value captured",
+    "oecdLabel": "OECD max 25% →",
+    "xAxisLabel": "DIRECT AWARD RATE →",
+    "yAxisLabel": "VALUE CAPTURED (MXN B) →",
+    "legendCritical": "Critical risk",
+    "legendHigh": "High",
+    "legendMedium": "Medium",
+    "legendLow": "Low",
+    "legendSizeNote": "Point size = contract volume",
+    "findingLabel": "FINDING",
+    "findingBody": "AMLO's centroid (orange node) sits up and to the right: more value captured with greater opacity. Cohorts move into high-risk territory (red) as the X axis advances.",
+    "footer": "Source: COMPRANET · cohorts by year of first federal registration · RUBLI v0.8.5"
   }
 }
