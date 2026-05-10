@@ -8,9 +8,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 
 export function StoryAdminFingerprints() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -20,37 +22,35 @@ export function StoryAdminFingerprints() {
     >
       {/* Section overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Political Analysis
+        {t('adminFingerprints.kicker')}
       </p>
 
       {/* Editorial headline */}
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Each president left a distinct corruption fingerprint in the data
+        {t('adminFingerprints.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Five radar charts reveal how procurement practices shifted with each administration.
-        The five dimensions — risk score, high-risk rate, direct award percentage, total value,
-        and contract volume — create a unique &ldquo;fingerprint&rdquo; for each presidency.
+        {t('adminFingerprints.lede')}
       </p>
 
       {/* Key finding strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-text-muted">7.59%</div>
+          <div className="text-lg font-mono font-bold text-text-muted">{t('adminFingerprints.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Pena Nieto HR · lowest of all 5
+            {t('adminFingerprints.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-high">79.5%</div>
+          <div className="text-lg font-mono font-bold text-risk-high">{t('adminFingerprints.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            AMLO direct awards · <span className="text-[color:var(--color-oecd)]">OECD: max 25%</span>
+            {t('adminFingerprints.stat2Label')} · <span className="text-[color:var(--color-oecd)]">{t('adminFingerprints.stat2OecdNote')}</span>
           </div>
         </div>
         <div className="border-l-2 border-pink-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-pink-400">12.0%</div>
+          <div className="text-lg font-mono font-bold text-pink-400">{t('adminFingerprints.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            Sheinbaum HR · highest (early data)
+            {t('adminFingerprints.stat3Label')}
           </div>
         </div>
       </div>
@@ -64,29 +64,25 @@ export function StoryAdminFingerprints() {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-3">
           <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-            HALLAZGO
+            {t('adminFingerprints.findingLabel')}
           </p>
           <p className="text-xs text-text-secondary leading-relaxed">
-            AMLO&apos;s administration increased direct awards to 79.5% — the highest in 23
-            years and 3.2x the OECD recommended maximum of 25%. Despite anti-corruption
-            rhetoric, the data shows less competition, not more.
+            {t('adminFingerprints.findingBody')}
           </p>
         </div>
         <div className="rounded-sm border border-border bg-background-card p-3">
           <p className="text-xs font-mono uppercase tracking-wide text-text-muted mb-1">
-            CAVEAT
+            {t('adminFingerprints.caveatLabel')}
           </p>
           <p className="text-xs text-text-secondary leading-relaxed">
-            Sheinbaum data covers only 2025 (partial year). The 12.0% high-risk rate may
-            normalize as more contracts are recorded. Fox-era data (2002-2006) has the lowest
-            data quality (Structure A), making risk comparisons less reliable for that period.
+            {t('adminFingerprints.caveatBody')}
           </p>
         </div>
       </div>
 
       {/* Source */}
       <p className="text-[10px] text-text-muted">
-        Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v0.8.5 model · 5 administrations
+        {t('adminFingerprints.footer')}
       </p>
     </motion.div>
   )

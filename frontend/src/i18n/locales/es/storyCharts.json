@@ -103,5 +103,22 @@
     "metricHighRisk": "Riesgo alto",
     "metricConcentration": "Concentración",
     "footer": "Fuente: COMPRANET 2002–2025 · Cada punto = 1pp · RUBLI v0.8.5"
+  },
+  "adminFingerprints": {
+    "kicker": "RUBLI · Análisis político",
+    "headline": "Cada presidente dejó una huella de corrupción distinta en los datos",
+    "lede": "Cinco gráficas radar revelan cómo cambiaron las prácticas de adjudicación con cada administración. Las cinco dimensiones — puntaje de riesgo, tasa de alto riesgo, porcentaje de adjudicación directa, valor total y volumen de contratos — crean una “huella” única para cada presidencia.",
+    "stat1Value": "7.59%",
+    "stat1Label": "HR Peña Nieto · la más baja de las 5",
+    "stat2Value": "79.5%",
+    "stat2Label": "Adj. directa AMLO",
+    "stat2OecdNote": "OCDE: máx. 25%",
+    "stat3Value": "12.0%",
+    "stat3Label": "HR Sheinbaum · la más alta (datos iniciales)",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "La administración AMLO aumentó la adjudicación directa al 79.5% — la más alta en 23 años y 3.2× el máximo recomendado por la OCDE del 25%. A pesar del discurso anticorrupción, los datos muestran menos competencia, no más.",
+    "caveatLabel": "ADVERTENCIA",
+    "caveatBody": "Los datos de Sheinbaum cubren solo 2025 (año parcial). La tasa de 12.0% de alto riesgo podría normalizarse al registrarse más contratos. Los datos de la era Fox (2002–2006) tienen la menor calidad (Estructura A), haciendo menos confiables las comparaciones de riesgo en ese período.",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · modelo RUBLI v0.8.5 · 5 administraciones"
   }
 }

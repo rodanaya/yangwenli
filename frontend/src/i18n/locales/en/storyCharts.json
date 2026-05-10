@@ -103,5 +103,22 @@
     "metricHighRisk": "High Risk",
     "metricConcentration": "Concentration",
     "footer": "Source: COMPRANET 2002–2025 · Each dot = 1pp · RUBLI v0.8.5"
+  },
+  "adminFingerprints": {
+    "kicker": "RUBLI · Political Analysis",
+    "headline": "Each president left a distinct corruption fingerprint in the data",
+    "lede": "Five radar charts reveal how procurement practices shifted with each administration. The five dimensions — risk score, high-risk rate, direct award percentage, total value, and contract volume — create a unique “fingerprint” for each presidency.",
+    "stat1Value": "7.59%",
+    "stat1Label": "Peña Nieto HR · lowest of all 5",
+    "stat2Value": "79.5%",
+    "stat2Label": "AMLO direct awards",
+    "stat2OecdNote": "OECD: max 25%",
+    "stat3Value": "12.0%",
+    "stat3Label": "Sheinbaum HR · highest (early data)",
+    "findingLabel": "FINDING",
+    "findingBody": "AMLO's administration increased direct awards to 79.5% — the highest in 23 years and 3.2× the OECD recommended maximum of 25%. Despite anti-corruption rhetoric, the data shows less competition, not more.",
+    "caveatLabel": "CAVEAT",
+    "caveatBody": "Sheinbaum data covers only 2025 (partial year). The 12.0% high-risk rate may normalize as more contracts are recorded. Fox-era data (2002–2006) has the lowest data quality (Structure A), making risk comparisons less reliable for that period.",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · RUBLI v0.8.5 model · 5 administrations"
   }
 }
