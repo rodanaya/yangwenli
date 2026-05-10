@@ -687,24 +687,24 @@ export function Methodology() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                How we score corruption risk.
+                {t('heroHeader.title')}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                METHODOLOGY · TRANSPARENCY REPORT · v0.8.5
+                {t('heroHeader.subtitle')}
               </p>
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.785</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Test AUC</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.testAuc')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">11.01%</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk rate</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.highRiskRate')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,401</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">GT cases</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.gtCases')}</div>
               </div>
             </div>
           </div>
@@ -753,7 +753,7 @@ export function Methodology() {
           <button
             onClick={() => window.print()}
             className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-            title="Export as PDF"
+            title={t('heroHeader.exportPdf')}
           >
             <Printer className="w-3.5 h-3.5" />
             PDF
@@ -764,18 +764,18 @@ export function Methodology() {
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
           <PullQuote
             stat="0.785"
-            label="Test AUC"
-            source="Vendor-stratified 70/30 hold-out"
+            label={t('pullQuotes.testAucLabel')}
+            source={t('pullQuotes.testAucSource')}
           />
           <PullQuote
             stat="11.01%"
-            label="High-risk rate"
-            source="OECD benchmark: 2–15%"
+            label={t('pullQuotes.highRiskLabel')}
+            source={t('pullQuotes.highRiskSource')}
           />
           <PullQuote
             stat="1,401"
-            label="Ground-truth cases"
-            source="861 vendors · ~302K contracts"
+            label={t('pullQuotes.gtCasesLabel')}
+            source={t('pullQuotes.gtCasesSource')}
           />
         </div>
       </header>
@@ -786,7 +786,7 @@ export function Methodology() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        aria-label="Additional dataset context"
+        aria-label={t('heroHeader.kpiAria')}
       >
         {(
           [
@@ -812,13 +812,11 @@ export function Methodology() {
             <div className="flex items-center gap-2 mb-1">
               <Shield className="h-4 w-4 text-accent" aria-hidden="true" />
               <span className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-accent">
-                HOW TO INTERPRET FINDINGS · CONFIDENCE TIERS
+                {t('tiers.kicker')}
               </span>
             </div>
             <p className="text-xs text-text-muted mt-1 max-w-2xl">
-              Not all RUBLI findings carry equal certainty. Every claim — whether in a risk score,
-              an ARIA flag, or a story — belongs to one of three tiers. The tier determines the
-              language you should use when citing or reporting it.
+              {t('tiers.intro')}
             </p>
           </div>
           <div className="px-6 pb-6 border-t border-border/30">
@@ -827,80 +825,76 @@ export function Methodology() {
               {/* Tier I */}
               <div className="rounded-sm border border-risk-critical/25 bg-risk-critical/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">TIER I</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">{t('tiers.tierILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Externally Confirmed
+                    {t('tiers.tierITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  An independent authority — SAT, SFP, or a documented judicial process — has
-                  formally established fraud, simulated operations, or a procurement irregularity.
+                  {t('tiers.tierIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Sources in RUBLI</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.sourcesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· SAT EFOS Definitivo list (13,960 vendors)</li>
-                    <li>· SFP sanctions registry (544 vendors)</li>
-                    <li>· Ground truth cases (1,401 documented investigations)</li>
+                    <li>{t('tiers.tierISource1')}</li>
+                    <li>{t('tiers.tierISource2')}</li>
+                    <li>{t('tiers.tierISource3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-critical/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-risk-critical italic">"confirmed" · "documented" · "formally established"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-critical italic">{t('tiers.tierISay')}</p>
                 </div>
               </div>
 
               {/* Tier II */}
               <div className="rounded-sm border border-risk-high/25 bg-risk-high/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">TIER II</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">{t('tiers.tierIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Corroborated
+                    {t('tiers.tierIITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Algorithmic risk signal plus at least one independent external source pointing
-                  in the same direction. Neither source alone is conclusive; together they
-                  warrant priority investigation.
+                  {t('tiers.tierIIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Examples</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.examplesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· Critical risk score + EFOS Presunto match</li>
-                    <li>· Multiple independent ARIA patterns (P2 + P3)</li>
-                    <li>· High risk + RUPC exclusion list</li>
+                    <li>{t('tiers.tierIIEx1')}</li>
+                    <li>{t('tiers.tierIIEx2')}</li>
+                    <li>{t('tiers.tierIIEx3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-high/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-risk-high italic">"corroborated by" · "flagged and independently noted" · "warrants investigation"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-high italic">{t('tiers.tierIISay')}</p>
                 </div>
               </div>
 
               {/* Tier III */}
               <div className="rounded-sm border border-border/40 bg-background-elevated/30 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">TIER III</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">{t('tiers.tierIIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Statistical Pattern
+                    {t('tiers.tierIIITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  RUBLI's algorithm detected procurement characteristics that statistically
-                  resemble known corruption cases. No external source corroborates the flag.
-                  <strong className="text-text-primary"> Most RUBLI findings are Tier III.</strong>
+                  {t('tiers.tierIIIBodyStart')}
+                  <strong className="text-text-primary">{t('tiers.tierIIIBodyStrong')}</strong>
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Scale</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.scaleLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· 412K contracts at high/critical risk score</li>
-                    <li>· 6,034 vendors with shell-company behavioral pattern</li>
-                    <li>· Collusion ring detections (co-bidding heuristic)</li>
+                    <li>{t('tiers.tierIIIEx1')}</li>
+                    <li>{t('tiers.tierIIIEx2')}</li>
+                    <li>{t('tiers.tierIIIEx3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-border/30">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-text-secondary italic">"statistical pattern consistent with" · "flagged for investigation" · "behavioral anomaly"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-text-secondary italic">{t('tiers.tierIIISay')}</p>
                 </div>
               </div>
 
@@ -908,12 +902,8 @@ export function Methodology() {
 
             <div className="mt-4 p-3 rounded-md bg-border/10 border border-border/30">
               <p className="text-xs text-text-muted leading-relaxed">
-                <span className="font-semibold text-text-secondary">Critical rule: </span>
-                Never use Tier I language ("confirmed," "proven") for Tier III findings. The RUBLI
-                risk score is not a verdict — it is a triage signal. A score of 0.90 means strong
-                resemblance to documented corruption patterns, not a 90% probability of guilt.
-                Shell company behavioral pattern flags (P2 pattern) have a 0.7% SAT confirmation rate —
-                the other 99.3% are unconfirmed algorithmic detections.
+                <span className="font-semibold text-text-secondary">{t('tiers.criticalRuleLabel')} </span>
+                {t('tiers.criticalRuleBody')}
               </p>
             </div>
           </div>
