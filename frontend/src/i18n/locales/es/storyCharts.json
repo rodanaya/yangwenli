@@ -405,5 +405,19 @@
     "readGuideTealSuffix": " son protectores. El tamaño del pétalo es proporcional a la contribución SHAP — pétalos más grandes elevan el puntaje. El centro muestra el puntaje global.",
     "footer": "Fuente: explicaciones SHAP RUBLI v6.5 · tabla vendor_shap_v52",
     "ariaLink": "Ver cola de investigación ARIA"
+  },
+  "moneySankey": {
+    "kicker": "RUBLI · Análisis de flujo de dinero",
+    "headline": "3 intermediarios capturaron MXN 270B en compras federales de salud",
+    "lede": "Entre 2019 y 2023, tres distribuidoras farmacéuticas absorbieron la gran mayoría del gasto en medicamentos de IMSS, ISSSTE e INSABI. Las tres puntúan arriba de 0.95 en el modelo de riesgo RUBLI — el tier más alto posible.",
+    "stat1Label": "flujo total a través de 3 proveedores",
+    "stat2LabelPrefix": "contratos · prom. MXN",
+    "stat2LabelSuffix": "M c/u",
+    "stat3Value": "97%",
+    "stat3Label": "puntaje promedio · todos críticos",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Un solo proveedor — Farmacos Especializados — recibió MXN 136B de dos instituciones (IMSS + ISSSTE), equivalente al 50% del flujo total identificado. Este nivel de concentración excede por mucho las guías de diversificación de adjudicaciones de la OCDE.",
+    "footer": "Fuente: COMPRANET 2019–2023 · modelo de riesgo RUBLI v0.8.5",
+    "ariaLink": "Investigar proveedores"
   }
 }

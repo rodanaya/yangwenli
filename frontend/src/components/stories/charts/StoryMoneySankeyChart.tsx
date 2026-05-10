@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
 import { MoneySankeyChart } from '@/components/charts/MoneySankeyChart'
 
@@ -47,6 +48,7 @@ const TOTAL_MXN = PHARMA_FLOWS.reduce((s, f) => s + f.value, 0)
 const TOTAL_CONTRACTS = PHARMA_FLOWS.reduce((s, f) => s + f.contracts, 0)
 
 export function StoryMoneySankeyChart() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -56,17 +58,15 @@ export function StoryMoneySankeyChart() {
     >
       {/* Section overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Money Flow Analysis
+        {t('moneySankey.kicker')}
       </p>
 
       {/* Editorial headline */}
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        3 intermediaries captured MXN 270B in federal health procurement
+        {t('moneySankey.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Between 2019 and 2023, three pharmaceutical distributors absorbed the vast majority of
-        IMSS, ISSSTE, and INSABI drug spending. All three score above 0.95 on the RUBLI risk model
-        — the highest possible tier.
+        {t('moneySankey.lede')}
       </p>
 
       {/* Key stats row */}
@@ -76,7 +76,7 @@ export function StoryMoneySankeyChart() {
             MXN {(TOTAL_MXN / 1e9).toFixed(0)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            total flow through 3 vendors
+            {t('moneySankey.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
@@ -84,13 +84,13 @@ export function StoryMoneySankeyChart() {
             {TOTAL_CONTRACTS.toLocaleString()}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            contracts · avg MXN {(TOTAL_MXN / TOTAL_CONTRACTS / 1e6).toFixed(0)}M each
+            {`${t('moneySankey.stat2LabelPrefix')} ${(TOTAL_MXN / TOTAL_CONTRACTS / 1e6).toFixed(0)}${t('moneySankey.stat2LabelSuffix')}`}
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">97%</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('moneySankey.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            avg risk score · all critical
+            {t('moneySankey.stat3Label')}
           </div>
         </div>
       </div>
@@ -103,26 +103,24 @@ export function StoryMoneySankeyChart() {
       {/* Finding callout */}
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('moneySankey.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          A single vendor — Farmacos Especializados — received MXN 136B from two institutions
-          (IMSS + ISSSTE), equivalent to 50% of total identified flow. This level of concentration
-          far exceeds OECD procurement diversification guidelines.
+          {t('moneySankey.findingBody')}
         </p>
       </div>
 
       {/* Source line */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-text-muted">
-          Source: COMPRANET 2019-2023 · RUBLI risk model v0.8.5
+          {t('moneySankey.footer')}
         </p>
         <a
           href="/aria"
           className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
         >
           <ExternalLink className="h-3 w-3" />
-          Investigate vendors
+          {t('moneySankey.ariaLink')}
         </a>
       </div>
     </motion.div>
