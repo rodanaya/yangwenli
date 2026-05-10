@@ -137,5 +137,19 @@
     "readGuideOuterLabel": "Outer ring:",
     "readGuideOuterBody": " each segment is one of 12 sectors, sized by that sector's spending under the corresponding president. Hover to see exact values.",
     "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · 12 sectors"
+  },
+  "riskCalendar": {
+    "kicker": "RUBLI · Risk Calendar",
+    "headline": "Ten years of procurement risk — December never cools down",
+    "lede": "Each cell in this heatmap represents one month's average risk score across all federal contracts. The pattern is unmistakable: the rightmost column (December) is consistently the darkest shade. The 2020 row shows an exceptional horizontal streak — COVID emergency procurement pushed risk scores up across all months.",
+    "legendHigh": "High/Critical risk months",
+    "legendMedium": "Medium risk",
+    "legendLow": "Low risk",
+    "hoverHint": "Hover cells for detail",
+    "covidLabel": "2020 — COVID SPIKE",
+    "covidBody": "Emergency procurement bypassed normal competitive procedures. Average risk scores reached their highest sustained levels in the 10-year window.",
+    "decemberLabel": "DECEMBER PATTERN",
+    "decemberBody": "Year-end budget exhaustion is visible in every single row. December risk averages are 64% higher than the October trough — the most reliable seasonal signal in the data.",
+    "footer": "Source: COMPRANET 2016–2025 · monthly average risk scores · RUBLI v0.8.5"
   }
 }

@@ -7,9 +7,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
 
 export function StoryRiskCalendar() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -19,35 +21,32 @@ export function StoryRiskCalendar() {
     >
       {/* Section overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Risk Calendar
+        {t('riskCalendar.kicker')}
       </p>
 
       {/* Editorial headline */}
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Ten years of procurement risk — December never cools down
+        {t('riskCalendar.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Each cell in this heatmap represents one month&apos;s average risk score across all
-        federal contracts. The pattern is unmistakable: the rightmost column (December)
-        is consistently the darkest shade. The 2020 row shows an exceptional horizontal
-        streak — COVID emergency procurement pushed risk scores up across all months.
+        {t('riskCalendar.lede')}
       </p>
 
       {/* Annotation strip */}
       <div className="flex items-center gap-4 py-2 border-y border-border">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-red-400" />
-          <span className="text-[10px] text-text-secondary">High/Critical risk months</span>
+          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-amber-400" />
-          <span className="text-[10px] text-text-secondary">Medium risk</span>
+          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendMedium')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-text-muted" />
-          <span className="text-[10px] text-text-secondary">Low risk</span>
+          <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendLow')}</span>
         </div>
-        <span className="text-[10px] text-text-muted ml-auto">Hover cells for detail</span>
+        <span className="text-[10px] text-text-muted ml-auto">{t('riskCalendar.hoverHint')}</span>
       </div>
 
       {/* Chart */}
@@ -58,25 +57,22 @@ export function StoryRiskCalendar() {
       {/* Year annotations */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-          <div className="text-[10px] font-mono text-risk-critical uppercase tracking-wide">2020 — COVID SPIKE</div>
+          <div className="text-[10px] font-mono text-risk-critical uppercase tracking-wide">{t('riskCalendar.covidLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
-            Emergency procurement bypassed normal competitive procedures. Average risk
-            scores reached their highest sustained levels in the 10-year window.
+            {t('riskCalendar.covidBody')}
           </p>
         </div>
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-          <div className="text-[10px] font-mono text-risk-high uppercase tracking-wide">DECEMBER PATTERN</div>
+          <div className="text-[10px] font-mono text-risk-high uppercase tracking-wide">{t('riskCalendar.decemberLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
-            Year-end budget exhaustion is visible in every single row. December risk averages
-            are 64% higher than the October trough — the most reliable seasonal signal in
-            the data.
+            {t('riskCalendar.decemberBody')}
           </p>
         </div>
       </div>
 
       {/* Source */}
       <p className="text-[10px] text-text-muted">
-        Source: COMPRANET 2016-2025 · monthly average risk scores · RUBLI v0.8.5
+        {t('riskCalendar.footer')}
       </p>
     </motion.div>
   )

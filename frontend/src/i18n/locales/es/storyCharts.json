@@ -137,5 +137,19 @@
     "readGuideOuterLabel": "Anillo exterior:",
     "readGuideOuterBody": " cada segmento es uno de 12 sectores, dimensionado por el gasto del sector bajo el presidente correspondiente. Pasa el cursor para ver valores exactos.",
     "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · 12 sectores"
+  },
+  "riskCalendar": {
+    "kicker": "RUBLI · Calendario de riesgo",
+    "headline": "Diez años de riesgo en adjudicaciones — diciembre nunca se enfría",
+    "lede": "Cada celda en este mapa de calor representa el puntaje promedio de riesgo de un mes a través de todos los contratos federales. El patrón es inconfundible: la columna derecha (diciembre) es consistentemente la más oscura. La fila de 2020 muestra una racha horizontal excepcional — la adjudicación de emergencia por COVID elevó los puntajes en todos los meses.",
+    "legendHigh": "Meses de riesgo alto/crítico",
+    "legendMedium": "Riesgo medio",
+    "legendLow": "Riesgo bajo",
+    "hoverHint": "Pasa el cursor sobre las celdas para detalle",
+    "covidLabel": "2020 — PICO COVID",
+    "covidBody": "La adjudicación de emergencia eludió los procedimientos competitivos normales. Los puntajes promedio de riesgo alcanzaron sus niveles sostenidos más altos en la ventana de 10 años.",
+    "decemberLabel": "PATRÓN DE DICIEMBRE",
+    "decemberBody": "El agotamiento del presupuesto a fin de año es visible en cada fila. Los promedios de riesgo de diciembre son 64% más altos que el mínimo de octubre — la señal estacional más confiable en los datos.",
+    "footer": "Fuente: COMPRANET 2016–2025 · puntajes promedio mensuales de riesgo · RUBLI v0.8.5"
   }
 }
