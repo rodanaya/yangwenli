@@ -254,5 +254,22 @@
     "findingStrong": "6% de contratos cargan 42% del dinero",
     "findingSuffix": ". El patrón es consistente en los 12 sectores — la corrupción gravita hacia los contratos grandes.",
     "footer": "Fuente: 3.05M contratos · RUBLI v0.8.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25"
+  },
+  "avalanchaDiciembre": {
+    "kicker": "RUBLI · Avalancha de Diciembre",
+    "headline": "51.4 mil millones en 31 días — el mes donde el presupuesto huye del calendario",
+    "lede": "Gasto federal por mes en 2014 · cada punto representa mil millones de pesos. Diciembre triplicó el promedio mensual porque la Ley de Presupuesto obliga a devolver lo no ejercido al Tesoro antes del 31.",
+    "stat1Value": "$51.4B",
+    "stat1Label": "DIC 2014 · pico histórico",
+    "stat2Value": "7,215",
+    "stat2Label": "contratos en 31 días",
+    "stat3Value": "233/día",
+    "stat3Label": "incluye sábados y domingos",
+    "ariaLabel": "Gasto federal mensual 2014: enero a noviembre línea base, diciembre explota a 51.4B MXN",
+    "averagePrefix": "PROM",
+    "annotation": "2.3× el promedio anual",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "Diciembre concentra entre 2.5 y 4× el gasto mensual promedio en los últimos 23 años — patrón bipartidista. La urgencia es contable, no operativa: entregas se programan para febrero o marzo del año siguiente.",
+    "footer": "Fuente: COMPRANET 2014 · 7,215 contratos · Ley Federal de Presupuesto y Responsabilidad Hacendaria"
   }
 }

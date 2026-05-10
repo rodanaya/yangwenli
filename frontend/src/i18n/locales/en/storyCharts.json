@@ -254,5 +254,22 @@
     "findingStrong": "6% of contracts carry 42% of the money",
     "findingSuffix": ". The pattern holds across all 12 sectors — corruption gravitates toward large contracts.",
     "footer": "Source: 3.05M contracts · RUBLI v0.8.5 · thresholds critical≥0.60, high≥0.40, medium≥0.25"
+  },
+  "avalanchaDiciembre": {
+    "kicker": "RUBLI · December Avalanche",
+    "headline": "51.4 billion in 31 days — the month the budget flees the calendar",
+    "lede": "Federal monthly spending in 2014 · each dot represents one billion pesos. December tripled the monthly average because the Budget Law forces unspent funds to return to the Treasury before the 31st.",
+    "stat1Value": "$51.4B",
+    "stat1Label": "DEC 2014 · all-time peak",
+    "stat2Value": "7,215",
+    "stat2Label": "contracts in 31 days",
+    "stat3Value": "233/day",
+    "stat3Label": "includes Saturdays and Sundays",
+    "ariaLabel": "Monthly federal spending 2014: January through November baseline, December explodes to 51.4B MXN",
+    "averagePrefix": "AVG",
+    "annotation": "2.3× the annual average",
+    "findingLabel": "FINDING",
+    "findingBody": "December concentrates 2.5–4× the monthly average spending across the last 23 years — a bipartisan pattern. The urgency is accounting-driven, not operational: deliveries are scheduled for February or March of the following year.",
+    "footer": "Source: COMPRANET 2014 · 7,215 contracts · Federal Budget and Treasury Responsibility Law"
   }
 }
