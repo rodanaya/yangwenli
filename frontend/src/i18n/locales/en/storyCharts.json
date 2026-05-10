@@ -290,5 +290,30 @@
     "findingLabel": "FINDING",
     "findingBody": "Seven companies with shared addresses, crossed legal representatives, and a single ultimate beneficial owner concentrated MXN 85B in federal works. In COMPRANET each contract looks legal. Summed, they reveal an institutional capture pattern that no isolated bid could have detected.",
     "footer": "Source: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · approximate network values"
+  },
+  "insabi": {
+    "kicker": "RUBLI · Seguro Popular vs INSABI · health sector",
+    "headline": "The INSABI experiment: four indicators, all worse after 2020",
+    "lede": "Direct comparison between the Seguro Popular era (2015–2019) and the INSABI era (2020–2023) in the same health sector. Each indicator is a dot strip: green when Seguro Popular was better, red when INSABI worsened the metric.",
+    "stat1Value": "~95%",
+    "stat1Label": "INSABI direct award · vs. ~78% health avg.",
+    "stat2Value": "18.2B",
+    "stat2Label": "MXN untraced · ASF 2023",
+    "stat3Value": "12B",
+    "stat3Label": "MXN estimated overpricing vs. tender",
+    "metricCompetition": "Real competition",
+    "metricRisk": "Average risk",
+    "metricShortage": "Pediatric shortage",
+    "metricDecember": "December spend concentration",
+    "ariaLabel": "Seguro Popular vs INSABI comparison chart",
+    "spName": "Seguro Popular",
+    "spYears": "2015–2019",
+    "insabiName": "INSABI",
+    "insabiYears": "2020–2023",
+    "vsLabel": "VS",
+    "legendBottom": "green = healthy metric · red = deteriorated · each dot = 2pp",
+    "findingLabel": "FINDING",
+    "findingBody": "INSABI ran four years. In all four, every health-system procurement indicator worsened: less competition, more risk, more shortage, greater year-end spend concentration. The institute was dissolved in 2023; the consequences for patients — children without chemo, adults without insulin — were not.",
+    "footer": "Source: COMPRANET 2015–2023 · ASF Cuenta Pública 2020–2023 · PAHO UNOPS reports"
   }
 }

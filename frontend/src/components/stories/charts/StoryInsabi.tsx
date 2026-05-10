@@ -7,10 +7,12 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface EraMetric {
   key: string
-  label: string
+  // i18n key under storyCharts.insabi.metricXxx — replaces the hardcoded label.
+  labelKey: 'Competition' | 'Risk' | 'Shortage' | 'December'
   seguroPopular: number // 0-100 for strip
   insabi: number        // 0-100 for strip
   spValue: string
@@ -22,7 +24,7 @@ interface EraMetric {
 const METRICS: EraMetric[] = [
   {
     key: 'competition',
-    label: 'Competencia real',
+    labelKey: 'Competition',
     seguroPopular: 22,
     insabi: 5,
     spValue: '22%',
@@ -31,7 +33,7 @@ const METRICS: EraMetric[] = [
   },
   {
     key: 'risk',
-    label: 'Riesgo promedio',
+    labelKey: 'Risk',
     seguroPopular: 28,
     insabi: 48,
     spValue: '0.28',
@@ -40,7 +42,7 @@ const METRICS: EraMetric[] = [
   },
   {
     key: 'shortage',
-    label: 'Desabasto pediátrico',
+    labelKey: 'Shortage',
     seguroPopular: 8,
     insabi: 74,
     spValue: '~8%',
@@ -49,7 +51,7 @@ const METRICS: EraMetric[] = [
   },
   {
     key: 'decemberSpike',
-    label: 'Gasto concentrado diciembre',
+    labelKey: 'December',
     seguroPopular: 18,
     insabi: 61,
     spValue: '18%',
@@ -71,6 +73,7 @@ const W = LABEL_W + STRIP_W * 2 + VALUE_W * 2 + COL_GAP + 16
 const H = 96 + METRICS.length * (STRIP_H + 22) + 24
 
 export function StoryInsabi() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -79,35 +82,33 @@ export function StoryInsabi() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Seguro Popular vs INSABI · sector salud
+        {t('insabi.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        El experimento INSABI: cuatro indicadores, todos peor después de 2020
+        {t('insabi.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Comparación directa entre la era Seguro Popular (2015-2019) y la era INSABI
-        (2020-2023) en el mismo sector salud. Cada indicador es una tira de puntos:
-        verde cuando Seguro Popular era mejor, rojo cuando INSABI empeoró la métrica.
+        {t('insabi.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">~95%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">{t('insabi.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            adj. directa INSABI · vs. ~78% promedio salud
+            {t('insabi.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">18.2B</div>
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">{t('insabi.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            MXN sin trazabilidad · ASF 2023
+            {t('insabi.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">12B</div>
+          <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">{t('insabi.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            MXN sobreprecio estimado vs. licitación
+            {t('insabi.stat3Label')}
           </div>
         </div>
       </div>
@@ -117,14 +118,14 @@ export function StoryInsabi() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[720px]"
           role="img"
-          aria-label="Seguro Popular vs INSABI comparison chart"
+          aria-label={t('insabi.ariaLabel')}
         >
           {/* Headers */}
           <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-sector-hacienda)" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
-            Seguro Popular
+            {t('insabi.spName')}
           </text>
           <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
-            2015-2019
+            {t('insabi.spYears')}
           </text>
 
           <text
@@ -136,7 +137,7 @@ export function StoryInsabi() {
             fontFamily="var(--font-family-serif)"
             fontWeight={700}
           >
-            INSABI
+            {t('insabi.insabiName')}
           </text>
           <text
             x={LABEL_W + STRIP_W + VALUE_W + COL_GAP + STRIP_W / 2 + VALUE_W / 2}
@@ -147,7 +148,7 @@ export function StoryInsabi() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.08em"
           >
-            2020-2023
+            {t('insabi.insabiYears')}
           </text>
 
           {/* VS divider */}
@@ -169,7 +170,7 @@ export function StoryInsabi() {
             fontFamily="var(--font-family-mono)"
             fontWeight={700}
           >
-            VS
+            {t('insabi.vsLabel')}
           </text>
 
           {/* Rows */}
@@ -199,7 +200,7 @@ export function StoryInsabi() {
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
-                  {m.label}
+                  {t(`insabi.metric${m.labelKey}`)}
                 </text>
 
                 {/* SP strip */}
@@ -271,26 +272,22 @@ export function StoryInsabi() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            verde = métrica sana · rojo = métrica deteriorada · cada punto = 2pp
+            {t('insabi.legendBottom')}
           </text>
         </svg>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('insabi.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          INSABI operó cuatro años. En los cuatro, todos los indicadores de salud del
-          sistema de compras empeoraron: menos competencia, más riesgo, más desabasto,
-          mayor concentración de gasto a fin de año. El instituto desapareció en 2023;
-          las consecuencias para los pacientes — niños sin quimioterapia, adultos sin
-          insulina — no.
+          {t('insabi.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2015-2023 · ASF Cuenta Pública 2020-2023 · PAHO reportes UNOPS
+        {t('insabi.footer')}
       </p>
     </motion.div>
   )

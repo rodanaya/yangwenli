@@ -290,5 +290,30 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "Siete empresas con domicilios compartidos, representantes legales cruzados y un solo beneficiario económico final concentraron MXN 85B en obras federales. En COMPRANET cada contrato luce legal. Sumados, revelan un patrón de captura institucional que ninguna licitación aislada podría haber detectado.",
     "footer": "Fuente: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · valores aproximados de red"
+  },
+  "insabi": {
+    "kicker": "RUBLI · Seguro Popular vs INSABI · sector salud",
+    "headline": "El experimento INSABI: cuatro indicadores, todos peor después de 2020",
+    "lede": "Comparación directa entre la era Seguro Popular (2015–2019) y la era INSABI (2020–2023) en el mismo sector salud. Cada indicador es una tira de puntos: verde cuando Seguro Popular era mejor, rojo cuando INSABI empeoró la métrica.",
+    "stat1Value": "~95%",
+    "stat1Label": "adj. directa INSABI · vs. ~78% promedio salud",
+    "stat2Value": "18.2B",
+    "stat2Label": "MXN sin trazabilidad · ASF 2023",
+    "stat3Value": "12B",
+    "stat3Label": "MXN sobreprecio estimado vs. licitación",
+    "metricCompetition": "Competencia real",
+    "metricRisk": "Riesgo promedio",
+    "metricShortage": "Desabasto pediátrico",
+    "metricDecember": "Gasto concentrado diciembre",
+    "ariaLabel": "Gráfico de comparación Seguro Popular vs INSABI",
+    "spName": "Seguro Popular",
+    "spYears": "2015–2019",
+    "insabiName": "INSABI",
+    "insabiYears": "2020–2023",
+    "vsLabel": "VS",
+    "legendBottom": "verde = métrica sana · rojo = métrica deteriorada · cada punto = 2pp",
+    "findingLabel": "HALLAZGO",
+    "findingBody": "INSABI operó cuatro años. En los cuatro, todos los indicadores de salud del sistema de compras empeoraron: menos competencia, más riesgo, más desabasto, mayor concentración de gasto a fin de año. El instituto desapareció en 2023; las consecuencias para los pacientes — niños sin quimioterapia, adultos sin insulina — no.",
+    "footer": "Fuente: COMPRANET 2015–2023 · ASF Cuenta Pública 2020–2023 · reportes PAHO UNOPS"
   }
 }
