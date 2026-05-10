@@ -370,5 +370,17 @@
     "headline": "COVID-19 drove a 30% spike in procurement risk — and it never fully came back down",
     "subline": "High-risk rate and avg risk score · 2010–2025 · Scandal annotations marked",
     "footer": "Source: COMPRANET 2010–2025 · RUBLI v0.8.5 risk model · Scandal dates from public record"
+  },
+  "seasonality": {
+    "kicker": "RUBLI · Temporal Pattern",
+    "headline": "Every December, procurement risk spikes 64% — for 23 consecutive years",
+    "lede": "The \"December effect\" is the single most persistent anomaly in Mexican federal procurement. Government agencies rush to exhaust annual budgets before the fiscal year closes, pushing average contract amounts to MXN 4.87M — nearly double the yearly average of MXN 2.9M.",
+    "stat1Value": "+64%",
+    "stat1Label": "December risk vs. October baseline",
+    "stat2Value": "MXN 4.87M",
+    "stat2Label": "avg contract in December · 1.7× annual avg",
+    "oecdLabel": "OECD BENCHMARK",
+    "oecdBody": "The OECD recommends even distribution of procurement across the fiscal year. Year-end spending spikes are a recognized corruption risk indicator in all OECD integrity frameworks — Mexico's December pattern is among the most extreme in OECD member states.",
+    "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · RUBLI v0.8.5 risk scores"
   }
 }

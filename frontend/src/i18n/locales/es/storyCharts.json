@@ -370,5 +370,17 @@
     "headline": "COVID-19 disparó el riesgo en adjudicaciones 30% — y nunca volvió a bajar del todo",
     "subline": "Tasa de alto riesgo y puntaje promedio · 2010–2025 · Anotaciones de escándalos marcadas",
     "footer": "Fuente: COMPRANET 2010–2025 · modelo de riesgo RUBLI v0.8.5 · Fechas de escándalos del registro público"
+  },
+  "seasonality": {
+    "kicker": "RUBLI · Patrón temporal",
+    "headline": "Cada diciembre, el riesgo en adjudicaciones sube 64% — durante 23 años consecutivos",
+    "lede": "El \"efecto diciembre\" es la anomalía más persistente en las compras federales mexicanas. Las dependencias gubernamentales corren para agotar el presupuesto anual antes del cierre fiscal, llevando el monto promedio del contrato a MXN 4.87M — casi el doble del promedio anual de MXN 2.9M.",
+    "stat1Value": "+64%",
+    "stat1Label": "riesgo de diciembre vs. línea base octubre",
+    "stat2Value": "MXN 4.87M",
+    "stat2Label": "contrato promedio diciembre · 1.7× promedio anual",
+    "oecdLabel": "REFERENCIA OCDE",
+    "oecdBody": "La OCDE recomienda distribución uniforme de las compras a lo largo del año fiscal. Los picos de gasto a fin de año son un indicador reconocido de riesgo de corrupción en todos los marcos de integridad de la OCDE — el patrón de diciembre en México está entre los más extremos de los miembros de la OCDE.",
+    "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · puntajes de riesgo RUBLI v0.8.5"
   }
 }
