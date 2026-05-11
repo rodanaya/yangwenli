@@ -10,9 +10,10 @@
  * L6: Events Timeline
  */
 
-import { lazy, Suspense, useMemo, useState, useRef, memo } from 'react'
+import { lazy, Suspense, useMemo, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { useWikipediaImage } from '@/hooks/useWikipediaImage'
+import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
+import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -305,73 +306,15 @@ function pearsonCorr(xs: number[], ys: number[]): number {
   return dx > 0 && dy > 0 ? num / Math.sqrt(dx * dy) : 0
 }
 
-function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; invertColor?: boolean }) {
-  const abs = Math.abs(val)
-  const isUp = val > 0.01
-  const isDown = val < -0.01
-  const color = invertColor
-    ? (isUp ? 'text-risk-low' : isDown ? 'text-risk-critical' : 'text-text-muted')
-    : (isUp ? 'text-risk-critical' : isDown ? 'text-risk-low' : 'text-text-muted')
-  const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus
-
-  return (
-    <span className={cn('inline-flex items-center gap-0.5 text-xs font-mono', color)}>
-      <Icon className="h-3 w-3" />
-      {abs < 0.01 ? '--' : `${val > 0 ? '+' : ''}${abs.toFixed(1)}${unit}`}
-    </span>
-  )
-}
+// PresidentAvatar + DeltaBadge extracted to components/administrations/.
+// (2026-05-11) Trims this file from 3,671 to ~3,580 LOC and lets those
+// helpers be reused without importing the Administrations page module.
 
 // =============================================================================
 // Component
 // =============================================================================
 
 type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
-
-// ─── President photo avatar ────────────────────────────────────────────────
-// Fetches official portrait from Wikipedia. Falls back to styled initials.
-const PresidentAvatar = memo(function PresidentAvatar({
-  wikiArticle,
-  fullName,
-  color,
-  size = 32,
-}: {
-  wikiArticle: string
-  fullName: string
-  color: string
-  size?: number
-}) {
-  const { src, isLoading } = useWikipediaImage(wikiArticle)
-  const initials = fullName.split(' ').map(w => w[0]).slice(0, 2).join('')
-
-  return (
-    <div
-      className="flex-shrink-0 rounded-full overflow-hidden border-2"
-      style={{
-        width: size,
-        height: size,
-        borderColor: `${color}60`,
-        backgroundColor: `${color}22`,
-      }}
-    >
-      {src && !isLoading ? (
-        <img
-          src={src}
-          alt={fullName}
-          className="w-full h-full object-cover object-top"
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-        />
-      ) : (
-        <span
-          className="w-full h-full flex items-center justify-center font-black font-mono"
-          style={{ fontSize: size * 0.31, color }}
-        >
-          {initials}
-        </span>
-      )}
-    </div>
-  )
-})
 
 // =============================================================================
 // AdminDossierPanel — per-administration deep-dive panel
