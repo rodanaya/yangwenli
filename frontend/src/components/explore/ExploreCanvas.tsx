@@ -18,7 +18,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
 import {
   RISK_COLORS,
@@ -432,6 +431,25 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 lang={lang}
               />
             )}
+            {/* Z4 contract focus stays on the Z3 visual canvas — only the
+                briefing panel changes. We look up the parent vendor in the
+                stack and reuse Z3Layer with a highlight prop so the user
+                never loses the constellation of sibling contracts. */}
+            {focus.kind === 'contract' && (() => {
+              // The most recent vendor focus must be on the stack — that's
+              // the constellation we're showing. Walk back from the top.
+              const parentVendor = [...state.stack].reverse().find((f): f is Extract<Focus, { kind: 'vendor' }> => f.kind === 'vendor')
+              if (!parentVendor) return null
+              return (
+                <Z3Layer
+                  key={`z3-${parentVendor.vendorId}`}
+                  vendorId={parentVendor.vendorId}
+                  vendorName={parentVendor.vendorName}
+                  lang={lang}
+                  highlightContractId={focus.contractId}
+                />
+              )
+            })()}
           </AnimatePresence>
         </g>
       </svg>
@@ -1006,13 +1024,17 @@ function Z3Layer({
   vendorId,
   vendorName,
   lang,
+  highlightContractId,
 }: {
   vendorId: number
   vendorName: string
   lang: 'en' | 'es'
+  /** If set, render a pulsing ring on the matching contract dot — used when
+   *  focus.kind === 'contract' (Z4 focus inside the same Z3 visual). */
+  highlightContractId?: number | null
 }) {
-  const navigate = useNavigate()
   // Hooks first (rules of hooks).
+  const dispatch = useExploreDispatch()
   const exploreState = useExploreState()
   const yearFilter = exploreState.year
   const { data, isLoading, isError } = useQuery({
@@ -1128,6 +1150,7 @@ function Z3Layer({
         const level = getRiskLevelFromScore(risk)
         const fill = RISK_COLORS[level]
         const dim = yearFilter != null && yr !== yearFilter
+        const isHighlighted = highlightContractId != null && c.id === highlightContractId
         // Tooltip body — read by the browser via SVG <title>. Keeps a
         // hover preview without React state churn on a 100-circle scatter.
         const tooltipLines = [
@@ -1138,17 +1161,51 @@ function Z3Layer({
           <g
             key={c.id}
             style={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/contracts/${c.id}`)}
+            // Spatial rule: clicks stay in the canvas. Drill into the
+            // contract focus, the briefing panel renders ContractBriefing,
+            // the visual layer stays at Z3 with this contract highlighted.
+            // Esc pops back to vendor focus.
+            onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
           >
             <title>{tooltipLines.join('\n')}</title>
+            {/* Pulsing focus ring — only renders when this contract is the
+                active Z4 focus. Two concentric circles animated via SMIL so
+                the effect doesn't add React state churn. */}
+            {isHighlighted && (
+              <>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r + 6}
+                  fill="none"
+                  stroke={fill}
+                  strokeWidth={1.5}
+                  opacity={0.9}
+                  pointerEvents="none"
+                >
+                  <animate attributeName="r" values={`${r + 6};${r + 14};${r + 6}`} dur="1.8s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={r + 2}
+                  fill="none"
+                  stroke={fill}
+                  strokeWidth={2}
+                  opacity={1}
+                  pointerEvents="none"
+                />
+              </>
+            )}
             <circle
               cx={cx}
               cy={cy}
               r={r}
               fill={fill}
-              fillOpacity={dim ? 0.18 : 0.85}
+              fillOpacity={dim ? 0.18 : isHighlighted ? 1 : 0.85}
               stroke="var(--color-background)"
-              strokeWidth={1}
+              strokeWidth={isHighlighted ? 2 : 1}
             />
           </g>
         )

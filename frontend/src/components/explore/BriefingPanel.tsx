@@ -8,7 +8,7 @@
  */
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { atlasApi, institutionApi, vendorApi } from '@/api/client'
+import { atlasApi, contractApi, institutionApi, vendorApi } from '@/api/client'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
@@ -46,6 +46,7 @@ export function BriefingPanel({ lang }: BriefingPanelProps) {
         {focus.kind === 'sector' && <SectorBriefing lang={lang} sectorId={focus.sectorId} sectorCode={focus.sectorCode} hoverId={getHoverId(state.hover, 'institution')} />}
         {focus.kind === 'institution' && <InstitutionBriefing lang={lang} institutionId={focus.institutionId} hoverId={getHoverId(state.hover, 'vendor')} />}
         {focus.kind === 'vendor' && <VendorBriefing lang={lang} vendorId={focus.vendorId} vendorName={focus.vendorName} />}
+        {focus.kind === 'contract' && <ContractBriefing lang={lang} contractId={focus.contractId} />}
       </div>
     </aside>
   )
@@ -99,7 +100,7 @@ function focusLabel(f: Focus, lang: 'en' | 'es'): string {
       const t = toTitleCase(f.vendorName)
       return t.length > 22 ? t.slice(0, 21) + '…' : t
     }
-    case 'contract': return `Contract ${f.contractId}`
+    case 'contract': return lang === 'en' ? `Contract ${f.contractId}` : `Contrato ${f.contractId}`
   }
 }
 
@@ -447,6 +448,137 @@ function VendorBriefing({
           ? 'Click a contract on the canvas for the contract detail view.'
           : 'Clic en un contrato en el lienzo para el detalle.'}
       </p>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Contract briefing — Z4 (in-canvas focus, briefing only — visual stays Z3)
+// ────────────────────────────────────────────────────────────────────────────
+
+function ContractBriefing({
+  lang,
+  contractId,
+}: {
+  lang: 'en' | 'es'
+  contractId: number
+}) {
+  const dispatch = useExploreDispatch()
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['explore', 'contract', contractId],
+    queryFn: () => contractApi.getById(contractId),
+    enabled: contractId > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isLoading) {
+    return (
+      <div>
+        <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
+        <div className="text-[11px] font-mono text-text-muted opacity-70 py-2">
+          {lang === 'en' ? 'Loading contract…' : 'Cargando contrato…'}
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !data) {
+    return (
+      <div>
+        <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
+        <p className="text-xs text-text-secondary">
+          {lang === 'en' ? 'Could not load this contract.' : 'No se pudo cargar este contrato.'}
+        </p>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'pop-focus' })}
+          className="mt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          ← {lang === 'en' ? 'back to vendor' : 'volver al proveedor'}
+        </button>
+      </div>
+    )
+  }
+
+  const risk = Number(data.risk_score ?? 0)
+  const amount = Number(data.amount_mxn ?? 0)
+  const date = data.contract_date || data.award_date || (data.contract_year ? String(data.contract_year) : '—')
+  const procedure = data.procedure_type_normalized || data.procedure_type || (data.is_direct_award ? (lang === 'en' ? 'Direct award' : 'Adjudicación directa') : '—')
+  const institutionName = data.institution_name ? toTitleCase(data.institution_name) : '—'
+  const sector = data.sector_name || '—'
+  const title = data.title || data.description || (lang === 'en' ? `Contract ${data.id}` : `Contrato ${data.id}`)
+  const risk_factors = data.risk_factors || []
+  // Translate the most common factor codes to a readable label without
+  // dragging in a full taxonomy here — anything unrecognized falls through
+  // as the raw code, which is honest.
+  const factorLabel = (code: string) => {
+    const map: Record<string, { en: string; es: string }> = {
+      direct_award: { en: 'Direct award', es: 'Adjudicación directa' },
+      single_bid: { en: 'Single bid', es: 'Una sola oferta' },
+      price_volatility: { en: 'Price volatility', es: 'Volatilidad de precio' },
+      vendor_concentration: { en: 'Vendor concentration', es: 'Concentración de proveedor' },
+      institution_diversity: { en: 'Low institution diversity', es: 'Baja diversidad institucional' },
+      network_member: { en: 'Network member', es: 'Miembro de red' },
+      same_day: { en: 'Same-day awards', es: 'Adjudicaciones mismo día' },
+      ad_period: { en: 'Short ad period', es: 'Periodo corto de publicación' },
+      threshold_gaming: { en: 'Threshold gaming', es: 'Manipulación de umbral' },
+      year_end: { en: 'Year-end award', es: 'Adjudicación fin de año' },
+    }
+    return map[code]?.[lang] || code.replace(/_/g, ' ')
+  }
+
+  return (
+    <div>
+      <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
+      <h2 className="text-base font-bold mb-1 text-text-primary leading-tight line-clamp-3">
+        {toTitleCase(title)}
+      </h2>
+      {data.contract_number && (
+        <div className="text-[10px] font-mono text-text-muted mb-2 tracking-wide">
+          {data.contract_number}
+        </div>
+      )}
+
+      <Stat label={lang === 'en' ? 'Amount' : 'Monto'} value={formatCompactMXN(amount)} />
+      <Stat label={lang === 'en' ? 'Date' : 'Fecha'} value={String(date)} />
+      <Stat label={lang === 'en' ? 'Institution' : 'Institución'} value={institutionName} />
+      <Stat label={lang === 'en' ? 'Sector' : 'Sector'} value={sector} />
+      <Stat label={lang === 'en' ? 'Procedure' : 'Procedimiento'} value={procedure} />
+
+      <RiskPill score={risk} />
+
+      {risk_factors.length > 0 && (
+        <div className="mt-3">
+          <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
+            {lang === 'en' ? 'Risk factors' : 'Factores de riesgo'}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {risk_factors.slice(0, 6).map((f) => (
+              <span
+                key={f}
+                className="text-[9px] font-mono uppercase tracking-[0.10em] px-1.5 py-0.5 rounded-sm"
+                style={{
+                  color: 'var(--color-risk-high)',
+                  background: 'var(--color-risk-high-bg, rgba(251,146,60,0.08))',
+                  border: '1px solid var(--color-risk-high-border, rgba(251,146,60,0.30))',
+                }}
+              >
+                {factorLabel(f)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'pop-focus' })}
+        className="mt-4 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+      >
+        ← {lang === 'en' ? 'back to vendor (esc)' : 'volver al proveedor (esc)'}
+      </button>
     </div>
   )
 }

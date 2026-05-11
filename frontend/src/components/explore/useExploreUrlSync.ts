@@ -3,10 +3,11 @@
  * the URL query string on /explore.
  *
  * URL format (compact + readable):
- *   /explore                           → Z0 (system)
- *   /explore?s=salud                   → Z1 (sector salud)
- *   /explore?s=salud&i=251             → Z2 (institution 251 inside salud)
- *   /explore?s=salud&i=251&v=29277     → Z3 (vendor 29277 inside institution 251 inside salud)
+ *   /explore                                 → Z0 (system)
+ *   /explore?s=salud                         → Z1 (sector salud)
+ *   /explore?s=salud&i=251                   → Z2 (institution 251 inside salud)
+ *   /explore?s=salud&i=251&v=29277           → Z3 (vendor 29277 inside institution 251)
+ *   /explore?s=salud&i=251&v=29277&c=918273  → Z4 (contract 918273 of vendor 29277)
  *
  * Hydration on mount reads s,i,v and rebuilds the focus stack. Each
  * push/pop writes the URL via setSearchParams (replace mode so we don't
@@ -38,6 +39,7 @@ export function useExploreUrlSync(): void {
     const sectorCode = searchParams.get('s')
     const institutionId = searchParams.get('i')
     const vendorId = searchParams.get('v')
+    const contractId = searchParams.get('c')
 
     const stack: Focus[] = [{ level: 0, kind: 'system' }]
 
@@ -72,6 +74,17 @@ export function useExploreUrlSync(): void {
       }
     }
 
+    if (contractId && stack.length > 3) {
+      const id = Number(contractId)
+      if (Number.isFinite(id) && id > 0) {
+        stack.push({
+          level: 4,
+          kind: 'contract',
+          contractId: id,
+        })
+      }
+    }
+
     if (stack.length > 1) {
       dispatch({ type: 'hydrate-from-url', stack })
     }
@@ -87,16 +100,19 @@ export function useExploreUrlSync(): void {
     let s: string | null = null
     let i: string | null = null
     let v: string | null = null
+    let c: string | null = null
     for (const f of state.stack) {
       if (f.kind === 'sector') s = f.sectorCode
       else if (f.kind === 'institution') i = String(f.institutionId)
       else if (f.kind === 'vendor') v = String(f.vendorId)
+      else if (f.kind === 'contract') c = String(f.contractId)
     }
 
     // Set or delete each key based on stack contents
     if (s) next.set('s', s); else next.delete('s')
     if (i) next.set('i', i); else next.delete('i')
     if (v) next.set('v', v); else next.delete('v')
+    if (c) next.set('c', c); else next.delete('c')
 
     // Only write if something changed — avoids React Router warning loops.
     const cur = searchParams.toString()
