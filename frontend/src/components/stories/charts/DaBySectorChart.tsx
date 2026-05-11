@@ -10,6 +10,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const SECTORS = [
   { code: 'agricultura',    name: 'Agricultura',    rate: 93.4 },
@@ -45,22 +46,12 @@ export function DaBySectorChart() {
   const oecdDots = Math.round(25 / 2) // = 13 dots (at 2pp each)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('daBySector.kicker')}
+      headline={t('daBySector.headline')}
+      subline={t('daBySector.subline')}
+      footer={t('daBySector.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('daBySector.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('daBySector.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {t('daBySector.subline')}
-      </p>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -155,10 +146,6 @@ export function DaBySectorChart() {
           {t('daBySector.legendAbove')}
         </span>
       </div>
-
-      <p className="mt-2 text-[10px] text-text-muted font-mono">
-        {t('daBySector.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
