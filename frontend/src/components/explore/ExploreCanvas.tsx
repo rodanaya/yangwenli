@@ -488,14 +488,35 @@ function Z0Layer({
     queryFn: () => sectorApi.getAll(),
     staleTime: 30 * 60 * 1000,
   })
+  // Gap 6: lens drives both sizing and coloring of Z0 bodies.
+  // 'sectors' lens: size by total spend, color by sector palette.
+  // 'risk' lens: size by avg_risk_score, color by risk palette.
+  // Same 12 bodies, two narratives ("where's the money?" vs "where's the
+  // corruption?"). The lens lives in ExploreState and persists via URL
+  // ?lens=… (see useExploreUrlSync). Future v1.1 lenses add to this map.
+  const exploreState = useExploreState()
+  const lens = exploreState.lens
   const sizeByCode = useMemo(() => {
     if (!sectorStats?.data) return null
-    const max = Math.max(...sectorStats.data.map((s) => s.total_value_mxn || 0), 1)
+    const valueField: 'total_value_mxn' | 'avg_risk_score' =
+      lens === 'risk' ? 'avg_risk_score' : 'total_value_mxn'
+    const max = Math.max(...sectorStats.data.map((s) => Number(s[valueField]) || 0), 0.01)
     const map = new Map<string, number>()
     for (const s of sectorStats.data) {
+      const v = Number(s[valueField]) || 0
       // sqrt scale so the visual difference is perceptible without
       // making one sector dwarf the rest.
-      map.set(s.sector_code, Math.sqrt((s.total_value_mxn || 0) / max))
+      map.set(s.sector_code, Math.sqrt(Math.max(0, v) / max))
+    }
+    return map
+  }, [sectorStats, lens])
+  // Build a risk-level → color map for the risk lens, by sector code.
+  const riskColorByCode = useMemo(() => {
+    if (!sectorStats?.data) return null
+    const map = new Map<string, string>()
+    for (const s of sectorStats.data) {
+      const level = getRiskLevelFromScore(Number(s.avg_risk_score) || 0)
+      map.set(s.sector_code, RISK_COLORS[level])
     }
     return map
   }, [sectorStats])
@@ -511,7 +532,8 @@ function Z0Layer({
           Pure decoration, deterministic, no interaction. */}
       <BackgroundStars />
 
-      {/* Eyebrow */}
+      {/* Eyebrow — names the current lens so the user knows what the
+          sizing/coloring means. */}
       <text
         x={PAD}
         y={PAD}
@@ -521,7 +543,9 @@ function Z0Layer({
         letterSpacing={1.4}
         fill="var(--color-text-muted)"
       >
-        {(lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS' : 'Z0 · SISTEMA · 12 SECTORES')}
+        {lens === 'risk'
+          ? (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · RISK LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE RIESGO')
+          : (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · MONEY LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE GASTO')}
       </text>
       <text
         x={PAD}
@@ -545,13 +569,20 @@ function Z0Layer({
         const sizeFactor = sizeByCode?.get(b.code) ?? null
         const r = sizeFactor != null ? 22 + sizeFactor * 28 : 32
         const isPinned = pinAnnotation?.kind === 'sector' && pinAnnotation.sectorId === b.id
+        // Gap 6: under the risk lens, body color comes from the risk
+        // palette (critical/high/medium/low), not the sector palette.
+        // Both lenses keep the sector-coded layout — only the visual
+        // encoding changes.
+        const bodyColor = lens === 'risk'
+          ? (riskColorByCode?.get(b.code) ?? b.color)
+          : b.color
         return (
           <SectorBodyVisual
             key={b.code}
             cx={cx}
             cy={cy}
             r={r}
-            color={b.color}
+            color={bodyColor}
             label={b.name}
             isPinned={isPinned}
             onClick={() =>

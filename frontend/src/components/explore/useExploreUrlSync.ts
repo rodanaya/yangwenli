@@ -9,6 +9,9 @@
  *   /explore?s=salud&i=251&v=29277           → Z3 (vendor 29277 inside institution 251)
  *   /explore?s=salud&i=251&v=29277&c=918273  → Z4 (contract 918273 of vendor 29277)
  *
+ * Additional shareable state:
+ *   ?lens=sectors | ?lens=risk               → Z0 coloring/sizing (Gap 6)
+ *
  * Hydration on mount reads s,i,v and rebuilds the focus stack. Each
  * push/pop writes the URL via setSearchParams (replace mode so we don't
  * spam the back-button history with every drill).
@@ -88,6 +91,13 @@ export function useExploreUrlSync(): void {
     if (stack.length > 1) {
       dispatch({ type: 'hydrate-from-url', stack })
     }
+
+    // Gap 6: hydrate lens from URL too. Defensive — anything other than
+    // 'sectors' | 'risk' falls back to the default.
+    const lensParam = searchParams.get('lens')
+    if (lensParam === 'risk' || lensParam === 'sectors') {
+      dispatch({ type: 'set-lens', lens: lensParam })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -114,6 +124,11 @@ export function useExploreUrlSync(): void {
     if (v) next.set('v', v); else next.delete('v')
     if (c) next.set('c', c); else next.delete('c')
 
+    // Lens — default 'sectors' stays out of URL to keep clean URLs; only
+    // write when the user has explicitly chosen the non-default 'risk'.
+    if (state.lens === 'risk') next.set('lens', 'risk')
+    else next.delete('lens')
+
     // Only write if something changed — avoids React Router warning loops.
     const cur = searchParams.toString()
     const nxt = next.toString()
@@ -121,5 +136,5 @@ export function useExploreUrlSync(): void {
       setSearchParams(next, { replace: true })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.stack])
+  }, [state.stack, state.lens])
 }

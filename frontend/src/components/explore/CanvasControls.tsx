@@ -122,6 +122,70 @@ export function RiskFloorToggle({ lang }: { lang: 'en' | 'es' }) {
 }
 
 /**
+ * LensToggle — Gap 6. Two lenses for v1.0:
+ *   SECTORS (default) — bodies sized by total spend, colored by sector palette.
+ *                       Answers "where is the money?"
+ *   RISK              — bodies sized by avg_risk_score, colored by risk
+ *                       palette (critical/high/medium/low). Answers "where
+ *                       is the corruption concentrated?"
+ *
+ * Z0Layer reads state.lens and branches its body builder.
+ *
+ * Future v1.1 lenses (patterns / categories / terms) attach here.
+ */
+const LENSES: Array<{ value: 'sectors' | 'risk'; labelEn: string; labelEs: string }> = [
+  { value: 'sectors', labelEn: 'Money', labelEs: 'Gasto' },
+  { value: 'risk', labelEn: 'Risk', labelEs: 'Riesgo' },
+]
+
+export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
+  const state = useExploreState()
+  const dispatch = useExploreDispatch()
+  return (
+    <div
+      className="absolute top-3 left-3 z-10 flex"
+      style={{
+        background: 'var(--color-background-card, #fff)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 4,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        overflow: 'hidden',
+      }}
+      role="group"
+      aria-label={lang === 'en' ? 'Lens — what to highlight on the map' : 'Lente — qué resaltar en el mapa'}
+    >
+      <span
+        className="px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-[0.16em] flex items-center"
+        style={{ color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' }}
+      >
+        {lang === 'en' ? 'Lens' : 'Lente'}
+      </span>
+      {LENSES.map((l, i) => {
+        const active = state.lens === l.value
+        return (
+          <button
+            key={l.value}
+            type="button"
+            onClick={() => dispatch({ type: 'set-lens', lens: l.value })}
+            className="text-[10px] font-mono uppercase tracking-[0.12em] py-1.5 px-3 transition-colors"
+            style={{
+              background: active ? 'var(--color-accent)' : 'transparent',
+              color: active ? '#fff' : 'var(--color-text-secondary)',
+              border: 'none',
+              borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
+              cursor: 'pointer',
+            }}
+            aria-pressed={active}
+          >
+            {lang === 'en' ? l.labelEn : l.labelEs}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
  * ShareViewButton — copies the current /explore URL (with focus stack
  * encoded by useExploreUrlSync) to the clipboard. Sits below the risk
  * floor toggle so the controls stack vertically along the top-right.

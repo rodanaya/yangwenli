@@ -39,6 +39,14 @@ export interface ExploreState {
   /** Risk floor — drops bodies below this level. */
   riskFloor: 'all' | 'medium' | 'high' | 'critical'
   /**
+   * Lens — the coloring + sizing transform applied to bodies on screen.
+   *   'sectors' (default) — sized by total spend, colored by sector palette
+   *   'risk' — sized + colored by avg_risk_score (Bible §3.10 risk palette)
+   *
+   * Future v1.1 lenses (deferred): patterns, categories, terms.
+   */
+  lens: 'sectors' | 'risk'
+  /**
    * Pinned entity path — a snapshot of the focus stack at pin time.
    * Survives zoom transitions: pin a vendor at Z3, then zoom out to
    * Z0, the canvas still highlights the vendor's home sector and
@@ -59,6 +67,7 @@ export type ExploreAction =
   | { type: 'set-hover'; hover: ExploreState['hover'] }
   | { type: 'set-year'; year: number | null }
   | { type: 'set-risk-floor'; floor: ExploreState['riskFloor'] }
+  | { type: 'set-lens'; lens: ExploreState['lens'] }
   | { type: 'hydrate-from-url'; stack: Focus[] }
   | { type: 'pin-current' }
   | { type: 'unpin' }
@@ -69,6 +78,7 @@ export const EXPLORE_DEFAULT_STATE: ExploreState = {
   hover: null,
   year: null,
   riskFloor: 'all',
+  lens: 'sectors',
   pinnedPath: null,
 }
 
@@ -194,6 +204,8 @@ function reducer(state: ExploreState, action: ExploreAction): ExploreState {
       return { ...state, year: action.year }
     case 'set-risk-floor':
       return { ...state, riskFloor: action.floor }
+    case 'set-lens':
+      return { ...state, lens: action.lens }
     case 'pin-current': {
       // Snapshot the current stack EXCLUDING the system root — pinning
       // "system" is meaningless. If we're already at Z0, no-op.
