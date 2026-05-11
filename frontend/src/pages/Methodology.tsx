@@ -69,11 +69,12 @@ const V33_WEIGHTS = [
 // Colors routed through canonical RISK_COLORS instead of three local hex
 // duplicates that drifted from the rest of the platform.
 // v0.8.5 distribution (3,051,294 scored contracts, HR=11.01%)
+// `meaningKey` is resolved at render time via t() — see render section.
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
-  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
+  { level: 'Critical', threshold: '>= 0.60', meaningKey: 'Critical', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
+  { level: 'High',     threshold: '>= 0.40', meaningKey: 'High',     pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
+  { level: 'Medium',   threshold: '>= 0.25', meaningKey: 'Medium',   pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
+  { level: 'Low',      threshold: '< 0.25',  meaningKey: 'Low',      pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -102,10 +103,10 @@ const CORRUPTION_CASES = [
 ] as const
 
 const DATA_STRUCTURES = [
-  { structure: 'A', years: '2002-2010', quality: 'Lowest', rfc: '0.1%', description: 'Risk scores may be underestimated' },
-  { structure: 'B', years: '2010-2017', quality: 'Better', rfc: '15.7%', description: 'UPPERCASE text, 72.2% direct award' },
-  { structure: 'C', years: '2018-2022', quality: 'Good', rfc: '30.3%', description: 'Mixed case, 78.4% direct award' },
-  { structure: 'D', years: '2023-2025', quality: 'Best', rfc: '47.4%', description: '100% Partida codes, best coverage' },
+  { structure: 'A', years: '2002-2010', qualityKey: 'A', rfc: '0.1%',  descKey: 'A' },
+  { structure: 'B', years: '2010-2017', qualityKey: 'B', rfc: '15.7%', descKey: 'B' },
+  { structure: 'C', years: '2018-2022', qualityKey: 'C', rfc: '30.3%', descKey: 'C' },
+  { structure: 'D', years: '2023-2025', qualityKey: 'D', rfc: '47.4%', descKey: 'D' },
 ] as const
 
 const REFERENCES = [
@@ -371,7 +372,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
 
   return (
-    <div role="img" aria-label="Dot matrix showing model coefficient values by feature">
+    <div role="img" aria-label={t('dataLabels.ariaModelCoefficients')}>
       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {/* Zero reference line */}
         <line
@@ -455,7 +456,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
   const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
 
   return (
-    <div role="img" aria-label="Dot matrix showing risk factor weights in the v3.3 model">
+    <div role="img" aria-label={t('dataLabels.ariaRiskFactorWeights')}>
       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {chartData.map((item, rowIdx) => {
           const filled = Math.round((item.weight / MAX_PCT) * MD_DOTS)
@@ -982,7 +983,7 @@ export function Methodology() {
                           <td className="py-2 pr-3 font-mono text-text-secondary">
                             {r.threshold}
                           </td>
-                          <td className="py-2 pr-3 text-text-muted">{r.meaning}</td>
+                          <td className="py-2 pr-3 text-text-muted">{t(`dataLabels.riskMeaning${r.meaningKey}`)}</td>
                           <td className="py-2 pr-3 text-right font-mono text-text-secondary">
                             {r.pct}
                           </td>
@@ -1464,19 +1465,21 @@ export function Methodology() {
                             variant="default"
                             className={cn(
                               'text-xs px-1.5 py-0',
-                              ds.quality === 'Lowest' && 'bg-risk-critical/10 text-risk-critical border-risk-critical/20',
-                              ds.quality === 'Better' && 'bg-risk-medium/10 text-risk-medium border-risk-medium/20',
-                              ds.quality === 'Good' && 'bg-accent/10 text-accent border-accent/20',
-                              ds.quality === 'Best' && 'bg-accent/10 text-accent border-accent/20',
+                              // Class lookup keyed on stable A/B/C/D structure code
+                              // (i18n-safe — no longer depends on the displayed string).
+                              ds.qualityKey === 'A' && 'bg-risk-critical/10 text-risk-critical border-risk-critical/20',
+                              ds.qualityKey === 'B' && 'bg-risk-medium/10 text-risk-medium border-risk-medium/20',
+                              ds.qualityKey === 'C' && 'bg-accent/10 text-accent border-accent/20',
+                              ds.qualityKey === 'D' && 'bg-accent/10 text-accent border-accent/20',
                             )}
                           >
-                            {ds.quality}
+                            {t(`dataLabels.structure${ds.qualityKey}_quality`)}
                           </Badge>
                         </td>
                         <td className="py-2 pr-3 text-right font-mono text-text-secondary">
                           {ds.rfc}
                         </td>
-                        <td className="py-2 text-text-muted">{ds.description}</td>
+                        <td className="py-2 text-text-muted">{t(`dataLabels.structure${ds.descKey}_desc`)}</td>
                       </tr>
                     ))}
                   </tbody>
