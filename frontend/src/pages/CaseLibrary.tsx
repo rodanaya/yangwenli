@@ -14,7 +14,7 @@ import type {
 } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
-import { getAdministrationByYear } from '@/lib/administrations'
+import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -175,17 +175,30 @@ function CaseRow({
               {t(`fraudTypes.${cas.fraud_type}`)}
             </span>
             {/* Administration pill
-                2026-05-11 (Audit F068/F069): the DB administration field
-                was off for cases that span an administration boundary
-                (e.g. Tren Maya tagged "Peña Nieto" instead of AMLO,
-                NAICM tagged "AMLO" instead of Peña Nieto). We now derive
-                the tag from contract_year_start — the year fraud
-                started, which is the journalism-correct attribution.
-                The original cas.administration is kept only as a
-                fallback when no year is present. */}
+                2026-05-11 (Audit F068/F069 + self-review): the DB
+                administration field was off for cases that span an
+                administration boundary (Tren Maya tagged "Peña Nieto"
+                instead of AMLO, NAICM tagged "AMLO" instead of Peña
+                Nieto). Override rule: trust the DB value when the
+                case's start year falls inside the DB admin's term;
+                otherwise derive from start year. This handles the
+                boundary year 2018 correctly — if the DB says AMLO and
+                2018 is within AMLO's [2018..2024] range, we keep AMLO
+                rather than flipping to EPN (which getAdministrationByYear
+                returns first because its range ends at 2018 inclusive). */}
             {(() => {
-              const derivedKey =
-                getAdministrationByYear(cas.contract_year_start ?? cas.contract_year_end)?.key
+              const startYear = cas.contract_year_start ?? cas.contract_year_end ?? null
+              const dbAdminRecord = cas.administration
+                ? ADMINISTRATIONS.find((a) => a.key === cas.administration)
+                : null
+              const dbAdminFitsYear =
+                dbAdminRecord != null &&
+                startYear != null &&
+                startYear >= dbAdminRecord.yearStart &&
+                startYear <= dbAdminRecord.yearEnd
+              const derivedKey = !dbAdminFitsYear
+                ? getAdministrationByYear(startYear)?.key
+                : null
               const effectiveAdmin = derivedKey ?? cas.administration
               if (!effectiveAdmin) return null
               return (

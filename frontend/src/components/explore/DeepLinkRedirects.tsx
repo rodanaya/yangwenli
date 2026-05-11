@@ -21,14 +21,30 @@
  */
 import { Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { vendorApi, institutionApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 
 /**
  * Tiny visual while the entity fetch resolves. Honest about what's
  * happening — the page is computing the deep link, not stuck.
+ *
+ * 2026-05-11 (self-review fix): kicker + label now bilingual. Previously
+ * Spanish users saw "Routing into the universe" / "Finding this vendor
+ * on the map…" in English on every /vendors/:id hop from Watchlist,
+ * ARIA, RedThread etc.
  */
-function RedirectLoading({ label }: { label: string }) {
+function RedirectLoading({ kind }: { kind: 'vendor' | 'institution' }) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es')
+  const kicker = isEs ? 'Enrutando al universo' : 'Routing into the universe'
+  const label = isEs
+    ? kind === 'vendor'
+      ? 'Localizando al proveedor en el mapa…'
+      : 'Localizando a la institución en el mapa…'
+    : kind === 'vendor'
+      ? 'Finding this vendor on the map…'
+      : 'Finding this institution on the map…'
   return (
     <div
       className="flex items-center justify-center min-h-[40vh] px-6"
@@ -37,7 +53,7 @@ function RedirectLoading({ label }: { label: string }) {
     >
       <div className="text-center max-w-md">
         <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-          Routing into the universe
+          {kicker}
         </div>
         <div className="text-sm text-text-secondary">{label}</div>
       </div>
@@ -75,7 +91,7 @@ export function VendorDeepLinkRedirect() {
   }
 
   if (isLoading) {
-    return <RedirectLoading label="Finding this vendor on the map…" />
+    return <RedirectLoading kind="vendor" />
   }
 
   // On error, fall through to the printable dossier so the user still
@@ -135,7 +151,7 @@ export function InstitutionDeepLinkRedirect() {
   }
 
   if (isLoading) {
-    return <RedirectLoading label="Finding this institution on the map…" />
+    return <RedirectLoading kind="institution" />
   }
 
   if (isError || !data) {

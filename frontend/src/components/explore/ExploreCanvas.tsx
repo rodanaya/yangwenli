@@ -1236,8 +1236,43 @@ const ACRONYM_STOP_WORDS = new Set([
   'OF', 'THE', 'AND', 'FOR', 'TO', 'IN', 'ON',
 ])
 
+// Canonical Mexican federal entity acronyms. The heuristic
+// (initials-of-content-words) doesn't always recover the conventional
+// public acronym — "PETRÓLEOS MEXICANOS" → PM, not PEMEX. This map
+// short-circuits the heuristic for the names a journalist will
+// recognize on sight. Keys are upper-cased + accent-normalized to
+// match what the database stores.
+const CANONICAL_ACRONYMS: Record<string, string> = {
+  'PETROLEOS MEXICANOS': 'PEMEX',
+  'SECRETARIA DE SALUD': 'SSA',
+  'SERVICIO DE ADMINISTRACION TRIBUTARIA': 'SAT',
+  'INSTITUTO POLITECNICO NACIONAL': 'IPN',
+  'UNIVERSIDAD NACIONAL AUTONOMA DE MEXICO': 'UNAM',
+  'INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRABAJADORES DEL ESTADO': 'ISSSTE',
+  'COMISION NACIONAL DEL AGUA': 'CONAGUA',
+  'SECRETARIA DE LA DEFENSA NACIONAL': 'SEDENA',
+  'SECRETARIA DE MARINA': 'SEMAR',
+  'SECRETARIA DE RELACIONES EXTERIORES': 'SRE',
+  'SECRETARIA DE COMUNICACIONES Y TRANSPORTES': 'SCT',
+  'SECRETARIA DE INFRAESTRUCTURA COMUNICACIONES Y TRANSPORTES': 'SICT',
+  'SECRETARIA DE HACIENDA Y CREDITO PUBLICO': 'SHCP',
+  'SECRETARIA DE LA FUNCION PUBLICA': 'SFP',
+  'SECRETARIA DE EDUCACION PUBLICA': 'SEP',
+  'SECRETARIA DE BIENESTAR': 'BIENESTAR',
+  'CONSEJO NACIONAL DE CIENCIA Y TECNOLOGIA': 'CONACYT',
+}
+
+/** Strip diacritics so DB names like "PETRÓLEOS" match the canonical map keys. */
+function stripAccents(s: string): string {
+  // U+0300..U+036F = Combining Diacritical Marks block.
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
 function shortLabel(name: string): string {
   const trimmed = name.trim()
+  // Canonical override — try the full normalized name first.
+  const normalized = stripAccents(trimmed.toUpperCase()).replace(/\s+/g, ' ')
+  if (CANONICAL_ACRONYMS[normalized]) return CANONICAL_ACRONYMS[normalized]
   const upperWords = trimmed
     .replace(/[,]/g, ' ')
     .split(/\s+/)

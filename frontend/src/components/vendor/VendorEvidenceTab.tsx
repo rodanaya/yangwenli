@@ -72,6 +72,10 @@ export function VendorEvidenceTab({
   // See MEMORY.md "vendor_stats.direct_award_pct corrupted".
   const normalizeRate = (v: number | null | undefined): number | null => {
     if (v == null) return null
+    // 2026-05-11 self-review fix: NaN propagates through Math.min/max
+    // (Math.max(0, Math.min(1, NaN)) === NaN), so the clamp alone
+    // didn't guarantee [0,1]. Reject non-finite values up front.
+    if (!Number.isFinite(v)) return null
     const fraction = v > 1 ? v / 100 : v
     return Math.max(0, Math.min(1, fraction))
   }
