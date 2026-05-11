@@ -19,7 +19,11 @@
  */
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ExploreProvider } from '@/components/explore/ExploreState'
+import {
+  ExploreProvider,
+  useCurrentFocus,
+  useExploreState,
+} from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
@@ -129,6 +133,19 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
 
 function MobileBriefingDrawer({ lang }: { lang: 'en' | 'es' }) {
   const [open, setOpen] = useState(false)
+  // 2026-05-11 Gap 5: auto-open the drawer when the user drills into a
+  // body. On mobile the user can't see the right-rail briefing, so the
+  // first signal that "the tap did something" is the drawer sliding up.
+  // We only auto-open on transitions INTO non-system focus, not on
+  // hover state or system reset, and we respect a user-initiated close
+  // (if you close it then drill, it opens again — but if you close it
+  // and pan around without drilling, it stays closed).
+  const state = useExploreState()
+  const focus = useCurrentFocus(state)
+  useEffect(() => {
+    if (focus.kind !== 'system') setOpen(true)
+    else setOpen(false)
+  }, [focus.kind, focus.level, (focus as { sectorId?: number }).sectorId, (focus as { institutionId?: number }).institutionId, (focus as { vendorId?: number }).vendorId, (focus as { contractId?: number }).contractId])
   return (
     <div
       className="lg:hidden fixed inset-x-0 bottom-0 z-20 transition-transform duration-300 ease-out"
