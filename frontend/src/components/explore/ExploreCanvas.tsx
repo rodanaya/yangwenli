@@ -951,9 +951,15 @@ function Z2Layer({
 
       {/* Centre marker — represents the institution itself, with a soft
           pulse so the user reads the radial composition as "vendors orbit
-          this institution" rather than "random circles in space". */}
+          this institution" rather than "random circles in space".
+          2026-05-11 (Audit F033): was a framer-motion <motion.circle>
+          which threw `<circle> attribute r: Expected length, "undefined"`
+          on every Z2 mount — framer-motion needs an explicit initial
+          when keyframe-animating r, otherwise the first frame is
+          undefined. Switched to pure SVG <animate> like PinRing —
+          GPU-driven, no warnings, no React state churn. */}
       <g style={{ pointerEvents: 'none' }}>
-        <motion.circle
+        <circle
           cx={cxC}
           cy={cyC}
           r={14}
@@ -962,9 +968,10 @@ function Z2Layer({
           strokeWidth={1}
           strokeDasharray="2 3"
           opacity={0.5}
-          animate={{ r: [14, 22, 14], opacity: [0.5, 0.15, 0.5] }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-        />
+        >
+          <animate attributeName="r" values="14;22;14" dur="3.5s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.5;0.15;0.5" dur="3.5s" repeatCount="indefinite" />
+        </circle>
         <circle cx={cxC} cy={cyC} r={4} fill="var(--color-text-muted)" opacity={0.7} />
       </g>
 

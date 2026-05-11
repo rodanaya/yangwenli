@@ -112,30 +112,62 @@ function persistPin(path: Focus[] | null): void {
 
 function reducer(state: ExploreState, action: ExploreAction): ExploreState {
   switch (action.type) {
-    case 'drill-into-sector':
+    case 'drill-into-sector': {
+      // 2026-05-11 (Audit F035): drill actions used to blindly append.
+      // If the user was already at Z1+ and dispatched another drill at
+      // the same level (e.g. searching for another sector while inside
+      // a sector), the breadcrumb showed two same-level entries. We
+      // now truncate the stack back to "one level above the target"
+      // before appending — drilling is always relative to system root
+      // for sector, sector for institution, etc.
       return {
         ...state,
-        stack: [...state.stack, { level: 1, kind: 'sector', sectorId: action.sectorId, sectorCode: action.sectorCode }],
+        stack: [
+          ...state.stack.slice(0, 1), // keep only system root
+          { level: 1, kind: 'sector', sectorId: action.sectorId, sectorCode: action.sectorCode },
+        ],
         hover: null,
       }
-    case 'drill-into-institution':
+    }
+    case 'drill-into-institution': {
+      // Truncate to system+sector before appending the institution. If
+      // there is no sector in the stack (shouldn't happen via UI but
+      // defensive against SearchOverlay), append after whatever's there.
+      const hasSector = state.stack.some((f) => f.kind === 'sector')
+      const base = hasSector ? state.stack.slice(0, 2) : state.stack
       return {
         ...state,
-        stack: [...state.stack, { level: 2, kind: 'institution', institutionId: action.institutionId, institutionName: action.institutionName }],
+        stack: [
+          ...base,
+          { level: 2, kind: 'institution', institutionId: action.institutionId, institutionName: action.institutionName },
+        ],
         hover: null,
       }
-    case 'drill-into-vendor':
+    }
+    case 'drill-into-vendor': {
+      const hasInstitution = state.stack.some((f) => f.kind === 'institution')
+      const base = hasInstitution ? state.stack.slice(0, 3) : state.stack
       return {
         ...state,
-        stack: [...state.stack, { level: 3, kind: 'vendor', vendorId: action.vendorId, vendorName: action.vendorName }],
+        stack: [
+          ...base,
+          { level: 3, kind: 'vendor', vendorId: action.vendorId, vendorName: action.vendorName },
+        ],
         hover: null,
       }
-    case 'drill-into-contract':
+    }
+    case 'drill-into-contract': {
+      const hasVendor = state.stack.some((f) => f.kind === 'vendor')
+      const base = hasVendor ? state.stack.slice(0, 4) : state.stack
       return {
         ...state,
-        stack: [...state.stack, { level: 4, kind: 'contract', contractId: action.contractId }],
+        stack: [
+          ...base,
+          { level: 4, kind: 'contract', contractId: action.contractId },
+        ],
         hover: null,
       }
+    }
     case 'pop-focus':
       if (state.stack.length <= 1) return state
       return { ...state, stack: state.stack.slice(0, -1), hover: null }
