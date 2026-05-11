@@ -589,6 +589,82 @@ function VendorBriefing({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// BriefingShell — Gap 7. Universal wrapper for the four states every
+// entity briefing has: loading, empty, error, ready. Replaces the
+// "each briefing reimplements its own spinner/empty line" pattern that
+// produced 3 different loading affordances across SystemBriefing,
+// SectorBriefing, InstitutionBriefing, VendorBriefing, ContractBriefing.
+//
+// The shell is intentionally minimal — it does NOT render an entity
+// header (each briefing keeps its own eyebrow + identity chip). It
+// only wraps the body content slot with consistent state visuals.
+// ────────────────────────────────────────────────────────────────────────────
+
+type BriefingState = 'loading' | 'empty' | 'error' | 'ready'
+
+interface BriefingShellProps {
+  state: BriefingState
+  lang: 'en' | 'es'
+  /** Optional override for the loading copy. */
+  loadingLabel?: string
+  /** Optional override for the empty-state copy. */
+  emptyLabel?: string
+  /** Optional override for the error-state copy. */
+  errorLabel?: string
+  /** Optional retry handler — renders a small "retry" button under the error message. */
+  onRetry?: () => void
+  /** Always-rendered prefix (eyebrow + identity row). */
+  header: React.ReactNode
+  /** Body content, rendered only when state === 'ready'. */
+  children: React.ReactNode
+}
+
+function BriefingShell({
+  state,
+  lang,
+  loadingLabel,
+  emptyLabel,
+  errorLabel,
+  onRetry,
+  header,
+  children,
+}: BriefingShellProps) {
+  return (
+    <div>
+      {header}
+      {state === 'loading' && (
+        <div className="text-[11px] font-mono text-text-muted opacity-70 py-3" aria-live="polite">
+          {loadingLabel ?? (lang === 'en' ? 'Loading…' : 'Cargando…')}
+        </div>
+      )}
+      {state === 'empty' && (
+        <p className="text-xs text-text-secondary py-2 leading-relaxed">
+          {emptyLabel ?? (lang === 'en' ? 'No data for this view.' : 'Sin datos para esta vista.')}
+        </p>
+      )}
+      {state === 'error' && (
+        <div className="py-2">
+          <p className="text-xs text-text-secondary leading-relaxed mb-2">
+            {errorLabel ?? (lang === 'en' ? 'Could not load this entity.' : 'No se pudo cargar esta entidad.')}
+          </p>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
+              style={{ background: 'none', border: '1px solid var(--color-border)', padding: '4px 10px', cursor: 'pointer', borderRadius: 3 }}
+            >
+              {lang === 'en' ? '↻ Retry' : '↻ Reintentar'}
+            </button>
+          )}
+        </div>
+      )}
+      {state === 'ready' && children}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Contract briefing — Z4 (in-canvas focus, briefing only — visual stays Z3)
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -600,40 +676,35 @@ function ContractBriefing({
   contractId: number
 }) {
   const dispatch = useExploreDispatch()
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['explore', 'contract', contractId],
     queryFn: () => contractApi.getById(contractId),
     enabled: contractId > 0,
     staleTime: 5 * 60 * 1000,
   })
 
-  if (isLoading) {
-    return (
-      <div>
-        <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
-        <div className="text-[11px] font-mono text-text-muted opacity-70 py-2">
-          {lang === 'en' ? 'Loading contract…' : 'Cargando contrato…'}
-        </div>
-      </div>
-    )
-  }
+  // Gap 7: BriefingShell normalizes the four states across all briefings.
+  // The eyebrow stays in the header slot so the user always sees what
+  // entity is being loaded, even on the loading/error paths.
+  const eyebrow = (
+    <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
+  )
 
-  if (isError || !data) {
+  if (isLoading || isError || !data) {
+    const state: BriefingState = isLoading ? 'loading' : isError ? 'error' : 'empty'
     return (
-      <div>
-        <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
-        <p className="text-xs text-text-secondary">
-          {lang === 'en' ? 'Could not load this contract.' : 'No se pudo cargar este contrato.'}
-        </p>
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'pop-focus' })}
-          className="mt-3 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-        >
-          ← {lang === 'en' ? 'back to vendor' : 'volver al proveedor'}
-        </button>
-      </div>
+      <BriefingShell
+        state={state}
+        lang={lang}
+        header={eyebrow}
+        loadingLabel={lang === 'en' ? 'Loading contract…' : 'Cargando contrato…'}
+        errorLabel={lang === 'en' ? 'Could not load this contract.' : 'No se pudo cargar este contrato.'}
+        emptyLabel={lang === 'en' ? 'No data for this contract.' : 'Sin datos para este contrato.'}
+        onRetry={state === 'error' ? () => refetch() : undefined}
+      >
+        {/* never rendered when state !== 'ready' */}
+        {null}
+      </BriefingShell>
     )
   }
 
