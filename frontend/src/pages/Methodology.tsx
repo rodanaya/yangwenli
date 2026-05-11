@@ -1151,7 +1151,7 @@ export function Methodology() {
                         <td className="py-2 pr-2 text-text-primary font-medium max-w-[200px]">
                           <span className="truncate block">{c.name}</span>
                         </td>
-                        <td className="py-2 pr-2 text-text-muted">{c.type}</td>
+                        <td className="py-2 pr-2 text-text-muted">{t(`corruptionTypes.${c.type}`, c.type)}</td>
                         <td className="py-2 pr-2 text-right font-mono text-text-secondary">
                           {c.contracts}
                         </td>

@@ -375,5 +375,16 @@
     "row15_l": "ARIA T1 = búsqueda de ground truth",
     "row15_i": "El boost +0.20 IPS de flags externos garantiza que vendors GT entren a T1; T2 es la superficie real de descubrimiento",
     "row15_f": "Sesión S.7 de recalibración deliberada pendiente"
+  },
+  "corruptionTypes": {
+    "Ghost companies": "Empresas fantasma",
+    "Procurement fraud": "Fraude en adjudicaciones",
+    "Embezzlement": "Peculado",
+    "Monopoly": "Monopolio",
+    "Overpricing": "Sobreprecio",
+    "Tender rigging": "Manipulación de licitación",
+    "Bid rigging": "Colusión en ofertas",
+    "Bribery": "Soborno",
+    "Conflict of interest": "Conflicto de interés"
   }
 }

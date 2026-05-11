@@ -375,5 +375,16 @@
     "row15_l": "ARIA T1 = ground-truth lookup",
     "row15_i": "External-flags +0.20 IPS boost guarantees GT vendors enter T1; T2 is the actual discovery surface",
     "row15_f": "S.7 deliberate recalibration session pending"
+  },
+  "corruptionTypes": {
+    "Ghost companies": "Ghost companies",
+    "Procurement fraud": "Procurement fraud",
+    "Embezzlement": "Embezzlement",
+    "Monopoly": "Monopoly",
+    "Overpricing": "Overpricing",
+    "Tender rigging": "Tender rigging",
+    "Bid rigging": "Bid rigging",
+    "Bribery": "Bribery",
+    "Conflict of interest": "Conflict of interest"
   }
 }
