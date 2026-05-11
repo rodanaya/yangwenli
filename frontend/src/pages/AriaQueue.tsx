@@ -879,12 +879,18 @@ function TierEditorialStrip({
                   />
                 </div>
 
-                {/* Count + pct */}
-                <div className="text-right">
+                {/* Count + pct
+                    2026-05-11 (Audit F057): JSX whitespace collapse caused
+                    counts and pcts to read as one number ("3140.1%",
+                    "1,4620.6%"). Wrapped in flex with explicit gap and
+                    a "·" separator so the two figures are never
+                    visually adjacent. */}
+                <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
                   <span className="font-mono tabular-nums text-sm font-bold text-text-primary">
                     {formatNumber(count)}
                   </span>
-                  <span className="font-mono tabular-nums text-[10px] text-text-muted ml-1.5">
+                  <span className="font-mono text-[10px] text-text-muted/60 select-none" aria-hidden>·</span>
+                  <span className="font-mono tabular-nums text-[10px] text-text-muted">
                     {pct}%
                   </span>
                 </div>

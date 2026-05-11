@@ -203,7 +203,7 @@
       "other": "Other"
     }
   },
-  "aboutData": "Risk scores are computed by a machine learning model trained on 1,401 documented corruption cases in Mexican federal procurement (2002–2025). Scores measure statistical similarity to known cases — they are not legal determinations or proof of wrongdoing. Source: COMPRANET (SHCP). Methodology: rubli.mx/methodology",
+  "aboutData": "Risk scores are computed by a machine learning model trained on 1,401 documented corruption cases in Mexican federal procurement (2002–2025). Scores measure statistical similarity to known cases — they are not legal determinations or proof of wrongdoing. Source: COMPRANET (SHCP). Methodology: rubli.xyz/methodology",
   "aboutDataToggle": "About this data",
   "storyType": {
     "era": "Era Analysis",

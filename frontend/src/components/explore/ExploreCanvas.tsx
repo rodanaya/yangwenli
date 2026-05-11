@@ -1223,12 +1223,25 @@ void sectorApi
 // Helpers
 // ────────────────────────────────────────────────────────────────────────────
 
+// Spanish + English connector / stop words that must not contribute to
+// an institution acronym. Without this list, "INSTITUTO MEXICANO DEL
+// SEGURO SOCIAL" produced "IMDSS" because DEL was treated as a content
+// word. The audit (F032) flagged this on prod — IMSS rendered as IMDSS
+// on the Salud Z1 map. Fix: filter connectors before acronym build.
+const ACRONYM_STOP_WORDS = new Set([
+  // Spanish
+  'DE', 'DEL', 'LA', 'EL', 'LAS', 'LOS', 'Y', 'EN', 'A', 'AL',
+  'POR', 'PARA', 'CON', 'SIN', 'SOBRE',
+  // English (rarely needed but defensive)
+  'OF', 'THE', 'AND', 'FOR', 'TO', 'IN', 'ON',
+])
+
 function shortLabel(name: string): string {
   const trimmed = name.trim()
   const upperWords = trimmed
     .replace(/[,]/g, ' ')
     .split(/\s+/)
-    .filter((w) => w.length >= 3 && w === w.toUpperCase())
+    .filter((w) => w.length >= 3 && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
   if (upperWords.length >= 2 && upperWords.length <= 6) {
     return upperWords.map((w) => w[0]).join('').slice(0, 6)
   }

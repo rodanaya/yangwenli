@@ -62,17 +62,31 @@ export function VendorEvidenceTab({
   const hasYE   = vendor.year_end_pct != null
   const showBenchmarks = hasDA || hasSB || hasHR
 
+  // 2026-05-11 (Audit F103-F107): vendor_stats.direct_award_pct is
+  // corrupted on a meaningful slice of rows — some are stored as a
+  // 0–1 fraction (0.4194) and some as a 0–100 percentage (41.94).
+  // BenchmarkRow assumes fraction → renders the percentage flavor at
+  // 4194%. Until the backend canonicalizes vendor_stats, we defend
+  // here: anything >1 is treated as already a percentage and divided
+  // by 100. Clamped to [0, 1] so corruption can never render >100%.
+  // See MEMORY.md "vendor_stats.direct_award_pct corrupted".
+  const normalizeRate = (v: number | null | undefined): number | null => {
+    if (v == null) return null
+    const fraction = v > 1 ? v / 100 : v
+    return Math.max(0, Math.min(1, fraction))
+  }
+
   return (
     <div className="space-y-8">
 
       {/* §0 Benchmark bars — how this vendor's key rates diverge from OECD limits */}
       {showBenchmarks && (
         <VendorBenchmarkBars
-          directAwardPct={hasDA ? vendor.direct_award_pct : null}
-          singleBidPct={hasSB ? vendor.single_bid_pct : null}
-          highRiskPct={hasHR ? vendor.high_risk_pct : null}
-          yearEndPct={hasYE ? vendor.year_end_pct! : null}
-          yearEndSectorAvg={vendor.year_end_sector_avg ?? null}
+          directAwardPct={hasDA ? normalizeRate(vendor.direct_award_pct) : null}
+          singleBidPct={hasSB ? normalizeRate(vendor.single_bid_pct) : null}
+          highRiskPct={hasHR ? normalizeRate(vendor.high_risk_pct) : null}
+          yearEndPct={hasYE ? normalizeRate(vendor.year_end_pct) : null}
+          yearEndSectorAvg={normalizeRate(vendor.year_end_sector_avg)}
           isEs={isEs}
         />
       )}

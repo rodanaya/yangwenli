@@ -14,6 +14,7 @@ import type {
 } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
+import { getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,27 +174,41 @@ function CaseRow({
             >
               {t(`fraudTypes.${cas.fraud_type}`)}
             </span>
-            {/* Administration pill */}
-            {cas.administration && (
-              <span
-                className="text-[10px] uppercase tracking-wider px-2 py-0.5"
-                style={{
-                  fontFamily: 'var(--font-family-mono)',
-                  color: '#8a8a86',
-                  border: `1px solid ${BORDER_STRONG}`,
-                }}
-              >
-                {/* Audit fix 2026-05-07: defensive — if an administration value
-                    has no i18n entry, show the raw value lowercase rather than
-                    echoing the uppercase key. Pluck the last segment so users
-                    never see "ADMINISTRATIONS.FOO". */}
-                {(() => {
-                  const key = `administrations.${cas.administration}`
-                  const tr = t(key)
-                  return tr === key || tr.includes('.') ? cas.administration : tr
-                })()}
-              </span>
-            )}
+            {/* Administration pill
+                2026-05-11 (Audit F068/F069): the DB administration field
+                was off for cases that span an administration boundary
+                (e.g. Tren Maya tagged "Peña Nieto" instead of AMLO,
+                NAICM tagged "AMLO" instead of Peña Nieto). We now derive
+                the tag from contract_year_start — the year fraud
+                started, which is the journalism-correct attribution.
+                The original cas.administration is kept only as a
+                fallback when no year is present. */}
+            {(() => {
+              const derivedKey =
+                getAdministrationByYear(cas.contract_year_start ?? cas.contract_year_end)?.key
+              const effectiveAdmin = derivedKey ?? cas.administration
+              if (!effectiveAdmin) return null
+              return (
+                <span
+                  className="text-[10px] uppercase tracking-wider px-2 py-0.5"
+                  style={{
+                    fontFamily: 'var(--font-family-mono)',
+                    color: '#8a8a86',
+                    border: `1px solid ${BORDER_STRONG}`,
+                  }}
+                >
+                  {/* Audit fix 2026-05-07: defensive — if an administration value
+                      has no i18n entry, show the raw value lowercase rather than
+                      echoing the uppercase key. Pluck the last segment so users
+                      never see "ADMINISTRATIONS.FOO". */}
+                  {(() => {
+                    const key = `administrations.${effectiveAdmin}`
+                    const tr = t(key)
+                    return tr === key || tr.includes('.') ? effectiveAdmin : tr
+                  })()}
+                </span>
+              )
+            })()}
             {/* Ground truth indicator */}
             {cas.ground_truth_case_id != null && (
               <span

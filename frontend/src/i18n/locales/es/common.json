@@ -212,7 +212,7 @@
       "other": "Otro"
     }
   },
-  "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 1,401 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia",
+  "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 1,401 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.xyz/metodologia",
   "aboutDataToggle": "Acerca de estos datos",
   "storyType": {
     "era": "Análisis de Era",

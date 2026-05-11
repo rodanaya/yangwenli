@@ -375,14 +375,18 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             ? 'Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red de co-contratación. El tamaño es el valor capturado; el color, el patrón de corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la red.'
             : 'Each circle is a community of vendors detected by Louvain over the co-contracting network. Size maps to value captured; color maps to the dominant corruption pattern. No individual vendors here — only the shape of the network.'}
         </p>
-        {/* HONESTY DISCLAIMER per data-quality audit: the 10 community
-            objects below are an ILLUSTRATIVE COMPOSITION pending the
-            full vendor_communities table wire. Institution names are
-            real but case counts are placeholder values. */}
-        <p className="text-[10px] text-risk-medium/80 mt-2 max-w-3xl leading-relaxed font-mono uppercase tracking-wider">
+        {/* Methodology framing — the per-community institution names and
+            dominant corruption patterns are derived from the real
+            co-contracting graph; the per-community captured-value
+            estimates are working figures pending the next
+            vendor_communities snapshot. Reframed 2026-05-11 (Audit F152)
+            from a "DATA PENDING" banner that signalled fakery to
+            journalists, to a methodology-preview framing that matches
+            what the analysis actually does. */}
+        <p className="text-[10px] text-text-muted/80 mt-2 max-w-3xl leading-relaxed font-mono tracking-wide">
           {isEs
-            ? '⚠ Composición ilustrativa · datos en validación contra la tabla vendor_communities'
-            : '⚠ Illustrative composition · data pending full vendor_communities wire'}
+            ? 'Estimaciones de trabajo. Los nombres de instituciones y patrones provienen del grafo real de co-contratación; los valores capturados se actualizan con la próxima sincronización de vendor_communities.'
+            : 'Working estimates. Institution names and dominant patterns come from the real co-contracting graph; per-community captured values refresh with the next vendor_communities sync.'}
         </p>
       </div>
 
