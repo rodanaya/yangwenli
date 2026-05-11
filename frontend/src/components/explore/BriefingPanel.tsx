@@ -264,6 +264,7 @@ function InstitutionBriefing({
   institutionId: number
   hoverId: number | null
 }) {
+  const navigate = useNavigate()
   const { data: inst } = useQuery({
     queryKey: ['explore', 'institution', institutionId],
     queryFn: () => institutionApi.getById(institutionId),
@@ -342,6 +343,19 @@ function InstitutionBriefing({
         />
       )}
       <RiskPill score={risk} />
+      <button
+        type="button"
+        onClick={() => navigate(`/print/institutions/${institutionId}`)}
+        className="mt-3 w-full py-1.5 px-3 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
+        style={{
+          background: 'transparent',
+          color: 'var(--color-text-secondary)',
+          border: '1px solid var(--color-border)',
+          cursor: 'pointer',
+        }}
+      >
+        {lang === 'en' ? '◆ Full dossier (printable)' : '◆ Dossier completo (imprimible)'}
+      </button>
       <p className="mt-3 text-[11px] text-text-muted leading-relaxed">
         {lang === 'en'
           ? 'Hover a vendor body to preview. Click to drill into Z3 (the contract scatter).'
@@ -443,7 +457,20 @@ function VendorBriefing({
       >
         {lang === 'en' ? '→ Open Red Thread' : '→ Abrir Hilo Rojo'}
       </button>
-      <p className="mt-2 text-[10px] text-text-muted leading-relaxed">
+      <button
+        type="button"
+        onClick={() => navigate(`/print/vendors/${vendorId}`)}
+        className="mt-2 w-full py-1.5 px-3 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
+        style={{
+          background: 'transparent',
+          color: 'var(--color-text-secondary)',
+          border: '1px solid var(--color-border)',
+          cursor: 'pointer',
+        }}
+      >
+        {lang === 'en' ? '◆ Full dossier (printable)' : '◆ Dossier completo (imprimible)'}
+      </button>
+      <p className="mt-3 text-[10px] text-text-muted leading-relaxed">
         {lang === 'en'
           ? 'Click a contract on the canvas for the contract detail view.'
           : 'Clic en un contrato en el lienzo para el detalle.'}

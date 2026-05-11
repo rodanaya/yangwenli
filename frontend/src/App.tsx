@@ -37,6 +37,20 @@ const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
 // case-insensitive clash with the legacy `pages/explore.tsx` page.
 // See docs/SPATIAL_NAV_PLAN.md for the zoom hierarchy.
 const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
+// 2026-05-11 Gap 2: /vendors/:id and /institutions/:id now redirect to
+// the /explore deep link. The legacy dossier components survive at
+// /print/vendors/:id and /print/institutions/:id for the printable
+// surface. See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2.
+const VendorDeepLinkRedirect = lazy(() =>
+  import('@/components/explore/DeepLinkRedirects').then((m) => ({
+    default: m.VendorDeepLinkRedirect,
+  })),
+)
+const InstitutionDeepLinkRedirect = lazy(() =>
+  import('@/components/explore/DeepLinkRedirects').then((m) => ({
+    default: m.InstitutionDeepLinkRedirect,
+  })),
+)
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -360,8 +374,34 @@ function App() {
               <Route path="price-analysis" element={<Navigate to="/sectors" replace />} />
               {/* v1.0 launch cut — ModelTransparency subsumed by /methodology. */}
               <Route path="model" element={<Navigate to="/methodology" replace />} />
+              {/* 2026-05-11 Gap 2: /vendors/:id and /institutions/:id
+                  now resolve into the spatial universe. The redirect
+                  component fetches the entity, computes the parent
+                  sector + institution, and Navigate-replaces to
+                  /explore?s=…&i=…&v=…. Legacy dossier survives at
+                  /print/vendors/:id for printable / fallback use.
+                  Pass ?print=1 to bypass the redirect.
+                  See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2. */}
               <Route
                 path="vendors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <VendorDeepLinkRedirect />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="institutions/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionDeepLinkRedirect />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* Legacy dossier routes — printable surface. Pre-2026-05-11
+                  these lived at /vendors/:id and /institutions/:id. */}
+              <Route
+                path="print/vendors/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <VendorProfile />
@@ -369,7 +409,7 @@ function App() {
                 }
               />
               <Route
-                path="institutions/:id"
+                path="print/institutions/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionProfile />
