@@ -1076,6 +1076,26 @@ export default function Atlas() {
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
   const navigate = useNavigate()
 
+  // 2026-05-11: redirect /atlas?z1=true → /explore. The ?z1=true experimental
+  // flag was the abandoned in-Atlas attempt at spatial-nav drill; the
+  // production version now lives at /explore (Phase 7). Preserve any
+  // sector/year params so deep-links still land on the right place.
+  // Harness was getting 4 nav errors per hour on /atlas?z1=true&lens=sectors.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('z1') === 'true') {
+      const next = new URLSearchParams()
+      // Map ?lens=sectors → no-op (Z0 is the system view), ?lens=patterns
+      // also goes to Z0 since the new /explore is sector-first.
+      // Preserve year if present.
+      const year = params.get('year')
+      if (year) next.set('year', year)
+      const replace = next.toString() ? `/explore?${next}` : '/explore'
+      navigate(replace, { replace: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [mode, setMode] = useState<ConstellationMode>('patterns')
   const [yearIndex, setYearIndex] = useState<number>(YEAR_SNAPSHOTS.length - 1) // default to most recent
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
