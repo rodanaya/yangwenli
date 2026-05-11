@@ -17,6 +17,7 @@ import {
   SECTOR_COLORS,
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   useCurrentFocus,
   useExploreState,
@@ -222,7 +223,20 @@ function SectorBriefing({
       return (
         <div>
           <Eyebrow color={accent}>{lang === 'en' ? 'Hovering · institution' : 'Hover · institución'}</Eyebrow>
-          <h2 className="text-base font-bold mb-1 text-text-primary leading-tight">{toTitleCase(inst.name)}</h2>
+          {/* Canonical entity chrome — same chip that renders this
+              institution in every other surface (Bible §3.1 / CLAUDE.md
+              hard rule #1). Click routes through /institutions/:id
+              which DeepLinkRedirects back into the universe. */}
+          <div className="mb-2">
+            <EntityIdentityChip
+              type="institution"
+              id={inst.institution_id}
+              name={inst.name}
+              size="md"
+              riskScore={inst.risk}
+              sectorCode={sectorCode}
+            />
+          </div>
           <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(inst.total_contracts)} />
           <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(inst.total_amount_mxn)} />
           {inst.direct_award_pct != null && (
@@ -287,7 +301,17 @@ function InstitutionBriefing({
           <Eyebrow color={RISK_COLORS[getRiskLevelFromScore(risk)]}>
             {lang === 'en' ? 'Hovering · vendor' : 'Hover · proveedor'}
           </Eyebrow>
-          <h2 className="text-base font-bold mb-1 text-text-primary leading-tight">{toTitleCase(v.vendor_name)}</h2>
+          {/* Canonical vendor chip — name through formatVendorName,
+              risk dot driven by avg_risk_score. */}
+          <div className="mb-2">
+            <EntityIdentityChip
+              type="vendor"
+              id={v.vendor_id}
+              name={v.vendor_name}
+              size="md"
+              riskScore={risk}
+            />
+          </div>
           <Stat label={lang === 'en' ? 'Contracts here' : 'Contratos aquí'} value={formatNumber(v.contract_count)} />
           <Stat label={lang === 'en' ? 'Value' : 'Valor'} value={formatCompactMXN(v.total_value_mxn)} />
           <RiskPill score={risk} />
@@ -333,14 +357,20 @@ function InstitutionBriefing({
         />
       )}
       {longestTenured && (
-        <Stat
-          label={lang === 'en' ? 'Longest tenure' : 'Mayor antigüedad'}
-          value={
-            (longestTenured as { vendor_name?: string }).vendor_name
-              ? toTitleCase((longestTenured as { vendor_name: string }).vendor_name)
-              : '—'
-          }
-        />
+        <div className="flex items-center justify-between py-1 border-b border-border/40 gap-2">
+          <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted shrink-0">
+            {lang === 'en' ? 'Longest tenure' : 'Mayor antigüedad'}
+          </span>
+          {/* Canonical vendor chip — clicks through DeepLinkRedirect
+              back into the universe focused on that vendor. */}
+          <EntityIdentityChip
+            type="vendor"
+            id={longestTenured.vendor_id}
+            name={longestTenured.vendor_name}
+            size="xs"
+            riskScore={longestTenured.avg_risk_score ?? null}
+          />
+        </div>
       )}
       <RiskPill score={risk} />
       <button
@@ -433,16 +463,32 @@ function VendorBriefing({
           value={`${firstYear}–${lastYear} (${yearsActive}y)`}
         />
       )}
-      {topInstitution && (
-        <Stat
-          label={lang === 'en' ? 'Top client' : 'Cliente top'}
-          value={
-            (topInstitution as { institution_name?: string; name?: string }).institution_name ??
-            (topInstitution as { institution_name?: string; name?: string }).name ??
-            '—'
-          }
-        />
-      )}
+      {topInstitution && (() => {
+        const ti = topInstitution as {
+          institution_id?: number
+          institution_name?: string
+          name?: string
+        }
+        const name = ti.institution_name ?? ti.name ?? null
+        if (!name) return null
+        if (!ti.institution_id) {
+          // No id → fall back to a plain Stat row.
+          return <Stat label={lang === 'en' ? 'Top client' : 'Cliente top'} value={name} />
+        }
+        return (
+          <div className="flex items-center justify-between py-1 border-b border-border/40 gap-2">
+            <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted shrink-0">
+              {lang === 'en' ? 'Top client' : 'Cliente top'}
+            </span>
+            <EntityIdentityChip
+              type="institution"
+              id={ti.institution_id}
+              name={name}
+              size="xs"
+            />
+          </div>
+        )
+      })()}
       <RiskPill score={risk} />
       <button
         type="button"
@@ -569,7 +615,22 @@ function ContractBriefing({
 
       <Stat label={lang === 'en' ? 'Amount' : 'Monto'} value={formatCompactMXN(amount)} />
       <Stat label={lang === 'en' ? 'Date' : 'Fecha'} value={String(date)} />
-      <Stat label={lang === 'en' ? 'Institution' : 'Institución'} value={institutionName} />
+      {/* Institution row — chip when we have an id, plain Stat as fallback. */}
+      {data.institution_id ? (
+        <div className="flex items-center justify-between py-1 border-b border-border/40 gap-2">
+          <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted shrink-0">
+            {lang === 'en' ? 'Institution' : 'Institución'}
+          </span>
+          <EntityIdentityChip
+            type="institution"
+            id={data.institution_id}
+            name={data.institution_name ?? '—'}
+            size="xs"
+          />
+        </div>
+      ) : (
+        <Stat label={lang === 'en' ? 'Institution' : 'Institución'} value={institutionName} />
+      )}
       <Stat label={lang === 'en' ? 'Sector' : 'Sector'} value={sector} />
       <Stat label={lang === 'en' ? 'Procedure' : 'Procedimiento'} value={procedure} />
 
