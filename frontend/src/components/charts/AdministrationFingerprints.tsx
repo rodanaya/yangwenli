@@ -144,8 +144,11 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
         <p className="text-[10px] text-text-muted font-mono">{admin.yearRange}</p>
       </div>
 
-      {/* Radar */}
-      <div className="w-full">
+      {/* Radar — explicit min-width on the wrapper so the radar's
+          ResponsiveContainer doesn't fire its width(-1) warning on first
+          paint when the 5-col grid hasn't resolved its track widths yet.
+          120px is the practical floor for a readable radar. */}
+      <div className="w-full" style={{ minWidth: 120 }}>
         <EditorialRadarChart
           axes={RADAR_AXES}
           series={buildSeries(admin)}
