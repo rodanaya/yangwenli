@@ -1551,27 +1551,16 @@ export function Methodology() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
-                    {([
-                      { l: 'Execution-phase fraud invisible', i: 'Construction/infrastructure underscored', f: 'Requires ASF audit data integration' },
-                      { l: 'Training bias (dominant cases)', i: 'Small-vendor & multi-sector corruption underdetected', f: 'Add more labeled ground truth cases' },
-                      { l: 'Ghost company detection (partial)', i: 'Small-shell EFOS vendors still challenging to detect', f: 'Case 22 included; institution-scoped labels' },
-                      { l: 'Vendor deduplication unsolved', i: 'True concentration understated pre-2018', f: 'RFC + address blocking (partial)' },
-                      { l: 'Co-bidding signal = zero', i: 'Bid rotation & cover bidding not in score', f: 'Need collusion-specific ground truth' },
-                      { l: 'CompraNet abolished Apr 2025', i: 'Future data unavailable; 1.9M records already deleted', f: 'Dependent on government decisions' },
-                      { l: 'Pre-2010 data quality', i: '25% of records less reliable', f: 'Structural COMPRANET limitation' },
-                      { l: 'Correlation ≠ causation', i: 'Scores require investigative follow-up', f: 'By design — model informs, not concludes' },
-                      { l: 'Structural concentration (sector)', i: 'Some sectors over-flagged (Defensa, Energía)', f: 'Sector-specific exclusion lists' },
-                      { l: 'Temporal stationarity', i: 'New fraud patterns may be undetected', f: 'Periodic retraining with new cases' },
-                      { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
-                      { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
-                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.8.5 temporal split', f: 'Point-in-time rolling features' },
-                      { l: 'PU c=0.32 post-OECD calibration', i: 'HR=11.01% (within OECD 2–15% range); intercept -2.616 floor applied', f: 'Documented intentional design decision' },
-                      { l: 'ARIA T1 = ground-truth lookup', i: 'External-flags +0.20 IPS boost guarantees GT vendors enter T1; T2 is the actual discovery surface', f: 'S.7 deliberate recalibration session pending' },
-                    ] as const).map((row) => (
-                      <tr key={row.l} className="hover:bg-accent/[0.03]">
-                        <td className="px-3 py-2 text-text-primary">{row.l}</td>
-                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{row.i}</td>
-                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{row.f}</td>
+                    {/* 15 known limitations — content in methodology.json
+                        under `limitationsTable.row{N}_{l|i|f}` so the whole
+                        table translates with the language toggle. Stable
+                        index keys; updates to the list need both EN+ES
+                        JSON updates. */}
+                    {Array.from({ length: 15 }, (_, idx) => idx + 1).map((n) => (
+                      <tr key={n} className="hover:bg-accent/[0.03]">
+                        <td className="px-3 py-2 text-text-primary">{t(`limitationsTable.row${n}_l`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{t(`limitationsTable.row${n}_i`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{t(`limitationsTable.row${n}_f`)}</td>
                       </tr>
                     ))}
                   </tbody>
