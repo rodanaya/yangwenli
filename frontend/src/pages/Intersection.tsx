@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -96,7 +96,11 @@ function VendorRow({
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-text-muted">
           {v.primary_sector_name && (
-            <span className="uppercase tracking-wider">{v.primary_sector_name}</span>
+            // F150/F257 fix: localize sector label so EN UI doesn't
+            // show Spanish ("ENERGIA" → "ENERGY" on EN).
+            <span className="uppercase tracking-wider">
+              {getSectorName(v.primary_sector_name.toLowerCase(), lang === 'es' ? 'es' : 'en')}
+            </span>
           )}
           <span>·</span>
           <span className="tabular-nums">

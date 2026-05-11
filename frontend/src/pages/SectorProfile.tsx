@@ -930,7 +930,18 @@ function SectorProfileSkeleton() {
 
 export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
-  const sectorId = Number(id)
+  // 2026-05-11 (Audit F091): /sectors/salud was 404'ing because we did
+  // Number('salud') → NaN. Both numeric ids (/sectors/1) and slug codes
+  // (/sectors/salud) are legitimate inbound URLs — the slug form is what
+  // pre-2026 internal links use, and what journalists are most likely
+  // to type. Resolve either form to the canonical numeric sector id.
+  const sectorId = (() => {
+    if (id == null) return 0
+    const asNum = Number(id)
+    if (Number.isFinite(asNum) && asNum > 0) return asNum
+    const bySlug = SECTORS.find((s) => s.code === id.toLowerCase())
+    return bySlug?.id ?? 0
+  })()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation('sectors')
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
