@@ -33,6 +33,12 @@ commit individually deployed to https://rubli.xyz.
 | Backend cache warmup endpoints | 18 | 33 (added 7 categories + 14 vendor heavy endpoints) |
 | Harness-driven fixes shipped | — | 12 (ErrorBoundary stale-chunk, Z1 hooks-order, ReportModal NaN, Recharts width, Categories throttle, SectorHover 422, slug filter, watchlist auth-gate, `/atlas?z1=true` redirect, prefetch, 2 extracts) |
 
+## Bonus shipped after week-summary write-up
+
+| Commit | What |
+|---|---|
+| `7d417ee` | `fix(admin radar): minWidth=120 on grid cell` — kills the 565 width(-1) warnings/35h that all sourced from the AdministrationFingerprints 5-panel radar grid (first-paint 0-width cells before CSS grid resolved). Largest single noise reduction of the week. |
+
 ## Wakeup-ready state
 
 `docs/AUTONOMOUS_WEEKEND_STATE.md` is up to date. `docs/PLAN_36H_2026-05-09.md`
