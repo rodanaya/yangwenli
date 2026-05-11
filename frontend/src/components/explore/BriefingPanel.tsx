@@ -19,6 +19,7 @@ import {
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
+  isCurrentViewPinned,
   useCurrentFocus,
   useExploreState,
   useExploreDispatch,
@@ -41,7 +42,10 @@ export function BriefingPanel({ lang }: BriefingPanelProps) {
         borderLeft: '1px solid var(--color-border)',
       }}
     >
-      <Breadcrumbs lang={lang} />
+      <div className="border-b border-border flex items-center justify-between gap-3">
+        <Breadcrumbs lang={lang} />
+        <PinToggleButton lang={lang} />
+      </div>
       <div className="px-4 py-3">
         {focus.kind === 'system' && <SystemBriefing lang={lang} hoverId={getHoverId(state.hover, 'sector')} />}
         {focus.kind === 'sector' && <SectorBriefing lang={lang} sectorId={focus.sectorId} sectorCode={focus.sectorCode} hoverId={getHoverId(state.hover, 'institution')} />}
@@ -62,7 +66,7 @@ function Breadcrumbs({ lang }: { lang: 'en' | 'es' }) {
   const state = useExploreState()
   const dispatch = useExploreDispatch()
   return (
-    <div className="px-4 py-2 border-b border-border flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted overflow-x-auto whitespace-nowrap">
+    <div className="flex-1 min-w-0 px-4 py-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted overflow-x-auto whitespace-nowrap">
       {state.stack.map((f, i) => {
         const isLast = i === state.stack.length - 1
         const label = focusLabel(f, lang)
@@ -86,6 +90,65 @@ function Breadcrumbs({ lang }: { lang: 'en' | 'es' }) {
         )
       })}
     </div>
+  )
+}
+
+/**
+ * PinToggleButton — pin the current focus so it stays highlighted as
+ * the user navigates to other entities. The pin survives zoom
+ * transitions and full-page reloads (persisted to localStorage in
+ * ExploreState's reducer). Hidden when the user is at Z0 — pinning
+ * "system" is meaningless.
+ *
+ * Per docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 4.
+ */
+function PinToggleButton({ lang }: { lang: 'en' | 'es' }) {
+  const state = useExploreState()
+  const dispatch = useExploreDispatch()
+  const focus = useCurrentFocus(state)
+  const pinned = isCurrentViewPinned(state)
+  const hasPinAtAll = state.pinnedPath != null && state.pinnedPath.length > 0
+
+  // No pin button at Z0 — can't pin the system root.
+  if (focus.kind === 'system') {
+    // But if a pin exists from a previous view, offer a "clear pin" affordance.
+    if (!hasPinAtAll) return <span className="pr-3" />
+    return (
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'unpin' })}
+        className="mr-3 my-1 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors hover:bg-background-elevated text-text-muted whitespace-nowrap"
+        style={{ background: 'transparent', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+        aria-label={lang === 'en' ? 'Clear pinned entity' : 'Quitar fijado'}
+        title={lang === 'en' ? 'Clear the pinned entity' : 'Quitar la entidad fijada'}
+      >
+        ✕ {lang === 'en' ? 'Pin' : 'Fijado'}
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => dispatch({ type: pinned ? 'unpin' : 'pin-current' })}
+      className="mr-3 my-1 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors whitespace-nowrap"
+      style={{
+        background: pinned ? 'var(--color-accent)' : 'transparent',
+        color: pinned ? 'white' : 'var(--color-text-secondary)',
+        border: `1px solid ${pinned ? 'var(--color-accent)' : 'var(--color-border)'}`,
+        cursor: 'pointer',
+      }}
+      aria-pressed={pinned}
+      title={
+        pinned
+          ? lang === 'en' ? 'Unpin this view' : 'Quitar fijado de esta vista'
+          : lang === 'en' ? 'Pin this view so it stays highlighted as you navigate' : 'Fijar esta vista para que se resalte al navegar'
+      }
+    >
+      {pinned
+        ? (lang === 'en' ? '📍 Pinned' : '📍 Fijado')
+        : (lang === 'en' ? '📍 Pin' : '📍 Fijar')}
+    </button>
   )
 }
 

@@ -38,6 +38,14 @@ export interface ExploreState {
   year: number | null
   /** Risk floor — drops bodies below this level. */
   riskFloor: 'all' | 'medium' | 'high' | 'critical'
+  /**
+   * Pinned entity path — a snapshot of the focus stack at pin time.
+   * Survives zoom transitions: pin a vendor at Z3, then zoom out to
+   * Z0, the canvas still highlights the vendor's home sector and
+   * institution as you walk past them. Null when nothing is pinned.
+   * Persisted to localStorage (rubli_explore_pin_v1).
+   */
+  pinnedPath: Focus[] | null
 }
 
 export type ExploreAction =
@@ -52,12 +60,50 @@ export type ExploreAction =
   | { type: 'set-year'; year: number | null }
   | { type: 'set-risk-floor'; floor: ExploreState['riskFloor'] }
   | { type: 'hydrate-from-url'; stack: Focus[] }
+  | { type: 'pin-current' }
+  | { type: 'unpin' }
+  | { type: 'set-pinned-path'; path: Focus[] | null }
 
 export const EXPLORE_DEFAULT_STATE: ExploreState = {
   stack: [{ level: 0, kind: 'system' }],
   hover: null,
   year: null,
   riskFloor: 'all',
+  pinnedPath: null,
+}
+
+const PIN_STORAGE_KEY = 'rubli_explore_pin_v1'
+
+/** Read the persisted pin from localStorage. Defensive — never throws. */
+function readPersistedPin(): Focus[] | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(PIN_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    // Soft validation — drop the pin entirely if any entry looks malformed.
+    for (const f of parsed) {
+      if (!f || typeof f !== 'object' || typeof f.level !== 'number' || typeof f.kind !== 'string') return null
+    }
+    return parsed as Focus[]
+  } catch {
+    return null
+  }
+}
+
+/** Persist (or clear) the pin. Never throws. */
+function persistPin(path: Focus[] | null): void {
+  if (typeof window === 'undefined') return
+  try {
+    if (path && path.length > 0) {
+      window.localStorage.setItem(PIN_STORAGE_KEY, JSON.stringify(path))
+    } else {
+      window.localStorage.removeItem(PIN_STORAGE_KEY)
+    }
+  } catch {
+    // Quota / disabled storage — silent.
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -116,6 +162,20 @@ function reducer(state: ExploreState, action: ExploreAction): ExploreState {
       return { ...state, year: action.year }
     case 'set-risk-floor':
       return { ...state, riskFloor: action.floor }
+    case 'pin-current': {
+      // Snapshot the current stack EXCLUDING the system root — pinning
+      // "system" is meaningless. If we're already at Z0, no-op.
+      if (state.stack.length <= 1) return state
+      const path = state.stack.slice(1)
+      persistPin(path)
+      return { ...state, pinnedPath: path }
+    }
+    case 'unpin':
+      persistPin(null)
+      return { ...state, pinnedPath: null }
+    case 'set-pinned-path':
+      persistPin(action.path)
+      return { ...state, pinnedPath: action.path }
     default:
       return state
   }
@@ -129,7 +189,13 @@ const StateCtx = createContext<ExploreState | null>(null)
 const DispatchCtx = createContext<React.Dispatch<ExploreAction> | null>(null)
 
 export function ExploreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, EXPLORE_DEFAULT_STATE)
+  // Lazy init seeds the pinnedPath from localStorage so a refresh
+  // keeps the pin without an extra hydration effect.
+  const [state, dispatch] = useReducer(
+    reducer,
+    EXPLORE_DEFAULT_STATE,
+    (init): ExploreState => ({ ...init, pinnedPath: readPersistedPin() }),
+  )
   return (
     <StateCtx.Provider value={state}>
       <DispatchCtx.Provider value={dispatch}>{children}</DispatchCtx.Provider>
@@ -152,4 +218,62 @@ export function useExploreDispatch(): React.Dispatch<ExploreAction> {
 /** Convenience: the currently focused entity (top of stack). */
 export function useCurrentFocus(state: ExploreState): Focus {
   return state.stack[state.stack.length - 1]
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pin helpers — used by ExploreCanvas (to draw ring annotations) and
+// BriefingPanel (to render the pin/unpin button).
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Are two Focus entries the same entity? Structural equality by kind+id. */
+export function focusEquals(a: Focus | null | undefined, b: Focus | null | undefined): boolean {
+  if (!a || !b) return false
+  if (a.kind !== b.kind) return false
+  switch (a.kind) {
+    case 'system': return b.kind === 'system'
+    case 'sector': return b.kind === 'sector' && a.sectorId === b.sectorId
+    case 'institution': return b.kind === 'institution' && a.institutionId === b.institutionId
+    case 'vendor': return b.kind === 'vendor' && a.vendorId === b.vendorId
+    case 'contract': return b.kind === 'contract' && a.contractId === b.contractId
+  }
+}
+
+/**
+ * Returns the pinned entity that should be annotated at the *next* level
+ * deeper than the current focus, or null if the pin is not in scope at
+ * this zoom (we navigated away from the pin's lineage).
+ *
+ * Example: pin a vendor inside Salud → IMSS → Vendor X. While the user
+ * is at Z1 Salud, this returns IMSS (institution body to highlight).
+ * While they're at Z2 IMSS, it returns Vendor X (vendor body). While at
+ * a different sector, it returns null.
+ */
+export function getPinAnnotation(state: ExploreState): Focus | null {
+  const { pinnedPath, stack } = state
+  if (!pinnedPath || pinnedPath.length === 0) return null
+  const currentFocus = stack[stack.length - 1]
+  // Lineage check — for levels 1..currentFocus.level, the stack and
+  // pin must agree on the ancestor entity.
+  for (let lvl = 1; lvl <= currentFocus.level; lvl++) {
+    const stackEntry = stack[lvl]
+    const pinEntry = pinnedPath[lvl - 1]
+    if (!stackEntry || !pinEntry || !focusEquals(stackEntry, pinEntry)) return null
+  }
+  // Annotation is one level deeper than current.
+  return pinnedPath[currentFocus.level] ?? null
+}
+
+/**
+ * Is the current focus *exactly* the pinned view? (Same entity, same
+ * depth.) Drives the Pin/Unpin toggle in the briefing panel.
+ */
+export function isCurrentViewPinned(state: ExploreState): boolean {
+  const { pinnedPath, stack } = state
+  if (!pinnedPath || pinnedPath.length === 0) return false
+  // Stack always starts with the system root; pinnedPath excludes it.
+  if (stack.length - 1 !== pinnedPath.length) return false
+  for (let i = 0; i < pinnedPath.length; i++) {
+    if (!focusEquals(pinnedPath[i], stack[i + 1])) return false
+  }
+  return true
 }
