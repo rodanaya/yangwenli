@@ -28,6 +28,7 @@ import {
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import {
+  getPinAnnotation,
   useExploreState,
   useExploreDispatch,
   useCurrentFocus,
@@ -149,6 +150,9 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
   const dispatch = useExploreDispatch()
   const focus = useCurrentFocus(state)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  // Gap 4.2: the pinned entity to annotate at the next zoom level
+  // deeper than the current focus, or null when no pin is in scope.
+  const pinAnnotation = getPinAnnotation(state)
 
   // Pan + wheel zoom state — local to the canvas (not in reducer).
   const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -402,7 +406,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
           }}
         >
           <AnimatePresence mode="wait">
-            {focus.kind === 'system' && <Z0Layer key="z0" lang={lang} dispatch={dispatch} triggerDrill={triggerCameraDrill} />}
+            {focus.kind === 'system' && <Z0Layer key="z0" lang={lang} dispatch={dispatch} triggerDrill={triggerCameraDrill} pinAnnotation={pinAnnotation} />}
             {focus.kind === 'sector' && (
               <Z1Layer
                 key={`z1-${focus.sectorId}`}
@@ -411,6 +415,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 lang={lang}
                 dispatch={dispatch}
                 triggerDrill={triggerCameraDrill}
+                pinAnnotation={pinAnnotation}
               />
             )}
             {focus.kind === 'institution' && (
@@ -421,6 +426,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 lang={lang}
                 dispatch={dispatch}
                 triggerDrill={triggerCameraDrill}
+                pinAnnotation={pinAnnotation}
               />
             )}
             {focus.kind === 'vendor' && (
@@ -429,6 +435,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                 vendorId={focus.vendorId}
                 vendorName={focus.vendorName}
                 lang={lang}
+                pinAnnotation={pinAnnotation}
               />
             )}
             {/* Z4 contract focus stays on the Z3 visual canvas — only the
@@ -447,6 +454,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
                   vendorName={parentVendor.vendorName}
                   lang={lang}
                   highlightContractId={focus.contractId}
+                  pinAnnotation={pinAnnotation}
                 />
               )
             })()}
@@ -465,10 +473,12 @@ function Z0Layer({
   lang,
   dispatch,
   triggerDrill,
+  pinAnnotation,
 }: {
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
+  pinAnnotation: Focus | null
 }) {
   // Phase 2.5 (May 9): size sector bodies by total spend so the system
   // view encodes scale, not just position. Falls back to a uniform layout
@@ -534,6 +544,7 @@ function Z0Layer({
         // would be uniform — dull and uninformative.
         const sizeFactor = sizeByCode?.get(b.code) ?? null
         const r = sizeFactor != null ? 22 + sizeFactor * 28 : 32
+        const isPinned = pinAnnotation?.kind === 'sector' && pinAnnotation.sectorId === b.id
         return (
           <SectorBodyVisual
             key={b.code}
@@ -542,6 +553,7 @@ function Z0Layer({
             r={r}
             color={b.color}
             label={b.name}
+            isPinned={isPinned}
             onClick={() =>
               triggerDrill(cx, cy, () =>
                 dispatch({ type: 'drill-into-sector', sectorId: b.id, sectorCode: b.code }),
@@ -565,6 +577,7 @@ function SectorBodyVisual({
   label,
   onClick,
   onHover,
+  isPinned = false,
 }: {
   cx: number
   cy: number
@@ -573,6 +586,8 @@ function SectorBodyVisual({
   label: string
   onClick: () => void
   onHover: (hovering: boolean) => void
+  /** When true, renders a pulsing pin ring around this body. */
+  isPinned?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r + 6 : r
@@ -583,6 +598,9 @@ function SectorBodyVisual({
     <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
       {/* Halo */}
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
+      {/* Pin ring — Gap 4.2. Pulses regardless of hover; SMIL animation
+          keeps the work on the GPU and avoids React state churn. */}
+      {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 4} color={color} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
       <text
         x={cx}
@@ -600,6 +618,25 @@ function SectorBodyVisual({
   )
 }
 
+/**
+ * PinRing — shared SMIL-animated pulsing ring. Reusable across Z0
+ * sector bodies, Z1 institution bodies, Z2 vendor bodies. (Z3 contract
+ * dots already use a similar inline-SMIL ring for the contract-focus
+ * highlight; we don't reuse this primitive there because the contract
+ * dots are tiny and want a tighter radius envelope.)
+ */
+function PinRing({ cx, cy, r, color }: { cx: number; cy: number; r: number; color: string }) {
+  return (
+    <g style={{ pointerEvents: 'none' }} aria-hidden="true">
+      <circle cx={cx} cy={cy} r={r + 2} fill="none" stroke={color} strokeWidth={2.5} opacity={1}>
+        <animate attributeName="r" values={`${r + 2};${r + 10};${r + 2}`} dur="1.8s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.9;0.15;0.9" dur="1.8s" repeatCount="indefinite" />
+      </circle>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={2} opacity={0.85} />
+    </g>
+  )
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 // Z1 — sector view (institutions inside one sector)
 // ────────────────────────────────────────────────────────────────────────────
@@ -610,12 +647,14 @@ function Z1Layer({
   lang,
   dispatch,
   triggerDrill,
+  pinAnnotation,
 }: {
   sectorId: number
   sectorCode: string
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
+  pinAnnotation: Focus | null
 }) {
   // ⚠️ Hooks must come before any early return — moved useExploreState here
   // (was below the loading/error returns, which violated rules-of-hooks and
@@ -709,6 +748,9 @@ function Z1Layer({
       {filteredInstitutions.map((inst) => {
         const cx = xOf(inst.fx)
         const cy = yOf(inst.fy)
+        const isPinned =
+          pinAnnotation?.kind === 'institution' &&
+          pinAnnotation.institutionId === inst.institution_id
         return (
           <InstitutionBodyVisual
             key={inst.institution_id}
@@ -717,6 +759,7 @@ function Z1Layer({
             cy={cy}
             r={rOf(inst.size)}
             showLabel={inst.size > 0.35}
+            isPinned={isPinned}
             onClick={() =>
               triggerDrill(cx, cy, () =>
                 dispatch({
@@ -747,6 +790,7 @@ function InstitutionBodyVisual({
   showLabel,
   onClick,
   onHover,
+  isPinned = false,
 }: {
   inst: SpatialInstitution
   cx: number
@@ -755,6 +799,7 @@ function InstitutionBodyVisual({
   showLabel: boolean
   onClick: () => void
   onHover: (hovering: boolean) => void
+  isPinned?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   const level = getRiskLevelFromScore(inst.risk)
@@ -767,6 +812,7 @@ function InstitutionBodyVisual({
     <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
       <title>{tooltip}</title>
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
+      {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.5} />
       {showLabel && (
         <text
@@ -809,12 +855,14 @@ function Z2Layer({
   lang,
   dispatch,
   triggerDrill,
+  pinAnnotation,
 }: {
   institutionId: number
   institutionName: string
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
+  pinAnnotation: Focus | null
 }) {
   // Pull the parent sector from the focus stack so the canvas keeps its
   // sector-tinted backdrop one level deeper (Salud→IMSS still glows red).
@@ -945,6 +993,7 @@ function Z2Layer({
             fill={fill}
             tooltip={tooltip}
             label={sizeRatio > 0.18 ? shortLabel(v.vendor_name) : null}
+            isPinned={pinAnnotation?.kind === 'vendor' && pinAnnotation.vendorId === v.vendor_id}
             onClick={() =>
               triggerDrill(cx, cy, () =>
                 dispatch({
@@ -976,6 +1025,7 @@ function VendorBodyVisual({
   tooltip,
   onClick,
   onHover,
+  isPinned = false,
 }: {
   cx: number
   cy: number
@@ -985,6 +1035,7 @@ function VendorBodyVisual({
   tooltip?: string
   onClick: () => void
   onHover: (hovering: boolean) => void
+  isPinned?: boolean
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r * 1.18 : r
@@ -997,6 +1048,7 @@ function VendorBodyVisual({
     >
       {tooltip && <title>{tooltip}</title>}
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 5} fill={fill} fillOpacity={0.18} />}
+      {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 1} color={fill} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.2} />
       {label && (
         <text
@@ -1025,6 +1077,7 @@ function Z3Layer({
   vendorName,
   lang,
   highlightContractId,
+  pinAnnotation,
 }: {
   vendorId: number
   vendorName: string
@@ -1032,6 +1085,8 @@ function Z3Layer({
   /** If set, render a pulsing ring on the matching contract dot — used when
    *  focus.kind === 'contract' (Z4 focus inside the same Z3 visual). */
   highlightContractId?: number | null
+  /** Contract-level pin annotation (when pinnedPath ends at a contract). */
+  pinAnnotation?: Focus | null
 }) {
   // Hooks first (rules of hooks).
   const dispatch = useExploreDispatch()
@@ -1151,6 +1206,8 @@ function Z3Layer({
         const fill = RISK_COLORS[level]
         const dim = yearFilter != null && yr !== yearFilter
         const isHighlighted = highlightContractId != null && c.id === highlightContractId
+        const isPinnedContract =
+          pinAnnotation?.kind === 'contract' && pinAnnotation.contractId === c.id
         // Tooltip body — read by the browser via SVG <title>. Keeps a
         // hover preview without React state churn on a 100-circle scatter.
         const tooltipLines = [
@@ -1168,6 +1225,12 @@ function Z3Layer({
             onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
           >
             <title>{tooltipLines.join('\n')}</title>
+            {/* Pin ring — Gap 4.2. Same SMIL primitive as sectors /
+                institutions / vendors. Distinct from the Z4-focus ring
+                so a pinned-but-not-focused contract still pulses. */}
+            {isPinnedContract && !isHighlighted && (
+              <PinRing cx={cx} cy={cy} r={r + 2} color={fill} />
+            )}
             {/* Pulsing focus ring — only renders when this contract is the
                 active Z4 focus. Two concentric circles animated via SMIL so
                 the effect doesn't add React state churn. */}
