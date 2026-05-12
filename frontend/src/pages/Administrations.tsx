@@ -625,14 +625,18 @@ export default function Administrations() {
               >
                 {isEs ? (
                   <>
-                    Seis administraciones,{' '}
+                    Cinco administraciones,{' '}
                     <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
                       un solo patrón.
                     </span>
                   </>
                 ) : (
                   <>
-                    Six administrations,{' '}
+                    {/* 2026-05-12 (Audit F157): "Six administrations" headline
+                        contradicted "Five federal administrations" body and
+                        the actual count (Fox / Calderón / Peña Nieto / AMLO /
+                        Sheinbaum). Aligned to five. */}
+                    Five administrations,{' '}
                     <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
                       one pattern.
                     </span>
@@ -657,7 +661,7 @@ export default function Administrations() {
             </div>
             <div className="flex items-baseline gap-5 flex-shrink-0">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">6</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">5</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Administraciones' : 'Administrations'}</div>
               </div>
               <div className="text-right">
@@ -708,7 +712,12 @@ export default function Administrations() {
                 fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
               }}
             >
-              {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
+              {/* 2026-05-12 (Audit F160): subhead and hero showed two
+                  precisions of the same totals side by side (3,049,988
+                  vs 3.1M; 9.87T vs 9.9T). Aligned to the hero figures
+                  so the reader sees one consistent number. The
+                  precise breakdown lives in /methodology. */}
+              {t('classifiedHeader.subtitle', { contracts: '3.1M', value: '9.9T' })}
             </p>
           </div>
           <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />

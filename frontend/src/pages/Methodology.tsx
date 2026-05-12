@@ -166,7 +166,15 @@ const MODEL_EVOLUTION_STEPS = [
     overlay: false,
   },
   {
-    version: 'v0.8.5',
+    // 2026-05-12 (Audit F082/F221): this row was mislabeled as v0.8.5,
+    // creating two rows both reading "v0.8.5" — the old v0.6.5 entry
+    // (Mar 25, 2026, AUC 0.828, 748 GT cases) showed up looking like
+    // a duplicate of the active May 2 v0.8.5 model. Renamed to its
+    // correct version so the lineage reads as a coherent progression
+    // and the "1,401 cases vs 748 cases" contradiction the audit
+    // surfaced becomes self-explanatory (748 = v0.6.5 trained-on,
+    // 1,401 = v0.8.5 trained-on).
+    version: 'v0.6.5',
     date: 'Mar 25, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
