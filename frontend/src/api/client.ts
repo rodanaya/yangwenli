@@ -2088,8 +2088,8 @@ export const categoriesApi = {
     }
   },
 
-  getVendorInstitution: async (categoryId: number, limit = 25) => {
-    const { data } = await api.get(`/categories/${categoryId}/vendor-institution`, { params: { limit } })
+  getVendorInstitution: async (categoryId: number, limit = 25, scope = 'federal') => {
+    const { data } = await api.get(`/categories/${categoryId}/vendor-institution`, { params: { limit, scope } })
     return data as {
       category_id: number
       category_name: string
@@ -2126,8 +2126,8 @@ export const categoriesApi = {
     }
   },
 
-  getTopVendors: async (categoryId: number, limit = 15) => {
-    const { data } = await api.get(`/categories/${categoryId}/top-vendors`, { params: { limit } })
+  getTopVendors: async (categoryId: number, limit = 15, scope = 'federal') => {
+    const { data } = await api.get(`/categories/${categoryId}/top-vendors`, { params: { limit, scope } })
     return data as {
       category_id: number
       category_name: string

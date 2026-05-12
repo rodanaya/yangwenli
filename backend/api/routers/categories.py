@@ -827,9 +827,17 @@ def get_category_price_distribution(category_id: int):
 def get_category_top_vendors(
     category_id: int,
     limit: int = Query(15, ge=1, le=30),
+    scope: str = Query("federal", regex="^(federal|all)$"),
 ):
-    """Return top vendors in a category with market share and HHI concentration."""
-    cache_key = f"tv:{category_id}:{limit}"
+    """Return top vendors in a category with market share and HHI concentration.
+
+    `scope` (Audit Fix E, Issue #001):
+      - `federal` (default): counts only contracts placed by federal institutions,
+        excluding state, municipal, and state-enterprise institution types whose
+        tiny denominators skew the ranking.
+      - `all`: legacy behavior — every institution type included.
+    """
+    cache_key = f"tv:{category_id}:{limit}:{scope}"
     cached = _top_vendors_cache.get(cache_key)
     if cached and (_time.time() - cached["ts"]) < _TOP_VENDORS_TTL:
         return cached["data"]
@@ -840,16 +848,30 @@ def get_category_top_vendors(
         if not cat:
             raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
 
-        cur.execute("""
+        scope_join = ""
+        scope_filter = ""
+        totals_params: list = [category_id]
+        vendors_params: list = [category_id]
+        if scope == "federal":
+            placeholders = ", ".join(["?"] * len(NON_FEDERAL_INSTITUTION_TYPES))
+            scope_join = "JOIN institutions i ON i.id = c.institution_id"
+            scope_filter = f"AND i.institution_type NOT IN ({placeholders})"
+            totals_params.extend(NON_FEDERAL_INSTITUTION_TYPES)
+            vendors_params.extend(NON_FEDERAL_INSTITUTION_TYPES)
+
+        cur.execute(f"""
             SELECT COALESCE(SUM(amount_mxn), 0) AS total_value,
                    COUNT(*) AS total_contracts
-            FROM contracts
-            WHERE category_id = ? AND amount_mxn IS NOT NULL
-        """, (category_id,))
+            FROM contracts c
+            {scope_join}
+            WHERE c.category_id = ? AND c.amount_mxn IS NOT NULL
+            {scope_filter}
+        """, totals_params)
         totals = cur.fetchone()
         cat_total_value = totals["total_value"] or 1.0
         cat_total_contracts = totals["total_contracts"] or 0
 
+        vendors_params.append(limit)
         cur.execute(f"""
             SELECT
                 v.id   AS vendor_id,
@@ -861,11 +883,13 @@ def get_category_top_vendors(
                 SUM(c.is_single_bid)   * 100.0 / COUNT(*)  AS single_bid_pct
             FROM contracts c
             JOIN vendors v ON v.id = c.vendor_id
+            {scope_join}
             WHERE c.category_id = ? AND c.amount_mxn IS NOT NULL
+            {scope_filter}
             GROUP BY c.vendor_id
             ORDER BY vendor_value DESC
             LIMIT ?
-        """, (category_id, limit))
+        """, vendors_params)
         rows = cur.fetchall()
 
     vendors = []
@@ -896,6 +920,7 @@ def get_category_top_vendors(
     result = {
         "category_id": category_id,
         "category_name": cat["name_es"],
+        "scope": scope,
         "total_value": round(cat_total_value, 2),
         "total_contracts": cat_total_contracts,
         "hhi": round(hhi, 4),
