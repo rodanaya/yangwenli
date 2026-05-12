@@ -209,6 +209,7 @@ function parseLeadStat(value: string): { numeric: number; prefix: string; suffix
 
 function ChapterSources({ sources }: { sources: string[] }) {
   const [open, setOpen] = useState(false)
+  const { t } = useTranslation('common')
   return (
     <div className="mt-8 mb-2">
       <button
@@ -218,8 +219,8 @@ function ChapterSources({ sources }: { sources: string[] }) {
       >
         <FileText className="h-3 w-3 group-hover:text-text-secondary" />
         <span className="font-mono">{open ? '−' : '+'}</span>
-        <span>{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
-        <span className="text-text-primary">&mdash; {open ? 'collapse' : 'view citations'}</span>
+        <span>{t('story.sources', { count: sources.length })}</span>
+        <span className="text-text-primary">&mdash; {open ? t('story.collapse') : t('story.viewCitations')}</span>
       </button>
       {open && (
         <ol className="mt-3 space-y-1.5 border-l-2 border-border pl-4">

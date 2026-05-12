@@ -130,7 +130,11 @@
     "actFurtherInquiry": "FURTHER INQUIRY",
     "actRelatedDossiers": "RELATED DOSSIERS",
     "actReturnToIndex": "RETURN TO INDEX",
-    "notFoundSubtitle": "The requested investigation could not be located."
+    "notFoundSubtitle": "The requested investigation could not be located.",
+    "sources_one": "1 source",
+    "sources_other": "{{count}} sources",
+    "viewCitations": "view citations",
+    "collapse": "collapse"
   },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Procurement Risk Analysis for Mexican Government Contracts",
@@ -218,7 +222,9 @@
     "year": "Annual Analysis",
     "readTime": "read",
     "chapter": "Chapter",
-    "chapterNav": "Chapter navigation"
+    "chapterNav": "Chapter navigation",
+    "closing": "Closing",
+    "pullquote": "Pull quote"
   },
   "era": {
     "fox": "Fox (2000-2006)",

@@ -139,7 +139,11 @@
     "actFurtherInquiry": "PARA PROFUNDIZAR",
     "actRelatedDossiers": "EXPEDIENTES RELACIONADOS",
     "actReturnToIndex": "VOLVER AL ÍNDICE",
-    "notFoundSubtitle": "La investigación solicitada no pudo encontrarse."
+    "notFoundSubtitle": "La investigación solicitada no pudo encontrarse.",
+    "sources_one": "1 fuente",
+    "sources_other": "{{count}} fuentes",
+    "viewCitations": "ver citas",
+    "collapse": "cerrar"
   },
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
@@ -227,7 +231,9 @@
     "year": "Análisis Anual",
     "readTime": "lectura",
     "chapter": "Capítulo",
-    "chapterNav": "Navegación de capítulos"
+    "chapterNav": "Navegación de capítulos",
+    "closing": "Cierre",
+    "pullquote": "Cita destacada"
   },
   "era": {
     "fox": "Fox (2000-2006)",
