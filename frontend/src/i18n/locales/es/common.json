@@ -517,6 +517,7 @@
       "otherDesc": "Comentarios generales o cualquier otra cosa"
     }
   },
+  "generateReport": "Generar Reporte",
   "report": {
     "generateButton": "Generar Informe",
     "generating": "Generando informe…",
