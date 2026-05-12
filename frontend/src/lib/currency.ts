@@ -85,7 +85,7 @@ export function realUSDLabel(
   if (usd === null) return null
 
   const formatted = formatRealUSD(usd)
-  return lang === 'es'
+  return lang.startsWith('es')
     ? `≈ ${formatted} valor real 2024`
     : `≈ ${formatted} real 2024 USD`
 }

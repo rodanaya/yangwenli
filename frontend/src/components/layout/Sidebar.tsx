@@ -139,7 +139,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const location = useLocation()
   const { t, i18n } = useTranslation('nav')
   const { t: tc } = useTranslation('common')
-  const { user: _user } = useAuth()
+  useAuth()
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
@@ -378,17 +378,17 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es')}
+                    onClick={() => i18n.changeLanguage(i18n.language.startsWith('es') ? 'en' : 'es')}
                     className="h-7 w-7 flex items-center justify-center rounded-sm text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)]"
-                    aria-label={i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                    aria-label={i18n.language.startsWith('es') ? 'Switch to English' : 'Cambiar a Español'}
                   >
                     <span className="text-[10px] font-bold font-mono">
-                      {i18n.language === 'es' ? 'EN' : 'ES'}
+                      {i18n.language.startsWith('es') ? 'EN' : 'ES'}
                     </span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8}>
-                  <p className="text-xs">{i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}</p>
+                  <p className="text-xs">{i18n.language.startsWith('es') ? 'Switch to English' : 'Cambiar a Español'}</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
