@@ -576,20 +576,12 @@ function Z0Layer({
           : 'clic en un sector para profundizar · arrastra · rueda para acercar'}
       </text>
 
-      {bodies.map((b) => {
+      {bodies.map((b, i) => {
         const cx = PAD + b.fx * (SVG_W - PAD * 2)
         const cy = PAD + b.fy * (SVG_H - PAD * 2)
-        // Body radius blends a uniform baseline (so even small sectors
-        // are clickable) with a sqrt(spend) scaling factor when stats are
-        // loaded. Otherwise every body would be 32px and the system view
-        // would be uniform — dull and uninformative.
         const sizeFactor = sizeByCode?.get(b.code) ?? null
         const r = sizeFactor != null ? 22 + sizeFactor * 28 : 32
         const isPinned = pinAnnotation?.kind === 'sector' && pinAnnotation.sectorId === b.id
-        // Gap 6: under the risk lens, body color comes from the risk
-        // palette (critical/high/medium/low), not the sector palette.
-        // Both lenses keep the sector-coded layout — only the visual
-        // encoding changes.
         const bodyColor = lens === 'risk'
           ? (riskColorByCode?.get(b.code) ?? b.color)
           : b.color
@@ -602,6 +594,7 @@ function Z0Layer({
             color={bodyColor}
             label={b.name}
             isPinned={isPinned}
+            index={i}
             onClick={() =>
               triggerDrill(cx, cy, () =>
                 dispatch({ type: 'drill-into-sector', sectorId: b.id, sectorCode: b.code }),
@@ -626,6 +619,7 @@ function SectorBodyVisual({
   onClick,
   onHover,
   isPinned = false,
+  index = 0,
 }: {
   cx: number
   cy: number
@@ -634,22 +628,25 @@ function SectorBodyVisual({
   label: string
   onClick: () => void
   onHover: (hovering: boolean) => void
-  /** When true, renders a pulsing pin ring around this body. */
   isPinned?: boolean
+  index?: number
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r + 6 : r
   return (
-    <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
+    <motion.g
+      initial={{ opacity: 0, scale: 0.15 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, delay: index * 0.065, ease: [0.22, 1, 0.36, 1] }}
+      style={{ cursor: 'pointer', transformOrigin: `${cx}px ${cy}px` }}
+      onClick={onClick}
+      onMouseEnter={() => { setHovered(true); onHover(true) }}
+      onMouseLeave={() => { setHovered(false); onHover(false) }}
+    >
       <title>{label}</title>
-      {/* Halo */}
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
-      {/* Pin ring — Gap 4.2. Pulses regardless of hover; SMIL animation
-          keeps the work on the GPU and avoids React state churn. */}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 4} color={color} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
-      {/* Label below the bubble — full name stays readable for long sector names
-          ("Infraestructura", "Infrastructure") that clipped inside small circles. */}
       <text
         x={cx}
         y={cy + r + 17}
@@ -665,7 +662,7 @@ function SectorBodyVisual({
       >
         {label}
       </text>
-    </g>
+    </motion.g>
   )
 }
 
@@ -760,10 +757,10 @@ function Z1Layer({
 
   return (
     <motion.g
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.08 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.05 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
     >
       <defs>
         <radialGradient id={gradId} cx="50%" cy="50%" r="65%">
@@ -796,7 +793,7 @@ function Z1Layer({
         {lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
       </text>
 
-      {filteredInstitutions.map((inst) => {
+      {filteredInstitutions.map((inst, i) => {
         const cx = xOf(inst.fx)
         const cy = yOf(inst.fy)
         const isPinned =
@@ -809,7 +806,7 @@ function Z1Layer({
             cx={cx}
             cy={cy}
             r={rOf(inst.size)}
-            showLabel={inst.size > 0.2}
+            index={i}
             isPinned={isPinned}
             onClick={() =>
               triggerDrill(cx, cy, () =>
@@ -838,54 +835,103 @@ function InstitutionBodyVisual({
   cx,
   cy,
   r,
-  showLabel,
   onClick,
   onHover,
   isPinned = false,
+  index = 0,
 }: {
   inst: SpatialInstitution
   cx: number
   cy: number
   r: number
-  showLabel: boolean
   onClick: () => void
   onHover: (hovering: boolean) => void
   isPinned?: boolean
+  index?: number
 }) {
   const [hovered, setHovered] = useState(false)
   const level = getRiskLevelFromScore(inst.risk)
   const fill = RISK_COLORS[level]
   const rEffective = hovered ? r * 1.15 : r
-  // Native browser tooltip — gives the full institution name + key stats
-  // even when the on-canvas label is hidden (showLabel=false for small bodies).
   const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
+  const lbl = shortLabel(inst.name)
+
+  // Crisp three-tier label strategy — no text ever floats behind another bubble:
+  //   large  (r ≥ 22): white acronym inside the circle  → always readable, zero overlap risk
+  //   medium (r ≥ 13): pill chip below the circle       → below is safe, nothing sits there
+  //   small  (r < 13): no label; browser <title> tooltip covers it
+  const insideLabel = r >= 22
+  const chipLabel   = !insideLabel && r >= 13
+  const chipW = lbl.length * 5.8 + 10
+  const chipH = 14
+
   return (
-    <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
+    <motion.g
+      initial={{ opacity: 0, scale: 0.1 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5, delay: index * 0.018, ease: [0.22, 1, 0.36, 1] }}
+      style={{ cursor: 'pointer', transformOrigin: `${cx}px ${cy}px` }}
+      onClick={onClick}
+      onMouseEnter={() => { setHovered(true); onHover(true) }}
+      onMouseLeave={() => { setHovered(false); onHover(false) }}
+    >
       <title>{tooltip}</title>
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.5} />
-      {showLabel && (
+      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={hovered ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={1.5} />
+
+      {/* Large: white acronym inside the bubble */}
+      {insideLabel && (
         <text
           x={cx}
-          y={cy - rEffective - 6}
+          y={cy + Math.round(Math.max(9, Math.min(13, r * 0.32)) * 0.38)}
           textAnchor="middle"
-          fontSize={inst.size > 0.7 ? 13 : 11}
+          fontSize={Math.max(9, Math.min(13, Math.round(r * 0.32)))}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight={700}
-          fill="var(--color-text-primary)"
-          stroke="var(--color-background)"
-          strokeWidth={3}
-          paintOrder="stroke fill"
+          fill="white"
           style={{ pointerEvents: 'none' }}
         >
-          {shortLabel(inst.name)}
+          {lbl}
         </text>
       )}
-      {showLabel && inst.size > 0.6 && (
+
+      {/* Medium: risk-tinted pill chip below the bubble */}
+      {chipLabel && (
+        <>
+          <rect
+            x={cx - chipW / 2}
+            y={cy + r + 5}
+            width={chipW}
+            height={chipH}
+            rx={chipH / 2}
+            fill={fill}
+            fillOpacity={0.15}
+            stroke={fill}
+            strokeWidth={0.5}
+            strokeOpacity={0.45}
+            style={{ pointerEvents: 'none' }}
+          />
+          <text
+            x={cx}
+            y={cy + r + 5 + chipH * 0.72}
+            textAnchor="middle"
+            fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)"
+            fontWeight={700}
+            fill="var(--color-text-primary)"
+            style={{ pointerEvents: 'none' }}
+          >
+            {lbl}
+          </text>
+        </>
+      )}
+
+      {/* Hover stat line for large bubbles */}
+      {hovered && r >= 28 && (
         <text
           x={cx}
-          y={cy + rEffective + 14}
+          y={cy + rEffective + 16}
           textAnchor="middle"
           fontSize={9}
           fontFamily="var(--font-family-mono, monospace)"
@@ -895,7 +941,7 @@ function InstitutionBodyVisual({
           {formatNumber(inst.total_contracts)} · {formatCompactMXN(inst.total_amount_mxn)}
         </text>
       )}
-    </g>
+    </motion.g>
   )
 }
 
