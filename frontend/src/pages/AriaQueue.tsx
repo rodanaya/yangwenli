@@ -919,14 +919,22 @@ function PatternDotStrip({
 
   const maxCount = entries[0][1]
 
+  // 2026-05-12 (Audit F060/F169/F170): pattern names had three different
+  // vocabularies across /aria, /aria filter row, and /patterns. Backend
+  // canon (backend/scripts/aria_pipeline.py) is the source of truth:
+  //   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
+  //   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
+  //   P7 Conflict of Interest
+  // Aligned to backend canon here so /aria, the aria filter row, and
+  // /patterns now agree.
   const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
     P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: RISK_COLORS.critical },
     P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: RISK_COLORS.high },
     P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: RISK_COLORS.high },
-    P4: { es: 'P4 · Explosión', en: 'P4 · Temporal burst', color: RISK_COLORS.medium },
-    P5: { es: 'P5 · Concentración', en: 'P5 · Concentration', color: RISK_COLORS.medium },
+    P4: { es: 'P4 · Manipulación', en: 'P4 · Bid Rigging', color: RISK_COLORS.medium },
+    P5: { es: 'P5 · Sobreprecio', en: 'P5 · Overpricing', color: RISK_COLORS.medium },
     P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: RISK_COLORS.critical },
-    P7: { es: 'P7 · Intersección', en: 'P7 · Intersection', color: RISK_COLORS.high },
+    P7: { es: 'P7 · Conflicto', en: 'P7 · Conflict of Interest', color: RISK_COLORS.high },
   }
 
   const stripRows = entries.map(([key, count]) => {
