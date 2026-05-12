@@ -19,7 +19,6 @@ import {
   Building2,
   Network,
   GitCompareArrows,
-  TrendingUp,
   Newspaper,
   Briefcase,
   Sparkles,
@@ -101,9 +100,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'capture', href: '/captura', icon: TrendingUp },
+      { i18nKey: 'relationships', href: '/relationships', icon: GitCompareArrows },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'intersection', href: '/intersection', icon: GitCompareArrows },
     ],
   },
   {

@@ -81,6 +81,7 @@ const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Intersection = lazy(() => import('@/pages/Intersection'))
 const CaptureCreep = lazy(() => import('@/pages/CaptureCreep'))
+const Relationships = lazy(() => import('@/pages/Relationships'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
@@ -282,23 +283,17 @@ function App() {
                 }
               />
               <Route
-                path="intersection"
+                path="relationships"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Intersection />
+                    <Relationships />
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="captura"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CaptureCreep />
-                  </SuspenseBoundary>
-                }
-              />
-              {/* Spanish-first rename per docs/SITE_IA.md — preserve old URL */}
-              <Route path="capture" element={<Navigate to="/captura" replace />} />
+              {/* Legacy routes — redirect to merged /relationships surface */}
+              <Route path="intersection" element={<Navigate to="/relationships#intersection" replace />} />
+              <Route path="captura" element={<Navigate to="/relationships#captura" replace />} />
+              <Route path="capture" element={<Navigate to="/relationships#captura" replace />} />
               {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
               <Route path="clusters" element={<Navigate to="/atlas" replace />} />
               <Route
