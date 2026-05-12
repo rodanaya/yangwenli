@@ -6,7 +6,7 @@
  * market concentration, vendor-institution pairs, top contracts, and subcategories.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -339,12 +339,20 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: topVendorsData, isLoading: topVendorsLoading } = useQuery({
+  const { data: topVendorsData, isLoading: topVendorsLoading, isError: topVendorsError } = useQuery({
     queryKey: ['categories', 'top-vendors', categoryId],
     queryFn: () => categoriesApi.getTopVendors(categoryId),
     enabled: !isNaN(categoryId),
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   })
+
+  const [vendorsTimedOut, setVendorsTimedOut] = useState(false)
+  useEffect(() => {
+    if (!topVendorsLoading) { setVendorsTimedOut(false); return }
+    const tid = setTimeout(() => setVendorsTimedOut(true), 5000)
+    return () => clearTimeout(tid)
+  }, [topVendorsLoading])
 
   const { data: vendorInstData, isLoading: vendorInstLoading } = useQuery({
     queryKey: ['categories', 'vendor-institution', categoryId],
@@ -704,11 +712,11 @@ export default function CategoryProfile() {
           </h2>
         </div>
         <Card>
-          {topVendorsLoading ? (
+          {topVendorsLoading && !vendorsTimedOut ? (
             <CardContent className="space-y-3 py-6">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
             </CardContent>
-          ) : topVendorsData ? (
+          ) : topVendorsData && !topVendorsError ? (
             <>
               {/* Concentration header */}
               <CardHeader className="pb-2">
