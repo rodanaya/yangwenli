@@ -896,8 +896,9 @@ function InstitutionBodyVisual({
         </text>
       )}
 
-      {/* Medium: risk-tinted pill chip below the bubble */}
-      {chipLabel && (
+      {/* Medium: risk-tinted pill chip below the bubble — only when shortLabel
+          produced a compact acronym (≤ 8 chars); silently skip overlong ones. */}
+      {chipLabel && lbl.length <= 8 && (
         <>
           <rect
             x={cx - chipW / 2}
@@ -1452,12 +1453,17 @@ function shortLabel(name: string): string {
   // Canonical override — try the full normalized name first.
   const normalized = stripAccents(trimmed.toUpperCase()).replace(/\s+/g, ' ')
   if (CANONICAL_ACRONYMS[normalized]) return CANONICAL_ACRONYMS[normalized]
-  const upperWords = trimmed
-    .replace(/[,]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length >= 3 && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
+  // Normalize hyphens to spaces so "COAH-Servicios" splits into two tokens.
+  const tokens = trimmed.replace(/[,-]/g, ' ').split(/\s+/)
+  // All-caps path: structures A/B store names as INSTITUTO MEXICANO DEL SEGURO SOCIAL.
+  const upperWords = tokens.filter((w) => w.length >= 3 && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
   if (upperWords.length >= 2 && upperWords.length <= 6) {
     return upperWords.map((w) => w[0]).join('').slice(0, 6)
+  }
+  // Title-case fallback: structures C/D store names as "Instituto de Salud de Veracruz" → "ISV".
+  const contentWords = tokens.filter((w) => w.length >= 3 && !ACRONYM_STOP_WORDS.has(w.toUpperCase()))
+  if (contentWords.length >= 2) {
+    return contentWords.map((w) => w[0].toUpperCase()).join('').slice(0, 5)
   }
   return trimmed.length > 18 ? trimmed.slice(0, 17) + '…' : trimmed
 }
