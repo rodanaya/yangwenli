@@ -1,9 +1,7 @@
 import { lazy, Suspense, useState, useMemo, useRef, useEffect } from 'react'
-import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge, Badge } from '@/components/ui/badge'
@@ -59,8 +57,6 @@ import {
   Calendar,
   UserCheck,
   BarChart3,
-  Clock,
-  Globe,
 } from 'lucide-react'
 const NetworkGraphModal = lazy(() =>
   import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal }))
@@ -74,8 +70,6 @@ import {
 import { DotStrip } from '@/components/charts/DotStrip'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
-
-// SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
 // ---- Risk level palette ----
 // Low uses zinc (not green) per ART canon: green implies safety on a corruption platform.
@@ -175,7 +169,6 @@ export function InstitutionProfile() {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('overview')
   const riskTimelineChartRef = useRef<HTMLDivElement>(null)
   const vendorLoyaltyChartRef = useRef<HTMLDivElement>(null)
   const spendingChartRef = useRef<HTMLDivElement>(null)
@@ -203,7 +196,7 @@ export function InstitutionProfile() {
   const { data: riskTimeline, isLoading: timelineLoading, error: timelineError } = useQuery({
     queryKey: ['institution', institutionId, 'risk-timeline'],
     queryFn: () => institutionApi.getRiskTimeline(institutionId),
-    enabled: !!institutionId && activeTab === 'risk',
+    enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
   })
 
@@ -235,14 +228,14 @@ export function InstitutionProfile() {
   const { data: vendorLoyalty, isLoading: loyaltyLoading, error: loyaltyError } = useQuery({
     queryKey: ['institution', institutionId, 'vendor-loyalty'],
     queryFn: () => institutionApi.getVendorLoyalty(institutionId, 10),
-    enabled: !!institutionId && activeTab === 'vendors',
+    enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
   })
 
   const { data: peerComparison, isLoading: peerLoading, error: peerError } = useQuery({
     queryKey: ['institution', institutionId, 'peer-comparison'],
     queryFn: () => institutionApi.getPeerComparison(institutionId),
-    enabled: !!institutionId && activeTab === 'risk',
+    enabled: !!institutionId,
     staleTime: 10 * 60 * 1000,
   })
 
@@ -273,14 +266,14 @@ export function InstitutionProfile() {
       const { data } = await api.get(`/institutions/${institutionId}/risk-waterfall`)
       return data
     },
-    enabled: !!institutionId && activeTab === 'risk',
+    enabled: !!institutionId,
     staleTime: 30 * 60 * 1000,
   })
 
   const { data: topCategories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['institution', institutionId, 'top-categories'],
     queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 15 }),
-    enabled: !!institutionId && activeTab === 'vendors',
+    enabled: !!institutionId,
     staleTime: 30 * 60 * 1000,
   })
 
@@ -296,7 +289,7 @@ export function InstitutionProfile() {
   const { data: officialsData, isLoading: officialsLoading, error: officialsError } = useQuery<OfficialsResponse>({
     queryKey: ['institution', institutionId, 'officials'],
     queryFn: () => institutionApi.getOfficials(institutionId) as Promise<OfficialsResponse>,
-    enabled: !!institutionId && activeTab === 'officials',
+    enabled: !!institutionId,
     staleTime: 30 * 60 * 1000,
   })
 
@@ -782,26 +775,16 @@ export function InstitutionProfile() {
       )}
 
       {/* ---- TABBED CONTENT ---- */}
-      <SimpleTabs
-        defaultTab="overview"
-        onTabChange={setActiveTab}
-        tabs={[
-          { key: 'overview', label: t('profile.tabs.overview'), icon: BarChart3 },
-          { key: 'risk', label: t('profile.tabs.risk'), icon: Shield },
-          { key: 'vendors', label: t('profile.tabs.vendors'), icon: Users },
-          { key: 'officials', label: t('profile.tabs.officials'), icon: UserCheck },
-          { key: 'history', label: t('profile.tabs.history'), icon: Clock },
-          { key: 'external', label: t('profile.tabs.external'), icon: Globe },
-        ]}
-      >
+      <div className="mt-6">
 
-        {/* ========= TAB 1: PANORAMA (OVERVIEW) ========= */}
-        <TabPanel tabKey="overview">
-          <div className="space-y-6">
-            {/* § PANORAMA kicker */}
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? '§ OVERVIEW · INSTITUTION PROFILE' : '§ PANORAMA · PERFIL INSTITUCIONAL'}
-            </p>
+        {/* ========= CHAPTER I: PANORAMA ========= */}
+        <div id="overview">
+          <InstChapterHeader
+            folio="§ I"
+            kicker={lang === 'en' ? 'Overview' : 'Panorama'}
+            title={lang === 'en' ? 'Institutional Overview' : 'El Panorama Institucional'}
+          />
+          <div className="space-y-8">
             {/* AI Intelligence Brief */}
             <div>
               <div className="flex items-center gap-2 px-1 mb-2">
@@ -829,13 +812,13 @@ export function InstitutionProfile() {
               <div className="space-y-5">
                 {/* Risk Distribution */}
                 <div className="card-elevated">
-                  <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <div className="pb-2 pt-4">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Shield className="h-3.5 w-3.5 text-accent" />
                       {t('profile.overview.riskDistribution')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4">
+                    </h3>
+                  </div>
+                  <div className="pb-4">
                     {riskProfileLoading ? (
                       <div className="space-y-2">
                         {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6" />)}
@@ -884,34 +867,34 @@ export function InstitutionProfile() {
                     ) : (
                       <p className="text-xs text-text-muted">{t('profile.noRiskData')}</p>
                     )}
-                  </CardContent>
+                  </div>
                 </div>
 
                 {/* Procurement Integrity Score */}
                 {scorecard && (
                   <div className="card-elevated">
-                    <CardHeader className="pb-2 pt-4">
-                      <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                    <div className="pb-2 pt-4">
+                      <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                         <Shield className="h-3.5 w-3.5 text-accent" />
                         {t('profile.integrityScoreLabel')}
                         <GradeBadge10 grade={scorecard.grade} size="sm" />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-4">
+                      </h3>
+                    </div>
+                    <div className="pb-4">
                       <InstitutionScorecardCard sc={scorecard} />
-                    </CardContent>
+                    </div>
                   </div>
                 )}
 
                 {/* Institution Details */}
                 <div className="card-elevated">
-                  <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <div className="pb-2 pt-4">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Building2 className="h-3.5 w-3.5 text-accent" />
                       {t('profile.overview.institutionDetails')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4 space-y-2">
+                    </h3>
+                  </div>
+                  <div className="pb-4 space-y-2">
                     <DetailRow label={t('profile.overview.detailType')} value={getInstitutionTypeLabel(institution.institution_type)} />
                     <DetailRow label={t('profile.overview.detailSize')} value={institution.size_tier} />
                     <DetailRow label={t('profile.overview.detailAutonomy')} value={institution.autonomy_level} />
@@ -928,7 +911,7 @@ export function InstitutionProfile() {
                         <DetailRow label={t('profile.overview.detailAutonomyRisk')} value={formatPercentSafe(riskProfile.autonomy_risk_baseline, true)} />
                       </>
                     )}
-                  </CardContent>
+                  </div>
                 </div>
               </div>
 
@@ -936,13 +919,13 @@ export function InstitutionProfile() {
               <div className="lg:col-span-2 space-y-5">
                 {/* Top Vendors */}
                 <div className="card-elevated">
-                  <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <div className="pb-2 pt-4">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Users className="h-3.5 w-3.5 text-accent" />
                       {t('profile.overview.topVendors')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4">
+                    </h3>
+                  </div>
+                  <div className="pb-4">
                     {vendorsLoading ? (
                       <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
                     ) : vendorsError ? (
@@ -952,7 +935,7 @@ export function InstitutionProfile() {
                     ) : (
                       <p className="text-sm text-text-muted">{t('profile.noVendorData')}</p>
                     )}
-                  </CardContent>
+                  </div>
                 </div>
 
                 {/* Most Suspicious Contract */}
@@ -972,13 +955,13 @@ export function InstitutionProfile() {
                       aria-label={`${t('profile.overview.mostSuspiciousContract')}: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
                     >
-                      <CardHeader className="pb-2 pt-4">
-                        <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
+                      <div className="pb-2 pt-4">
+                        <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
                           <AlertTriangle className="h-3.5 w-3.5" />
                           {t('profile.overview.mostSuspiciousContract')}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pb-4 space-y-2">
+                        </h3>
+                      </div>
+                      <div className="pb-4 space-y-2">
                         <p className="text-sm font-semibold text-text-primary leading-tight line-clamp-2">
                           {topContract.title ?? `Contrato #${topContract.id}`}
                         </p>
@@ -991,30 +974,33 @@ export function InstitutionProfile() {
                           {topContract.is_single_bid && <span className="text-risk-critical">{t('profile.overview.singleBidder')}</span>}
                         </div>
                         <p className="text-[10px] text-text-muted/60 italic">{t('profile.overview.clickForDetails')}</p>
-                      </CardContent>
+                      </div>
                     </div>
                   )
                 })()}
               </div>
             </div>
           </div>
-        </TabPanel>
+        </div>
 
-        {/* ========= TAB 2: RIESGO ========= */}
-        <TabPanel tabKey="risk">
-          <div className="space-y-5">
-            {/* § RIESGO kicker */}
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? '§ RISK ANALYSIS · MODEL v0.8.5' : '§ ANÁLISIS DE RIESGO · MODELO v0.8.5'}
-            </p>
+        <InstChapterDivider />
+
+        {/* ========= CHAPTER II: RIESGO ========= */}
+        <div id="risk">
+          <InstChapterHeader
+            folio="§ II"
+            kicker={lang === 'en' ? 'Risk' : 'Riesgo'}
+            title={lang === 'en' ? 'The Risk Analysis' : 'El Análisis de Riesgo'}
+          />
+          <div className="space-y-8">
             {/* Risk Trajectory */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
+              <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <TrendingUp className="h-3.5 w-3.5 text-accent" />
                     {t('profile.risk.trajectory')}
-                  </CardTitle>
+                  </h3>
                   {timelineTrend && (
                     <div className={cn(
                       'flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full',
@@ -1030,8 +1016,8 @@ export function InstitutionProfile() {
                     </div>
                   )}
                 </div>
-              </CardHeader>
-              <CardContent className="pb-4">
+              </div>
+              <div className="pb-4">
                 {timelineLoading ? (
                   <Skeleton className="h-40" />
                 ) : timelineError ? (
@@ -1050,19 +1036,19 @@ export function InstitutionProfile() {
                     {lang === 'en' ? 'Insufficient data' : 'Datos insuficientes'}
                   </div>
                 )}
-              </CardContent>
+              </div>
             </div>
 
             {/* Risk Factor Breakdown (Waterfall) */}
             {(waterfallDataError || waterfallLoading || waterfallData?.features?.length > 0) && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Shield className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Risk factor breakdown' : 'Desglose de factores de riesgo'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {waterfallDataError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingRisk')}</p>
                 ) : waterfallLoading ? (
@@ -1074,15 +1060,15 @@ export function InstitutionProfile() {
                     finalScore={waterfallData.final_score}
                   />
                 ) : null}
-              </CardContent>
+              </div>
             </div>
             )}
 
             {/* Peer Comparison */}
             {(peerLoading || peerComparison) && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Users className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Peer comparison' : 'Comparacion con pares'}
                   {peerComparison && (
@@ -1090,9 +1076,9 @@ export function InstitutionProfile() {
                       vs {peerComparison.peer_count} {lang === 'en' ? 'similar institutions' : 'instituciones similares'}
                     </span>
                   )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {peerLoading ? (
                   <div className="space-y-3">
                     {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
@@ -1154,7 +1140,7 @@ export function InstitutionProfile() {
                 ) : (
                   <p className="text-xs text-text-muted">{lang === 'en' ? 'Insufficient peers to compare' : 'Pares insuficientes para comparar'}</p>
                 )}
-              </CardContent>
+              </div>
             </div>
             )}
 
@@ -1169,13 +1155,13 @@ export function InstitutionProfile() {
               const sbDiff = singleBidPct != null ? singleBidPct - NATIONAL_SB_BENCHMARK : null
               return (
                 <div className="card-elevated">
-                  <CardHeader className="pb-2 pt-4">
-                    <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <div className="pb-2 pt-4">
+                    <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <AlertTriangle className="h-3.5 w-3.5 text-accent" />
                       {t('benchmarks.procurementMethod')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pb-4 space-y-3">
+                    </h3>
+                  </div>
+                  <div className="pb-4 space-y-3">
                     {directAwardPct != null && (
                       <BenchmarkBar label={t('benchmarks.directAwardLabel')} value={directAwardPct} benchmark={NATIONAL_DA_BENCHMARK} diff={daDiff} highThreshold={10} />
                     )}
@@ -1185,29 +1171,32 @@ export function InstitutionProfile() {
                     <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
                       {t('benchmarks.benchmarkNote')}
                     </p>
-                  </CardContent>
+                  </div>
                 </div>
               )
             })()}
           </div>
-        </TabPanel>
+        </div>
 
-        {/* ========= TAB 3: PROVEEDORES ========= */}
-        <TabPanel tabKey="vendors">
-          <div className="space-y-5">
-            {/* § PROVEEDORES kicker */}
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? '§ VENDORS · CONCENTRATION & LOYALTY' : '§ PROVEEDORES · CONCENTRACIÓN Y LEALTAD'}
-            </p>
+        <InstChapterDivider />
+
+        {/* ========= CHAPTER III: PROVEEDORES Y RED ========= */}
+        <div id="vendors-network">
+          <InstChapterHeader
+            folio="§ III"
+            kicker={lang === 'en' ? 'Vendors & Network' : 'Proveedores y Red'}
+            title={lang === 'en' ? 'The Procurement Network' : 'La Red de Contratación'}
+          />
+          <div className="space-y-8">
             {/* § CONCENTRACIÓN — vendor concentration ranked dot strip */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Vendor concentration' : 'Concentración de proveedores'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {vendorsLoading ? (
                   <div className="space-y-2">{[...Array(8)].map((_, i) => <Skeleton key={i} className="h-6" />)}</div>
                 ) : vendorsError ? (
@@ -1234,19 +1223,19 @@ export function InstitutionProfile() {
                 ) : (
                   <p className="text-xs text-text-muted">{t('profile.noVendorData')}</p>
                 )}
-              </CardContent>
+              </div>
             </div>
 
             {/* Vendor Loyalty Heatmap */}
             {(loyaltyLoading || (vendorLoyalty?.vendors?.length ?? 0) > 0) && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <TrendingUp className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Vendor loyalty — long-term relationships' : 'Lealtad de proveedores — relaciones de largo plazo'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {loyaltyLoading ? (
                   <Skeleton className="h-32" />
                 ) : loyaltyError ? (
@@ -1258,30 +1247,30 @@ export function InstitutionProfile() {
                     <p className="mt-2 text-[10px] text-text-muted/50 italic">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
                   </div>
                 ) : null}
-              </CardContent>
+              </div>
             </div>
             )}
 
             {/* Longest-Tenured Vendors */}
             {institution.longest_tenured_vendors && institution.longest_tenured_vendors.length > 0 && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Calendar className="h-3.5 w-3.5 text-accent" />
                   {t('profile.longestTenuredVendors', 'Long-tenured Vendors')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 <LongestTenuredGantt vendors={institution.longest_tenured_vendors} />
-              </CardContent>
+              </div>
             </div>
             )}
 
             {/* HHI Trend Chart */}
             {institution.supplier_diversity && institution.supplier_diversity.history.length > 0 && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
                   {t('profile.supplierDiversity', 'Supplier Diversity (HHI)')}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-2">
@@ -1292,11 +1281,11 @@ export function InstitutionProfile() {
                       {hhiTrendBadge.label}
                     </span>
                   )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 <HHITrendChart history={institution.supplier_diversity.history} />
-              </CardContent>
+              </div>
             </div>
             )}
 
@@ -1319,13 +1308,13 @@ export function InstitutionProfile() {
             {/* Top Procurement Categories */}
             {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <FileText className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Top procurement categories' : 'Principales categorias de contratacion'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {categoriesLoading ? (
                   <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7" />)}</div>
                 ) : (topCategories?.data ?? []).length === 0 ? (
@@ -1353,14 +1342,16 @@ export function InstitutionProfile() {
                     })}
                   </div>
                 )}
-              </CardContent>
+              </div>
             </div>
             )}
           </div>
-        </TabPanel>
 
-        {/* ========= TAB 4: FUNCIONARIOS ========= */}
-        <TabPanel tabKey="officials">
+          {/* ── Officials section ───────────────────────────── */}
+          <section aria-labelledby="officials-heading" className="pt-6 border-t border-border/40">
+            <h3 id="officials-heading" className="text-[11px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] mb-3">
+              {lang === 'en' ? 'Officials & Tenure' : 'Funcionarios y Permanencia'}
+            </h3>
           <div className="space-y-4">
             <p className="text-[11px] text-text-muted italic leading-relaxed max-w-2xl">
               {lang === 'en'
@@ -1466,15 +1457,14 @@ export function InstitutionProfile() {
               </div>
             )}
           </div>
-        </TabPanel>
+          </section>
 
-        {/* ========= TAB 5: HISTORIAL ========= */}
-        <TabPanel tabKey="history">
-          <div className="space-y-5">
+          {/* ── History: contracts sections ─────────────────── */}
+          <div className="space-y-8 mt-6">
             {/* Spending Over Time */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <DollarSign className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Spending evolution' : 'Evolucion del gasto'}
                   {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
@@ -1482,9 +1472,9 @@ export function InstitutionProfile() {
                       {riskTimeline.timeline[0].year}--{riskTimeline.timeline[riskTimeline.timeline.length - 1].year}
                     </span>
                   )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 {timelineLoading ? (
                   <Skeleton className="h-56" />
                 ) : timelineError ? (
@@ -1497,23 +1487,23 @@ export function InstitutionProfile() {
                 ) : (
                   <div className="h-40 flex items-center justify-center text-sm text-text-muted">{lang === 'en' ? 'Insufficient data' : 'Datos insuficientes'}</div>
                 )}
-              </CardContent>
+              </div>
             </div>
 
             {/* High-Risk Contracts */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
+              <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
                   {lang === 'en' ? 'Highest-risk contracts' : 'Contratos de mayor riesgo'}
-                  </CardTitle>
+                  </h3>
                   <Link to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`} className="text-xs text-accent hover:underline flex items-center gap-1">
                     {lang === 'en' ? 'View all' : 'Ver todos'} <ExternalLink className="h-3 w-3" />
                   </Link>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0 pb-1">
+              </div>
+              <div className="p-0 pb-1">
                 {highRiskContractsError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingContracts')}</p>
                 ) : highRiskLoading ? (
@@ -1527,23 +1517,23 @@ export function InstitutionProfile() {
                 ) : (
                   <p className="p-4 text-sm text-text-muted">{t('profile.noContractsFound')}</p>
                 )}
-              </CardContent>
+              </div>
             </div>
 
             {/* Recent Contracts */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
+              <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <FileText className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Recent contracts' : 'Contratos recientes'}
-                  </CardTitle>
+                  </h3>
                   <Link to={`/contracts?institution_id=${institutionId}`} className="text-xs text-accent hover:underline flex items-center gap-1">
                     {lang === 'en' ? 'View all' : 'Ver todos'} <ExternalLink className="h-3 w-3" />
                   </Link>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0 pb-1">
+              </div>
+              <div className="p-0 pb-1">
                 {recentLoading ? (
                   <div className="p-4 space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 ) : contractsError ? (
@@ -1559,23 +1549,21 @@ export function InstitutionProfile() {
                 ) : (
                   <p className="p-4 text-sm text-text-muted">{t('profile.noContractsFound')}</p>
                 )}
-              </CardContent>
+              </div>
             </div>
           </div>
-        </TabPanel>
 
-        {/* ========= TAB 6: EXTERNO ========= */}
-        <TabPanel tabKey="external">
-          <div className="space-y-5">
+          {/* ── External: audit & case links ────────────────── */}
+          <div className="space-y-8 mt-6">
             {/* ASF Audit Findings */}
             <div className="card-elevated">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <div className="pb-3">
+                <h3 className="flex items-center gap-2 text-sm font-medium">
                   <AlertTriangle className="h-4 w-4 text-risk-high" />
                   {lang === 'en' ? 'ASF Audit Findings' : 'Hallazgos de auditoria ASF'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </h3>
+              </div>
+              <div>
                 {asfDataError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingAudit')}</p>
                 ) : asfLoading ? (
@@ -1637,13 +1625,13 @@ export function InstitutionProfile() {
                     </div>
                   </div>
                 )}
-              </CardContent>
+              </div>
             </div>
 
             {/* Ground Truth Link */}
             {groundTruthStatus?.is_ground_truth_related && (
               <div className="card-elevated border-l-4 border-l-risk-critical">
-                <CardContent className="pt-4 pb-4">
+                <div className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield className="h-4 w-4 text-risk-critical" />
                     <h3 className="text-sm font-bold text-risk-critical">{lang === 'en' ? 'Documented corruption case' : 'Caso de corrupcion documentado'}</h3>
@@ -1659,14 +1647,14 @@ export function InstitutionProfile() {
                   <Link to="/cases" className="text-xs text-accent hover:underline mt-2 inline-flex items-center gap-1">
                     {lang === 'en' ? 'View case library' : 'Ver biblioteca de casos'} <ExternalLink className="h-3 w-3" />
                   </Link>
-                </CardContent>
+                </div>
               </div>
             )}
 
             {/* Known Scandals in sector */}
             {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
               <div className="card-elevated">
-                <CardContent className="pt-5 pb-4">
+                <div className="pt-5 pb-4">
                   {sectorCasesError ? (
                     <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingScandals')}</p>
                   ) : (
@@ -1694,24 +1682,24 @@ export function InstitutionProfile() {
                       </div>
                     </>
                   )}
-                </CardContent>
+                </div>
               </div>
             )}
 
             {/* Cross-Registry Timeline */}
             <div className="card-elevated">
-              <CardHeader className="pb-2 pt-4">
-                <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
+              <div className="pb-2 pt-4">
+                <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Calendar className="h-3.5 w-3.5 text-accent" />
                   {lang === 'en' ? 'Cross-registry timeline' : 'Linea de tiempo cruzada'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pb-4">
+                </h3>
+              </div>
+              <div className="pb-4">
                 <CrossRegistryTimeline
                   timeline={riskTimeline?.timeline ?? []}
                   asfFindings={(asfData?.findings ?? []).map(f => ({ year: f.year, amount_mxn: f.amount_mxn ?? undefined, observations_total: f.observations_total ?? undefined }))}
                 />
-              </CardContent>
+              </div>
             </div>
 
             {/* Cross-registry note */}
@@ -1723,9 +1711,9 @@ export function InstitutionProfile() {
               </p>
             </div>
           </div>
-        </TabPanel>
+        </div>{/* end chapter III */}
 
-      </SimpleTabs>
+      </div>{/* end single-scroll wrapper */}
 
       {/* ---- EDITORIAL CLOSING ---- */}
       {(() => {
@@ -2298,6 +2286,59 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
         )}
       </div>
     </div>
+  )
+}
+
+// ─── Chapter chrome — mirrors RedThread + VendorProfile editorial register ──
+
+function InstChapterDivider() {
+  return (
+    <div className="flex items-center gap-3 my-8">
+      <div className="h-px flex-1 bg-background-elevated" />
+      <div
+        className="w-0.5 h-0.5 rounded-full opacity-50"
+        style={{ background: 'var(--color-accent)' }}
+      />
+      <div className="h-px flex-1 bg-background-elevated" />
+    </div>
+  )
+}
+
+function InstChapterHeader({
+  folio,
+  kicker,
+  title,
+}: {
+  folio: string
+  kicker: string
+  title: string
+}) {
+  return (
+    <header className="pt-8 pb-4">
+      <div
+        style={{
+          fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+          fontSize: '10px',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: '#a06820',
+          fontStyle: 'italic',
+          fontWeight: 500,
+          marginBottom: '0.6rem',
+        }}
+      >
+        {folio} · {kicker}
+      </div>
+      <h2
+        className="text-xl font-bold text-text-primary mb-3"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {title}
+      </h2>
+    </header>
   )
 }
 
