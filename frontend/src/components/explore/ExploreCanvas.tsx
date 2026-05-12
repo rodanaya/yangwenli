@@ -1456,12 +1456,14 @@ function shortLabel(name: string): string {
   // Normalize hyphens to spaces so "COAH-Servicios" splits into two tokens.
   const tokens = trimmed.replace(/[,-]/g, ' ').split(/\s+/)
   // All-caps path: structures A/B store names as INSTITUTO MEXICANO DEL SEGURO SOCIAL.
-  const upperWords = tokens.filter((w) => w.length >= 3 && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
+  const upperWords = tokens.filter((w) => w.length >= 3 && /^[A-Za-z]/.test(w) && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
   if (upperWords.length >= 2 && upperWords.length <= 6) {
     return upperWords.map((w) => w[0]).join('').slice(0, 6)
   }
   // Title-case fallback: structures C/D store names as "Instituto de Salud de Veracruz" → "ISV".
-  const contentWords = tokens.filter((w) => w.length >= 3 && !ACRONYM_STOP_WORDS.has(w.toUpperCase()))
+  // /^[A-Za-zÀ-ÿ]/ skips tokens that start with ", ", numbers — hospital names often have
+  // quoted subnames like "Dr. Eduardo Liceaga" that produce stray punctuation initials.
+  const contentWords = tokens.filter((w) => w.length >= 3 && /^[A-Za-zÀ-ÿ]/.test(w) && !ACRONYM_STOP_WORDS.has(w.toUpperCase()))
   if (contentWords.length >= 2) {
     return contentWords.map((w) => w[0].toUpperCase()).join('').slice(0, 5)
   }
