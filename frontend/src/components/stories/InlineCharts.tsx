@@ -194,9 +194,11 @@ const MAX_TRUE_DOTS = 9000
 export function InlineDotGrid({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const total = data.points.reduce((s, p) => s + p.value, 0)
 
@@ -241,19 +243,24 @@ export function InlineDotGrid({
   const othersTotal = others.reduce((s, p) => s + p.value, 0)
   const highlightedColor = highlighted[0] ? getColor(highlighted[0], 0) : HIGHLIGHT_COLOR
   const othersColor = others[0] ? getColor(others[0], 1) : 'var(--color-text-muted)'
+  const dotGridAnnotation = lang === 'es'
+    ? (data.annotation_es ?? data.annotation)
+    : data.annotation
+  const pointLabelFor = (pt: { label: string; label_es?: string }) =>
+    lang === 'es' ? (pt.label_es ?? pt.label) : pt.label
 
   return (
     <ChartCard
       title={title}
       eyebrow="DOT FIELD · 1:1"
-      annotation={data.annotation}
+      annotation={dotGridAnnotation}
     >
       {/* Twin Playfair callouts — leads with the ratio */}
       {highlighted.length > 0 && others.length > 0 && (
         <div className="grid grid-cols-2 gap-6 mb-5 px-2">
           {[
-            { label: highlighted[0].label, total: highlightedTotal, color: highlightedColor },
-            { label: others[0].label,      total: othersTotal,      color: othersColor },
+            { label: pointLabelFor(highlighted[0]), total: highlightedTotal, color: highlightedColor },
+            { label: pointLabelFor(others[0]),      total: othersTotal,      color: othersColor },
           ].map((side, idx) => (
             <div key={idx}>
               <div
@@ -331,7 +338,7 @@ export function InlineDotGrid({
               className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: getColor(pt, i), opacity: pt.highlight ? 1 : 0.55 }}
             />
-            <span>{pt.label}</span>
+            <span>{pointLabelFor(pt)}</span>
             <span className="tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
               {pt.value.toLocaleString()}
             </span>
@@ -386,6 +393,15 @@ export function InlineBarChart({
     if (lang === 'en') return pt.label_en ?? pt.label
     return pt.label_es ?? pt.label
   }
+  // Pick lang-aware annotation per point.
+  const annoFor = (pt: { annotation?: string; annotation_es?: string }) => {
+    if (lang === 'es') return pt.annotation_es ?? pt.annotation
+    return pt.annotation
+  }
+  const refLabelFor = (ref: { label: string; label_es?: string }) => {
+    if (lang === 'es') return ref.label_es ?? ref.label
+    return ref.label
+  }
 
   const refX = (v: number) => LABEL_W + (v / mx) * BAR_AREA
 
@@ -399,12 +415,16 @@ export function InlineBarChart({
       }
     : undefined
 
+  const cardAnnotation = lang === 'es'
+    ? (data.annotation_es ?? data.annotation)
+    : data.annotation
+
   return (
     <ChartCard
       title={title}
       eyebrow="HORIZONTAL · RANKED"
       anchor={anchor}
-      annotation={data.annotation}
+      annotation={cardAnnotation}
     >
       <svg
         viewBox={`0 0 ${svgW} ${svgH}`}
@@ -478,7 +498,7 @@ export function InlineBarChart({
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="rgba(255,255,255,0.85)"
                 >
-                  {pt.annotation}
+                  {annoFor(pt)}
                 </text>
               )}
 
@@ -507,7 +527,7 @@ export function InlineBarChart({
             fill={data.referenceLine.color ?? REFERENCE_COLOR}
             opacity={0.9}
           >
-            {data.referenceLine.label}
+            {refLabelFor(data.referenceLine)}
           </text>
         )}
         {data.referenceLine2 && (
@@ -519,7 +539,7 @@ export function InlineBarChart({
             fill={data.referenceLine2.color ?? 'var(--color-sector-energia)'}
             opacity={0.9}
           >
-            {data.referenceLine2.label}
+            {refLabelFor(data.referenceLine2)}
           </text>
         )}
       </svg>
@@ -572,9 +592,11 @@ function pickAnchor(
 export function InlineLineChart({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const pts = data.points
   const mx = maxVal(pts, data.maxValue)
@@ -593,13 +615,19 @@ export function InlineLineChart({
   const mainColor = ANCHOR_COLOR
   const linePoints = buildPolyPoints(pts, plotX, plotY)
   const showEveryOther = pts.length > 15
+  const lineAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const lineYLabel = lang === 'es' ? (data.yLabel_es ?? data.yLabel) : data.yLabel
+  const lineRefLabel = (ref: { label: string; label_es?: string }) =>
+    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
+  const ptAnnoFor = (pt: { annotation?: string; annotation_es?: string }) =>
+    lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation
 
   return (
     <ChartCard
       title={title}
       eyebrow={`TIME SERIES · ${pts.length} POINTS`}
       anchor={pickAnchor(pts, data.unit, mainColor)}
-      annotation={data.annotation}
+      annotation={lineAnnotation}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -634,7 +662,7 @@ export function InlineLineChart({
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
             >
-              {data.referenceLine.label}
+              {lineRefLabel(data.referenceLine)}
             </text>
           </>
         )}
@@ -680,7 +708,7 @@ export function InlineLineChart({
               fill={HIGHLIGHT_COLOR}
               fontWeight={700}
             >
-              {pt.annotation}
+              {ptAnnoFor(pt)}
             </text>
           ) : null
         )}
@@ -701,7 +729,7 @@ export function InlineLineChart({
           )
         )}
 
-        {data.yLabel && (
+        {lineYLabel && (
           <text
             x={6}
             y={PAD.top + plotH / 2}
@@ -711,7 +739,7 @@ export function InlineLineChart({
             fill="var(--color-text-muted)"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
-            {data.yLabel}
+            {lineYLabel}
           </text>
         )}
       </svg>
@@ -726,9 +754,11 @@ export function InlineLineChart({
 export function InlineAreaChart({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const pts = data.points
   const mx = maxVal(pts, data.maxValue)
@@ -746,13 +776,19 @@ export function InlineAreaChart({
   const mainColor = 'var(--color-sector-infraestructura)'
   const linePoints = buildPolyPoints(pts, plotX, plotY)
   const showEveryOther = pts.length > 15
+  const areaAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const areaYLabel = lang === 'es' ? (data.yLabel_es ?? data.yLabel) : data.yLabel
+  const areaRefLabel = (ref: { label: string; label_es?: string }) =>
+    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
+  const areaPtAnno = (pt: { annotation?: string; annotation_es?: string }) =>
+    lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation
 
   return (
     <ChartCard
       title={title}
       eyebrow={`AREA · ${pts.length} POINTS`}
       anchor={pickAnchor(pts, data.unit, mainColor)}
-      annotation={data.annotation}
+      annotation={areaAnnotation}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -794,7 +830,7 @@ export function InlineAreaChart({
               fill={data.referenceLine.color ?? REFERENCE_COLOR}
               opacity={0.9}
             >
-              {data.referenceLine.label}
+              {areaRefLabel(data.referenceLine)}
             </text>
           </>
         )}
@@ -832,7 +868,7 @@ export function InlineAreaChart({
               fill={HIGHLIGHT_COLOR}
               fontWeight={700}
             >
-              {pt.annotation}
+              {areaPtAnno(pt)}
             </text>
           ) : null
         )}
@@ -853,7 +889,7 @@ export function InlineAreaChart({
           )
         )}
 
-        {data.yLabel && (
+        {areaYLabel && (
           <text
             x={6}
             y={PAD.top + plotH / 2}
@@ -863,7 +899,7 @@ export function InlineAreaChart({
             fill="var(--color-text-muted)"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
-            {data.yLabel}
+            {areaYLabel}
           </text>
         )}
       </svg>
@@ -1146,11 +1182,15 @@ export function InlineDivergingBar({
 export function InlineMultiLine({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryMultiSeriesData
   title: string
+  lang?: 'en' | 'es'
 }) {
-  const { xLabels, series, unit, yLabel, annotation } = data
+  const { xLabels, series, unit } = data
+  const annotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const yLabel = lang === 'es' ? (data.yLabel_es ?? data.yLabel) : data.yLabel
   // Compute global y-max
   const allValues = series.flatMap((s) => s.values)
   const yMax = Math.max(...allValues, 1)
@@ -1233,6 +1273,7 @@ export function InlineMultiLine({
                 const lastIdx = s.values.length - 1
                 const lastV = s.values[lastIdx]
                 if (lastV <= 0) return null
+                const seriesName = lang === 'es' ? (s.name_es ?? s.name) : s.name
                 return (
                   <text
                     x={plotX(lastIdx) + 4}
@@ -1242,7 +1283,7 @@ export function InlineMultiLine({
                     fill={s.color}
                     fontWeight={700}
                   >
-                    {s.name}
+                    {seriesName}
                   </text>
                 )
               })()}
@@ -1272,7 +1313,7 @@ export function InlineMultiLine({
                   fill={s.color}
                   fontWeight={700}
                 >
-                  {s.annotation.text}
+                  {lang === 'es' ? (s.annotation.text_es ?? s.annotation.text) : s.annotation.text}
                 </text>
               )}
             </g>
@@ -1314,32 +1355,38 @@ export function InlineMultiLine({
 
       {/* Legend with totals — color swatch + name + total caption */}
       <div className="flex flex-wrap gap-x-6 gap-y-2 px-2 pt-2 pb-1">
-        {series.map((s, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span
-              className="inline-block rounded-sm"
-              style={{ width: 14, height: 3, backgroundColor: s.color }}
-            />
-            <span
-              className="font-mono"
-              style={{
-                fontSize: 11,
-                color: 'var(--color-text-secondary)',
-                fontWeight: 600,
-              }}
-            >
-              {s.name}
-            </span>
-            {s.totalCaption && (
+        {series.map((s, i) => {
+          const legendName = lang === 'es' ? (s.name_es ?? s.name) : s.name
+          const legendCaption = lang === 'es'
+            ? (s.totalCaption_es ?? s.totalCaption)
+            : s.totalCaption
+          return (
+            <div key={i} className="flex items-center gap-2">
               <span
-                className="font-mono tabular-nums"
-                style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
+                className="inline-block rounded-sm"
+                style={{ width: 14, height: 3, backgroundColor: s.color }}
+              />
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 11,
+                  color: 'var(--color-text-secondary)',
+                  fontWeight: 600,
+                }}
               >
-                {s.totalCaption}
+                {legendName}
               </span>
-            )}
-          </div>
-        ))}
+              {legendCaption && (
+                <span
+                  className="font-mono tabular-nums"
+                  style={{ fontSize: 10.5, color: 'var(--color-text-muted)' }}
+                >
+                  {legendCaption}
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
     </ChartCard>
   )
@@ -1354,11 +1401,20 @@ export function InlineMultiLine({
 export function InlineNetwork({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryNetworkData
   title: string
+  lang?: 'en' | 'es'
 }) {
-  const { nodes, edges, anchor, annotation } = data
+  const { nodes, edges } = data
+  const annotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const anchor = data.anchor
+    ? {
+        ...data.anchor,
+        label: lang === 'es' ? (data.anchor.label_es ?? data.anchor.label) : data.anchor.label,
+      }
+    : undefined
   const W = 560
   const H = 340
   const cx = W / 2
@@ -1517,7 +1573,12 @@ export function InlineStackedBar({
   title: string
   lang?: 'en' | 'es'
 }) {
-  const { rows, unit, anchor, annotation, highlightColor, baseColor } = data
+  const {
+    rows, unit, anchor, annotation, annotation_es,
+    highlightColor, baseColor,
+    highlightLabel, highlightLabel_es,
+    baseLabel, baseLabel_es,
+  } = data
   const hi = highlightColor ?? HIGHLIGHT_COLOR
   const base = baseColor ?? 'var(--color-text-muted)'
 
@@ -1526,6 +1587,29 @@ export function InlineStackedBar({
     if (lang === 'en') return r.label_en ?? r.label
     return r.label_es ?? r.label
   }
+
+  // Lang-aware row annotation
+  const rowAnnotation = (r: { annotation?: string; annotation_es?: string }) =>
+    lang === 'es' ? (r.annotation_es ?? r.annotation) : r.annotation
+
+  // Lang-aware card-level annotation
+  const cardAnnotation = lang === 'es' ? (annotation_es ?? annotation) : annotation
+
+  // Lang-aware anchor label
+  const cardAnchor = anchor
+    ? {
+        ...anchor,
+        label: lang === 'es' ? (anchor.label_es ?? anchor.label) : anchor.label,
+      }
+    : undefined
+
+  // Legend strings with bilingual fallbacks
+  const legendHi = lang === 'es'
+    ? (highlightLabel_es ?? highlightLabel ?? 'porción concentrada')
+    : (highlightLabel ?? 'concentrated portion')
+  const legendBase = lang === 'es'
+    ? (baseLabel_es ?? baseLabel ?? 'resto')
+    : (baseLabel ?? 'remainder')
 
   const ROW_H = 26
   const ROW_GAP = 14
@@ -1541,8 +1625,8 @@ export function InlineStackedBar({
     <ChartCard
       title={title}
       eyebrow={`SHARE · ${rows.length} ROWS`}
-      anchor={anchor}
-      annotation={annotation}
+      anchor={cardAnchor}
+      annotation={cardAnnotation}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -1609,7 +1693,7 @@ export function InlineStackedBar({
                 {unit ? ` ${unit}` : ''}
               </text>
               {/* Annotation (e.g. "60.1% IMSS") below the value */}
-              {r.annotation && (
+              {rowAnnotation(r) && (
                 <text
                   x={LABEL_W + totalW + 8}
                   y={y + ROW_H / 2 + 14}
@@ -1619,7 +1703,7 @@ export function InlineStackedBar({
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={r.color ?? hi}
                 >
-                  {r.annotation}
+                  {rowAnnotation(r)}
                 </text>
               )}
             </g>
@@ -1632,11 +1716,11 @@ export function InlineStackedBar({
         style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-2 rounded-sm" style={{ background: hi, opacity: 0.92 }} />
-          <span>concentrated portion</span>
+          <span>{legendHi}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-block w-3 h-2 rounded-sm" style={{ background: base, opacity: 0.22 }} />
-          <span>remainder</span>
+          <span>{legendBase}</span>
         </div>
       </div>
     </ChartCard>

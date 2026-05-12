@@ -212,6 +212,12 @@ export interface StoryStackedBarData {
   highlightColor?: string
   /** Color used for the remaining portion. */
   baseColor?: string
+  /** Legend label for the highlighted segment (default "concentrated portion"). */
+  highlightLabel?: string
+  highlightLabel_es?: string
+  /** Legend label for the base/remainder segment (default "remainder"). */
+  baseLabel?: string
+  baseLabel_es?: string
 }
 
 /**
@@ -890,6 +896,10 @@ export const STORIES: StoryDef[] = [
             annotation: 'Solid bar = IMSS portion. Faded portion = all other federal customers combined. Each vendor\'s dependency on IMSS is between 50% and 72%.',
             annotation_es: 'Barra sólida = porción IMSS. Porción atenuada = todos los demás clientes federales combinados. La dependencia del IMSS de cada proveedor está entre 50% y 72%.',
             highlightColor: '#dc2626',
+            highlightLabel: 'IMSS portion',
+            highlightLabel_es: 'porción IMSS',
+            baseLabel: 'all other clients',
+            baseLabel_es: 'todos los demás clientes',
           },
         },
         pullquote: {
@@ -1971,6 +1981,10 @@ export const STORIES: StoryDef[] = [
             annotation: 'Bar = AMLO-era spend per sector. Annotation shows the change vs Peña Nieto. The shape of Mexican federal spending changed direction across this transition.',
             annotation_es: 'Barra = gasto del sexenio AMLO por sector. La anotación muestra el cambio frente a Peña Nieto. La forma del gasto federal mexicano cambió de dirección en esta transición.',
             highlightColor: '#a06820',
+            highlightLabel: 'AMLO-era spend',
+            highlightLabel_es: 'gasto sexenio AMLO',
+            baseLabel: 'context',
+            baseLabel_es: 'contexto',
           },
         },
         pullquote: {
