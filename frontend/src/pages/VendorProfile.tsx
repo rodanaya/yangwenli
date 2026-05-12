@@ -250,11 +250,14 @@ export function VendorProfile() {
         }
       />
 
-      {/* ── Single-scroll dossier: three chapters, no tab chrome ────────── */}
-      <div id="evidence" className="mt-8">
-        <ChapterDivider
-          roman="I"
-          title={isEs ? 'Análisis de Riesgo' : 'Risk Analysis'}
+      {/* ── Single-scroll dossier: three chapters, no tab chrome ─────────────
+          Chapter structure mirrors RedThread: accent kicker + serif h2 header,
+          dot-rule divider between chapters, content sections below.          */}
+      <div id="evidence">
+        <ChapterHeader
+          folio="§ I"
+          kicker={isEs ? 'Riesgo' : 'Risk'}
+          title={isEs ? 'El Análisis de Riesgo' : 'The Risk Analysis'}
         />
         <VendorEvidenceTab
           vendor={vendor}
@@ -267,10 +270,13 @@ export function VendorProfile() {
         />
       </div>
 
-      <div id="activity" className="mt-4">
-        <ChapterDivider
-          roman="II"
-          title={isEs ? 'Actividad Contractual' : 'Contract Activity'}
+      <ChapterDivider />
+
+      <div id="activity">
+        <ChapterHeader
+          folio="§ II"
+          kicker={isEs ? 'Actividad' : 'Activity'}
+          title={isEs ? 'La Trayectoria Contractual' : 'The Contract Track Record'}
         />
         <VendorActivityTab
           vendor={vendor}
@@ -284,10 +290,13 @@ export function VendorProfile() {
         />
       </div>
 
-      <div id="network" className="mt-4">
-        <ChapterDivider
-          roman="III"
-          title={isEs ? 'Red e Investigación' : 'Network & Investigation'}
+      <ChapterDivider />
+
+      <div id="network">
+        <ChapterHeader
+          folio="§ III"
+          kicker={isEs ? 'Red' : 'Network'}
+          title={isEs ? 'Las Conexiones' : 'The Connections'}
         />
         <VendorNetworkTab
           vendor={vendor}
@@ -327,22 +336,58 @@ export function VendorProfile() {
   )
 }
 
-// ─── Chapter divider ─────────────────────────────────────────────────────
-function ChapterDivider({ roman, title }: { roman: string; title: string }) {
+// ─── Chapter chrome — mirrors RedThread editorial register ───────────────
+// ChapterDivider: dot-rule between chapters (matches RedThread.tsx:117-125)
+function ChapterDivider() {
   return (
-    <div className="flex items-center gap-4 pt-10 pb-6">
-      <span
-        className="text-[10px] font-mono font-bold tracking-[0.2em] shrink-0"
-        style={{ color: 'var(--color-accent)', opacity: 0.7 }}
-      >
-        {roman}
-      </span>
-      <div className="flex-1 h-px bg-border/40" />
-      <span className="text-[10px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] shrink-0">
-        {title}
-      </span>
-      <div className="w-12 h-px bg-border/40" />
+    <div className="flex items-center gap-3 my-8">
+      <div className="h-px flex-1 bg-background-elevated" />
+      <div
+        className="w-0.5 h-0.5 rounded-full opacity-50"
+        style={{ background: 'var(--color-accent)' }}
+      />
+      <div className="h-px flex-1 bg-background-elevated" />
     </div>
+  )
+}
+
+// ChapterHeader: IBM Plex Mono italic accent kicker + EB Garamond serif h2
+// (matches ChapterLabel + RedThreadChapter pattern in RedThread.tsx:92-115)
+function ChapterHeader({
+  folio,
+  kicker,
+  title,
+}: {
+  folio: string
+  kicker: string
+  title: string
+}) {
+  return (
+    <header className="pt-8 pb-4">
+      <div
+        style={{
+          fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+          fontSize: '10px',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: '#a06820',
+          fontStyle: 'italic',
+          fontWeight: 500,
+          marginBottom: '0.6rem',
+        }}
+      >
+        {folio} · {kicker}
+      </div>
+      <h2
+        className="text-xl font-bold text-text-primary mb-3"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {title}
+      </h2>
+    </header>
   )
 }
 
