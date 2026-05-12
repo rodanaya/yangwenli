@@ -276,6 +276,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
   }, [])
 
   const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const drag = dragRef.current
     pointersRef.current.delete(e.pointerId)
     const wrapper = wrapperRef.current
     if (wrapper) wrapper.releasePointerCapture?.(e.pointerId)
@@ -286,6 +287,22 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     if (pointersRef.current.size === 0) {
       dragRef.current = null
       setDragging(false)
+      // setPointerCapture on the wrapper div redirects the browser's native
+      // click event to the div — React onClick on SVG <g> children never fires.
+      // Fix: detect tap (< 6px movement) and re-dispatch a synthetic click on
+      // the real SVG element under the pointer after capture is released.
+      if (drag) {
+        const dx = e.clientX - drag.startX
+        const dy = e.clientY - drag.startY
+        if (Math.hypot(dx, dy) < 6) {
+          const target = document.elementFromPoint(e.clientX, e.clientY)
+          if (target && target !== wrapper) {
+            target.dispatchEvent(
+              new MouseEvent('click', { bubbles: true, cancelable: true, clientX: e.clientX, clientY: e.clientY })
+            )
+          }
+        }
+      }
     } else if (pointersRef.current.size === 1) {
       // Pinch ended but one finger still down — promote to drag
       const remaining = Array.from(pointersRef.current.values())[0]
@@ -622,25 +639,28 @@ function SectorBodyVisual({
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r + 6 : r
-  // Adaptive font: smaller bodies get smaller labels so the text doesn't
-  // overflow the circle on Energy / Otros etc.
-  const fontSize = Math.max(10, Math.min(15, Math.round(r / 2.6)))
   return (
     <g style={{ cursor: 'pointer' }} onClick={onClick} onMouseEnter={() => { setHovered(true); onHover(true) }} onMouseLeave={() => { setHovered(false); onHover(false) }}>
+      <title>{label}</title>
       {/* Halo */}
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
       {/* Pin ring — Gap 4.2. Pulses regardless of hover; SMIL animation
           keeps the work on the GPU and avoids React state churn. */}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 4} color={color} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
+      {/* Label below the bubble — full name stays readable for long sector names
+          ("Infraestructura", "Infrastructure") that clipped inside small circles. */}
       <text
         x={cx}
-        y={cy + Math.round(fontSize * 0.36)}
+        y={cy + r + 17}
         textAnchor="middle"
-        fontSize={fontSize}
+        fontSize={11}
         fontFamily="var(--font-family-mono, monospace)"
         fontWeight={700}
-        fill="white"
+        fill={color}
+        stroke="var(--color-background)"
+        strokeWidth={3}
+        paintOrder="stroke fill"
         style={{ pointerEvents: 'none' }}
       >
         {label}
@@ -789,7 +809,7 @@ function Z1Layer({
             cx={cx}
             cy={cy}
             r={rOf(inst.size)}
-            showLabel={inst.size > 0.35}
+            showLabel={inst.size > 0.2}
             isPinned={isPinned}
             onClick={() =>
               triggerDrill(cx, cy, () =>
@@ -854,6 +874,9 @@ function InstitutionBodyVisual({
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight={700}
           fill="var(--color-text-primary)"
+          stroke="var(--color-background)"
+          strokeWidth={3}
+          paintOrder="stroke fill"
           style={{ pointerEvents: 'none' }}
         >
           {shortLabel(inst.name)}
@@ -937,6 +960,10 @@ function Z2Layer({
   const cxC = SVG_W / 2
   const cyC = SVG_H / 2
 
+  // Golden-ratio angle for sunflower spiral layout — gives organic, non-repeating
+  // placement that avoids the "concentric rings of orbs" appearance.
+  const goldenAngle = 2 * Math.PI / ((1 + Math.sqrt(5)) / 2)
+
   // Sector-tinted backdrop (lighter than Z1, since this is a child surface).
   const z2GradId = parentSector ? `z2-bg-${parentSector.sectorCode}` : null
 
@@ -1007,15 +1034,12 @@ function Z2Layer({
       </g>
 
       {vendors.map((v, i) => {
-        // Spiral-out radial layout — bumped first ring to 70 so the
-        // smallest vendor doesn't overlap the centre institution marker.
-        // 8 vendors per ring; rings step by 100px.
-        const ringIdx = Math.floor(i / 8)
-        const inRingPos = i % 8
-        const angle = (inRingPos / 8) * Math.PI * 2 + (ringIdx % 2) * (Math.PI / 8) // alternate offset for rings
-        const ring = 80 + ringIdx * 95
-        const cx = cxC + Math.cos(angle) * ring
-        const cy = cyC + Math.sin(angle) * ring
+        // Sunflower phyllotaxis: golden-angle spiral gives organic, non-repeating
+        // placement with no concentric-ring artefacts (audit: "orbs lined up").
+        const angle = i * goldenAngle
+        const radius = 70 + Math.sqrt(i + 1) * 50
+        const cx = cxC + Math.cos(angle) * radius
+        const cy = cyC + Math.sin(angle) * radius
         const sizeRatio = (v.total_value_mxn ?? 0) / max
         const r = 8 + Math.sqrt(sizeRatio) * 30
         const risk = v.avg_risk_score ?? 0
