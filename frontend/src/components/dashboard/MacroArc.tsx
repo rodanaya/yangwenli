@@ -257,30 +257,57 @@ export function MacroArc({ lang }: Props) {
           )
         })()}
 
-        {/* FT-style annotation callouts BELOW the line at staggered depths
-            so they don't collide with the admin band labels at the top.
-            Boxes anchor to the dot via a vertical leader. */}
+        {/* Annotation callouts BELOW the line at staggered depths.
+            COVID 2020 (peak at 87%) gets a Playfair italic pull-out;
+            the other three use the standard FT-style mono box. */}
         {CALLOUTS.map((c) => {
           const cx = xOf(c.year)
           const pt = YEARLY_DA.find((d) => d.year === c.year)
           if (!pt) return null
           const cy = yOf(pt.da)
           const label = isEs ? c.es : c.en
-          // Estimate text width for box (rough: 5.4px per char + padding)
+          const minX = PAD_L + 2
+          const maxX2 = PAD_L + CW - 2
+
+          if (c.year === 2020) {
+            // Playfair italic editorial pull-out — peak event deserves visual promotion
+            const boxW = Math.min(label.length * 7.4 + 24, 120)
+            const boxH = 24
+            let boxX = cx - boxW / 2
+            if (boxX < minX) boxX = minX
+            if (boxX > maxX2 - boxW) boxX = maxX2 - boxW
+            const boxY = cy + c.dy
+            const leaderEndX = boxX + boxW / 2
+            return (
+              <g key={c.year}>
+                <line x1={cx} y1={cy + 2} x2={leaderEndX} y2={boxY} stroke="#dc2626" strokeWidth={0.9} opacity={0.65} />
+                <rect x={boxX} y={boxY} width={boxW} height={boxH} rx={2} fill="var(--color-background-card)" stroke="#dc2626" strokeWidth={1} opacity={0.97} />
+                <text
+                  x={boxX + boxW / 2}
+                  y={boxY + 16}
+                  textAnchor="middle"
+                  fontSize={11}
+                  fontFamily="'Playfair Display', Georgia, serif"
+                  fontStyle="italic"
+                  fontWeight="700"
+                  fill="#dc2626"
+                >
+                  {label}
+                </text>
+              </g>
+            )
+          }
+
+          // Standard mono callout for the other three events
           const boxW = label.length * 5.4 + 14
           const boxH = 16
-          // Anchor: the box top aligns at cy + dy (always BELOW the dot)
           let boxX = cx - boxW / 2
-          // Clamp inside chart so labels don't fall off either edge
-          const minX = PAD_L + 2
-          const maxX = PAD_L + CW - boxW - 2
           if (boxX < minX) boxX = minX
-          if (boxX > maxX) boxX = maxX
+          if (boxX > maxX2 - boxW) boxX = maxX2 - boxW
           const boxY = cy + c.dy
           const leaderEndX = boxX + boxW / 2
           return (
             <g key={c.year}>
-              {/* Leader line from dot down to box top */}
               <line
                 x1={cx}
                 y1={cy + 2}
@@ -290,7 +317,6 @@ export function MacroArc({ lang }: Props) {
                 strokeWidth={0.6}
                 opacity={0.55}
               />
-              {/* Callout box */}
               <rect
                 x={boxX}
                 y={boxY}

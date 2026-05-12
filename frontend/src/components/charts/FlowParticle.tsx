@@ -132,7 +132,7 @@ export function FlowParticle({
         />
       ))}
 
-      {/* Source labels */}
+      {/* Source labels — Playfair italic for community/entity names */}
       {sources.map((n) => (
         <text
           key={`sl-${n.id}`}
@@ -142,12 +142,14 @@ export function FlowParticle({
           fontSize={10}
           textAnchor="end"
           dominantBaseline="middle"
-          fontFamily={FONT_MONO}
+          fontFamily="'Playfair Display', Georgia, serif"
+          fontStyle="italic"
+          fontWeight="400"
         >
           {n.label.slice(0, 20)}
         </text>
       ))}
-      {/* Target labels */}
+      {/* Target labels — mono for institution identifiers */}
       {targets.map((n) => (
         <text
           key={`tl-${n.id}`}

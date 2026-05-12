@@ -231,6 +231,25 @@ function LensVisualization({ tiers, lang }: { tiers: LensTier[]; lang: 'en' | 'e
           />
         )
       })}
+
+      {/* Editorial finding label at the outer ring — Playfair italic.
+          fontSize=9 renders ~11px after the 280/220 vertical stretch. */}
+      <motion.text
+        x={CX}
+        y={PAD_T + 14}
+        textAnchor="middle"
+        fontSize={8}
+        fontFamily="'Playfair Display', Georgia, serif"
+        fontStyle="italic"
+        fill="var(--color-text-muted)"
+        fillOpacity={0.65}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, delay: 1.1 }}
+      >
+        {lang === 'es' ? '12% del gasto · 6% de contratos' : '12% of pesos · 6% of contracts'}
+      </motion.text>
     </svg>
   )
 }
@@ -762,20 +781,22 @@ interface CategoryCell {
   sector_code: string
   total_value: number
   avg_risk: number
+  caption_es?: string
+  caption_en?: string
 }
 
 // Curated fallback — illustrative figures that round to the v0.8.5 distribution.
 // Used only when category_stats is unavailable (the table doesn't exist on
 // every environment yet — precompute job ships separately).
 const FALLBACK_CATEGORIES: CategoryCell[] = [
-  { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55 },
-  { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42 },
-  { id: 'obra_publica',  name_es: 'Obra pública',           name_en: 'Public Works',        sector_code: 'infraestructura', total_value:   870_000_000_000, avg_risk: 0.51 },
-  { id: 'tic',           name_es: 'Tecnologías de Información', name_en: 'IT Services',     sector_code: 'tecnologia',      total_value:   620_000_000_000, avg_risk: 0.68 },
-  { id: 'serv_prof',     name_es: 'Servicios profesionales', name_en: 'Professional Services', sector_code: 'gobernacion',  total_value:   540_000_000_000, avg_risk: 0.59 },
-  { id: 'vehiculos',     name_es: 'Vehículos y transporte',  name_en: 'Vehicles & Transport', sector_code: 'infraestructura', total_value:  410_000_000_000, avg_risk: 0.46 },
-  { id: 'equipo_medico', name_es: 'Equipo médico',          name_en: 'Medical Equipment',   sector_code: 'salud',           total_value:   380_000_000_000, avg_risk: 0.52 },
-  { id: 'alimentos',     name_es: 'Alimentos y despensa',   name_en: 'Food & Distribution', sector_code: 'agricultura',     total_value:   290_000_000_000, avg_risk: 0.66 },
+  { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55, caption_es: 'Clúster IMSS-ISSSTE · 1 de cada 4 pesos', caption_en: 'IMSS-ISSSTE cluster · 1 in 4 pesos' },
+  { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42, caption_es: 'Cadena suministro Pemex-CFE',               caption_en: 'Pemex-CFE supply chain' },
+  { id: 'obra_publica',  name_es: 'Obra pública',           name_en: 'Public Works',        sector_code: 'infraestructura', total_value:   870_000_000_000, avg_risk: 0.51, caption_es: 'Boom infra Peña Nieto',                    caption_en: 'Peña Nieto infra boom' },
+  { id: 'tic',           name_es: 'Tecnologías de Información', name_en: 'IT Services',     sector_code: 'tecnologia',      total_value:   620_000_000_000, avg_risk: 0.68, caption_es: 'Monopolio Toka-Infotec',                   caption_en: 'Toka-Infotec monopoly ring' },
+  { id: 'serv_prof',     name_es: 'Servicios profesionales', name_en: 'Professional Services', sector_code: 'gobernacion',  total_value:   540_000_000_000, avg_risk: 0.59, caption_es: 'Puerta giratoria gobernación',              caption_en: 'Gobernación revolving door' },
+  { id: 'vehiculos',     name_es: 'Vehículos y transporte',  name_en: 'Vehicles & Transport', sector_code: 'infraestructura', total_value:  410_000_000_000, avg_risk: 0.46, caption_es: 'Concentración flota SCT',                 caption_en: 'SCT fleet concentration' },
+  { id: 'equipo_medico', name_es: 'Equipo médico',          name_en: 'Medical Equipment',   sector_code: 'salud',           total_value:   380_000_000_000, avg_risk: 0.52, caption_es: 'Pico de compras COVID 2020',               caption_en: 'COVID 2020 equipment surge' },
+  { id: 'alimentos',     name_es: 'Alimentos y despensa',   name_en: 'Food & Distribution', sector_code: 'agricultura',     total_value:   290_000_000_000, avg_risk: 0.66, caption_es: 'Captura P6 Segalmex',                     caption_en: 'P6 capture · Segalmex' },
 ]
 
 function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
@@ -871,15 +892,29 @@ function TopCategoriesChart({ lang }: { lang: 'en' | 'es' }) {
           >
             {name}
           </div>
-          <div
-            className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
-            style={{
-              color: 'var(--color-text-primary)',
-              fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
-              fontWeight: primary ? 800 : 700,
-            }}
-          >
-            {formatCompactMXN(cat.total_value)}
+          <div>
+            <div
+              className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
+              style={{
+                color: 'var(--color-text-primary)',
+                fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
+                fontWeight: primary ? 800 : 700,
+              }}
+            >
+              {formatCompactMXN(cat.total_value)}
+            </div>
+            {primary && (cat.caption_es || cat.caption_en) && (
+              <div
+                className="text-[8px] leading-[1.3] mt-0.5 italic"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  color: 'var(--color-text-muted)',
+                  opacity: 0.75,
+                }}
+              >
+                {lang === 'en' ? (cat.caption_en ?? cat.caption_es) : (cat.caption_es ?? cat.caption_en)}
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -2253,81 +2288,113 @@ export default function Executive() {
                 <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
                 <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
               </div>
-              {/* Budget allocation: 4 healthy institutions vs. 1 captured (illustrative — pattern is real, exact pcts simplified) */}
+              {/* Cleveland pair per institution: filled dot = top vendor share,
+                  open dot = second vendor share. Gap reveals capture. */}
               <div className="mb-4">
-                {(
-                  [
-                    { label: 'IMSS',   pcts: [30, 25, 20, 15, 10], captured: false },
-                    { label: 'SEP',    pcts: [35, 27, 22, 16],     captured: false },
-                    { label: 'ISSSTE', pcts: [91, 9],              captured: true  },
-                    { label: 'SCT',    pcts: [28, 26, 24, 22],     captured: false },
-                    { label: 'CFE',    pcts: [32, 24, 20, 14, 10], captured: false },
-                  ] as Array<{ label: string; pcts: number[]; captured: boolean }>
-                ).map((inst, iIdx) => {
-                  const OPACITIES = [0.55, 0.40, 0.28, 0.18, 0.11]
+                {(() => {
+                  // Sorted by gap desc so ISSSTE (captured) leads — story reads in one glance.
+                  // top / second vendor market share (illustrative — pattern is real, pcts simplified)
+                  const INST_DATA = [
+                    { label: 'ISSSTE', top: 91, second:  9, captured: true  },
+                    { label: 'SEP',    top: 35, second: 27, captured: false },
+                    { label: 'CFE',    top: 32, second: 24, captured: false },
+                    { label: 'IMSS',   top: 30, second: 25, captured: false },
+                    { label: 'SCT',    top: 28, second: 26, captured: false },
+                  ]
+                  const SVG_W = 240
+                  const PAD_L = 10
+                  const PAD_R = 52  // gap label space
+                  const TRACK_W = SVG_W - PAD_L - PAD_R
+                  const xPos = (pct: number) => PAD_L + (pct / 100) * TRACK_W
+                  const ROW_H = 22
+
                   return (
-                    <div key={inst.label} className="flex items-center gap-2 mb-[5px]">
-                      {/* Institution label */}
-                      <span
-                        className="text-[8px] font-mono flex-shrink-0 text-right"
-                        style={{
-                          width: 46,
-                          color: inst.captured ? '#a06820' : 'var(--color-text-muted)',
-                          fontWeight: inst.captured ? 700 : 400,
-                        }}
-                      >
-                        {inst.captured ? '▶ ' : ''}{inst.label}
-                      </span>
-
-                      {/* Allocation bar */}
-                      <div
-                        className="flex-1 relative rounded-sm overflow-hidden"
-                        style={{ height: 18, background: 'var(--color-border)' }}
-                      >
-                        {/* Vendor slices revealed left-to-right via clipPath — no SVG transform issues */}
-                        <motion.div
-                          className="absolute inset-0 flex"
-                          initial={{ clipPath: 'inset(0 100% 0 0)' }}
-                          whileInView={{ clipPath: 'inset(0 0% 0 0)' }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.62, delay: 0.1 + iIdx * 0.09, ease: 'easeOut' }}
-                        >
-                          {inst.pcts.map((p, sIdx) => (
-                            <div
-                              key={sIdx}
-                              style={{
-                                width: `${p}%`,
-                                flexShrink: 0,
-                                background: inst.captured
-                                  ? sIdx === 0 ? '#a06820' : 'rgba(160,104,32,0.15)'
-                                  : `rgba(100,116,139,${OPACITIES[sIdx] ?? 0.08})`,
-                                marginRight: !inst.captured && sIdx < inst.pcts.length - 1 ? 1 : 0,
-                              }}
-                            />
-                          ))}
-                        </motion.div>
-
-                        {/* Label inside the captured bar */}
-                        {inst.captured && (
-                          <div className="absolute inset-0 flex items-center px-2.5 pointer-events-none">
+                    <>
+                      {INST_DATA.map((inst, iIdx) => {
+                        const gap = inst.top - inst.second
+                        const dotColor = inst.captured ? '#a06820' : 'var(--color-text-primary)'
+                        return (
+                          <div key={inst.label} className="flex items-center gap-2 mb-[3px]">
                             <span
-                              className="text-[8px] font-mono font-bold"
-                              style={{ color: 'rgba(255,255,255,0.92)' }}
+                              className="text-[8px] font-mono flex-shrink-0 text-right"
+                              style={{
+                                width: 46,
+                                color: inst.captured ? '#a06820' : 'var(--color-text-muted)',
+                                fontWeight: inst.captured ? 700 : 400,
+                              }}
                             >
-                              91% {lang === 'en' ? '— single vendor' : '— un proveedor'}
+                              {inst.captured ? '▶ ' : ''}{inst.label}
                             </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
 
-                <div className="text-[8px] font-mono text-text-muted mt-1.5 leading-[1.4]">
-                  {lang === 'en'
-                    ? 'each row = one institution · segments = different vendors · amber bar = monopoly capture'
-                    : 'cada fila = una institución · segmentos = distintos proveedores · barra ámbar = captura monopolio'}
-                </div>
+                            <motion.svg
+                              width={SVG_W}
+                              height={ROW_H}
+                              style={{ flexShrink: 0, overflow: 'visible' }}
+                              initial={{ opacity: 0 }}
+                              whileInView={{ opacity: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.45, delay: 0.1 + iIdx * 0.08 }}
+                            >
+                              {/* Guide line */}
+                              <line
+                                x1={PAD_L}
+                                x2={SVG_W - PAD_R}
+                                y1={ROW_H / 2}
+                                y2={ROW_H / 2}
+                                stroke="var(--color-border)"
+                                strokeWidth={0.6}
+                              />
+                              {/* Connector between the two dots */}
+                              <line
+                                x1={xPos(inst.second)}
+                                x2={xPos(inst.top)}
+                                y1={ROW_H / 2}
+                                y2={ROW_H / 2}
+                                stroke={inst.captured ? '#a06820' : 'var(--color-text-muted)'}
+                                strokeWidth={1.4}
+                                strokeOpacity={inst.captured ? 0.85 : 0.45}
+                              />
+                              {/* Open circle = second vendor */}
+                              <circle
+                                cx={xPos(inst.second)}
+                                cy={ROW_H / 2}
+                                r={4}
+                                fill="none"
+                                stroke="var(--color-text-muted)"
+                                strokeWidth={1.2}
+                              />
+                              {/* Filled circle = top vendor */}
+                              <circle
+                                cx={xPos(inst.top)}
+                                cy={ROW_H / 2}
+                                r={5}
+                                fill={dotColor}
+                                fillOpacity={inst.captured ? 1 : 0.7}
+                              />
+                              {/* Gap annotation */}
+                              <text
+                                x={SVG_W - PAD_R + 5}
+                                y={ROW_H / 2 + 3.5}
+                                fontSize={8}
+                                fontFamily="var(--font-family-mono,monospace)"
+                                fontWeight="700"
+                                fill={inst.captured ? '#a06820' : 'var(--color-text-muted)'}
+                              >
+                                +{gap}pp
+                              </text>
+                            </motion.svg>
+                          </div>
+                        )
+                      })}
+
+                      <div className="text-[8px] font-mono text-text-muted mt-1.5 leading-[1.4]">
+                        {lang === 'en'
+                          ? '● top vendor share · ○ second vendor · gap = concentration advantage'
+                          : '● cuota proveedor 1 · ○ proveedor 2 · brecha = ventaja de concentración'}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
                 {lang === 'en' ? 'One vendor locks one institution — year after year, no competition.' : 'Un proveedor captura una institución — año tras año, sin competencia.'}
