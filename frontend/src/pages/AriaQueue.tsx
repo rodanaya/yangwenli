@@ -1101,7 +1101,7 @@ export default function AriaPage() {
     4: stats?.latest_run?.tier4_count ?? 0,
   }
 
-  const isEs = i18n.language === 'es'
+  const isEs = i18n.language.startsWith('es')
   const locale = isEs ? 'es-MX' : 'en-US'
   const lastRunAt = stats?.latest_run?.completed_at
     ? new Intl.DateTimeFormat(locale, {

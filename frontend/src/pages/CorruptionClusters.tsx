@@ -1012,7 +1012,7 @@ function PatternVendorCard({
 // ============================================================================
 export default function CorruptionClusters() {
   const { i18n } = useTranslation()
-  const isEs = i18n.language === 'es'
+  const isEs = i18n.language.startsWith('es')
   const location = useLocation()
 
   // Scroll to hash-anchored pattern (e.g. /clusters#p1) after mount.

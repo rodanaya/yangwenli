@@ -183,7 +183,7 @@ function PatternCard({
 export default function Patterns() {
   const { i18n } = useTranslation('nav')
   const navigate = useNavigate()
-  const isEs = i18n.language === 'es'
+  const isEs = i18n.language.startsWith('es')
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['pattern-spotlight'],

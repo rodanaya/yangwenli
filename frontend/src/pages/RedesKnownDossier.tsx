@@ -1034,9 +1034,9 @@ function HeaderStat({
 
 export default function RedesKnownDossier() {
   const { i18n } = useTranslation('redes')
-  const isEs = i18n.language === 'es'
+  const isEs = i18n.language.startsWith('es')
 
-  const communities = useMemo(() => buildCommunities(isEs), [isEs])
+  const communities = useMemo(() => buildCommunities(isEs), [isEs, i18n.language])
 
   const { data: spotlightData } = useQuery({
     queryKey: ['pattern-spotlight'],
