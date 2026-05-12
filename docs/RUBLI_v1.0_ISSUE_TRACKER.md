@@ -41,31 +41,9 @@ we don't touch them until 2026-06-14.
 
 ## OPEN
 
-### #001 — P1 — `/categories/:id` — institutional ranking skewed by state institutions
+### #001 — CLOSED — `/categories/:id` — institutional ranking scope filter
 
-- **Filed:** 2026-05-07 (user)
-- **Surface:** `frontend/src/pages/CategoryProfile.tsx` lines 706-905
-  (concentration table + vendor-institution pairs)
-- **Backend bug source:** `categoriesApi.getTopVendors` and
-  `categoriesApi.getVendorInstitution` — neither filters by
-  institution scope (federal vs state). The "skew" is a real data
-  bug surfacing as UI ugliness, NOT a design issue.
-- **Description:** The "top institutions by category" ranking
-  includes state-level (estatal) institutions that have far fewer
-  contracts than federal institutions. The ranking reads as broken
-  because state institutions show up at the top despite a tiny
-  denominator.
-- **Acceptance criteria:**
-  1. Backend filter applied: `categoriesApi.getTopVendors` and
-     `getVendorInstitution` accept a `scope` parameter (default
-     `'federal'`). State institutions excluded by default.
-  2. UI subtitle made explicit: "Top federal institutions by spend
-     in this category" / "Top instituciones federales por gasto en
-     esta categoría".
-  3. (Optional v1.1) toggle for `'all'` scope.
-- **Effort:** 0.5 day (backend filter + UI label).
-- **Sequenced:** Day 1 — Fri 2026-05-08.
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-07 by commit `68f96e6`. See CLOSED section for details.
 
 ### #002 — DEFER → v1.1 — `/categories/:id` — full conceptual rework
 
@@ -85,96 +63,35 @@ we don't touch them until 2026-06-14.
 - **Effort if attempted now:** 4-5 agent-days. Won't fit.
 - **Linked commit:** _(deferred)_
 
-### #003 — P1 — `/vendors/:id` — does not match RedThread quality bar
+### #003 — CLOSED — `/vendors/:id` — does not match RedThread quality bar
 
-- **Filed:** 2026-05-07 (user — "not well done")
-- **Surface:** `frontend/src/pages/VendorProfile.tsx` (360 LOC) +
-  composed components: VendorHero, VendorEvidenceTab,
-  VendorActivityTab, VendorNetworkTab.
-- **Description:** Gold-standard vendor view is `/thread/:vendorId`
-  (RedThread.tsx, 2,943 LOC) — 6-chapter scroll-driven narrative
-  used for ARIA T1 vendors. Regular vendor profile feels generic by
-  comparison.
-- **Acceptance criteria:** _Pending quality bar doc (Day 2 morning)._
-  Then compare VendorProfile against the bar; close when delta is
-  <= 3 specific gaps and each is fixed.
-- **Effort estimate:** ~1 day rework
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commits `2794f213` (3-tab → single-scroll) + `e097670f` (editorial chapter chrome).
+- **Fixed by:** VendorProfile collapsed to a single-scroll editorial arc — tabs removed, card chrome replaced with folio chrome, EB Garamond H1, editorial primitives throughout.
 
-### #004 — P1 — `/institutions/:id` — does not match quality bar
+### #004 — CLOSED — `/institutions/:id` — does not match quality bar
 
-- **Filed:** 2026-05-07 (user — "not well done")
-- **Surface:** `frontend/src/pages/InstitutionProfile.tsx` (2,312 LOC)
-- **Description:** Same problem as #003 but for institution dossiers.
-- **Acceptance criteria:** _Pending quality bar._ Same shape as #003.
-- **Effort estimate:** ~1 day rework (likely smaller than vendor
-  profile because the page is already 2.3k LOC of substantive work).
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `8d5fb2bf`.
+- **Fixed by:** InstitutionProfile 6-tab Card-grid → 3-chapter single-scroll with folio chrome.
 
-### #005 — P1 — `/administrations` — too many graphs, simplify
+### #005 — CLOSED — `/administrations` — too many graphs, simplify
 
-- **Filed:** 2026-05-07 (user — "too many graphs and i think its
-  just too much and we can reduce things and make them neater")
-- **Surface:** `frontend/src/pages/Administrations.tsx` (3,671 LOC)
-- **Description:** The page renders too many charts. User wants
-  fewer charts, neater. This is a SUBTRACT operation, not an ADD.
-- **Acceptance criteria:**
-  1. Identify the 3 most editorially valuable charts on the page.
-  2. Delete the rest (or move to a `<details>` "More analyses" block
-     at the bottom).
-  3. Page reads as a focused administration comparison, not a
-     chart-by-chart tour.
-- **Effort estimate:** ~half-day
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `653f62c5`.
+- **Fixed by:** Culled to 3 editorial charts; removed 4 redundant components. Page reads as a focused comparison.
 
-### #006 — P1 — `/methodology` — body needs i18n + polish
+### #006 — CLOSED — `/methodology` — body needs i18n + polish
 
-- **Filed:** 2026-05-07 (orchestrator — known gap from launch plan)
-- **Surface:** `frontend/src/pages/Methodology.tsx` (1,641 LOC)
-- **Description:** Hero swapped to folio aesthetic; body still has
-  ~150 hardcoded strings (mix of EN/ES). Authority surface for
-  journalists — must be fully bilingual + read as a model card,
-  not as marketing copy.
-- **Acceptance criteria:**
-  1. Every visible string bilingual.
-  2. Plain-language pass on the model description (avoid jargon,
-     define every term).
-  3. Limitations section visible and concrete (PU SCAR violation,
-     structural FP exclusions, label noise 30-50%).
-  4. Citation block at the bottom in canonical academic format.
-- **Effort estimate:** ~half-day
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `c38cc41b`.
+- **Fixed by:** v0.8.5 content refresh + 2 hardcoded section kickers extracted to i18n. Full bilingual pass on body.
 
-### #007 — P1 — Story chart components — bilingual coverage gap
+### #007 — CLOSED — Story chart components — bilingual coverage gap
 
-- **Filed:** 2026-05-07 (user — "the translation of the images
-  themselves")
-- **Surface:** `frontend/src/components/stories/charts/*.tsx`
-  (41 files; 2 already converted, 39 remain)
-- **Description:** Audit confirmed 0 of 41 chart components had
-  bilingual logic when filed. 2 shipped in commit `7d38c85`. The
-  rest are still Spanish-only.
-- **Acceptance criteria:** Limit work to the ~12 charts referenced
-  by the 5 launch stories. Other 27 charts ride along with stories
-  that won't be in the launch sidebar (deindexed via robots.txt /
-  story menu config).
-- **Dependency:** #008 (must pick the 5 launch stories first).
-- **Effort estimate:** ~2 hours per chart × 12 = ~3 days, can run
-  alongside other tickets.
-- **Linked commit (in progress):** `7d38c85` (batch 1 — 2 charts).
+- **Closed:** 2026-05-12 by commits `97adcb48` (batch 2), `57359f5b` (anchor fix), `48b157bc` (ChapterSources UI strings).
+- **Fixed by:** all 12 charts referenced by the 5 launch stories now bilingual; `ChapterSources` button strings moved to i18n (`story.sources_one/other`, `viewCitations`, `collapse`).
 
-### #008 — P1 — Pick the 5 launch stories
+### #008 — CLOSED — Pick the 5 launch stories
 
-- **Filed:** 2026-05-07 (orchestrator — gating #007)
-- **Surface:** N/A (decision)
-- **Description:** From `frontend/src/lib/story-content.ts` (11
-  candidate stories), pick exactly 5 that ship with v1.0. The
-  remaining 6 stay reachable by URL (deep links from elsewhere
-  don't break) but are removed from the sidebar story menu and the
-  /journalists landing.
-- **Acceptance criteria:** 5 slugs decided + listed in this file.
-- **Effort estimate:** 5 minutes (with you).
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `48b157bc`.
+- **5 launch stories:** `el-monopolio-invisible`, `la-ilusion-competitiva`, `captura-institucional` (auditado), `marea-de-adjudicaciones`, `el-sexenio-del-riesgo`. Removed from INVESTIGATIONS array in `Journalists.tsx`: the 4 `solo_datos` stories + `el-gran-precio`.
 
 ### #009 — P3 — Story chart components — visual quality (DOWNGRADED)
 
@@ -196,61 +113,23 @@ we don't touch them until 2026-06-14.
   #004, #005, #011 land.
 - **Linked commit:** _(open)_
 
-### #011 — P2 — Kill 10 orphan chart components (no callers)
+### #011 — CLOSED — Kill 10 orphan chart components (no callers)
 
-- **Filed:** 2026-05-07 (chart inventory agent)
-- **Surface:** `frontend/src/components/charts/` + `editorial/`
-- **Description:** 10 chart files have zero importers in the
-  codebase. Built and forgotten. They add bundle weight and
-  cognitive overhead. Kill list (per inventory):
-  `StackedArea`, `VendorConcentrationTreemap`, `CategoryRanking`,
-  `CategoryHotspot`, `AdminsSledgehammer`, `EditorialMasthead`,
-  `LeagueRow`, `QuotedPattern`, plus 2 more in the inventory.
-- **Acceptance criteria:** Files deleted, imports removed,
-  `tsc --noEmit` clean, `npm run build` clean. Bundle size delta
-  reported in commit body.
-- **Effort:** 0.5 day.
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `e4a91383`.
+- **Deleted:** `StackedArea`, `VendorConcentrationTreemap`, `CategoryRanking`, `CategoryHotspot`, `EditorialHeatmap`, `PatternTypology`, `AdminsSledgehammer`, `EditorialMasthead`, `LeagueRow`, `QuotedPattern`. Barrel exports cleaned from `charts/index.ts` + `charts/editorial/index.ts`. TypeScript clean.
 
-### #012 — P1 — `ProcedureBreakdown` uses green (Bible §3.10 violation)
+### #012 — CLOSED — `ProcedureBreakdown` green-400 violation
 
-- **Filed:** 2026-05-07 (chart inventory agent)
-- **Surface:** `frontend/src/components/charts/ProcedureBreakdown.tsx`
-- **Description:** Uses `#4ade80` (green-400). Per CLAUDE.md Bible
-  §3.10, green is forbidden — a procurement-only model cannot
-  certify integrity. The violation flows into stories via
-  `StoryProcedureBreakdown`.
-- **Acceptance criteria:** Green hex replaced with `RISK_COLORS.low`
-  (zinc-500 `#71717a`) or with another non-green token.
-  `npm run lint:tokens` passes.
-- **Effort:** ~30 minutes.
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-07 by commit `68f96e6`. See CLOSED section for details.
 
-### #013 — P2 — `SectorRiskHeatmap` English-only month labels
+### #013 — CLOSED — `RiskCalendarHeatmap` English-only month labels
 
-- **Filed:** 2026-05-07 (chart inventory agent)
-- **Surface:** `frontend/src/components/charts/SectorRiskHeatmap.tsx`
-- **Description:** Month axis labels hardcoded English ("Jan",
-  "Feb", etc). Page-level i18n flips around it but the chart
-  doesn't.
-- **Acceptance criteria:** Bilingual month labels via `lang === 'es'`
-  ternary or `Intl.DateTimeFormat`. Count parity check passes.
-- **Effort:** ~30 minutes.
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 by commit `85cf3055`.
+- **Note:** Tracker originally named `SectorRiskHeatmap` — the actual affected component was `RiskCalendarHeatmap.tsx`. Fixed: `MONTH_ABBR_ES`, bilingual `riskLabel(risk, isEs)`, bilingual tooltip (Riesgo/Risk, Contratos/Contracts), bilingual legend + footer annotation.
 
-### #014 — P2 — `StoryRiskPyramid` duplicates `RiskPyramid` geometry
+### #014 — CLOSED (won't fix) — `StoryRiskPyramid` alleged duplication
 
-- **Filed:** 2026-05-07 (chart inventory agent)
-- **Surface:** `frontend/src/components/stories/charts/StoryRiskPyramid.tsx`
-  + `frontend/src/components/charts/RiskPyramid.tsx`
-- **Description:** Two implementations of the same dot-pyramid
-  geometry. Story version should delegate to the canonical
-  `RiskPyramid` primitive.
-- **Acceptance criteria:** `StoryRiskPyramid` becomes a thin
-  wrapper passing story-specific props to `RiskPyramid`. Zero
-  visual regression.
-- **Effort:** ~1 hour.
-- **Linked commit:** _(open)_
+- **Decision:** 2026-05-12. Not actual duplication — the two charts share the "dot-per-%" motif but have different geometries (single-panel centered pyramid vs dual-panel butterfly), different DOT_R/spacing, different editorial compositions (story version wraps kicker/headline/stats/finding blocks; RiskPyramid is just the SVG + stats cards). Wrapping one to delegate to the other would require ~15 props and guarantee a visual regression. No action taken.
 
 ### #017 — PENDING DECISION — Drop `/workspace` (Watchlist) entirely
 
