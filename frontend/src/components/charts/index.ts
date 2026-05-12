@@ -9,7 +9,6 @@
  */
 
 // Custom chart components (Recharts-based only)
-export { StackedAreaChart } from './StackedArea'
 export { ProcedureBreakdown } from './ProcedureBreakdown'
 
 // Editorial particle-grammar primitives (pure SVG, deterministic)

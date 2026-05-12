@@ -33,9 +33,6 @@ export type { EditorialSparklineProps } from './EditorialSparkline'
 export { EditorialRadarChart } from './EditorialRadarChart'
 export type { EditorialRadarChartProps, RadarSeries } from './EditorialRadarChart'
 
-export { EditorialHeatmap } from './EditorialHeatmap'
-export type { EditorialHeatmapProps } from './EditorialHeatmap'
-
 export { scaleToColor } from './colorScales'
 export type { HeatmapScale } from './colorScales'
 
