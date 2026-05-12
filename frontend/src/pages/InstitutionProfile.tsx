@@ -73,6 +73,7 @@ import {
 } from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 
 // SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
@@ -278,7 +279,7 @@ export function InstitutionProfile() {
 
   const { data: topCategories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['institution', institutionId, 'top-categories'],
-    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
+    queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 15 }),
     enabled: !!institutionId && activeTab === 'vendors',
     staleTime: 30 * 60 * 1000,
   })
@@ -298,6 +299,30 @@ export function InstitutionProfile() {
     enabled: !!institutionId && activeTab === 'officials',
     staleTime: 30 * 60 * 1000,
   })
+
+  // Map institution top-categories response → CategoryDatum shape for CategoryCaptureDumbbell.
+  // sector_code/sector_id are not in the institution endpoint — the dumbbell falls back to 'otros'.
+  const dumbbellCategories = useMemo(() => {
+    if (!topCategories?.data) return []
+    return topCategories.data.map((row: {
+      category_id: number; name_es: string; name_en: string;
+      total_value_mxn: number; contract_count: number; avg_risk_score: number | null;
+      direct_award_pct: number | null;
+    }) => ({
+      category_id: row.category_id,
+      name_es: row.name_es,
+      name_en: row.name_en,
+      sector_id: null,
+      sector_code: null,
+      total_value: row.total_value_mxn,
+      total_contracts: row.contract_count,
+      avg_risk: row.avg_risk_score ?? 0,
+      direct_award_pct: row.direct_award_pct ?? 0,
+      single_bid_pct: 0,
+      top_vendor: null,
+      top_institution: null,
+    }))
+  }, [topCategories])
 
   // ---- Derived values ----
 
@@ -1284,14 +1309,12 @@ export function InstitutionProfile() {
               </p>
             </div>
 
-            {/*
-              TODO inst-P2: Add <CategoryCaptureDumbbell> here once the component
-              accepts institution_id and fetches institution-scoped categories.
-              Currently CategoryCaptureDumbbell (src/components/sectors/CategoryCaptureDumbbell.tsx)
-              takes a `categories: CategoryDatum[]` array that must include top-2 vendor shares
-              per category — data not yet exposed via an institution-level endpoint.
-              Tracked: docs/FULL_SITE_GRAPHICS_AUDIT.md Part A § ADDITIONS.
-            */}
+            {/* § Concentración por categoría — vendor capture per procurement category */}
+            {dumbbellCategories.length >= 3 && (
+              <div className="mt-6">
+                <CategoryCaptureDumbbell categories={dumbbellCategories} />
+              </div>
+            )}
 
             {/* Top Procurement Categories */}
             {(categoriesLoading || (topCategories?.data?.length ?? 0) > 0) && (

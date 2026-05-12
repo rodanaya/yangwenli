@@ -29,6 +29,7 @@ import { useSavedSearches } from '@/hooks/useSavedSearches'
 import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { getLocale } from '@/lib/utils'
 import { VendorBadge } from '@/components/ui/VendorBadge'
+import { formatVendorName } from '@/lib/vendor/formatName'
 
 // Mexican RFC pattern: 3-4 uppercase letters + 6 digits (YYMMDD) + 3 alphanumeric
 const RFC_PATTERN = /^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/i
@@ -371,7 +372,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       className="gap-2"
                     >
                       <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
-                      <span className="truncate">{v.name}</span>
+                      <span className="truncate">{formatVendorName(v.name)}</span>
                       {v.rfc && <span className="text-xs font-mono text-text-muted ml-1 shrink-0">{v.rfc}</span>}
                       <VendorBadge isEfos={v.is_efos} isSfp={v.is_sfp_sanctioned} />
                       {riskLevel && riskLevel !== 'low' && <RiskPill level={riskLevel} />}
