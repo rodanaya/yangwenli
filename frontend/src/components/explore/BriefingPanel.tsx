@@ -472,7 +472,7 @@ function VendorBriefing({
   vendorName: string
 }) {
   const navigate = useNavigate()
-  const { data: vendor } = useQuery({
+  const { data: vendor, isLoading } = useQuery({
     queryKey: ['explore', 'vendor', vendorId],
     queryFn: () => vendorApi.getById(vendorId),
     enabled: vendorId > 0,
@@ -490,6 +490,25 @@ function VendorBriefing({
   const topInstitution = vendor?.top_institutions?.[0]
   const isEfos = vendor?.is_efos_ghost === true
   const isSfp = vendor?.is_sfp_sanctioned === true
+
+  // 2026-05-12 (Audit V007 P1): on first hydration the vendor query is
+  // pending while the briefing renders stats that fall back to 0 — the
+  // user reads "CONTRACTS 0, TOTAL VALUE MX$0, LOW 0.0%" for ~2s as a
+  // working answer. Render skeleton lines during isLoading so the
+  // numbers don't lie during the fetch.
+  if (isLoading && !vendor) {
+    return (
+      <div>
+        <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Vendor · Z3' : 'Proveedor · Z3'}</Eyebrow>
+        <h2 className="text-lg font-bold mb-2 text-text-primary leading-tight">{displayName}</h2>
+        <div className="space-y-2 mt-3" aria-live="polite">
+          <div className="h-3 w-3/4 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>

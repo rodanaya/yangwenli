@@ -722,15 +722,38 @@ export default function Administrations() {
           </div>
           <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
         </div>
+        {/* 2026-05-12 (Audit V011-V014): the header used to hardcode
+            15.82% (highest) and 3.84% (lowest) — values from an
+            earlier snapshot of the aggregate. The per-administration
+            cards below use the live weighted-HR computation, so the
+            header disagreed with its own page. Now we pick highest /
+            lowest dynamically from adminAggs and the page is
+            internally consistent. */}
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-            <span>{t('classifiedHeader.highestRiskNote')} <strong className="text-risk-critical">15.82%</strong></span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-low" />
-            <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
-          </div>
+          {(() => {
+            if (adminAggs.length === 0) return null
+            const sorted = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
+            const highest = sorted[0]
+            const lowest = sorted[sorted.length - 1]
+            return (
+              <>
+                <div className="flex items-center gap-2 text-xs text-text-muted">
+                  <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+                  <span>
+                    {t('classifiedHeader.highestRiskNote')}{' '}
+                    <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-text-muted">
+                  <span className="w-2 h-2 rounded-full bg-risk-low" />
+                  <span>
+                    {t('classifiedHeader.lowestRiskNote')}{' '}
+                    <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
+                  </span>
+                </div>
+              </>
+            )
+          })()}
         </div>
       </header>
 
