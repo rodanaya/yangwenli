@@ -149,7 +149,7 @@ function SexenioDotColumns({
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
         {data.map((d, colIdx) => {
           const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * ROWS)) : 0
-          const cx = offsetX + colIdx * (COL_W + 24) + COL_W / 2
+          const cx = offsetX + colIdx * (COL_W + COL_GAP) + COL_W / 2
           const opacity = 0.3 + (colIdx / Math.max(1, data.length - 1)) * 0.6
 
           return (
@@ -196,7 +196,7 @@ function SexenioDotColumns({
                 fill="var(--color-text-secondary)"
                 fontFamily="var(--font-family-mono)"
               >
-                {d.admin}
+                {d.admin.length > 11 ? d.admin.slice(0, 10) + '…' : d.admin}
               </text>
               {/* Risk / contracts secondary label */}
               <text
