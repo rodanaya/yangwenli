@@ -1017,7 +1017,7 @@ export function Methodology() {
           <CollapsibleSection id="features" number="02" title={t('sectionLabels.features')} icon={BarChart3}>
             <div className="space-y-4">
               <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
-                § Importancia de variables · ElasticNet C=0.2243
+                {t('sectionKickers.featuresKicker')}
               </p>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.features.p1')}
@@ -1134,7 +1134,7 @@ export function Methodology() {
           <CollapsibleSection id="validation" number="05" title={t('sectionLabels.validation')} icon={Target}>
             <div className="space-y-4">
               <p className="font-mono uppercase tracking-[0.15em] text-text-muted text-[10px]">
-                § Validación de casos documentados · v0.8.5
+                {t('sectionKickers.validationKicker')}
               </p>
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}

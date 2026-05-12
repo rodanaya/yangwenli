@@ -34,8 +34,8 @@
     "thresholdSplitting": "Threshold Splitting"
   },
   "sectionLabels": {
-    "overview": "Model Overview (v0.6.5)",
-    "features": "The Features (9 Active)",
+    "overview": "Model Overview (v0.8.5)",
+    "features": "The Features (18 Active)",
     "risk-evidence": "Risk Factor Evidence Base",
     "findings": "Key Findings",
     "validation": "Ground Truth Validation",
@@ -81,10 +81,10 @@
     "overview": {
       "p1Start": "Every risk score is a ",
       "p1StatisticalIndicator": "statistical risk indicator",
-      "p1End": " with 95% confidence intervals. The v0.6.5 model uses vendor-stratified validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.828. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.",
+      "p1End": " with 95% confidence intervals. The v0.8.5 model uses vendor-stratified validation (no vendor appears in both training and test sets), producing an honest test AUC of 0.785. A score of 0.35 means this contract's procurement characteristics closely resemble those from documented corruption cases.",
       "formulaLabel": "SCORE FORMULA",
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
-      "formulaDescStart": "Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.300). S(z) is a ",
+      "formulaDescStart": "Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.32). S(z) is a ",
       "formulaDescStrong": "risk similarity score",
       "formulaDescEnd": " — it measures how closely a contract's procurement characteristics resemble those from documented corruption cases. It is not a literal probability of corruption.",
       "riskThresholdsLabel": "RISK LEVEL THRESHOLDS",
@@ -94,36 +94,36 @@
       "tableColDistribution": "Distribution",
       "tableColCount": "Count",
       "highRiskSummaryStart": "High-risk rate: ",
-      "highRiskSummaryValue": "13.49%",
-      "highRiskSummaryEnd": " (critical + high). Thresholds calibrated against ~748 documented cases to yield a rate consistent with international procurement risk ranges. v0.6.5 is the active model (Mar 25, 2026), using vendor-stratified validation."
+      "highRiskSummaryValue": "11.01%",
+      "highRiskSummaryEnd": " (critical + high). Thresholds calibrated against 1,401 documented cases to yield a rate consistent with international procurement risk ranges. v0.8.5 is the active model (May 2, 2026), using vendor-stratified validation."
     },
     "features": {
-      "p1": "Each contract is described by 16 z-score features normalized by sector and year baselines. v0.6.5 uses 4 behavioral features added in v5.0: price_volatility, institution_diversity, win_rate, and sector_spread. The chart below shows the learned cross-validated ElasticNet coefficients. Positive coefficients increase the risk score; negative coefficients decrease it.",
+      "p1": "Each contract is described by 18 z-score features normalized by sector and year baselines. v0.8.5 adds cobid_herfindahl, recency_z, amount_residual_z, amendment_flag, and pub_delay_z to the v5.x behavioral set. The chart below shows the learned ElasticNet coefficients (C=0.2243, l1_ratio=0.7545). Positive coefficients increase the risk score; negative coefficients decrease it.",
       "legendIncreasesRisk": "Increases risk",
       "legendDecreasesRisk": "Decreases risk",
       "legendNoSignal": "No signal",
-      "footerNote": "Coefficients from Optuna-tuned ElasticNet (C=0.0100, l1_ratio=0.9673, near-pure L1). Near-L1 regularization drives uninformative features to zero. Two features (co_bid_rate, price_hyp_confidence) are regularized to exactly zero across all 13 models."
+      "footerNote": "Coefficients from Optuna-tuned ElasticNet (C=0.2243, l1_ratio=0.7545, 200 trials). ElasticNet mix balances sparsity and stability. Six features regularized to exactly zero (sameDayContracts, winRate, singleBid, sectorSpread, coBidRate, priceHypConfidence). Run: CAL-v8-202605020212."
     },
     "riskEvidence": {
       "p1": "Each risk factor is grounded in peer-reviewed literature on procurement corruption. The table below shows each factor's learned coefficient, global evidence strength, and key source. Hover over a factor name for mechanism details."
     },
     "findings": {
       "finding1Label": "#1 PREDICTOR",
-      "finding1Title": "Price Volatility is the strongest predictor (+0.53)",
-      "finding1Body": "Vendors with wildly varying contract sizes remain the strongest corruption signal. This is followed by vendor concentration (+0.37) and institution diversity (-0.38, protective). Price ratio (+0.23) and network membership (+0.18) are meaningful positive predictors. Win rate is a weak positive signal (+0.05) in v0.6.5.",
+      "finding1Title": "Price Volatility is the strongest predictor (+0.558)",
+      "finding1Body": "Vendors with wildly varying contract sizes remain the strongest corruption signal (+0.558). This is followed by price ratio (+0.358), vendor concentration (+0.327), and co-bid herfindahl (+0.272). Institution diversity is protective (-0.388). Recency is also protective (-0.247): recently active vendors are less suspicious.",
       "finding2Label": "COUNTERINTUITIVE",
-      "finding2Title": "Key sign changes from v5.1 to v0.6.5",
+      "finding2Title": "Key sign changes from v5.1 to v0.8.5",
       "finding2Item1Start": "",
       "finding2Item1Strong": "Win rate weakened dramatically",
       "finding2Item1End": " — Win rate collapsed from a strong predictor to near-zero. Many GT vendors receive direct awards rather than winning competitive bids, making win_rate a confounded signal.",
       "finding2Item1Mono": "(beta = +0.049, was +0.727)",
       "finding2Item2Start": "",
       "finding2Item2Strong": "Sector spread flipped positive",
-      "finding2Item2End": " — In v5.1, cross-sector operation was protective. In v0.6.5, large GT vendors like Edenred and Toka operate across sectors, causing the model to associate sector spread with corruption. This is a labeling artifact.",
+      "finding2Item2End": " — In v5.1, cross-sector operation was protective. In v0.8.5, large GT vendors like Edenred and Toka operate across sectors, causing the model to associate sector spread with corruption. This is a labeling artifact.",
       "finding2Item2Mono": "(beta = +0.117, was -0.374)",
       "finding2Item3Start": "",
       "finding2Item3Strong": "Single bid regularized to zero",
-      "finding2Item3End": " — Single bidding provides no discriminating power in v0.6.5. Known-bad vendors tend to win through direct awards rather than single-bid competitive procedures, so this classic OECD indicator has no signal in Mexican federal procurement ground truth.",
+      "finding2Item3End": " — Single bidding provides no discriminating power in v0.8.5. Known-bad vendors tend to win through direct awards rather than single-bid competitive procedures, so this classic OECD indicator has no signal in Mexican federal procurement ground truth.",
       "finding2Item3Mono": "(beta = 0.000, was +0.013)",
       "finding3Label": "NO SIGNAL",
       "finding3BodyStart": "",
@@ -135,8 +135,8 @@
     },
     "validation": {
       "p1Start": "The model was trained and validated against ",
-      "p1Strong": "~748 documented Mexican corruption cases",
-      "p1End": ", matching ~603 vendors to ~288K contracts across all 12 sectors in the COMPRANET database.",
+      "p1Strong": "1,401 documented Mexican corruption cases",
+      "p1End": ", matching 861 vendors to ~302K contracts across all 12 sectors in the COMPRANET database.",
       "tableAriaLabel": "Corruption cases validation",
       "tableColCase": "Case",
       "tableColType": "Type",
@@ -144,7 +144,7 @@
       "tableColDetected": "Detected",
       "tableColHighPlus": "High+",
       "tableColAvgScore": "Avg Score",
-      "footnote": "*Case 9 (PEMEX Emilio Lozoya) shares vendors with the Odebrecht case. Documented for reference but does not contribute additional training data. The table above shows the original 22 foundation cases from v5.1. v0.6.5 expanded the ground truth to ~748 cases and ~603 vendors through systematic COMPRANET investigation, ASF audit cross-referencing, and SAT EFOS integration.",
+      "footnote": "*Case 9 (PEMEX Emilio Lozoya) shares vendors with the Odebrecht case. Documented for reference but does not contribute additional training data. The table above shows the original 22 foundation cases from v5.1. v0.8.5 expanded the ground truth to 1,401 cases and 861 vendors through systematic COMPRANET investigation, ASF audit cross-referencing, and SAT EFOS integration.",
       "metricTestAuc": "Test AUC-ROC",
       "metricTrainAuc": "Train AUC-ROC",
       "metricOecdRate": "High-risk rate (OECD compliance)",
@@ -162,18 +162,18 @@
       "mahalanobisFormula": "D^2(z) = z^T Sigma^(-1) z ~ chi^2(16)",
       "mahalanobisNote": "Covariance estimated with Ledoit-Wolf shrinkage for stability in small sectors. P-values computed against chi-squared distribution with 16 degrees of freedom.",
       "logisticTitle": "Per-Sector Logistic Regression",
-      "logisticP1": "Optuna-tuned ElasticNet (C=0.0100, l1_ratio=0.9673, near-pure L1) trained on ~288K known-bad contracts from ~748 corruption cases with vendor-stratified 70/30 split (no vendor in both train and test). 12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.",
-      "logisticNote": "Train AUC: 0.798, Test AUC: 0.828. Near-L1 regularization drives uninformative features to exactly zero, producing a sparser and more robust model than v5.1.",
+      "logisticP1": "Optuna-tuned ElasticNet (C=0.2243, l1_ratio=0.7545, 200 trials) trained on ~302K known-bad contracts from 1,401 corruption cases with vendor-stratified 70/30 split (no vendor in both train and test). 12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.",
+      "logisticNote": "Train AUC: 0.797, Test AUC: 0.785. ElasticNet mix drives 6 uninformative features to exactly zero while preserving more features than near-pure L1, improving robustness over v0.8.5.",
       "puTitle": "PU-Learning Correction (Elkan & Noto 2008)",
       "puP1Start": "Since unlabeled contracts are not necessarily clean (some may be corrupt but undetected), we apply a Positive-Unlabeled learning correction: ",
-      "puNote": "v0.6.5 estimated c = 0.300 via Elkan & Noto holdout on 13 models (1 global + 12 per-sector). This reflects the heterogeneity of the expanded ground truth (~603 vendors with diverse patterns). With c=0.300, scores are rescaled by ~3.3x and capped at 1.0. IMPORTANT: The SCAR assumption is structurally violated — known cases are high-profile scandals, not a random sample of all corruption.",
+      "puNote": "v0.8.5 estimated c = 0.32 via Elkan & Noto holdout on 13 models (1 global + 12 per-sector). This reflects the heterogeneity of the ground truth (861 vendors with diverse patterns). With c=0.32, scores are rescaled by ~3.1x and capped at 1.0. IMPORTANT: The SCAR assumption is structurally violated — known cases are high-profile scandals, not a random sample of all corruption.",
       "bootstrapTitle": "Bootstrap Confidence Intervals",
       "bootstrapP1": "Each contract receives a 95% confidence interval from 500 bootstrap resamples of the training data. A score of 0.35 [0.22, 0.48] means: the risk indicator is 0.35, but given data uncertainty, it could be as low as 0.22 or as high as 0.48."
     },
     "v52layer": {
       "p1Start": "The ",
       "p1Strong": "v5.2 analytical layer",
-      "p1End": " adds three independent ML tools on top of the active v0.6.5 risk scores. These tools do not replace or alter any contract risk scores — they provide additional explanations and cross-validation signals.",
+      "p1End": " adds three independent ML tools on top of the active v0.8.5 risk scores. These tools do not replace or alter any contract risk scores — they provide additional explanations and cross-validation signals.",
       "shapeTitle": "SHAP Explanations",
       "shapBadge": "456K vendors",
       "shapBody": "Exact Shapley values (φᵢ = βᵢ × (zᵢ − E[zᵢ])) computed for each vendor using their sector-specific model coefficients. Shows which of the 16 z-score features drove the risk score up or down.",
@@ -194,14 +194,14 @@
       "aiConfirmedTitle": "What \"AI Confirmed\" means",
       "aiConfirmedStart": "A contract is ",
       "aiConfirmedStrong": "dual-confirmed",
-      "aiConfirmedEnd": " when the supervised v0.6.5 logistic model scores it as high or critical risk and the unsupervised PyOD ensemble independently scores it above the 0.50 anomaly threshold. Two completely different methods — one trained on labeled corruption cases, one trained on no labels at all — agree that this contract is unusual. This convergence reduces the false-positive rate for investigation triage.",
-      "noteStart": "Note: v5.2 is an analytical overlay — it adds explanability and cross-validation. The active risk model is v0.6.5. Contract ",
+      "aiConfirmedEnd": " when the supervised v0.8.5 logistic model scores it as high or critical risk and the unsupervised PyOD ensemble independently scores it above the 0.50 anomaly threshold. Two completely different methods — one trained on labeled corruption cases, one trained on no labels at all — agree that this contract is unusual. This convergence reduces the false-positive rate for investigation triage.",
+      "noteStart": "Note: v5.2 is an analytical overlay — it adds explanability and cross-validation. The active risk model is v0.8.5. Contract ",
       "noteCode": "risk_score",
       "noteEnd": " values are unchanged by the v5.2 layer."
     },
     "limitations": {
       "item1Title": "Ground truth concentration",
-      "item1Text": "v0.6.5 expanded to ~748 cases and ~603 vendors (~288K training contracts) with a per-vendor cap of 100. While this dramatically reduces the dominance of mega-cases, Salud and Agricultura sectors still contribute a disproportionate share of positive training data due to the IMSS, Segalmex, and DICONSA/LICONSA ecosystems.",
+      "item1Text": "v0.8.5 trained on 1,401 cases and 861 vendors (~302K training contracts) with a per-vendor cap of 100. Salud and Agricultura sectors still contribute a disproportionate share of positive training data due to the IMSS, Segalmex, and DICONSA/LICONSA ecosystems.",
       "item2Title": "Small-case detection is weaker",
       "item2Text": "Cases with few contracts (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografia: 2) have lower detection rates. The model requires sufficient contract volume to detect patterns reliably.",
       "item3Title": "Data quality varies by period",
@@ -221,10 +221,10 @@
       "p1Mono": "risk_score_v3",
       "bonusFactors": "Additional bonus factors: Co-bidding +5%, Price Hypothesis +5%, Industry Mismatch +3%, Institution Risk +3%. 5 interaction pairs with up to +15% bonus. Score capped at 1.0.",
       "modelComparisonLabel": "MODEL COMPARISON",
-      "tableAriaLabel": "Model comparison v3.3 vs v0.6.5",
+      "tableAriaLabel": "Model comparison v3.3 vs v0.8.5",
       "tableColMetric": "Metric",
       "tableColV33": "v3.3",
-      "tableColV60": "v0.6.5",
+      "tableColV60": "v0.8.5 (active)",
       "tableColChange": "Change"
     },
     "dataSources": {
@@ -249,6 +249,10 @@
     "references": {
       "footer": "Risk scores are statistical indicators with confidence intervals. A high score indicates similarity to documented corruption patterns -- it does not constitute proof of wrongdoing."
     }
+  },
+  "sectionKickers": {
+    "featuresKicker": "§ Feature importance · ElasticNet C=0.2243",
+    "validationKicker": "§ Validation against documented cases · v0.8.5"
   },
   "copyCitation": "Copy citation",
   "citationCopied": "Citation copied!",
