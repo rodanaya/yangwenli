@@ -59,8 +59,6 @@ import {
   Banknote,
   FileText,
   Activity,
-  ChevronDown,
-  BarChart3,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { FuentePill } from '@/components/ui/FuentePill'
@@ -70,10 +68,6 @@ import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 // All other charts only render when user navigates within the page —
 // lazy-load so initial /administrations page-load doesn't pay for them.
 const AdministrationFingerprints = lazy(() => import('@/components/charts/AdministrationFingerprints'))
-const AdminSectorSunburst = lazy(() => import('@/components/charts/AdminSectorSunburst').then(m => ({ default: m.AdminSectorSunburst })))
-const AdminSectorHeatmap = lazy(() => import('@/components/charts/AdminSectorHeatmap').then(m => ({ default: m.AdminSectorHeatmap })))
-const SectorAdminHeatmap = lazy(() => import('@/components/charts/SectorAdminHeatmap').then(m => ({ default: m.SectorAdminHeatmap })))
-const AdminConcentrationTimeline = lazy(() => import('@/components/charts/AdminConcentrationTimeline').then(m => ({ default: m.AdminConcentrationTimeline })))
 const AdminRiskTrajectory = lazy(() => import('@/components/charts/AdminRiskTrajectory').then(m => ({ default: m.AdminRiskTrajectory })))
 import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
@@ -1024,31 +1018,6 @@ export default function Administrations() {
         sectorData={sectorHeatmap}
       />
 
-      {/* Spending Fingerprint Sunburst — collapsed by default */}
-      <details className="group">
-        <summary className="cursor-pointer list-none">
-          <div className="card group-open:rounded-b-none">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-mono flex items-center gap-2">
-                <Activity className="h-4 w-4 text-accent" />
-                {t('sunburstCard.title')}
-                <ChevronDown className="h-3.5 w-3.5 text-text-muted ml-auto transition-transform group-open:rotate-180" />
-              </CardTitle>
-              <p className="text-xs text-text-muted">
-                {t('sunburstCard.subtitle')}
-              </p>
-            </CardHeader>
-          </div>
-        </summary>
-        <div className="card border-t-0 rounded-t-none">
-          <CardContent className="pt-4">
-            <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
-              <AdminSectorSunburst />
-            </Suspense>
-          </CardContent>
-        </div>
-      </details>
-
       {/* Administration Fingerprints — radar comparison.
           Folio·XI plate: NYT Upshot multi-administration grouped
           comparison; FT small multiples per-admin radar. */}
@@ -1066,74 +1035,6 @@ export default function Administrations() {
           <AdministrationFingerprints />
         </Suspense>
       </PlateFrame>
-
-      {/* ── PROCUREMENT INTENSITY HEATMAP ── */}
-      {sectorYearData.length > 0 && (
-        <ScrollReveal direction="fade">
-          <div className="card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-mono flex items-center gap-2">
-                <Activity className="h-4 w-4 text-accent" />
-                {t('intensityHeatmap.title')}
-              </CardTitle>
-              <p className="text-xs text-text-muted">
-                {t('intensityHeatmap.subtitle')}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
-                <AdminSectorHeatmap sectorYearData={sectorYearData} />
-              </Suspense>
-            </CardContent>
-          </div>
-        </ScrollReveal>
-      )}
-
-      {/* ── RIESGO PROMEDIO — SECTOR × ADMINISTRACIÓN ── */}
-      <ScrollReveal direction="fade">
-        <section className="card" aria-labelledby="sector-admin-risk-heading">
-          <CardHeader className="pb-2">
-            <CardTitle
-              id="sector-admin-risk-heading"
-              className="text-sm font-mono flex items-center gap-2"
-            >
-              <BarChart3 className="h-4 w-4 text-accent" />
-              Riesgo Promedio — Sector × Administración
-            </CardTitle>
-            <p className="text-xs text-text-muted">
-              Puntuación de riesgo v0.8.5 ponderada por contratos, comparable entre sectores y sexenios.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="h-[400px] bg-background-card animate-pulse rounded-sm" />}>
-              <SectorAdminHeatmap />
-            </Suspense>
-          </CardContent>
-        </section>
-      </ScrollReveal>
-
-      {/* ── CONCENTRACIÓN DE MERCADO POR ADMINISTRACIÓN ── */}
-      <ScrollReveal direction="fade">
-        <section className="card" aria-labelledby="admin-concentration-heading">
-          <CardHeader className="pb-2">
-            <CardTitle
-              id="admin-concentration-heading"
-              className="text-sm font-mono flex items-center gap-2"
-            >
-              <TrendingUp className="h-4 w-4 text-accent" />
-              Concentración de Mercado por Administración
-            </CardTitle>
-            <p className="text-xs text-text-muted">
-              Participación del proveedor principal en los cuatro sectores de mayor gasto, con bandas de sexenio.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="h-[300px] bg-background-card animate-pulse rounded-sm" />}>
-              <AdminConcentrationTimeline height={300} />
-            </Suspense>
-          </CardContent>
-        </section>
-      </ScrollReveal>
 
       {/* Editorial Narrative — INVESTIGACION */}
       <motion.div
