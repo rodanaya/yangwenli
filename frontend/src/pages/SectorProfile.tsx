@@ -1243,10 +1243,10 @@ export function SectorProfile() {
               {sector.name} <span style={{ fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.7em' }}>sector</span>
             </h1>
           </div>
-          <div className="flex items-baseline gap-5">
+          <div className="flex flex-col items-end gap-2">
             <RiskBadge level={riskLevel} />
             {stats && (
-              <>
+              <div className="flex items-baseline gap-5">
                 <div className="text-right">
                   <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: sectorColor }}>
                     {formatCompactMXN(stats.total_value_mxn)}
@@ -1265,7 +1265,7 @@ export function SectorProfile() {
                   </div>
                   <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('profile.highPlusCritical')}</div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
