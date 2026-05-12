@@ -75,7 +75,6 @@ const Atlas = lazy(() => import('@/pages/Atlas'))
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
-const Workspace = lazy(() => import('@/pages/Watchlist'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
@@ -243,15 +242,9 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="workspace"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Workspace />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route path="watchlist" element={<Navigate to="/workspace" replace />} />
+              {/* /workspace dropped in v1.0 — RUBLI is a publication, not a workbench */}
+              <Route path="workspace" element={<Navigate to="/atlas" replace />} />
+              <Route path="watchlist" element={<Navigate to="/atlas" replace />} />
               {/* v1.0 launch cut — Investigation surfaces overlap with /aria.
                   Component files preserved for v1.1. See docs/RUBLI_v1.0_LAUNCH_PLAN.md. */}
               <Route path="investigation/:caseId" element={<Navigate to="/aria" replace />} />

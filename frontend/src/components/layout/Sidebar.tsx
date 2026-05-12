@@ -20,7 +20,6 @@ import {
   Network,
   GitCompareArrows,
   Newspaper,
-  Briefcase,
   Sparkles,
   Tag,
   Map,
@@ -28,7 +27,7 @@ import {
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { watchlistApi, caseLibraryApi, ariaApi } from '@/api/client'
+import { caseLibraryApi, ariaApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
 // ReportIssueDialog is lazy — only loads when user clicks the issue button
 const ReportIssueDialog = lazy(() =>
@@ -52,7 +51,7 @@ interface NavItemDef {
   i18nKey: string
   href: string
   icon: React.ElementType
-  badgeSource?: 'aria-t1' | 'watchlist' | 'cases'
+  badgeSource?: 'aria-t1' | 'cases'
 }
 
 interface NavSectionDef {
@@ -83,7 +82,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
-      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
     ],
   },
@@ -151,21 +149,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   // On mobile: use mobileOpen for collapse decision (always show full sidebar when open)
   const isCollapsed = collapsed && !mobileOpen
 
-  // Watchlist alert count (5 min stale).
-  // Gated on auth — endpoint requires JWT, anonymous visitors got 17×
-  // 502/401 per harness hour. Skipping the call when there's no user
-  // is correct UX (badge would always be 0 anyway) and stops the noise.
-  const { data: alerts } = useQuery({
-    queryKey: ['watchlist-alerts-check'],
-    queryFn: () => watchlistApi.checkAlerts(),
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 0,
-  })
-  const watchlistCount = alerts?.length ?? 0
-
   // Case Library count (1h cache)
   const { data: caseStats } = useQuery({
     queryKey: ['case-library-count'],
@@ -194,14 +177,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     if (!source) return 0
     switch (source) {
       case 'aria-t1': return ariaT1Count
-      case 'watchlist': return watchlistCount
       case 'cases': return caseCount
       default: return 0
     }
   }
 
-  function getBadgeStyle(source?: NavItemDef['badgeSource']): 'alert' | 'count' {
-    if (source === 'watchlist') return 'alert'
+  function getBadgeStyle(_source?: NavItemDef['badgeSource']): 'alert' | 'count' {
     return 'count'
   }
 
