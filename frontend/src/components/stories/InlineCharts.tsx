@@ -575,12 +575,14 @@ function pickAnchor(
   pts: StoryChartPoint[],
   unit: string | undefined,
   color: string,
+  lang: 'en' | 'es' = 'en',
 ): { value: string; label: string; color?: string } | undefined {
   const target = pts.find((p) => p.highlight) ?? pts[pts.length - 1]
   if (!target) return undefined
+  const label = lang === 'es' ? (target.label_es ?? target.label) : target.label
   return {
     value: `${target.value.toLocaleString()}${unit ? ` ${unit}` : ''}`,
-    label: target.label,
+    label,
     color,
   }
 }
@@ -626,7 +628,7 @@ export function InlineLineChart({
     <ChartCard
       title={title}
       eyebrow={`TIME SERIES · ${pts.length} POINTS`}
-      anchor={pickAnchor(pts, data.unit, mainColor)}
+      anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={lineAnnotation}
     >
       <svg
@@ -787,7 +789,7 @@ export function InlineAreaChart({
     <ChartCard
       title={title}
       eyebrow={`AREA · ${pts.length} POINTS`}
-      anchor={pickAnchor(pts, data.unit, mainColor)}
+      anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={areaAnnotation}
     >
       <svg
