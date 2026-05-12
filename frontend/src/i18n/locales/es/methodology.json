@@ -17,7 +17,12 @@
     "priceRatio": "Ratio de Precio",
     "singleBid": "Licitación Única",
     "priceHypConfidence": "Confianza Hipótesis Precio",
-    "coBidRate": "Tasa Co-licitación"
+    "coBidRate": "Tasa Co-licitación",
+    "cobidHerfindahl": "Herfindahl Co-licitación",
+    "recencyZ": "Recencia (z)",
+    "amountResidualZ": "Residual de Monto (z)",
+    "amendmentFlag": "Indicador de Modificación",
+    "pubDelayZ": "Retraso de Publicación (z)"
   },
   "v33WeightNames": {
     "singleBidding": "Licitación Única",
@@ -142,8 +147,10 @@
       "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.6.5 expandió la verdad fundamental a ~748 casos y ~603 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
       "metricTestAuc": "AUC-ROC de Prueba",
       "metricTrainAuc": "AUC-ROC de Entrenamiento",
+      "metricOecdRate": "Tasa de alto riesgo (cumple OCDE)",
       "metricHighPlus": "Detección GT (alto+)",
-      "metricMedPlus": "Detección GT (medio+)"
+      "metricMedPlus": "Detección GT (medio+)",
+      "technicalNote": "AUC Entrenamiento 0.797 / AUC Prueba 0.785 — división 70/30 estratificada por proveedor, ningún proveedor aparece en entrenamiento y prueba. HR=11.01% cumple OCDE (rango 2–15%). Modelo v0.8.5 activo desde el 2 de mayo de 2026. Corrida: CAL-v8-202605020212."
     },
     "methods": {
       "zScoreTitle": "Normalización Z-Score",

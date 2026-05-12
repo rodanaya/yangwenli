@@ -1186,7 +1186,7 @@ export function Methodology() {
                 {[
                   { label: t('body.validation.metricTestAuc'), value: '0.785' },
                   { label: t('body.validation.metricTrainAuc'), value: '0.797' },
-                  { label: 'High-risk rate (OECD compliance)', value: '11.01%' },
+                  { label: t('body.validation.metricOecdRate'), value: '11.01%' },
                   { label: t('body.validation.metricHighPlus'), value: '25.3%' },
                   { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
@@ -1200,7 +1200,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted italic">
-                Train AUC 0.797 / Test AUC 0.785 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=11.01% OECD-compliant (within 2–15% benchmark). Model v0.8.5 active since May 2, 2026. Run ID: CAL-v8-202605020212.
+                {t('body.validation.technicalNote')}
               </p>
             </div>
           </CollapsibleSection>

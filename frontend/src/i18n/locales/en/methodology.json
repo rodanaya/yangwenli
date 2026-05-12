@@ -16,7 +16,12 @@
     "priceRatio": "Price Ratio",
     "singleBid": "Single Bid",
     "priceHypConfidence": "Price Hyp. Confidence",
-    "coBidRate": "Co-Bid Rate"
+    "coBidRate": "Co-Bid Rate",
+    "cobidHerfindahl": "Co-Bid Herfindahl",
+    "recencyZ": "Recency (z)",
+    "amountResidualZ": "Amount Residual (z)",
+    "amendmentFlag": "Amendment Flag",
+    "pubDelayZ": "Publication Delay (z)"
   },
   "v33WeightNames": {
     "singleBidding": "Single Bidding",
@@ -142,8 +147,10 @@
       "footnote": "*Case 9 (PEMEX Emilio Lozoya) shares vendors with the Odebrecht case. Documented for reference but does not contribute additional training data. The table above shows the original 22 foundation cases from v5.1. v0.6.5 expanded the ground truth to ~748 cases and ~603 vendors through systematic COMPRANET investigation, ASF audit cross-referencing, and SAT EFOS integration.",
       "metricTestAuc": "Test AUC-ROC",
       "metricTrainAuc": "Train AUC-ROC",
+      "metricOecdRate": "High-risk rate (OECD compliance)",
       "metricHighPlus": "GT Detection (high+)",
-      "metricMedPlus": "GT Detection (medium+)"
+      "metricMedPlus": "GT Detection (medium+)",
+      "technicalNote": "Train AUC 0.797 / Test AUC 0.785 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=11.01% OECD-compliant (within 2–15% benchmark). Model v0.8.5 active since May 2, 2026. Run ID: CAL-v8-202605020212."
     },
     "methods": {
       "zScoreTitle": "Z-Score Normalization",
