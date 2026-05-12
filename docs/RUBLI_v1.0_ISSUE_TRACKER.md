@@ -93,25 +93,10 @@ we don't touch them until 2026-06-14.
 - **Closed:** 2026-05-12 by commit `48b157bc`.
 - **5 launch stories:** `el-monopolio-invisible`, `la-ilusion-competitiva`, `captura-institucional` (auditado), `marea-de-adjudicaciones`, `el-sexenio-del-riesgo`. Removed from INVESTIGATIONS array in `Journalists.tsx`: the 4 `solo_datos` stories + `el-gran-precio`.
 
-### #009 — P3 — Story chart components — visual quality (DOWNGRADED)
+### #009 — CLOSED (zero-work) — Story chart components — visual quality
 
-- **Filed:** 2026-05-07 (user) — REVISED 2026-05-07 after audit.
-- **Surface:** `frontend/src/components/stories/charts/`
-- **Description:** Initial diagnosis ("most graphs look like
-  PowerPoint") was over-broad. The inventory found **only 3 of 86
-  chart files are truly pathetic** (`AdminVendorBreakdown`,
-  `CategoryHotspot`, `PatternTypology`). The "pathetic" feeling
-  is actually **Card chrome on Institution/Category profiles** —
-  covered by #003 + #004 — not the chart components themselves.
-- **Acceptance criteria:** Replace the 3 pathetic charts only IF
-  they appear on a launch surface. `AdminVendorBreakdown` is on
-  /administrations (cull will likely delete it via #005).
-  `CategoryHotspot` is an orphan (kill via #011).
-  `PatternTypology` is on /patterns/:code (Tier 2 — defer to
-  v1.1).
-- **Effort estimate:** Likely ZERO additional work after #003,
-  #004, #005, #011 land.
-- **Linked commit:** _(open)_
+- **Closed:** 2026-05-12 (no commit needed).
+- **Resolution:** All dependencies landed (#003, #004, #005, #011). `CategoryHotspot` and `PatternTypology` deleted via #011. `AdminVendorBreakdown` removed from /administrations via #005 cull. Zero charts remain on a launch surface that warrant replacement.
 
 ### #011 — CLOSED — Kill 10 orphan chart components (no callers)
 
@@ -218,16 +203,10 @@ we don't touch them until 2026-06-14.
   via `/ui` parallel-agent skill if launched in worktree isolation.
 - **Linked commit:** _(open)_
 
-- **Filed:** 2026-05-07 (chart inventory agent)
-- **Surface:** Wherever the story chart map dispatches
-  `VendorFingerprintChart` in `pages/StoryNarrative.tsx`.
-- **Description:** Chart accepts a `lang` prop but caller doesn't
-  pass it. Falls back to default. Bilingual gap on a Gold-tier
-  launch-critical chart.
-- **Acceptance criteria:** Caller passes `lang={lang}`. Story
-  renders bilingually.
-- **Effort:** ~15 minutes.
-- **Linked commit:** _(open)_
+### #015 — CLOSED — `VendorFingerprintChart` petal labels English-only
+
+- **Closed:** 2026-05-12 by commit `f5ce8386`.
+- **Fixed by:** Added `useTranslation` internally to `VendorFingerprintChart`; petal labels now pick `labelES`/`labelEN` based on active locale. No caller changes needed.
 
 ### #010 — P2 — `/aria/:vendorId` style coherence with VendorProfile
 
