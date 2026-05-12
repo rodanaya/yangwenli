@@ -878,7 +878,7 @@ function InstitutionBodyVisual({
       <title>{tooltip}</title>
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={hovered ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={1.5} />
+      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={hovered ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={3} />
 
       {/* Large: white acronym inside the bubble */}
       {insideLabel && (
@@ -907,10 +907,10 @@ function InstitutionBodyVisual({
             height={chipH}
             rx={chipH / 2}
             fill={fill}
-            fillOpacity={0.15}
+            fillOpacity={0.22}
             stroke={fill}
             strokeWidth={0.5}
-            strokeOpacity={0.45}
+            strokeOpacity={0.7}
             style={{ pointerEvents: 'none' }}
           />
           <text
@@ -920,7 +920,7 @@ function InstitutionBodyVisual({
             fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={700}
-            fill="var(--color-text-primary)"
+            fill={fill}
             style={{ pointerEvents: 'none' }}
           >
             {lbl}
