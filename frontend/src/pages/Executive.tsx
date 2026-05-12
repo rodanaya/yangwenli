@@ -1771,7 +1771,11 @@ export default function Executive() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                0.828
+                {/* 2026-05-12 (Audit V009): caption read v0.8.5 but the
+                    number was the v0.6.5 test AUC. Updated to the
+                    v0.8.5 trained-2026-05-02 value (0.785). The scale
+                    width math also rebased: (0.785 − 0.5)/0.5 = 57%. */}
+                0.785
               </div>
               <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
                 {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
@@ -1779,26 +1783,26 @@ export default function Executive() {
               <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                 {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
               </div>
-              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.828 */}
+              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.785 */}
               <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                {/* Filled portion from 0.5 to 0.828 — that's 65.6% of the scale */}
+                {/* Filled portion from 0.5 to 0.785 — that's 57% of the scale */}
                 <div
                   className="absolute inset-y-0 rounded-sm"
                   style={{
                     left: '0%',
-                    width: '65.6%',
+                    width: '57%',
                     background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
                     opacity: 0.65,
                   }}
                 />
-                {/* Tick marker at exactly 0.828 (=65.6%) */}
+                {/* Tick marker at exactly 0.785 (=57%) */}
                 <div
                   className="absolute top-0 bottom-0 w-[2px]"
-                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
                 />
                 <div
                   className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
-                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
                 />
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
@@ -2750,7 +2754,7 @@ export default function Executive() {
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono text-text-muted mb-4">
             <span className="inline-flex items-center gap-1.5">
               <Shield className="h-3 w-3" />
-              AUC 0.828
+              AUC 0.785
             </span>
             <span>·</span>
             <span>{formatNumber(stats.totalContracts)} {lang === 'en' ? 'contracts' : 'contratos'}</span>

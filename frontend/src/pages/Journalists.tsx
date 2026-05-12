@@ -1423,7 +1423,7 @@ export default function Journalists() {
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              Test AUC <span className="text-text-secondary tabular-nums">0.828</span>
+              Test AUC <span className="text-text-secondary tabular-nums">0.785</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>

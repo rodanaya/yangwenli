@@ -254,16 +254,35 @@ export default function CaptureCreep() {
             </p>
           </div>
           <div className="flex items-baseline gap-5 flex-shrink-0">
+            {/* 2026-05-12 (Audit V010 P0): /api/v1/capture/top can take 30s+
+                to respond. Previously the header rendered "0 CAPTURES ·
+                MX$0 · — LARGEST JUMP" during that whole window — readers
+                screenshotted it as a working surface with zero captures.
+                Render skeletons during isLoading so the loading state is
+                visible and the chrome doesn't lie about the data.
+                Backend perf on /capture/top is a separate fix. */}
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCount)}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-12 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCount)}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Capturas' : 'Captures'}</div>
             </div>
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-20 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Valor capturado' : 'Captured value'}</div>
             </div>
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-14 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
             </div>
           </div>

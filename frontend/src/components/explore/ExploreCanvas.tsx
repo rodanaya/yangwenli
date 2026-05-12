@@ -1335,6 +1335,14 @@ const ACRONYM_STOP_WORDS = new Set([
   'POR', 'PARA', 'CON', 'SIN', 'SOBRE',
   // English (rarely needed but defensive)
   'OF', 'THE', 'AND', 'FOR', 'TO', 'IN', 'ON',
+  // Mexican corporate-entity suffix tokens — these are the parts of
+  // names like "S.A. DE C.V." or "S.C." that the dot-stripping regex
+  // leaves intact. Without filtering, a Title-Case vendor name like
+  // "Servicios y Construcciones del Norte S.A. de C.V." passes only
+  // "S.A." and "C.V." through the upper-only filter and the acronym
+  // builder returns "SC" (Audit V017, 2026-05-12).
+  'S.A.', 'S.C.', 'A.C.', 'C.V.', 'R.L.', 'S.N.C.', 'S.A.B.',
+  'S.A.P.I.', 'S.A.S.',
 ])
 
 // Canonical Mexican federal entity acronyms. The heuristic

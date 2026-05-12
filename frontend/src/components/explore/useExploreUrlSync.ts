@@ -22,14 +22,20 @@
  * names would bloat the URL and require re-encoding when names change.
  */
 import { useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { SECTORS } from '@/lib/constants'
 import { useExploreState, useExploreDispatch, type Focus } from './ExploreState'
+
+interface DeepLinkNames {
+  vendorName?: string
+  institutionName?: string
+}
 
 export function useExploreUrlSync(): void {
   const state = useExploreState()
   const dispatch = useExploreDispatch()
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   // Track whether we've done initial hydration so the first URL→state
   // pass doesn't fight with the first state→URL pass.
   const hydratedRef = useRef(false)
@@ -43,6 +49,12 @@ export function useExploreUrlSync(): void {
     const institutionId = searchParams.get('i')
     const vendorId = searchParams.get('v')
     const contractId = searchParams.get('c')
+
+    // 2026-05-12 (Audit V001 P1): DeepLinkRedirects pass entity names
+    // through React Router location state so the breadcrumb doesn't
+    // read "INSTITUTION 251 › VENDOR 4325" on the first paint.
+    const deepLinkNames: DeepLinkNames =
+      (location.state as { deepLinkNames?: DeepLinkNames } | null)?.deepLinkNames ?? {}
 
     const stack: Focus[] = [{ level: 0, kind: 'system' }]
 
@@ -60,7 +72,7 @@ export function useExploreUrlSync(): void {
           level: 2,
           kind: 'institution',
           institutionId: id,
-          institutionName: `Institution ${id}`, // placeholder — gets replaced on next drill
+          institutionName: deepLinkNames.institutionName ?? `Institution ${id}`,
         })
       }
     }
@@ -72,7 +84,7 @@ export function useExploreUrlSync(): void {
           level: 3,
           kind: 'vendor',
           vendorId: id,
-          vendorName: `Vendor ${id}`,
+          vendorName: deepLinkNames.vendorName ?? `Vendor ${id}`,
         })
       }
     }

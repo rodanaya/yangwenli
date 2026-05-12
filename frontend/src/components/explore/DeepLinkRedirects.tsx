@@ -120,7 +120,24 @@ export function VendorDeepLinkRedirect() {
     return <Navigate to={`/print/vendors/${vendorId}`} replace />
   }
 
-  return <Navigate to={`/explore?${params.toString()}`} replace />
+  // 2026-05-12 (Audit V001 P1): pass entity names through React Router
+  // location state so the /explore URL hydrator can replace the
+  // "Vendor 29277" / "Institution 251" placeholders with the real
+  // names. Without this, the breadcrumb on a deep-linked load reads
+  // "SYSTEM › HEALTH › INSTITUTION 251 › VENDOR 4325" until the user
+  // navigates again.
+  return (
+    <Navigate
+      to={`/explore?${params.toString()}`}
+      replace
+      state={{
+        deepLinkNames: {
+          vendorName: data.name,
+          institutionName: topInst.institution_name,
+        },
+      }}
+    />
+  )
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -168,5 +185,16 @@ export function InstitutionDeepLinkRedirect() {
     return <Navigate to={`/print/institutions/${institutionId}`} replace />
   }
 
-  return <Navigate to={`/explore?${params.toString()}`} replace />
+  // Pass institution name through location state (Audit V001 P1).
+  return (
+    <Navigate
+      to={`/explore?${params.toString()}`}
+      replace
+      state={{
+        deepLinkNames: {
+          institutionName: data.name,
+        },
+      }}
+    />
+  )
 }
