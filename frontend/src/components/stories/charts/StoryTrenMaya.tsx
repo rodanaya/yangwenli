@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Section {
   id: string
@@ -49,6 +50,7 @@ function colorForRate(r: number): string {
 }
 
 export function StoryTrenMaya() {
+  const { t } = useTranslation('storyCharts')
   const totalKm = SECTIONS.reduce((s, r) => s + r.km, 0)
   const totalValue = SECTIONS.reduce((s, r) => s + r.valueB, 0)
   const avgDA = SECTIONS.reduce((s, r) => s + r.daRate * r.km, 0) / totalKm
@@ -61,41 +63,39 @@ export function StoryTrenMaya() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Tren Maya · adjudicación por tramo
+        {t('trenMaya.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        1,525 kilómetros de vía, cero licitaciones públicas abiertas
+        {t('trenMaya.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada fila es un tramo del trazado. La tira de puntos muestra la tasa de
-        adjudicación directa de ese tramo. El último tramo — bajo contratación SEDENA
-        por declaratoria de seguridad nacional — queda fuera de COMPRANET.
+        {t('trenMaya.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical tabular-nums">
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
             {avgDA.toFixed(1)}%
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            adj. directa promedio · ponderada por km
+            {t('trenMaya.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high tabular-nums">
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
             {totalValue.toFixed(0)}B
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            MXN visibles · resto en SEDENA clasificado
+            {t('trenMaya.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">
             {totalKm}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            km total · 6 tramos · 0 licitaciones abiertas
+            {t('trenMaya.stat3Label')}
           </div>
         </div>
       </div>
@@ -105,14 +105,14 @@ export function StoryTrenMaya() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[720px]"
           role="img"
-          aria-label="Tren Maya direct award rate by section"
+          aria-label={t('trenMaya.ariaLabel')}
         >
           {/* Header */}
           <text x={LABEL_W - 8} y={32} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            TRAMO
+            {t('trenMaya.sectionHeader')}
           </text>
           <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)
+            {t('trenMaya.axisHeader')}
           </text>
           {/* OECD line */}
           <g>
@@ -135,11 +135,11 @@ export function StoryTrenMaya() {
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
-              OCDE 25%
+              {t('trenMaya.oecdLabel')}
             </text>
           </g>
           <text x={LABEL_W + STRIP_W + META_W / 2 + 20} y={32} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            VALOR · EJECUTOR
+            {t('trenMaya.valueExecutorHeader')}
           </text>
 
           {/* Route line (vertical spine) */}
@@ -242,7 +242,7 @@ export function StoryTrenMaya() {
                       fontWeight={700}
                       letterSpacing="0.1em"
                     >
-                      SEDENA · FUERA DE COMPRANET · SEGURIDAD NACIONAL
+                      {t('trenMaya.sedenaBox')}
                     </text>
                   </g>
                 ) : (
@@ -281,7 +281,9 @@ export function StoryTrenMaya() {
                     fontFamily="var(--font-family-mono)"
                     y={12}
                   >
-                    {isSEDENA ? 'estimado' : `${sec.daRate}% · risk ${sec.riskScore.toFixed(2)}`}
+                    {isSEDENA
+                      ? t('trenMaya.estimatedLabel')
+                      : `${sec.daRate}% · ${t('trenMaya.riskWord')} ${sec.riskScore.toFixed(2)}`}
                   </text>
                 </g>
               </g>
@@ -297,25 +299,22 @@ export function StoryTrenMaya() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            cada punto = 2pp · color = intensidad de adjudicación directa
+            {t('trenMaya.bottomLegend')}
           </text>
         </svg>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('trenMaya.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Los cinco tramos bajo FONATUR promediaron 97.6% de adjudicación directa. Los
-          tramos 6 y 7 se movieron a SEDENA bajo declaratoria de seguridad nacional,
-          exentándolos de la Ley de Obras Públicas. El resultado: el megaproyecto más
-          caro del sexenio ejecutado sin una sola licitación pública abierta.
+          {t('trenMaya.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET FONATUR 2019-2024 · DOF 22/11/2021 · ASF Auditoría de Desempeño 2023 · cifras aprox.
+        {t('trenMaya.footer')}
       </p>
     </motion.div>
   )

@@ -42,6 +42,10 @@ class ScandalListItem(BaseModel):
     summary_en: str
     is_verified: int
     ground_truth_case_id: Optional[Union[int, str]] = None
+    # IDs of vendors linked to this case via ground_truth_vendors.
+    # Populated by the list endpoint when vendor_id filter is active;
+    # None when fetching without a vendor filter (avoids bulk JOIN on full list).
+    linked_vendor_ids: Optional[List[int]] = None
 
 
 class ScandalDetail(ScandalListItem):

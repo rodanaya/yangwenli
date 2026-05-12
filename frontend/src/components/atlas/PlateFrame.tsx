@@ -1,20 +1,23 @@
 /**
- * PlateFrame — investigative-folio framing for the Atlas constellation.
+ * PlateFrame — investigative-folio framing for Atlas constellation and other
+ * contemplative data sections on the Executive briefing.
  *
  * Aesthetic direction: "Procurement Atlas as a classified investigative folio."
  * Reference vocabulary: OCCRP / ICIJ Pandora Papers, Bureau of Investigative
  * Journalism, Reuters Graphics archival, FT print edition, Ordnance Survey
  * map plates. Anti-pattern: generic dashboard chrome.
  *
- * The frame wraps the existing constellation card with:
+ * The frame wraps a chart / data section with:
  *   - Four corner crop marks (thin L-brackets) like a film cell or map plate
- *   - Top-left tag: FOLIO·N · ATLAS · in IBM Plex Mono italic 300
+ *   - Top-left tag: FOLIO·N · context label · in IBM Plex Mono italic 300
  *   - Top-right tag: file-stamp date + bilingual classification
  *   - Bottom plate caption: italic EB Garamond — context-aware copy
  *   - A measured rule above the caption (not a generic divider)
  *
- * The caption updates with the active lens + year + cluster count so the
- * reader always sees a concrete plate index, not abstract chart chrome.
+ * For /atlas: the caption updates with the active lens + year + cluster count
+ * so the reader always sees a concrete plate index, not abstract chart chrome.
+ * For non-atlas surfaces (Executive sections): pass `caption` and `folio`
+ * overrides to supply static bilingual text without touching the /atlas call site.
  *
  * No images, no SVG decorative shapes — just typography + 1px rules.
  * Easy to revert: this is purely a visual wrapper around `children`.
@@ -25,18 +28,36 @@ import React from 'react'
 interface PlateFrameProps {
   children: React.ReactNode
   /** Active lens code: 'patterns' | 'sectors' | 'categories' | 'sexenios' */
-  lens: string
+  lens?: string
   /** Active year (YYYY) */
-  year: number
+  year?: number
   /** Number of clusters in the active lens */
-  clusterCount: number
+  clusterCount?: number
   /** Total contracts shown (across all clusters) */
-  totalContracts: number
+  totalContracts?: number
   lang: 'en' | 'es'
+  /**
+   * Optional: override the auto-computed plate caption with a fixed string.
+   * When provided, the lens/year/clusterCount/totalContracts props are ignored
+   * for caption generation. Use for non-atlas surfaces where the caption is
+   * static or computed by the caller.
+   */
+  caption?: string
+  /**
+   * Optional: override the auto-computed folio index (default IX·a/b/c/d via lens).
+   * Use for non-atlas surfaces. Pass a string like 'II', 'III', etc.
+   */
+  folio?: string
+  /**
+   * Optional: override the eyebrow context label (default 'Atlas of contracting' /
+   * 'Atlas de contratación'). Pass a { en, es } object so the component
+   * stays bilingual.
+   */
+  contextLabel?: { en: string; es: string }
 }
 
-/** Plate caption — bilingual, lens-aware. */
-function getPlateCaption(
+/** Plate caption — bilingual, lens-aware (atlas default). */
+function getAtlasCaption(
   lens: string,
   year: number,
   clusterCount: number,
@@ -58,7 +79,7 @@ function getPlateCaption(
 }
 
 /** Folio number — derived from lens so each lens has its own catalog index. */
-function getFolioNumber(lens: string): string {
+function getAtlasFolioNumber(lens: string): string {
   const folioMap: Record<string, string> = {
     patterns:   'IX·a',
     sectors:    'IX·b',
@@ -75,10 +96,24 @@ export function PlateFrame({
   clusterCount,
   totalContracts,
   lang,
+  caption: captionOverride,
+  folio: folioOverride,
+  contextLabel,
 }: PlateFrameProps) {
-  const folio = getFolioNumber(lens)
-  const caption = getPlateCaption(lens, year, clusterCount, totalContracts, lang)
-  // Date stamp — render once on mount; YYYY-MM-DD in archival monospace.
+  // Use overrides when provided (non-atlas surfaces); fall back to atlas defaults.
+  const folio = folioOverride ?? getAtlasFolioNumber(lens ?? 'patterns')
+  const caption = captionOverride ?? getAtlasCaption(
+    lens ?? 'patterns',
+    year ?? new Date().getUTCFullYear(),
+    clusterCount ?? 0,
+    totalContracts ?? 0,
+    lang,
+  )
+  const contextLabelText = contextLabel
+    ? (lang === 'en' ? contextLabel.en : contextLabel.es)
+    : (lang === 'en' ? 'Atlas of contracting' : 'Atlas de contratación')
+
+  // Date stamp — render once on mount; YYYY·MM·DD in archival monospace.
   const dateStamp = React.useMemo(() => {
     const d = new Date()
     return `${d.getUTCFullYear()}·${String(d.getUTCMonth() + 1).padStart(2, '0')}·${String(d.getUTCDate()).padStart(2, '0')}`
@@ -122,7 +157,7 @@ export function PlateFrame({
         <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
           <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·{folio}</span>
           <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
-          <span>{lang === 'en' ? 'Atlas of contracting' : 'Atlas de contratación'}</span>
+          <span>{contextLabelText}</span>
         </span>
         <span>
           <span style={{ opacity: 0.55 }}>{lang === 'en' ? 'Indexed' : 'Indexado'} </span>

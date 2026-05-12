@@ -15,6 +15,7 @@ import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 /**
  * Mini sparkline of share-percent over the observed years. Pure SVG —
@@ -162,28 +163,126 @@ export default function CaptureCreep() {
     : 0
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-      <header className="mb-5 pb-4 border-b border-border">
-        <div className="flex items-baseline justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-              {lang === 'es' ? 'Captura institucional' : 'Institutional capture'}
+    <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-6">
+      {/* Page paper-grain — scoped to this contemplative analysis surface.
+          Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
+          overlay". */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="captura-page-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="13" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#captura-page-paper-grain)" />
+      </svg>
+      <div className="relative" style={{ zIndex: 1 }}>
+      {/* Folio·XII hero — replaces the prior utility header. EB Garamond
+          italic 500 + ochre normal-weight fragment per
+          rubli-folio-aesthetic § Typography. ICIJ Pandora Papers
+          institution → vendor entity-flow vocabulary cited in plan
+          docs/FOLIO_V1_PHASE4_2026_05_07.md § 2. */}
+      <header className="mb-8 pb-5 border-b border-border">
+        <div
+          className="flex items-center gap-3 mb-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XII</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span>
+              {lang === 'es'
+                ? 'Captura institucional · 2018–2025 · 25% → 50% · ≥4 años'
+                : 'Institutional capture · 2018–2025 · 25% → 50% · ≥4 years'}
+            </span>
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-6 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <h1
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(30px, 4.4vw, 52px)',
+                lineHeight: 1.02,
+                letterSpacing: '-0.012em',
+                color: 'var(--color-text-primary)',
+              }}
+            >
+              {lang === 'es' ? (
+                <>
+                  Cómo un proveedor{' '}
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    captura
+                  </span>{' '}
+                  una institución.
+                </>
+              ) : (
+                <>
+                  How a vendor{' '}
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    captures
+                  </span>{' '}
+                  an institution.
+                </>
+              )}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              {lang === 'es' ? 'RUBLI · 2018–2025 · UMBRALES 25% → 50% · ≥4 AÑOS' : 'RUBLI · 2018–2025 · THRESHOLDS 25% → 50% · ≥4 YEARS'}
+            <p
+              className="mt-4"
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '17px',
+                lineHeight: 1.55,
+                maxWidth: '68ch',
+                color: 'var(--color-text-secondary)',
+                letterSpacing: '0.005em',
+              }}
+            >
+              {lang === 'es'
+                ? 'Cada fila es una concentración monótona: el proveedor empezó por debajo del 25% del gasto de la institución y terminó por encima del 50%, año tras año, durante al menos cuatro años. El ascenso no es prueba de irregularidad — pero la geometría es publicable.'
+                : "Each row is a monotonic concentration: the vendor began below 25% of the institution's spend and ended above 50%, year after year, for at least four years. The climb is not proof of wrongdoing — but the geometry is publishable."}
             </p>
           </div>
-          <div className="flex items-baseline gap-5">
+          <div className="flex items-baseline gap-5 flex-shrink-0">
+            {/* 2026-05-12 (Audit V010 P0): /api/v1/capture/top can take 30s+
+                to respond. Previously the header rendered "0 CAPTURES ·
+                MX$0 · — LARGEST JUMP" during that whole window — readers
+                screenshotted it as a working surface with zero captures.
+                Render skeletons during isLoading so the loading state is
+                visible and the chrome doesn't lie about the data.
+                Backend perf on /capture/top is a separate fix. */}
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCount)}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-12 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCount)}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Capturas' : 'Captures'}</div>
             </div>
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-20 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{formatCompactMXN(capturedValue)}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Valor capturado' : 'Captured value'}</div>
             </div>
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>
+              {isLoading ? (
+                <Skeleton className="h-5 w-14 ml-auto" />
+              ) : (
+                <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>
+              )}
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
             </div>
           </div>
@@ -211,16 +310,27 @@ export default function CaptureCreep() {
             </p>
           </div>
 
-          <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-            {captures.map((c, i) => (
-              <CaptureRow
-                key={`${c.institution_id}-${c.vendor_id}`}
-                c={c}
-                rank={i + 1}
-                lang={lang}
-              />
-            ))}
-          </div>
+          <PlateFrame
+            lang={lang}
+            folio="XII"
+            contextLabel={{ en: 'Capture atlas', es: 'Atlas de captura' }}
+            caption={
+              lang === 'es'
+                ? 'Lámina — Las concentraciones monótonas más grandes de proveedor → institución, 2018–2025. El ancho de la chispa muestra los años observados; los puntos rojos marcan años con participación ≥ 50%.'
+                : 'Plate — The largest monotonic vendor → institution concentrations, 2018–2025. Sparkline width shows observed years; red dots mark years at ≥ 50% share.'
+            }
+          >
+            <div className="rounded-sm border border-border bg-background-card overflow-hidden">
+              {captures.map((c, i) => (
+                <CaptureRow
+                  key={`${c.institution_id}-${c.vendor_id}`}
+                  c={c}
+                  rank={i + 1}
+                  lang={lang}
+                />
+              ))}
+            </div>
+          </PlateFrame>
 
           <div className="pt-6 border-t border-border">
             <p className="text-[11px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
@@ -240,6 +350,7 @@ export default function CaptureCreep() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

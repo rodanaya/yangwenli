@@ -130,10 +130,18 @@ export function VendorActivityTab({
           id: y.year,
           date: `${y.year}-01-01`,
           amount: y.total_value_mxn,
-          title: `${y.year}${y.contract_count ? ` · ${y.contract_count.toLocaleString()} contratos` : ''}`,
+          title: `${y.year}${y.contract_count
+            ? ` · ${y.contract_count.toLocaleString()} ${
+                isEs
+                  ? (y.contract_count === 1 ? 'contrato' : 'contratos')
+                  : (y.contract_count === 1 ? 'contract' : 'contracts')
+              }`
+            : ''}`,
           subtitle:
             y.high_risk_count && y.high_risk_count > 0
-              ? `${y.high_risk_count} contratos de riesgo alto+`
+              ? (isEs
+                  ? `${y.high_risk_count} ${y.high_risk_count === 1 ? 'contrato' : 'contratos'} de riesgo alto+`
+                  : `${y.high_risk_count} high-risk ${y.high_risk_count === 1 ? 'contract' : 'contracts'}`)
               : undefined,
           riskLevel,
           sectorCode,

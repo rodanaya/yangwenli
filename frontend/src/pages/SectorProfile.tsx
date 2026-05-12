@@ -930,7 +930,18 @@ function SectorProfileSkeleton() {
 
 export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
-  const sectorId = Number(id)
+  // 2026-05-11 (Audit F091): /sectors/salud was 404'ing because we did
+  // Number('salud') → NaN. Both numeric ids (/sectors/1) and slug codes
+  // (/sectors/salud) are legitimate inbound URLs — the slug form is what
+  // pre-2026 internal links use, and what journalists are most likely
+  // to type. Resolve either form to the canonical numeric sector id.
+  const sectorId = (() => {
+    if (id == null) return 0
+    const asNum = Number(id)
+    if (Number.isFinite(asNum) && asNum > 0) return asNum
+    const bySlug = SECTORS.find((s) => s.code === id.toLowerCase())
+    return bySlug?.id ?? 0
+  })()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation('sectors')
   const currentYear = useMemo(() => new Date().getFullYear() - 1, [])
@@ -1195,15 +1206,42 @@ export function SectorProfile() {
         </div>
       </nav>
 
-      <header className="mb-2 pb-4 border-b border-border">
+      <header className="mb-2 pb-5 border-b border-border">
+        {/* folio-v1-P2: archival eyebrow */}
+        <div
+          className="mb-3 flex items-center gap-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ color: sectorColor, fontStyle: 'italic', fontWeight: 500 }}>Folio·{sector.code?.toUpperCase()}</span>
+          <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            Sector profile
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            v0.8.5
+          </span>
+        </div>
         <div className="flex items-baseline justify-between gap-4 flex-wrap mb-2">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight capitalize">
-              {sector.name} <span className="text-text-muted font-normal">sector</span>
+            <h1
+              className="text-text-primary capitalize"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(28px, 4vw, 40px)',
+                lineHeight: 0.98,
+                letterSpacing: '-0.012em',
+              }}
+            >
+              {sector.name} <span style={{ fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', fontSize: '0.7em' }}>sector</span>
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              SECTOR PROFILE · {sector.code} · v0.8.5
-            </p>
           </div>
           <div className="flex items-baseline gap-5">
             <RiskBadge level={riskLevel} />

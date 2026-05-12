@@ -60,7 +60,8 @@
   "vendorFlags": {
     "groundTruth": {
       "headline": "Documented in a known corruption case",
-      "detail": "This vendor appears in {{n}} ground-truth case(s) used to train the v0.6.5 risk model."
+      "detail_one": "This vendor appears in {{count}} ground-truth case used to train the {{version}} risk model.",
+      "detail_other": "This vendor appears in {{count}} ground-truth cases used to train the {{version}} risk model."
     },
     "efosDefinitivo": {
       "headline": "SAT-confirmed ghost company (EFOS Definitivo)",

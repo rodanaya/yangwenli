@@ -20,7 +20,9 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/explore': 'explore',
   '/money-flow': 'captureHeatmap',
   '/administrations': 'administrations',
-  '/price-analysis': 'priceAnalysis',
+  // /price-analysis was an orphan route cut on 2026-05-07 (Issue #017
+  // quick-cut). The route now redirects to /sectors via App.tsx, so the
+  // breadcrumb map entry was dead and is removed in this Day-1 closeout.
   '/contracts': 'contracts',
   '/network': 'network',
   '/workspace': 'workspace',
@@ -84,17 +86,25 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const alertCount = anomalies?.total || 0
   const qualityScore = dataQuality?.overall_score
-  const qualityGrade = qualityScore
+  // 2026-05-12 (Audit F023): header DQ chip used letter grades A/B/C/D/F.
+  // CLAUDE.md canonical wording is the 5-tier ladder (Excelente /
+  // Satisfactorio / Regular / Deficiente / Crítico) — same one /sectors
+  // PHI uses. Renders "DQ · Satisfactorio" instead of "DQ · B" so the
+  // platform stops mixing two grading vocabularies on the same screen.
+  const isEs = i18n.language?.startsWith('es')
+  const qualityTier: { letter: string; label: string } | null = qualityScore != null
     ? qualityScore >= 90
-      ? 'A'
+      ? { letter: 'A', label: isEs ? 'Excelente' : 'Excellent' }
       : qualityScore >= 75
-        ? 'B'
+        ? { letter: 'B', label: isEs ? 'Satisfactorio' : 'Satisfactory' }
         : qualityScore >= 60
-          ? 'C'
+          ? { letter: 'C', label: isEs ? 'Regular' : 'Moderate' }
           : qualityScore >= 40
-            ? 'D'
-            : 'F'
+            ? { letter: 'D', label: isEs ? 'Deficiente' : 'Poor' }
+            : { letter: 'F', label: isEs ? 'Crítico' : 'Critical' }
     : null
+  const qualityGrade = qualityTier?.letter ?? null
+  const qualityLabel = qualityTier?.label ?? null
 
   // Global Cmd+K / Ctrl+K keyboard shortcut
   useEffect(() => {
@@ -218,8 +228,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           </TooltipContent>
         </Tooltip>
 
-        {/* Data quality grade */}
-        {qualityGrade && (
+        {/* Data quality grade — tier label, not letter (Audit F023). */}
+        {qualityLabel && (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -228,7 +238,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               >
                 <Database className="h-3 w-3 text-text-muted" />
                 <span className="text-text-muted">DQ</span>
-                <span className="text-[color:var(--color-accent)] font-bold">{qualityGrade}</span>
+                <span className="text-[color:var(--color-accent)] font-bold uppercase tracking-wide">{qualityLabel}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>

@@ -23,41 +23,68 @@ const EntityProfileDrawer = lazy(() =>
 // Lazy load all page components for code splitting
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
-const Explore = lazy(() => import('@/pages/explore'))
+const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
 const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
+// 2026-05-09 Day 3: new editorial 3-chapter dossier replacing the
+// 2,312-LOC card grid. Old page kept on /institutions/:id/legacy for
+// quick revert if the new shape needs more work.
+const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
+// 2026-05-09: spatial-nav rebuild — the Star Fox map. Lives at /explore
+// while it iterates; will be promoted to / when stable.
+// File is named SpatialMap.tsx (not Explore.tsx) to avoid a Windows
+// case-insensitive clash with the legacy `pages/explore.tsx` page.
+// See docs/SPATIAL_NAV_PLAN.md for the zoom hierarchy.
+const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
+// 2026-05-11 Gap 2: /vendors/:id and /institutions/:id now redirect to
+// the /explore deep link. The legacy dossier components survive at
+// /print/vendors/:id and /print/institutions/:id for the printable
+// surface. See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2.
+const VendorDeepLinkRedirect = lazy(() =>
+  import('@/components/explore/DeepLinkRedirects').then((m) => ({
+    default: m.VendorDeepLinkRedirect,
+  })),
+)
+const InstitutionDeepLinkRedirect = lazy(() =>
+  import('@/components/explore/DeepLinkRedirects').then((m) => ({
+    default: m.InstitutionDeepLinkRedirect,
+  })),
+)
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
-const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
-const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
-const Investigation = lazy(() => import('@/pages/Investigation'))
-const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
+// PriceIntelligence — orphan removed 2026-05-07 (Audit Fix M); /price-analysis
+// route now redirects to /sectors. Component file preserved for v1.1 if a
+// real consumer surfaces.
+// v1.0 launch cuts — components retained on disk for v1.1, no longer imported.
+// See docs/RUBLI_v1.0_LAUNCH_PLAN.md for the cut list.
+//   ModelTransparency        → /methodology
+//   Investigation/Case       → /aria
+//   CapturaHeatmap           → /captura
+//   YearInReview             → /
+//   VendorCompare            → /sectors
+//   InstitutionCompare       → /institutions
+//   CorruptionClusters       → /atlas
+//   ProcurementCalendar      → /
 const Executive = lazy(() => import('@/pages/Executive'))
 const Atlas = lazy(() => import('@/pages/Atlas'))
 // SpendingCategories removed; /categories now redirects to /sectors?view=categories
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
-const CapturaHeatmap = lazy(() => import('@/pages/CapturaHeatmap'))
 const Workspace = lazy(() => import('@/pages/Watchlist'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
-const YearInReview = lazy(() => import('@/pages/YearInReview'))
-const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
-const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Intersection = lazy(() => import('@/pages/Intersection'))
 const CaptureCreep = lazy(() => import('@/pages/CaptureCreep'))
-const CorruptionClusters = lazy(() => import('@/pages/CorruptionClusters'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
-const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
@@ -131,18 +158,32 @@ function App() {
               }
             />
             <Route path="/" element={<MainLayout />}>
-              {/* Front page — Executive briefing + the galleries map. */}
+              {/* 2026-05-10 Phase 7: Spatial Map IS the homepage.
+                  The Star-Fox-style /explore drill experience replaces the
+                  static Executive briefing as the front door. Executive
+                  moved to /dashboard so external links keep working via
+                  the redirects below. Spatial-nav rebuild plan:
+                  docs/SPATIAL_NAV_PLAN.md. */}
               <Route
                 index
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <SpatialMap />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* Executive briefing kept available at /dashboard. */}
+              <Route
+                path="dashboard"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Executive />
                   </SuspenseBoundary>
                 }
               />
-              {/* Retired: /executive is now /. Keep redirect for external links. */}
-              <Route path="executive" element={<Navigate to="/" replace />} />
-              <Route path="executive-summary" element={<Navigate to="/" replace />} />
+              {/* Legacy aliases — all funnel into /dashboard. */}
+              <Route path="executive" element={<Navigate to="/dashboard" replace />} />
+              <Route path="executive-summary" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="report-card"
                 element={<Navigate to="/institutions?tab=reporte" replace />}
@@ -151,13 +192,13 @@ function App() {
               <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
               <Route path="league" element={<Navigate to="/institutions" replace />} />
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
-              {/* Retired: /dashboard merged into / (Executive landing). */}
-              <Route path="dashboard" element={<Navigate to="/" replace />} />
+              {/* Legacy /explore page (CardGrid catalog) — moved to /explore/legacy
+                  to free /explore for the spatial-nav rebuild. */}
               <Route
-                path="explore"
+                path="explore/legacy"
                 element={
                   <SuspenseBoundary fallback={<CardGridSkeleton />}>
-                    <Explore />
+                    <ExploreLegacy />
                   </SuspenseBoundary>
                 }
               />
@@ -212,22 +253,10 @@ function App() {
                 }
               />
               <Route path="watchlist" element={<Navigate to="/workspace" replace />} />
-              <Route
-                path="investigation/:caseId"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InvestigationCaseDetail />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="investigation"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Investigation />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — Investigation surfaces overlap with /aria.
+                  Component files preserved for v1.1. See docs/RUBLI_v1.0_LAUNCH_PLAN.md. */}
+              <Route path="investigation/:caseId" element={<Navigate to="/aria" replace />} />
+              <Route path="investigation" element={<Navigate to="/aria" replace />} />
               <Route
                 path="aria"
                 element={
@@ -270,14 +299,8 @@ function App() {
               />
               {/* Spanish-first rename per docs/SITE_IA.md — preserve old URL */}
               <Route path="capture" element={<Navigate to="/captura" replace />} />
-              <Route
-                path="clusters"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CorruptionClusters />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
+              <Route path="clusters" element={<Navigate to="/atlas" replace />} />
               <Route
                 path="atlas"
                 element={
@@ -336,48 +359,34 @@ function App() {
               <Route path="ground-truth" element={<Navigate to="/model" replace />} />
               <Route path="state-expenditure" element={<Navigate to="/administrations" replace />} />
               <Route path="state-expenditure/:code" element={<Navigate to="/administrations" replace />} />
-              <Route
-                path="year-in-review"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <YearInReview />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="year-in-review/:year"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <YearInReview />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — YearInReview not core to journalism MVP. */}
+              <Route path="year-in-review" element={<Navigate to="/" replace />} />
+              <Route path="year-in-review/:year" element={<Navigate to="/" replace />} />
               <Route path="institutions/health" element={<Navigate to="/institutions" replace />} />
               <Route path="institutions/scorecards" element={<Navigate to="/institutions?tab=fichas" replace />} />
               <Route path="institutions/fichas" element={<Navigate to="/institutions?tab=fichas" replace />} />
               <Route path="price-intelligence" element={<Navigate to="/price-analysis" replace />} />
               <Route path="model-transparency" element={<Navigate to="/model" replace />} />
-              <Route
-                path="price-analysis"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <PriceIntelligence />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="model"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ModelTransparency />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — PriceIntelligence is fully built but
+                  has zero inbound links anywhere in the codebase (per audit
+                  Issue #003 in chart inventory). Redirected to /sectors;
+                  component preserved for v1.1 if a real consumer surfaces. */}
+              <Route path="price-analysis" element={<Navigate to="/sectors" replace />} />
+              {/* v1.0 launch cut — ModelTransparency subsumed by /methodology. */}
+              <Route path="model" element={<Navigate to="/methodology" replace />} />
+              {/* 2026-05-11 Gap 2: /vendors/:id and /institutions/:id
+                  now resolve into the spatial universe. The redirect
+                  component fetches the entity, computes the parent
+                  sector + institution, and Navigate-replaces to
+                  /explore?s=…&i=…&v=…. Legacy dossier survives at
+                  /print/vendors/:id for printable / fallback use.
+                  Pass ?print=1 to bypass the redirect.
+                  See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2. */}
               <Route
                 path="vendors/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <VendorProfile />
+                    <VendorDeepLinkRedirect />
                   </SuspenseBoundary>
                 }
               />
@@ -385,7 +394,47 @@ function App() {
                 path="institutions/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionDeepLinkRedirect />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* Legacy dossier routes — printable surface. Pre-2026-05-11
+                  these lived at /vendors/:id and /institutions/:id. */}
+              <Route
+                path="print/vendors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <VendorProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="print/institutions/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionProfile />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* 2026-05-09: InstitutionThread reverted off the canonical
+                  route after user feedback. The page-shaped editorial
+                  dossier was the wrong concept — the platform is a
+                  spatial-exploration map (Star Fox-style zoom hierarchy),
+                  not a CMS of pages. See docs/SPATIAL_NAV_PLAN.md. The
+                  draft remains addressable here for reference only. */}
+              <Route
+                path="institutions/:id/thread-draft"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <InstitutionThread />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="explore"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <SpatialMap />
                   </SuspenseBoundary>
                 }
               />
@@ -399,34 +448,15 @@ function App() {
               />
 
               {/* Redirects from merged/renamed pages */}
-              <Route
-                path="money-flow"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CapturaHeatmap />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — CapturaHeatmap duplicate of /captura. */}
+              <Route path="money-flow" element={<Navigate to="/captura" replace />} />
               {/* Plural/singular + recent-rename aliases kept for external links */}
               <Route path="networks" element={<Navigate to="/network" replace />} />
               <Route path="institution-health" element={<Navigate to="/institutions" replace />} />
 
-              <Route
-                path="vendors/compare"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <VendorCompare />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="procurement-calendar"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ProcurementCalendar />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cuts — vendor compare + procurement calendar deferred to v1.1. */}
+              <Route path="vendors/compare" element={<Navigate to="/sectors" replace />} />
+              <Route path="procurement-calendar" element={<Navigate to="/" replace />} />
               <Route
                 path="journalists"
                 element={
@@ -446,14 +476,8 @@ function App() {
                 }
               />
 
-              <Route
-                path="institutions/compare"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <InstitutionCompare />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* v1.0 launch cut — InstitutionCompare deferred to v1.1. */}
+              <Route path="institutions/compare" element={<Navigate to="/institutions" replace />} />
 
               {/* Route aliases — singular/plural spelling variants */}
               <Route path="sector" element={<Navigate to="/sectors" replace />} />

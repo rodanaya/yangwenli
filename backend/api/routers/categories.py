@@ -180,12 +180,38 @@ def get_category_contracts(
     }
 
 
+# Audit Fix E (Issue #001) — institution_type values that are clearly
+# state-level / municipal / regional and should be EXCLUDED from a
+# "federal" scope ranking. Federal-tier types stay in by omission.
+# State-level types here have ~3,000+ rows total; federal-tier types
+# total ~325. Without this filter, any "top institutions" ranking is
+# mathematically dominated by state institutions despite tiny per-
+# institution contract counts. See docs/RUBLI_v1.0_HONEST_AUDIT.md §4.
+NON_FEDERAL_INSTITUTION_TYPES = (
+    "state_agency",
+    "state_government",
+    "state_enterprise_finance",
+    "state_enterprise_energy",
+    "state_enterprise_infra",
+    "municipal",
+    "other",
+)
+
+
 @router.get("/{category_id}/vendor-institution")
 def get_category_vendor_institution(
     category_id: int,
     limit: int = Query(25, ge=1, le=50),
+    scope: str = Query("federal", regex="^(federal|all)$"),
 ):
-    """Return top vendor-institution pairs for a category by total value."""
+    """Return top vendor-institution pairs for a category by total value.
+
+    `scope` (Audit Fix E, 2026-05-07):
+      - `federal` (default): excludes state, municipal, and state-enterprise
+        institutions whose tiny denominators dominate the ranking and mislead
+        readers comparing federal procurement.
+      - `all`: legacy behavior — every institution type included.
+    """
     with get_db() as conn:
         cur = conn.cursor()
         cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
@@ -193,7 +219,15 @@ def get_category_vendor_institution(
         if not cat:
             raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
 
-        cur.execute("""
+        scope_filter = ""
+        params: list = [category_id]
+        if scope == "federal":
+            placeholders = ", ".join(["?"] * len(NON_FEDERAL_INSTITUTION_TYPES))
+            scope_filter = f"AND i.institution_type NOT IN ({placeholders})"
+            params.extend(NON_FEDERAL_INSTITUTION_TYPES)
+        params.append(limit)
+
+        cur.execute(f"""
             SELECT
                 v.id   AS vendor_id,
                 v.name AS vendor_name,
@@ -209,15 +243,17 @@ def get_category_vendor_institution(
             JOIN vendors      v ON v.id = c.vendor_id
             JOIN institutions i ON i.id = c.institution_id
             WHERE c.category_id = ?
+              {scope_filter}
             GROUP BY c.vendor_id, c.institution_id
             ORDER BY total_value DESC
             LIMIT ?
-        """, (category_id, limit))
+        """, params)
         rows = cur.fetchall()
 
     return {
         "category_id": category_id,
         "category_name": cat["name_es"],
+        "scope": scope,
         "data": [
             {
                 "vendor_id": r["vendor_id"],

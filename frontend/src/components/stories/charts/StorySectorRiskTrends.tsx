@@ -6,9 +6,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { SectorRiskTrendPanel } from '@/components/charts/SectorRiskTrendPanel'
 
 export function StorySectorRiskTrends() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,21 +20,21 @@ export function StorySectorRiskTrends() {
     >
       {/* Editorial overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Sector Trajectories
+        {t('sectorRiskTrends.kicker')}
       </p>
       {/* Finding headline */}
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        Agriculture risk doubled after Segalmex — Salud spiked during COVID and stayed elevated
+        {t('sectorRiskTrends.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        High-risk rate per sector · 2010-2025 · Toggle sectors to compare
+        {t('sectorRiskTrends.subline')}
       </p>
 
       <SectorRiskTrendPanel />
 
       {/* Source */}
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2010-2025 · RUBLI v0.6.5 per-sector models · Scandal dates from public record
+        {t('sectorRiskTrends.footer')}
       </p>
     </motion.div>
   )

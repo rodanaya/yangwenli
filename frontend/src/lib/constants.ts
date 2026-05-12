@@ -62,9 +62,40 @@ export const SECTOR_NAMES_EN: Record<string, string> = {
   otros: 'Other',
 } as const
 
+// Spanish sector name translations (proper case, with diacritics).
+// Backend codes are normalised to lowercase ascii (`salud`, `educacion`,
+// `gobernacion`) so `getSectorNameES` is what callers should use to render
+// the user-facing label — never just `code.toUpperCase()` which drops accents
+// and reads as a backend identifier.
+export const SECTOR_NAMES_ES: Record<string, string> = {
+  salud: 'Salud',
+  educacion: 'Educación',
+  infraestructura: 'Infraestructura',
+  energia: 'Energía',
+  defensa: 'Defensa',
+  tecnologia: 'Tecnología',
+  hacienda: 'Hacienda',
+  gobernacion: 'Gobernación',
+  agricultura: 'Agricultura',
+  ambiente: 'Ambiente',
+  trabajo: 'Trabajo',
+  otros: 'Otros',
+} as const
+
 // Helper function to translate sector code to English name
 export function getSectorNameEN(sectorCode: string): string {
   return SECTOR_NAMES_EN[sectorCode] || sectorCode
+}
+
+// Spanish counterpart — used by ARIA queue, vendor profiles, and any chip
+// that previously called getSectorNameEN unconditionally.
+export function getSectorNameES(sectorCode: string): string {
+  return SECTOR_NAMES_ES[sectorCode] || sectorCode
+}
+
+/** Lang-aware sector label — pass the i18n language to pick ES or EN. */
+export function getSectorName(sectorCode: string, lang: 'en' | 'es'): string {
+  return lang === 'es' ? getSectorNameES(sectorCode) : getSectorNameEN(sectorCode)
 }
 
 // Sector metadata with professional colors
@@ -96,10 +127,28 @@ export const RISK_COLORS = {
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
-// Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-05-folio-skin'
+// Ground-truth case count fallback. The live count is served by
+// `/api/v1/executive/summary` → `ground_truth.cases` and grows on every
+// retraining cycle. Surfaces that aren't already loading the executive
+// summary fall back to this snapshot so we don't ship a hardcoded "1,363"
+// (Day 1 audit Fix B caught the homepage hero; this constant covers the
+// remaining 4 surfaces — CaseDetail, Intersection, ModelTransparency,
+// and the watchlist `caseDesc` JSON which uses {{count}} interpolation).
+// Update on every retraining unless we wire `useGroundTruthCount()` (v1.1).
+export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1401
 
-// Risk thresholds (v0.6.5 — medium raised from 0.15→0.25 to make medium actionable)
+// Ground-truth vendor count fallback (vendors linked to ≥1 GT case).
+// Same fallback contract as GROUND_TRUTH_CASE_COUNT_FALLBACK — updates
+// on each retraining and is referenced by methodology/intersection
+// editorial copy. Live source: `/api/v1/executive/summary` →
+// `ground_truth.vendors`.
+export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 861
+
+// Build identifier — bump to force Vite content hash change and bust CDN/browser cache
+export const BUILD_ID = '2026-05-12-audit-batch3'
+
+// Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
+// retraining — medium was raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.
 // At 0.25, medium is 26.8% of contracts (investigable) and low is 59.4% (noise floor).
 // Structural FP vendors (pharma OEMs) capped at medium via DB risk_level override.

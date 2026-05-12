@@ -53,7 +53,7 @@ export function EditorialComposedChart<T extends object>({
   const hasRightAxis = layers.some((l) => l.axis === 'right')
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       <ComposedChart data={data} margin={{ top: 8, right: hasRightAxis ? 8 : 12, left: 0, bottom: 4 }}>
         <defs>
           {layers

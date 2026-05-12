@@ -69,6 +69,8 @@ import esInstitutionScorecards from './locales/es/institutionScorecards.json'
 import enInstitutionScorecards from './locales/en/institutionScorecards.json'
 import esAuth from './locales/es/auth.json'
 import enAuth from './locales/en/auth.json'
+import esStoryCharts from './locales/es/storyCharts.json'
+import enStoryCharts from './locales/en/storyCharts.json'
 
 i18n
   .use(LanguageDetector)
@@ -99,6 +101,7 @@ i18n
         procurementCalendar: esProcurementCalendar,
         institutionScorecards: esInstitutionScorecards,
         auth: esAuth,
+        storyCharts: esStoryCharts,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -124,9 +127,14 @@ i18n
         procurementCalendar: enProcurementCalendar,
         institutionScorecards: enInstitutionScorecards,
         auth: enAuth,
+        storyCharts: enStoryCharts,
       },
     },
-    lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference
+    // Do NOT set lng here — let LanguageDetector determine the language from
+    // localStorage. An explicit lng option overrides the detector and would
+    // prevent the detector from ever running, so new users always got 'en'
+    // regardless of any stored preference. The fallbackLng below handles the
+    // case where no language is detected.
     fallbackLng: 'en',
     detection: { order: ['localStorage'], caches: ['localStorage'] },
     defaultNS: 'common',

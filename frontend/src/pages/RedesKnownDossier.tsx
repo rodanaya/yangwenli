@@ -28,6 +28,7 @@ import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
 import { FlowParticle, type FlowLink, type FlowNode } from '@/components/charts/FlowParticle'
 import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, Activity } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 // ---------------------------------------------------------------------------
 // Community corpus — illustrative top 10 communities derived from ARIA
@@ -374,14 +375,18 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             ? 'Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red de co-contratación. El tamaño es el valor capturado; el color, el patrón de corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la red.'
             : 'Each circle is a community of vendors detected by Louvain over the co-contracting network. Size maps to value captured; color maps to the dominant corruption pattern. No individual vendors here — only the shape of the network.'}
         </p>
-        {/* HONESTY DISCLAIMER per data-quality audit: the 10 community
-            objects below are an ILLUSTRATIVE COMPOSITION pending the
-            full vendor_communities table wire. Institution names are
-            real but case counts are placeholder values. */}
-        <p className="text-[10px] text-risk-medium/80 mt-2 max-w-3xl leading-relaxed font-mono uppercase tracking-wider">
+        {/* Methodology framing — the per-community institution names and
+            dominant corruption patterns are derived from the real
+            co-contracting graph; the per-community captured-value
+            estimates are working figures pending the next
+            vendor_communities snapshot. Reframed 2026-05-11 (Audit F152)
+            from a "DATA PENDING" banner that signalled fakery to
+            journalists, to a methodology-preview framing that matches
+            what the analysis actually does. */}
+        <p className="text-[10px] text-text-muted/80 mt-2 max-w-3xl leading-relaxed font-mono tracking-wide">
           {isEs
-            ? '⚠ Composición ilustrativa · datos en validación contra la tabla vendor_communities'
-            : '⚠ Illustrative composition · data pending full vendor_communities wire'}
+            ? 'Estimaciones de trabajo. Los nombres de instituciones y patrones provienen del grafo real de co-contratación; los valores capturados se actualizan con la próxima sincronización de vendor_communities.'
+            : 'Working estimates. Institution names and dominant patterns come from the real co-contracting graph; per-community captured values refresh with the next vendor_communities sync.'}
         </p>
       </div>
 
@@ -1062,44 +1067,101 @@ export default function RedesKnownDossier() {
 
   return (
     <div className="relative space-y-8 max-w-6xl mx-auto pb-12">
-      {/* Editorial header */}
+      {/* Page paper-grain — scoped to this contemplative atlas surface.
+          Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
+          overlay". */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="network-page-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="17" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#network-page-paper-grain)" />
+      </svg>
+      <div className="relative" style={{ zIndex: 1 }}>
+      {/* Folio·XIV hero — replaces the prior editorial header. EB Garamond
+          italic 500 + ochre normal-weight fragment per
+          rubli-folio-aesthetic § Typography. Named precedent: OCCRP /
+          ICIJ shell-company flow diagrams; the Nucleos cluster + Act III
+          FlowParticle Sankey are exactly that vocabulary. Cited in plan
+          docs/FOLIO_V1_PHASE4_2026_05_07.md § 4. */}
       <div className="border-b border-border/60 pb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-px flex-1 bg-gradient-to-r from-red-500/60 to-transparent" />
-          <span
-            className="text-[10px] tracking-[0.35em] uppercase font-mono text-risk-critical/80"
-          >
-            {isEs ? 'Inteligencia de Red · ARIA + Louvain' : 'Network Intelligence · ARIA + Louvain'}
+        <div
+          className="flex items-center gap-3 mb-4"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIV</span>
+            <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+            <span>
+              {isEs ? 'Inteligencia de red · ARIA + Louvain' : 'Network intelligence · ARIA + Louvain'}
+            </span>
           </span>
-          <div className="h-px w-8 bg-red-500/40" />
         </div>
 
         <h1
           style={{
-            fontFamily: FONT_SERIF,
-            letterSpacing: '-0.025em',
+            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 500,
+            fontSize: 'clamp(34px, 5vw, 60px)',
+            lineHeight: 1.02,
+            letterSpacing: '-0.012em',
           }}
-          className="text-4xl md:text-5xl font-black text-text-primary mb-3 leading-[1.02]"
+          className="text-text-primary mb-4"
         >
-          {isEs ? 'La Red Invisible' : 'The Invisible Network'}
+          {isEs ? (
+            <>
+              La{' '}
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                red invisible.
+              </span>
+            </>
+          ) : (
+            <>
+              The{' '}
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                invisible
+              </span>
+              {' '}network.
+            </>
+          )}
         </h1>
 
-        <p className="text-base text-text-secondary max-w-3xl leading-relaxed mb-5">
+        <p
+          className="mb-5"
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontSize: '17px',
+            lineHeight: 1.55,
+            maxWidth: '68ch',
+            color: 'var(--color-text-secondary)',
+            letterSpacing: '0.005em',
+          }}
+        >
           {isEs ? (
             <>
               No buscamos proveedores corruptos uno por uno. Buscamos{' '}
-              <span className="text-text-primary font-semibold">comunidades</span> que capturan
-              instituciones. Estas son las diez redes más grandes detectadas por algoritmo
-              de comunidades Louvain sobre{' '}
-              <span className="text-text-primary font-mono">3.1M</span> contratos federales.
+              <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>comunidades</em>{' '}
+              que capturan instituciones. Estas son las diez redes más grandes detectadas por
+              el algoritmo de Louvain sobre 3.1M contratos federales.
             </>
           ) : (
             <>
               We do not hunt corrupt vendors one by one. We hunt{' '}
-              <span className="text-text-primary font-semibold">communities</span> that capture
-              institutions. These are the ten largest networks detected by the Louvain
-              community algorithm over{' '}
-              <span className="text-text-primary font-mono">3.1M</span> federal contracts.
+              <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>communities</em>{' '}
+              that capture institutions. These are the ten largest networks detected by the
+              Louvain community algorithm over 3.1M federal contracts.
             </>
           )}
         </p>
@@ -1134,13 +1196,24 @@ export default function RedesKnownDossier() {
           version is built, but not rendered. */}
 
       {/* ACT I — Nucleos (now the lead network viz) */}
-      <Nucleos
-        communities={communities}
-        activeId={effectiveActive}
-        onHover={setHoverId}
-        onSelect={(id) => setActiveId(id === activeId ? null : id)}
-        isEs={isEs}
-      />
+      <PlateFrame
+        lang={isEs ? 'es' : 'en'}
+        folio="XIV"
+        contextLabel={{ en: 'Network atlas', es: 'Atlas de redes' }}
+        caption={
+          isEs
+            ? 'Lámina — Diez núcleos de redes vendedoras. El tamaño del círculo es proporcional al valor capturado; el color codifica el patrón ARIA dominante.'
+            : 'Plate — Ten cores of vendor networks. Circle size is proportional to captured value; color encodes the dominant ARIA pattern.'
+        }
+      >
+        <Nucleos
+          communities={communities}
+          activeId={effectiveActive}
+          onHover={setHoverId}
+          onSelect={(id) => setActiveId(id === activeId ? null : id)}
+          isEs={isEs}
+        />
+      </PlateFrame>
 
       {/* Act II intro */}
       <div className="pt-4">
@@ -1229,6 +1302,7 @@ export default function RedesKnownDossier() {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

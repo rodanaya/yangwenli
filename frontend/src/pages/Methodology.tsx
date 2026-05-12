@@ -69,11 +69,12 @@ const V33_WEIGHTS = [
 // Colors routed through canonical RISK_COLORS instead of three local hex
 // duplicates that drifted from the rest of the platform.
 // v0.8.5 distribution (3,051,294 scored contracts, HR=11.01%)
+// `meaningKey` is resolved at render time via t() — see render section.
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
-  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
+  { level: 'Critical', threshold: '>= 0.60', meaningKey: 'Critical', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
+  { level: 'High',     threshold: '>= 0.40', meaningKey: 'High',     pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
+  { level: 'Medium',   threshold: '>= 0.25', meaningKey: 'Medium',   pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
+  { level: 'Low',      threshold: '< 0.25',  meaningKey: 'Low',      pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -102,10 +103,10 @@ const CORRUPTION_CASES = [
 ] as const
 
 const DATA_STRUCTURES = [
-  { structure: 'A', years: '2002-2010', quality: 'Lowest', rfc: '0.1%', description: 'Risk scores may be underestimated' },
-  { structure: 'B', years: '2010-2017', quality: 'Better', rfc: '15.7%', description: 'UPPERCASE text, 72.2% direct award' },
-  { structure: 'C', years: '2018-2022', quality: 'Good', rfc: '30.3%', description: 'Mixed case, 78.4% direct award' },
-  { structure: 'D', years: '2023-2025', quality: 'Best', rfc: '47.4%', description: '100% Partida codes, best coverage' },
+  { structure: 'A', years: '2002-2010', qualityKey: 'A', rfc: '0.1%',  descKey: 'A' },
+  { structure: 'B', years: '2010-2017', qualityKey: 'B', rfc: '15.7%', descKey: 'B' },
+  { structure: 'C', years: '2018-2022', qualityKey: 'C', rfc: '30.3%', descKey: 'C' },
+  { structure: 'D', years: '2023-2025', qualityKey: 'D', rfc: '47.4%', descKey: 'D' },
 ] as const
 
 const REFERENCES = [
@@ -165,6 +166,14 @@ const MODEL_EVOLUTION_STEPS = [
     overlay: false,
   },
   {
+    // 2026-05-12 (Audit F082/F221): this row was mislabeled as v0.8.5,
+    // creating two rows both reading "v0.8.5" — the old v0.6.5 entry
+    // (Mar 25, 2026, AUC 0.828, 748 GT cases) showed up looking like
+    // a duplicate of the active May 2 v0.8.5 model. Renamed to its
+    // correct version so the lineage reads as a coherent progression
+    // and the "1,401 cases vs 748 cases" contradiction the audit
+    // surfaced becomes self-explanatory (748 = v0.6.5 trained-on,
+    // 1,401 = v0.8.5 trained-on).
     version: 'v0.6.5',
     date: 'Mar 25, 2026',
     titleKey: 'v60Title',
@@ -360,7 +369,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   })), [t])
 
   // Scale: v0.8.5 coefficients range from -0.39 to +0.56. Symmetric 0-based axis.
-  // (v5.x had ±1.3; v0.6.5 max was price_volatility +0.534, v0.8.5 max is +0.558;
+  // (v5.x had ±1.3; v0.8.5 max was price_volatility +0.534, v0.8.5 max is +0.558;
   // min is institution_diversity -0.3821.)
   const RANGE_MIN = -0.55
   const RANGE_MAX = 0.55
@@ -371,7 +380,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
 
   return (
-    <div role="img" aria-label="Dot matrix showing model coefficient values by feature">
+    <div role="img" aria-label={t('dataLabels.ariaModelCoefficients')}>
       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {/* Zero reference line */}
         <line
@@ -455,7 +464,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
   const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
 
   return (
-    <div role="img" aria-label="Dot matrix showing risk factor weights in the v3.3 model">
+    <div role="img" aria-label={t('dataLabels.ariaRiskFactorWeights')}>
       <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {chartData.map((item, rowIdx) => {
           const filled = Math.round((item.weight / MAX_PCT) * MD_DOTS)
@@ -687,24 +696,24 @@ export function Methodology() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                How we score corruption risk.
+                {t('heroHeader.title')}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                METHODOLOGY · TRANSPARENCY REPORT · v0.8.5
+                {t('heroHeader.subtitle')}
               </p>
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">0.785</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Test AUC</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.testAuc')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">11.01%</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk rate</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.highRiskRate')}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,401</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">GT cases</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.gtCases')}</div>
               </div>
             </div>
           </div>
@@ -724,25 +733,27 @@ export function Methodology() {
               <span className="text-text-primary">·</span>
               <span className="font-mono tabular-nums">v0.8.5</span>
             </div>
-            <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>
             <h1
-              className="text-text-primary leading-[1.05]"
+              className="text-text-primary"
               style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                fontWeight: 700,
-                letterSpacing: '-0.025em',
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(36px, 5.5vw, 60px)',
+                lineHeight: 0.98,
+                letterSpacing: '-0.012em',
               }}
             >
               {t('pageHeadline')}
             </h1>
             <p
-              className="mt-4 text-text-secondary max-w-2xl"
+              className="mt-5 max-w-[68ch]"
               style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontStyle: 'italic',
-                fontSize: 'clamp(1rem, 1.3vw, 1.2rem)',
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontSize: '17px',
                 lineHeight: 1.55,
+                color: 'var(--color-text-secondary, var(--color-text-muted))',
+                letterSpacing: '0.005em',
               }}
             >
               {t('pageSubline')}
@@ -751,7 +762,7 @@ export function Methodology() {
           <button
             onClick={() => window.print()}
             className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-            title="Export as PDF"
+            title={t('heroHeader.exportPdf')}
           >
             <Printer className="w-3.5 h-3.5" />
             PDF
@@ -762,18 +773,18 @@ export function Methodology() {
         <div className="mt-8 grid gap-5 sm:grid-cols-3">
           <PullQuote
             stat="0.785"
-            label="Test AUC"
-            source="Vendor-stratified 70/30 hold-out"
+            label={t('pullQuotes.testAucLabel')}
+            source={t('pullQuotes.testAucSource')}
           />
           <PullQuote
             stat="11.01%"
-            label="High-risk rate"
-            source="OECD benchmark: 2–15%"
+            label={t('pullQuotes.highRiskLabel')}
+            source={t('pullQuotes.highRiskSource')}
           />
           <PullQuote
             stat="1,401"
-            label="Ground-truth cases"
-            source="861 vendors · ~302K contracts"
+            label={t('pullQuotes.gtCasesLabel')}
+            source={t('pullQuotes.gtCasesSource')}
           />
         </div>
       </header>
@@ -784,7 +795,7 @@ export function Methodology() {
         variants={staggerContainer}
         initial="initial"
         animate="animate"
-        aria-label="Additional dataset context"
+        aria-label={t('heroHeader.kpiAria')}
       >
         {(
           [
@@ -810,13 +821,11 @@ export function Methodology() {
             <div className="flex items-center gap-2 mb-1">
               <Shield className="h-4 w-4 text-accent" aria-hidden="true" />
               <span className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-accent">
-                HOW TO INTERPRET FINDINGS · CONFIDENCE TIERS
+                {t('tiers.kicker')}
               </span>
             </div>
             <p className="text-xs text-text-muted mt-1 max-w-2xl">
-              Not all RUBLI findings carry equal certainty. Every claim — whether in a risk score,
-              an ARIA flag, or a story — belongs to one of three tiers. The tier determines the
-              language you should use when citing or reporting it.
+              {t('tiers.intro')}
             </p>
           </div>
           <div className="px-6 pb-6 border-t border-border/30">
@@ -825,80 +834,76 @@ export function Methodology() {
               {/* Tier I */}
               <div className="rounded-sm border border-risk-critical/25 bg-risk-critical/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">TIER I</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-critical">{t('tiers.tierILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Externally Confirmed
+                    {t('tiers.tierITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  An independent authority — SAT, SFP, or a documented judicial process — has
-                  formally established fraud, simulated operations, or a procurement irregularity.
+                  {t('tiers.tierIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Sources in RUBLI</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.sourcesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· SAT EFOS Definitivo list (13,960 vendors)</li>
-                    <li>· SFP sanctions registry (544 vendors)</li>
-                    <li>· Ground truth cases (1,401 documented investigations)</li>
+                    <li>{t('tiers.tierISource1')}</li>
+                    <li>{t('tiers.tierISource2')}</li>
+                    <li>{t('tiers.tierISource3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-critical/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-risk-critical italic">"confirmed" · "documented" · "formally established"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-critical italic">{t('tiers.tierISay')}</p>
                 </div>
               </div>
 
               {/* Tier II */}
               <div className="rounded-sm border border-risk-high/25 bg-risk-high/5 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">TIER II</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-risk-high">{t('tiers.tierIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Corroborated
+                    {t('tiers.tierIITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  Algorithmic risk signal plus at least one independent external source pointing
-                  in the same direction. Neither source alone is conclusive; together they
-                  warrant priority investigation.
+                  {t('tiers.tierIIBody')}
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Examples</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.examplesLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· Critical risk score + EFOS Presunto match</li>
-                    <li>· Multiple independent ARIA patterns (P2 + P3)</li>
-                    <li>· High risk + RUPC exclusion list</li>
+                    <li>{t('tiers.tierIIEx1')}</li>
+                    <li>{t('tiers.tierIIEx2')}</li>
+                    <li>{t('tiers.tierIIEx3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-risk-high/15">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-risk-high italic">"corroborated by" · "flagged and independently noted" · "warrants investigation"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-risk-high italic">{t('tiers.tierIISay')}</p>
                 </div>
               </div>
 
               {/* Tier III */}
               <div className="rounded-sm border border-border/40 bg-background-elevated/30 p-4 space-y-3">
                 <div>
-                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">TIER III</span>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">{t('tiers.tierIIILabel')}</span>
                   <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                    Statistical Pattern
+                    {t('tiers.tierIIITitle')}
                   </h3>
                 </div>
                 <p className="text-xs text-text-secondary leading-relaxed">
-                  RUBLI's algorithm detected procurement characteristics that statistically
-                  resemble known corruption cases. No external source corroborates the flag.
-                  <strong className="text-text-primary"> Most RUBLI findings are Tier III.</strong>
+                  {t('tiers.tierIIIBodyStart')}
+                  <strong className="text-text-primary">{t('tiers.tierIIIBodyStrong')}</strong>
                 </p>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Scale</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">{t('tiers.scaleLabel')}</p>
                   <ul className="text-xs text-text-muted space-y-0.5">
-                    <li>· 412K contracts at high/critical risk score</li>
-                    <li>· 6,034 vendors with shell-company behavioral pattern</li>
-                    <li>· Collusion ring detections (co-bidding heuristic)</li>
+                    <li>{t('tiers.tierIIIEx1')}</li>
+                    <li>{t('tiers.tierIIIEx2')}</li>
+                    <li>{t('tiers.tierIIIEx3')}</li>
                   </ul>
                 </div>
                 <div className="pt-2 border-t border-border/30">
-                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
-                  <p className="text-xs text-text-secondary italic">"statistical pattern consistent with" · "flagged for investigation" · "behavioral anomaly"</p>
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">{t('tiers.sayLabel')}</p>
+                  <p className="text-xs text-text-secondary italic">{t('tiers.tierIIISay')}</p>
                 </div>
               </div>
 
@@ -906,12 +911,8 @@ export function Methodology() {
 
             <div className="mt-4 p-3 rounded-md bg-border/10 border border-border/30">
               <p className="text-xs text-text-muted leading-relaxed">
-                <span className="font-semibold text-text-secondary">Critical rule: </span>
-                Never use Tier I language ("confirmed," "proven") for Tier III findings. The RUBLI
-                risk score is not a verdict — it is a triage signal. A score of 0.90 means strong
-                resemblance to documented corruption patterns, not a 90% probability of guilt.
-                Shell company behavioral pattern flags (P2 pattern) have a 0.7% SAT confirmation rate —
-                the other 99.3% are unconfirmed algorithmic detections.
+                <span className="font-semibold text-text-secondary">{t('tiers.criticalRuleLabel')} </span>
+                {t('tiers.criticalRuleBody')}
               </p>
             </div>
           </div>
@@ -990,7 +991,7 @@ export function Methodology() {
                           <td className="py-2 pr-3 font-mono text-text-secondary">
                             {r.threshold}
                           </td>
-                          <td className="py-2 pr-3 text-text-muted">{r.meaning}</td>
+                          <td className="py-2 pr-3 text-text-muted">{t(`dataLabels.riskMeaning${r.meaningKey}`)}</td>
                           <td className="py-2 pr-3 text-right font-mono text-text-secondary">
                             {r.pct}
                           </td>
@@ -1158,7 +1159,7 @@ export function Methodology() {
                         <td className="py-2 pr-2 text-text-primary font-medium max-w-[200px]">
                           <span className="truncate block">{c.name}</span>
                         </td>
-                        <td className="py-2 pr-2 text-text-muted">{c.type}</td>
+                        <td className="py-2 pr-2 text-text-muted">{t(`corruptionTypes.${c.type}`, c.type)}</td>
                         <td className="py-2 pr-2 text-right font-mono text-text-secondary">
                           {c.contracts}
                         </td>
@@ -1472,19 +1473,21 @@ export function Methodology() {
                             variant="default"
                             className={cn(
                               'text-xs px-1.5 py-0',
-                              ds.quality === 'Lowest' && 'bg-risk-critical/10 text-risk-critical border-risk-critical/20',
-                              ds.quality === 'Better' && 'bg-risk-medium/10 text-risk-medium border-risk-medium/20',
-                              ds.quality === 'Good' && 'bg-accent/10 text-accent border-accent/20',
-                              ds.quality === 'Best' && 'bg-accent/10 text-accent border-accent/20',
+                              // Class lookup keyed on stable A/B/C/D structure code
+                              // (i18n-safe — no longer depends on the displayed string).
+                              ds.qualityKey === 'A' && 'bg-risk-critical/10 text-risk-critical border-risk-critical/20',
+                              ds.qualityKey === 'B' && 'bg-risk-medium/10 text-risk-medium border-risk-medium/20',
+                              ds.qualityKey === 'C' && 'bg-accent/10 text-accent border-accent/20',
+                              ds.qualityKey === 'D' && 'bg-accent/10 text-accent border-accent/20',
                             )}
                           >
-                            {ds.quality}
+                            {t(`dataLabels.structure${ds.qualityKey}_quality`)}
                           </Badge>
                         </td>
                         <td className="py-2 pr-3 text-right font-mono text-text-secondary">
                           {ds.rfc}
                         </td>
-                        <td className="py-2 text-text-muted">{ds.description}</td>
+                        <td className="py-2 text-text-muted">{t(`dataLabels.structure${ds.descKey}_desc`)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1517,8 +1520,7 @@ export function Methodology() {
           <CollapsibleSection id="limitations" number="11" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
             <div className="space-y-6">
               <p className="text-xs text-text-secondary leading-relaxed">
-                These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform.
-                Understanding them is essential to interpreting risk scores correctly.
+                {t('limitations.intro')}
               </p>
 
               {/* Severity summary */}
@@ -1527,57 +1529,46 @@ export function Methodology() {
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">High Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
-                    <span className="text-xs text-text-muted ml-1.5">Medium Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
-                    <span className="text-xs text-text-muted ml-1.5">Low Impact</span>
+                    <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Summary table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-xs" aria-label="Model limitations summary">
+                <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
                   <thead className="border-b border-border">
                     <tr>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">Limitation</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">Impact</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">Path to Fix</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
-                    {([
-                      { l: 'Execution-phase fraud invisible', i: 'Construction/infrastructure underscored', f: 'Requires ASF audit data integration' },
-                      { l: 'Training bias (dominant cases)', i: 'Small-vendor & multi-sector corruption underdetected', f: 'Add more labeled ground truth cases' },
-                      { l: 'Ghost company detection (partial)', i: 'Small-shell EFOS vendors still challenging to detect', f: 'Case 22 included; institution-scoped labels' },
-                      { l: 'Vendor deduplication unsolved', i: 'True concentration understated pre-2018', f: 'RFC + address blocking (partial)' },
-                      { l: 'Co-bidding signal = zero', i: 'Bid rotation & cover bidding not in score', f: 'Need collusion-specific ground truth' },
-                      { l: 'CompraNet abolished Apr 2025', i: 'Future data unavailable; 1.9M records already deleted', f: 'Dependent on government decisions' },
-                      { l: 'Pre-2010 data quality', i: '25% of records less reliable', f: 'Structural COMPRANET limitation' },
-                      { l: 'Correlation ≠ causation', i: 'Scores require investigative follow-up', f: 'By design — model informs, not concludes' },
-                      { l: 'Structural concentration (sector)', i: 'Some sectors over-flagged (Defensa, Energía)', f: 'Sector-specific exclusion lists' },
-                      { l: 'Temporal stationarity', i: 'New fraud patterns may be undetected', f: 'Periodic retraining with new cases' },
-                      { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
-                      { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
-                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.8.5 temporal split', f: 'Point-in-time rolling features' },
-                      { l: 'PU c=0.32 post-OECD calibration', i: 'HR=11.01% (within OECD 2–15% range); intercept -2.616 floor applied', f: 'Documented intentional design decision' },
-                      { l: 'ARIA T1 = ground-truth lookup', i: 'External-flags +0.20 IPS boost guarantees GT vendors enter T1; T2 is the actual discovery surface', f: 'S.7 deliberate recalibration session pending' },
-                    ] as const).map((row) => (
-                      <tr key={row.l} className="hover:bg-accent/[0.03]">
-                        <td className="px-3 py-2 text-text-primary">{row.l}</td>
-                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{row.i}</td>
-                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{row.f}</td>
+                    {/* 15 known limitations — content in methodology.json
+                        under `limitationsTable.row{N}_{l|i|f}` so the whole
+                        table translates with the language toggle. Stable
+                        index keys; updates to the list need both EN+ES
+                        JSON updates. */}
+                    {Array.from({ length: 15 }, (_, idx) => idx + 1).map((n) => (
+                      <tr key={n} className="hover:bg-accent/[0.03]">
+                        <td className="px-3 py-2 text-text-primary">{t(`limitationsTable.row${n}_l`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{t(`limitationsTable.row${n}_i`)}</td>
+                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{t(`limitationsTable.row${n}_f`)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1587,10 +1578,8 @@ export function Methodology() {
               {/* Interpretive guidance */}
               <div className="p-3 rounded-md bg-border/10 border border-border/40">
                 <p className="text-xs text-text-muted leading-relaxed">
-                  <span className="font-medium text-text-primary">Interpretation guidance: </span>
-                  Risk scores are statistical indicators — not verdicts. A high score means strong similarity
-                  to documented corruption patterns. A low score does not certify a contract is clean.
-                  Use scores for investigation triage only; follow-up with primary sources to establish facts.
+                  <span className="font-medium text-text-primary">{t('limitations.interpretationLabel')}</span>
+                  {t('limitations.interpretationBody')}
                 </p>
               </div>
             </div>

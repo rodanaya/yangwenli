@@ -49,6 +49,8 @@ import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
+import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
@@ -948,6 +950,12 @@ function AtlasUrlSync({
       // Preserve ?story= param if present (don't evict active story deep-link)
       const storyParam = searchParams.get('story')
       if (storyParam) params.set('story', storyParam)
+      // 2026-05-09: also preserve ?z1=true so the spatial-nav feature flag
+      // doesn't get evicted by the URL-state writer 250ms after the user
+      // navigates with the flag set. Without this, /atlas?z1=true was
+      // collapsing to /atlas?lens=... and the Z1 drill-in never fired.
+      const z1Param = searchParams.get('z1')
+      if (z1Param) params.set('z1', z1Param)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
@@ -966,6 +974,55 @@ function AtlasUrlSync({
 // React's setState dedupes by reference equality, so calling unconditionally
 // is a no-op when values haven't changed.
 // ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Z1Overlay — renders the spatial-nav Z1 sub-constellation when the user
+ * has drilled into a sector via the ?z1=true flag. Sits as an absolute
+ * overlay above the AtlasZoomLayer so the legacy CSS-scale zoom is still
+ * available behind it and we can A/B between them during iteration.
+ */
+function Z1Overlay({ lang }: { lang: 'en' | 'es' }) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const navigate = useNavigate()
+  if (state.view.kind !== 'zoomed-sector') return null
+  const view = state.view
+  return (
+    <div
+      className="absolute inset-0 z-10"
+      style={{ background: 'var(--color-background, #faf9f6)' }}
+    >
+      <div className="relative h-full">
+        <Z1SectorMap
+          sectorId={view.sectorId}
+          sectorCode={view.sectorCode}
+          lang={lang}
+          onInstitutionClick={(institutionId, institutionName) => {
+            // Phase 1.3: institution click deep-links to the legacy
+            // /institutions/:id page until Z2 lands. This proves the
+            // navigation primitive end-to-end without committing to the
+            // Z2 sub-constellation render in this commit.
+            dispatch({ type: 'drill-into-institution', institutionId, institutionName })
+            navigate(`/institutions/${institutionId}`)
+          }}
+        />
+        {/* Back button — top-right, always visible */}
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'escape-zoom' })}
+          className="absolute top-2 right-2 px-2 py-1 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm hover:bg-background-elevated transition-colors"
+          style={{
+            color: 'var(--color-accent)',
+            border: '1px solid var(--color-border)',
+            background: 'var(--color-background-card)',
+          }}
+        >
+          {lang === 'en' ? '← Zoom out' : '← Alejar'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function AtlasContextBridge({
   setMode,
   setYearIndex,
@@ -1018,6 +1075,26 @@ export default function Atlas() {
   const { i18n } = useTranslation()
   const lang = (i18n.language.startsWith('es') ? 'es' : 'en') as 'en' | 'es'
   const navigate = useNavigate()
+
+  // 2026-05-11: redirect /atlas?z1=true → /explore. The ?z1=true experimental
+  // flag was the abandoned in-Atlas attempt at spatial-nav drill; the
+  // production version now lives at /explore (Phase 7). Preserve any
+  // sector/year params so deep-links still land on the right place.
+  // Harness was getting 4 nav errors per hour on /atlas?z1=true&lens=sectors.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('z1') === 'true') {
+      const next = new URLSearchParams()
+      // Map ?lens=sectors → no-op (Z0 is the system view), ?lens=patterns
+      // also goes to Z0 since the new /explore is sector-first.
+      // Preserve year if present.
+      const year = params.get('year')
+      if (year) next.set('year', year)
+      const replace = next.toString() ? `/explore?${next}` : '/explore'
+      navigate(replace, { replace: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [mode, setMode] = useState<ConstellationMode>('patterns')
   const [yearIndex, setYearIndex] = useState<number>(YEAR_SNAPSHOTS.length - 1) // default to most recent
@@ -1183,6 +1260,9 @@ export default function Atlas() {
         params.set('compare', String(YEAR_SNAPSHOTS[yearIndexB].year))
       }
       if (riskFloor !== 'all') params.set('floor', riskFloor)
+      // 2026-05-09: preserve z1 flag (see same fix in the other URL writer above)
+      const z1Param = searchParams.get('z1')
+      if (z1Param) params.set('z1', z1Param)
       setSearchParams(params, { replace: true })
     }, 250)
     return () => clearTimeout(id)
@@ -1201,9 +1281,16 @@ export default function Atlas() {
     const hasUrlState = searchParams.toString().length > 0
     // Skip auto-tour if URL has Atlas-C specific params (shared investigation link)
     const hasSharedState = hasAtlasCParams(searchParams)
+    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
+    // constellation off-screen — the chart it's narrating becomes invisible
+    // until the reader scrolls past several hundred pixels of editorial copy.
+    // Suppress the first-visit auto-launch on mobile; the user can still tap
+    // "Play story" explicitly. Don't set the visited flag so they still get
+    // the tour when they later open the same URL on desktop.
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
     let visited = false
     try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
-    if (!visited && !hasUrlState && !hasSharedState) {
+    if (!visited && !hasUrlState && !hasSharedState && !isMobile) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
@@ -1378,6 +1465,12 @@ export default function Atlas() {
   const handleClusterClick = (clusterCode: string) => {
     setSelectedClusterCode(clusterCode)
   }
+  // 2026-05-09 spatial-nav Phase 1.3 — feature flag for the Z1 sub-
+  // constellation render. When set on /atlas?z1=true AND the user is on
+  // the sectors lens, AtlasZoomLayer additionally dispatches
+  // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
+  // as an overlay on the zoomed view.
+  const z1Enabled = searchParams.get('z1') === 'true'
 
   const totalContractsForYear = snapshot.totalContracts
 
@@ -1467,7 +1560,10 @@ export default function Atlas() {
           />
         }
         center={
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+          // 2026-05-09: bumped max-w 1200→1680 + py-6/8→py-3/4 so the
+          // constellation canvas fills more of the viewport. User
+          // feedback: "make it bigger… you can barely see shit".
+          <div className="max-w-[1680px] mx-auto px-4 sm:px-6 py-3 sm:py-4 relative">
       {/* ── folio-skin: paper-grain texture overlay ─────────────────────────
           A very low-opacity SVG fractal noise sits behind the page content
           so the entire atlas surface reads as a printed plate, not a glossy
@@ -1491,9 +1587,9 @@ export default function Atlas() {
           closer to a bound atlas plate than a generic dashboard title.
           Lede sits in a narrower measure with EB Garamond regular italic for
           the inline emphasis tokens. */}
-      <header className="mb-8">
+      <header className="mb-3">
         <div
-          className="mb-3 flex items-center gap-3"
+          className="mb-1 flex items-center gap-3"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
             fontSize: '10px',
@@ -1509,8 +1605,12 @@ export default function Atlas() {
             {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
           </span>
         </div>
+        {/* 2026-05-09: hero compressed from 3-line italic Garamond + 4-line
+            sub-paragraph (~300px tall) to a single-line title + one-line
+            sub. The map should be the first thing the reader sees, not
+            an editorial preamble that hides it below the fold. */}
         <h1
-          className="text-[36px] sm:text-[52px] md:text-[68px] leading-[0.96] text-text-primary mb-4 text-balance"
+          className="text-[24px] sm:text-[28px] md:text-[32px] leading-[1.1] text-text-primary mb-1 text-balance"
           style={{
             fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
             fontStyle: 'italic',
@@ -1520,29 +1620,26 @@ export default function Atlas() {
         >
           {lang === 'en' ? (
             <>
-              An Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>of nine&#8202;trillion&#8202;pesos</span><br />
-              <span style={{ fontStyle: 'normal' }}>in federal procurement.</span>
+              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine&#8202;trillion pesos</span> in federal procurement.
             </>
           ) : (
             <>
-              Un Atlas <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>de nueve&#8202;billones&#8202;de pesos</span><br />
-              <span style={{ fontStyle: 'normal' }}>en contratación federal.</span>
+              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve&#8202;billones de pesos</span> en contratación federal.
             </>
           )}
         </h1>
         <p
-          className="max-w-[68ch]"
+          className="max-w-[80ch] text-[12px]"
           style={{
             fontFamily: '"EB Garamond", Georgia, serif',
-            fontSize: '17px',
-            lineHeight: 1.55,
-            color: 'var(--color-text-secondary, var(--color-text-muted))',
+            lineHeight: 1.4,
+            color: 'var(--color-text-muted)',
             letterSpacing: '0.005em',
           }}
         >
           {lang === 'en'
-            ? <>Each mark in the plate below stands for a slice of the federal contract record. Choose a <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lens</em> in the rail at left to reorder them by pattern, sector, category, or presidential term. Drag the <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>year</em> below to watch the field shift across eighteen years. Click a cluster to open the dossier.</>
-            : <>Cada marca en la lámina inferior representa una fracción del registro federal de contratos. Selecciona una <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>lente</em> en el panel izquierdo para reordenarlas por patrón, sector, categoría o sexenio. Arrastra el <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>año</em> abajo para ver el campo desplazarse a través de dieciocho años. Haz clic en un cúmulo para abrir el expediente.</>
+            ? <>Each mark = a slice of the federal contract record. Choose a <em style={{ color: 'var(--color-text-secondary)' }}>lens</em>, drag the year, click a cluster to drill in.</>
+            : <>Cada marca = una fracción del registro federal. Elige una <em style={{ color: 'var(--color-text-secondary)' }}>lente</em>, arrastra el año, haz clic para profundizar.</>
           }
         </p>
       </header>
@@ -2189,7 +2286,14 @@ export default function Atlas() {
           onClusterClickBridge={handleClusterClick}
           namedVendors={namedVendors}
           highlightedClusterCodes={highlightedClusterCodes}
+          z1Enabled={z1Enabled}
+          resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
         />
+        {/* 2026-05-09 spatial-nav Phase 1.3 — Z1 sub-constellation overlay.
+            Renders institutions as bodies in space when the user has
+            drilled into a sector. Only mounted when ?z1=true so the
+            existing /atlas behavior is preserved. */}
+        {z1Enabled && <Z1Overlay lang={lang} />}
       </PlateFrame>
 
       {/* ── Year scrubber A ─────────────────────────────────────────── */}
@@ -2268,8 +2372,13 @@ export default function Atlas() {
         }
       </div>
 
-      {/* ── Cluster detail side panel ────────────────────────────────── */}
-      {(() => {
+      {/* ── Cluster detail side panel — legacy modal ────────────────────
+           2026-05-09: suppressed when ?z1=true and lens=sectors so the
+           Z1 sub-constellation isn't covered by a 420px modal. Without
+           this guard, clicking a sector cluster fired BOTH the spatial
+           drill-into-sector dispatch AND the legacy selectedClusterCode
+           setter — and the legacy modal popped over the new map. */}
+      {!(z1Enabled && mode === 'sectors') && (() => {
         // V5: compute year-delta vs previous year using yearly_trends + scaled
         // critical/high pcts. Best-effort, illustrative when live data missing.
         let deltaT1: number | undefined = undefined
@@ -2277,7 +2386,7 @@ export default function Atlas() {
         if (selectedMeta && yearIndex > 0) {
           const prevSnap = effectiveSnapshot(yearIndex - 1)
           const curSnap = snapshot
-          // T1 scales with critical+high pct vs the v0.6.5 baseline (13.49%)
+          // T1 scales with critical+high pct vs the v0.8.5 baseline (13.49%)
           const BASELINE = 13.49
           const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
           const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE

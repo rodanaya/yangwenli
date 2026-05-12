@@ -1147,6 +1147,14 @@ function ReportCard() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Live GT case count — replaces the stale hardcoded 1363 (audit 2026-05-12)
+  const { data: executiveSummary } = useQuery({
+    queryKey: ['reportcard', 'executive-summary-gt'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+
   const is503 = (err: unknown): boolean =>
     (err as AxiosError)?.response?.status === 503
 
@@ -1187,8 +1195,8 @@ function ReportCard() {
   const totalValueMxn: number | null = dashData?.overview?.total_value_mxn ?? national.total_value_mxn ?? null
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
-  // Ground truth cases count -- institution-scoped windowed cases (v6.5 model)
-  const GT_CASES_COUNT = 1363
+  // Ground truth cases count — live from executive summary (audit 2026-05-12)
+  const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1401
 
   return (
     <main className="min-h-screen bg-background" id="main-content">

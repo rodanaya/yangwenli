@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface CohortPoint {
   year: number
@@ -81,6 +82,7 @@ function yFor(v: number) {
 }
 
 export function StoryNuevosRicos() {
+  const { t } = useTranslation('storyCharts')
   // Compute era centroids for big bubbles
   const eraCentroids = (['calderon', 'pena', 'amlo'] as const).map((era) => {
     const pts = POINTS.filter((p) => p.era === era)
@@ -99,21 +101,21 @@ export function StoryNuevosRicos() {
       className="rounded-sm bg-background border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Cohortes de proveedores
+        {t('nuevosRicos.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Los proveedores nuevos bajo AMLO nacen más opacos — y con más dinero
+        {t('nuevosRicos.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        Cada punto es el cohorte de un año de registro · eje X = adj. directa · eje Y = valor capturado
+        {t('nuevosRicos.subline')}
       </p>
 
       <div className="border-l-2 border-red-500 pl-4 py-1 mb-4">
-        <div className="text-3xl font-mono font-bold text-risk-critical">+25pp</div>
+        <div className="text-xl font-mono font-bold text-risk-critical">{t('nuevosRicos.deltaValue')}</div>
         <div className="text-[11px] text-text-secondary mt-0.5">
-          DA promedio Calderón → AMLO —{' '}
-          <span className="text-[color:var(--color-oecd)]">{(eraCentroids[2].daPct / 25).toFixed(1)}x el límite OCDE</span>
+          {t('nuevosRicos.deltaPrefix')}{' '}
+          <span className="text-[color:var(--color-oecd)]">{(eraCentroids[2].daPct / 25).toFixed(1)}{t('nuevosRicos.deltaSuffix')}</span>
         </div>
       </div>
 
@@ -121,7 +123,7 @@ export function StoryNuevosRicos() {
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Scatter plot of vendor cohorts by registration year: direct award rate versus total value captured"
+        aria-label={t('nuevosRicos.ariaLabel')}
       >
         {/* Grid */}
         {[40, 80, 120, 160].map((v) => (
@@ -153,7 +155,7 @@ export function StoryNuevosRicos() {
         />
         {/* Label only if 25 is visible; here X_MIN=50 so place label at start */}
         <text x={PAD.left + 4} y={PAD.top + 12} fill="var(--color-oecd)" fontSize={9} fontFamily="var(--font-family-mono)">
-          OCDE máx 25% →
+          {t('nuevosRicos.oecdLabel')}
         </text>
 
         {/* Axis labels */}
@@ -166,7 +168,7 @@ export function StoryNuevosRicos() {
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
-          TASA DE ADJUDICACIÓN DIRECTA →
+          {t('nuevosRicos.xAxisLabel')}
         </text>
         <text
           x={15}
@@ -178,7 +180,7 @@ export function StoryNuevosRicos() {
           letterSpacing="0.1em"
           transform={`rotate(-90, 15, ${PAD.top + PLOT_H / 2})`}
         >
-          VALOR CAPTURADO (MXN B) →
+          {t('nuevosRicos.yAxisLabel')}
         </text>
 
         {/* Yearly points (small) */}
@@ -244,32 +246,30 @@ export function StoryNuevosRicos() {
       {/* Legend */}
       <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
         {[
-          { label: 'Riesgo crítico', color: 'var(--color-sector-salud)' },
-          { label: 'Alto',           color: 'var(--color-sector-infraestructura)' },
-          { label: 'Medio',          color: 'var(--color-sector-energia)' },
-          { label: 'Bajo',           color: 'var(--color-sector-hacienda)' },
+          { label: t('nuevosRicos.legendCritical'), color: 'var(--color-sector-salud)' },
+          { label: t('nuevosRicos.legendHigh'),     color: 'var(--color-sector-infraestructura)' },
+          { label: t('nuevosRicos.legendMedium'),   color: 'var(--color-sector-energia)' },
+          { label: t('nuevosRicos.legendLow'),      color: 'var(--color-sector-hacienda)' },
         ].map(({ label, color }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, opacity: 0.6 }} />
             {label}
           </span>
         ))}
-        <span className="text-text-muted ml-auto">Tamaño del punto = volumen de contratos</span>
+        <span className="text-text-muted ml-auto">{t('nuevosRicos.legendSizeNote')}</span>
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('nuevosRicos.findingLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          El centroide de AMLO (nodo naranja) se ubica arriba y a la derecha: más valor capturado
-          con mayor opacidad. Los cohortes cruzan hacia zonas de riesgo alto (rojo) a medida que
-          el eje X avanza.
+          {t('nuevosRicos.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono mt-3">
-        Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.6.5
+        {t('nuevosRicos.footer')}
       </p>
     </motion.div>
   )

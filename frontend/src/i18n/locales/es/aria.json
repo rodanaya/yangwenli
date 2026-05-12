@@ -167,7 +167,7 @@
   },
   "methodology": {
     "title": "¿Cómo funciona ARIA?",
-    "body": "ARIA combina score de riesgo ML (v0.6.5), detección de anomalías PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
+    "body": "ARIA combina score de riesgo ML (v0.8.5), detección de anomalías PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
   },
   "threatLevels": "Niveles de Prioridad",
   "ipsBreakdown": {

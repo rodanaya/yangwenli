@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Ghost {
   id: number
@@ -90,6 +91,7 @@ function getColor(score: number): string {
 }
 
 export function StoryRedFantasma() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -98,30 +100,28 @@ export function StoryRedFantasma() {
       className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Red Fantasma
+        {t('ghostNetwork.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        42 empresas, 5 domicilios — la geografía del fraude de facturación
+        {t('ghostNetwork.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Constelación de proveedores EFOS definitivo que comparten un puñado de
-        direcciones fiscales. Cada nodo es un proveedor; tamaño = número de
-        contratos; color = score de riesgo v0.6.5.
+        {t('ghostNetwork.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">11,208</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">empresas EFOS definitivo (SAT)</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{t('ghostNetwork.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">38</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">confirmadas por RFC en COMPRANET</div>
+          <div className="text-xl font-mono font-bold text-orange-400">{t('ghostNetwork.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat2Label')}</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high">0.28</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">score promedio · subdetectadas</div>
+          <div className="text-xl font-mono font-bold text-risk-high">{t('ghostNetwork.stat3Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat3Label')}</div>
         </div>
       </div>
 
@@ -129,7 +129,7 @@ export function StoryRedFantasma() {
         viewBox="0 0 600 440"
         className="w-full h-auto"
         role="img"
-        aria-label="Network of 42 ghost vendors clustered around 5 shared addresses"
+        aria-label={t('ghostNetwork.ariaLabel')}
       >
         {/* Cluster boundaries */}
         {CLUSTER_LABELS.map((cluster) => {
@@ -247,40 +247,37 @@ export function StoryRedFantasma() {
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono text-text-muted pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-600"></div>
-          <span>score ≥ 0.85</span>
+          <span>{t('ghostNetwork.legendTop')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <span>0.75-0.85</span>
+          <span>{t('ghostNetwork.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-          <span>0.65-0.75</span>
+          <span>{t('ghostNetwork.legendMid')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-orange-400"></div>
-          <span>0.55-0.65</span>
+          <span>{t('ghostNetwork.legendLow')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-text-muted"></div>
-          <span>&lt; 0.55 · subdetectado</span>
+          <span>{t('ghostNetwork.legendUnder')}</span>
         </div>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('ghostNetwork.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Los EFOS definitivo comparten una firma estructural: pocos contratos
-          (típicamente 2-5), vida corta (2-3 años) y domicilios fiscales compartidos.
-          El modelo v0.6.5 los subdetecta (score 0.28) porque fue entrenado con
-          casos grandes (IMSS, SEGALMEX) — una brecha de detección sistemática.
+          {t('ghostNetwork.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: SAT Art. 69-B CFF · cruce con COMPRANET 2018-2024 · 38 RFC confirmados + 125 por nombre
+        {t('ghostNetwork.footer')}
       </p>
     </motion.div>
   )

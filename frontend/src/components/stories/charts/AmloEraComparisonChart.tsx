@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface EraRow {
   era: string
@@ -45,6 +46,7 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 50 + DATA.length * ROW_H + 16
 
 export function AmloEraComparisonChart() {
+  const { t } = useTranslation('storyCharts')
   const oecdDot = OECD_LIMIT // 1 dot per pct
 
   return (
@@ -55,13 +57,13 @@ export function AmloEraComparisonChart() {
       className="rounded-sm bg-background-card p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Comparacion sexenal
+        {t('amloEra.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        AMLO promedio 79.4% — cada sexenio supera al anterior
+        {t('amloEra.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        +15.9 pts vs era Fox. El pico de 81.9% es 3.3x el limite OCDE.
+        {t('amloEra.subline')}
       </p>
 
       {/* Stat strip */}
@@ -79,7 +81,7 @@ export function AmloEraComparisonChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="DA peak rate by sexenio, dot matrix, each dot 1pp"
+          aria-label={t('amloEra.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -91,7 +93,7 @@ export function AmloEraComparisonChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            SEXENIO
+            {t('amloEra.sexenioHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -102,7 +104,7 @@ export function AmloEraComparisonChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            PICO % DA
+            {t('amloEra.peakHeader')}
           </text>
 
           {/* OECD line */}
@@ -123,7 +125,7 @@ export function AmloEraComparisonChart() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            OCDE 25%
+            {t('amloEra.oecdLabel')}
           </text>
 
           {/* Rows */}
@@ -195,7 +197,7 @@ export function AmloEraComparisonChart() {
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
+        {t('amloEra.footer')}
       </p>
     </motion.div>
   )

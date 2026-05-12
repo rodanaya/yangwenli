@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { hierarchy, treemap, treemapSquarify, type HierarchyRectangularNode } from 'd3-hierarchy'
-import { SECTOR_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, getRiskLevelFromScore, getSectorName } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { SectorStatistics } from '@/api/types'
 
@@ -126,7 +126,9 @@ function Tooltip({
           className="text-[11px] font-mono font-bold uppercase tracking-[0.15em] mb-2"
           style={{ color }}
         >
-          {s.sector_name || s.sector_code}
+          {/* F088 fix: sector label must localize via getSectorName.
+              s.sector_name was rendering Spanish on EN UI. */}
+          {getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')}
         </p>
         <div className="space-y-1">
           {rows.map((row) => (
@@ -296,8 +298,10 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
           const showLabel = w > 80 && h > 40
           const showChip = w > 55 && h > 30 && isOECDViolator
 
-          // Sector display name: use sector_name from API, fallback to code
-          const displayName = s.sector_name || s.sector_code
+          // Sector display name — must localize via getSectorName so EN
+          // UI doesn't show Spanish (F088). sector_name from API is
+          // canonical Spanish-cased.
+          const displayName = getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')
           const spendLabel = formatCompactMXN(s.total_value_mxn)
           const isAgri = s.sector_code === 'agricultura'
           const sectorColor = SECTOR_COLORS[s.sector_code] ?? '#64748b'

@@ -139,7 +139,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'volatilidad-el-precio-del-riesgo',
     headline: "Price Volatility: The Algorithm's Smoking Gun",
-    sub: 'Strongest predictor in v0.6.5 model · coefficient +0.5343 across 3M contracts',
+    sub: 'Strongest predictor in v0.8.5 model · coefficient +0.5343 across 3M contracts',
     type: 'overpricing',
     status: 'solo_datos',
     amount: 0,
@@ -1423,7 +1423,7 @@ export default function Journalists() {
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              Test AUC <span className="text-text-secondary tabular-nums">0.828</span>
+              Test AUC <span className="text-text-secondary tabular-nums">0.785</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>

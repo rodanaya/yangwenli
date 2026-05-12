@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface MonthRow {
   mes: string
@@ -61,6 +62,7 @@ function getFillOpacity(index: number): number {
 }
 
 export function MonthlySpendingChart() {
+  const { t } = useTranslation('storyCharts')
   const avgDot = Math.round(AVG * DOT_PER_B)
 
   return (
@@ -71,19 +73,19 @@ export function MonthlySpendingChart() {
       className="rounded-sm bg-background-card p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Estacionalidad
+        {t('monthly.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Diciembre concentra $71B — 48% mas que el promedio mensual
+        {t('monthly.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        El "rush" de fin de ano: Oct-Dic acumulan el 30% del gasto anual en solo 3 meses
+        {t('monthly.subline')}
       </p>
 
       {/* Hero stat */}
       <div className="border-l-2 pl-3 py-0.5 mb-4" style={{ borderColor: ALERT_COLOR }}>
-        <p className="text-3xl font-mono font-bold" style={{ color: ALERT_COLOR }}>$71B</p>
-        <p className="text-[10px] text-text-muted uppercase tracking-wide">Gasto Diciembre 2023 — 1.5x el mes promedio</p>
+        <p className="text-xl font-mono font-bold" style={{ color: ALERT_COLOR }}>{t('monthly.heroStat')}</p>
+        <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('monthly.heroLabel')}</p>
       </div>
 
       <div className="rounded-sm border border-border bg-background p-4">
@@ -91,7 +93,7 @@ export function MonthlySpendingChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Monthly federal spending dot matrix, Jan to Dec 2023, each dot 1.6B MXN"
+          aria-label={t('monthly.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -103,7 +105,7 @@ export function MonthlySpendingChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            MES
+            {t('monthly.monthHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -114,7 +116,7 @@ export function MonthlySpendingChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            MXN (B)
+            {t('monthly.valueHeader')}
           </text>
 
           {/* Avg reference marker */}
@@ -135,7 +137,7 @@ export function MonthlySpendingChart() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            Prom. ${AVG}B
+            {`${t('monthly.avgPrefix')} $${AVG}B`}
           </text>
 
           {/* Rows */}
@@ -197,7 +199,7 @@ export function MonthlySpendingChart() {
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.6.5
+        {t('monthly.footer')}
       </p>
     </motion.div>
   )

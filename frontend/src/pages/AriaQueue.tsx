@@ -26,7 +26,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorNameEN, SECTORS, RISK_COLORS } from '@/lib/constants'
+import { getSectorName, SECTORS, RISK_COLORS } from '@/lib/constants'
 import { EditorialDistribution, DotStrip } from '@/components/charts/editorial'
 import {
   Search,
@@ -359,6 +359,8 @@ function FilterChip({
   onClear: () => void
   accent?: string
 }) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es')
   return (
     <span
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[10px] font-mono font-medium"
@@ -372,7 +374,7 @@ function FilterChip({
       <button
         onClick={onClear}
         className="inline-flex items-center justify-center w-3 h-3 rounded-full hover:bg-background-card transition-colors"
-        aria-label="Clear filter"
+        aria-label={isEs ? 'Quitar filtro' : 'Clear filter'}
         type="button"
       >
         <XIcon className="w-2.5 h-2.5" />
@@ -452,11 +454,12 @@ function LollipopScore({ ips, tier }: { ips: number; tier: 1 | 2 | 3 | 4 }) {
   )
 }
 
-const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; title: string }> = {
-  pending:    { char: '○', color: 'var(--color-text-muted)',     title: 'Pending review' },
-  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      title: 'Under review' },
-  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  title: 'Confirmed corrupt' },
-  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     title: 'Dismissed' },
+// 2026-05-08 audit fix: title was monolingual EN — now picks ES on `es` locale.
+const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; titleEn: string; titleEs: string }> = {
+  pending:    { char: '○', color: 'var(--color-text-muted)',     titleEn: 'Pending review',      titleEs: 'Revisión pendiente' },
+  reviewing:  { char: '◐', color: 'var(--color-risk-high)',      titleEn: 'Under review',         titleEs: 'En revisión' },
+  confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  titleEn: 'Confirmed corrupt',    titleEs: 'Corrupción confirmada' },
+  dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     titleEn: 'Dismissed',            titleEs: 'Descartado' },
 }
 
 function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }) {
@@ -525,7 +528,13 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
       >
         {/* ─── LINE 1 ─────────────────────────────────────────────────── */}
 
-        {/* Vendor name — EntityIdentityChip; stopPropagation so row-click → thread still works */}
+        {/* Vendor name — EntityIdentityChip with narrative=true so the chip
+            link target (/thread/:id) matches the row's onClick. Without
+            this the chip routes to /vendors/:id and the user's first
+            instinct (click the name) lands on the vendor profile instead
+            of the Red Thread, contradicting the row's affordance.
+            stopPropagation still prevents double-navigation if the chip
+            and row both fire. */}
         <div className="min-w-0 flex items-center gap-2">
           <div onClick={(e) => e.stopPropagation()} className="min-w-0">
             <EntityIdentityChip
@@ -535,6 +544,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               size="sm"
               riskScore={item.avg_risk_score}
               ariaTier={item.ips_tier}
+              narrative
               hideIcon
             />
           </div>
@@ -570,7 +580,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
             style={{ color: reviewGlyph.color }}
             aria-label={t('reviewPopover.updateTitle')}
-            title={`${reviewGlyph.title} — ${t('reviewPopover.updateTitle')}`}
+            title={`${isEs ? reviewGlyph.titleEs : reviewGlyph.titleEn} — ${t('reviewPopover.updateTitle')}`}
           >
             {reviewGlyph.char}
           </button>
@@ -595,16 +605,20 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {sector && (
             <span className="inline-flex items-center gap-1 max-w-[160px]">
               <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" />
-              <span className="uppercase tracking-[0.06em] truncate" title={getSectorNameEN(sector)}>
-                {getSectorNameEN(sector)}
+              {/* 2026-05-08 audit fix: sector chips were force-EN; now follow lang */}
+              <span className="uppercase tracking-[0.06em] truncate" title={getSectorName(sector, isEs ? 'es' : 'en')}>
+                {getSectorName(sector, isEs ? 'es' : 'en')}
               </span>
             </span>
           )}
 
-          {/* Contract count */}
+          {/* Contract count — pluralized so it never reads "1 contratos" */}
           {contracts > 0 && (
             <span className="tabular-nums">
-              {formatNumber(contracts)} {isEs ? 'contratos' : 'contracts'}
+              {formatNumber(contracts)}{' '}
+              {isEs
+                ? (contracts === 1 ? 'contrato' : 'contratos')
+                : (contracts === 1 ? 'contract' : 'contracts')}
             </span>
           )}
 
@@ -682,7 +696,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               {item.is_sfp_sanctioned && (
                 <span
                   className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-high/10 text-risk-high border border-risk-high/30"
-                  title="Sancionado SFP"
+                  title={isEs ? 'Sancionado por la SFP' : 'Sanctioned by SFP'}
                 >
                   SFP
                 </span>
@@ -865,12 +879,18 @@ function TierEditorialStrip({
                   />
                 </div>
 
-                {/* Count + pct */}
-                <div className="text-right">
+                {/* Count + pct
+                    2026-05-11 (Audit F057): JSX whitespace collapse caused
+                    counts and pcts to read as one number ("3140.1%",
+                    "1,4620.6%"). Wrapped in flex with explicit gap and
+                    a "·" separator so the two figures are never
+                    visually adjacent. */}
+                <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
                   <span className="font-mono tabular-nums text-sm font-bold text-text-primary">
                     {formatNumber(count)}
                   </span>
-                  <span className="font-mono tabular-nums text-[10px] text-text-muted ml-1.5">
+                  <span className="font-mono text-[10px] text-text-muted/60 select-none" aria-hidden>·</span>
+                  <span className="font-mono tabular-nums text-[10px] text-text-muted">
                     {pct}%
                   </span>
                 </div>
@@ -899,14 +919,22 @@ function PatternDotStrip({
 
   const maxCount = entries[0][1]
 
+  // 2026-05-12 (Audit F060/F169/F170): pattern names had three different
+  // vocabularies across /aria, /aria filter row, and /patterns. Backend
+  // canon (backend/scripts/aria_pipeline.py) is the source of truth:
+  //   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
+  //   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
+  //   P7 Conflict of Interest
+  // Aligned to backend canon here so /aria, the aria filter row, and
+  // /patterns now agree.
   const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
     P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: RISK_COLORS.critical },
     P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: RISK_COLORS.high },
     P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: RISK_COLORS.high },
-    P4: { es: 'P4 · Explosión', en: 'P4 · Temporal burst', color: RISK_COLORS.medium },
-    P5: { es: 'P5 · Concentración', en: 'P5 · Concentration', color: RISK_COLORS.medium },
+    P4: { es: 'P4 · Manipulación', en: 'P4 · Bid Rigging', color: RISK_COLORS.medium },
+    P5: { es: 'P5 · Sobreprecio', en: 'P5 · Overpricing', color: RISK_COLORS.medium },
     P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: RISK_COLORS.critical },
-    P7: { es: 'P7 · Intersección', en: 'P7 · Intersection', color: RISK_COLORS.high },
+    P7: { es: 'P7 · Conflicto', en: 'P7 · Conflict of Interest', color: RISK_COLORS.high },
   }
 
   const stripRows = entries.map(([key, count]) => {
@@ -1188,10 +1216,38 @@ export default function AriaPage() {
             stats, plus a methodology popover. No serif headline,
             no kicker, no editorial paragraph competing with the data.
            ════════════════════════════════════════════════════════════════ */}
-        <header className="mb-5 pb-4 border-b border-border">
+        <header className="mb-5 pb-5 border-b border-border">
+          {/* folio-v1-P5: archival eyebrow */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·V</span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {isEs ? 'Cola de investigación · ARIA' : 'Investigation queue · ARIA'}
+            </span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 38px)',
+                  lineHeight: 0.98,
+                  letterSpacing: '-0.012em',
+                }}
+              >
                 {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">

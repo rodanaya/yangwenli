@@ -48,7 +48,7 @@ function getSlides(t: TFunction): Slide[] {
       visual: 'bar-trend',
       visualData: [62.7, 68.4, 73.1, 76.2, 77.8, 78.1, 80.0, 79.1, 81.9],
       visualLabels: ["'10", "'13", "'16", "'18", "'19", "'20", "'21", "'22", "'23"],
-      source: 'COMPRANET 2002-2025 · RUBLI v0.6.5',
+      source: 'COMPRANET 2002-2025 · RUBLI v0.8.5',
     },
     {
       id: 'ghost-companies',
@@ -101,7 +101,7 @@ function getSlides(t: TFunction): Slide[] {
       visual: 'ring',
       visualData: [6.0, 7.5, 26.8, 59.7],
       visualLabels: ['Crítico 6.0%', 'Alto 7.5%', 'Medio 26.8%', 'Bajo 59.7%'],
-      source: 'RUBLI modelo v0.6.5 · 3,051,294 contratos',
+      source: 'RUBLI modelo v0.8.5 · 3,051,294 contratos',
     },
   ]
 }

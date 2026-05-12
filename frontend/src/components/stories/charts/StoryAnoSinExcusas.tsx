@@ -4,24 +4,28 @@
  * Yearly dot strips 2019-2024 showing DA rate. 2023 highlighted deep red.
  * OECD threshold (25%) as a vertical line. A context strip below marks
  * which years had COVID active (gray bg for 2020-2021).
+ *
+ * Bilingual via useTranslation — every visible string flips on i18n.language.
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface YearRow {
   year: number
   daRate: number
   covid: boolean
-  label?: string
+  labelEs?: string
+  labelEn?: string
 }
 
 const DATA: YearRow[] = [
   { year: 2019, daRate: 74.1, covid: false },
-  { year: 2020, daRate: 78.6, covid: true,  label: 'pandemia' },
-  { year: 2021, daRate: 79.2, covid: true,  label: 'pandemia' },
+  { year: 2020, daRate: 78.6, covid: true,  labelEs: 'pandemia',                 labelEn: 'pandemic' },
+  { year: 2021, daRate: 79.2, covid: true,  labelEs: 'pandemia',                 labelEn: 'pandemic' },
   { year: 2022, daRate: 79.8, covid: false },
-  { year: 2023, daRate: 82.2, covid: false, label: 'RÉCORD · sin emergencia' },
-  { year: 2024, daRate: 78.9, covid: false, label: 'transición' },
+  { year: 2023, daRate: 82.2, covid: false, labelEs: 'RÉCORD · sin emergencia',  labelEn: 'RECORD · no emergency' },
+  { year: 2024, daRate: 78.9, covid: false, labelEs: 'transición',               labelEn: 'transition' },
 ]
 
 const OECD_LIMIT = 25
@@ -39,6 +43,9 @@ const W = LABEL_W + STRIP_W + VALUE_W + COVID_W + 20
 const H = 64 + DATA.length * ROW_H + 24
 
 export function StoryAnoSinExcusas() {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language.startsWith('es')
+
   const oecdDotIdx = Math.round(OECD_LIMIT / 2)
   const LEFT_FOR_DOT = (i: number) => LABEL_W + i * DOT_GAP_X + DOT_GAP_X / 2
 
@@ -50,35 +57,39 @@ export function StoryAnoSinExcusas() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Tasa de adjudicación directa · 2019-2024
+        {isEs
+          ? 'RUBLI · Tasa de adjudicación directa · 2019-2024'
+          : 'RUBLI · Direct award rate · 2019-2024'}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa
+        {isEs
+          ? '2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa'
+          : '2023: the record year without a pandemic, without a declared emergency, without operational excuse'}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian
-        marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023
-        batió el récord histórico verificable con ninguna de las dos excusas disponibles.
+        {isEs
+          ? 'Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023 batió el récord histórico verificable con ninguna de las dos excusas disponibles.'
+          : 'Each row is a year. Each dot is 2pp of direct-award rate. The cyan line marks the OECD ceiling (25%). The gray background indicates years with COVID active. 2023 broke the verifiable historical record with neither of the two available excuses.'}
       </p>
 
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical tabular-nums">82.2%</div>
+          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">82.2%</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            adj. directa 2023 · récord verificable
+            {isEs ? 'adj. directa 2023 · récord verificable' : 'direct award 2023 · verifiable record'}
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
+          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            sobre el máximo OCDE de 25%
+            {isEs ? 'sobre el máximo OCDE de 25%' : 'above the 25% OECD ceiling'}
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-high tabular-nums">+3.0pp</div>
+          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">+3.0pp</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            vs. 2022 · sin emergencia que justifique
+            {isEs ? 'vs. 2022 · sin emergencia que justifique' : 'vs. 2022 · no emergency to justify'}
           </div>
         </div>
       </div>
@@ -88,14 +99,16 @@ export function StoryAnoSinExcusas() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[680px]"
           role="img"
-          aria-label="Direct award rate by year 2019-2024 with COVID context"
+          aria-label={isEs
+            ? 'Tasa de adjudicación directa por año 2019-2024 con contexto COVID'
+            : 'Direct award rate by year 2019-2024 with COVID context'}
         >
           {/* Header */}
           <text x={LABEL_W - 8} y={36} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            AÑO
+            {isEs ? 'AÑO' : 'YEAR'}
           </text>
           <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)
+            {isEs ? 'TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)' : 'DIRECT AWARD RATE (0% → 100%)'}
           </text>
 
           {/* OECD line label */}
@@ -119,14 +132,14 @@ export function StoryAnoSinExcusas() {
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
-              OCDE 25%
+              {isEs ? 'OCDE 25%' : 'OECD 25%'}
             </text>
           </g>
           <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             %
           </text>
           <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            CONTEXTO
+            {isEs ? 'CONTEXTO' : 'CONTEXT'}
           </text>
 
           {/* Rows */}
@@ -136,6 +149,7 @@ export function StoryAnoSinExcusas() {
             const isRecord = row.year === 2023
             const filled = Math.round(row.daRate / 2)
             const fillColor = isRecord ? 'var(--color-sector-salud)' : 'var(--color-risk-medium)'
+            const rowLabel = isEs ? row.labelEs : row.labelEn
 
             return (
               <g key={row.year}>
@@ -168,7 +182,7 @@ export function StoryAnoSinExcusas() {
                 >
                   {row.year}
                 </text>
-                {row.label && (
+                {rowLabel && (
                   <text
                     x={LABEL_W - 10}
                     y={cy + 14}
@@ -178,7 +192,7 @@ export function StoryAnoSinExcusas() {
                     fontFamily="var(--font-family-mono)"
                     fontWeight={isRecord ? 700 : 400}
                   >
-                    {row.label}
+                    {rowLabel}
                   </text>
                 )}
 
@@ -237,7 +251,9 @@ export function StoryAnoSinExcusas() {
                     fontWeight={600}
                     letterSpacing="0.05em"
                   >
-                    {row.covid ? 'COVID activo' : 'sin emergencia'}
+                    {isEs
+                      ? (row.covid ? 'COVID activo' : 'sin emergencia')
+                      : (row.covid ? 'COVID active' : 'no emergency')}
                   </text>
                 </g>
               </g>
@@ -253,24 +269,28 @@ export function StoryAnoSinExcusas() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            cada punto = 2pp · fila roja = año récord sin emergencia activa
+            {isEs
+              ? 'cada punto = 2pp · fila roja = año récord sin emergencia activa'
+              : 'each dot = 2pp · red row = record year with no active emergency'}
           </text>
         </svg>
       </div>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {isEs ? 'HALLAZGO' : 'FINDING'}
         </p>
         <p className="text-sm text-text-secondary">
-          Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023,
-          subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en
-          excepción temporal: se volvió hábito administrativo permanente.
+          {isEs
+            ? 'Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023, subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en excepción temporal: se volvió hábito administrativo permanente.'
+            : 'During the pandemic years (2020-2021), the rate rose 5pp. Without a pandemic, in 2023, it climbed another 3pp to the record. The health emergency did not become a temporary exception — it became a permanent administrative habit.'}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023
+        {isEs
+          ? 'Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023'
+          : 'Source: COMPRANET 2019-2024 · Structure B-D · OECD Public Procurement Report 2023'}
       </p>
     </motion.div>
   )

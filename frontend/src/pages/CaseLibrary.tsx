@@ -14,6 +14,7 @@ import type {
 } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
+import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -63,7 +64,19 @@ function formatMXN(n?: number | null): string {
   return formatCompactMXN(n)
 }
 
-function formatMXNHero(n: number): string {
+// 2026-05-08 audit fix: hero formatter must respect Mexican Spanish convention
+// (CLAUDE.md: never `B MXN` in ES; use `MDP` for 10⁹ and `billones` for 10¹²).
+// `lang` is passed in instead of reading i18n at module scope so the call sites
+// stay reactive to language toggles.
+function formatMXNHero(n: number, lang: 'en' | 'es'): string {
+  if (lang === 'es') {
+    if (n >= 1e12) return `${(n / 1e12).toFixed(2)} billones`
+    if (n >= 1e9) {
+      const mdp = Math.round(n / 1e6)
+      return `${new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(mdp)} MDP`
+    }
+    return `${(n / 1e6).toFixed(0)} MDP`
+  }
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
   return `$${(n / 1e6).toFixed(0)}M`
@@ -161,19 +174,54 @@ function CaseRow({
             >
               {t(`fraudTypes.${cas.fraud_type}`)}
             </span>
-            {/* Administration pill */}
-            {cas.administration && (
-              <span
-                className="text-[10px] uppercase tracking-wider px-2 py-0.5"
-                style={{
-                  fontFamily: 'var(--font-family-mono)',
-                  color: '#8a8a86',
-                  border: `1px solid ${BORDER_STRONG}`,
-                }}
-              >
-                {t(`administrations.${cas.administration}`)}
-              </span>
-            )}
+            {/* Administration pill
+                2026-05-11 (Audit F068/F069 + self-review): the DB
+                administration field was off for cases that span an
+                administration boundary (Tren Maya tagged "Peña Nieto"
+                instead of AMLO, NAICM tagged "AMLO" instead of Peña
+                Nieto). Override rule: trust the DB value when the
+                case's start year falls inside the DB admin's term;
+                otherwise derive from start year. This handles the
+                boundary year 2018 correctly — if the DB says AMLO and
+                2018 is within AMLO's [2018..2024] range, we keep AMLO
+                rather than flipping to EPN (which getAdministrationByYear
+                returns first because its range ends at 2018 inclusive). */}
+            {(() => {
+              const startYear = cas.contract_year_start ?? cas.contract_year_end ?? null
+              const dbAdminRecord = cas.administration
+                ? ADMINISTRATIONS.find((a) => a.key === cas.administration)
+                : null
+              const dbAdminFitsYear =
+                dbAdminRecord != null &&
+                startYear != null &&
+                startYear >= dbAdminRecord.yearStart &&
+                startYear <= dbAdminRecord.yearEnd
+              const derivedKey = !dbAdminFitsYear
+                ? getAdministrationByYear(startYear)?.key
+                : null
+              const effectiveAdmin = derivedKey ?? cas.administration
+              if (!effectiveAdmin) return null
+              return (
+                <span
+                  className="text-[10px] uppercase tracking-wider px-2 py-0.5"
+                  style={{
+                    fontFamily: 'var(--font-family-mono)',
+                    color: '#8a8a86',
+                    border: `1px solid ${BORDER_STRONG}`,
+                  }}
+                >
+                  {/* Audit fix 2026-05-07: defensive — if an administration value
+                      has no i18n entry, show the raw value lowercase rather than
+                      echoing the uppercase key. Pluck the last segment so users
+                      never see "ADMINISTRATIONS.FOO". */}
+                  {(() => {
+                    const key = `administrations.${effectiveAdmin}`
+                    const tr = t(key)
+                    return tr === key || tr.includes('.') ? effectiveAdmin : tr
+                  })()}
+                </span>
+              )
+            })()}
             {/* Ground truth indicator */}
             {cas.ground_truth_case_id != null && (
               <span
@@ -384,16 +432,45 @@ export default function CaseLibrary() {
             not a magazine cover; the impact-statement that lived in the
             42px serif headline is now compressed into the dateline so it
             still reads but doesn't crowd the data. */}
-        <header className="mb-3 pb-4 border-b" style={{ borderColor: BORDER_STRONG }}>
+        <header className="mb-3 pb-5 border-b" style={{ borderColor: BORDER_STRONG }}>
+          {/* folio-v1-P5: archival eyebrow */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·CA</span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {i18n.language === 'es' ? 'Casos documentados · biblioteca' : 'Documented cases · library'}
+            </span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 38px)',
+                  lineHeight: 0.98,
+                  letterSpacing: '-0.012em',
+                }}
+              >
                 {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
+                {/* ES: formatMXNHero already returns "X MDP" / "X billones" — don't double-tag with MXN */}
                 {i18n.language === 'es'
-                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss)} MXN documentados</>
-                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss)} MXN documented</>
+                  ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss, 'es')} documentados</>
+                  : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss, 'en')} MXN documented</>
                 }
               </p>
             </div>
@@ -408,7 +485,7 @@ export default function CaseLibrary() {
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#a06820' }}>
-                  {totalLoss > 0 ? formatMXNHero(totalLoss) : '—'}
+                  {totalLoss > 0 ? formatMXNHero(totalLoss, i18n.language === 'es' ? 'es' : 'en') : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
                   {i18n.language === 'es' ? 'Pérdidas MXN' : 'Losses MXN'}
@@ -450,7 +527,7 @@ export default function CaseLibrary() {
             These cases were documented by Mexican investigative
             journalism, federal audits, and court records — not by
             RUBLI. The platform aggregates them as the training
-            corpus for the v0.6.5 risk model. Putting that on the
+            corpus for the v0.8.5 risk model. Putting that on the
             tin avoids the misimpression that "Cases" = our work. */}
         <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
           <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">
@@ -487,7 +564,7 @@ export default function CaseLibrary() {
                   type="button"
                   onClick={() => setSearch(null)}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
-                  aria-label="Clear search"
+                  aria-label={i18n.language === 'es' ? 'Limpiar búsqueda' : 'Clear search'}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

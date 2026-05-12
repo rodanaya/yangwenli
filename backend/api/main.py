@@ -150,8 +150,32 @@ def _warmup_caches():
         # Categories capture-dumbbell — top categories by spend; the
         # /sectors?view=categories dumbbell fans 12 of these in parallel
         # and the slow ones (Medicamentos, Alimentos) timeout uncached.
-        # Pre-warm the top 15 categories observed in production.
-        *[f"/api/v1/categories/{i}/top-vendors?limit=2" for i in [26, 20, 57, 91, 88, 8, 30, 22, 73, 60, 5, 71, 63, 55, 24]],
+        # Set built from 30h harness network log: every category id the
+        # frontend actually requested in production. Adding 21, 27, 28,
+        # 47, 77, 86, 90 (previously missed and 502-flooding the worker).
+        *[f"/api/v1/categories/{i}/top-vendors?limit=2" for i in [
+            5, 8, 20, 21, 22, 24, 26, 27, 28, 30, 47, 55, 57, 60, 63, 71,
+            73, 77, 86, 88, 90, 91,
+        ]],
+        # Vendor profile heavy endpoints for the top T1 vendors visited
+        # constantly via /thread/:id and /vendors/:id. 29277 (Grupo
+        # Farmacos) and 4325 (Vitalmex) are linked from the homepage hero
+        # AND the curated story tour, so a cold profile breaks the
+        # primary user journey. risk-waterfall + risk-timeline + linked-
+        # scandals are the slowest queries on the page.
+        *[
+            f"/api/v1/vendors/{vid}/{ep}"
+            for vid in [29277, 4325]
+            for ep in [
+                "risk-waterfall",
+                "risk-timeline",
+                "linked-scandals",
+                "peer-comparison",
+                "footprint",
+                "risk-profile",
+                "institutions?per_page=50",
+            ]
+        ],
         # Sector sub-pages — now use precomputed fast paths so safe to warm
         *[f"/api/v1/sectors/{i}/trends" for i in range(1, 13)],
         *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
@@ -168,6 +192,8 @@ def _warmup_caches():
                 timeout = 200  # 169s cold per audit
             elif "/top-vendors" in ep:
                 timeout = 60  # biggest categories take ~30s cold
+            elif "/vendors/" in ep and ("waterfall" in ep or "timeline" in ep or "linked-scandals" in ep):
+                timeout = 45  # heavy SHAP / case-link queries
             elif "executive" in ep or "price-anomalies" in ep:
                 timeout = 120
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:

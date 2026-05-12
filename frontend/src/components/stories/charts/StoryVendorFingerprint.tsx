@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
 import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 
@@ -22,6 +23,7 @@ const HEMOSER_SHAP = {
 }
 
 export function StoryVendorFingerprint() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -32,34 +34,32 @@ export function StoryVendorFingerprint() {
       {/* Section overline with risk pill */}
       <div className="flex items-center gap-3">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-          RUBLI · Vendor Forensics
+          {t('vendorFingerprint.kicker')}
         </p>
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
                         bg-risk-critical/10 border border-red-500/20 text-xs text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          Critical risk
+          {t('vendorFingerprint.criticalPill')}
         </div>
       </div>
 
       {/* Editorial headline */}
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        12 contracts in one day: inside HEMOSER&apos;s risk fingerprint
+        {t('vendorFingerprint.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        On August 2, 2023, ISSSTE awarded HEMOSER 12 separate cardiac supply contracts
-        — a textbook &ldquo;threshold splitting&rdquo; pattern designed to keep each contract
-        below the competitive bidding threshold. The SHAP model assigns HEMOSER a risk score
-        of <span className="text-risk-critical font-mono font-bold">0.94</span> — in the top 2% of
-        all 200K+ active vendors.
+        {t('vendorFingerprint.ledePrefix')}{' '}
+        <span className="text-risk-critical font-mono font-bold">0.94</span>{' '}
+        {t('vendorFingerprint.ledeSuffix')}
       </p>
 
       {/* SHAP factor callouts */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: 'Same-day', value: '+1.24', color: 'text-risk-critical', note: 'strongest signal' },
-          { label: 'Concentration', value: '+0.88', color: 'text-risk-critical', note: 'market share' },
-          { label: 'Price volatility', value: '+0.62', color: 'text-orange-400', note: 'contract sizes vary' },
-          { label: 'Inst. diversity', value: '-0.14', color: 'text-teal-400', note: 'protective factor' },
+          { label: t('vendorFingerprint.factor1Label'), value: '+1.24', color: 'text-risk-critical', note: t('vendorFingerprint.factor1Note') },
+          { label: t('vendorFingerprint.factor2Label'), value: '+0.88', color: 'text-risk-critical', note: t('vendorFingerprint.factor2Note') },
+          { label: t('vendorFingerprint.factor3Label'), value: '+0.62', color: 'text-orange-400', note: t('vendorFingerprint.factor3Note') },
+          { label: t('vendorFingerprint.factor4Label'), value: '-0.14', color: 'text-teal-400', note: t('vendorFingerprint.factor4Note') },
         ].map((f) => (
           <div key={f.label} className="rounded-lg border border-border bg-background-card p-2.5 text-center">
             <div className={`text-lg font-mono font-bold ${f.color}`}>{f.value}</div>
@@ -84,28 +84,26 @@ export function StoryVendorFingerprint() {
       {/* Reading guide */}
       <div className="rounded-sm border border-border bg-background-card p-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
-          HOW TO READ THIS CHART
+          {t('vendorFingerprint.readGuideLabel')}
         </p>
         <p className="text-xs text-text-secondary leading-relaxed">
-          Each petal represents one of the 9 active risk model features.
-          <strong className="text-risk-critical"> Red petals</strong> are risk-increasing factors;
-          <strong className="text-teal-400"> teal petals</strong> are protective.
-          Petal size is proportional to the SHAP contribution — larger petals drive
-          the risk score higher. The center badge shows the overall score.
+          {t('vendorFingerprint.readGuidePrefix')}
+          <strong className="text-risk-critical">{t('vendorFingerprint.readGuideRedLabel')}</strong>{t('vendorFingerprint.readGuideRedSuffix')}
+          <strong className="text-teal-400">{t('vendorFingerprint.readGuideTealLabel')}</strong>{t('vendorFingerprint.readGuideTealSuffix')}
         </p>
       </div>
 
       {/* Investigation hook */}
       <div className="flex items-center justify-between">
         <p className="text-[10px] text-text-muted">
-          Source: RUBLI v6.5 SHAP explanations · vendor_shap_v52 table
+          {t('vendorFingerprint.footer')}
         </p>
         <a
           href="/aria"
           className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
         >
           <ExternalLink className="h-3 w-3" />
-          View ARIA investigation queue
+          {t('vendorFingerprint.ariaLink')}
         </a>
       </div>
     </motion.div>

@@ -7,6 +7,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Month {
   m: string
@@ -48,6 +49,7 @@ const DOT_R = 3.2
 const DOT_SPACING_Y = 7
 
 export function StoryAvalanchaDiciembre() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -56,30 +58,28 @@ export function StoryAvalanchaDiciembre() {
       className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Avalancha de Diciembre
+        {t('avalanchaDiciembre.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        51.4 mil millones en 31 días — el mes donde el presupuesto huye del calendario
+        {t('avalanchaDiciembre.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Gasto federal por mes en 2014 · cada punto representa mil millones de pesos.
-        Diciembre triplicó el promedio mensual porque la Ley de Presupuesto obliga
-        a devolver lo no ejercido al Tesoro antes del 31.
+        {t('avalanchaDiciembre.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">$51.4B</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">DIC 2014 · pico histórico</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{t('avalanchaDiciembre.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('avalanchaDiciembre.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">7,215</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos en 31 días</div>
+          <div className="text-xl font-mono font-bold text-orange-400">{t('avalanchaDiciembre.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('avalanchaDiciembre.stat2Label')}</div>
         </div>
         <div className="border-l-2 border-border pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-text-secondary">233/día</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">incluye sábados y domingos</div>
+          <div className="text-xl font-mono font-bold text-text-secondary">{t('avalanchaDiciembre.stat3Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('avalanchaDiciembre.stat3Label')}</div>
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function StoryAvalanchaDiciembre() {
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Monthly federal spending 2014: January through November baseline, December explodes to 51.4B MXN"
+        aria-label={t('avalanchaDiciembre.ariaLabel')}
       >
         {/* Y axis gridlines */}
         {[0, 10, 20, 30, 40, 50].map((v) => {
@@ -138,7 +138,7 @@ export function StoryAvalanchaDiciembre() {
           fontFamily="var(--font-family-mono)"
           fontWeight={600}
         >
-          PROM ${AVG}B
+          {`${t('avalanchaDiciembre.averagePrefix')} $${AVG}B`}
         </text>
 
         {/* Month columns */}
@@ -221,24 +221,22 @@ export function StoryAvalanchaDiciembre() {
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
           >
-            2.3× el promedio anual
+            {t('avalanchaDiciembre.annotation')}
           </motion.text>
         </g>
       </svg>
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('avalanchaDiciembre.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Diciembre concentra entre 2.5 y 4× el gasto mensual promedio en los últimos
-          23 años — patrón bipartidista. La urgencia es contable, no operativa:
-          entregas se programan para febrero o marzo del año siguiente.
+          {t('avalanchaDiciembre.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2014 · 7,215 contratos · Ley Federal de Presupuesto y Responsabilidad Hacendaria
+        {t('avalanchaDiciembre.footer')}
       </p>
     </motion.div>
   )

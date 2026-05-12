@@ -42,14 +42,14 @@ export const RISK_DOT_STYLE: Record<RiskLevel, { r: number; fill: string; alpha:
   low:      { r: 0.6,  fill: RISK_PALETTE.low,     alpha: 0.42 },
 }
 
-// ── v0.6.5 model constants ─────────────────────────────────────────────────
+// ── v0.8.5 model constants ─────────────────────────────────────────────────
 export const RISK_THRESHOLDS = {
   critical: 0.60,
   high: 0.40,
   medium: 0.25,
 } as const
 
-// v0.6.5 deployed distribution (HR=13.49%)
+// v0.8.5 deployed distribution (HR=13.49%)
 export const RISK_DISTRIBUTION_065 = {
   critical: 0.0601,
   high: 0.0748,

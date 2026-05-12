@@ -13,8 +13,11 @@
   "otros": "Otros",
   "page": {
     "title": "12 Sectores de la Contratación Federal Mexicana",
+    "titleCategories": "Qué Compra México — por Categoría",
     "subtitle": "{{totalValue}} en {{years}} años de datos COMPRANET",
+    "subtitleCategories": "{{totalValue}} canalizados por 72 categorías de adquisición",
     "subtitleFallback": "~9.9 billones MXN en 23 años de datos COMPRANET",
+    "subtitleCategoriesFallback": "72 categorías de adquisición que cubren el 99.7% del gasto federal",
     "rankedBy": "Ordenados por puntuación de riesgo promedio — haz clic para inspeccionar",
     "sortBy": "Ordenar por",
     "sortValue": "Gasto Total",

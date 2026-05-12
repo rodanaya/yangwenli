@@ -46,7 +46,7 @@ function isVendorReport(
   return type === 'vendor'
 }
 
-/** Risk level color from score (v0.6.5 thresholds) */
+/** Risk level color from score (active model thresholds — see RISK_THRESHOLDS) */
 function riskColor(score: number): string {
   if (score >= 0.60) return RISK_COLORS.critical
   if (score >= 0.40) return RISK_COLORS.high
@@ -72,15 +72,21 @@ function openVendorPrintWindow(
     riskLevel: string
   }
 ): void {
-  const riskScore = report.risk_score
+  // Backend can ship partial reports — risk_score / contract_count / generated_at
+  // may be NaN, null, or missing. Default to 0 / now() so toLocaleString never
+  // throws (root cause of the harness ErrorBoundary spike on May 9).
+  const riskScore = Number.isFinite(report.risk_score) ? report.risk_score : 0
+  const contractCount = Number.isFinite(report.contract_count) ? report.contract_count : 0
   const riskPct = Math.round(riskScore * 100)
   const color = riskColor(riskScore)
-  const generatedAt = new Date(report.generated_at).toLocaleString(getLocale())
+  const generatedDate = report.generated_at ? new Date(report.generated_at) : new Date()
+  const generatedAt = (Number.isNaN(generatedDate.getTime()) ? new Date() : generatedDate)
+    .toLocaleString(getLocale())
 
   // Simple 5-bar SVG chart: risk score as bar width (0-100)
   const bars: Array<{ label: string; value: number; max: number; color: string }> = [
     { label: labels.riskScore, value: riskPct, max: 100, color: color },
-    { label: labels.contracts, value: Math.min(report.contract_count, 10000), max: 10000, color: '#3b82f6' },
+    { label: labels.contracts, value: Math.min(contractCount, 10000), max: 10000, color: '#3b82f6' },
   ]
 
   const barSvg = bars
@@ -134,7 +140,7 @@ function openVendorPrintWindow(
     </div>
     <div class="kpi-card">
       <div class="kpi-label">${labels.contracts}</div>
-      <div class="kpi-value">${report.contract_count.toLocaleString(getLocale())}</div>
+      <div class="kpi-value">${contractCount.toLocaleString(getLocale())}</div>
     </div>
   </div>
 
@@ -259,7 +265,13 @@ export function ReportModal({
               <div className="border-b border-border pb-3">
                 <h2 className="text-lg font-semibold text-text-primary">{entityName}</h2>
                 <p className="text-xs text-text-muted">
-                  {t('report.generatedAt', { date: new Date(data.generated_at).toLocaleString(getLocale()) })}
+                  {t('report.generatedAt', {
+                    date: (() => {
+                      // Tolerate missing/invalid generated_at — fall back to "now".
+                      const d = data.generated_at ? new Date(data.generated_at) : new Date()
+                      return (Number.isNaN(d.getTime()) ? new Date() : d).toLocaleString(getLocale())
+                    })(),
+                  })}
                 </p>
               </div>
 
@@ -278,7 +290,7 @@ export function ReportModal({
                   <div className="rounded-md border border-border p-3">
                     <p className="text-[11px] text-text-muted uppercase">{t('report.contracts')}</p>
                     <p className="text-lg font-semibold text-text-primary">
-                      {(data as VendorReport).contract_count.toLocaleString(getLocale())}
+                      {(((data as VendorReport).contract_count) ?? 0).toLocaleString(getLocale())}
                     </p>
                   </div>
                 </div>

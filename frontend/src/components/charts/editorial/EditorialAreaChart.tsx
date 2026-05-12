@@ -36,7 +36,7 @@ export function EditorialAreaChart<T extends object>({
   const gradId = `grad-${colorToken}-${String(yKey)}`
 
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer width="100%" minWidth={0} height={height}>
       <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">

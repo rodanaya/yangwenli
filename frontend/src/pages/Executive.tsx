@@ -26,6 +26,7 @@ import type { ContractListItem, ContractListResponse, RiskDistribution } from '@
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   ConcentrationConstellation,
@@ -763,7 +764,7 @@ interface CategoryCell {
   avg_risk: number
 }
 
-// Curated fallback — illustrative figures that round to the v0.6.5 distribution.
+// Curated fallback — illustrative figures that round to the v0.8.5 distribution.
 // Used only when category_stats is unavailable (the table doesn't exist on
 // every environment yet — precompute job ships separately).
 const FALLBACK_CATEGORIES: CategoryCell[] = [
@@ -1192,6 +1193,17 @@ export default function Executive() {
     retry: 0,
   })
 
+  // Fix B (audit 2026-05-07) — live GT case count for the homepage hero.
+  // Was hardcoded as "1,363" in two places below. The ground-truth corpus
+  // grows over time; this ensures the headline number drifts with the data.
+  const { data: executiveSummary } = useQuery({
+    queryKey: ['executive', 'summary-gt'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1401
+
   // § 2 La Lente — GT case corpus growth signal
   const { data: caseStats } = useQuery({
     queryKey: ['executive', 'case-stats-v3'],
@@ -1232,7 +1244,7 @@ export default function Executive() {
   const handlePrint = () => window.print()
 
   // § 1 The Atlas — risk distribution rows for the constellation field
-  // Falls back to the v0.6.5 calibrated proportions if the live API is empty
+  // Falls back to the v0.8.5 calibrated proportions if the live API is empty
   const atlasRows: ConstellationRiskRow[] = useMemo(() => {
     const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
       ? (dashboard!.risk_distribution as RiskDistribution[])
@@ -1244,7 +1256,7 @@ export default function Executive() {
         pct: r.percentage,
       }))
     }
-    // v0.6.5 calibrated fallback (Mar 25 2026)
+    // v0.8.5 calibrated fallback (Mar 25 2026)
     return [
       { level: 'critical', count: 184_031, pct: 6.01 },
       { level: 'high',     count: 228_814, pct: 7.48 },
@@ -1296,17 +1308,48 @@ export default function Executive() {
         }
       `}</style>
 
-      <div className="executive-page max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* ─── Header / Dateline ─── */}
+      <div className="executive-page max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+        {/* ─── E0 folio-v1-P1b: page-scoped paper-grain overlay ───────────────
+            SVG fractalNoise at opacity 0.045, multiply blend, ochre tint.
+            Pointer-events:none so it never blocks interaction. Content sits
+            above via z-index. */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 print-hide"
+          style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+        >
+          <filter id="executive-paper-grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" stitchTiles="stitch" />
+            <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#executive-paper-grain)" />
+        </svg>
+        <div className="relative" style={{ zIndex: 1 }}>
+        {/* ─── E1 folio-v1-P1b: Header / Dateline (folio aesthetic) ─── */}
         <motion.header
-          className="mb-5"
+          className="mb-7"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-start justify-between mb-4 print-hide">
-            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
-              {lang === 'en' ? 'RUBLI · EXECUTIVE BRIEFING' : 'RUBLI · REPORTE EJECUTIVO'}
+            {/* Eyebrow — IBM Plex Mono italic 0.18em archival index pattern */}
+            <div
+              className="flex items-center gap-3"
+              style={{
+                fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+                fontSize: '10px',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                fontWeight: 400,
+              }}
+            >
+              <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·I</span>
+              <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+              <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+                {lang === 'en' ? 'RUBLI executive briefing' : 'RUBLI reporte ejecutivo'}
+              </span>
             </div>
             <button
               onClick={handlePrint}
@@ -1318,7 +1361,7 @@ export default function Executive() {
             </button>
           </div>
 
-          <div className="text-[11px] font-mono text-text-muted mb-3">
+          <div className="text-[11px] font-mono text-text-muted mb-4">
             {new Date().toLocaleDateString(lang === 'en' ? 'en-US' : 'es-MX', {
               year: 'numeric', month: 'long', day: 'numeric',
             })}
@@ -1326,43 +1369,81 @@ export default function Executive() {
             {lang === 'en' ? 'Mexico Federal Procurement Analysis' : 'Análisis de Contratación Federal México'}
           </div>
 
+          {/* Headline — EB Garamond italic 500, ochre/red normal-weight accents */}
           <h1
-            className="font-serif font-extrabold text-[40px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            className="text-[36px] sm:text-[52px] md:text-[64px] leading-[0.98] text-text-primary mb-4 text-balance"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              letterSpacing: '-0.012em',
+            }}
           >
-            {lang === 'en'
-              ? <>Twenty-three years. <span style={{ color: '#a06820' }}>MX$9.9 trillion</span> in federal contracts. <span style={{ color: '#dc2626' }}>Three out of four</span>{' '}awarded without competition.</>
-              : <>Veintitrés años. <span style={{ color: '#a06820' }}>MX$9.9 billones</span> en contratos federales. <span style={{ color: '#dc2626' }}>Tres de cada cuatro</span>{' '}sin licitación.</>
-            }
+            {lang === 'en' ? (
+              <>
+                Twenty-three years.{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 trillion</span>
+                {' '}in federal contracts.{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Three out of four</span>
+                {' '}awarded without competition.
+              </>
+            ) : (
+              <>
+                Veintitrés años.{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 billones</span>
+                {' '}en contratos federales.{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Tres de cada cuatro</span>
+                {' '}sin licitación.
+              </>
+            )}
           </h1>
 
-          {/* Dateline — publisher + data provenance. Cold-reader reviewer
-              (AP/Reuters persona) flagged the lack of byline as the #1 blocker
-              to trusting the hero claim. */}
-          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5">
+          {/* Dateline — publisher + data provenance, archival mono italic */}
+          <p
+            className="mb-6"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+              fontStyle: 'italic',
+            }}
+          >
             {lang === 'en'
-              ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026 · MODEL v0.8.5'
-              : 'POR RUBLI · DATOS: COMPRANET 2002–2025 · ACTUALIZADO ABR 2026 · MODELO v0.8.5'}
+              ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Updated Apr 2026 · Model v0.8.5'
+              : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Actualizado abr 2026 · Modelo v0.8.5'}
           </p>
 
-          <p className="text-base leading-[1.7] text-text-secondary text-pretty">
+          {/* Lede — EB Garamond regular 17px / 1.55, max-width 68ch */}
+          <p
+            className="max-w-[68ch] text-pretty"
+            style={{
+              fontFamily: '"EB Garamond", Georgia, serif',
+              fontSize: '17px',
+              lineHeight: 1.55,
+              color: 'var(--color-text-secondary, var(--color-text-muted))',
+              letterSpacing: '0.005em',
+            }}
+          >
             {lang === 'en'
               ? <>
                   Every administration since 2001 has bypassed competitive procurement at
-                  {' '}<strong className="text-text-primary">two to three times the OECD recommended ceiling</strong>.
+                  {' '}<em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>two to three times the OECD recommended ceiling</em>.
                   This is not an aberration — it is the structural condition of Mexican federal spending.
-                  RUBLI analyzed <strong className="text-text-primary">{formatNumber(stats.totalContracts)} contracts</strong> across 23 years,
-                  trained its risk model on <strong className="text-text-primary">1,363 documented corruption cases</strong> — Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement, and more —
-                  and now flags <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contracts</strong> matching those patterns.
+                  RUBLI analyzed <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contracts</em> across 23 years,
+                  trained its risk model on <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{gtCaseCount.toLocaleString('en-US')} documented corruption cases</em> — Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement, and more —
+                  and now flags <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.highCriticalCount)} contracts</em> matching those patterns.
                   {' '}These are investigation signals, not verdicts.
                 </>
               : <>
                   Cada administración desde 2001 ha evitado la licitación competitiva a
-                  {' '}<strong className="text-text-primary">dos o tres veces el límite recomendado por la OCDE</strong>.
+                  {' '}<em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>dos o tres veces el límite recomendado por la OCDE</em>.
                   No es una anomalía — es la condición estructural del gasto federal mexicano.
-                  RUBLI analizó <strong className="text-text-primary">{formatNumber(stats.totalContracts)} contratos</strong> en 23 años,
-                  entrenó su modelo de riesgo en <strong className="text-text-primary">1,363 casos documentados</strong> — Segalmex, Odebrecht, Fantasmas IMSS, emergencia COVID y más —
-                  y ahora señala <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contratos</strong> con esas huellas.
+                  RUBLI analizó <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.totalContracts)} contratos</em> en 23 años,
+                  entrenó su modelo de riesgo en <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{gtCaseCount.toLocaleString('es-MX')} casos documentados</em> — Segalmex, Odebrecht, Fantasmas IMSS, emergencia COVID y más —
+                  y ahora señala <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>{formatNumber(stats.highCriticalCount)} contratos</em> con esas huellas.
                   {' '}Son señales de investigación, no veredictos.
                 </>
             }
@@ -1425,14 +1506,21 @@ export default function Executive() {
               : 'Cada punto representa aproximadamente 2,500 contratos federales. Los contratos de riesgo crítico se agrupan en torno a su patrón, sector o sexenio dominante — alterna el modo para reorganizar la misma población bajo otra lente. Haz clic en cualquier cúmulo para investigar.'}
           </p>
 
-          <div className="surface-card rounded-sm p-4 md:p-5">
+          <PlateFrame
+            lang={lang}
+            folio="II"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Each mark stands for ~2,500 federal contracts, organised by pattern, sector, category, or term.'
+              : 'Lámina — Cada marca representa ~2,500 contratos federales agrupados por patrón, sector, categoría o sexenio.'}
+          >
             <ConcentrationConstellation
               rows={atlasRows}
               totalContracts={stats.totalContracts}
               mode={atlasMode}
               onClusterClick={handleAtlasClusterClick}
             />
-          </div>
+          </PlateFrame>
           {/* Footer link into the full /atlas surface — preserves the
               current lens by passing it through as ?lens=<atlasMode>. */}
           <div className="mt-3 flex items-center justify-end">
@@ -1462,9 +1550,16 @@ export default function Executive() {
               ? 'Direct award rate — share of contracts awarded without competitive bidding — has remained 2–3× the OECD ceiling under every Mexican administration since 2001. The AI model trained on this systemic pattern now detects its variants automatically.'
               : 'La tasa de adjudicación directa — contratos sin licitación — ha permanecido 2–3× por encima del umbral OCDE en cada administración mexicana desde 2001. El modelo entrenado en este patrón sistémico lo detecta automáticamente.'}
           </p>
-          <div className="surface-card rounded-sm p-4 md:p-6">
+          <PlateFrame
+            lang={lang}
+            folio="III"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Direct-award rate stays 2–3× above the OECD ceiling across five administrations.'
+              : 'Lámina — La tasa de adjudicación directa permanece 2–3× sobre el techo OCDE en cinco administraciones.'}
+          >
             <MacroArc lang={lang} />
-          </div>
+          </PlateFrame>
         </motion.section>
 
         {/* ─── LEAD-TIME ADVANTAGE — Hero #3 (promoted by d-P4 2026-05-04) ─── */}
@@ -1478,13 +1573,17 @@ export default function Executive() {
               : <>Para cada caso documentado, la distancia entre cuándo los contratos cruzaron el <strong className="text-text-primary">umbral de riesgo crítico</strong> en los datos, y cuándo el escándalo se hizo público. Cuanto mayor la brecha, más tiempo la plataforma habría podido señalarlo.</>
             }
           </p>
-          <div className="surface-card rounded-sm p-5">
+          <PlateFrame
+            lang={lang}
+            folio="IV"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Time between the data first crossing the critical-risk threshold and the scandal becoming public.'
+              : 'Lámina — Tiempo entre el primer cruce del umbral crítico en los datos y la cobertura pública del escándalo.'}
+          >
             <LeadTimeChart lang={lang} />
-          </div>
+          </PlateFrame>
         </section>
-
-        {/* ─── Amber divider ─── */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
 
         {/* DashboardSledgehammer DELETED 2026-05-05 per user critique:
             "delete it. We already have that same figure below." The MacroArc
@@ -1492,11 +1591,17 @@ export default function Executive() {
             duplicated giant Playfair number was redundant. */}
 
         {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
-            micro-visualization. Replaces the bland mono-stat tile grid. ─── */}
+            micro-visualization. Replaces the bland mono-stat tile grid.
+            E5: PlateFrame replaces the standalone eyebrow + amber divider. ─── */}
         <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? 'Headline Numbers' : 'Cifras Clave'}
-          </div>
+          <PlateFrame
+            lang={lang}
+            folio="V"
+            contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
+            caption={lang === 'en'
+              ? 'Plate — Four anchor figures from the 2002–2025 record: total spend, direct awards, high+critical share, model accuracy.'
+              : 'Lámina — Cuatro cifras ancla del registro 2002–2025: gasto total, adjudicación directa, alto+crítico, precisión del modelo.'}
+          >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
             {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
@@ -1666,7 +1771,11 @@ export default function Executive() {
                   color: 'var(--color-text-primary)',
                 }}
               >
-                0.828
+                {/* 2026-05-12 (Audit V009): caption read v0.8.5 but the
+                    number was the v0.6.5 test AUC. Updated to the
+                    v0.8.5 trained-2026-05-02 value (0.785). The scale
+                    width math also rebased: (0.785 − 0.5)/0.5 = 57%. */}
+                0.785
               </div>
               <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
                 {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
@@ -1674,26 +1783,26 @@ export default function Executive() {
               <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                 {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
               </div>
-              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.828 */}
+              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.785 */}
               <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                {/* Filled portion from 0.5 to 0.828 — that's 65.6% of the scale */}
+                {/* Filled portion from 0.5 to 0.785 — that's 57% of the scale */}
                 <div
                   className="absolute inset-y-0 rounded-sm"
                   style={{
                     left: '0%',
-                    width: '65.6%',
+                    width: '57%',
                     background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
                     opacity: 0.65,
                   }}
                 />
-                {/* Tick marker at exactly 0.828 (=65.6%) */}
+                {/* Tick marker at exactly 0.785 (=57%) */}
                 <div
                   className="absolute top-0 bottom-0 w-[2px]"
-                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
                 />
                 <div
                   className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
-                  style={{ left: '65.6%', background: 'var(--color-text-primary)' }}
+                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
                 />
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
@@ -1704,6 +1813,7 @@ export default function Executive() {
             </motion.div>
 
           </div>
+          </PlateFrame>
         </section>
 
         {/* ─── KEY FINDINGS — specific discoveries with animated visualizations ─── */}
@@ -2242,9 +2352,16 @@ export default function Executive() {
               ? 'Risk scores count contracts. This counts pesos. For each ARIA pattern we estimate the financial exposure using pattern-specific overpayment models — direct overcharges (P5), full ghost-network volume (P2), capture premiums, monopoly discounts lost. Estimates are illustrative; methodology in the footnote.'
               : 'Los puntajes cuentan contratos. Esto cuenta pesos. Para cada patrón ARIA estimamos la exposición financiera usando modelos específicos de sobrepago — sobrecargos directos (P5), volumen completo de redes fantasma (P2), premios de captura, descuentos monopólicos perdidos. Las estimaciones son ilustrativas; metodología en la nota.'}
           </p>
-          <div className="surface-card rounded-sm p-5">
+          <PlateFrame
+            lang={lang}
+            folio="VI"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Estimated financial exposure by ARIA pattern, computed with pattern-specific overpayment models.'
+              : 'Lámina — Exposición financiera estimada por patrón ARIA, calculada con modelos de sobrepago específicos.'}
+          >
             <PesosAtRiskChart lang={lang} />
-          </div>
+          </PlateFrame>
         </section>
 
         {/* SPENDING CATEGORIES — restored 2026-05-05 from d-P1 cut.
@@ -2268,9 +2385,16 @@ export default function Executive() {
               ? 'Cell width = total spend; cell color = sector palette tinted by risk score. The top 8 categories cover the majority of federal spend.'
               : 'Ancho de celda = gasto total; color de celda = paleta sectorial teñida por puntaje de riesgo. Las 8 categorías principales cubren la mayoría del gasto federal.'}
           </p>
-          <div className="surface-card rounded-sm p-5">
+          <PlateFrame
+            lang={lang}
+            folio="VII"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Top 8 federal spending categories, cell width proportional to spend, hue tinted by risk.'
+              : 'Lámina — Las 8 categorías principales del gasto federal, con ancho proporcional al monto y matiz por riesgo.'}
+          >
             <TopCategoriesChart lang={lang} />
-          </div>
+          </PlateFrame>
         </section>
 
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
@@ -2284,7 +2408,14 @@ export default function Executive() {
               : 'Cada anillo es una capa de enfoque. La plataforma lee cada registro de COMPRANET, luego filtra por riesgo, después por patrón ARIA, y finalmente por coincidencia con casos documentados — hasta que solo queda un conjunto pequeño que puede investigarse a mano.'}
           </p>
 
-          <div className="surface-card p-6 rounded-sm">
+          <PlateFrame
+            lang={lang}
+            folio="VIII"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — From 3.1M COMPRANET records to 320 priority vendors; five filtering layers applied before human inspection.'
+              : 'Lámina — De 3.1M registros COMPRANET a 320 proveedores prioritarios; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
+          >
             {(() => {
               const lensTiers = buildLensTiers(
                 ariaStats?.latest_run?.tier1_count ?? 320,
@@ -2375,7 +2506,7 @@ export default function Executive() {
                 </>
               )}
             </div>
-          </div>
+          </PlateFrame>
         </section>
 
         {/* ─── § 5 HISTORIAS EJEMPLARES — try-it dossiers ─── */}
@@ -2458,9 +2589,16 @@ export default function Executive() {
               ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
               : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
           </p>
-          <div className="surface-card rounded-sm p-6">
+          <PlateFrame
+            lang={lang}
+            folio="IX"
+            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
+            caption={lang === 'en'
+              ? 'Plate — Ten landmark cases, 2008–2025; height = critical risk, hue = sector.'
+              : 'Lámina — Diez casos emblemáticos 2008–2025; alto = riesgo crítico, color = sector.'}
+          >
             <CaseTimeline lang={lang} />
-          </div>
+          </PlateFrame>
         </section>
 
         {/* ─── Recommendations by Audience ─── */}
@@ -2616,7 +2754,7 @@ export default function Executive() {
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono text-text-muted mb-4">
             <span className="inline-flex items-center gap-1.5">
               <Shield className="h-3 w-3" />
-              AUC 0.828
+              AUC 0.785
             </span>
             <span>·</span>
             <span>{formatNumber(stats.totalContracts)} {lang === 'en' ? 'contracts' : 'contratos'}</span>
@@ -2633,6 +2771,7 @@ export default function Executive() {
               : 'Las puntuaciones de riesgo son indicadores estadísticos de similitud con patrones de corrupción documentados. Una puntuación alta no constituye prueba de irregularidad. Todos los datos provienen de COMPRANET 2002–2025 — registros públicos, sin requerir FOIA.'}
           </p>
         </footer>
+        </div>{/* /folio-v1-P1b: end paper-grain content wrapper */}
       </div>
     </>
   )

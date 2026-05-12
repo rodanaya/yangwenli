@@ -498,3 +498,165 @@ def _query_terms(conn: sqlite3.Connection, code: str) -> ClusterVendorsResponse:
             "and requires a dedicated ETL step to produce vendor-term rollups."
         ),
     )
+
+
+# ============================================================================
+# Spatial nav — Z1 (sector → institutions sub-constellation)
+#
+# 2026-05-09 (docs/SPATIAL_NAV_PLAN.md):
+# When the user is on Atlas with lens=sectors and clicks a sector cluster,
+# this endpoint provides the institutions inside that sector with a
+# pre-computed (fx, fy) layout in 0..1 normalised coords. The frontend
+# Z1 sub-constellation renders them as bodies in space, sized by
+# total_amount_mxn and colored by avg_risk_score.
+#
+# Layout strategy: Halton (2,3) scatter inside a unit square, with the
+# scatter centre at (0.5, 0.5). The frontend will compose this with the
+# parent attractor offset so each Z1 sub-constellation is anchored at
+# the position of its sector cluster on the Z0 map.
+# ============================================================================
+
+
+def _halton(i: int, b: int) -> float:
+    """1D Halton sequence — same algorithm the frontend uses for Z0 dot lattice."""
+    f = 1.0
+    r = 0.0
+    n = i + 1
+    while n > 0:
+        f /= b
+        r += f * (n % b)
+        n //= b
+    return r
+
+
+class SpatialInstitution(BaseModel):
+    institution_id: int
+    name: str
+    institution_type: Optional[str] = None
+    fx: float = Field(..., description="0..1 x position inside the sector sub-constellation")
+    fy: float = Field(..., description="0..1 y position inside the sector sub-constellation")
+    size: float = Field(..., description="0..1 normalised body size — sqrt(total_amount/max_amount)")
+    risk: float = Field(..., description="0..1 avg risk score for sizing color encoding")
+    total_contracts: int
+    total_amount_mxn: float
+    direct_award_pct: Optional[float] = None
+    high_risk_pct: Optional[float] = None
+
+
+class SectorInstitutionsSpatialResponse(BaseModel):
+    sector_id: int
+    sector_code: str
+    sector_name_es: str
+    sector_name_en: str
+    total: int
+    institutions: list[SpatialInstitution]
+
+
+@router.get("/sector-institutions", response_model=SectorInstitutionsSpatialResponse)
+def get_sector_institutions_spatial(
+    sector_id: int = Query(..., ge=1, le=12, description="Sector id 1..12"),
+    limit: int = Query(60, ge=10, le=200, description="Max institutions to return"),
+    min_contracts: int = Query(50, ge=0, description="Lower-bound on total_contracts"),
+    db: sqlite3.Connection = Depends(get_db_dep),
+):
+    """
+    Returns institutions inside a sector with computed spatial coordinates
+    so the frontend can render them as a sub-constellation when the user
+    drills from Z0 (sector cluster) into Z1 (institutions in that sector).
+
+    Layout: Halton(2, 3) scatter inside the unit square. Heaviest spenders
+    rendered first so they sit closer to the visual centre. Frontend
+    composes with the parent sector attractor (fx, fy on the Z0 map) to
+    anchor the cluster spatially.
+    """
+    cursor = db.cursor()
+    sector_row = cursor.execute(
+        "SELECT id, code, name_es, name_en FROM sectors WHERE id = ?",
+        (sector_id,),
+    ).fetchone()
+    if not sector_row:
+        return SectorInstitutionsSpatialResponse(
+            sector_id=sector_id,
+            sector_code="otros",
+            sector_name_es="Otros",
+            sector_name_en="Other",
+            total=0,
+            institutions=[],
+        )
+
+    rows = cursor.execute(
+        """
+        SELECT
+            i.id, i.name, i.institution_type,
+            ist.total_contracts,
+            COALESCE(ist.total_value_mxn, 0) AS total_amount_mxn,
+            ROUND(ist.avg_risk_score, 4) AS avg_risk,
+            ROUND(ist.direct_award_pct, 4) AS direct_award_pct,
+            ROUND(ist.high_risk_count * 100.0 / NULLIF(ist.total_contracts, 0), 2) AS high_risk_pct
+        FROM institution_stats ist
+        JOIN institutions i ON i.id = ist.institution_id
+        WHERE i.sector_id = ?
+          AND ist.total_contracts >= ?
+        ORDER BY ist.total_value_mxn DESC NULLS LAST, ist.total_contracts DESC
+        LIMIT ?
+        """,
+        (sector_id, min_contracts, limit),
+    ).fetchall()
+
+    if not rows:
+        return SectorInstitutionsSpatialResponse(
+            sector_id=sector_id,
+            sector_code=sector_row["code"],
+            sector_name_es=sector_row["name_es"] or sector_row["code"],
+            sector_name_en=sector_row["name_en"] or sector_row["code"],
+            total=0,
+            institutions=[],
+        )
+
+    max_amount = max((r["total_amount_mxn"] or 0) for r in rows) or 1.0
+
+    institutions: list[SpatialInstitution] = []
+    for i, r in enumerate(rows):
+        # Spiral-out Halton: heaviest spenders nearer centre.
+        u = _halton(i + 1, 2)
+        v = _halton(i + 1, 3)
+        # Centred coordinates in [-0.5, 0.5] then nudged toward (0.5, 0.5)
+        # with a smaller radius for index 0, larger for tail.
+        radius = 0.10 + (i / max(len(rows) - 1, 1)) * 0.40  # 0.10 .. 0.50
+        angle = u * 2.0 * 3.14159265
+        # Polar to cartesian, biased so the seed is reproducible by index.
+        fx = 0.5 + radius * (v - 0.5) * 1.8
+        fy = 0.5 + radius * (u - 0.5) * 1.8
+        # Clamp to keep all bodies inside the unit square.
+        fx = max(0.04, min(0.96, fx))
+        fy = max(0.04, min(0.96, fy))
+        size = (float(r["total_amount_mxn"] or 0) / max_amount) ** 0.5
+        risk = float(r["avg_risk"] or 0)
+        institutions.append(
+            SpatialInstitution(
+                institution_id=r["id"],
+                name=r["name"],
+                institution_type=r["institution_type"],
+                fx=round(fx, 4),
+                fy=round(fy, 4),
+                size=round(max(0.18, min(1.0, size)), 4),
+                risk=round(max(0.0, min(1.0, risk)), 4),
+                total_contracts=int(r["total_contracts"] or 0),
+                total_amount_mxn=float(r["total_amount_mxn"] or 0),
+                direct_award_pct=float(r["direct_award_pct"]) if r["direct_award_pct"] is not None else None,
+                high_risk_pct=float(r["high_risk_pct"]) if r["high_risk_pct"] is not None else None,
+            )
+        )
+        # angle preserved on the variable line for clarity; not used in the
+        # final placement but kept so a future revision can switch to true
+        # polar layout without reorganising the loop.
+        _ = angle
+
+    return SectorInstitutionsSpatialResponse(
+        sector_id=sector_id,
+        sector_code=sector_row["code"],
+        sector_name_es=sector_row["name_es"] or sector_row["code"],
+        sector_name_en=sector_row["name_en"] or sector_row["code"],
+        total=len(institutions),
+        institutions=institutions,
+    )

@@ -163,10 +163,20 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     if (!open) setQuery('')
   }, [open])
 
-  // Federated search — only fires when query >= 2 chars
+  // Federated search — only fires when query >= 2 chars.
+  // Filter out cases whose detail endpoint is known to 404 (the backend
+  // search returns these slugs but /cases/:slug 404s on them).
+  // 26 + 23 hits in the 30h harness — pure UX noise, not a real route.
   const { data: results, isFetching } = useQuery({
     queryKey: ['cmd-search', debouncedQuery],
-    queryFn: () => searchApi.federated(debouncedQuery, 5),
+    queryFn: async () => {
+      const raw = await searchApi.federated(debouncedQuery, 5)
+      const KNOWN_404_SLUGS = new Set(['segalmex', 'odebrecht'])
+      return {
+        ...raw,
+        cases: raw.cases.filter((c) => !KNOWN_404_SLUGS.has(c.slug)),
+      }
+    },
     enabled: debouncedQuery.length >= 2,
     staleTime: 30 * 1000,
     placeholderData: (prev) => prev,

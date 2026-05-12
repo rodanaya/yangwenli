@@ -10,9 +10,18 @@
  * L6: Events Timeline
  */
 
-import { lazy, Suspense, useMemo, useState, useRef, memo } from 'react'
-import { Link } from 'react-router-dom'
-import { useWikipediaImage } from '@/hooks/useWikipediaImage'
+import { lazy, Suspense, useMemo, useState, useRef } from 'react'
+import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
+import { DeltaBadge } from '@/components/administrations/DeltaBadge'
+import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
+import {
+  ADMINISTRATIONS,
+  PARTY_COLORS,
+} from '@/components/administrations/data'
+import type {
+  AdminName,
+  AdminAgg,
+} from '@/components/administrations/types'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -31,7 +40,6 @@ import {
   Line,
 } from '@/components/charts'
 import { DotStrip } from '@/components/charts/DotStrip'
-import { gradeToTierKey, TIER_STYLES } from '@/lib/tiers'
 import {
   EditorialLineChart,
   EditorialComposedChart,
@@ -52,8 +60,6 @@ import {
   FileText,
   Activity,
   ChevronDown,
-  ExternalLink,
-  BookOpen,
   BarChart3,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
@@ -71,18 +77,16 @@ const AdminConcentrationTimeline = lazy(() => import('@/components/charts/AdminC
 const AdminRiskTrajectory = lazy(() => import('@/components/charts/AdminRiskTrajectory').then(m => ({ default: m.AdminRiskTrajectory })))
 import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
+import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const ADMINISTRATIONS = [
-  { name: 'Fox',       fullName: 'Vicente Fox',                   start: 2001, end: 2006, dataStart: 2002, color: '#3b82f6', party: 'PAN',    wikiArticle: 'Vicente_Fox_Quesada' },
-  { name: 'Calderon',  fullName: 'Felipe Calderon',               start: 2006, end: 2012, dataStart: 2006, color: '#22c55e', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
-  { name: 'Pena Nieto',fullName: 'Enrique Pena Nieto',            start: 2012, end: 2018, dataStart: 2012, color: '#ef4444', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
-  { name: 'AMLO',      fullName: 'Andres Manuel Lopez Obrador',   start: 2018, end: 2024, dataStart: 2018, color: '#a16207', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
-  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum',             start: 2024, end: 2030, dataStart: 2024, color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
-] as const
+// ADMINISTRATIONS, PARTY_COLORS, DOSSIER_DATA, SEVERITY_COLORS, AdminName,
+// AdminAgg, AdminMeta, ScandalRef, DossierEntry moved to
+// components/administrations/{data,types}.ts as part of the AdminDossierPanel
+// extraction (2026-05-11). Imported above.
 
 // Map AdminName to backend era key
 const ERA_KEYS: Record<string, string> = {
@@ -102,71 +106,9 @@ const ERA_EDITORIAL_KEYS: Record<string, string> = {
   Sheinbaum: 'sheinbaum',
 }
 
-// Party color mapping for badge/stripe
-const PARTY_COLORS: Record<string, string> = {
-  PAN: '#002395',
-  PRI: '#008000',
-  MORENA: '#8B0000',
-}
+// PARTY_COLORS imported above.
 
-// =============================================================================
-// Static dossier data — political context + known scandals per administration
-// =============================================================================
-
-interface ScandalRef {
-  key: string           // i18n key under dossier.scandals
-  caseId?: string       // links to /cases/:caseId if present
-  severity: 'critical' | 'high' | 'medium'
-}
-
-interface DossierEntry {
-  contextKey: string      // i18n key under dossier.contexts
-  scandals: ScandalRef[]
-  topSectorKeys: string[] // sector codes ranked by spending priority for this era
-}
-
-const DOSSIER_DATA: Record<string, DossierEntry> = {
-  Fox: {
-    contextKey: 'fox',
-    scandals: [
-      { key: 'pemexgate', severity: 'high' },
-    ],
-    topSectorKeys: ['energia', 'infraestructura', 'salud', 'defensa', 'educacion'],
-  },
-  Calderon: {
-    contextKey: 'calderon',
-    scandals: [
-      { key: 'odebrecht', severity: 'high' },
-    ],
-    topSectorKeys: ['defensa', 'infraestructura', 'energia', 'salud', 'gobernacion'],
-  },
-  'Pena Nieto': {
-    contextKey: 'pena_nieto',
-    scandals: [
-      { key: 'casa_blanca',   severity: 'high' },
-      { key: 'grupo_higa',    severity: 'high' },
-      { key: 'estafa_maestra',severity: 'critical' },
-      { key: 'imss_ghost',    severity: 'critical' },
-      { key: 'odebrecht',     severity: 'high' },
-    ],
-    topSectorKeys: ['salud', 'infraestructura', 'educacion', 'energia', 'hacienda'],
-  },
-  AMLO: {
-    contextKey: 'amlo',
-    scandals: [
-      { key: 'covid_procurement', severity: 'critical' },
-      { key: 'segalmex',          severity: 'critical' },
-      { key: 'efos_sat',          severity: 'high' },
-      { key: 'tren_maya',         severity: 'high' },
-    ],
-    topSectorKeys: ['infraestructura', 'salud', 'energia', 'defensa', 'gobernacion'],
-  },
-  Sheinbaum: {
-    contextKey: 'sheinbaum',
-    scandals: [],
-    topSectorKeys: ['infraestructura', 'salud', 'energia', 'educacion', 'gobernacion'],
-  },
-}
+// DOSSIER_DATA + ScandalRef + DossierEntry imported above.
 
 // Administration colors for bar chart cells and reference bands
 // Fox=blue, Calderon=green, Pena Nieto=red, AMLO=brown/sienna, Sheinbaum=teal
@@ -194,7 +136,7 @@ const MATRIX_SECTORS = [
   { key: 'otros',          code: 'O',  name: 'Other' },
 ]
 
-type AdminName = typeof ADMINISTRATIONS[number]['name']
+// AdminName imported above from components/administrations/types.
 
 // Comparison table metric definitions — use fields from AdminAgg
 const ADMIN_METRIC_KEYS = [
@@ -211,23 +153,7 @@ const ADMIN_METRIC_KEYS = [
 // Helpers
 // =============================================================================
 
-interface AdminAgg {
-  name: AdminName
-  contracts: number
-  totalValue: number
-  avgRisk: number
-  directAwardPct: number
-  singleBidPct: number
-  highRiskPct: number
-  valueAtRisk: number  // totalValue × highRiskPct / 100
-  vendorCount: number
-  institutionCount: number
-  years: YearOverYearChange[]
-  // Derived for comparison table
-  contractsPerYear: number
-  valuePerYear: number
-  yearCount: number
-}
+// AdminAgg imported above from components/administrations/types.
 
 function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
   return ADMINISTRATIONS.map((admin) => {
@@ -304,22 +230,9 @@ function pearsonCorr(xs: number[], ys: number[]): number {
   return dx > 0 && dy > 0 ? num / Math.sqrt(dx * dy) : 0
 }
 
-function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; invertColor?: boolean }) {
-  const abs = Math.abs(val)
-  const isUp = val > 0.01
-  const isDown = val < -0.01
-  const color = invertColor
-    ? (isUp ? 'text-risk-low' : isDown ? 'text-risk-critical' : 'text-text-muted')
-    : (isUp ? 'text-risk-critical' : isDown ? 'text-risk-low' : 'text-text-muted')
-  const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus
-
-  return (
-    <span className={cn('inline-flex items-center gap-0.5 text-xs font-mono', color)}>
-      <Icon className="h-3 w-3" />
-      {abs < 0.01 ? '--' : `${val > 0 ? '+' : ''}${abs.toFixed(1)}${unit}`}
-    </span>
-  )
-}
+// PresidentAvatar + DeltaBadge extracted to components/administrations/.
+// (2026-05-11) Trims this file from 3,671 to ~3,580 LOC and lets those
+// helpers be reused without importing the Administrations page module.
 
 // =============================================================================
 // Component
@@ -327,446 +240,16 @@ function DeltaBadge({ val, unit, invertColor }: { val: number; unit: string; inv
 
 type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
 
-// ─── President photo avatar ────────────────────────────────────────────────
-// Fetches official portrait from Wikipedia. Falls back to styled initials.
-const PresidentAvatar = memo(function PresidentAvatar({
-  wikiArticle,
-  fullName,
-  color,
-  size = 32,
-}: {
-  wikiArticle: string
-  fullName: string
-  color: string
-  size?: number
-}) {
-  const { src, isLoading } = useWikipediaImage(wikiArticle)
-  const initials = fullName.split(' ').map(w => w[0]).slice(0, 2).join('')
-
-  return (
-    <div
-      className="flex-shrink-0 rounded-full overflow-hidden border-2"
-      style={{
-        width: size,
-        height: size,
-        borderColor: `${color}60`,
-        backgroundColor: `${color}22`,
-      }}
-    >
-      {src && !isLoading ? (
-        <img
-          src={src}
-          alt={fullName}
-          className="w-full h-full object-cover object-top"
-          onError={(e) => { e.currentTarget.style.display = 'none' }}
-        />
-      ) : (
-        <span
-          className="w-full h-full flex items-center justify-center font-black font-mono"
-          style={{ fontSize: size * 0.31, color }}
-        >
-          {initials}
-        </span>
-      )}
-    </div>
-  )
-})
-
 // =============================================================================
 // AdminDossierPanel — per-administration deep-dive panel
 // =============================================================================
 
-interface DossierPanelProps {
-  adminName: AdminName
-  adminMeta: typeof ADMINISTRATIONS[number]
-  agg: AdminAgg | undefined
-  vendors: Array<{ name: string; total_mxn: number; contracts: number; risk_pct: number }>
-  vendorsLoading: boolean
-  sectorData: Array<{ sectorId: number; code: string; name: string; color: string; contracts: number; da: number; sb: number; hr: number; risk: number }>
-}
+// DossierPanelProps + SEVERITY_COLORS imported from components/administrations.
 
-const SEVERITY_COLORS = {
-  critical: '#f87171',
-  high:     '#fb923c',
-  medium:   '#fbbf24',
-}
-
-function AdminDossierPanel({
-  adminName,
-  adminMeta,
-  agg,
-  vendors,
-  vendorsLoading,
-  sectorData,
-}: DossierPanelProps) {
-  const { t } = useTranslation('administrations')
-  const dossier = DOSSIER_DATA[adminName]
-  const partyColor = PARTY_COLORS[adminMeta.party] || '#64748b'
-
-  // Top 3 sectors by contract count from live sectorData
-  const topSectors = useMemo(() => {
-    const sorted = [...sectorData]
-      .filter((s) => s.contracts > 0)
-      .sort((a, b) => b.contracts - a.contracts)
-      .slice(0, 5)
-    return sorted
-  }, [sectorData])
-
-  // Flag Fox era DA as data artifact (Structure A 2002-2010 didn't record DA reliably)
-  const isFoxEra = adminName === 'Fox'
-  const fingerprintItems = agg ? [
-    { labelKey: 'dossier.fingerprint.totalSpend',   value: formatCompactMXN(agg.totalValue),               icon: Banknote },
-    { labelKey: 'dossier.fingerprint.directAward',  value: isFoxEra ? `${agg.directAwardPct.toFixed(1)}%*` : `${agg.directAwardPct.toFixed(1)}%`, icon: Shield },
-    { labelKey: 'dossier.fingerprint.singleBid',    value: `${agg.singleBidPct.toFixed(1)}%`,              icon: Users },
-    { labelKey: 'dossier.fingerprint.avgRisk',      value: `${(agg.avgRisk * 100).toFixed(1)}%`,           icon: Activity },
-    { labelKey: 'dossier.fingerprint.highRisk',     value: `${agg.highRiskPct.toFixed(1)}%`,               icon: AlertTriangle },
-    { labelKey: 'dossier.fingerprint.valueAtRisk',  value: formatCompactMXN(agg.valueAtRisk),              icon: Banknote },
-    { labelKey: 'dossier.fingerprint.vendors',      value: formatNumber(agg.vendorCount),                  icon: FileText },
-  ] : []
-
-  return (
-    <motion.div
-      key={adminName}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
-      style={{ borderLeftWidth: 4, borderLeftColor: partyColor }}
-    >
-      {/* Dossier Header */}
-      <div className="px-5 pt-4 pb-3 border-b border-border/30 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="text-[9px] tracking-[0.28em] uppercase font-bold text-text-muted mb-1.5">
-            {t('dossier.sectionLabel')}
-          </div>
-          <div className="flex items-center gap-3">
-            <PresidentAvatar
-              wikiArticle={adminMeta.wikiArticle}
-              fullName={adminMeta.fullName}
-              color={adminMeta.color}
-              size={52}
-            />
-            <div>
-              <h2
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-                className="text-xl font-bold text-text-primary leading-tight"
-              >
-                {adminMeta.fullName}
-              </h2>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span
-                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
-                  style={{
-                    backgroundColor: `${partyColor}20`,
-                    color: partyColor,
-                    border: `1px solid ${partyColor}40`,
-                  }}
-                >
-                  {adminMeta.party}
-                </span>
-                <span className="text-xs text-text-muted font-mono">
-                  {adminMeta.dataStart}–{Math.min(adminMeta.end, 2025)}
-                </span>
-                {agg && (
-                  <span className="text-xs text-text-muted font-mono">
-                    {formatNumber(agg.contracts)} {t('contracts')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Risk badge — rate + absolute MXN at risk */}
-        {agg && (
-          <div className="text-right flex-shrink-0 space-y-2">
-            <div>
-              <div className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5">
-                {t('dossier.fingerprint.highRisk')}
-              </div>
-              <div
-                className="text-2xl font-bold font-mono"
-                style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : 'var(--color-text-secondary)' }}
-              >
-                {agg.highRiskPct.toFixed(1)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5">
-                MXN at risk
-              </div>
-              <div className="text-sm font-bold font-mono text-text-primary">
-                {formatCompactMXN(agg.valueAtRisk)}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Column 1: Political Context */}
-        <div className="lg:col-span-1 space-y-4">
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <BookOpen className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                {t('dossier.politicalContext')}
-              </span>
-            </div>
-            <p
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-              className="text-sm text-text-secondary leading-relaxed"
-            >
-              {t(`dossier.contexts.${dossier.contextKey}`)}
-            </p>
-          </div>
-
-          {/* Known Scandals */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                {t('dossier.knownScandals')}
-              </span>
-              {dossier.scandals.length > 0 && (
-                <span className="text-[9px] font-mono text-text-muted ml-auto">
-                  {dossier.scandals.length}
-                </span>
-              )}
-            </div>
-            {dossier.scandals.length === 0 ? (
-              <div className="rounded-sm border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
-                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" />
-                <p className="text-xs text-text-muted italic leading-relaxed">
-                  {t('dossier.noScandals')}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {dossier.scandals.map((scandal) => {
-                  const sevColor = SEVERITY_COLORS[scandal.severity]
-                  const sevLabel = scandal.severity === 'critical'
-                    ? t('dossier.severityLabels.critical')
-                    : scandal.severity === 'high'
-                    ? t('dossier.severityLabels.high')
-                    : t('dossier.severityLabels.medium')
-                  return (
-                    <div
-                      key={scandal.key}
-                      className="rounded-sm border bg-background-elevated/20 overflow-hidden transition-colors hover:bg-background-elevated/40"
-                      style={{ borderColor: `${sevColor}30`, borderLeftWidth: 3, borderLeftColor: sevColor }}
-                    >
-                      <div className="px-3 py-2">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span
-                            className="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded-sm uppercase tracking-[0.15em]"
-                            style={{
-                              backgroundColor: `${sevColor}20`,
-                              color: sevColor,
-                              border: `1px solid ${sevColor}40`,
-                            }}
-                          >
-                            {sevLabel}
-                          </span>
-                          {scandal.caseId && (
-                            <Link
-                              to={`/cases/${scandal.caseId}`}
-                              className="text-[9px] text-accent hover:text-accent/80 font-mono transition-colors flex items-center gap-0.5 ml-auto"
-                            >
-                              <ExternalLink className="h-2.5 w-2.5" />
-                              {t('dossier.linkToCases')}
-                            </Link>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-text-secondary leading-snug">
-                          {t(`dossier.scandals.${scandal.key}`)}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-                <Link
-                  to="/cases"
-                  className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 font-mono mt-1 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {t('dossier.linkToCases')}
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Key Figures — most revealing stats for this admin */}
-          {agg && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Landmark className="h-3.5 w-3.5 text-accent" />
-                <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                  {t('dossier.keyFigures')}
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {(() => {
-                  const highestRiskSector = [...sectorData].filter(s => s.contracts > 100).sort((a, b) => b.risk - a.risk)[0]
-                  const figures = [
-                    {
-                      label: t('dossier.keyFiguresLabels.highestRiskSector'),
-                      value: highestRiskSector ? highestRiskSector.name : '--',
-                      sub: highestRiskSector ? `${(highestRiskSector.risk * 100).toFixed(1)}%` : '',
-                      color: highestRiskSector?.color || '#64748b',
-                    },
-                    {
-                      label: t('dossier.keyFiguresLabels.singleBidRate'),
-                      value: `${agg.singleBidPct.toFixed(1)}%`,
-                      sub: agg.singleBidPct > 20 ? t('dossier.keyFiguresLabels.aboveAvg') : t('dossier.keyFiguresLabels.typical'),
-                      color: agg.singleBidPct > 20 ? '#f87171' : '#fbbf24',
-                    },
-                    {
-                      label: t('dossier.keyFiguresLabels.directAwardRate'),
-                      value: `${agg.directAwardPct.toFixed(1)}%`,
-                      sub: agg.directAwardPct > 70 ? t('dossier.keyFiguresLabels.critical') : agg.directAwardPct > 50 ? t('dossier.keyFiguresLabels.elevated') : t('dossier.keyFiguresLabels.moderate'),
-                      color: agg.directAwardPct > 70 ? '#f87171' : agg.directAwardPct > 50 ? '#fb923c' : '#fbbf24',
-                    },
-                  ]
-                  return figures.map((fig) => (
-                    <div
-                      key={fig.label}
-                      className="rounded-sm border border-border/20 bg-background-elevated/20 px-2 py-2 text-center"
-                    >
-                      <div className="text-[8px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5 truncate">
-                        {fig.label}
-                      </div>
-                      <div className="text-sm font-bold font-mono" style={{ color: fig.color }}>
-                        {fig.value}
-                      </div>
-                      {fig.sub && (
-                        <div className="text-[9px] text-text-muted font-mono mt-0.5">
-                          {fig.sub}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                })()}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Column 2: Procurement Fingerprint */}
-        <div className="lg:col-span-1 space-y-4">
-          <div>
-            <div className="flex items-center gap-1.5 mb-3">
-              <BarChart3 className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                {t('dossier.procurementFingerprint')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {fingerprintItems.map(({ labelKey, value, icon: Icon }) => (
-                <div
-                  key={labelKey}
-                  className="rounded-sm border border-border/30 bg-background-elevated/30 px-3 py-2"
-                >
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <Icon className="h-3 w-3 text-text-muted flex-shrink-0" />
-                    <span className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
-                      {t(labelKey)}
-                    </span>
-                  </div>
-                  <div
-                    className="text-sm font-bold font-mono"
-                    style={{ color: adminMeta.color }}
-                  >
-                    {value}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {/* Enhancement A: Procurement Grade Card */}
-            {agg && <ProcurementGradeCard agg={agg} />}
-          </div>
-        </div>
-
-        {/* Column 3: Top Vendors + Top Sectors */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Top Vendors */}
-          <div>
-            <div className="flex items-center gap-1.5 mb-2">
-              <Users className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                {t('vendorSection.title')}
-              </span>
-            </div>
-            <AdminVendorBreakdown
-              vendors={vendors.slice(0, 5)}
-              eraColor={adminMeta.color}
-              loading={vendorsLoading}
-            />
-          </div>
-
-          {/* Top Sectors */}
-          {topSectors.length > 0 && (
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <Activity className="h-3.5 w-3.5 text-accent" />
-                <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
-                  {t('dossier.topSectors')}
-                </span>
-              </div>
-              <div className="space-y-1.5">
-                {topSectors.map((sector, idx) => {
-                  const maxContracts = topSectors[0]?.contracts ?? 1
-                  const pct = Math.min(100, (sector.contracts / maxContracts) * 100)
-                  return (
-                    <div key={sector.sectorId} className="flex items-center gap-2">
-                      <span className="text-[10px] font-mono text-text-muted w-4 text-right flex-shrink-0">
-                        {idx + 1}
-                      </span>
-                      <span
-                        className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: sector.color }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between text-[10px] mb-0.5">
-                          <span className="text-text-secondary truncate">{sector.name}</span>
-                          <span className="font-mono text-text-muted ml-1 flex-shrink-0">
-                            {formatNumber(sector.contracts)}
-                          </span>
-                        </div>
-                        {(() => {
-                          const N = 20, DR = 1.75, DG = 4.5
-                          const filled = Math.max(1, Math.round((pct / 100) * N))
-                          return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                              {Array.from({ length: N }).map((_, k) => (
-                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : 'var(--color-background-elevated)'}
-                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                  strokeWidth={k < filled ? 0 : 0.5}
-                                  fillOpacity={k < filled ? 0.7 : 1}
-                                />
-                              ))}
-                            </svg>
-                          )
-                        })()}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <p className="text-[10px] font-mono text-text-muted/60 mt-1.5">
-                1 ● ≈ 5% del sector líder
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  )
-}
+// AdminDossierPanel moved to components/administrations/AdminDossierPanel.tsx
 
 export default function Administrations() {
-  const { t } = useTranslation('administrations')
+  const { t, i18n } = useTranslation('administrations')
   const { t: ts } = useTranslation('sectors')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
@@ -1080,38 +563,114 @@ export default function Administrations() {
     )
   }
 
+  const isEs = (i18n.language?.startsWith('es') ?? false)
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Utility header — closes out the redesign sweep. /administrations
-            is the cross-sexenio comparison surface. The compact header here
-            still carries the editorial hook ("Six administrations, one
-            pattern.") because the page IS framed as a finding, not just a
-            data table — but the kicker / paragraph / stat tile spread is
-            collapsed into a one-line dateline + 3 inline anchor stats. */}
-        <header className="mb-5 pb-4 border-b border-border">
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                Six administrations,{' '}
-                <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
+    <div className="min-h-screen bg-background relative">
+      {/* Page paper-grain — scoped to this contemplative cross-sexenio
+          surface. Pattern from rubli-folio-aesthetic § "Atmosphere —
+          paper-grain overlay". */}
+      <svg
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
+      >
+        <filter id="administrations-page-paper-grain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="19" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#administrations-page-paper-grain)" />
+      </svg>
+      <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8" style={{ zIndex: 1 }}>
+        {/* Folio·XI hero — replaces the prior utility header. EB Garamond
+            italic 500 + ochre normal-weight fragment per
+            rubli-folio-aesthetic § Typography. Named precedent: NYT
+            Upshot multi-administration grouped comparison; FT small
+            multiples for the radar-fingerprint grid. Cited in plan
+            docs/FOLIO_V1_PHASE4_2026_05_07.md § 1. */}
+        <header className="mb-8 pb-5 border-b border-border">
+          <div
+            className="flex items-center gap-3 mb-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XI</span>
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              <span>
+                {isEs
+                  ? 'Análisis sexenal · 2002–2025'
+                  : 'Cross-administration analysis · 2002–2025'}
+              </span>
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between gap-6 flex-wrap">
+            <div className="flex-1 min-w-0">
+              <h1
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(30px, 4.4vw, 52px)',
+                  lineHeight: 1.02,
+                  letterSpacing: '-0.012em',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {isEs ? (
+                  <>
+                    Cinco administraciones,{' '}
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                      un solo patrón.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {/* 2026-05-12 (Audit F157): "Six administrations" headline
+                        contradicted "Five federal administrations" body and
+                        the actual count (Fox / Calderón / Peña Nieto / AMLO /
+                        Sheinbaum). Aligned to five. */}
+                    Five administrations,{' '}
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                      one pattern.
+                    </span>
+                  </>
+                )}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                ADMINISTRATIONS · SEXENIO ANALYSIS · 2002–2025
+              <p
+                className="mt-4"
+                style={{
+                  fontFamily: '"EB Garamond", Georgia, serif',
+                  fontSize: '17px',
+                  lineHeight: 1.55,
+                  maxWidth: '68ch',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '0.005em',
+                }}
+              >
+                {isEs
+                  ? 'Cinco gobiernos federales, tres partidos, una métrica constante: la adjudicación directa permanece sobre el techo OCDE en cada sexenio. La lámina central muestra la huella de cada administración a lo largo de las mismas seis dimensiones.'
+                  : "Five federal administrations, three parties, one constant: the direct-award rate stays above the OECD ceiling under every term. The plate below shows each administration's fingerprint across the same six dimensions."}
               </p>
             </div>
-            <div className="flex items-baseline gap-5">
+            <div className="flex items-baseline gap-5 flex-shrink-0">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">6</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Administrations</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">5</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Administraciones' : 'Administrations'}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>9.9T MXN</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Gasto total' : 'Total spend'}</div>
               </div>
               <div className="text-right">
                 <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">3.1M</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
+                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Contratos' : 'Contracts'}</div>
               </div>
             </div>
           </div>
@@ -1153,20 +712,48 @@ export default function Administrations() {
                 fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
               }}
             >
-              {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
+              {/* 2026-05-12 (Audit F160): subhead and hero showed two
+                  precisions of the same totals side by side (3,049,988
+                  vs 3.1M; 9.87T vs 9.9T). Aligned to the hero figures
+                  so the reader sees one consistent number. The
+                  precise breakdown lives in /methodology. */}
+              {t('classifiedHeader.subtitle', { contracts: '3.1M', value: '9.9T' })}
             </p>
           </div>
           <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
         </div>
+        {/* 2026-05-12 (Audit V011-V014): the header used to hardcode
+            15.82% (highest) and 3.84% (lowest) — values from an
+            earlier snapshot of the aggregate. The per-administration
+            cards below use the live weighted-HR computation, so the
+            header disagreed with its own page. Now we pick highest /
+            lowest dynamically from adminAggs and the page is
+            internally consistent. */}
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-            <span>{t('classifiedHeader.highestRiskNote')} <strong className="text-risk-critical">15.82%</strong></span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-low" />
-            <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
-          </div>
+          {(() => {
+            if (adminAggs.length === 0) return null
+            const sorted = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
+            const highest = sorted[0]
+            const lowest = sorted[sorted.length - 1]
+            return (
+              <>
+                <div className="flex items-center gap-2 text-xs text-text-muted">
+                  <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+                  <span>
+                    {t('classifiedHeader.highestRiskNote')}{' '}
+                    <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-text-muted">
+                  <span className="w-2 h-2 rounded-full bg-risk-low" />
+                  <span>
+                    {t('classifiedHeader.lowestRiskNote')}{' '}
+                    <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
+                  </span>
+                </div>
+              </>
+            )
+          })()}
         </div>
       </header>
 
@@ -1406,7 +993,7 @@ export default function Administrations() {
                 {/* Mini sparkline */}
                 {agg && agg.years.length > 1 && (
                   <div className="mt-2 h-6">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" minWidth={0} height="100%">
                       <ComposedChart data={agg.years} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                         <Line
                           type="monotone"
@@ -1462,10 +1049,23 @@ export default function Administrations() {
         </div>
       </details>
 
-      {/* Administration Fingerprints — radar comparison */}
-      <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
-        <AdministrationFingerprints />
-      </Suspense>
+      {/* Administration Fingerprints — radar comparison.
+          Folio·XI plate: NYT Upshot multi-administration grouped
+          comparison; FT small multiples per-admin radar. */}
+      <PlateFrame
+        lang={isEs ? 'es' : 'en'}
+        folio="XI"
+        contextLabel={{ en: 'Administrations atlas', es: 'Atlas de administraciones' }}
+        caption={
+          isEs
+            ? 'Lámina — Seis dimensiones, cinco huellas presidenciales. La participación adjudicada directamente, los proveedores únicos, la concentración de gasto y el riesgo medio se grafican sobre un eje común. La forma de cada radar es la "huella" de la administración.'
+            : "Plate — Six dimensions, five presidential fingerprints. Direct-award share, single-bidder share, spend concentration and mean risk are plotted on a shared axis. Each radar's shape is the administration's fingerprint."
+        }
+      >
+        <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
+          <AdministrationFingerprints />
+        </Suspense>
+      </PlateFrame>
 
       {/* ── PROCUREMENT INTENSITY HEATMAP ── */}
       {sectorYearData.length > 0 && (
@@ -2248,100 +1848,7 @@ export default function Administrations() {
 // Enhancement A: Procurement Grade Card
 // =============================================================================
 
-interface ProcurementGradeResult {
-  grade: 'A' | 'B' | 'C' | 'D' | 'F'
-  score: number
-  details: Array<{ label: string; value: string; grade: string }>
-}
-
-function computeProcurementGrade(agg: AdminAgg): ProcurementGradeResult {
-  const daScore = agg.directAwardPct < 30 ? 4 : agg.directAwardPct < 50 ? 3 : agg.directAwardPct < 65 ? 2 : agg.directAwardPct < 80 ? 1 : 0
-  const hrScore = agg.highRiskPct < 8 ? 4 : agg.highRiskPct < 12 ? 3 : agg.highRiskPct < 16 ? 2 : agg.highRiskPct < 22 ? 1 : 0
-  const sbScore = agg.singleBidPct < 10 ? 4 : agg.singleBidPct < 20 ? 3 : agg.singleBidPct < 30 ? 2 : agg.singleBidPct < 40 ? 1 : 0
-  const total = (daScore + hrScore + sbScore) / 12
-  const grade: ProcurementGradeResult['grade'] = total >= 0.83 ? 'A' : total >= 0.66 ? 'B' : total >= 0.5 ? 'C' : total >= 0.33 ? 'D' : 'F'
-  return {
-    grade,
-    score: Math.round(total * 100),
-    details: [
-      { label: 'Direct Award', value: `${agg.directAwardPct.toFixed(0)}%`, grade: daScore >= 3 ? 'A' : daScore >= 2 ? 'B' : daScore >= 1 ? 'C' : 'F' },
-      { label: 'High Risk Rate', value: `${agg.highRiskPct.toFixed(1)}%`, grade: hrScore >= 3 ? 'A' : hrScore >= 2 ? 'B' : hrScore >= 1 ? 'C' : 'F' },
-      { label: 'Single Bid', value: `${agg.singleBidPct.toFixed(1)}%`, grade: sbScore >= 3 ? 'A' : sbScore >= 2 ? 'B' : sbScore >= 1 ? 'C' : 'F' },
-    ],
-  }
-}
-
-const GRADE_COLORS: Record<string, string> = {
-  A: '#16a34a',
-  B: '#84cc16',
-  C: '#eab308',
-  D: '#f97316',
-  F: '#dc2626',
-}
-
-function ProcurementGradeCard({ agg }: { agg: AdminAgg }) {
-  const { t } = useTranslation('administrations')
-  const result = useMemo(() => computeProcurementGrade(agg), [agg])
-  const gradeColor = GRADE_COLORS[result.grade] || '#64748b'
-
-  return (
-    <div
-      className="rounded-sm border bg-background-elevated/20 p-3 mt-3"
-      style={{ borderColor: `${gradeColor}30` }}
-    >
-      <div className="text-[8px] tracking-[0.25em] uppercase font-bold text-text-muted mb-2 font-mono">
-        {t('grade.title', { defaultValue: 'PROCUREMENT GRADE' })}
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0 text-center">
-          {(() => {
-            const tk = gradeToTierKey(result.grade)
-            const ts = tk ? TIER_STYLES[tk] : null
-            return ts ? (
-              <span
-                className="inline-flex items-center px-2.5 py-1 rounded text-[11px] font-bold font-mono uppercase tracking-wider border"
-                style={{ color: ts.color, backgroundColor: `${ts.color}18`, borderColor: `${ts.color}40` }}
-              >
-                {tk}
-              </span>
-            ) : (
-              <div className="text-4xl font-mono font-black leading-none" style={{ color: gradeColor }}>
-                {result.grade}
-              </div>
-            )
-          })()}
-          <div className="text-[9px] font-mono text-text-muted mt-1">
-            {result.score}/100
-          </div>
-        </div>
-        <div className="flex-1 grid grid-cols-3 gap-1.5">
-          {result.details.map((d) => {
-            const detailColor = GRADE_COLORS[d.grade] || '#64748b'
-            return (
-              <div
-                key={d.label}
-                className="rounded-sm border border-border/20 bg-background-elevated/30 px-1.5 py-1 text-center"
-              >
-                <div className="text-[7px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
-                  {d.label}
-                </div>
-                <div className="text-xs font-bold font-mono" style={{ color: detailColor }}>
-                  {d.grade}
-                </div>
-                <div className="text-[9px] text-text-muted font-mono">
-                  {d.value}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-      <div className="text-[9px] text-text-muted font-mono mt-2 leading-relaxed">
-        {t('grade.procurement', { defaultValue: 'Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate.' })}
-      </div>
-    </div>
-  )
-}
+// ProcurementGradeCard + computeProcurementGrade moved to components/administrations/ProcurementGradeCard.tsx
 
 // =============================================================================
 // Enhancement B: All-Administration Radar Comparison (Pure SVG)

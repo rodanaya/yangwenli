@@ -67,29 +67,29 @@ const PATTERN_EDITORIAL: PatternEditorial[] = [
   },
   {
     code: 'P4',
-    nameEn: 'Kickback',
-    nameEs: 'Soborno',
+    nameEn: 'Bid Rigging',
+    nameEs: 'Manipulación de Ofertas',
     ledeEn:
-      'Kickback arrangements manifest in procurement data as systematic irregularities: identical contract amounts across unrelated procedures, heavy use of direct awards to a single vendor at the same institution, and a prevalence of round-number contracts that suggest negotiated prices rather than competitive bids. These patterns are particularly acute in infrastructure and health sectors, where contracts are large and inspection capacity is limited.',
+      'Bid rigging is cartel behavior where vendors who appear to compete actually coordinate. The same small group submits "competing" bids across many procedures at the same institution, taking turns winning while the others submit cover bids designed to lose. The pattern shows up in COMPRANET as repeated co-bidding partnerships — the same 3-5 vendors appearing on each other\'s losing-bid rosters across dozens of procedures, with a near-deterministic rotation of who wins.',
     ledeEs:
-      'Los arreglos de soborno se manifiestan en los datos de contratación como irregularidades sistemáticas: montos de contratos idénticos en procedimientos no relacionados, uso intensivo de adjudicaciones directas a un único proveedor en la misma institución, y prevalencia de contratos en números redondos que sugieren precios negociados en lugar de licitaciones competitivas. Estos patrones son especialmente agudos en sectores de infraestructura y salud, donde los contratos son grandes y la capacidad de inspección es limitada.',
+      'La manipulación de ofertas es un comportamiento de cártel en el que proveedores aparentemente competidores en realidad coordinan. El mismo pequeño grupo presenta ofertas "competidoras" en muchos procedimientos de la misma institución, turnándose para ganar mientras los demás presentan ofertas de cobertura diseñadas para perder. El patrón aparece en COMPRANET como asociaciones repetidas de co-licitación: los mismos 3-5 proveedores aparecen en las listas de ofertas perdedoras unos de otros en docenas de procedimientos, con una rotación casi determinista de quién gana.',
     signalEn:
-      'ARIA detects P4 by flagging vendor-institution pairs where ≥80% of contracts are direct awards, more than 30% share an identical amount within a ±5% tolerance band, and the vendor\'s win rate at that institution exceeds 95% over a 3-year period.',
+      'ARIA detects P4 from co-bidding statistics. The signal fires when a vendor\'s maximum pairwise co-bid rate (the share of their procedures where the same partner also bid) exceeds a calibrated threshold, indicating a recurring competitive relationship that statistically cannot be coincidence.',
     signalEs:
-      'ARIA detecta P4 marcando pares proveedor-institución donde ≥80% de los contratos son adjudicaciones directas, más del 30% comparten un monto idéntico dentro de una banda de tolerancia ±5%, y la tasa de éxito del proveedor en esa institución supera el 95% en un período de 3 años.',
+      'ARIA detecta P4 a partir de estadísticas de co-licitación. La señal se activa cuando la tasa máxima de co-licitación entre pares de un proveedor (la proporción de sus procedimientos en los que el mismo socio también ofertó) supera un umbral calibrado, lo que indica una relación competitiva recurrente que estadísticamente no puede ser coincidencia.',
   },
   {
     code: 'P5',
-    nameEn: 'Bid Rotation',
-    nameEs: 'Rotación de Ofertas',
+    nameEn: 'Overpricing',
+    nameEs: 'Sobreprecio',
     ledeEn:
-      'Bid rotation is a cartel-like behavior where a small group of nominally competing vendors take turns winning contracts at the same institution. Each vendor in the ring submits non-competitive bids in rounds they are "assigned" to lose, allowing the ring to maintain the appearance of competition while guaranteeing each member a predictable share of public contracts. The pattern is detected through network analysis of co-bidding relationships.',
+      'Overpricing flags vendors whose unit prices are systematically above peer-group baselines for comparable goods or services. Two signals matter: persistent overpricing (the vendor\'s average price-ratio is well above their sector\'s median across many contracts) and spike overpricing (occasional contracts at multiple times the going rate). Both shapes appear in pharma, construction supplies, and IT services — categories where price benchmarking is feasible.',
     ledeEs:
-      'La rotación de ofertas es un comportamiento tipo cártel donde un pequeño grupo de proveedores nominalmente competidores se turnan para ganar contratos en la misma institución. Cada proveedor del grupo presenta ofertas no competitivas en las rondas que le "corresponde" perder, lo que permite al grupo mantener la apariencia de competencia mientras garantiza a cada miembro una parte predecible de los contratos públicos. El patrón se detecta mediante análisis de red de relaciones de co-licitación.',
+      'El sobreprecio identifica a proveedores cuyos precios unitarios están sistemáticamente por encima de los de su grupo de pares para bienes o servicios comparables. Importan dos señales: el sobreprecio persistente (el ratio de precio promedio del proveedor está muy por encima de la mediana de su sector en muchos contratos) y el sobreprecio puntual (contratos ocasionales a múltiplos de la tarifa vigente). Ambas formas aparecen en farmacéutica, suministros de construcción y servicios de TI: categorías donde el benchmarking de precios es factible.',
     signalEn:
-      'ARIA identifies P5 by building co-bidding graphs for each institution and detecting cyclic win-rotation sequences. A vendor group triggers P5 when 3+ vendors show alternating wins across ≥6 procedures at the same institution within a 24-month window, with average win concentration per vendor between 20–40%.',
+      'ARIA computes z-scored price ratios per vendor against the sector-median benchmark. P5 fires when both the average and the maximum z-price exceed calibrated thresholds — the average catches consistently overpriced vendors, the maximum catches the explanatory single-contract spikes a journalist can use as the lede.',
     signalEs:
-      'ARIA identifica P5 construyendo grafos de co-licitación por institución y detectando secuencias cíclicas de rotación de victorias. Un grupo de proveedores activa P5 cuando 3 o más proveedores muestran victorias alternadas en ≥6 procedimientos en la misma institución dentro de una ventana de 24 meses, con una concentración promedio de victorias por proveedor entre 20% y 40%.',
+      'ARIA calcula ratios de precio normalizados (z-score) por proveedor contra la mediana del sector. P5 se activa cuando tanto el promedio como el máximo z-precio superan umbrales calibrados: el promedio detecta proveedores consistentemente sobrepagados, el máximo detecta los picos de contrato único que un periodista puede usar como gancho.',
   },
   {
     code: 'P6',
@@ -106,16 +106,16 @@ const PATTERN_EDITORIAL: PatternEditorial[] = [
   },
   {
     code: 'P7',
-    nameEn: 'Budget Dump',
-    nameEs: 'Vaciado de Presupuesto',
+    nameEn: 'Conflict of Interest',
+    nameEs: 'Conflicto de Interés',
     ledeEn:
-      'Budget dumping refers to the abnormal concentration of contracts in the final weeks of the fiscal year, driven by use-it-or-lose-it budget rules. Agencies facing end-of-year surplus exhaust remaining funds through rapid-fire direct awards, bypassing normal procurement safeguards. These contracts are disproportionately large, poorly documented, and concentrated among vendors with pre-existing relationships to the contracting officer—making December a high-risk month for procurement integrity.',
+      'Conflict of interest flags vendors with documented external red flags — appearance on regulatory blacklists (SAT EFOS for tax fraud, SFP sanctions for procurement misconduct), inclusion in journalism-grounded ground-truth corruption cases, or family/political ties to procurement officials. P7 is a placeholder pending Phase 3 of the pipeline (media-evidence integration via CENTINELA WEB), but its current formulation already captures the strongest external signals.',
     ledeEs:
-      'El vaciado de presupuesto se refiere a la concentración anormal de contratos en las últimas semanas del año fiscal, impulsada por reglas de presupuesto de "úsalo o piérdelo". Las dependencias con superávit de fin de año agotan los fondos restantes mediante adjudicaciones directas en serie, eludiendo los controles normales de contratación. Estos contratos son desproporcionadamente grandes, escasamente documentados y están concentrados entre proveedores con relaciones previas con el funcionario contratante, lo que convierte a diciembre en un mes de alto riesgo para la integridad de las contrataciones.',
+      'El conflicto de interés identifica a proveedores con señales externas documentadas: aparición en listas negras regulatorias (EFOS del SAT por fraude fiscal, sanciones de la SFP por mala conducta en contratación), inclusión en casos de corrupción documentados periodísticamente como ground-truth, o vínculos familiares o políticos con funcionarios de contratación. P7 es un marcador en espera de la Fase 3 del pipeline (integración de evidencia mediática vía CENTINELA WEB), pero su formulación actual ya captura las señales externas más fuertes.',
     signalEn:
-      'ARIA computes monthly contract-count and value distributions per institution per year. P7 is triggered when December accounts for ≥35% of annual contract value or ≥40% of annual contract count, combined with a direct-award rate in that December cohort above 90%.',
+      'ARIA fires P7 when a vendor matches any external watchlist (SAT EFOS Definitivo, SFP sanction registry) or appears in the curated ground-truth corruption case library. The flag is binary in its current form; Phase 3 will fold in graded media-evidence scores from CENTINELA WEB.',
     signalEs:
-      'ARIA calcula distribuciones mensuales de conteo y valor de contratos por institución por año. P7 se activa cuando diciembre representa ≥35% del valor anual de contratos o ≥40% del conteo anual de contratos, combinado con una tasa de adjudicación directa en ese grupo de diciembre superior al 90%.',
+      'ARIA activa P7 cuando un proveedor aparece en alguna lista externa (SAT EFOS Definitivo, registro de sanciones SFP) o figura en la biblioteca curada de casos de corrupción ground-truth. La marca es binaria en su forma actual; la Fase 3 incorporará puntajes graduados de evidencia mediática de CENTINELA WEB.',
   },
 ]
 

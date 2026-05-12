@@ -94,8 +94,14 @@ export function MainLayout() {
         {/* Version announcement banner */}
         <AppBanner />
 
-        {/* Page content — extra bottom padding on mobile so bottom nav doesn't cover content */}
-        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5" tabIndex={-1}>
+        {/* Page content — extra bottom padding on mobile so bottom nav doesn't cover content.
+            2026-05-11 (Audit F184/F186/F187): mobile horizontal overflow on /aria,
+            /vendors, /methodology (3 of 4 surfaces tested at 390px). overflow-x-hidden
+            on the main column clips any per-page widget that exceeds the viewport
+            without affecting per-card overflow-x-auto regions (charts, tables) that
+            need their own horizontal scroll. Page-level horizontal scroll is the
+            actual UX bug — local widget scroll is intentional. */}
+        <main id="main-content" className="flex-1 px-3 sm:px-5 py-5 pb-20 md:pb-5 overflow-x-hidden" tabIndex={-1}>
           <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={location.pathname}

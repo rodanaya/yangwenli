@@ -41,7 +41,7 @@
   },
   "aucRoc": {
     "title": "AUC-ROC",
-    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v0.6.5 alcanza 0.828 (AUC de prueba, estratificado por proveedor)."
+    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v0.8.5 alcanza 0.785 (AUC de prueba, dividido por proveedor; el modelo previo v0.6.5 alcanzó 0.828 — ver Metodología para el detalle del re-entrenamiento) (AUC de prueba, estratificado por proveedor)."
   },
   "industryMismatch": {
     "title": "Discrepancia de Industria",
@@ -85,7 +85,7 @@
   },
   "groundTruth": {
     "title": "Verdad Base",
-    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos ~748 casos con ~603 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 1,401 casos con ~861 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {
     "title": "Período de Publicación",

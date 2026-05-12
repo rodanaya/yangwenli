@@ -18,14 +18,19 @@
   ],
   "shortcuts": [
     {
-      "name": "Dashboard",
+      "name": "Spatial Map",
       "url": "/",
-      "description": "Open procurement dashboard"
+      "description": "Open the spatial map (Z0 sectors)"
     },
     {
-      "name": "Explore Contracts",
-      "url": "/explore",
-      "description": "Explore 3.1M contracts"
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "Open the executive dashboard"
+    },
+    {
+      "name": "ARIA Queue",
+      "url": "/aria",
+      "description": "Investigation queue"
     },
     {
       "name": "Sector Analysis",

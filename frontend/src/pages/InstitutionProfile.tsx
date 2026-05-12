@@ -631,15 +631,41 @@ export function InstitutionProfile() {
         </Suspense>
       )}
 
-      <header className="mb-5 pb-4 border-b border-border">
+      <header className="mb-5 pb-5 border-b border-border">
+        {/* folio-v1-P2: archival eyebrow */}
+        <div
+          className="mb-3 flex items-center gap-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
+        >
+          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
+          <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            {getInstitutionTypeLabel(institution.institution_type)}
+            {sectorName ? <><span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>{sectorName}</> : null}
+          </span>
+        </div>
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+            <h1
+              className="text-text-primary"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(26px, 3.6vw, 38px)',
+                lineHeight: 0.98,
+                letterSpacing: '-0.012em',
+              }}
+            >
               {toTitleCase(institution.name)}
             </h1>
-            <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-              PERFIL INSTITUCIONAL · {getInstitutionTypeLabel(institution.institution_type).toUpperCase()}{sectorName ? ` · ${sectorName.toUpperCase()}` : ''}
-            </p>
           </div>
           <div className="flex items-baseline gap-5">
             <a

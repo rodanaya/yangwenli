@@ -40,8 +40,8 @@ def _set(key: str, value: Any) -> None:
         _cache[key] = {"value": value, "expires": datetime.now() + timedelta(seconds=_CACHE_TTL)}
 
 
-def _row_to_list_item(row) -> dict:
-    return {
+def _row_to_list_item(row, linked_vendor_ids: Optional[List[int]] = None) -> dict:
+    d = {
         "id": row["id"],
         "name_en": row["name_en"],
         "name_es": row["name_es"] or row["name_en"],
@@ -61,7 +61,9 @@ def _row_to_list_item(row) -> dict:
         "summary_en": row["summary_en"],
         "is_verified": row["is_verified"],
         "ground_truth_case_id": row["ground_truth_case_id"],
+        "linked_vendor_ids": linked_vendor_ids,
     }
+    return d
 
 
 def _row_to_detail(row) -> dict:
@@ -87,9 +89,17 @@ def list_cases(
     severity_min: Optional[int] = Query(None, ge=1, le=4),
     compranet_visibility: Optional[str] = Query(None),
     search: Optional[str] = Query(None, max_length=100),
+    vendor_id: Optional[int] = Query(None),
 ):
-    """List documented procurement scandals with optional filters."""
-    cache_key = f"list:{fraud_type}:{administration}:{sector_id}:{legal_status}:{severity_min}:{compranet_visibility}:{search}"
+    """List documented procurement scandals with optional filters.
+
+    `vendor_id` filters via the ground-truth vendor map: returns scandals
+    whose `ground_truth_case_id` appears in `ground_truth_vendors` for the
+    given vendor. (Audit fix C, 2026-05-07: param was previously
+    silently ignored, returning the global list — see
+    docs/RUBLI_v1.0_HONEST_AUDIT.md.)
+    """
+    cache_key = f"list:{fraud_type}:{administration}:{sector_id}:{legal_status}:{severity_min}:{compranet_visibility}:{search}:{vendor_id}"
     cached = _get(cache_key)
     if cached is not None:
         return cached
@@ -127,6 +137,17 @@ def list_cases(
         pattern = f"%{search}%"
         conditions.append("(name_en LIKE ? OR name_es LIKE ? OR summary_en LIKE ?)")
         params.extend([pattern, pattern, pattern])
+    if vendor_id is not None:
+        # Filter scandals to those linked (via GT case_id) to a vendor in
+        # ground_truth_vendors. If the table doesn't exist or has no row
+        # for this vendor, returns empty — which is honest.
+        conditions.append(
+            "ground_truth_case_id IS NOT NULL AND "
+            "ground_truth_case_id IN ("
+            "  SELECT case_id FROM ground_truth_vendors WHERE vendor_id = ?"
+            ")"
+        )
+        params.append(vendor_id)
 
     where = "WHERE " + " AND ".join(conditions)
     sql = f"""
@@ -142,7 +163,28 @@ def list_cases(
     with get_db() as conn:
         rows = conn.execute(sql, params).fetchall()
 
-    result = [_row_to_list_item(r) for r in rows]
+        # Bulk-fetch linked vendor IDs for all returned cases (single query, not N+1).
+        # Only populated when ground_truth_vendors table exists and vendor_id was filtered.
+        linked_map: dict = {}
+        if vendor_id is not None and rows:
+            gt_ids = [r["ground_truth_case_id"] for r in rows if r["ground_truth_case_id"] is not None]
+            if gt_ids:
+                gtv_tbl = conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='ground_truth_vendors'"
+                ).fetchone()
+                if gtv_tbl:
+                    placeholders = ",".join("?" * len(gt_ids))
+                    link_rows = conn.execute(
+                        f"SELECT case_id, vendor_id FROM ground_truth_vendors WHERE case_id IN ({placeholders}) AND vendor_id IS NOT NULL",
+                        gt_ids,
+                    ).fetchall()
+                    for lr in link_rows:
+                        linked_map.setdefault(lr["case_id"], []).append(lr["vendor_id"])
+
+    result = [
+        _row_to_list_item(r, linked_map.get(r["ground_truth_case_id"]) if vendor_id is not None else None)
+        for r in rows
+    ]
     _set(cache_key, result)
     return result
 

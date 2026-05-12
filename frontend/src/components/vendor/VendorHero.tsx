@@ -8,7 +8,7 @@
  * Section order: identity line → priority alerts → verdict → stat row →
  * top-3 model drivers.
  */
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
@@ -90,6 +90,11 @@ export function VendorHero({
 
   const isEs = i18n.language.startsWith('es')
 
+  const dateStamp = useMemo(() => {
+    const d = new Date()
+    return `${d.getUTCFullYear()}·${String(d.getUTCMonth() + 1).padStart(2, '0')}·${String(d.getUTCDate()).padStart(2, '0')}`
+  }, [])
+
   const verdict = getVerdictSentence(riskLevel, vendor, isEs)
 
   return (
@@ -97,10 +102,41 @@ export function VendorHero({
       {/* ─── Row 1: identity + actions ─────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-text-muted">
-            {isEs ? 'Perfil del Proveedor' : 'Vendor Dossier'}
-          </p>
-          <h1 className="font-editorial text-3xl sm:text-4xl font-bold leading-[1.05] tracking-tight text-text-primary">
+          {/* ── V1: folio hero eyebrow (IBM Plex Mono archival index strip) ── */}
+          <div
+            className="flex items-center gap-3 mb-2"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·D</span>
+            <span style={{ width: 24, height: 1, background: 'rgba(160, 104, 32, 0.45)', display: 'inline-block' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {isEs ? 'Expediente del proveedor' : 'Vendor dossier'}
+            </span>
+            <span style={{ opacity: 0.5 }}>·</span>
+            <span style={{ opacity: 0.7 }}>
+              {isEs ? 'Indexado' : 'Indexed'} {dateStamp}
+            </span>
+          </div>
+          {/* EB Garamond italic 500 — vendor name is the headline proper noun */}
+          <h1
+            className="text-balance mb-1"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(28px, 4vw, 44px)',
+              lineHeight: 1.04,
+              letterSpacing: '-0.012em',
+              color: 'var(--color-text-primary)',
+            }}
+          >
             {toTitleCase(vendor.name)}
           </h1>
           <IdentityLine
@@ -127,9 +163,10 @@ export function VendorHero({
                 ) : (
                   <ChevronDown className="h-3 w-3" aria-hidden="true" />
                 )}
+                {/* Pluralized — Spanish never uses (s); English uses singular for n=1 */}
                 {isEs
-                  ? `${nameVariants.length} variante(s) del nombre`
-                  : `${nameVariants.length} name variant(s)`}
+                  ? `${nameVariants.length} ${nameVariants.length === 1 ? 'variante del nombre' : 'variantes del nombre'}`
+                  : `${nameVariants.length} ${nameVariants.length === 1 ? 'name variant' : 'name variants'}`}
               </button>
               {variantsOpen && (
                 <ul
@@ -151,12 +188,54 @@ export function VendorHero({
         )}
       </div>
 
-      {/* ─── Row 2: priority alert (collapses 5 banners into 1) ─────────── */}
-      {flags.length > 0 && <PriorityAlert flags={flags} />}
+      {/* ─── Row 2: PriorityAlert reframed as marginal note (V2) ──────────
+          Left ochre 2px rule + italic mono kicker. PriorityAlert component
+          itself is not modified — this is a wrapper-only editorial reframe
+          per docs/FOLIO_V1_PHASE1_2026_05_06.md §5. */}
+      {flags.length > 0 && (
+        <aside
+          aria-labelledby="vendor-marginal-note"
+          style={{
+            borderLeft: '2px solid #a06820',
+            paddingLeft: '14px',
+            paddingTop: '6px',
+            paddingBottom: '6px',
+            marginTop: '4px',
+            marginBottom: '4px',
+          }}
+        >
+          <p
+            id="vendor-marginal-note"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '9.5px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: '#a06820',
+              fontWeight: 500,
+              fontStyle: 'italic',
+              marginBottom: '6px',
+            }}
+          >
+            {isEs ? 'Nota al margen' : 'Marginal note'}
+          </p>
+          <PriorityAlert flags={flags} />
+        </aside>
+      )}
 
       {/* ─── Row 3: verdict sentence + investigation CTA ─────────────────── */}
+      {/* V3: EB Garamond regular 17px / 1.55 / max-width 68ch per plan §1.b */}
       {verdict && (
-        <p className="text-base leading-[1.55] text-text-secondary max-w-prose">
+        <p
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontSize: '17px',
+            lineHeight: 1.55,
+            maxWidth: '68ch',
+            color: 'var(--color-text-secondary, var(--color-text-muted))',
+            letterSpacing: '0.005em',
+          }}
+        >
           {verdict}
         </p>
       )}

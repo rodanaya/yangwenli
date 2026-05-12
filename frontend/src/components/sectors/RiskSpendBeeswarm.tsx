@@ -37,7 +37,7 @@ import {
   forceCollide,
   type SimulationNodeDatum,
 } from 'd3-force'
-import { SECTOR_COLORS, SECTOR_TEXT_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, SECTOR_TEXT_COLORS, getRiskLevelFromScore, getSectorName } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { SectorStatistics } from '@/api/types'
 
@@ -389,7 +389,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   outline: isFocused ? `2px solid ${color}` : undefined,
                 }}
                 role="button"
-                aria-label={`${node.sector.sector_name} — ${(node.sector.avg_risk_score * 100).toFixed(1)}% riesgo, ${formatCompactMXN(node.sector.total_value_mxn)}`}
+                aria-label={`${getSectorName(node.sector.sector_code, isEs ? 'es' : 'en')} — ${(node.sector.avg_risk_score * 100).toFixed(1)}% ${isEs ? 'riesgo' : 'risk'}, ${formatCompactMXN(node.sector.total_value_mxn)}`}
                 tabIndex={-1}
                 onMouseEnter={() => setHoveredId(node.sector.sector_id)}
                 onMouseLeave={() => setHoveredId(null)}
@@ -438,9 +438,12 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                   fontWeight={isHovered ? 700 : 500}
                   style={{ userSelect: 'none', pointerEvents: 'none' }}
                 >
-                  {isEs
-                    ? (node.sector.sector_name || node.sector.sector_code)
-                    : (node.sector.sector_code.charAt(0).toUpperCase() + node.sector.sector_code.slice(1))}
+                  {/* 2026-05-12 (Audit V003 P1): EN labels rendered the
+                      raw Spanish sector_code ("Salud", "Agricultura",
+                      "Infraestructura"). Route through getSectorName
+                      so the EN side gets the same translation table
+                      as every other surface. */}
+                  {getSectorName(node.sector.sector_code, isEs ? 'es' : 'en')}
                 </text>
               </g>
             )
@@ -608,8 +611,8 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
       <p className="mt-2 text-[10px] font-mono text-text-muted opacity-60" aria-live="polite">
         {focusedSector
           ? (isEs
-              ? `${focusedSector.sector_name} seleccionado — Enter para investigar`
-              : `${focusedSector.sector_name} selected — Enter to investigate`)
+              ? `${getSectorName(focusedSector.sector_code, 'es')} seleccionado — Enter para investigar`
+              : `${getSectorName(focusedSector.sector_code, 'en')} selected — Enter to investigate`)
           : (isEs
               ? '↑ ↓ navegar sectores · Enter para abrir · clic en círculo'
               : '↑ ↓ navigate sectors · Enter to open · click circle')}

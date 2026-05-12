@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
-import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/constants'
 import { TableExportButton } from '@/components/TableExportButton'
 import { EmptyState } from '@/components/EmptyState'
 import type {
@@ -223,7 +223,8 @@ function CaseCard({
   index: number
   onClick: () => void
 }) {
-  const { t } = useTranslation('investigation')
+  const { t, i18n } = useTranslation('investigation')
+  const isEs = i18n.language?.startsWith('es')
   const priority = getPriority(caseItem.suspicion_score)
   const sectorColor = SECTOR_COLORS[caseItem.sector_name] || '#64748b'
   const rankNum = String(index + 1).padStart(2, '0')
@@ -299,7 +300,7 @@ function CaseCard({
             className="text-[10px] font-bold px-1.5 py-0.5 rounded"
             style={{ backgroundColor: sectorColor + '25', color: sectorColor }}
           >
-            {getSectorNameEN(caseItem.sector_name)}
+            {getSectorName(caseItem.sector_name, isEs ? 'es' : 'en')}
           </span>
           {caseItem.signals_triggered.slice(0, 3).map((signal) => {
             const cls = SIGNAL_TAG_CLASS[signal]
@@ -427,7 +428,8 @@ function SortHeader({
 
 export function Investigation() {
   const navigate = useNavigate()
-  const { t } = useTranslation('investigation')
+  const { t, i18n } = useTranslation('investigation')
+  const isEs = i18n.language?.startsWith('es')
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState<InvestigationValidationStatus | 'all'>('all')
@@ -758,7 +760,7 @@ export function Investigation() {
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" aria-label="Investigation cases">
+                <table className="w-full text-sm" aria-label={isEs ? 'Casos de investigación' : 'Investigation cases'}>
                   <thead className="border-b border-border/40 bg-background-elevated/60">
                     <tr>
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
@@ -808,6 +810,8 @@ function CaseTableRow({
   index: number
   onClick: () => void
 }) {
+  const { i18n } = useTranslation('investigation')
+  const isEs = i18n.language?.startsWith('es')
   const priority = getPriority(caseItem.suspicion_score)
   const sectorColor = SECTOR_COLORS[caseItem.sector_name] || '#64748b'
   const cleanTitle = toTitleCase(
@@ -857,7 +861,7 @@ function CaseTableRow({
           className="text-xs font-medium px-1.5 py-0.5 rounded"
           style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
         >
-          {getSectorNameEN(caseItem.sector_name)}
+          {getSectorName(caseItem.sector_name, isEs ? 'es' : 'en')}
         </span>
       </td>
 

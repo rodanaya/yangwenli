@@ -30,6 +30,35 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatCompactMXN } from '@/lib/utils'
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+/**
+ * Run an array of async tasks with at most `concurrency` in flight at once.
+ * Returns a `Promise.allSettled`-shaped array so individual failures (502/503/
+ * timeout) don't void the whole batch.
+ */
+async function throttledAllSettled<T>(
+  tasks: Array<() => Promise<T>>,
+  concurrency: number,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length)
+  let cursor = 0
+  async function worker() {
+    while (cursor < tasks.length) {
+      const i = cursor++
+      try {
+        const value = await tasks[i]()
+        results[i] = { status: 'fulfilled', value }
+      } catch (reason) {
+        results[i] = { status: 'rejected', reason }
+      }
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, tasks.length) }, worker)
+  await Promise.all(workers)
+  return results
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface CategoryDatum {
@@ -222,18 +251,25 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
   }, [categories])
 
   // ── Step 2: fan-out getTopVendors(catId, 2) for each of the 12 categories ──
+  // Uses allSettled + a 3-at-a-time concurrency throttle so a single 502
+  // from one category doesn't void the whole chart, AND so we don't open
+  // 12 simultaneous connections that contributed to the harness 502 cluster.
   const { data: captureRows, isLoading } = useQuery({
     queryKey: ['categories', 'capture-dumbbell', top12cats.map(c => c.category_id).join(',')],
     queryFn: async (): Promise<DumbbellRow[]> => {
-      const results = await Promise.all(
-        top12cats.map(cat => categoriesApi.getTopVendors(cat.category_id, 2))
-      ) as CategoryTopVendorsResult[]
+      const results = await throttledAllSettled(
+        top12cats.map(cat => () => categoriesApi.getTopVendors(cat.category_id, 2)),
+        3, // max 3 concurrent requests
+      )
 
       return results
         .map((res, i): DumbbellRow | null => {
           const cat = top12cats[i]
-          const top1 = res.data[0]
-          const top2 = res.data[1] ?? null
+          // Skip categories whose request failed (502/503/timeout).
+          if (res.status !== 'fulfilled') return null
+          const cats = res.value as CategoryTopVendorsResult
+          const top1 = cats.data[0]
+          const top2 = cats.data[1] ?? null
           if (!top1) return null
           const gap = top1.market_share_pct - (top2?.market_share_pct ?? 0)
           const sectorCode = cat.sector_code ?? 'otros'
@@ -243,8 +279,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
             name_en: cat.name_en,
             sector_code: sectorCode,
             color: SECTOR_COLORS[sectorCode] ?? '#64748b',
-            total_value: res.total_value,
-            total_contracts: res.total_contracts,
+            total_value: cats.total_value,
+            total_contracts: cats.total_contracts,
             top1,
             top2,
             gap,

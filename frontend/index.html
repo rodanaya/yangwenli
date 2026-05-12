@@ -7,6 +7,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- 2026-05-11 Phase 8: pre-warm the spatial-map's first paint.
+         The Z0 sector grid needs /api/v1/sectors and the spatial Z1
+         endpoint for any sector hovered before drill. Browser can pull
+         these in parallel with the JS bundle so the canvas is interactive
+         within ~500ms of page load instead of waiting for a serial
+         JS → fetch chain. dns-prefetch + preconnect cover the API host. -->
+    <link rel="preconnect" href="https://rubli.xyz" crossorigin />
+    <link rel="prefetch" href="/api/v1/sectors" as="fetch" crossorigin />
+    <link rel="prefetch" href="/api/v1/atlas/sector-institutions?sector_id=1&limit=60" as="fetch" crossorigin />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

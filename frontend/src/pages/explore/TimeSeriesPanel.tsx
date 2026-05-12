@@ -133,12 +133,12 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
           and the year-range selection interaction is core to this widget's UX.
           Tokens migrated to bible-aligned values; structural migration deferred. */}
       <div
-        style={{ height: 120, cursor: 'crosshair', userSelect: 'none' }}
+        style={{ height: 120, minWidth: 240, cursor: 'crosshair', userSelect: 'none' }}
         onMouseLeave={() => {
           if (isBrushing) handleMouseUp()
         }}
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" minWidth={0} height="100%">
           <ComposedChart
             data={chartData}
             onMouseDown={handleMouseDown}

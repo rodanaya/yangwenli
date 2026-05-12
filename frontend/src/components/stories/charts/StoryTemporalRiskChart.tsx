@@ -6,9 +6,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { TemporalRiskChart } from '@/components/charts/TemporalRiskChart'
 
 export function StoryTemporalRiskChart() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -18,14 +20,14 @@ export function StoryTemporalRiskChart() {
     >
       {/* Editorial overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Risk Timeline
+        {t('temporalRisk.kicker')}
       </p>
       {/* Finding headline */}
       <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        COVID-19 drove a 30% spike in procurement risk — and it never fully came back down
+        {t('temporalRisk.headline')}
       </h3>
       <p className="text-xs text-text-muted font-mono mb-4">
-        High-risk rate and avg risk score · 2010-2025 · Scandal annotations marked
+        {t('temporalRisk.subline')}
       </p>
 
       <TemporalRiskChart
@@ -36,7 +38,7 @@ export function StoryTemporalRiskChart() {
 
       {/* Source */}
       <p className="text-[10px] text-text-muted mt-2 font-mono">
-        Source: COMPRANET 2010-2025 · RUBLI v0.6.5 risk model · Scandal dates from public record
+        {t('temporalRisk.footer')}
       </p>
     </motion.div>
   )

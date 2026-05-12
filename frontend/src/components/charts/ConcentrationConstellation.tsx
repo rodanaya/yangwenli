@@ -84,8 +84,13 @@ interface ConcentrationConstellationProps {
 export type { ClusterMeta }
 
 // ── Layout constants ──────────────────────────────────────────────────────
+// 2026-05-09: SVG_H bumped 220 → 540 so the constellation reads as a
+// proper canvas rather than a 200px-tall sliver. Aspect now 840:540
+// (~1.55:1 widescreen) instead of the original 3.8:1 letterbox band.
+// FIELD_H grows from 176 to 496 — bodies have ~3× more vertical room
+// to breathe and the (fx, fy) fractions still work proportionally.
 const SVG_W = 840
-const SVG_H = 220
+const SVG_H = 540
 const PAD_L = 16
 const PAD_R = 200 // reserve right margin for annotations
 const PAD_T = 16
@@ -499,6 +504,7 @@ export function ConcentrationConstellation({
         width="100%"
         preserveAspectRatio="xMidYMid meet"
         className={className}
+        data-atlas-constellation="true"
         role="img"
         aria-label={isEs
           ? `Constelación de ${totalContracts.toLocaleString()} contratos. ${modeAriaHint} Pasa el cursor o haz clic en un grupo para abrir su página.`
@@ -864,7 +870,9 @@ export function ConcentrationConstellation({
                   stroke="var(--color-background, #faf9f6)"
                   strokeWidth={0.8}
                 />
-                {/* Vendor name label — 9px mono */}
+                {/* Vendor name label — 9px mono. atlas-named-vendor-label
+                    class lets AtlasZoomLayer hide these when zoomed (the
+                    right panel shows the same vendor list more legibly). */}
                 <text
                   x={labelX}
                   y={ny + 1}
@@ -875,6 +883,7 @@ export function ConcentrationConstellation({
                   fontWeight="600"
                   textAnchor={labelAnchor}
                   dominantBaseline="middle"
+                  className="atlas-named-vendor-label"
                   style={{ pointerEvents: 'none' }}
                 >
                   {nv.name.length > 20 ? nv.name.slice(0, 19) + '…' : nv.name}

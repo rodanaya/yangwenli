@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface Institution {
   id: string
@@ -66,6 +67,7 @@ function getNode(id: string): { x: number; y: number } {
 }
 
 export function StoryTrianguloFarmaceutico() {
+  const { t } = useTranslation('storyCharts')
   const maxValue = Math.max(...EDGES.map((e) => e.value))
 
   return (
@@ -76,35 +78,33 @@ export function StoryTrianguloFarmaceutico() {
       className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Triángulo Farmacéutico
+        {t('trianguloFarmaceutico.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        Tres instituciones, tres proveedores, 285 mil millones de pesos
+        {t('trianguloFarmaceutico.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        El grueso del gasto farmacéutico federal 2019-2023 fluyó desde IMSS, ISSSTE
-        y la Secretaría de Salud hacia tres proveedores dominantes. El ancho de cada
-        arista es proporcional al valor contratado.
+        {t('trianguloFarmaceutico.lede')}
       </p>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$128B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            Fármacos Especializados · score 0.89
+            {t('trianguloFarmaceutico.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-red-400 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$92B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            Maypo Internacional · score 0.84
+            {t('trianguloFarmaceutico.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-red-300 pl-3 py-1">
-          <div className="text-2xl font-mono font-bold text-risk-critical">$65B</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            DIMM · score 0.81
+            {t('trianguloFarmaceutico.stat3Label')}
           </div>
         </div>
       </div>
@@ -113,7 +113,7 @@ export function StoryTrianguloFarmaceutico() {
         viewBox="0 0 440 440"
         className="w-full h-auto"
         role="img"
-        aria-label="Pharmaceutical triangle showing flow from IMSS, ISSSTE, and SS to three dominant vendors"
+        aria-label={t('trianguloFarmaceutico.ariaLabel')}
       >
         {/* Triangle outline connecting institutions */}
         <motion.path
@@ -202,7 +202,7 @@ export function StoryTrianguloFarmaceutico() {
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
-              ${inst.spend}B gasto
+              {`$${inst.spend}B ${t('trianguloFarmaceutico.spendSuffix')}`}
             </text>
           </motion.g>
         ))}
@@ -252,11 +252,11 @@ export function StoryTrianguloFarmaceutico() {
         <g transform="translate(20, 400)">
           <circle cx={6} cy={6} r={6} fill="#18181b" stroke="var(--color-sector-educacion)" strokeWidth={1.5} />
           <text x={18} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-            Instituciones federales
+            {t('trianguloFarmaceutico.legendInstitutions')}
           </text>
           <circle cx={180} cy={6} r={6} fill="var(--color-sector-salud)" />
           <text x={192} y={10} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
-            Proveedor dominante
+            {t('trianguloFarmaceutico.legendVendor')}
           </text>
         </g>
       </svg>
@@ -264,7 +264,7 @@ export function StoryTrianguloFarmaceutico() {
       {/* DA rate dot strips */}
       <div className="space-y-2 pt-2 border-t border-border">
         <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-          Adjudicación directa por proveedor · cada punto = 2pp · OCDE máx 25%
+          {t('trianguloFarmaceutico.daStripsLabel')}
         </p>
         {VENDORS.map((v) => {
           const filled = Math.round(v.daRate / 2)
@@ -303,18 +303,15 @@ export function StoryTrianguloFarmaceutico() {
 
       <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          HALLAZGO
+          {t('trianguloFarmaceutico.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          Los tres proveedores comparten el mismo patrón: adjudicación directa por
-          encima del 75% — más de 3x el límite OCDE — y scores de riesgo v0.6.5
-          superiores a 0.81. Fármacos Especializados concentró el 45% del gasto
-          farmacéutico federal rastreable entre 2019-2023.
+          {t('trianguloFarmaceutico.findingBody')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: COMPRANET 2019-2023 · análisis RUBLI · modelo v0.6.5 · COFECE DE-011-2016
+        {t('trianguloFarmaceutico.footer')}
       </p>
     </motion.div>
   )

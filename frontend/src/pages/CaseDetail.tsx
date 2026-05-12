@@ -6,7 +6,7 @@ import { caseLibraryApi, ariaApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { ArrowLeft, ExternalLink, ArrowUpRight } from 'lucide-react'
-import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
@@ -172,7 +172,13 @@ function formatCompact(n: number): string {
   return String(n)
 }
 
-function titleCase(s: string): string {
+function titleCase(s: string | null | undefined): string {
+  // 2026-05-09: harness-found bug — null was being passed in 11 separate
+  // production sessions (TypeError: Cannot read properties of null at M).
+  // Most likely culprits: data.administration, data.fraud_type, vendor.role,
+  // vendor.evidence_strength, sector — any backend nullable field reaching
+  // this function blows the page via ErrorBoundary. Now defaults to '—'.
+  if (s == null || s === '') return '—'
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
@@ -990,7 +996,7 @@ function SimilarPatternsTeaser({
 // VISUAL — Pattern Fingerprint
 // Shown in Section 03 (Risk Signature) when this case has no matched
 // vendors with model scores. Instead of an empty "data unavailable"
-// card, this draws on the live ARIA queue to show how the v0.6.5
+// card, this draws on the live ARIA queue to show how the v0.8.5
 // model actually characterizes the case's mapped pattern (P1-P7) at
 // the population level: vendor count, IPS distribution, sector spread.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1016,7 +1022,7 @@ function PatternFingerprint({
   const total = data?.pagination?.total ?? 0
 
   // Compute the pattern's IPS distribution + sector mix client-side.
-  // Bucket scores into the 4 risk levels matching the v0.6.5 thresholds.
+  // Bucket scores into the 4 risk levels matching the v0.8.5 thresholds.
   const ipsValues = items.map((i) => i.ips_final ?? 0)
   const avgIps = ipsValues.length > 0 ? ipsValues.reduce((s, v) => s + v, 0) / ipsValues.length : 0
   const tierCounts = { critical: 0, high: 0, medium: 0, low: 0 }
@@ -1789,7 +1795,7 @@ function CaseBody({
         </Section>
 
         {/* NEW — Model Provenance: explicit transparency about how this
-            case actually fed into the v0.6.5 model. Shows the data flow
+            case actually fed into the v0.8.5 model. Shows the data flow
             from documented vendors → matched COMPRANET contracts →
             positive training labels. The user called out the prior
             "Training Corpus" framing as rhetoric without evidence — this
@@ -1872,8 +1878,8 @@ function CaseBody({
                 <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
                   Across {riskDist.totalVendors} {riskDist.totalVendors === 1 ? 'vendor' : 'vendors'}{' '}
                   with COMPRANET contracts. The v0.8.5 model uses 18 features — price volatility,
-                  vendor concentration, institution diversity — calibrated against 1,363 confirmed
-                  corruption cases.
+                  vendor concentration, institution diversity — calibrated against{' '}
+                  {GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} confirmed corruption cases.
                   {avgRiskScore < 0.3 && (
                     <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 11 }}>
                       Low score flag: this pattern is structurally different from the training set.

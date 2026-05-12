@@ -617,10 +617,17 @@ export default function DataPullquote({
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontStyle: 'italic',
                     fontWeight: 800,
-                    fontSize: 'clamp(4.5rem, 12vw, 7rem)',
-                    lineHeight: 0.88,
-                    letterSpacing: '-0.03em',
+                    // 2026-05-07: shrunk from clamp(4.5rem, 12vw, 7rem) — multi-character
+                    // strings like "1,200-2,400" overflowed at narrow side-column widths.
+                    // Container-query-style sizing: cap at 3.5rem so 9-character strings
+                    // (~"1,200-2,400") fit in a 380px sidebar column.
+                    fontSize: 'clamp(2.4rem, 5.5vw, 3.5rem)',
+                    lineHeight: 0.95,
+                    letterSpacing: '-0.025em',
                     color: accent,
+                    // Allow long ranges to wrap rather than overflow if a column is even narrower
+                    overflowWrap: 'anywhere',
+                    maxWidth: '100%',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >
@@ -701,10 +708,14 @@ export default function DataPullquote({
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontStyle: 'italic',
                     fontWeight: 800,
-                    fontSize: 'clamp(2.4rem, 5.6vw, 3.6rem)',
+                    // 2026-05-07: trimmed from clamp(2.4rem, 5.6vw, 3.6rem) so
+                    // multi-character ranges sit on one line at narrow columns.
+                    fontSize: 'clamp(1.85rem, 4vw, 2.6rem)',
                     lineHeight: 0.95,
                     letterSpacing: '-0.02em',
                     color: accent,
+                    overflowWrap: 'anywhere',
+                    maxWidth: '100%',
                   }}
                   aria-label={`${stat} ${statLabel}`}
                 >

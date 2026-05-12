@@ -62,6 +62,24 @@ window.addEventListener('unhandledrejection', (event) => {
   }
 })
 
+// 2026-05-11: catch the "Cannot read properties of undefined (reading 'default')"
+// TypeError raised during module evaluation. This happens when a vendor chunk
+// (most commonly vendor-i18n) loads successfully but its export-resolution
+// runs against a stale module graph — the imported `.default` is undefined
+// and the next access throws. ErrorBoundary can't catch this because it
+// fires before any React component renders.
+//
+// 26 hits in the latest 35h harness all match this pattern, all in vendor-i18n.
+// Reload pulls a fresh module graph that resolves the export correctly.
+window.addEventListener('error', (event) => {
+  const msg = String(event.error?.message ?? event.message ?? '')
+  if (/Cannot read propert(?:y|ies) of undefined \(reading ['"](?:default|exports)['"]\)/i.test(msg)) {
+    if (recoverFromChunkError('module-init TypeError: ' + msg.slice(0, 80))) {
+      event.preventDefault()
+    }
+  }
+})
+
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined
 if (sentryDsn) {
   Sentry.init({

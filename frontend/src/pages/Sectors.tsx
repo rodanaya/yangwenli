@@ -291,12 +291,27 @@ export function Sectors() {
   const totalValue = data?.total_value_mxn ?? 0
   const totalContracts = data?.total_contracts ?? 0
 
-  const subtitleText = totalValue > 0
-    ? t('page.subtitle', {
-        totalValue: formatSpend(totalValue),
-        years: '23',
-      })
-    : t('page.subtitleFallback')
+  // 2026-05-08 audit fix: when sidebar lands the user on `?view=categories`,
+  // the page was still titled "12 Sectores …". Switch title + subtitle so the
+  // sidebar item and the page agree.
+  const titleText = view === 'categories'
+    ? t('page.titleCategories', { defaultValue: 'What Mexico Is Buying — by Category' })
+    : t('page.title')
+  const subtitleText = view === 'categories'
+    ? (totalValue > 0
+        ? t('page.subtitleCategories', {
+            totalValue: formatSpend(totalValue),
+            defaultValue: '{{totalValue}} routed through 72 procurement categories',
+          })
+        : t('page.subtitleCategoriesFallback', {
+            defaultValue: '72 procurement categories covering 99.7% of federal spend',
+          }))
+    : (totalValue > 0
+        ? t('page.subtitle', {
+            totalValue: formatSpend(totalValue),
+            years: '23',
+          })
+        : t('page.subtitleFallback'))
 
   return (
     <div className="min-h-screen">
@@ -308,19 +323,45 @@ export function Sectors() {
           + italic subtitle) was eating the entire fold; condensed to
           one title row + dateline + 3 anchor stats. */}
       <header className="border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7">
+          {/* folio-v1-P2: archival eyebrow */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·II</span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              COMPRANET 2002–2025
+              <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
+              v0.8.5
+            </span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                {t('page.title')}
+              {/* Headline — EB Garamond italic 500 */}
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 40px)',
+                  lineHeight: 0.98,
+                  letterSpacing: '-0.012em',
+                }}
+              >
+                {titleText}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
-                <span className="mx-1.5" aria-hidden>·</span>
-                COMPRANET 2002–2025
-                <span className="mx-1.5" aria-hidden>·</span>
-                v0.8.5
-              </p>
             </div>
             {!isLoading && (
               <div className="flex items-baseline gap-5">
@@ -349,8 +390,17 @@ export function Sectors() {
               </div>
             )}
           </div>
-          {/* Subtitle — kept as a single muted line below for context. */}
-          <p className="text-xs text-text-muted mt-2 max-w-2xl">
+          {/* Subtitle — folio-v1-P2: EB Garamond italic 16px / 1.55 max-width 68ch */}
+          <p
+            className="mt-3 max-w-[68ch]"
+            style={{
+              fontFamily: '"EB Garamond", Georgia, serif',
+              fontSize: '16px',
+              lineHeight: 1.55,
+              color: 'var(--color-text-secondary, var(--color-text-muted))',
+              letterSpacing: '0.005em',
+            }}
+          >
             {subtitleText}
           </p>
         </div>

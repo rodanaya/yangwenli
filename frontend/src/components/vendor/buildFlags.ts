@@ -24,7 +24,7 @@ import {
   sortFlagsByPriority,
   type PriorityFlag,
 } from '@/components/ui/PriorityAlert'
-import { RISK_THRESHOLDS } from '@/lib/constants'
+import { RISK_THRESHOLDS, CURRENT_MODEL_VERSION } from '@/lib/constants'
 
 export interface BuildFlagsInput {
   vendor: VendorDetailResponse
@@ -59,7 +59,14 @@ export function buildVendorFlags(input: BuildFlagsInput): PriorityFlag[] {
       headline: t('vendorFlags.groundTruth.headline'),
       detail:
         caseCount > 0
-          ? t('vendorFlags.groundTruth.detail', { n: caseCount })
+          // i18next plural — count drives detail_one vs detail_other so the
+          // string never reads "1 caso(s)" / "1 cases" again. Also threads
+          // the active model version through ({{version}}) so we don't have
+          // to reissue translations every time the active model bumps.
+          ? t('vendorFlags.groundTruth.detail', {
+              count: caseCount,
+              version: CURRENT_MODEL_VERSION,
+            })
           : undefined,
       // § 7 dossier spec: GT case flag must be clickable → /cases/:slug
       linkTo: firstSlug ? `/cases/${firstSlug}` : undefined,

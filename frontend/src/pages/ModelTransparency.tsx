@@ -2,7 +2,7 @@
  * Model Transparency Page — Editorial 3-tab Layout
  *
  * Summary · Metrics · Audit Trail
- * Explains the v0.6.5 risk scoring model in plain language.
+ * Explains the v0.8.5 risk scoring model in plain language.
  */
 
 import { useMemo } from 'react'
@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { analysisApi } from '@/api/client'
-import { CURRENT_MODEL_VERSION, RISK_COLORS } from '@/lib/constants'
+import { CURRENT_MODEL_VERSION, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
 import { FileText, BarChart3, History } from 'lucide-react'
 
@@ -25,7 +25,7 @@ const POSITIVE = 'var(--color-risk-high)'   // amber: risk-increasing factors
 const NEGATIVE = 'var(--color-oecd)'        // cyan: protective factors
 
 // ============================================================================
-// Static model data (v0.6.5)
+// Static model data (v0.8.5)
 // ============================================================================
 
 interface Coefficient {
@@ -65,7 +65,7 @@ interface VersionEntry {
 
 const VERSION_HISTORY: VersionEntry[] = [
   {
-    version: 'v0.6.5',
+    version: 'v0.8.5',
     date: '2026-03-25',
     auc: 0.828,
     hr: 13.49,
@@ -206,12 +206,12 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           <StatCard
             value={formatNumber(nContracts || 3_051_294)}
             label="Contracts scored"
-            sub="All v0.6.5-tagged records, 2002–2025."
+            sub="All v0.8.5-tagged records, 2002–2025."
           />
           <StatCard
-            value="1,363"
+            value={GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}
             label="Ground-truth cases"
-            sub="603 vendors · 288K scoped contracts."
+            sub="861 vendors · 288K scoped contracts."
           />
         </div>
       </section>
@@ -221,7 +221,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
         <SectionHeadline
           eyebrow="How the model works"
           headline="Similarity to documented corruption — not literal probability"
-          deck="A calibrated logistic regression trained on 1,363 ground-truth cases produces a 0–1 score for every federal procurement contract since 2002."
+          deck={`A calibrated logistic regression trained on ${GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} ground-truth cases produces a 0–1 score for every federal procurement contract since 2002.`}
         />
 
         <div className="max-w-3xl space-y-5">
@@ -246,8 +246,9 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
               R
             </span>
             UBLI scores every Mexican federal procurement contract on a 0–1 scale
-            by comparing it against patterns from 1,363 documented corruption cases — ghost
-            companies, bid rigging, captured institutions, inflated contracts.
+            by comparing it against patterns from {GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}{' '}
+            documented corruption cases — ghost companies, bid rigging, captured institutions,
+            inflated contracts.
           </p>
           <p className="text-[0.95rem] leading-[1.7] text-text-secondary" style={{ fontFamily: 'var(--font-family-serif)' }}>
             The model is a calibrated <span className="text-text-secondary font-medium">logistic regression</span> with
@@ -376,7 +377,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
       {/* Feature coefficients — editorial divergent bar */}
       <section>
         <SectionHeadline
-          eyebrow="Active coefficients · v0.6.5 global model"
+          eyebrow="Active coefficients · v0.8.5 global model"
           headline="Nine features survive L1 regularization"
           deck="Positive coefficients (amber) push contracts toward higher scores. Protective coefficients (blue) pull toward lower. Seven features in the architecture regularize to zero."
         />
@@ -811,7 +812,7 @@ export default function ModelTransparency() {
           </div>
           <div className="flex items-baseline gap-5">
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">1,363</div>
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}</div>
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">GT cases</div>
             </div>
             <div className="text-right">

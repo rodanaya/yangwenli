@@ -33,6 +33,7 @@ import {
   Shield,
   Activity,
   Network as NetworkIcon,
+  Map as MapIcon,
 } from 'lucide-react'
 
 import { vendorApi } from '@/api/client'
@@ -202,6 +203,37 @@ export function VendorProfile() {
               <BookOpen className="h-3.5 w-3.5" />
               <span className="ml-1.5 hidden sm:inline">
                 {isEs ? 'Hilo' : 'Thread'}
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Push this vendor into the spatial-map recent-jumps list so
+                // it appears at top of ⌘K Recent on /. Same key as the
+                // overlay (rubli_explore_recent_v1).
+                try {
+                  const KEY = 'rubli_explore_recent_v1'
+                  const cur = JSON.parse(localStorage.getItem(KEY) || '[]')
+                  const filtered = (Array.isArray(cur) ? cur : []).filter(
+                    (x: { kind?: string; id?: number }) => !(x.kind === 'vendor' && x.id === vendorId),
+                  )
+                  const next = [
+                    { kind: 'vendor', id: vendorId, label: vendor.name },
+                    ...filtered,
+                  ].slice(0, 8)
+                  localStorage.setItem(KEY, JSON.stringify(next))
+                } catch {
+                  /* private mode */
+                }
+                navigate('/')
+              }}
+              className="h-8 text-xs"
+              title={isEs ? 'Abrir en el mapa espacial' : 'Open in spatial map'}
+            >
+              <MapIcon className="h-3.5 w-3.5" />
+              <span className="ml-1.5 hidden sm:inline">
+                {isEs ? 'Mapa' : 'Map'}
               </span>
             </Button>
             <AddToWatchlistButton

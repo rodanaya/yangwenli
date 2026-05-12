@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DotBar } from '@/components/ui/DotBar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { FolderSidebar } from '@/components/FolderSidebar'
 import { DossierCard } from '@/components/DossierCard'
@@ -62,7 +62,7 @@ function formatRiskPct(score: number | null | undefined): string {
   return `${(score * 100).toFixed(1)}%`
 }
 
-// Canonical thresholds via getRiskLevelFromScore (v0.6.5: 0.60/0.40/0.25).
+// Canonical thresholds via getRiskLevelFromScore (v0.8.5: 0.60/0.40/0.25).
 // Trust manifest invariant 3: never inline thresholds — always go through @/lib/constants.
 const RISK_COLOR_CLASS: Record<'critical' | 'high' | 'medium' | 'low', string> = {
   critical: 'text-risk-critical',
@@ -986,7 +986,7 @@ export function Watchlist() {
                               {t('workspaceEmpty.caseTitle')}
                             </p>
                             <p className="text-xs text-text-muted leading-snug mb-4 min-h-[2.5rem]">
-                              {t('workspaceEmpty.caseDesc')}
+                              {t('workspaceEmpty.caseDesc', { n: GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString() })}
                             </p>
                             <Button
                               variant="outline"

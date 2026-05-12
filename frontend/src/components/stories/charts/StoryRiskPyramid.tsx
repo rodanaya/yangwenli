@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 const TIERS = [
   { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: 'var(--color-sector-salud)', threshold: '≥ 0.60', count: '184K' },
@@ -28,6 +29,7 @@ const W = LEFT_LABEL_W + DOTS_PER_ROW * DOT_GAP + RIGHT_LABEL_W
 const H = 40 + TIERS.length * ROW_H + 30
 
 export function StoryRiskPyramid() {
+  const { t } = useTranslation('storyCharts')
   const maxValuePct = Math.max(...TIERS.map((t) => t.valuePct))
 
   return (
@@ -38,35 +40,34 @@ export function StoryRiskPyramid() {
       className="w-full space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        RUBLI · Distribución de riesgo
+        {t('riskPyramid.kicker')}
       </p>
 
       <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        6% de los contratos concentran 42% del dinero — y son todos de riesgo crítico
+        {t('riskPyramid.headline')}
       </h3>
       <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        Cada punto representa 2% del total de contratos. Los niveles se angostan hacia arriba:
-        la cima crítica es estrecha por número, pero la más ancha por valor.
+        {t('riskPyramid.lede')}
       </p>
 
       {/* Hero stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-risk-critical">MXN 4.1T</div>
+          <div className="text-xl font-mono font-bold text-risk-critical">{t('riskPyramid.stat1Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            en contratos críticos
+            {t('riskPyramid.stat1Label')}
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-orange-400">6.9x</div>
+          <div className="text-xl font-mono font-bold text-orange-400">{t('riskPyramid.stat2Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            ratio valor / volumen (crítico)
+            {t('riskPyramid.stat2Label')}
           </div>
         </div>
         <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-text-muted">13.5%</div>
+          <div className="text-xl font-mono font-bold text-text-muted">{t('riskPyramid.stat3Value')}</div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            tasa de alto riesgo · OCDE máx 15%
+            {t('riskPyramid.stat3Label')}
           </div>
         </div>
       </div>
@@ -77,17 +78,17 @@ export function StoryRiskPyramid() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Dot pyramid showing 4 risk levels, critical at the top with 6 percent, low at the base with 59.4 percent"
+          aria-label={t('riskPyramid.ariaLabel')}
         >
           {/* Column headers */}
           <text x={LEFT_LABEL_W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            NIVEL
+            {t('riskPyramid.levelHeader')}
           </text>
           <text x={LEFT_LABEL_W + (DOTS_PER_ROW * DOT_GAP) / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            % DE CONTRATOS (cada punto = 2%)
+            {t('riskPyramid.contractsHeader')}
           </text>
           <text x={W - 8} y={20} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            % DEL VALOR
+            {t('riskPyramid.valueHeader')}
           </text>
 
           {TIERS.map((tier, rowIdx) => {
@@ -157,7 +158,7 @@ export function StoryRiskPyramid() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            HR = 13.49% · modelo RUBLI v0.6.5 · AUC test 0.828
+            {t('riskPyramid.summaryLine')}
           </text>
         </svg>
       </div>
@@ -165,17 +166,17 @@ export function StoryRiskPyramid() {
       {/* Finding */}
       <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-critical mb-1">
-          HALLAZGO
+          {t('riskPyramid.findingLabel')}
         </p>
         <p className="text-sm text-text-secondary">
-          La forma de la pirámide se invierte cuando la medida cambia de número a valor:
-          <strong className="text-risk-critical"> 6% de contratos cargan 42% del dinero</strong>.
-          El patrón es consistente en los 12 sectores — la corrupción gravita hacia los contratos grandes.
+          {t('riskPyramid.findingPrefix')}
+          <strong className="text-risk-critical"> {t('riskPyramid.findingStrong')}</strong>
+          {t('riskPyramid.findingSuffix')}
         </p>
       </div>
 
       <p className="text-[10px] text-text-muted font-mono">
-        Fuente: 3.05M contratos · RUBLI v0.6.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25
+        {t('riskPyramid.footer')}
       </p>
     </motion.div>
   )

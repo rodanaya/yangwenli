@@ -7,9 +7,11 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface MetricRow {
-  metric: string
+  // i18n key under storyCharts.sexenioComp.metricXxx
+  metricKey: 'DirectAward' | 'SingleBid' | 'HighRisk' | 'Concentration'
   unit: string
   fox: number
   calderon: number
@@ -18,10 +20,10 @@ interface MetricRow {
 }
 
 const DATA: MetricRow[] = [
-  { metric: 'Adj. Directa',   unit: '%', fox: 63.5, calderon: 64.2, pena: 71.8, amlo: 79.4 },
-  { metric: 'Licit. unica',   unit: '%', fox: 12.1, calderon: 13.4, pena: 15.7, amlo: 18.2 },
-  { metric: 'Riesgo alto',    unit: '%', fox: 4.2,  calderon: 5.1,  pena: 7.3,  amlo: 11.8 },
-  { metric: 'Concentracion',  unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
+  { metricKey: 'DirectAward',   unit: '%', fox: 63.5, calderon: 64.2, pena: 71.8, amlo: 79.4 },
+  { metricKey: 'SingleBid',     unit: '%', fox: 12.1, calderon: 13.4, pena: 15.7, amlo: 18.2 },
+  { metricKey: 'HighRisk',      unit: '%', fox: 4.2,  calderon: 5.1,  pena: 7.3,  amlo: 11.8 },
+  { metricKey: 'Concentration', unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
 ]
 
 const FOX_COLOR = 'var(--color-text-secondary)'
@@ -53,10 +55,14 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 50 + DATA.length * (SEXENIO_BLOCK_H + METRIC_GAP) + 20
 
 export function SexenioComparisonChart() {
-  const worstMetric = DATA.reduce((worst, d) => {
-    const delta = d.amlo - d.fox
-    return delta > worst.delta ? { name: d.metric, delta, amloVal: d.amlo } : worst
-  }, { name: '', delta: 0, amloVal: 0 })
+  const { t } = useTranslation('storyCharts')
+  const worstMetric = DATA.reduce<{ key: MetricRow['metricKey']; delta: number; amloVal: number }>(
+    (worst, d) => {
+      const delta = d.amlo - d.fox
+      return delta > worst.delta ? { key: d.metricKey, delta, amloVal: d.amlo } : worst
+    },
+    { key: 'DirectAward', delta: 0, amloVal: 0 },
+  )
 
   return (
     <motion.div
@@ -66,13 +72,13 @@ export function SexenioComparisonChart() {
       className="rounded-sm bg-background-card p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        RUBLI · Diagnostico sexenal
+        {t('sexenioComp.kicker')}
       </p>
       <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        Todos los indicadores empeoran con cada sexenio
+        {t('sexenioComp.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Mayor deterioro: {worstMetric.name} (+{worstMetric.delta.toFixed(1)} pts Fox a AMLO)
+        {`${t('sexenioComp.sublinePrefix')} ${t(`sexenioComp.metric${worstMetric.key}`)} (+${worstMetric.delta.toFixed(1)} pts Fox → AMLO)`}
       </p>
 
       {/* Sexenio legend */}
@@ -90,7 +96,7 @@ export function SexenioComparisonChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Four metrics by sexenio, dot matrix, each dot 1pp"
+          aria-label={t('sexenioComp.ariaLabel')}
         >
           {/* Header */}
           <text
@@ -102,7 +108,7 @@ export function SexenioComparisonChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            INDICADOR / SEXENIO
+            {t('sexenioComp.indicatorHeader')}
           </text>
           <text
             x={LABEL_W + COL_W + VALUE_W - 2}
@@ -113,7 +119,7 @@ export function SexenioComparisonChart() {
             fontFamily="var(--font-family-mono)"
             letterSpacing="0.1em"
           >
-            VALOR
+            {t('sexenioComp.valueHeader')}
           </text>
 
           {/* Metric blocks */}
@@ -121,7 +127,7 @@ export function SexenioComparisonChart() {
             const blockY = 38 + metricIdx * (SEXENIO_BLOCK_H + METRIC_GAP)
 
             return (
-              <g key={row.metric}>
+              <g key={row.metricKey}>
                 {/* Metric label at block top */}
                 <text
                   x={LABEL_W - 6}
@@ -132,7 +138,7 @@ export function SexenioComparisonChart() {
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
                 >
-                  {row.metric}
+                  {t(`sexenioComp.metric${row.metricKey}`)}
                 </text>
 
                 {/* Divider under metric label */}
@@ -207,7 +213,7 @@ export function SexenioComparisonChart() {
       </div>
 
       <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
+        {t('sexenioComp.footer')}
       </p>
     </motion.div>
   )

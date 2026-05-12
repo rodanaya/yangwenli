@@ -8,6 +8,7 @@
  */
 
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 
 interface EraRow {
   era: string
@@ -45,6 +46,7 @@ const W = LABEL_W + MAX_COL_W + VALUE_W
 const H = 40 + DATA.length * (ERA_BLOCK_H + ERA_GAP) + 10
 
 export function StoryAusteridadChart() {
+  const { t } = useTranslation('storyCharts')
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,24 +55,24 @@ export function StoryAusteridadChart() {
       className="rounded-sm bg-background-card border border-border p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        RUBLI · Austeridad
+        {t('austeridad.kicker')}
       </p>
 
       <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        El gasto bajó 10%. La opacidad subió 8 puntos.
+        {t('austeridad.headline')}
       </p>
       <p className="text-xs text-text-muted mb-4">
-        Gasto total y tasa de adjudicación directa por administración · COMPRANET 2007-2024
+        {t('austeridad.subline')}
       </p>
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-border pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-text-secondary">-10%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">gasto Pena a AMLO</div>
+          <div className="text-lg font-mono font-bold text-text-secondary">{t('austeridad.stat1Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('austeridad.stat1Label')}</div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-risk-critical">+8.6pp</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">opacidad Pena a AMLO</div>
+          <div className="text-lg font-mono font-bold text-risk-critical">{t('austeridad.stat2Value')}</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('austeridad.stat2Label')}</div>
         </div>
       </div>
 
@@ -79,17 +81,17 @@ export function StoryAusteridadChart() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
           role="img"
-          aria-label="Spend vs DA rate by administration, dot matrix"
+          aria-label={t('austeridad.ariaLabel')}
         >
           {/* Legend row */}
           <g>
             <circle cx={LABEL_W + 4} cy={20} r={3} fill={SPEND_COLOR} />
             <text x={LABEL_W + 14} y={24} fill={SPEND_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              GASTO TOTAL (cada punto = 0.1T MXN)
+              {t('austeridad.spendLegend')}
             </text>
             <circle cx={LABEL_W + 288} cy={20} r={3} fill={DA_COLOR} />
             <text x={LABEL_W + 298} y={24} fill={DA_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-              ADJ. DIRECTA (cada punto = 2pp)
+              {t('austeridad.daLegend')}
             </text>
           </g>
 
@@ -202,7 +204,7 @@ export function StoryAusteridadChart() {
                         fontFamily="var(--font-family-mono)"
                         fontWeight={600}
                       >
-                        {row.daPct}% DA
+                        {`${row.daPct}% ${t('austeridad.daSuffix')}`}
                       </text>
                     </g>
                   )
@@ -214,7 +216,7 @@ export function StoryAusteridadChart() {
       </div>
 
       <p className="text-[10px] text-text-muted mt-3">
-        Fuente: COMPRANET · Análisis RUBLI v0.6.5
+        {t('austeridad.footer')}
       </p>
     </motion.div>
   )
