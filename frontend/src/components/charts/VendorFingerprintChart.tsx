@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getRiskLevelFromScore } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
@@ -183,6 +184,8 @@ export default function VendorFingerprintChart({
   animate = true,
   compareWith,
 }: VendorFingerprintChartProps) {
+  const { i18n } = useTranslation()
+  const isES = i18n.language?.startsWith('es') ?? true
   const cx = size / 2
   const cy = size / 2
   const labelOffset = showLabels ? 48 : 8
@@ -429,7 +432,7 @@ export default function VendorFingerprintChart({
               cy={cy}
               angle={petal.midAngle}
               radius={maxRadius + 14}
-              label={petal.feature.labelEN}
+              label={isES ? petal.feature.labelES : petal.feature.labelEN}
               color={color}
             />
           )
