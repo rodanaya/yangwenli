@@ -31,8 +31,8 @@ const HOUR = 60 * MIN
 export type VendorTabKey = 'overview' | 'evidence' | 'activity' | 'network' | 'aria'
 
 interface UseVendorDataOptions {
-  /** Active tab — controls which queries fire. */
-  activeTab: VendorTabKey
+  /** Active tab — no longer used for gating; kept for API compat. */
+  activeTab?: VendorTabKey
   /** Page for the contracts list (1-based). */
   contractsPage?: number
   /** Gate for the AI summary query. */
@@ -51,7 +51,6 @@ export function useVendorData(
   opts: UseVendorDataOptions
 ) {
   const {
-    activeTab,
     contractsPage = 1,
     loadAiSummary = false,
     contractsPerPage = 50,
@@ -64,7 +63,7 @@ export function useVendorData(
         ? vendorIdRaw
         : Number(vendorIdRaw)
   const enabled = vendorId != null && Number.isFinite(vendorId)
-  const evidenceTabActive = activeTab === 'evidence' || activeTab === 'overview'
+  const evidenceTabActive = enabled
 
   // ───────────────────────────── Eager queries ────────────────────────────
   const vendor = useQuery({

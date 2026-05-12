@@ -21,7 +21,7 @@
  *   - Tab state via ?tab=
  */
 import { lazy, Suspense, useCallback, useState } from 'react'
-import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -30,16 +30,13 @@ import {
   BookOpen,
   Download,
   Loader2,
-  Shield,
-  Activity,
-  Network as NetworkIcon,
   Map as MapIcon,
 } from 'lucide-react'
 
 import { vendorApi } from '@/api/client'
 import type { ContractListItem, VendorLinkedScandalsResponse } from '@/api/types'
 
-import { useVendorData, type VendorTabKey } from '@/hooks/useVendorData'
+import { useVendorData } from '@/hooks/useVendorData'
 import { buildVendorFlags } from '@/components/vendor/buildFlags'
 import { VendorHero } from '@/components/vendor/VendorHero'
 import { VendorEvidenceTab } from '@/components/vendor/VendorEvidenceTab'
@@ -48,7 +45,6 @@ import { VendorNetworkTab } from '@/components/vendor/VendorNetworkTab'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 
 const ContractDetailModal = lazy(() =>
   import('@/components/ContractDetailModal').then((m) => ({ default: m.ContractDetailModal }))
@@ -60,8 +56,6 @@ import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { ShareButton } from '@/components/ShareButton'
 
-const VALID_TABS: VendorTabKey[] = ['evidence', 'activity', 'network']
-
 export function VendorProfile() {
   const { t, i18n } = useTranslation('vendors')
   const { id } = useParams<{ id: string }>()
@@ -70,19 +64,6 @@ export function VendorProfile() {
   const location = useLocation()
   const queryClient = useQueryClient()
 
-  const [searchParams, setSearchParams] = useSearchParams()
-  const rawTab = searchParams.get('tab') as VendorTabKey | null
-  const activeTab: VendorTabKey =
-    rawTab && VALID_TABS.includes(rawTab) ? rawTab : 'evidence'
-  const setActiveTab = useCallback(
-    (key: string) => {
-      const next = new URLSearchParams(searchParams)
-      next.set('tab', key)
-      setSearchParams(next, { replace: true })
-    },
-    [searchParams, setSearchParams]
-  )
-
   const [contractPage, setContractPage] = useState(1)
   const [selectedContract, setSelectedContract] =
     useState<ContractListItem | null>(null)
@@ -90,7 +71,6 @@ export function VendorProfile() {
   const [csvExporting, setCsvExporting] = useState(false)
 
   const data = useVendorData(vendorId, {
-    activeTab,
     contractsPage: contractPage,
   })
 
@@ -270,62 +250,55 @@ export function VendorProfile() {
         }
       />
 
-      <SimpleTabs
-        active={activeTab}
-        onTabChange={setActiveTab}
-        tabs={[
-          {
-            key: 'evidence',
-            label: isEs ? 'Evidencia' : 'Evidence',
-            icon: Shield,
-          },
-          {
-            key: 'activity',
-            label: isEs ? 'Actividad' : 'Activity',
-            icon: Activity,
-          },
-          {
-            key: 'network',
-            label: isEs ? 'Red' : 'Network',
-            icon: NetworkIcon,
-          },
-        ]}
-      >
-        <TabPanel tabKey="evidence">
-          <VendorEvidenceTab
-            vendor={vendor}
-            waterfall={data.waterfall.data}
-            waterfallLoading={data.waterfall.isLoading}
-            shap={data.shap.data}
-            aria={data.aria.data}
-            groundTruth={data.groundTruthStatus.data}
-            peerComparison={data.peerComparison.data}
-          />
-        </TabPanel>
-        <TabPanel tabKey="activity">
-          <VendorActivityTab
-            vendor={vendor}
-            contracts={data.contracts.data}
-            contractsLoading={data.contracts.isLoading}
-            contractsPage={contractPage}
-            onContractsPageChange={setContractPage}
-            onContractClick={(c) => setSelectedContract(c)}
-            lifecycle={data.lifecycle.data}
-            institutions={data.institutions.data}
-          />
-        </TabPanel>
-        <TabPanel tabKey="network">
-          <VendorNetworkTab
-            vendor={vendor}
-            aria={data.aria.data}
-            linkedScandals={data.linkedScandals.data as VendorLinkedScandalsResponse | null | undefined}
-            coBidders={data.coBidders.data}
-            externalFlags={data.externalFlags.data}
-            shap={data.shap.data}
-            onOpenNetworkGraph={() => setNetworkOpen(true)}
-          />
-        </TabPanel>
-      </SimpleTabs>
+      {/* ── Single-scroll dossier: three chapters, no tab chrome ────────── */}
+      <div id="evidence" className="mt-8">
+        <ChapterDivider
+          roman="I"
+          title={isEs ? 'Análisis de Riesgo' : 'Risk Analysis'}
+        />
+        <VendorEvidenceTab
+          vendor={vendor}
+          waterfall={data.waterfall.data}
+          waterfallLoading={data.waterfall.isLoading}
+          shap={data.shap.data}
+          aria={data.aria.data}
+          groundTruth={data.groundTruthStatus.data}
+          peerComparison={data.peerComparison.data}
+        />
+      </div>
+
+      <div id="activity" className="mt-4">
+        <ChapterDivider
+          roman="II"
+          title={isEs ? 'Actividad Contractual' : 'Contract Activity'}
+        />
+        <VendorActivityTab
+          vendor={vendor}
+          contracts={data.contracts.data}
+          contractsLoading={data.contracts.isLoading}
+          contractsPage={contractPage}
+          onContractsPageChange={setContractPage}
+          onContractClick={(c) => setSelectedContract(c)}
+          lifecycle={data.lifecycle.data}
+          institutions={data.institutions.data}
+        />
+      </div>
+
+      <div id="network" className="mt-4">
+        <ChapterDivider
+          roman="III"
+          title={isEs ? 'Red e Investigación' : 'Network & Investigation'}
+        />
+        <VendorNetworkTab
+          vendor={vendor}
+          aria={data.aria.data}
+          linkedScandals={data.linkedScandals.data as VendorLinkedScandalsResponse | null | undefined}
+          coBidders={data.coBidders.data}
+          externalFlags={data.externalFlags.data}
+          shap={data.shap.data}
+          onOpenNetworkGraph={() => setNetworkOpen(true)}
+        />
+      </div>
 
       {/* Contract detail drawer — lazy */}
       {selectedContract && (
@@ -350,6 +323,25 @@ export function VendorProfile() {
           />
         </Suspense>
       )}
+    </div>
+  )
+}
+
+// ─── Chapter divider ─────────────────────────────────────────────────────
+function ChapterDivider({ roman, title }: { roman: string; title: string }) {
+  return (
+    <div className="flex items-center gap-4 pt-10 pb-6">
+      <span
+        className="text-[10px] font-mono font-bold tracking-[0.2em] shrink-0"
+        style={{ color: 'var(--color-accent)', opacity: 0.7 }}
+      >
+        {roman}
+      </span>
+      <div className="flex-1 h-px bg-border/40" />
+      <span className="text-[10px] font-mono font-semibold text-text-muted uppercase tracking-[0.15em] shrink-0">
+        {title}
+      </span>
+      <div className="w-12 h-px bg-border/40" />
     </div>
   )
 }
