@@ -40,8 +40,8 @@ def _set(key: str, value: Any) -> None:
         _cache[key] = {"value": value, "expires": datetime.now() + timedelta(seconds=_CACHE_TTL)}
 
 
-def _row_to_list_item(row) -> dict:
-    return {
+def _row_to_list_item(row, linked_vendor_ids: Optional[List[int]] = None) -> dict:
+    d = {
         "id": row["id"],
         "name_en": row["name_en"],
         "name_es": row["name_es"] or row["name_en"],
@@ -61,7 +61,9 @@ def _row_to_list_item(row) -> dict:
         "summary_en": row["summary_en"],
         "is_verified": row["is_verified"],
         "ground_truth_case_id": row["ground_truth_case_id"],
+        "linked_vendor_ids": linked_vendor_ids,
     }
+    return d
 
 
 def _row_to_detail(row) -> dict:
@@ -161,7 +163,28 @@ def list_cases(
     with get_db() as conn:
         rows = conn.execute(sql, params).fetchall()
 
-    result = [_row_to_list_item(r) for r in rows]
+        # Bulk-fetch linked vendor IDs for all returned cases (single query, not N+1).
+        # Only populated when ground_truth_vendors table exists and vendor_id was filtered.
+        linked_map: dict = {}
+        if vendor_id is not None and rows:
+            gt_ids = [r["ground_truth_case_id"] for r in rows if r["ground_truth_case_id"] is not None]
+            if gt_ids:
+                gtv_tbl = conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='ground_truth_vendors'"
+                ).fetchone()
+                if gtv_tbl:
+                    placeholders = ",".join("?" * len(gt_ids))
+                    link_rows = conn.execute(
+                        f"SELECT case_id, vendor_id FROM ground_truth_vendors WHERE case_id IN ({placeholders}) AND vendor_id IS NOT NULL",
+                        gt_ids,
+                    ).fetchall()
+                    for lr in link_rows:
+                        linked_map.setdefault(lr["case_id"], []).append(lr["vendor_id"])
+
+    result = [
+        _row_to_list_item(r, linked_map.get(r["ground_truth_case_id"]) if vendor_id is not None else None)
+        for r in rows
+    ]
     _set(cache_key, result)
     return result
 
