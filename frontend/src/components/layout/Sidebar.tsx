@@ -139,7 +139,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const location = useLocation()
   const { t, i18n } = useTranslation('nav')
   const { t: tc } = useTranslation('common')
-  const { user } = useAuth()
+  const { user: _user } = useAuth()
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
