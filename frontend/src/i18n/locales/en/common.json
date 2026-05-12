@@ -124,7 +124,13 @@
     "exploreContracts": "Explore contracts",
     "exploreContractsDesc": "Search 3M+ contracts",
     "sectorAgricultura": "Agriculture Sector",
-    "sectorAgriculturaDesc": "93.4% direct award"
+    "sectorAgriculturaDesc": "93.4% direct award",
+    "actInvestigation": "THE INVESTIGATION",
+    "actMethodology": "THE METHODOLOGY",
+    "actFurtherInquiry": "FURTHER INQUIRY",
+    "actRelatedDossiers": "RELATED DOSSIERS",
+    "actReturnToIndex": "RETURN TO INDEX",
+    "notFoundSubtitle": "The requested investigation could not be located."
   },
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Procurement Risk Analysis for Mexican Government Contracts",
@@ -512,6 +518,7 @@
     }
   },
   "report": {
+    "generateButton": "Generate Report",
     "generating": "Generating report…",
     "loadFailed": "Failed to load report. Please try again.",
     "generatedAt": "Generated: {{date}}",

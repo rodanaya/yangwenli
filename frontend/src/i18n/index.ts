@@ -130,7 +130,11 @@ i18n
         storyCharts: enStoryCharts,
       },
     },
-    lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference
+    // Do NOT set lng here — let LanguageDetector determine the language from
+    // localStorage. An explicit lng option overrides the detector and would
+    // prevent the detector from ever running, so new users always got 'en'
+    // regardless of any stored preference. The fallbackLng below handles the
+    // case where no language is detected.
     fallbackLng: 'en',
     detection: { order: ['localStorage'], caches: ['localStorage'] },
     defaultNS: 'common',

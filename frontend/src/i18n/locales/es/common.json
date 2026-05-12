@@ -133,7 +133,13 @@
     "exploreContracts": "Explorar contratos",
     "exploreContractsDesc": "Buscar en 3M+ contratos",
     "sectorAgricultura": "Sector Agricultura",
-    "sectorAgriculturaDesc": "93.4% adjudicación directa"
+    "sectorAgriculturaDesc": "93.4% adjudicación directa",
+    "actInvestigation": "LA INVESTIGACIÓN",
+    "actMethodology": "LA METODOLOGÍA",
+    "actFurtherInquiry": "PARA PROFUNDIZAR",
+    "actRelatedDossiers": "EXPEDIENTES RELACIONADOS",
+    "actReturnToIndex": "VOLVER AL ÍNDICE",
+    "notFoundSubtitle": "La investigación solicitada no pudo encontrarse."
   },
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
@@ -512,6 +518,7 @@
     }
   },
   "report": {
+    "generateButton": "Generar Informe",
     "generating": "Generando informe…",
     "loadFailed": "Error al cargar el informe. Intente de nuevo.",
     "generatedAt": "Generado: {{date}}",

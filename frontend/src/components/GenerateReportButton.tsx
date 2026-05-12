@@ -22,14 +22,13 @@ export function GenerateReportButton({
   variant = 'outline',
 }: GenerateReportButtonProps) {
   const [open, setOpen] = useState(false)
-  const { i18n } = useTranslation()
-  const isEs = i18n.language === 'es'
+  const { t } = useTranslation('common')
 
   return (
     <>
       <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
         <FileText className="h-3.5 w-3.5 mr-1" />
-        {isEs ? 'Generar Reporte' : 'Generate Report'}
+        {t('report.generateButton')}
       </Button>
 
       {open && (

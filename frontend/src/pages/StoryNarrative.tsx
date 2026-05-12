@@ -1856,14 +1856,14 @@ export default function StoryNarrative() {
             <>
               {t('story.notFound', 'Story not found')}
               <span className="block text-base font-normal mt-3 text-text-muted" style={{ fontFamily: 'var(--font-family-sans)' }}>
-                The requested investigation could not be located.
+                {t('story.notFoundSubtitle', 'The requested investigation could not be located.')}
               </span>
             </>
           }
           paragraph={t('story.notFoundDetail', 'The story "{{slug}}" could not be found in the RUBLI narrative archive. Return to the journalism index to explore active investigations.', { slug })}
           severity="high"
         >
-          <Act number="I" label="RETURN TO INDEX">
+          <Act number="I" label={t('story.actReturnToIndex', 'RETURN TO INDEX')}>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 onClick={() => navigate('/journalists')}
@@ -1914,7 +1914,7 @@ export default function StoryNarrative() {
       {/* ── ACT I: THE INVESTIGATION ── */}
       {/* Wider container so hero/feature/data-spotlight variants can breakout */}
       <main className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-16">
-        <Act number="I" label="THE INVESTIGATION" className="space-y-0">
+        <Act number="I" label={t('story.actInvestigation', 'THE INVESTIGATION')} className="space-y-0">
           {story.chapters.map((chapter, idx) => {
             const variant = pickChapterVariant(chapter, idx, story.chapters.length)
             return (
@@ -1943,14 +1943,14 @@ export default function StoryNarrative() {
 
       {/* ── ACT II: THE METHODOLOGY ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
-        <Act number="II" label="THE METHODOLOGY" className="space-y-4">
+        <Act number="II" label={t('story.actMethodology', 'THE METHODOLOGY')} className="space-y-4">
           <MethodologySection story={story} />
         </Act>
       </div>
 
       {/* ── ACT III: FURTHER INQUIRY ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
-        <Act number="III" label="FURTHER INQUIRY" className="space-y-4">
+        <Act number="III" label={t('story.actFurtherInquiry', 'FURTHER INQUIRY')} className="space-y-4">
           <ShareBar story={story} />
           <ObservatoryTrailerCTA longformSlug={story.slug} lang={lang} />
           <PlatformLinks story={story} />
@@ -1959,7 +1959,7 @@ export default function StoryNarrative() {
 
       {/* ── ACT IV: RELATED DOSSIERS ── */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
-        <Act number="IV" label="RELATED DOSSIERS" className="space-y-4">
+        <Act number="IV" label={t('story.actRelatedDossiers', 'RELATED DOSSIERS')} className="space-y-4">
           <RelatedSection story={story} />
         </Act>
       </div>
