@@ -17,6 +17,7 @@ import { RISK_COLORS } from '@/lib/constants'
 import { getLocale } from '@/lib/utils'
 
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const MONTH_ABBR_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
 // Risk color ramp — cream-mode, bible §2 (NO green for low; zinc for low).
@@ -30,11 +31,11 @@ function riskToColor(risk: number): string {
   return '#ef4444'                    // critical (bible)
 }
 
-function riskLabel(risk: number): string {
-  if (risk < 0.25) return 'Low'
-  if (risk < 0.40) return 'Medium'
-  if (risk < 0.60) return 'High'
-  return 'Critical'
+function riskLabel(risk: number, isEs: boolean): string {
+  if (risk < 0.25) return isEs ? 'Bajo' : 'Low'
+  if (risk < 0.40) return isEs ? 'Medio' : 'Medium'
+  if (risk < 0.60) return isEs ? 'Alto' : 'High'
+  return isEs ? 'Crítico' : 'Critical'
 }
 
 interface TooltipData {
@@ -126,7 +127,7 @@ export function RiskCalendarHeatmap() {
 
         {/* Month headers */}
         <div className="flex ml-[36px] mb-1">
-          {MONTH_ABBR.map(m => (
+          {(isES ? MONTH_ABBR_ES : MONTH_ABBR).map(m => (
             <div
               key={m}
               className="text-[9px] font-mono text-text-muted text-center"
@@ -202,17 +203,17 @@ export function RiskCalendarHeatmap() {
             }}
           >
             <p className="font-semibold text-text-primary font-mono">
-              {MONTH_ABBR[tooltip.month - 1]} {tooltip.year}
+              {(isES ? MONTH_ABBR_ES : MONTH_ABBR)[tooltip.month - 1]} {tooltip.year}
             </p>
             <p className="text-text-secondary mt-0.5">
-              Risk:{' '}
+              {isES ? 'Riesgo' : 'Risk'}:{' '}
               <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold font-mono">
                 {tooltip.risk.toFixed(3)}
               </span>{' '}
-              <span className="text-text-muted">({riskLabel(tooltip.risk)})</span>
+              <span className="text-text-muted">({riskLabel(tooltip.risk, isES)})</span>
             </p>
             <p className="text-text-secondary">
-              Contracts:{' '}
+              {isES ? 'Contratos' : 'Contracts'}:{' '}
               <span className="text-text-primary font-mono">{tooltip.contracts.toLocaleString(getLocale())}</span>
             </p>
           </div>
@@ -221,24 +222,26 @@ export function RiskCalendarHeatmap() {
 
       {/* Legend — dark-mode risk palette */}
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">Risk:</span>
+        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">
+          {isES ? 'Riesgo' : 'Risk'}:
+        </span>
         {[
-          { label: 'None', color: '#f3f1ec' },
-          { label: 'Low', color: RISK_COLORS.low },
-          { label: 'Medium', color: RISK_COLORS.medium },
-          { label: 'High', color: RISK_COLORS.high },
-          { label: 'Critical', color: RISK_COLORS.critical },
-        ].map(({ label, color }) => (
-          <div key={label} className="flex items-center gap-1">
+          { labelEn: 'None', labelEs: 'Ninguno', color: '#f3f1ec' },
+          { labelEn: 'Low', labelEs: 'Bajo', color: RISK_COLORS.low },
+          { labelEn: 'Medium', labelEs: 'Medio', color: RISK_COLORS.medium },
+          { labelEn: 'High', labelEs: 'Alto', color: RISK_COLORS.high },
+          { labelEn: 'Critical', labelEs: 'Crítico', color: RISK_COLORS.critical },
+        ].map(({ labelEn, labelEs, color }) => (
+          <div key={labelEn} className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded-[2px]"
-              style={{ backgroundColor: color, border: label === 'None' ? '1px solid #3f3f46' : 'none' }}
+              style={{ backgroundColor: color, border: labelEn === 'None' ? '1px solid #3f3f46' : 'none' }}
             />
-            <span className="text-[10px] font-mono text-text-muted">{label}</span>
+            <span className="text-[10px] font-mono text-text-muted">{isES ? labelEs : labelEn}</span>
           </div>
         ))}
         <span className="text-[10px] font-mono text-text-muted ml-2">
-          outlined = December (budget year-end)
+          {isES ? 'contorno = diciembre (cierre de año)' : 'outlined = December (budget year-end)'}
         </span>
       </div>
     </div>
