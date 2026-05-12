@@ -207,3 +207,7 @@ scripts/resumable_upload.py
 # Audit artifacts — Playwright screenshots, session captures
 audit/
 .playwright-mcp/
+
+# Local audit + harness runs (large image dirs, JSONL transcripts)
+data/audit_runs/
+data/explore_runs/
