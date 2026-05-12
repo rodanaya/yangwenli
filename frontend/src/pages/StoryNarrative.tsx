@@ -35,6 +35,9 @@ import {
   InlineMultiLine,
   InlineNetwork,
   InlineStackedBar,
+  ThresholdDistribution as EditorialThreshold,
+  AnnotatedThermometer as EditorialThermometer,
+  ClevelandPairChart as EditorialClevelandPair,
 } from '@/components/stories/InlineCharts'
 import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -54,6 +57,9 @@ const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
   'inline-area': InlineAreaChart,
   'inline-spike': InlineSpikeChart,
   'inline-diverging': InlineDivergingBar,
+  'editorial-threshold':      EditorialThreshold,
+  'editorial-thermometer':    EditorialThermometer,
+  'editorial-cleveland-pair': EditorialClevelandPair,
 }
 
 // ---------------------------------------------------------------------------

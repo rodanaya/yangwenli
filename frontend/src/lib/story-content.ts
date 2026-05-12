@@ -80,6 +80,9 @@ export interface StoryChapterDef {
       | 'editorial-dumbbell'
       | 'vendor-price-trajectory'  // n-P3 Volatilidad ch.2
       | 'venn-convergence'         // n-P3 Volatilidad ch.4
+      | 'editorial-threshold'      // P2 ThresholdDistribution
+      | 'editorial-thermometer'    // P2 AnnotatedThermometer
+      | 'editorial-cleveland-pair' // P2 ClevelandPairChart
     highlight?: string
     title: string
     /** Optional Spanish translation of `title`. */
@@ -596,7 +599,7 @@ export const STORIES: StoryDef[] = [
           'The 112 contracts in the top bracket — each a single procurement event worth more than 5 billion pesos — represent 1.32 trillion pesos in total contracting. Their average risk score of 0.94 places every one of them, on average, deep inside the model\'s critical tier. This is not a statistical curiosity. It is a pattern that should structurally reshape how Mexican oversight institutions allocate audit resources.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-threshold',
           title: 'Average Risk Score by Contract Size Bracket',
           title_es: 'Calificación de riesgo promedio por rango de monto',
           chartId: 'risk-by-size-ladder',
@@ -723,7 +726,7 @@ export const STORIES: StoryDef[] = [
           'This is what international procurement research calls "concentrated risk capture" — the pattern in which the highest-value transactions and the highest-risk transactions are the same transactions, in the same institutions, with the same recurring vendor cast. OECD\'s 2023 review of Mexico identified this pattern explicitly and recommended sector-specific oversight teams concentrated on the four highest-risk sectors. The recommendation was not implemented. The mega-contract universe continues to operate outside the audit rate that would deter it.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-thermometer',
           title: 'Mega-Contract Pesos (≥1B MXN) by Sector',
           title_es: 'Pesos en mega-contratos (≥1 mil millones) por sector',
           chartId: 'mega-by-sector',
@@ -740,6 +743,7 @@ export const STORIES: StoryDef[] = [
               { label: 'Agricultura',      value: 12.4,  color: '#22c55e',                  annotation: '0.5%',                                  annotation_es: '0.5%' },
               { label: 'Trabajo',          value: 6.2,   color: '#f97316',                  annotation: '0.2%',                                  annotation_es: '0.2%' },
             ],
+            referenceLine: { value: 265.3, label: 'Equal share (1 of 10 sectors)', label_es: 'Parte igual (1 de 10 sectores)', color: 'var(--color-sector-tecnologia)' },
             unit: 'B MXN',
             annotation: 'Mega-contract pesos by sector. Top 4 sectors absorb 92 percent of the universe. The four sectors are also the four with the longest documented corruption histories.',
             annotation_es: 'Pesos en mega-contratos por sector. Los 4 sectores principales absorben el 92 por ciento del universo. Estos cuatro sectores son los mismos cuatro con las historias de corrupción mejor documentadas.',
@@ -1229,28 +1233,30 @@ export const STORIES: StoryDef[] = [
           'El universo combinado de oferta única es de tamaño considerable: 504,903 contratos y 5.4 billones de pesos en 23 años. Es más de tres veces el gasto federal completo de la era AMLO, adjudicado bajo procedimientos nominalmente competitivos que en realidad no tuvieron competencia. La calificación de riesgo promedio en este universo es 0.28 — muy por debajo del umbral de alto riesgo, porque el modelo reconoce que no todo contrato de oferta única es fraudulento. Pero el tamaño del universo es el punto editorial: este no es territorio de excepción. Es el modo de operación estándar de la contratación federal mexicana.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-cleveland-pair',
           title: 'Top 12 Vendors by Single-Bid Wins (in "competitive" procedures)',
           title_es: 'Top 12 proveedores por victorias en oferta única (en procedimientos "competitivos")',
           chartId: 'sb-top-vendors',
           data: {
             points: [
-              { label: 'Edenred México',          value: 1679, color: '#dc2626', highlight: true, annotation: '23.8B · vouchers',          annotation_es: '23.8B · vales' },
-              { label: 'INFRA',                   value: 1423, color: '#a06820',                  annotation: '20.1B · gas (FP)',         annotation_es: '20.1B · gas (FP)' },
-              { label: 'TOKA Internacional',      value: 1290, color: '#dc2626', highlight: true, annotation: '37.0B · vouchers',          annotation_es: '37.0B · vales' },
-              { label: 'Efectivale (RL)',         value: 1155, color: '#dc2626', highlight: true, annotation: '6.1B · vouchers',           annotation_es: '6.1B · vales' },
-              { label: 'Efectivale (S.A.)',       value: 1055, color: '#dc2626', highlight: true, annotation: '13.5B · vouchers',          annotation_es: '13.5B · vales' },
-              { label: 'Seg. Alim. Mex (Segalmex)',value: 1014, color: '#dc2626', highlight: true, annotation: '5.3B · risk 0.94',          annotation_es: '5.3B · riesgo 0.94' },
-              { label: 'Liconsa',                 value: 998,  color: '#a06820',                  annotation: '0.7B · gov-owned',           annotation_es: '0.7B · paraestatal' },
-              { label: 'Sodexo',                  value: 658,  color: '#dc2626', highlight: true, annotation: '5.2B · vouchers',           annotation_es: '5.2B · vales' },
-              { label: 'PRAXAIR México',          value: 585,  color: '#a06820',                  annotation: '9.5B · gas',                 annotation_es: '9.5B · gas' },
-              { label: 'Servicio Postal',         value: 551,  color: '#a06820',                  annotation: '1.4B · gov-owned',           annotation_es: '1.4B · paraestatal' },
-              { label: 'Productos Hospitalarios', value: 511,  color: '#a06820',                  annotation: '8.0B · medical supply',      annotation_es: '8.0B · insumos médicos' },
-              { label: 'Estafeta Mexicana',       value: 475,  color: '#a06820',                  annotation: '0.8B · logistics',           annotation_es: '0.8B · logística' },
+              { label: 'Edenred México',          value: 1679, value2: 536, color: '#dc2626', highlight: true, annotation: '23.8B · vouchers',          annotation_es: '23.8B · vales' },
+              { label: 'INFRA',                   value: 1423, value2: 454, color: '#a06820',                  annotation: '20.1B · gas (FP)',         annotation_es: '20.1B · gas (FP)' },
+              { label: 'TOKA Internacional',      value: 1290, value2: 412, color: '#dc2626', highlight: true, annotation: '37.0B · vouchers',          annotation_es: '37.0B · vales' },
+              { label: 'Efectivale (RL)',         value: 1155, value2: 368, color: '#dc2626', highlight: true, annotation: '6.1B · vouchers',           annotation_es: '6.1B · vales' },
+              { label: 'Efectivale (S.A.)',       value: 1055, value2: 337, color: '#dc2626', highlight: true, annotation: '13.5B · vouchers',          annotation_es: '13.5B · vales' },
+              { label: 'Seg. Alim. Mex (Segalmex)',value: 1014, value2: 324, color: '#dc2626', highlight: true, annotation: '5.3B · risk 0.94',          annotation_es: '5.3B · riesgo 0.94' },
+              { label: 'Liconsa',                 value: 998,  value2: 318, color: '#a06820',                  annotation: '0.7B · gov-owned',           annotation_es: '0.7B · paraestatal' },
+              { label: 'Sodexo',                  value: 658,  value2: 210, color: '#dc2626', highlight: true, annotation: '5.2B · vouchers',           annotation_es: '5.2B · vales' },
+              { label: 'PRAXAIR México',          value: 585,  value2: 187, color: '#a06820',                  annotation: '9.5B · gas',                 annotation_es: '9.5B · gas' },
+              { label: 'Servicio Postal',         value: 551,  value2: 176, color: '#a06820',                  annotation: '1.4B · gov-owned',           annotation_es: '1.4B · paraestatal' },
+              { label: 'Productos Hospitalarios', value: 511,  value2: 163, color: '#a06820',                  annotation: '8.0B · medical supply',      annotation_es: '8.0B · insumos médicos' },
+              { label: 'Estafeta Mexicana',       value: 475,  value2: 152, color: '#a06820',                  annotation: '0.8B · logistics',           annotation_es: '0.8B · logística' },
             ],
+            yLabel: 'Single-bid wins',
+            yLabel_es: 'Victorias de oferta única',
             unit: 'wins',
-            annotation: 'Each row counts "competitive" procedures the vendor won as the only bidder. Red rows = the welfare-voucher cluster (Edenred + TOKA + Efectivale + Sodexo + Segalmex), which collectively wins 6,851 single-bid procedures totaling 91.7B MXN.',
-            annotation_es: 'Cada fila cuenta procedimientos "competitivos" que el proveedor ganó como único oferente. Filas rojas = el cluster de vales del bienestar (Edenred + TOKA + Efectivale + Sodexo + Segalmex), que ganan colectivamente 6,851 procedimientos de oferta única por un total de 91.7 mil millones de pesos.',
+            annotation: 'Filled dot = actual single-bid wins. Open dot = OECD-compliant estimate (15% threshold × inferred total procedures at national 47% rate). Gap = excess above OECD standard.',
+            annotation_es: 'Punto relleno = victorias reales de oferta única. Punto abierto = estimado conforme OCDE (umbral 15% × procedimientos totales inferidos a tasa nacional 47%). Brecha = exceso sobre estándar OCDE.',
           },
         },
         pullquote: {
@@ -1290,7 +1296,7 @@ export const STORIES: StoryDef[] = [
           'Infraestructura al 89.2 por ciento es el hallazgo más consecuente de todos. El estímulo de la era COVID, los proyectos nacionales del periodo AMLO, los programas descentralizados de agua y carreteras pos-Sheinbaum todos fluyen por la contratación civil de infraestructura. La tasa de 89.2 por ciento significa que a lo largo de más de una década de estímulo y grandes proyectos, la gran mayoría de los contratos adjudicados "competitivamente" no tuvieron competencia alguna.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-threshold',
           title: 'Single-Bid Rate by Sector (in "competitive" procedures only)',
           title_es: 'Tasa de oferta única por sector (solo en procedimientos "competitivos")',
           chartId: 'sb-by-sector',
@@ -1450,24 +1456,25 @@ export const STORIES: StoryDef[] = [
           'En cada sector el mecanismo P3 opera distinto. En infraestructura el intermediario gana el contrato, luego subcontrata la obra civil a constructoras reales, quedándose con 15-30 por ciento de sobrecarga. En energía el intermediario suministra equipo proveniente de fabricantes internacionales, marcando los precios a lo largo de la cadena de suministro. En salud el intermediario distribuye medicamentos de un pequeño número de fabricantes farmacéuticos reales, cobrando márgenes en cada eslabón.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'editorial-cleveland-pair',
           title: 'P3 Intermediary Vendors by Sector (Total Value)',
           title_es: 'Proveedores intermediarios P3 por sector (valor total)',
           chartId: 'p3-by-sector',
           data: {
             points: [
-              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, color: '#ea580c' },
-              { label: 'Energía',         label_en: 'Energy',          value: 130.6, color: '#eab308' },
-              { label: 'Salud',           label_en: 'Health',          value: 104.2, color: '#dc2626', highlight: true },
-              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  color: '#16a34a' },
-              { label: 'Educación',       label_en: 'Education',       value: 19.1,  color: '#3b82f6' },
-              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  color: '#22c55e' },
-              { label: 'Gobernación',     label_en: 'Governance',      value: 17.8,  color: '#be123c' },
-              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  color: '#1e3a5f' },
+              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, value2: 65.85, color: '#ea580c' },
+              { label: 'Energía',         label_en: 'Energy',          value: 130.6, value2: 65.85, color: '#eab308' },
+              { label: 'Salud',           label_en: 'Health',          value: 104.2, value2: 65.85, color: '#dc2626', highlight: true },
+              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  value2: 65.85, color: '#16a34a' },
+              { label: 'Educación',       label_en: 'Education',       value: 19.1,  value2: 65.85, color: '#3b82f6' },
+              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  value2: 65.85, color: '#22c55e' },
+              { label: 'Gobernación',     label_en: 'Governance',      value: 17.8,  value2: 65.85, color: '#be123c' },
+              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  value2: 65.85, color: '#1e3a5f' },
             ],
+            referenceLine: { value: 65.85, label: 'Equal distribution (526.8B / 8 sectors)', label_es: 'Distribución igual (526.8 mil millones / 8 sectores)', color: 'var(--color-sector-tecnologia)' },
             unit: 'B MXN',
-            annotation: '2,974 intermediary-pattern vendors across 526.8B MXN of federal spending.',
-            annotation_es: '2,974 proveedores con patrón de intermediario que suman 526.8 mil millones de pesos en gasto federal.',
+            annotation: 'Filled dot = P3 intermediary value (B MXN). Open dot = equal-distribution reference (65.85B per sector). Top 3 sectors hold 2–3× their expected share.',
+            annotation_es: 'Punto relleno = valor intermediario P3 (miles de millones MXN). Punto abierto = referencia de distribución igual (65.85 mil millones por sector). Los 3 primeros sectores concentran 2–3× su parte esperada.',
           },
         },
         pullquote: {

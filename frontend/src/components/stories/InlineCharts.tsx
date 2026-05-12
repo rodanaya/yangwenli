@@ -1561,7 +1561,518 @@ export function InlineNetwork({
 }
 
 // ---------------------------------------------------------------------------
-// 9. InlineStackedBar — horizontal rows split into "highlight" + remainder.
+// 9. ThresholdDistribution — dot scatter with horizontal threshold rules.
+// Dots above top threshold are highlighted; between thresholds use ANCHOR_COLOR;
+// below are muted. Editorial point: the threshold line IS the finding.
+// ---------------------------------------------------------------------------
+
+export function ThresholdDistribution({
+  data,
+  title,
+  lang = 'en',
+}: {
+  data: StoryInlineChartData
+  title: string
+  lang?: 'en' | 'es'
+}) {
+  const pts = data.points
+  const n = pts.length
+  const mx = maxVal(pts, data.maxValue)
+  const unit = data.unit ?? ''
+
+  const margin = { top: 48, right: 90, bottom: 56, left: 20 }
+  const plotW = 450
+  const plotH = 156
+  const totalH = margin.top + plotH + margin.bottom
+  const totalW = margin.left + plotW + margin.right
+
+  const cardAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+
+  const labelFor = (pt: StoryChartPoint) => {
+    if (lang === 'en') return pt.label_en ?? pt.label
+    return pt.label_es ?? pt.label
+  }
+  const refLabelFor = (ref: { label: string; label_es?: string }) =>
+    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
+
+  const dotX = (i: number) => margin.left + (i + 0.5) * (plotW / n)
+  const dotY = (v: number) => margin.top + (1 - v / mx) * plotH
+
+  const topThreshold = data.referenceLine?.value
+  const midThreshold = data.referenceLine2?.value
+
+  // Anchor stat: highest value point
+  const topPt = pts.reduce((a, b) => (a.value > b.value ? a : b), pts[0])
+  const anchor = topPt
+    ? {
+        value: `${topPt.value.toFixed(1)}${unit ? ` ${unit}` : ''}`,
+        label: labelFor(topPt),
+        color: topPt.color ?? HIGHLIGHT_COLOR,
+      }
+    : undefined
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow="THRESHOLD · DISTRIBUTION"
+      anchor={anchor}
+      annotation={cardAnnotation}
+    >
+      <svg
+        viewBox={`0 0 ${totalW} ${totalH}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Threshold lines */}
+        {topThreshold != null && (
+          <>
+            <line
+              x1={margin.left}
+              y1={dotY(topThreshold)}
+              x2={margin.left + plotW}
+              y2={dotY(topThreshold)}
+              stroke={data.referenceLine!.color ?? HIGHLIGHT_COLOR}
+              strokeWidth={1}
+              strokeDasharray="4 3"
+              opacity={0.7}
+            />
+            <text
+              x={margin.left + plotW + 4}
+              y={dotY(topThreshold) + 4}
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="var(--color-text-muted)"
+            >
+              {refLabelFor(data.referenceLine!)}
+            </text>
+          </>
+        )}
+        {midThreshold != null && (
+          <>
+            <line
+              x1={margin.left}
+              y1={dotY(midThreshold)}
+              x2={margin.left + plotW}
+              y2={dotY(midThreshold)}
+              stroke={data.referenceLine2!.color ?? ANCHOR_COLOR}
+              strokeWidth={1}
+              strokeDasharray="4 3"
+              opacity={0.7}
+            />
+            <text
+              x={margin.left + plotW + 4}
+              y={dotY(midThreshold) + 4}
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="var(--color-text-muted)"
+            >
+              {refLabelFor(data.referenceLine2!)}
+            </text>
+          </>
+        )}
+
+        {/* Dots and labels */}
+        {pts.map((pt, i) => {
+          const cx = dotX(i)
+          const cy = dotY(pt.value)
+          const aboveTop = topThreshold != null && pt.value >= topThreshold
+          const aboveMid = midThreshold != null && pt.value >= midThreshold
+
+          let r: number
+          let fill: string
+          let opacity: number
+
+          if (aboveTop) {
+            r = 6
+            fill = pt.color ?? HIGHLIGHT_COLOR
+            opacity = 0.95
+          } else if (aboveMid) {
+            r = 5
+            fill = ANCHOR_COLOR
+            opacity = 0.85
+          } else {
+            r = 4
+            fill = 'var(--color-text-muted)'
+            opacity = 0.45
+          }
+
+          const valueLabel = `${pt.value.toFixed(unit === '%' ? 1 : 2)}${unit ? ` ${unit}` : ''}`
+
+          return (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={r} fill={fill} opacity={opacity} />
+              {/* Value label above dot — only for above-top and above-mid tiers */}
+              {(aboveTop || aboveMid) && (
+                <text
+                  x={cx}
+                  y={cy - r - 3}
+                  textAnchor="middle"
+                  dominantBaseline="auto"
+                  fontSize={aboveTop ? 11.5 : 10}
+                  fontFamily={aboveTop ? "'Playfair Display', Georgia, serif" : 'var(--font-family-mono, monospace)'}
+                  fontStyle={aboveTop ? 'italic' : 'normal'}
+                  fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : ANCHOR_COLOR}
+                >
+                  {valueLabel}
+                </text>
+              )}
+              {/* X-axis label — rotated -40° */}
+              <text
+                x={cx}
+                y={margin.top + plotH + 8}
+                textAnchor="end"
+                dominantBaseline="hanging"
+                fontSize={10}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={aboveTop ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'}
+                transform={`rotate(-40, ${cx}, ${margin.top + plotH + 8})`}
+              >
+                {labelFor(pt)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 10. AnnotatedThermometer — ranked horizontal bars with a reference tick.
+// Bars above the reference are highlighted; below are muted. The reference
+// tick is the editorial chrome showing "expected" level.
+// ---------------------------------------------------------------------------
+
+export function AnnotatedThermometer({
+  data,
+  title,
+  lang = 'en',
+}: {
+  data: StoryInlineChartData
+  title: string
+  lang?: 'en' | 'es'
+}) {
+  const LABEL_W = 138
+  const BAR_W = 288
+  const VALUE_W = 94
+  const TOTAL_W = LABEL_W + BAR_W + VALUE_W
+  const ROW_H = 22
+  const ROW_GAP = 10
+
+  const cardAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+
+  const labelFor = (pt: StoryChartPoint) => {
+    if (lang === 'en') return pt.label_en ?? pt.label
+    return pt.label_es ?? pt.label
+  }
+  const annoFor = (pt: StoryChartPoint) =>
+    lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation
+
+  // Sort descending by value
+  const sorted = [...data.points].sort((a, b) => b.value - a.value)
+
+  const total = sorted.reduce((s, p) => s + p.value, 0)
+  const mx = maxVal(data.points, data.maxValue)
+  const refVal = data.referenceLine?.value ?? 0
+  const refPx = (refVal / mx) * BAR_W
+
+  const refLabelFor = (ref: { label: string; label_es?: string }) =>
+    lang === 'es' ? (ref.label_es ?? ref.label) : ref.label
+
+  const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 28
+
+  // Anchor stat: highest value point's share pct
+  const topPt = sorted[0]
+  const topShare = total > 0 ? (topPt.value / total * 100) : 0
+  const anchor = topPt
+    ? {
+        value: `${topShare.toFixed(1)}%`,
+        label: labelFor(topPt),
+        color: topPt.color ?? HIGHLIGHT_COLOR,
+      }
+    : undefined
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow="THERMOMETER · SECTOR SHARE"
+      anchor={anchor}
+      annotation={cardAnnotation}
+    >
+      <svg
+        viewBox={`0 0 ${TOTAL_W} ${totalSvgH}`}
+        preserveAspectRatio="xMinYMin meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Header: reference label */}
+        {data.referenceLine && (
+          <text
+            x={LABEL_W + refPx}
+            y={12}
+            textAnchor={refPx > BAR_W * 0.5 ? 'end' : 'start'}
+            fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+          >
+            {refLabelFor(data.referenceLine)}
+          </text>
+        )}
+
+        {sorted.map((pt, i) => {
+          const rowY = i * (ROW_H + ROW_GAP) + 20
+          const sharePct = total > 0 ? (pt.value / total * 100) : 0
+          const barPx = (pt.value / mx) * BAR_W
+          const aboveRef = pt.value > refVal
+          const barFill = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
+          const barOpacity = aboveRef ? 0.85 : 0.35
+          const valueColor = aboveRef ? (pt.color ?? HIGHLIGHT_COLOR) : 'var(--color-text-muted)'
+          const anno = annoFor(pt)
+
+          return (
+            <g key={i}>
+              {/* Background track */}
+              <rect
+                x={LABEL_W}
+                y={rowY}
+                width={BAR_W}
+                height={ROW_H}
+                fill="var(--color-background-elevated)"
+                opacity={0.08}
+                rx={1}
+              />
+              {/* Fill bar */}
+              <rect
+                x={LABEL_W}
+                y={rowY}
+                width={Math.max(2, barPx)}
+                height={ROW_H}
+                fill={barFill}
+                opacity={barOpacity}
+                rx={1}
+              />
+              {/* Reference tick */}
+              {data.referenceLine && (
+                <line
+                  x1={LABEL_W + refPx}
+                  y1={rowY - 2}
+                  x2={LABEL_W + refPx}
+                  y2={rowY + ROW_H + 2}
+                  stroke={data.referenceLine.color ?? REFERENCE_COLOR}
+                  strokeWidth={1.5}
+                />
+              )}
+              {/* Label */}
+              <text
+                x={LABEL_W - 6}
+                y={rowY + ROW_H / 2 + 1}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize={11}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-secondary)"
+              >
+                {labelFor(pt)}
+              </text>
+              {/* Value: share% · absolute */}
+              <text
+                x={LABEL_W + Math.max(2, barPx) + 6}
+                y={rowY + ROW_H / 2 + 1}
+                textAnchor="start"
+                dominantBaseline="middle"
+                fontSize={11}
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight={700}
+                fill={valueColor}
+              >
+                {sharePct.toFixed(1)}% · {pt.value.toLocaleString()}{data.unit ? ` ${data.unit}` : ''}
+              </text>
+              {/* Annotation for highlighted rows */}
+              {aboveRef && anno && (
+                <text
+                  x={LABEL_W + BAR_W + VALUE_W - 4}
+                  y={rowY + ROW_H / 2 + 1}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-muted)"
+                >
+                  {anno}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 11. ClevelandPairChart — ranked dot pairs. Filled dot = primary metric.
+// Open dot = comparator (value2). Gap between them = editorial finding.
+// ---------------------------------------------------------------------------
+
+export function ClevelandPairChart({
+  data,
+  title,
+  lang = 'en',
+}: {
+  data: StoryInlineChartData
+  title: string
+  lang?: 'en' | 'es'
+}) {
+  const LABEL_W = 148
+  const DOT_AREA = 268
+  const GAP_W = 84
+  const TOTAL_W = LABEL_W + DOT_AREA + GAP_W
+  const ROW_H = 24
+  const ROW_GAP = 12
+
+  const cardAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+
+  const labelFor = (pt: StoryChartPoint) => {
+    if (lang === 'en') return pt.label_en ?? pt.label
+    return pt.label_es ?? pt.label
+  }
+
+  const yLabelText = lang === 'es' ? (data.yLabel_es ?? data.yLabel) : data.yLabel
+
+  // Sort by gap (value - value2) descending
+  const sorted = [...data.points].sort((a, b) => {
+    const gapA = a.value - (a.value2 ?? 0)
+    const gapB = b.value - (b.value2 ?? 0)
+    return gapB - gapA
+  })
+
+  // Scale: max of all values and value2
+  const allVals = data.points.flatMap((p) => [p.value, p.value2 ?? 0])
+  const mx = Math.max(...allVals, 1)
+  const xPos = (v: number) => LABEL_W + (v / mx) * DOT_AREA
+
+  const totalSvgH = sorted.length * (ROW_H + ROW_GAP) + 36
+
+  // Anchor stat: gap of first (largest-gap) row
+  const firstPt = sorted[0]
+  const firstGap = firstPt ? firstPt.value - (firstPt.value2 ?? 0) : 0
+  const anchor = firstPt
+    ? {
+        value: firstGap.toLocaleString(),
+        label: labelFor(firstPt),
+        color: firstPt.color ?? HIGHLIGHT_COLOR,
+      }
+    : undefined
+
+  // Column header labels
+  const actualLabel = yLabelText ? yLabelText : 'ACTUAL'
+  const referenceLabel = 'REFERENCE'
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow="CLEVELAND · PAIR"
+      anchor={anchor}
+      annotation={cardAnnotation}
+    >
+      <svg
+        viewBox={`0 0 ${TOTAL_W} ${totalSvgH}`}
+        preserveAspectRatio="xMinYMin meet"
+        className="w-full"
+        aria-hidden="true"
+      >
+        {/* Column headers */}
+        <text
+          x={LABEL_W + 8}
+          y={14}
+          fontSize={9}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="var(--color-text-muted)"
+          textAnchor="start"
+        >
+          {actualLabel.toUpperCase()}
+        </text>
+        <text
+          x={LABEL_W + DOT_AREA - 8}
+          y={14}
+          fontSize={9}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="var(--color-text-muted)"
+          textAnchor="end"
+        >
+          {referenceLabel}
+        </text>
+
+        {sorted.map((pt, i) => {
+          const yCenter = i * (ROW_H + ROW_GAP) + ROW_H / 2 + 18
+          const x1 = xPos(pt.value)
+          const x2 = pt.value2 != null ? xPos(pt.value2) : x1
+          const gap = pt.value - (pt.value2 ?? 0)
+          const dotColor = pt.color ?? HIGHLIGHT_COLOR
+
+          return (
+            <g key={i}>
+              {/* Connector line */}
+              {pt.value2 != null && (
+                <line
+                  x1={Math.min(x1, x2)}
+                  y1={yCenter}
+                  x2={Math.max(x1, x2)}
+                  y2={yCenter}
+                  stroke={dotColor}
+                  strokeWidth={1}
+                  opacity={0.4}
+                />
+              )}
+              {/* Filled dot (primary value) */}
+              <circle cx={x1} cy={yCenter} r={5.5} fill={dotColor} opacity={0.9} />
+              {/* Open dot (value2 comparator) */}
+              {pt.value2 != null && (
+                <circle
+                  cx={x2}
+                  cy={yCenter}
+                  r={5}
+                  fill="none"
+                  stroke={pt.color ?? 'var(--color-text-muted)'}
+                  strokeWidth={1.5}
+                  opacity={0.7}
+                />
+              )}
+              {/* Row label */}
+              <text
+                x={LABEL_W - 8}
+                y={yCenter + 1}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontSize={11}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-secondary)"
+              >
+                {labelFor(pt)}
+              </text>
+              {/* Gap annotation */}
+              <text
+                x={LABEL_W + DOT_AREA + 8}
+                y={yCenter + 1}
+                textAnchor="start"
+                dominantBaseline="middle"
+                fontSize={10}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="var(--color-text-muted)"
+              >
+                +{gap.toLocaleString()}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// 12. InlineStackedBar — horizontal rows split into "highlight" + remainder.
 // Built for the IMSS-dependency chapter: each vendor's bar is dominated
 // by its IMSS portion in a single accent color, the rest muted.
 // ---------------------------------------------------------------------------
