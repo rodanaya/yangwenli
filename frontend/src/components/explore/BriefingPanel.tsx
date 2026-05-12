@@ -681,6 +681,17 @@ function ContractBriefing({
     queryFn: () => contractApi.getById(contractId),
     enabled: contractId > 0,
     staleTime: 5 * 60 * 1000,
+    // 2026-05-12 (Audit G7 FAIL): React Query's default of 3 retries
+    // with exponential backoff meant an invalid contract id (e.g. a
+    // shared deep link to a since-deleted contract) sat on
+    // "Loading contract…" for 10–15s before BriefingShell flipped to
+    // error state. Don't retry on 4xx — they're not transient. One
+    // retry on 5xx covers the genuinely flaky case.
+    retry: (failureCount, err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status != null && status >= 400 && status < 500) return false
+      return failureCount < 1
+    },
   })
 
   // Gap 7: BriefingShell normalizes the four states across all briefings.
