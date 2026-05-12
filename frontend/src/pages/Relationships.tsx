@@ -328,7 +328,7 @@ export default function Relationships() {
               id="intersection-heading"
               style={{ fontFamily: 'var(--font-family-serif)', fontSize: 'clamp(1.25rem, 2.2vw, 1.75rem)', fontWeight: 700, letterSpacing: '-0.012em', color: 'var(--color-text-primary)' }}
             >
-              {lang === 'es' ? 'El modelo señala lo que los reguladores todavía no.' : 'The model flags what regulators don't yet.'}
+              {lang === 'es' ? 'El modelo señala lo que los reguladores todavía no.' : "The model flags what regulators haven't yet."}
             </h2>
             <p className="mt-2 text-[13px] text-text-secondary leading-[1.55] max-w-prose">
               {lang === 'es'
