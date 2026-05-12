@@ -196,7 +196,7 @@ function SexenioDotColumns({
                 fill="var(--color-text-secondary)"
                 fontFamily="var(--font-family-mono)"
               >
-                {d.admin.length > 11 ? d.admin.slice(0, 10) + '…' : d.admin}
+                {d.admin.length > 10 ? d.admin.slice(0, 10) + '…' : d.admin}
               </text>
               {/* Risk / contracts secondary label */}
               <text
@@ -716,7 +716,11 @@ export default function CategoryProfile() {
             <CardContent className="space-y-3 py-6">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
             </CardContent>
-          ) : topVendorsData && !topVendorsError ? (
+          ) : topVendorsError ? (
+            <CardContent className="py-8 text-center text-text-muted text-sm">
+              {t('profile.empty.noVendors')}
+            </CardContent>
+          ) : topVendorsData ? (
             <>
               {/* Concentration header */}
               <CardHeader className="pb-2">
