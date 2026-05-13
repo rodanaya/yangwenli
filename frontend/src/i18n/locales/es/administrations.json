@@ -247,7 +247,16 @@
   "radar": {
     "title": "Todas las Administraciones: Huella de Compras",
     "subtitle": "Radar comparativo de 5 métricas clave de contratación en todas las presidencias (más alto = mejor desempeño)",
-    "axisVolume": "Volumen"
+    "axisRiskScore": "Indicador Riesgo",
+    "axisHighRisk": "% Alto Riesgo",
+    "axisDirectAward": "% Adj. Directa",
+    "axisTotalValue": "Valor Total",
+    "axisVolume": "Volumen",
+    "miniHighRisk": "Alto Riesgo",
+    "miniDirectAward": "Adj. Directa",
+    "insightLowestNote": "Menor tasa de contratos de alto riesgo entre todas las administraciones",
+    "insightHighestDaNote": "Mayor proporción de contratos adjudicados sin competencia",
+    "insightBiggestNote": "Mayor valor total de contratación pública en una sola administración"
   },
   "actCard": {
     "contracts": "Contratos",

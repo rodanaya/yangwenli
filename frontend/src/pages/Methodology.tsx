@@ -1002,6 +1002,9 @@ export function Methodology() {
                       ))}
                     </tbody>
                   </table>
+                  <p className="text-[10px] text-text-muted mt-1 font-mono">
+                    {t('body.overview.tableFootnote')}
+                  </p>
                 </div>
               </div>
 

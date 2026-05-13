@@ -95,7 +95,8 @@
       "tableColCount": "Count",
       "highRiskSummaryStart": "High-risk rate: ",
       "highRiskSummaryValue": "11.01%",
-      "highRiskSummaryEnd": " (critical + high). Thresholds calibrated against 1,401 documented cases to yield a rate consistent with international procurement risk ranges. v0.8.5 is the active model (May 2, 2026), using vendor-stratified validation."
+      "highRiskSummaryEnd": " (critical + high). Thresholds calibrated against 1,401 documented cases to yield a rate consistent with international procurement risk ranges. v0.8.5 is the active model (May 2, 2026), using vendor-stratified validation.",
+      "tableFootnote": "* 3,051,294 scored contracts of 3,058,286 total. The remaining ~7K contracts lack sector assignment and were excluded from scoring."
     },
     "features": {
       "p1": "Each contract is described by 18 z-score features normalized by sector and year baselines. v0.8.5 adds cobid_herfindahl, recency_z, amount_residual_z, amendment_flag, and pub_delay_z to the v5.x behavioral set. The chart below shows the learned ElasticNet coefficients (C=0.2243, l1_ratio=0.7545). Positive coefficients increase the risk score; negative coefficients decrease it.",

@@ -247,7 +247,16 @@
   "radar": {
     "title": "All Administrations: Procurement Fingerprint",
     "subtitle": "Comparative radar of 5 key procurement metrics across all presidencies (higher = better performance)",
-    "axisVolume": "Volume"
+    "axisRiskScore": "Risk Score",
+    "axisHighRisk": "High-Risk %",
+    "axisDirectAward": "Direct Award %",
+    "axisTotalValue": "Total Value",
+    "axisVolume": "Volume",
+    "miniHighRisk": "High-Risk",
+    "miniDirectAward": "Direct Award",
+    "insightLowestNote": "Lowest high-risk contract rate across all administrations",
+    "insightHighestDaNote": "Highest share of contracts awarded without competition",
+    "insightBiggestNote": "Largest total procurement value across a single administration"
   },
   "actCard": {
     "contracts": "Contracts",

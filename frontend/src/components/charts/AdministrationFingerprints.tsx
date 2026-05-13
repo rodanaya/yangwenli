@@ -91,8 +91,6 @@ const MAX_DA_PCT = 79.52
 const MAX_BILLIONS = 3076.5
 const MAX_CONTRACTS = 1253865
 
-const RADAR_AXES = ['Risk Score', 'High-Risk %', 'Direct Award %', 'Total Value', 'Volume']
-
 function normalize(value: number, max: number): number {
   return value / max  // 0..1 for editorial radar valueDomain default
 }
@@ -115,17 +113,17 @@ const CONSENSUS_DATA: number[] = (() => {
   ]
 })()
 
-function buildSeries(admin: (typeof ADMIN_DATA)[0]): RadarSeries[] {
+function buildSeries(admin: (typeof ADMIN_DATA)[0], axes: string[]): RadarSeries[] {
   return [
     {
       name: admin.shortName,
       colorToken: admin.colorToken,
       values: {
-        'Risk Score': normalize(admin.avgRisk, MAX_AVG_RISK),
-        'High-Risk %': normalize(admin.hrPct, MAX_HR_PCT),
-        'Direct Award %': normalize(admin.directAwardPct, MAX_DA_PCT),
-        'Total Value': normalize(admin.totalBillions, MAX_BILLIONS),
-        'Volume': normalize(admin.contracts, MAX_CONTRACTS),
+        [axes[0]]: normalize(admin.avgRisk, MAX_AVG_RISK),
+        [axes[1]]: normalize(admin.hrPct, MAX_HR_PCT),
+        [axes[2]]: normalize(admin.directAwardPct, MAX_DA_PCT),
+        [axes[3]]: normalize(admin.totalBillions, MAX_BILLIONS),
+        [axes[4]]: normalize(admin.contracts, MAX_CONTRACTS),
       },
     },
   ]
@@ -136,6 +134,14 @@ function buildSeries(admin: (typeof ADMIN_DATA)[0]): RadarSeries[] {
 // ---------------------------------------------------------------------------
 
 function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
+  const { t } = useTranslation('administrations')
+  const axes = [
+    t('radar.axisRiskScore'),
+    t('radar.axisHighRisk'),
+    t('radar.axisDirectAward'),
+    t('radar.axisTotalValue'),
+    t('radar.axisVolume'),
+  ]
   return (
     <div className="flex flex-col items-center rounded-sm border border-border bg-background-card/60 p-4 gap-2">
       {/* Title */}
@@ -150,25 +156,25 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
           120px is the practical floor for a readable radar. */}
       <div className="w-full" style={{ minWidth: 120 }}>
         <EditorialRadarChart
-          axes={RADAR_AXES}
-          series={buildSeries(admin)}
+          axes={axes}
+          series={buildSeries(admin, axes)}
           height={180}
           valueDomain={[0, 1]}
           consensusData={CONSENSUS_DATA}
-          consensusLabel="Promedio · 5 sexenios"
+          consensusLabel={t('radar.subtitle', { defaultValue: 'Promedio · 5 sexenios' })}
         />
       </div>
 
       {/* Mini stats */}
       <div className="w-full grid grid-cols-2 gap-1 mt-1">
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
-          <p className="text-[10px] text-text-muted font-mono">High-Risk</p>
+          <p className="text-[10px] text-text-muted font-mono">{t('radar.miniHighRisk')}</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.accentColorVar }}>
             {admin.hrPct.toFixed(1)}%
           </p>
         </div>
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
-          <p className="text-[10px] text-text-muted font-mono">Direct Award</p>
+          <p className="text-[10px] text-text-muted font-mono">{t('radar.miniDirectAward')}</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.accentColorVar }}>
             {admin.directAwardPct.toFixed(0)}%
           </p>
@@ -238,19 +244,19 @@ export default function AdministrationFingerprints() {
         <InsightCard
           label={t('fingerprints.insight_lowest_risk')}
           value="Pena Nieto -- 7.59%"
-          note="Lowest high-risk contract rate across all administrations"
+          note={t('radar.insightLowestNote')}
           color="var(--color-sector-infraestructura)"
         />
         <InsightCard
           label={t('fingerprints.insight_highest_da')}
           value="AMLO -- 79.5%"
-          note="Highest share of contracts awarded without competition"
+          note={t('radar.insightHighestDaNote')}
           color="var(--color-sector-tecnologia)"
         />
         <InsightCard
           label={t('fingerprints.insight_biggest_spender')}
           value="Pena Nieto -- 3.08T MXN"
-          note="Largest total procurement value across a single administration"
+          note={t('radar.insightBiggestNote')}
           color="var(--color-sector-infraestructura)"
         />
       </div>

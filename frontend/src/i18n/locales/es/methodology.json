@@ -95,7 +95,8 @@
       "tableColCount": "Cantidad",
       "highRiskSummaryStart": "Tasa de alto riesgo: ",
       "highRiskSummaryValue": "11.01%",
-      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con 1,401 casos documentados para obtener una tasa consistente con rangos internacionales de riesgo en contrataciones (OCDE 2–15%). v0.8.5 es el modelo activo (2 de mayo de 2026), usando validación estratificada por proveedor."
+      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con 1,401 casos documentados para obtener una tasa consistente con rangos internacionales de riesgo en contrataciones (OCDE 2–15%). v0.8.5 es el modelo activo (2 de mayo de 2026), usando validación estratificada por proveedor.",
+      "tableFootnote": "* 3,051,294 contratos calificados de 3,058,286 totales. Los ~7K restantes carecen de asignación sectorial y fueron excluidos del modelo."
     },
     "features": {
       "p1": "Cada contrato se describe con 18 características z-score normalizadas por sector y año base. v0.8.5 añade cobid_herfindahl, recency_z, amount_residual_z, amendment_flag y pub_delay_z al conjunto v5.x. El gráfico muestra los coeficientes ElasticNet aprendidos (C=0.2243, l1_ratio=0.7545). Coeficientes positivos aumentan la puntuación de riesgo; negativos la disminuyen.",
