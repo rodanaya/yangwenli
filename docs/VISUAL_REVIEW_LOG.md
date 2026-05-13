@@ -224,3 +224,46 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key le
 
 ### Overall: WARN
 HTTP and API checks blocked by sandbox egress proxy — not a site outage. Bilingual gap scan completed locally with no genuine gaps found. Run checks from an unrestricted host (e.g. VPS at 37.60.232.109) to verify live site health.
+
+---
+## Visual Review — 2026-05-13T18:06:25Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/atlas | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/aria | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/sectors | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/cases | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/methodology | 403 (proxy: Host not in allowlist) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (proxy: Host not in allowlist) | ⚠ |
+
+Note: All 403s originate from the sandbox egress proxy ("Host not in allowlist"), not from rubli.xyz. The TLS cert issuer is "Egress Gateway Subordinate CA" — confirming outbound HTTPS is intercepted and blocked by the execution environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/sectors | 403 (proxy: Host not in allowlist) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all false positives (unchanged from prior run):
+- Company names in Executive.tsx (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`)
+- Type/tier key lookups (`TIER_STYLES[tierName as TierKey]` in InstitutionScorecards.tsx:443)
+- Academic author names (`Mahalanobis, P.C.` in Methodology.tsx:118)
+- Legal suffixes array (`'S.A.', 'S.C.', 'A.C.'`, etc. in ExploreCanvas.tsx:1415-1416)
+- Administration abbreviations (`A.M. Lopez Obrador` in AdminSectorHeatmap.tsx:30)
+- Comment text in CaseLibrary.tsx:216 (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by sandbox egress proxy — not a site outage. Bilingual gap scan completed locally: no genuine i18n gaps or hardcoded English strings found. Run checks from VPS (37.60.232.109) or an unrestricted host to verify live site health.
