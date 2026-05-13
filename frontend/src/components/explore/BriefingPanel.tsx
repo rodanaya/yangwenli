@@ -935,19 +935,39 @@ function SectorStoryChip({ sectorCode, lang }: { sectorCode: string; lang: 'en' 
 
 const SECTOR_STORY_MAP: Record<string, { slug: string; titleEn: string; titleEs: string }> = {
   salud: {
-    slug: 'the-pharmaceutical-cartel',
-    titleEn: 'The Pharmaceutical Cartel',
-    titleEs: 'El cártel farmacéutico',
+    slug: 'el-monopolio-invisible',
+    titleEn: 'The Invisible Monopoly',
+    titleEs: 'El monopolio invisible',
   },
-  agricultura: {
-    slug: 'la-estafa-maestra',
-    titleEn: 'La Estafa Maestra',
-    titleEs: 'La Estafa Maestra',
+  infraestructura: {
+    slug: 'captura-institucional',
+    titleEn: 'Inside Institutional Capture',
+    titleEs: 'Captura Institucional',
   },
   hacienda: {
-    slug: 'la-estafa-maestra',
-    titleEn: 'La Estafa Maestra',
-    titleEs: 'La Estafa Maestra',
+    slug: 'la-ilusion-competitiva',
+    titleEn: 'The Competition That Never Was',
+    titleEs: 'La Ilusión Competitiva',
+  },
+  energia: {
+    slug: 'captura-institucional',
+    titleEn: 'Inside Institutional Capture',
+    titleEs: 'Captura Institucional',
+  },
+  defensa: {
+    slug: 'el-sexenio-del-riesgo',
+    titleEn: 'The Era of Risk',
+    titleEs: 'El Sexenio del Riesgo',
+  },
+  gobernacion: {
+    slug: 'marea-de-adjudicaciones',
+    titleEn: 'The Direct Award Tide',
+    titleEs: 'La Marea de las Adjudicaciones',
+  },
+  otros: {
+    slug: 'marea-de-adjudicaciones',
+    titleEn: 'The Direct Award Tide',
+    titleEs: 'La Marea de las Adjudicaciones',
   },
 }
 
