@@ -18,7 +18,7 @@
  * Color via style={{ color: hex }} — NEVER via className (silently stripped).
  */
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -737,7 +737,7 @@ function ZoomedClusterPanel({
 // SELECTING state — P4 bulk action panel (§ 4.4)
 //
 // Header: "{N} selected" + Clear button
-// Actions: Export CSV · Open all in ARIA · Save investigation
+// Actions: Export CSV · Open all in ARIA
 // Mini-table: top 10 selected vendor names (+ N more)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -746,15 +746,11 @@ interface SelectingPanelProps {
   selectedIds: string[]
   // Vendor data from the zoomed-cluster query cache for enrichment
   cachedVendors?: AtlasClusterVendorItem[]
-  lens?: string
-  code?: string
 }
 
-function SelectingPanel({ lang, selectedIds, cachedVendors, lens, code }: SelectingPanelProps) {
+function SelectingPanel({ lang, selectedIds, cachedVendors }: SelectingPanelProps) {
   const dispatch = useAtlasDispatch()
   const ACCENT = '#a06820'
-  const [saveMsg, setSaveMsg] = useState<string | null>(null)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const count = selectedIds.length
 
@@ -808,38 +804,6 @@ function SelectingPanel({ lang, selectedIds, cachedVendors, lens, code }: Select
     } else {
       openFn()
     }
-  }
-
-  // ── Save investigation ────────────────────────────────────────────────────
-  const handleSave = () => {
-    const defaultName = lang === 'en'
-      ? `Investigation ${new Date().toLocaleDateString('en-MX')}`
-      : `Investigación ${new Date().toLocaleDateString('es-MX')}`
-    const name = window.prompt(
-      lang === 'en' ? 'Investigation name:' : 'Nombre de la investigación:',
-      defaultName,
-    )
-    if (!name) return
-
-    const entry = {
-      id: Date.now().toString(36),
-      name,
-      lens: lens ?? '',
-      code: code ?? '',
-      vendor_ids: selectedIds,
-      created_at: new Date().toISOString(),
-    }
-    const raw = localStorage.getItem('rubli_atlas_investigations_v1')
-    const existing: typeof entry[] = raw ? JSON.parse(raw) : []
-    existing.push(entry)
-    localStorage.setItem('rubli_atlas_investigations_v1', JSON.stringify(existing))
-    // Notify same-tab listeners (useSavedInvestigations hook in AtlasLeftRail)
-    window.dispatchEvent(new Event('atlas-investigation-saved'))
-
-    const msg = lang === 'en' ? 'Saved' : 'Guardado'
-    setSaveMsg(msg)
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => setSaveMsg(null), 2500)
   }
 
   const PREVIEW_CAP = 10
@@ -1000,35 +964,6 @@ function SelectingPanel({ lang, selectedIds, cachedVendors, lens, code }: Select
           </div>
         </button>
 
-        {/* Save investigation */}
-        <button
-          onClick={handleSave}
-          className="w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-sm transition-opacity hover:opacity-80"
-          style={{
-            background: 'var(--color-background-elevated, rgba(160,104,32,0.06))',
-            border: '1px solid var(--color-border)',
-          }}
-          aria-label={lang === 'en' ? 'Save investigation' : 'Guardar investigación'}
-        >
-          <span style={{ color: ACCENT }} className="text-[13px] leading-none flex-shrink-0">▣</span>
-          <div className="flex-1 min-w-0">
-            <div
-              className="text-[10px] font-mono font-bold uppercase tracking-[0.08em]"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              {lang === 'en' ? 'Save investigation' : 'Guardar investigación'}
-            </div>
-            <div
-              className="text-[9px] font-mono"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {saveMsg
-                ? <span style={{ color: ACCENT }}>{saveMsg}</span>
-                : (lang === 'en' ? 'Store locally (P5 surfaces in rail)' : 'Guarda local (P5 muestra en barra)')
-              }
-            </div>
-          </div>
-        </button>
       </div>
 
       {/* ── ESC hint ─────────────────────────────────────────────────── */}
@@ -1067,8 +1002,6 @@ function SelectingPanelWrapper({ lang, selectedIds }: { lang: 'en' | 'es'; selec
       lang={lang}
       selectedIds={selectedIds}
       cachedVendors={data?.vendors}
-      lens={state.lens}
-      code={lastCode}
     />
   )
 }

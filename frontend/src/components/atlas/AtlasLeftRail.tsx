@@ -10,7 +10,7 @@
  *   Year scrubber: simplified horizontal slider + autoplay
  *   Risk floor: segmented control
  *   Vendor search: typeahead input (functionality bridged from Atlas.tsx)
- *   Saved investigations: ATLAS_STORIES + "save current view" stub
+ *   Stories: ATLAS_STORIES list
  *
  * All state reads from AtlasStateContext; mutations fire AtlasDispatch.
  * The year scrubber also calls the bridged callbacks (onYearChange,
@@ -20,12 +20,11 @@
 
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Play, Pause, Search, BookOpen, RotateCcw, Bookmark, X } from 'lucide-react'
+import { Play, Pause, Search, BookOpen, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ATLAS_STORIES } from '@/lib/atlas-stories'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 import type { ConstellationMode } from '@/components/charts/ConcentrationConstellation'
-import { useSavedInvestigations, formatRelativeTime } from '@/lib/atlas/saved-investigations'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Year snapshot labels (subset for annotations — full array bridged from Atlas)
@@ -124,21 +123,6 @@ export function AtlasLeftRail({
 
   // Accent amber — matches dashboard/Atlas platform color
   const ACCENT = '#a06820'
-
-  // atlas-C-P5: saved investigations from localStorage
-  const { investigations, deleteInvestigation } = useSavedInvestigations()
-
-  const handleRestoreInvestigation = (
-    inv: { lens: string; code: string; vendor_ids: string[] },
-  ) => {
-    if (inv.lens === 'patterns' || inv.lens === 'sectors' || inv.lens === 'categories' || inv.lens === 'terms') {
-      dispatch({ type: 'set-lens', lens: inv.lens as ConstellationMode })
-    }
-    dispatch({ type: 'zoom-into-cluster', code: inv.code })
-    if (inv.vendor_ids && inv.vendor_ids.length > 0) {
-      dispatch({ type: 'lasso-select', ids: inv.vendor_ids, mode: 'replace' })
-    }
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -418,62 +402,8 @@ export function AtlasLeftRail({
           </div>
         </div>
 
-        {/* ── INVESTIGATIONS (Saved + Stories) ──────────────────────── */}
-        <RailSection label={lang === 'en' ? 'INVESTIGATIONS' : 'INVESTIGACIONES'} />
-
-        {/* atlas-C-P5: saved investigations from localStorage */}
-        {investigations.length > 0 && (
-          <div className="px-2 pb-2">
-            <div
-              className="px-1 pb-1 text-[9px] font-mono uppercase tracking-[0.12em]"
-              style={{ color: 'var(--color-text-muted)' }}
-            >
-              {lang === 'en' ? 'Saved' : 'Guardadas'}
-            </div>
-            {investigations.slice(0, 8).map((inv) => (
-              <div
-                key={inv.id}
-                className="group w-full flex items-start gap-1.5 px-2 py-1.5 rounded-sm hover:bg-background-elevated/40"
-                style={{ borderLeft: `2px solid ${ACCENT}` }}
-              >
-                <Bookmark
-                  className="h-3 w-3 flex-shrink-0 mt-0.5"
-                  style={{ color: ACCENT }}
-                />
-                <button
-                  onClick={() => handleRestoreInvestigation(inv)}
-                  className="min-w-0 flex-1 text-left"
-                  title={lang === 'en' ? 'Restore investigation' : 'Restaurar investigación'}
-                >
-                  <div
-                    className="text-[11px] font-mono font-bold truncate"
-                    style={{ color: 'var(--color-text-primary)' }}
-                  >
-                    {inv.name}
-                  </div>
-                  <div
-                    className="text-[9px] font-mono mt-0.5 truncate"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    {inv.code} · {inv.vendor_ids.length} {lang === 'en' ? 'vendors' : 'proveedores'} · {formatRelativeTime(inv.created_at, lang)}
-                  </div>
-                </button>
-                <button
-                  onClick={() => deleteInvestigation(inv.id)}
-                  className="opacity-0 group-hover:opacity-100 flex-shrink-0 p-0.5 rounded-sm hover:bg-background-elevated"
-                  aria-label={lang === 'en' ? 'Delete investigation' : 'Eliminar investigación'}
-                  title={lang === 'en' ? 'Delete' : 'Eliminar'}
-                >
-                  <X className="h-3 w-3" style={{ color: 'var(--color-text-muted)' }} />
-                </button>
-              </div>
-            ))}
-            <div
-              className="my-2 mx-1"
-              style={{ height: 1, background: 'var(--color-border)' }}
-            />
-          </div>
-        )}
+        {/* ── STORIES ───────────────────────────────────────────────── */}
+        <RailSection label={lang === 'en' ? 'STORIES' : 'HISTORIAS'} />
 
         <div className="px-2 pb-4">
           {ATLAS_STORIES.map((story) => (

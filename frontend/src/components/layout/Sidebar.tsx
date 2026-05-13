@@ -432,10 +432,7 @@ function getIsActive(href: string, pathname: string, search = ''): boolean {
     // Active for /sectors (without categories view) and /sectors/:id
     return (pathname === '/sectors' && !search.includes('view=categories')) || pathname.startsWith('/sectors/')
   }
-  if (href === '/workspace') {
-    return pathname === '/workspace' || pathname === '/watchlist' || pathname.startsWith('/workspace/')
-  }
-  if (href === '/cases') {
+if (href === '/cases') {
     return pathname === '/cases' || pathname.startsWith('/cases/')
   }
   if (href === '/investigation') {
