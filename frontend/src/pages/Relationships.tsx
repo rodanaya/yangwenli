@@ -397,7 +397,7 @@ export default function Relationships() {
                     showSecondaryMetric="ips"
                     lang={lang}
                     ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
-                    ctaTo="/intersection/novelty"
+                    ctaTo="/intersection"
                   />
                   <QuadrantCard
                     eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
@@ -411,7 +411,7 @@ export default function Relationships() {
                     showSecondaryMetric="risk"
                     lang={lang}
                     ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
-                    ctaTo="/intersection/confirmed"
+                    ctaTo="/intersection"
                   />
                   <QuadrantCard
                     eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
@@ -425,7 +425,7 @@ export default function Relationships() {
                     showSecondaryMetric="value"
                     lang={lang}
                     ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
-                    ctaTo="/intersection/blindspot"
+                    ctaTo="/intersection"
                   />
                 </div>
               </PlateFrame>

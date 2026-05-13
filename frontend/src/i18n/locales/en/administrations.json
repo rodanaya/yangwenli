@@ -8,7 +8,13 @@
     "noScandals": "No documented cases for this period in the RUBLI ground truth corpus.",
     "linkToCases": "View in Cases",
     "fingerprint": {
-      "highRisk": "High-Risk Rate"
+      "totalSpend": "Total Spend",
+      "directAward": "Direct Award",
+      "singleBid": "Single Bid",
+      "avgRisk": "Avg Risk",
+      "highRisk": "High-Risk Rate",
+      "valueAtRisk": "Value at Risk",
+      "vendors": "Vendors"
     },
     "severityLabels": {
       "critical": "CRIT",

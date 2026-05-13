@@ -406,7 +406,7 @@ export default function Intersection() {
               showSecondaryMetric="ips"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
-              ctaTo="/intersection/novelty"
+              ctaTo="/aria"
             />
 
             {/* CONFIRMED — triangulation */}
@@ -428,7 +428,7 @@ export default function Intersection() {
               showSecondaryMetric="risk"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
-              ctaTo="/intersection/confirmed"
+              ctaTo="/aria"
             />
 
             {/* BLIND SPOT — humility */}
@@ -450,7 +450,7 @@ export default function Intersection() {
               showSecondaryMetric="value"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
-              ctaTo="/intersection/blindspot"
+              ctaTo="/aria"
             />
               </div>
             </PlateFrame>

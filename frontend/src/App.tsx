@@ -79,6 +79,7 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Relationships = lazy(() => import('@/pages/Relationships'))
+const Intersection = lazy(() => import('@/pages/Intersection'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
@@ -281,8 +282,14 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              {/* Legacy routes — redirect to merged /relationships surface */}
-              <Route path="intersection" element={<Navigate to="/relationships#intersection" replace />} />
+              <Route
+                path="intersection"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Intersection />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="captura" element={<Navigate to="/relationships#captura" replace />} />
               <Route path="capture" element={<Navigate to="/relationships#captura" replace />} />
               {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}

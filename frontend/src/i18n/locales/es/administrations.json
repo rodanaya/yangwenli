@@ -8,7 +8,13 @@
     "noScandals": "Sin casos documentados para este período en el corpus de casos verificados de RUBLI.",
     "linkToCases": "Ver en Casos",
     "fingerprint": {
-      "highRisk": "Tasa Alto Riesgo"
+      "totalSpend": "Gasto Total",
+      "directAward": "Adj. Directa",
+      "singleBid": "Lic. Única",
+      "avgRisk": "Riesgo Prom.",
+      "highRisk": "Tasa Alto Riesgo",
+      "valueAtRisk": "Valor en Riesgo",
+      "vendors": "Proveedores"
     },
     "severityLabels": {
       "critical": "CRIT",

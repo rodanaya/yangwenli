@@ -16,7 +16,7 @@ import type { AdminAgg } from './types'
 interface ProcurementGradeResult {
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
   score: number
-  details: Array<{ label: string; value: string; grade: string }>
+  details: Array<{ labelKey: string; value: string; grade: string }>
 }
 
 function computeProcurementGrade(agg: AdminAgg): ProcurementGradeResult {
@@ -29,9 +29,9 @@ function computeProcurementGrade(agg: AdminAgg): ProcurementGradeResult {
     grade,
     score: Math.round(total * 100),
     details: [
-      { label: 'Direct Award', value: `${agg.directAwardPct.toFixed(0)}%`, grade: daScore >= 3 ? 'A' : daScore >= 2 ? 'B' : daScore >= 1 ? 'C' : 'F' },
-      { label: 'High Risk Rate', value: `${agg.highRiskPct.toFixed(1)}%`, grade: hrScore >= 3 ? 'A' : hrScore >= 2 ? 'B' : hrScore >= 1 ? 'C' : 'F' },
-      { label: 'Single Bid', value: `${agg.singleBidPct.toFixed(1)}%`, grade: sbScore >= 3 ? 'A' : sbScore >= 2 ? 'B' : sbScore >= 1 ? 'C' : 'F' },
+      { labelKey: 'dossier.fingerprint.directAward', value: `${agg.directAwardPct.toFixed(0)}%`, grade: daScore >= 3 ? 'A' : daScore >= 2 ? 'B' : daScore >= 1 ? 'C' : 'F' },
+      { labelKey: 'dossier.fingerprint.highRisk',    value: `${agg.highRiskPct.toFixed(1)}%`,    grade: hrScore >= 3 ? 'A' : hrScore >= 2 ? 'B' : hrScore >= 1 ? 'C' : 'F' },
+      { labelKey: 'dossier.fingerprint.singleBid',   value: `${agg.singleBidPct.toFixed(1)}%`,   grade: sbScore >= 3 ? 'A' : sbScore >= 2 ? 'B' : sbScore >= 1 ? 'C' : 'F' },
     ],
   }
 }
@@ -88,11 +88,11 @@ export function ProcurementGradeCard({ agg }: Props) {
             const detailColor = GRADE_COLORS[d.grade] || '#64748b'
             return (
               <div
-                key={d.label}
+                key={d.labelKey}
                 className="rounded-sm border border-border/20 bg-background-elevated/30 px-1.5 py-1 text-center"
               >
                 <div className="text-[7px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
-                  {d.label}
+                  {t(d.labelKey)}
                 </div>
                 <div className="text-xs font-bold font-mono" style={{ color: detailColor }}>
                   {d.grade}
