@@ -41,28 +41,28 @@ export const DOSSIER_DATA: Record<string, DossierEntry> = {
   Calderon: {
     contextKey: 'calderon',
     scandals: [
-      { key: 'odebrecht', severity: 'high' },
+      { key: 'odebrecht', severity: 'high', caseId: 'odebrecht-pemex-bribery' },
     ],
     topSectorKeys: ['defensa', 'infraestructura', 'energia', 'salud', 'gobernacion'],
   },
   'Pena Nieto': {
     contextKey: 'pena_nieto',
     scandals: [
-      { key: 'casa_blanca',   severity: 'high' },
-      { key: 'grupo_higa',    severity: 'high' },
-      { key: 'estafa_maestra',severity: 'critical' },
-      { key: 'imss_ghost',    severity: 'critical' },
-      { key: 'odebrecht',     severity: 'high' },
+      { key: 'casa_blanca',    severity: 'high',     caseId: 'grupo-higa-casa-blanca' },
+      { key: 'grupo_higa',     severity: 'high',     caseId: 'grupo-higa-casa-blanca' },
+      { key: 'estafa_maestra', severity: 'critical', caseId: 'estafa-maestra' },
+      { key: 'imss_ghost',     severity: 'critical', caseId: 'imss-ghost-company-network' },
+      { key: 'odebrecht',      severity: 'high',     caseId: 'odebrecht-pemex-bribery' },
     ],
     topSectorKeys: ['salud', 'infraestructura', 'educacion', 'energia', 'hacienda'],
   },
   AMLO: {
     contextKey: 'amlo',
     scandals: [
-      { key: 'covid_procurement', severity: 'critical' },
-      { key: 'segalmex',          severity: 'critical' },
+      { key: 'covid_procurement', severity: 'critical', caseId: 'covid-emergency-procurement' },
+      { key: 'segalmex',          severity: 'critical', caseId: 'segalmex-food-distribution' },
       { key: 'efos_sat',          severity: 'high' },
-      { key: 'tren_maya',         severity: 'high' },
+      { key: 'tren_maya',         severity: 'high',     caseId: 'tren-maya-fonatur' },
     ],
     topSectorKeys: ['infraestructura', 'salud', 'energia', 'defensa', 'gobernacion'],
   },

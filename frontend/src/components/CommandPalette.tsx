@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
   FlaskConical, GitBranch, LayoutDashboard, Network, Scale,
-  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon,
+  TrendingUp, Users, Zap, Bookmark, X as XIcon,
 } from 'lucide-react'
 import {
   CommandDialog,
@@ -58,7 +58,6 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'institutions', label: 'Explore Institutions',     icon: Building2,       href: '/explore?tab=institutions',          shortcut: 'G I' },
   { id: 'sectors',      label: 'Sectors Overview',         icon: BarChart3,       href: '/sectors',                          shortcut: 'G S' },
   { id: 'network',      label: 'Network Graph',            icon: Network,         href: '/network',                          shortcut: 'G N' },
-  { id: 'workspace',    label: 'Workspace / Watchlist',    icon: Shield,          href: '/workspace',                        shortcut: 'G W' },
   { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
   { id: 'aria',         label: 'ARIA Queue',               description: 'Tier 1 — 320 vendors for immediate review', icon: Zap, href: '/aria', shortcut: 'G Q' },
   { id: 'administrations', label: 'Administrations',        description: 'Cross-sexenio procurement comparison', icon: GitBranch, href: '/administrations' },
@@ -165,19 +164,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   }, [open])
 
   // Federated search — only fires when query >= 2 chars.
-  // Filter out cases whose detail endpoint is known to 404 (the backend
-  // search returns these slugs but /cases/:slug 404s on them).
-  // 26 + 23 hits in the 30h harness — pure UX noise, not a real route.
   const { data: results, isFetching } = useQuery({
     queryKey: ['cmd-search', debouncedQuery],
-    queryFn: async () => {
-      const raw = await searchApi.federated(debouncedQuery, 5)
-      const KNOWN_404_SLUGS = new Set(['segalmex', 'odebrecht'])
-      return {
-        ...raw,
-        cases: raw.cases.filter((c) => !KNOWN_404_SLUGS.has(c.slug)),
-      }
-    },
+    queryFn: () => searchApi.federated(debouncedQuery, 5),
     enabled: debouncedQuery.length >= 2,
     staleTime: 30 * 1000,
     placeholderData: (prev) => prev,
