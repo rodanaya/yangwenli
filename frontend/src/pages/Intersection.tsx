@@ -12,13 +12,14 @@
  * interest in a ranked list of unsuspicious vendors.
  */
 
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
+import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -217,9 +218,10 @@ function QuadrantCard({
 export default function Intersection() {
   const { i18n } = useTranslation()
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+  const [selectedSector, setSelectedSector] = useState<string | null>(null)
   const { data, isLoading } = useQuery({
-    queryKey: ['intersection', 'summary', 10],
-    queryFn: () => intersectionApi.getSummary(10),
+    queryKey: ['intersection', 'summary', 50],
+    queryFn: () => intersectionApi.getSummary(50),
     staleTime: 10 * 60 * 1000,
   })
 
@@ -261,7 +263,7 @@ export default function Intersection() {
             <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
-              {lang === 'es' ? 'La intersección · RUBLI vs reguladores' : 'The intersection · RUBLI vs regulators'}
+              {lang === 'es' ? 'Superficie de investigación · Vista completa de cuadrantes' : 'Investigation Surface · Full quadrant view'}
             </span>
           </span>
         </div>
@@ -305,9 +307,13 @@ export default function Intersection() {
                 letterSpacing: '0.005em',
               }}
             >
-              {lang === 'es'
-                ? 'Tres cuadrantes triangulan dos métodos independientes: el patrón cuantitativo del modelo y el registro oficial de los reguladores. Donde divergen — proveedores que un método ve y el otro no — está la materia prima de una investigación.'
-                : "Three quadrants triangulate two independent methods: the model's quantitative pattern and the regulators' official register. Where they diverge — vendors that one method sees and the other does not — is the raw material of an investigation."}
+              {data
+                ? lang === 'es'
+                  ? <>Dataset completo: <strong style={{ color: 'var(--color-text-primary)' }}>{formatNumber(data.counts.novelty + data.counts.confirmed + data.counts.blindspot)}</strong> proveedores en tres cuadrantes de investigación. Filtra por sector para enfocar tu investigación.</>
+                  : <>Full dataset: <strong style={{ color: 'var(--color-text-primary)' }}>{formatNumber(data.counts.novelty + data.counts.confirmed + data.counts.blindspot)}</strong> vendors across three investigation quadrants. Filter by sector to focus your investigation.</>
+                : lang === 'es'
+                  ? 'Tres cuadrantes triangulan dos métodos independientes: el patrón cuantitativo del modelo y el registro oficial de los reguladores.'
+                  : "Three quadrants triangulate two independent methods: the model's quantitative pattern and the regulators' official register."}
             </p>
           </div>
           {!isLoading && data && (
@@ -376,6 +382,47 @@ export default function Intersection() {
               </p>
             </div>
 
+            {/* Sector filter chips */}
+            <div
+              className="flex items-center gap-1.5 overflow-x-auto pb-1"
+              role="group"
+              aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'}
+              style={{ scrollbarWidth: 'none' }}
+            >
+              <button
+                onClick={() => setSelectedSector(null)}
+                className="flex-shrink-0 px-2.5 py-1 rounded-sm font-mono text-[10px] uppercase tracking-[0.14em] transition-colors"
+                style={{
+                  border: `1px solid ${selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-border)'}`,
+                  color: selectedSector === null ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                  background: selectedSector === null ? 'var(--color-background-elevated)' : 'transparent',
+                  fontWeight: selectedSector === null ? 700 : 400,
+                }}
+                aria-pressed={selectedSector === null}
+              >
+                {lang === 'es' ? 'Todos' : 'All'}
+              </button>
+              {SECTORS.map((s) => {
+                const active = selectedSector === s.code
+                return (
+                  <button
+                    key={s.code}
+                    onClick={() => setSelectedSector(active ? null : s.code)}
+                    className="flex-shrink-0 px-2.5 py-1 rounded-sm font-mono text-[10px] uppercase tracking-[0.14em] transition-colors"
+                    style={{
+                      border: `1px solid ${active ? s.color : `${s.color}44`}`,
+                      color: active ? s.color : 'var(--color-text-muted)',
+                      background: active ? `${s.color}12` : 'transparent',
+                      fontWeight: active ? 700 : 400,
+                    }}
+                    aria-pressed={active}
+                  >
+                    {getSectorName(s.code, lang === 'es' ? 'es' : 'en')}
+                  </button>
+                )
+              })}
+            </div>
+
             <PlateFrame
               lang={lang}
               folio="XIII"
@@ -402,7 +449,7 @@ export default function Intersection() {
                   ? <>Esta es la razón de ser del modelo: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> proveedores con score alto (≥ 40/100) cuyos RFC no aparecen en SAT EFOS, ni tienen sanción SFP, ni están en el corpus de casos documentados. Ordenados por IPS — prioridad integrada.</>
                   : <>This is the model's reason to exist: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> vendors with high pattern-match (≥ 40/100) whose RFCs do not appear on SAT EFOS, carry no SFP sanction, and are absent from the documented-case corpus. Ranked by IPS (integrated priority score).</>
               }
-              rows={data.rankings.novelty}
+              rows={selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty}
               showSecondaryMetric="ips"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
@@ -424,7 +471,7 @@ export default function Intersection() {
                   ? <>Triangulación: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> proveedores con score alto que además aparecen en al menos un registro externo. Cuando métodos independientes convergen, la confianza en cada uno crece.</>
                   : <>Triangulation: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> vendors with high pattern-match that also appear on at least one external registry. When independent methods converge, confidence in each grows.</>
               }
-              rows={data.rankings.confirmed}
+              rows={selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed}
               showSecondaryMetric="risk"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
@@ -446,7 +493,7 @@ export default function Intersection() {
                   ? <>Honestidad metodológica: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> proveedores con bajo score RUBLI (&lt; 25/100) que sí aparecen en un registro externo. Ordenados por valor total de contratos — los puntos ciegos más grandes primero.</>
                   : <>Methodological honesty: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> vendors with low RUBLI score (&lt; 25/100) that do appear on an external registry. Sorted by total contract value — largest blind spots first.</>
               }
-              rows={data.rankings.blindspot}
+              rows={selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot}
               showSecondaryMetric="value"
               lang={lang}
               ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
@@ -470,6 +517,11 @@ export default function Intersection() {
                     Quadrants computed over aria_queue (318K federal vendors). RUBLI score = {CURRENT_MODEL_VERSION} OECD-calibrated per-sector (see <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">methodology</Link>). External registries: <span className="font-mono">SAT EFOS</span> (Art. 69-B definitivo, 13,960 RFCs), <span className="font-mono">SFP</span> (final federal-comptroller sanctions, 544 records), <span className="font-mono">RUBLI corpus</span> ({GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} ground-truth cases covering {GROUND_TRUTH_VENDOR_COUNT_FALLBACK} vendors).
                   </>
                 )}
+              </p>
+              <p className="mt-3 text-[11px] font-mono text-text-muted">
+                {lang === 'es'
+                  ? <>Para acceso al dataset completo, consulta la <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">metodología RUBLI</Link>. Datos: contratos federales COMPRANET 2002–2025.</>
+                  : <>For full dataset access, see the <Link to="/methodology" className="underline underline-offset-2 hover:text-text-primary">RUBLI methodology</Link>. Data: COMPRANET federal contracts 2002–2025.</>}
               </p>
             </div>
           </div>

@@ -55,11 +55,18 @@ below for a guaranteed-clean deploy.
 ### 3. Container name collisions on rebuild
 
 After certain partial deploys, `docker compose up` errors with
-"name already in use". Pre-emptively remove containers first:
+"name already in use". `docker rm -f` by name **does not reliably catch
+partially-created containers** — the new container gets a fresh ID that
+doesn't match the name yet. Use `docker compose down` instead:
 
 ```bash
-docker rm -f rubli-frontend rubli-backend rubli-caddy rubli-aria-cron rubli-backup-cron
+docker compose -f docker-compose.prod.yml --env-file .env.prod down --remove-orphans
 ```
+
+This is already embedded in the canonical deploy command below. If you
+hit a collision mid-deploy, extract the container ID from the error
+message and `docker rm -f <ID>`, then re-run `docker compose up -d`
+(no `--build` needed since images were already built).
 
 ### 4. The `RUBLI_WRITE_KEY` env var is required by aria-cron
 
@@ -79,12 +86,13 @@ required variable RUBLI_WRITE_KEY is missing a value: RUBLI_WRITE_KEY must be se
 ssh root@37.60.232.109 "cd /opt/rubli && \
   git fetch origin && \
   git reset --hard origin/main && \
-  docker rm -f rubli-frontend rubli-backend rubli-caddy rubli-aria-cron rubli-backup-cron 2>/dev/null && \
+  docker compose -f docker-compose.prod.yml --env-file .env.prod down --remove-orphans && \
   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build"
 ```
 
 This is the safe path for any deploy — code change, env change, schema
-change, doesn't matter. ~3-5 minutes total, idempotent.
+change, doesn't matter. ~3-5 minutes total, idempotent. Uses `down`
+instead of `rm -f` to avoid container name collision bugs (Gotcha 3).
 
 For a frontend-only fast iteration where you've already deployed
 recently and the backend container is healthy, you *can* use:

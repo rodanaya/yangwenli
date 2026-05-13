@@ -13,20 +13,22 @@
  * editorial arc. Both redirected here.
  */
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, captureApi, type IntersectionVendor, type CaptureItem } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import {
+  SECTORS,
   SECTOR_COLORS,
   CURRENT_MODEL_VERSION,
   GROUND_TRUTH_CASE_COUNT_FALLBACK,
   GROUND_TRUTH_VENDOR_COUNT_FALLBACK,
   getSectorName,
 } from '@/lib/constants'
-import { ChevronRight, AlertTriangle } from 'lucide-react'
+import { ChevronRight, AlertTriangle, ArrowRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 
@@ -163,12 +165,24 @@ function ShareSparkline({ timeline, peakShare }: { timeline: CaptureItem['timeli
 }
 
 function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en' | 'es' }) {
+  const navigate = useNavigate()
   const sectorColor = c.institution_sector_name ? SECTOR_COLORS[c.institution_sector_name.toLowerCase()] ?? '#64748b' : '#64748b'
   const delta = c.peak_share_pct - c.earliest_share_pct
   const years = `${c.earliest_year}–${c.peak_year}`
+  const goToInstitution = (e: React.MouseEvent | React.KeyboardEvent) => {
+    // Let inner links (EntityIdentityChip) handle their own clicks
+    const target = e.target as HTMLElement
+    if (target.closest('a')) return
+    navigate(`/institutions/${c.institution_id}`)
+  }
   return (
     <article
-      className="group flex flex-col md:flex-row items-stretch md:items-center gap-4 px-5 py-5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
+      role="link"
+      tabIndex={0}
+      onClick={goToInstitution}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToInstitution(e) } }}
+      title={lang === 'es' ? `Ver institución: ${c.institution_name}` : `View institution: ${c.institution_name}`}
+      className="group flex flex-col md:flex-row items-stretch md:items-center gap-4 px-5 py-5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-text-muted focus:ring-inset"
       style={{ borderLeft: `4px solid ${sectorColor}` }}
     >
       <div className="flex items-start gap-4 md:w-[240px] flex-shrink-0">
@@ -240,12 +254,40 @@ export default function Relationships() {
     staleTime: 30 * 60 * 1000,
   })
 
-  const captures = capData?.data ?? []
+  const allCaptures = capData?.data ?? []
+  const [captureFilter, setCaptureFilter] = useState<string | null>(null)
+
+  // Sector counts over the full (unfiltered) capture list — used by chip badges and top-sector stat
+  const captureSectorCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const c of allCaptures) {
+      const key = c.institution_sector_name?.toLowerCase() ?? 'otros'
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    return counts
+  }, [allCaptures])
+
+  const topSectorEntry = useMemo(() => {
+    let best: { code: string; count: number } | null = null
+    for (const [code, count] of captureSectorCounts) {
+      if (!best || count > best.count) best = { code, count }
+    }
+    return best
+  }, [captureSectorCounts])
+
+  const captures = useMemo(() => {
+    if (!captureFilter) return allCaptures
+    return allCaptures.filter((c) => c.institution_sector_name?.toLowerCase() === captureFilter)
+  }, [allCaptures, captureFilter])
+
   const totalCaptures = capData?.total_captures ?? 0
-  const capturedValue = capData?.data.reduce((s, c) => s + c.cumulative_value_mxn, 0) ?? 0
-  const largestJump = capData && capData.data.length > 0
-    ? Math.max(...capData.data.map((c) => c.peak_share_pct - c.earliest_share_pct))
+  const capturedValue = allCaptures.reduce((s, c) => s + c.cumulative_value_mxn, 0)
+  const largestJump = allCaptures.length > 0
+    ? Math.max(...allCaptures.map((c) => c.peak_share_pct - c.earliest_share_pct))
     : 0
+
+  // Intersection total (for the deep-dive link)
+  const ixTotal = ixData ? ixData.counts.novelty + ixData.counts.confirmed + ixData.counts.blindspot : 0
 
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -349,6 +391,17 @@ export default function Relationships() {
                   <div className="text-lg font-bold text-text-primary tabular-nums leading-none">{formatNumber(ixData.counts.blindspot)}</div>
                   <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{lang === 'es' ? 'Punto ciego' : 'Blind spot'}</div>
                 </div>
+                <Link
+                  to="/intersection"
+                  className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors self-end pb-0.5"
+                >
+                  <span>
+                    {lang === 'es'
+                      ? <>Análisis completo de la intersección <span className="tabular-nums">({formatNumber(ixTotal)} {lang === 'es' ? 'proveedores' : 'vendors'})</span></>
+                      : <>Full intersection analysis <span className="tabular-nums">({formatNumber(ixTotal)} vendors)</span></>}
+                  </span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
               </div>
             )}
           </div>
@@ -481,6 +534,30 @@ export default function Relationships() {
                 {capLoading ? <Skeleton className="h-5 w-14 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>}
                 <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
               </div>
+              <div className="text-right">
+                {capLoading ? (
+                  <Skeleton className="h-5 w-24 ml-auto" />
+                ) : topSectorEntry ? (
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: SECTOR_COLORS[topSectorEntry.code] ?? '#64748b' }}
+                      aria-hidden="true"
+                    />
+                    <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
+                      {getSectorName(topSectorEntry.code, lang)}
+                    </span>
+                    <span className="font-mono tabular-nums text-[11px] text-text-muted">
+                      ({topSectorEntry.count})
+                    </span>
+                  </div>
+                ) : (
+                  <div className="font-mono tabular-nums text-base font-semibold text-text-primary">—</div>
+                )}
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">
+                  {lang === 'es' ? 'Sector dominante' : 'Top sector'}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -497,6 +574,63 @@ export default function Relationships() {
                 </p>
               </div>
 
+              {/* Sector filter chips — narrow the capture list to a single sector */}
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted flex-shrink-0">
+                  {lang === 'es' ? 'Filtrar' : 'Filter'}
+                </p>
+                <div className="flex-1 flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1" style={{ scrollbarWidth: 'thin' }}>
+                  <button
+                    type="button"
+                    onClick={() => setCaptureFilter(null)}
+                    className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                      captureFilter === null
+                        ? 'border border-text-primary text-text-primary bg-background-elevated'
+                        : 'border border-border text-text-muted hover:text-text-secondary hover:border-text-muted'
+                    }`}
+                    aria-pressed={captureFilter === null}
+                  >
+                    <span>{lang === 'es' ? 'Todos' : 'All'}</span>
+                    <span className="tabular-nums opacity-70">{allCaptures.length}</span>
+                  </button>
+                  {SECTORS.map((s) => {
+                    const count = captureSectorCounts.get(s.code) ?? 0
+                    const active = captureFilter === s.code
+                    const disabled = count === 0
+                    return (
+                      <button
+                        key={s.code}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => setCaptureFilter(active ? null : s.code)}
+                        aria-pressed={active}
+                        className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
+                          active
+                            ? 'bg-background-elevated text-text-primary'
+                            : disabled
+                            ? 'border border-border text-text-muted opacity-40 cursor-not-allowed'
+                            : 'border border-border text-text-muted hover:text-text-secondary'
+                        }`}
+                        style={
+                          active
+                            ? { border: `1px solid ${SECTOR_COLORS[s.code] ?? '#64748b'}`, color: SECTOR_COLORS[s.code] ?? undefined }
+                            : undefined
+                        }
+                        title={`${lang === 'es' ? s.name : s.nameEN} — ${count} ${lang === 'es' ? 'capturas' : 'captures'}`}
+                      >
+                        <span
+                          className="inline-block h-1.5 w-1.5 rounded-full"
+                          style={{ background: SECTOR_COLORS[s.code] ?? '#64748b', opacity: disabled ? 0.4 : 1 }}
+                          aria-hidden="true"
+                        />
+                        <span>{lang === 'es' ? s.name : s.nameEN}</span>
+                        <span className="tabular-nums opacity-70">{count}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <PlateFrame
                 lang={lang}
                 folio="XII"
@@ -506,9 +640,17 @@ export default function Relationships() {
                   : 'Plate — The largest monotonic vendor → institution concentrations, 2018–2025. Sparkline width shows observed years; red dots mark years at ≥ 50% share.'}
               >
                 <div className="rounded-sm border border-border bg-background-card overflow-hidden">
-                  {captures.map((c, i) => (
-                    <CaptureRow key={`${c.institution_id}-${c.vendor_id}`} c={c} rank={i + 1} lang={lang} />
-                  ))}
+                  {captures.length === 0 ? (
+                    <div className="px-5 py-10 text-center text-[12px] text-text-muted">
+                      {lang === 'es'
+                        ? 'Ninguna captura coincide con este filtro de sector.'
+                        : 'No captures match this sector filter.'}
+                    </div>
+                  ) : (
+                    captures.map((c, i) => (
+                      <CaptureRow key={`${c.institution_id}-${c.vendor_id}`} c={c} rank={i + 1} lang={lang} />
+                    ))
+                  )}
                 </div>
               </PlateFrame>
 

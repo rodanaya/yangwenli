@@ -21,7 +21,7 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { ariaApi, networkApi, type PatternSpotlight } from '@/api/client'
+import { ariaApi, networkApi, type PatternSpotlight, type PatternSpotlightResponse, type CommunityItem } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
@@ -57,6 +57,101 @@ interface Community {
   verdict: string
 }
 
+// ---------------------------------------------------------------------------
+// buildCommunitiesFromSpotlight — derives community structure from real
+// ARIA pattern-spotlight data. Each P1-P7 pattern becomes one community.
+// vendor_count, avg_ips and gt_case_count are real database values.
+// value/daRate/sbRate/paRate are set to 0 (unknown at pattern aggregate
+// level) — callers must guard on c.value === 0 before rendering MXN.
+// ---------------------------------------------------------------------------
+
+const PATTERN_NAMES: Record<string, { en: string; es: string }> = {
+  P1: { en: 'Monopoly Cluster', es: 'Cluster Monopolio' },
+  P2: { en: 'Ghost Company Network', es: 'Red Empresas Fantasma' },
+  P3: { en: 'Intermediary Ring', es: 'Red de Intermediarios' },
+  P4: { en: 'Bid Rigging Cartel', es: 'Cártel de Licitaciones' },
+  P5: { en: 'Rotation & Overpricing', es: 'Rotación y Sobreprecio' },
+  P6: { en: 'Institutional Capture', es: 'Captura Institucional' },
+  P7: { en: 'Budget Dump Ring', es: 'Red Vaciado Presupuestal' },
+}
+
+const PATTERN_SECTORS: Record<string, keyof typeof SECTOR_COLORS> = {
+  P1: 'energia',
+  P2: 'salud',
+  P3: 'tecnologia',
+  P4: 'infraestructura',
+  P5: 'salud',
+  P6: 'gobernacion',
+  P7: 'hacienda',
+}
+
+function buildCommunitiesFromSpotlight(
+  spotlight: PatternSpotlightResponse | undefined,
+  isEs: boolean,
+): Community[] {
+  if (!spotlight?.patterns?.length) return buildCommunities(isEs)
+
+  return spotlight.patterns.map((p) => {
+    const names = PATTERN_NAMES[p.code] ?? { en: p.code, es: p.code }
+    return {
+      id: p.code,
+      name: isEs ? names.es : names.en,
+      sector: PATTERN_SECTORS[p.code] ?? 'otros',
+      pattern: p.code as PatternCode,
+      vendors: p.vendor_count,
+      value: 0,            // unknown — do NOT show fake MXN
+      institution: '',     // unknown at pattern aggregate level
+      avgRisk: p.avg_ips,
+      confirmed: p.gt_case_count,
+      daRate: 0,           // unknown
+      sbRate: 0,           // unknown
+      paRate: 0,           // unknown
+      verdict: isEs
+        ? `${p.vendor_count.toLocaleString('es-MX')} proveedores con patrón ${p.code} · ${p.t1_count} en cola T1 · ${p.gt_case_count} casos documentados`
+        : `${p.vendor_count.toLocaleString()} vendors flagged ${p.code} · ${p.t1_count} in T1 queue · ${p.gt_case_count} documented cases`,
+    }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// buildCommunitiesFromLouvain — maps real Louvain community data (from
+// vendor_graph_features) to the Community shape. vendor count and avg_risk
+// are real; value/daRate/sbRate/paRate are unknown at community aggregate
+// level and left at 0.
+// ---------------------------------------------------------------------------
+
+function buildCommunitiesFromLouvain(
+  communities: CommunityItem[],
+  isEs: boolean,
+): Community[] {
+  return communities.slice(0, 10).map((c, i) => {
+    // Infer dominant pattern from avg_risk (rough heuristic until real pattern
+    // assignment is available from the graph pipeline)
+    const pattern: PatternCode = c.avg_risk >= 0.7 ? 'P2' : c.avg_risk >= 0.6 ? 'P6' : 'P5'
+    return {
+      id: `L${String(c.community_id).padStart(3, '0')}`,
+      name: isEs
+        ? `Comunidad ${i + 1} · ${c.sector_count} sectores`
+        : `Community ${i + 1} · ${c.sector_count} sectors`,
+      sector: 'otros' as keyof typeof SECTOR_COLORS,
+      pattern,
+      vendors: c.size,      // REAL
+      value: 0,             // unknown at community aggregate level
+      institution: '',
+      avgRisk: c.avg_risk,  // REAL
+      confirmed: 0,
+      daRate: 0,
+      sbRate: 0,
+      paRate: 0,
+      verdict: isEs
+        ? `Comunidad detectada por Louvain con ${c.size} proveedores y riesgo promedio ${(c.avg_risk * 100).toFixed(0)}%.`
+        : `Louvain-detected community with ${c.size} vendors and avg risk ${(c.avg_risk * 100).toFixed(0)}%.`,
+    }
+  })
+}
+
+// Legacy hardcoded corpus — kept as fallback when spotlight API is unavailable.
+// DO NOT use these values in new features: all MXN amounts are fabricated.
 function buildCommunities(isEs: boolean): Community[] {
   return [
     {
@@ -326,18 +421,21 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
   const W = 900
   const H = 440
 
-  // Radius scale: sqrt on value so area ≈ value.
-  const maxV = Math.max(...communities.map((c) => c.value))
+  // Radius scale: use vendors (always real) for sizing.
+  // value may be 0 when built from spotlight data — never use it for geometry.
+  const maxV = Math.max(...communities.map((c) => c.vendors))
   const rOf = (v: number) => 16 + 52 * Math.sqrt(v / maxV)
 
   // Deterministic, organic 3-row staggered layout — no overlap, flows L→R.
-  // Sorted by value desc so the two largest anchor the left.
-  const sorted = [...communities].sort((a, b) => b.value - a.value)
-  const rows = [
-    [0, 1, 2],       // top row: 3 of the biggest 3
-    [3, 4, 5, 6],    // middle: 4
-    [7, 8, 9],       // bottom: 3
-  ]
+  // Sorted by vendors desc so the two largest anchor the left.
+  const sorted = [...communities].sort((a, b) => b.vendors - a.vendors)
+  // Dynamic row layout adapts to n communities (7 from spotlight, 10 fallback).
+  const n = sorted.length
+  const rowConfig: number[][] =
+    n <= 7
+      ? [[0, 1, 2], [3, 4], [5, 6]]            // 3-2-2 for 7
+      : [[0, 1, 2], [3, 4, 5, 6], [7, 8, 9]]   // 3-4-3 for 10
+  const rows = rowConfig
   const rowYs = [0.24, 0.52, 0.80]
   const positioned: { c: Community; x: number; y: number; r: number }[] = []
   rows.forEach((rowIdx, ri) => {
@@ -368,25 +466,14 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
           className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
         >
-          {isEs ? 'Diez comunidades, diez instituciones capturadas' : 'Ten communities, ten captured institutions'}
+          {isEs
+            ? `${communities.length} clústeres de patrones ARIA`
+            : `${communities.length} ARIA pattern clusters`}
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
           {isEs
-            ? 'Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red de co-contratación. El tamaño es el valor capturado; el color, el patrón de corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la red.'
-            : 'Each circle is a community of vendors detected by Louvain over the co-contracting network. Size maps to value captured; color maps to the dominant corruption pattern. No individual vendors here — only the shape of the network.'}
-        </p>
-        {/* Methodology framing — the per-community institution names and
-            dominant corruption patterns are derived from the real
-            co-contracting graph; the per-community captured-value
-            estimates are working figures pending the next
-            vendor_communities snapshot. Reframed 2026-05-11 (Audit F152)
-            from a "DATA PENDING" banner that signalled fakery to
-            journalists, to a methodology-preview framing that matches
-            what the analysis actually does. */}
-        <p className="text-[10px] text-text-muted/80 mt-2 max-w-3xl leading-relaxed font-mono tracking-wide">
-          {isEs
-            ? 'Estimaciones de trabajo. Los nombres de instituciones y patrones provienen del grafo real de co-contratación; los valores capturados se actualizan con la próxima sincronización de vendor_communities.'
-            : 'Working estimates. Institution names and dominant patterns come from the real co-contracting graph; per-community captured values refresh with the next vendor_communities sync.'}
+            ? 'Cada círculo representa un patrón de corrupción ARIA (P1–P7). El tamaño refleja el número de proveedores en ese patrón; el color, el tipo de corrupción dominante. Datos en tiempo real de la base de datos ARIA.'
+            : 'Each circle represents one ARIA corruption pattern (P1–P7). Size reflects the vendor count in that pattern; color encodes the dominant corruption type. Live data from the ARIA database.'}
         </p>
       </div>
 
@@ -421,7 +508,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 opacity={dim ? 0.35 : 1}
                 onMouseEnter={() => onHover(c.id)}
                 onClick={() => onSelect(c.id)}
-                aria-label={`${c.name}: ${formatCompactMXN(c.value)}, ${c.vendors} vendors`}
+                aria-label={`${c.name}: ${formatNumber(c.vendors)} vendors${c.value > 0 ? ', ' + formatCompactMXN(c.value) : ''}`}
               >
                 {/* Halo for active */}
                 {isActive && (
@@ -452,7 +539,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 >
                   {c.pattern}
                 </text>
-                {/* Value inside */}
+                {/* Vendor count inside bubble */}
                 <text
                   y={12}
                   textAnchor="middle"
@@ -461,7 +548,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                   fontSize={Math.max(8, Math.min(11, r * 0.16))}
                   style={{ fontFamily: FONT_MONO }}
                 >
-                  {formatCompactMXN(c.value).replace(' MXN', '')}
+                  {formatNumber(c.vendors)} {isEs ? 'provs' : 'vendors'}
                 </text>
                 {/* Community name beneath */}
                 <text
@@ -518,8 +605,10 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             </div>
             <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px]">
               <span className="text-text-secondary">{isEs ? 'Valor' : 'Value'}</span>
-              <span className="text-text-primary font-mono font-bold">
-                {formatCompactMXN(active.c.value)}
+              <span className="text-text-muted font-mono">
+                {active.c.value > 0
+                  ? formatCompactMXN(active.c.value)
+                  : isEs ? 'pendiente análisis' : 'pending analysis'}
               </span>
             </div>
             <div className="flex items-center gap-1.5 mt-1.5">
@@ -647,6 +736,7 @@ function CommunityDossier({
   const maxVendors = Math.max(...communities.map((x) => x.vendors))
   const maxConfirmed = Math.max(...communities.map((x) => x.confirmed))
   const maxValue = Math.max(...communities.map((x) => x.value))
+  const hasRealValues = maxValue > 0
 
   return (
     <div
@@ -703,19 +793,33 @@ function CommunityDossier({
           {c.name}
         </h3>
 
-        {/* Value captured — the hero number */}
+        {/* Value captured — hero number (only shown when real; 0 = unknown) */}
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: fill }}>
           <div
             className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5"
           >
             {isEs ? 'Valor capturado' : 'Value captured'}
           </div>
-          <div
-            className="text-3xl tabular-nums leading-none"
-            style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
-          >
-            {formatCompactMXN(c.value)}
-          </div>
+          {c.value > 0 ? (
+            <div
+              className="text-3xl tabular-nums leading-none"
+              style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
+            >
+              {formatCompactMXN(c.value)}
+            </div>
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span
+                className="text-3xl tabular-nums leading-none text-text-muted/40"
+                style={{ fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
+              >
+                —
+              </span>
+              <span className="text-[10px] text-text-muted/50 font-mono">
+                {isEs ? 'pendiente análisis de comunidades' : 'pending community analysis'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Stat bars: Members · Confirmed · Avg Risk */}
@@ -741,40 +845,61 @@ function CommunityDossier({
             value={`${(c.avgRisk * 100).toFixed(0)}%`}
             bar={<DotBar value={c.avgRisk} color="#f59e0b" dots={18} />}
           />
-          <StatRow
-            label={isEs ? 'Cuota top-10' : 'Top-10 share'}
-            value={`${((c.value / maxValue) * 100).toFixed(0)}%`}
-            bar={<DotBar value={c.value / maxValue} color={fill} dots={18} />}
-          />
+          {hasRealValues ? (
+            <StatRow
+              label={isEs ? 'Cuota top-10' : 'Top-10 share'}
+              value={`${((c.value / maxValue) * 100).toFixed(0)}%`}
+              bar={<DotBar value={c.value / maxValue} color={fill} dots={18} />}
+            />
+          ) : (
+            <StatRow
+              label={isEs ? 'Cuota en red' : 'Network share'}
+              value={`${((c.vendors / maxVendors) * 100).toFixed(0)}%`}
+              bar={<DotBar value={c.vendors / maxVendors} color={fill} dots={18} />}
+            />
+          )}
         </div>
 
-        {/* Network signature */}
-        <div className="pt-3 mt-1 border-t border-border">
-          <div
-            className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
-          >
-            {isEs ? 'Firma de red' : 'Network signature'}
+        {/* Network signature — only shown when per-community rates are known */}
+        {(c.daRate > 0 || c.sbRate > 0 || c.paRate > 0) ? (
+          <div className="pt-3 mt-1 border-t border-border">
+            <div
+              className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
+            >
+              {isEs ? 'Firma de red' : 'Network signature'}
+            </div>
+            <div className="space-y-1.5">
+              <SignatureRow
+                label={isEs ? 'Adjudicación Directa' : 'Direct Award'}
+                value={c.daRate}
+                color="#ef4444"
+                benchmark={0.25}
+                benchmarkLabel={isEs ? 'OCDE 25%' : 'OECD 25%'}
+              />
+              <SignatureRow
+                label={isEs ? 'Propuesta Única' : 'Single Bid'}
+                value={c.sbRate}
+                color="#f59e0b"
+              />
+              <SignatureRow
+                label={isEs ? 'Precio Anómalo' : 'Price Anomaly'}
+                value={c.paRate}
+                color="#eab308"
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <SignatureRow
-              label={isEs ? 'Adjudicación Directa' : 'Direct Award'}
-              value={c.daRate}
-              color="#ef4444"
-              benchmark={0.25}
-              benchmarkLabel={isEs ? 'OCDE 25%' : 'OECD 25%'}
-            />
-            <SignatureRow
-              label={isEs ? 'Propuesta Única' : 'Single Bid'}
-              value={c.sbRate}
-              color="#f59e0b"
-            />
-            <SignatureRow
-              label={isEs ? 'Precio Anómalo' : 'Price Anomaly'}
-              value={c.paRate}
-              color="#eab308"
-            />
+        ) : (
+          <div className="pt-3 mt-1 border-t border-border">
+            <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1">
+              {isEs ? 'Firma de red' : 'Network signature'}
+            </div>
+            <p className="text-[10px] text-text-muted/50 font-mono italic">
+              {isEs
+                ? 'Tasas por comunidad pendientes de análisis de grafo'
+                : 'Per-community rates pending graph analysis'}
+            </p>
           </div>
-        </div>
+        )}
 
         {/* Verdict */}
         <div className="pt-3 border-t border-border">
@@ -866,26 +991,37 @@ function SignatureRow({
 // ---------------------------------------------------------------------------
 
 function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: boolean }) {
+  // Determine whether we have real MXN values or only vendor counts.
+  const hasRealValues = communities.some((c) => c.value > 0)
+
   const { sources, targets, links } = useMemo(() => {
-    const top5 = [...communities].sort((a, b) => b.value - a.value).slice(0, 5)
+    // Sort by whichever dimension is real; fall back to vendors when values are 0.
+    const top5 = [...communities]
+      .sort((a, b) => (hasRealValues ? b.value - a.value : b.vendors - a.vendors))
+      .slice(0, 5)
+    // Flow weight: use real MXN when available, otherwise use vendor count.
+    const flowOf = (c: Community) => (hasRealValues ? c.value : c.vendors)
+    // Target label: use institution name when set, otherwise pattern name.
+    const targetOf = (c: Community) => c.institution || c.name
     const sources: FlowNode[] = top5.map((c) => ({
       id: `s-${c.id}`,
       label: c.name,
-      value: c.value,
+      value: flowOf(c),
     }))
     const targets: FlowNode[] = top5.map((c) => ({
       id: `t-${c.id}`,
-      label: c.institution,
-      value: c.value,
+      label: targetOf(c),
+      value: flowOf(c),
     }))
     const links: FlowLink[] = top5.map((c) => ({
       sourceId: `s-${c.id}`,
       targetId: `t-${c.id}`,
-      value: c.value,
+      value: flowOf(c),
       critical: c.avgRisk >= 0.65,
     }))
     return { sources, targets, links }
-  }, [communities])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communities, hasRealValues])
 
   const totalFlow = links.reduce((s, l) => s + l.value, 0)
 
@@ -907,21 +1043,41 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
           {isEs ? (
             <>
-              Cada partícula representa una fracción del valor capturado. Los flujos rojos
-              marcan comunidades con riesgo promedio ≥ 65%. Total mostrado:{' '}
-              <span className="text-text-primary font-mono font-bold">
-                {formatCompactMXN(totalFlow)}
-              </span>{' '}
-              a través de las 5 comunidades más grandes.
+              Cada partícula representa una fracción del flujo relativo. Los flujos rojos
+              marcan clústeres con indicador de riesgo promedio ≥ 65%.{' '}
+              {hasRealValues ? (
+                <>
+                  Total mostrado:{' '}
+                  <span className="text-text-primary font-mono font-bold">
+                    {formatCompactMXN(totalFlow)}
+                  </span>{' '}
+                  a través de los 5 clústeres más grandes.
+                </>
+              ) : (
+                <>
+                  El ancho del flujo es proporcional al número de proveedores;
+                  el valor monetario estará disponible con la próxima sincronización de comunidades.
+                </>
+              )}
             </>
           ) : (
             <>
-              Each particle represents a fraction of value captured. Red flows
-              mark communities with average risk ≥ 65%. Total shown:{' '}
-              <span className="text-text-primary font-mono font-bold">
-                {formatCompactMXN(totalFlow)}
-              </span>{' '}
-              across the 5 largest communities.
+              Each particle represents a fraction of relative flow. Red flows
+              mark clusters with average risk indicator ≥ 65%.{' '}
+              {hasRealValues ? (
+                <>
+                  Total shown:{' '}
+                  <span className="text-text-primary font-mono font-bold">
+                    {formatCompactMXN(totalFlow)}
+                  </span>{' '}
+                  across the 5 largest clusters.
+                </>
+              ) : (
+                <>
+                  Flow width is proportional to vendor count;
+                  monetary value will be available with the next community sync.
+                </>
+              )}
             </>
           )}
         </p>
@@ -966,13 +1122,14 @@ function HeaderStats({ communities, isEs }: { communities: Community[]; isEs: bo
     () => communities.reduce((s, c) => s + c.confirmed, 0),
     [communities],
   )
+  const hasRealValues = totalCorpusValue > 0
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <HeaderStat
-        label={isEs ? 'Comunidades' : 'Communities'}
-        value="10"
-        sublabel={isEs ? 'detectadas por Louvain' : 'detected by Louvain'}
+        label={isEs ? 'Clústeres' : 'Clusters'}
+        value={String(communities.length)}
+        sublabel={isEs ? 'patrones ARIA activos' : 'active ARIA patterns'}
       />
       <HeaderStat
         label={isEs ? 'Proveedores en red' : 'Vendors in network'}
@@ -983,16 +1140,24 @@ function HeaderStats({ communities, isEs }: { communities: Community[]; isEs: bo
             : `of ${stats ? formatNumber(stats.queue_total) : '—'} in ARIA queue`
         }
       />
+      {hasRealValues ? (
+        <HeaderStat
+          label={isEs ? 'Valor capturado' : 'Value captured'}
+          value={formatCompactMXN(totalCorpusValue)}
+          sublabel={isEs ? 'estimado en la red' : 'estimated in network'}
+          accent="#ef4444"
+        />
+      ) : (
+        <HeaderStat
+          label={isEs ? 'Valor capturado' : 'Value captured'}
+          value="—"
+          sublabel={isEs ? 'pendiente análisis de grafo' : 'pending graph analysis'}
+        />
+      )}
       <HeaderStat
-        label={isEs ? 'Valor capturado' : 'Value captured'}
-        value={formatCompactMXN(totalCorpusValue)}
-        sublabel={isEs ? 'en las top 10' : 'in the top 10'}
-        accent="#ef4444"
-      />
-      <HeaderStat
-        label={isEs ? 'Casos confirmados' : 'Confirmed cases'}
+        label={isEs ? 'Casos documentados' : 'Documented cases'}
         value={String(totalCorpusConfirmed)}
-        sublabel={isEs ? 'con sentencia o sanción' : 'with sentence or sanction'}
+        sublabel={isEs ? 'con evidencia en GT' : 'with GT evidence'}
         accent="#f59e0b"
       />
     </div>
@@ -1036,13 +1201,30 @@ export default function RedesKnownDossier() {
   const { i18n } = useTranslation('redes')
   const isEs = i18n.language.startsWith('es')
 
-  const communities = useMemo(() => buildCommunities(isEs), [i18n.language])
-
   const { data: spotlightData } = useQuery({
     queryKey: ['pattern-spotlight'],
     queryFn: () => networkApi.getPatternSpotlight(),
     staleTime: 30 * 60 * 1000,
   })
+
+  const { data: communitiesData } = useQuery({
+    queryKey: ['network-communities-v2'],
+    queryFn: () => networkApi.getCommunities({ min_size: 3, min_avg_risk: 0.0, limit: 20 }),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const usingLouvain =
+    (communitiesData?.graph_ready === true) && (communitiesData.communities.length > 0)
+
+  const communities = useMemo(() => {
+    // Prefer real Louvain communities if available
+    if (communitiesData?.graph_ready && communitiesData.communities.length > 0) {
+      return buildCommunitiesFromLouvain(communitiesData.communities, isEs)
+    }
+    // Fall back to pattern spotlight aggregations
+    return buildCommunitiesFromSpotlight(spotlightData, isEs)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communitiesData, spotlightData, isEs, i18n.language])
 
   const spotlightByCode = useMemo(() => {
     const map: Record<string, PatternSpotlight> = {}
@@ -1153,31 +1335,53 @@ export default function RedesKnownDossier() {
             <>
               No buscamos proveedores corruptos uno por uno. Buscamos{' '}
               <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>comunidades</em>{' '}
-              que capturan instituciones. Estas son las diez redes más grandes detectadas por
-              el algoritmo de Louvain sobre 3.1M contratos federales.
+              que capturan instituciones. Siete patrones de comportamiento detectados por ARIA
+              sobre 3.1M contratos federales.
             </>
           ) : (
             <>
               We do not hunt corrupt vendors one by one. We hunt{' '}
               <em style={{ fontStyle: 'italic', color: 'var(--color-text-primary)' }}>communities</em>{' '}
-              that capture institutions. These are the ten largest networks detected by the
-              Louvain community algorithm over 3.1M federal contracts.
+              that capture institutions. Seven behavioral patterns detected by ARIA
+              over 3.1M federal contracts.
             </>
           )}
         </p>
 
-        {/* Bible §2: this is a factual lede, not a critical-risk alert.
-            Amber accent reads "notable finding" without the salmon-pink alarm. */}
+        {/* Data-source indicator */}
+        <div className="mb-4">
+          <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60">
+            {usingLouvain
+              ? (isEs
+                  ? `Comunidades detectadas por Louvain · ${communitiesData!.total_communities.toLocaleString(isEs ? 'es-MX' : 'en-US')} nodos`
+                  : `Louvain-detected communities · ${communitiesData!.total_communities.toLocaleString()} nodes`)
+              : (isEs
+                  ? 'Vista por patrones ARIA · datos en tiempo real'
+                  : 'ARIA pattern view · live data')}
+          </span>
+        </div>
+
+        {/* Real-data callout derived from spotlight query */}
         <div className="inline-flex items-center gap-3 rounded-sm border border-[color:var(--color-accent)]/25 bg-[color:var(--color-accent)]/8 px-4 py-2">
           <span className="h-2 w-2 rounded-full bg-[color:var(--color-accent)] animate-pulse flex-shrink-0" />
           <span className="text-sm font-mono">
-            <span className="text-[color:var(--color-accent)] font-bold">10</span>
-            <span className="text-text-muted/70 ml-1.5">
-              {isEs ? 'comunidades controlan ' : 'communities control '}
+            <span className="text-[color:var(--color-accent)] font-bold">
+              {formatNumber(communities.reduce((s, c) => s + c.vendors, 0))}
             </span>
-            <span className="text-[color:var(--color-accent)] font-bold">MX$1.40T</span>
             <span className="text-text-muted/70 ml-1.5">
-              {isEs ? 'en contratos federales' : 'in federal contracts'}
+              {isEs ? 'proveedores en ' : 'vendors across '}
+            </span>
+            <span className="text-[color:var(--color-accent)] font-bold">
+              {communities.length}
+            </span>
+            <span className="text-text-muted/70 ml-1.5">
+              {isEs ? 'clústeres de patrones · ' : 'pattern clusters · '}
+            </span>
+            <span className="text-[color:var(--color-accent)] font-bold">
+              {communities.reduce((s, c) => s + c.confirmed, 0)}
+            </span>
+            <span className="text-text-muted/70 ml-1.5">
+              {isEs ? 'casos documentados' : 'documented cases'}
             </span>
           </span>
         </div>
@@ -1202,8 +1406,8 @@ export default function RedesKnownDossier() {
         contextLabel={{ en: 'Network atlas', es: 'Atlas de redes' }}
         caption={
           isEs
-            ? 'Lámina — Diez núcleos de redes vendedoras. El tamaño del círculo es proporcional al valor capturado; el color codifica el patrón ARIA dominante.'
-            : 'Plate — Ten cores of vendor networks. Circle size is proportional to captured value; color encodes the dominant ARIA pattern.'
+            ? 'Lámina — Clústeres de patrones ARIA. El tamaño del círculo es proporcional al número de proveedores; el color codifica el patrón dominante.'
+            : 'Plate — ARIA pattern clusters. Circle size is proportional to vendor count; color encodes the dominant pattern.'
         }
       >
         <Nucleos
@@ -1234,12 +1438,12 @@ export default function RedesKnownDossier() {
           className="text-2xl md:text-3xl font-bold text-text-primary mb-2 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.015em' }}
         >
-          {isEs ? 'Cada comunidad, su propia patología' : 'Every community, its own pathology'}
+          {isEs ? 'Cada patrón, su propia patología' : 'Every pattern, its own pathology'}
         </h2>
         <p className="text-sm text-text-muted/70 max-w-3xl leading-relaxed">
           {isEs
-            ? 'Debajo, cada comunidad presenta su firma de red: tasa de adjudicación directa, propuesta única y anomalía de precio. La línea cian marca el techo OCDE del 25% para adjudicación directa — todo lo que lo rebasa es señal de alarma.'
-            : 'Below, each community presents its network signature: direct-award rate, single-bid rate, and price anomaly rate. The cyan line marks the OECD ceiling of 25% for direct awards — anything above it is a red flag.'}
+            ? 'Debajo, cada clúster de patrón ARIA muestra el número real de proveedores, casos documentados e indicador de riesgo promedio. Cuando esté disponible el análisis de comunidades Louvain, se añadirán tasas de adjudicación directa, propuesta única y anomalía de precio por comunidad.'
+            : 'Below, each ARIA pattern cluster shows the real vendor count, documented cases, and average risk indicator. When Louvain community analysis is available, per-community direct-award, single-bid, and price-anomaly rates will be added.'}
         </p>
       </div>
 

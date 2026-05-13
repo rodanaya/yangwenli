@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, SECTOR_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Hardcoded editorial data per pattern
@@ -128,8 +128,19 @@ const META_BY_CODE = PATTERN_EDITORIAL.reduce<Record<string, PatternEditorial>>(
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Build a sector frequency map from vendor list */
-function buildSectorHeat(vendors: Array<{ primary_sector_name: string | null }>): Array<{ name: string; count: number }> {
+/** Normalize a sector display name to a SECTOR_COLORS slug key */
+function sectorSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .trim()
+}
+
+/** Group spotlight top_vendors by sector — top 5 by vendor count */
+function buildSectorBreakdown(
+  vendors: Array<{ primary_sector_name: string | null }>
+): Array<{ name: string; count: number; color: string }> {
   const freq: Record<string, number> = {}
   for (const v of vendors) {
     if (v.primary_sector_name) {
@@ -137,9 +148,24 @@ function buildSectorHeat(vendors: Array<{ primary_sector_name: string | null }>)
     }
   }
   return Object.entries(freq)
-    .map(([name, count]) => ({ name, count }))
+    .map(([name, count]) => ({
+      name,
+      count,
+      color: SECTOR_COLORS[sectorSlug(name)] ?? SECTOR_COLORS.otros,
+    }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 6)
+    .slice(0, 5)
+}
+
+/** Pattern code -> /cases?type=... mapping */
+const CASE_TYPE_BY_PATTERN: Record<string, string> = {
+  P1: 'monopoly',
+  P2: 'ghost_company',
+  P3: 'intermediary',
+  P4: 'bid_rigging',
+  P5: 'overpricing',
+  P6: 'institutional_capture',
+  P7: 'procurement_fraud',
 }
 
 // ---------------------------------------------------------------------------
@@ -183,8 +209,10 @@ export default function PatternDossier() {
   )
 
   const vendors = queueData?.data ?? []
-  const sectorHeat = buildSectorHeat(vendors)
-  const maxSectorCount = sectorHeat[0]?.count ?? 1
+
+  // Sector breakdown from PatternSpotlight.top_vendors (top 5)
+  const sectorBreakdown = spotlight ? buildSectorBreakdown(spotlight.top_vendors) : []
+  const maxBreakdownCount = sectorBreakdown[0]?.count ?? 1
 
   const isLoading = loadingSpotlight || loadingQueue
 
@@ -209,14 +237,17 @@ export default function PatternDossier() {
   const lede = isEs ? meta.ledeEs : meta.ledeEn
   const signal = isEs ? meta.signalEs : meta.signalEn
 
+  const codeUpper = code?.toUpperCase() ?? ''
+  const caseType = CASE_TYPE_BY_PATTERN[codeUpper]
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-      {/* Back link */}
+      {/* Breadcrumb */}
       <Link
         to="/patterns"
         className="inline-block text-[11px] font-mono text-text-muted hover:text-text-secondary transition-colors"
       >
-        {isEs ? '← Patrones' : '← Patterns'}
+        {isEs ? '← Todos los patrones' : '← All patterns'}
       </Link>
 
       {/* §0 Cabecera */}
@@ -228,9 +259,9 @@ export default function PatternDossier() {
             style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
             aria-label={`Pattern code ${code}`}
           >
-            {code?.toUpperCase()}
+            {codeUpper}
           </span>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1
               id="pattern-heading"
               className="text-2xl font-bold text-text-primary leading-tight"
@@ -238,9 +269,25 @@ export default function PatternDossier() {
             >
               {name}
             </h1>
+
+            {/* Investigate CTA */}
+            <Link
+              to={`/aria?pattern=${codeUpper}`}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+              style={{
+                backgroundColor: 'rgba(220,38,38,0.12)',
+                color: '#dc2626',
+                border: '1px solid rgba(220,38,38,0.25)',
+              }}
+            >
+              <span aria-hidden="true">→</span>
+              {isEs
+                ? `Abrir Cola ARIA filtrada por ${codeUpper}`
+                : `Open ARIA Queue filtered by ${codeUpper}`}
+            </Link>
             {/* Stats */}
             {spotlight && (
-              <div className="flex flex-wrap items-center gap-4 mt-2">
+              <div className="flex flex-wrap items-center gap-4 mt-3">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
                     {isEs ? 'Proveedores' : 'Vendors'}
@@ -358,20 +405,27 @@ export default function PatternDossier() {
         )}
       </section>
 
-      {/* §3 Sector Heat */}
-      {!isLoading && sectorHeat.length > 0 && (
-        <section aria-label={isEs ? 'Distribución sectorial' : 'Sector distribution'}>
-          <SectionKicker label={isEs ? '§ 3 · CALOR SECTORIAL' : '§ 3 · SECTOR HEAT'} />
+      {/* §3 Sector Breakdown — top 5 sectors from spotlight.top_vendors */}
+      {sectorBreakdown.length > 0 && (
+        <section aria-label={isEs ? 'Distribución sectorial' : 'Sector breakdown'}>
+          <SectionKicker
+            label={isEs ? '§ 3 · DESGLOSE SECTORIAL' : '§ 3 · SECTOR BREAKDOWN'}
+          />
+          <p className="text-[11px] font-mono text-text-muted mb-3">
+            {isEs
+              ? `Sectores principales en ${spotlight?.top_vendors.length ?? 0} proveedores destacados`
+              : `Top sectors across ${spotlight?.top_vendors.length ?? 0} highlighted vendors`}
+          </p>
           <div className="space-y-2">
-            {sectorHeat.map(({ name: sectorName, count }) => (
+            {sectorBreakdown.map(({ name: sectorName, count, color }) => (
               <div key={sectorName} className="flex items-center gap-3">
                 <span className="text-[11px] font-mono text-text-secondary w-32 flex-shrink-0 truncate">
                   {sectorName}
                 </span>
                 <DotBar
                   value={count}
-                  max={maxSectorCount}
-                  color="var(--color-risk-critical)"
+                  max={maxBreakdownCount}
+                  color={color}
                   dots={18}
                   ariaLabel={`${sectorName}: ${count} vendors`}
                 />
@@ -389,6 +443,55 @@ export default function PatternDossier() {
         <SectionKicker label={isEs ? '§ 4 · SEÑAL DE DETECCIÓN' : '§ 4 · DETECTION SIGNAL'} />
         <p className="text-sm text-text-secondary leading-relaxed">{signal}</p>
       </section>
+
+      {/* §5 GT Cases Callout */}
+      {spotlight && spotlight.gt_case_count > 0 && caseType && (
+        <section
+          aria-label={isEs ? 'Casos documentados' : 'Documented cases'}
+          className="rounded-sm border-l-2 pl-4 py-3"
+          style={{
+            borderLeftColor: '#dc2626',
+            backgroundColor: 'rgba(220,38,38,0.04)',
+          }}
+        >
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
+            {isEs ? 'CORPUS RUBLI' : 'RUBLI CORPUS'}
+          </div>
+          <p className="text-sm text-text-secondary leading-relaxed mb-2">
+            {isEs ? (
+              <>
+                <span
+                  className="font-mono font-bold tabular-nums"
+                  style={{ color: '#dc2626' }}
+                >
+                  {spotlight.gt_case_count.toLocaleString()}
+                </span>{' '}
+                casos documentados coinciden con la tipología{' '}
+                <span className="text-text-primary">{name}</span>.
+              </>
+            ) : (
+              <>
+                <span
+                  className="font-mono font-bold tabular-nums"
+                  style={{ color: '#dc2626' }}
+                >
+                  {spotlight.gt_case_count.toLocaleString()}
+                </span>{' '}
+                documented cases match the{' '}
+                <span className="text-text-primary">{name}</span> typology.
+              </>
+            )}
+          </p>
+          <Link
+            to={`/cases?type=${caseType}`}
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
+            style={{ color: '#dc2626' }}
+          >
+            <span aria-hidden="true">→</span>
+            {isEs ? 'Ver casos de corrupción' : 'View corruption cases'}
+          </Link>
+        </section>
+      )}
     </div>
   )
 }

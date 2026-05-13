@@ -13,7 +13,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
@@ -966,7 +966,19 @@ function PatternDotStrip({
 export default function AriaPage() {
   const { t, i18n } = useTranslation('aria')
   const [search, setSearch] = useState('')
-  const [patternFilter, setPatternFilter] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const patternFilter = searchParams.get('pattern')
+  const setPatternFilter = (pattern: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      if (pattern == null) {
+        next.delete('pattern')
+      } else {
+        next.set('pattern', pattern)
+      }
+      return next
+    }, { replace: true })
+  }
   const [tierFilter, setTierFilter] = useState<number | null>(1)   // start on T1 — most urgent
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [novelOnly, setNovelOnly] = useState(false)
