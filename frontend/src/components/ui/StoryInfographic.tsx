@@ -93,14 +93,14 @@ function getSlides(t: TFunction): Slide[] {
     {
       id: 'risk-model',
       chapter: '05 / 05',
-      statRaw: 412845,
+      statRaw: 337693,
       statLabel: t('stories.riskModel.statLabel'),
       headline: t('stories.riskModel.headline'),
       body: t('stories.riskModel.body'),
       color: '#dc2626',
       visual: 'ring',
-      visualData: [6.0, 7.5, 26.8, 59.7],
-      visualLabels: ['Crítico 6.0%', 'Alto 7.5%', 'Medio 26.8%', 'Bajo 59.7%'],
+      visualData: [5.2, 5.9, 16.2, 72.7],
+      visualLabels: ['Crítico 5.2%', 'Alto 5.9%', 'Medio 16.2%', 'Bajo 72.7%'],
       source: 'RUBLI modelo v0.8.5 · 3,051,294 contratos',
     },
   ]

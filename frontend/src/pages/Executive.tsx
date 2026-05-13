@@ -1251,14 +1251,14 @@ export default function Executive() {
     const d = dashboard
     const totalContracts = d?.overview?.total_contracts ?? 3_051_294
     const totalValue = d?.overview?.total_value_mxn ?? 9_881_000_000_000
-    const highCriticalRate = 13.49
+    const highCriticalRate = 11.01
     const rd = Array.isArray(d?.risk_distribution) ? d!.risk_distribution : []
     const highCriticalCount =
       rd.reduce(
         (sum, r) =>
           r.risk_level === 'critical' || r.risk_level === 'high' ? sum + (r.count ?? 0) : sum,
         0,
-      ) || 412_845
+      ) || 337_693
     // Estimated value-at-risk: high+critical contract count / total contract
     // count × total spend. This is an approximation that assumes uniform value
     // distribution across risk bands (which is NOT exact — high-risk contracts
@@ -1291,12 +1291,12 @@ export default function Executive() {
         pct: r.percentage,
       }))
     }
-    // v0.8.5 calibrated fallback (Mar 25 2026)
+    // v0.8.5 calibrated fallback (May 2 2026)
     return [
-      { level: 'critical', count: 184_031, pct: 6.01 },
-      { level: 'high',     count: 228_814, pct: 7.48 },
-      { level: 'medium',   count: 821_251, pct: 26.84 },
-      { level: 'low',      count: 1_817_198, pct: 59.39 },
+      { level: 'critical', count: 158_667, pct: 5.20 },
+      { level: 'high',     count: 179_026, pct: 5.90 },
+      { level: 'medium',   count: 494_310, pct: 16.20 },
+      { level: 'low',      count: 2_219_291, pct: 72.70 },
     ]
   }, [dashboard])
 
@@ -1765,22 +1765,22 @@ export default function Executive() {
                 {formatNumber(stats.highCriticalCount)}
               </div>
               <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· 13.5% of all flagged' : '· 13.5% del total marcado'}
+                {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
               </div>
               <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
                 {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
               </div>
               {/* Mini-viz: stacked 100% bar showing risk distribution */}
               <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
-                <div style={{ width: '6.01%', background: '#dc2626', opacity: 0.85 }} />
-                <div style={{ width: '7.48%', background: '#f59e0b', opacity: 0.85 }} />
-                <div style={{ width: '26.84%', background: '#a06820', opacity: 0.40 }} />
-                <div style={{ width: '59.39%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
+                <div style={{ width: '5.20%', background: '#dc2626', opacity: 0.85 }} />
+                <div style={{ width: '5.90%', background: '#f59e0b', opacity: 0.85 }} />
+                <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
+                <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span style={{ color: '#dc2626' }}>● {lang === 'en' ? 'crit' : 'crít'} 6%</span>
-                <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 7.5%</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'med' : 'med'} 27%</span>
+                <span style={{ color: '#dc2626' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
               </div>
             </motion.div>
 

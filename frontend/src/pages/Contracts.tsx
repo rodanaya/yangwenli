@@ -581,7 +581,7 @@ export function Contracts() {
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Indexed</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-risk-high tabular-nums leading-none">{formatNumber(412_845)}</div>
+                <div className="text-xl sm:text-2xl font-bold text-risk-high tabular-nums leading-none">{formatNumber(337_693)}</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">High-risk</div>
               </div>
               <div className="text-right">
