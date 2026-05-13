@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const TIERS = [
   { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: 'var(--color-sector-salud)', threshold: '≥ 0.60', count: '184K' },
@@ -33,45 +34,19 @@ export function StoryRiskPyramid() {
   const maxValuePct = Math.max(...TIERS.map((t) => t.valuePct))
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('riskPyramid.kicker')}
+      headline={t('riskPyramid.headline')}
+      lede={t('riskPyramid.lede')}
+      stats={[
+        { value: t('riskPyramid.stat1Value'), label: t('riskPyramid.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('riskPyramid.stat2Value'), label: t('riskPyramid.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: t('riskPyramid.stat3Value'), label: t('riskPyramid.stat3Label') },
+      ]}
+      finding={{ label: t('riskPyramid.findingLabel'), body: t('riskPyramid.findingBody') }}
+      footer={t('riskPyramid.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('riskPyramid.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('riskPyramid.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('riskPyramid.lede')}
-      </p>
-
-      {/* Hero stats */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">{t('riskPyramid.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('riskPyramid.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-orange-400">{t('riskPyramid.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('riskPyramid.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-text-muted">{t('riskPyramid.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('riskPyramid.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       {/* The pyramid */}
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
@@ -162,22 +137,6 @@ export function StoryRiskPyramid() {
           </text>
         </svg>
       </div>
-
-      {/* Finding */}
-      <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-critical mb-1">
-          {t('riskPyramid.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('riskPyramid.findingPrefix')}
-          <strong className="text-risk-critical"> {t('riskPyramid.findingStrong')}</strong>
-          {t('riskPyramid.findingSuffix')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('riskPyramid.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

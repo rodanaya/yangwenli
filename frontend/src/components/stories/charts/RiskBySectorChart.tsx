@@ -9,6 +9,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface SectorRow {
   sector: string
@@ -52,22 +53,12 @@ export function RiskBySectorChart() {
   const oecdDot = Math.round(OECD_AVG * DOT_PER_PCT) // = 18
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-background-card rounded-sm p-4 border border-border"
+    <EditorialChartFrame
+      kicker={t('riskBySector.kicker')}
+      headline={t('riskBySector.headline')}
+      subline={`${t('riskBySector.sublinePrefix')} ${OECD_AVG}%`}
+      footer={t('riskBySector.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('riskBySector.kicker')}
-      </p>
-      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        {t('riskBySector.headline')}
-      </h3>
-      <p className="text-xs text-text-muted font-mono mb-4">
-        {`${t('riskBySector.sublinePrefix')} ${OECD_AVG}%`}
-      </p>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -184,11 +175,7 @@ export function RiskBySectorChart() {
           {t('riskBySector.legend')}
         </span>
       </div>
-
-      <p className="text-[10px] text-text-muted mt-2 font-mono">
-        {t('riskBySector.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

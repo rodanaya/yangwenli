@@ -9,6 +9,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface VendorRow {
   name: string
@@ -48,34 +49,17 @@ function getVendorColor(daPct: number): string {
 export function StoryGraneroVacio() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('emptyGranary.kicker')}
+      headline={t('emptyGranary.headline')}
+      subline={t('emptyGranary.subline')}
+      stats={[
+        { value: t('emptyGranary.stat1Value'), label: t('emptyGranary.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('emptyGranary.stat2Value'), label: t('emptyGranary.stat2Label'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('emptyGranary.findingLabel'), body: t('emptyGranary.findingBody') }}
+      footer={t('emptyGranary.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('emptyGranary.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('emptyGranary.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('emptyGranary.subline')}
-      </p>
-
-      <div className="flex gap-6 mb-5">
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('emptyGranary.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('emptyGranary.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-high">{t('emptyGranary.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('emptyGranary.stat2Label')}</div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -165,15 +149,6 @@ export function StoryGraneroVacio() {
         </svg>
       </div>
 
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-4">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('emptyGranary.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('emptyGranary.findingBody')}
-        </p>
-      </div>
-
       <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-salud)' }} />
@@ -188,11 +163,7 @@ export function StoryGraneroVacio() {
           {t('emptyGranary.legendUnder')}
         </span>
       </div>
-
-      <p className="text-[10px] text-text-muted mt-3">
-        {t('emptyGranary.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

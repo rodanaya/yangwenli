@@ -11,6 +11,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface SectorRow {
   name: string
@@ -54,38 +55,25 @@ const H = 50 + DATA.length * TRIO_H + 10
 export function StoryProcedureBreakdown() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('procedureBreakdown.kicker')}
+      headline={t('procedureBreakdown.headline')}
+      lede={t('procedureBreakdown.lede')}
+      stats={[
+        {
+          value: t('procedureBreakdown.stat1Value'),
+          label: t('procedureBreakdown.stat1Label'),
+          accent: 'var(--color-risk-critical)',
+        },
+        {
+          value: t('procedureBreakdown.stat2Value'),
+          label: t('procedureBreakdown.stat2Label'),
+        },
+      ]}
+      finding={{ label: t('procedureBreakdown.findingLabel'), body: t('procedureBreakdown.findingBody') }}
+      footer={t('procedureBreakdown.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('procedureBreakdown.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('procedureBreakdown.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('procedureBreakdown.lede')}
-      </p>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">{t('procedureBreakdown.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('procedureBreakdown.stat1Label')} <span className="text-[color:var(--color-oecd)]">{t('procedureBreakdown.stat1Oecd')}</span>
-          </div>
-        </div>
-        <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-text-muted">{t('procedureBreakdown.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('procedureBreakdown.stat2Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -176,19 +164,6 @@ export function StoryProcedureBreakdown() {
           })}
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('procedureBreakdown.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('procedureBreakdown.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('procedureBreakdown.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

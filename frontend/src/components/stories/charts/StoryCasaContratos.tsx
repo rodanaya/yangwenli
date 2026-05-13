@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Vendor {
   name: string
@@ -56,50 +57,19 @@ export function StoryCasaContratos() {
   const angleStep = (2 * Math.PI) / VENDORS.length
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('casaContratos.kicker')}
+      headline={t('casaContratos.headline')}
+      lede={t('casaContratos.lede')}
+      stats={[
+        { value: `${totalValue.toFixed(0)}B`, label: t('casaContratos.stat1Suffix'), accent: 'var(--color-risk-critical)' },
+        { value: String(VENDORS.length), label: t('casaContratos.stat2Suffix'), accent: 'var(--color-risk-high)' },
+        { value: String(totalContracts), label: t('casaContratos.stat3Suffix'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('casaContratos.findingLabel'), body: t('casaContratos.findingBody') }}
+      footer={t('casaContratos.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('casaContratos.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('casaContratos.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('casaContratos.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
-            {totalValue.toFixed(0)}B
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('casaContratos.stat1Suffix')}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
-            {VENDORS.length}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('casaContratos.stat2Suffix')}
-          </div>
-        </div>
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">
-            {totalContracts}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('casaContratos.stat3Suffix')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -268,19 +238,6 @@ export function StoryCasaContratos() {
           </g>
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('casaContratos.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('casaContratos.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('casaContratos.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

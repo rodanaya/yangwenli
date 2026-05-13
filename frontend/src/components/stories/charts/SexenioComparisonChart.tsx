@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface MetricRow {
   // i18n key under storyCharts.sexenioComp.metricXxx
@@ -65,22 +66,12 @@ export function SexenioComparisonChart() {
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card p-5"
+    <EditorialChartFrame
+      kicker={t('sexenioComp.kicker')}
+      headline={t('sexenioComp.headline')}
+      subline={`${t('sexenioComp.sublinePrefix')} ${t(`sexenioComp.metric${worstMetric.key}`)} (+${worstMetric.delta.toFixed(1)} pts Fox → AMLO)`}
+      footer={t('sexenioComp.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('sexenioComp.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('sexenioComp.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {`${t('sexenioComp.sublinePrefix')} ${t(`sexenioComp.metric${worstMetric.key}`)} (+${worstMetric.delta.toFixed(1)} pts Fox → AMLO)`}
-      </p>
-
       {/* Sexenio legend */}
       <div className="flex items-center gap-4 mb-3">
         {SEXENIO_ROWS.map((r) => (
@@ -211,11 +202,7 @@ export function SexenioComparisonChart() {
           })}
         </svg>
       </div>
-
-      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        {t('sexenioComp.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

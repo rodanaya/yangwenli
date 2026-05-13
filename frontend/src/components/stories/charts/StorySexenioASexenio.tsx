@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface SexenioCol {
   president: string
@@ -53,44 +54,19 @@ export function StorySexenioASexenio() {
   const oecdDotIdx = Math.round(OECD_LIMIT / 2) // 12.5 → 13 dots from bottom
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('sexenioASexenio.kicker')}
+      headline={t('sexenioASexenio.headline')}
+      lede={t('sexenioASexenio.lede')}
+      stats={[
+        { value: t('sexenioASexenio.stat1Value'), label: t('sexenioASexenio.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('sexenioASexenio.stat2Value'), label: t('sexenioASexenio.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: t('sexenioASexenio.stat3Value'), label: t('sexenioASexenio.stat3Label'), accent: 'var(--color-oecd)' },
+      ]}
+      finding={{ label: t('sexenioASexenio.findingLabel'), body: t('sexenioASexenio.findingBody') }}
+      footer={t('sexenioASexenio.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('sexenioASexenio.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('sexenioASexenio.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('sexenioASexenio.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">{t('sexenioASexenio.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('sexenioASexenio.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">{t('sexenioASexenio.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('sexenioASexenio.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">{t('sexenioASexenio.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('sexenioASexenio.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -284,19 +260,6 @@ export function StorySexenioASexenio() {
           </text>
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('sexenioASexenio.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('sexenioASexenio.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('sexenioASexenio.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

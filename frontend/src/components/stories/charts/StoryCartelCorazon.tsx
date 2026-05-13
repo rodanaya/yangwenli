@@ -11,6 +11,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Device {
   nameEs: string
@@ -47,42 +48,36 @@ export function StoryCartelCorazon() {
   const isEs = i18n.language.startsWith('es')
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5 space-y-4"
+    <EditorialChartFrame
+      kicker={isEs ? 'RUBLI · Cártel del Corazón' : 'RUBLI · Cardiac Cartel'}
+      headline={isEs
+        ? 'Lo que el IMSS pagó vs. lo que vale el mercado — por dispositivo cardíaco'
+        : "What IMSS paid vs. market price — by cardiac device"}
+      lede={isEs
+        ? 'Vitalmex concentró el suministro de dispositivos cardíacos federales por más de una década. Cada punto equivale a $8,000 MXN — el sobrepago en rojo refleja una prima de monopolio del 20-40% documentada por OCDE en mercados médicos capturados.'
+        : 'Vitalmex concentrated the supply of federal cardiac devices for over a decade. Each dot equals $8,000 MXN — the red overpay reflects a 20-40% monopoly premium documented by the OECD in captured medical markets.'}
+      stats={[
+        {
+          value: '$50B',
+          label: isEs ? 'en contratos cardíacos · un solo proveedor' : 'in cardiac contracts · single vendor',
+          accent: 'var(--color-risk-critical)',
+        },
+        {
+          value: '$10-20B',
+          label: isEs ? 'sobrepago estimado · prima OCDE 20-40%' : 'estimated overpayment · OECD 20-40% premium',
+          accent: 'var(--color-risk-high)',
+        },
+      ]}
+      finding={{
+        label: isEs ? 'HALLAZGO' : 'FINDING',
+        body: isEs
+          ? 'COFECE abrió expediente por prácticas monopólicas en el mercado de equipamiento cardíaco — los precios de IMSS estaban entre 28% y 43% encima del precio de mercado OCDE. 10 mil millones de pesos adicionales por año equivaldrían a 50 unidades de hemodinamia regionales.'
+          : 'COFECE opened a docket for monopolistic practices in the cardiac equipment market — IMSS prices were 28% to 43% above the OECD market price. 10 billion additional pesos per year would buy 50 regional hemodynamics units.',
+      }}
+      footer={isEs
+        ? 'Fuente: COMPRANET · Vitalmex portfolio 2010-2024 · estudios OCDE/WHO · expediente COFECE en curso'
+        : 'Source: COMPRANET · Vitalmex portfolio 2010-2024 · OECD/WHO studies · COFECE docket pending'}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {isEs ? 'RUBLI · Cártel del Corazón' : 'RUBLI · Cardiac Cartel'}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {isEs
-          ? 'Lo que el IMSS pagó vs. lo que vale el mercado — por dispositivo cardíaco'
-          : "What IMSS paid vs. market price — by cardiac device"}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {isEs
-          ? 'Vitalmex concentró el suministro de dispositivos cardíacos federales por más de una década. Cada punto equivale a $8,000 MXN — el sobrepago en rojo refleja una prima de monopolio del 20-40% documentada por OCDE en mercados médicos capturados.'
-          : 'Vitalmex concentrated the supply of federal cardiac devices for over a decade. Each dot equals $8,000 MXN — the red overpay reflects a 20-40% monopoly premium documented by the OECD in captured medical markets.'}
-      </p>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">$50B</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {isEs ? 'en contratos cardíacos · un solo proveedor' : 'in cardiac contracts · single vendor'}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high">$10-20B</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {isEs ? 'sobrepago estimado · prima OCDE 20-40%' : 'estimated overpayment · OECD 20-40% premium'}
-          </div>
-        </div>
-      </div>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -209,23 +204,6 @@ export function StoryCartelCorazon() {
           )
         })}
       </svg>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {isEs ? 'HALLAZGO' : 'FINDING'}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {isEs
-            ? 'COFECE abrió expediente por prácticas monopólicas en el mercado de equipamiento cardíaco — los precios de IMSS estaban entre 28% y 43% encima del precio de mercado OCDE. 10 mil millones de pesos adicionales por año equivaldrían a 50 unidades de hemodinamia regionales.'
-            : 'COFECE opened a docket for monopolistic practices in the cardiac equipment market — IMSS prices were 28% to 43% above the OECD market price. 10 billion additional pesos per year would buy 50 regional hemodynamics units.'}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {isEs
-          ? 'Fuente: COMPRANET · Vitalmex portfolio 2010-2024 · estudios OCDE/WHO · expediente COFECE en curso'
-          : 'Source: COMPRANET · Vitalmex portfolio 2010-2024 · OECD/WHO studies · COFECE docket pending'}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

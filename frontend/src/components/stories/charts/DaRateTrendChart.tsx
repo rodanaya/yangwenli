@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const DATA = [
   { year: 2010, rate: 62.7, era: 'calderon' },
@@ -86,22 +87,12 @@ export function DaRateTrendChart() {
   const peakYear = DATA.reduce((acc, d) => (d.rate > acc.rate ? d : acc))
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('daRateTrend.kicker')}
+      headline={t('daRateTrend.headline')}
+      subline={t('daRateTrend.subline')}
+      footer={t('daRateTrend.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('daRateTrend.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('daRateTrend.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {t('daRateTrend.subline')}
-      </p>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -264,10 +255,6 @@ export function DaRateTrendChart() {
           )
         })}
       </div>
-
-      <p className="mt-3 text-[10px] text-text-muted font-mono">
-        {t('daRateTrend.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

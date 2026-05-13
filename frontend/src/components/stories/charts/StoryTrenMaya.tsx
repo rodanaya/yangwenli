@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Section {
   id: string
@@ -56,50 +57,19 @@ export function StoryTrenMaya() {
   const avgDA = SECTIONS.reduce((s, r) => s + r.daRate * r.km, 0) / totalKm
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('trenMaya.kicker')}
+      headline={t('trenMaya.headline')}
+      lede={t('trenMaya.lede')}
+      stats={[
+        { value: `${avgDA.toFixed(1)}%`, label: t('trenMaya.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: `${totalValue.toFixed(0)}B`, label: t('trenMaya.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: String(totalKm), label: t('trenMaya.stat3Label'), accent: 'var(--color-oecd)' },
+      ]}
+      finding={{ label: t('trenMaya.findingLabel'), body: t('trenMaya.findingBody') }}
+      footer={t('trenMaya.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('trenMaya.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('trenMaya.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('trenMaya.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
-            {avgDA.toFixed(1)}%
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('trenMaya.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
-            {totalValue.toFixed(0)}B
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('trenMaya.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">
-            {totalKm}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('trenMaya.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -303,19 +273,6 @@ export function StoryTrenMaya() {
           </text>
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('trenMaya.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('trenMaya.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('trenMaya.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

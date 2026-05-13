@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface CohortPoint {
   year: number
@@ -94,31 +95,20 @@ export function StoryNuevosRicos() {
   })
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('nuevosRicos.kicker')}
+      headline={t('nuevosRicos.headline')}
+      subline={t('nuevosRicos.subline')}
+      stats={[
+        {
+          value: t('nuevosRicos.deltaValue'),
+          label: t('nuevosRicos.deltaPrefix'),
+          accent: 'var(--color-risk-critical)',
+        },
+      ]}
+      finding={{ label: t('nuevosRicos.findingLabel'), body: t('nuevosRicos.findingBody') }}
+      footer={t('nuevosRicos.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('nuevosRicos.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('nuevosRicos.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('nuevosRicos.subline')}
-      </p>
-
-      <div className="border-l-2 border-red-500 pl-4 py-1 mb-4">
-        <div className="text-xl font-mono font-bold text-risk-critical">{t('nuevosRicos.deltaValue')}</div>
-        <div className="text-[11px] text-text-secondary mt-0.5">
-          {t('nuevosRicos.deltaPrefix')}{' '}
-          <span className="text-[color:var(--color-oecd)]">{(eraCentroids[2].daPct / 25).toFixed(1)}{t('nuevosRicos.deltaSuffix')}</span>
-        </div>
-      </div>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -258,19 +248,6 @@ export function StoryNuevosRicos() {
         ))}
         <span className="text-text-muted ml-auto">{t('nuevosRicos.legendSizeNote')}</span>
       </div>
-
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('nuevosRicos.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('nuevosRicos.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono mt-3">
-        {t('nuevosRicos.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface EraRow {
   era: string
@@ -50,32 +51,13 @@ export function AmloEraComparisonChart() {
   const oecdDot = OECD_LIMIT // 1 dot per pct
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card p-5"
+    <EditorialChartFrame
+      kicker={t('amloEra.kicker')}
+      headline={t('amloEra.headline')}
+      subline={t('amloEra.subline')}
+      stats={DATA.map((d) => ({ value: `${d.avg}%`, label: d.era, accent: ERA_PALETTE[d.era] }))}
+      footer={t('amloEra.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('amloEra.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('amloEra.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {t('amloEra.subline')}
-      </p>
-
-      {/* Stat strip */}
-      <div className="flex gap-6 mb-4">
-        {DATA.map((d) => (
-          <div key={d.era} className="flex-1">
-            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">{d.era}</p>
-            <p className="text-xl font-mono font-bold" style={{ color: ERA_PALETTE[d.era] }}>{d.avg}%</p>
-          </div>
-        ))}
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -195,11 +177,7 @@ export function AmloEraComparisonChart() {
           })}
         </svg>
       </div>
-
-      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        {t('amloEra.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

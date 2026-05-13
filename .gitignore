@@ -84,6 +84,9 @@ nul
 *.db.backup_*
 *.db.currency_backup_*
 *.db.corrupt_*
+*.db.bak
+*.db.prev
+*.db.pre_v*
 *.backup_*
 backend/*.backup_*
 

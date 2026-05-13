@@ -7,6 +7,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface SectorRow {
   sector: string
@@ -69,34 +70,17 @@ export function StoryCeroCompetenciaChart() {
   const criticalSectors = DATA.filter(d => d.competitive < 25).length
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('ceroCompetencia.kicker')}
+      headline={t('ceroCompetencia.headline')}
+      subline={t('ceroCompetencia.subline')}
+      stats={[
+        { value: String(criticalSectors), label: t('ceroCompetencia.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('ceroCompetencia.stat2Value'), label: t('ceroCompetencia.stat2Label'), accent: 'var(--color-oecd)' },
+      ]}
+      finding={{ label: t('ceroCompetencia.findingLabel'), body: t('ceroCompetencia.findingBody') }}
+      footer={t('ceroCompetencia.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('ceroCompetencia.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('ceroCompetencia.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('ceroCompetencia.subline')}
-      </p>
-
-      <div className="flex gap-6 mb-5">
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">{criticalSectors}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ceroCompetencia.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-cyan-400 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-[color:var(--color-oecd)]">{t('ceroCompetencia.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ceroCompetencia.stat2Label')}</div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -204,20 +188,7 @@ export function StoryCeroCompetenciaChart() {
           })}
         </svg>
       </div>
-
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('ceroCompetencia.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('ceroCompetencia.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted mt-3">
-        {t('ceroCompetencia.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

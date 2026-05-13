@@ -10,6 +10,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Pt {
   code: string
@@ -59,23 +60,13 @@ function colorFor(code: string): string {
 export function StorySectorParadox() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('sectorParadox.kicker')}
+      headline={t('sectorParadox.headline')}
+      subline={t('sectorParadox.subline')}
+      finding={{ label: t('sectorParadox.findingLabel'), body: t('sectorParadox.findingBody') }}
+      footer={t('sectorParadox.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('sectorParadox.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('sectorParadox.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('sectorParadox.subline')}
-      </p>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -175,19 +166,6 @@ export function StorySectorParadox() {
           </text>
         </g>
       </svg>
-
-      <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('sectorParadox.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('sectorParadox.findingPrefix')} <strong className="text-orange-300">{t('sectorParadox.findingStrong')}</strong>{t('sectorParadox.findingSuffix')}
-        </p>
-      </div>
-
-      <p className="mt-3 text-[10px] text-text-muted font-mono">
-        {t('sectorParadox.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

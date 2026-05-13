@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Vendor {
   name: string
@@ -58,44 +59,19 @@ export function StoryRacingBar() {
   const totalValue = VENDORS.reduce((s, v) => s + v.valueB, 0)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('racingBar.kicker')}
+      headline={t('racingBar.headline')}
+      lede={t('racingBar.lede')}
+      stats={[
+        { value: `MXN ${totalValue.toFixed(1)}B`, label: t('racingBar.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('racingBar.stat2Value'), label: t('racingBar.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: t('racingBar.stat3Value'), label: t('racingBar.stat3Label') },
+      ]}
+      finding={{ label: t('racingBar.findingLabel'), body: t('racingBar.findingBody') }}
+      footer={t('racingBar.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('racingBar.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('racingBar.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('racingBar.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">MXN {totalValue.toFixed(1)}B</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('racingBar.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-orange-400">{t('racingBar.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('racingBar.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-text-muted pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-text-muted">{t('racingBar.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('racingBar.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -213,19 +189,6 @@ export function StoryRacingBar() {
           <span className="text-text-muted ml-auto">{t('racingBar.legendSizeNote')}</span>
         </div>
       </div>
-
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('racingBar.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('racingBar.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('racingBar.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

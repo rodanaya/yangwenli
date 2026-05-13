@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const TOTAL_ATTEMPTS = 50 // visualization scale (not actual count)
 const SIXSIGMA_WINS = 46 // ~92% win rate visualization
@@ -37,38 +38,18 @@ const COLORS = {
 export function StorySixSigmaHacienda() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5 space-y-4"
+    <EditorialChartFrame
+      kicker={t('sixSigma.kicker')}
+      headline={t('sixSigma.headline')}
+      lede={t('sixSigma.lede')}
+      stats={[
+        { value: t('sixSigma.stat1Value'), label: t('sixSigma.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('sixSigma.stat2Value'), label: t('sixSigma.stat2Label'), accent: 'var(--color-oecd)' },
+        { value: t('sixSigma.stat3Value'), label: t('sixSigma.stat3Label'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('sixSigma.findingLabel'), body: t('sixSigma.findingBody') }}
+      footer={t('sixSigma.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('sixSigma.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('sixSigma.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('sixSigma.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">{t('sixSigma.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)]">{t('sixSigma.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat2Label')}</div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high">{t('sixSigma.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('sixSigma.stat3Label')}</div>
-        </div>
-      </div>
-
       {/* Win-rate comparison + contract strip */}
       <div className="grid md:grid-cols-[280px_1fr] gap-5">
         {/* Two columns comparison */}
@@ -214,19 +195,6 @@ export function StorySixSigmaHacienda() {
           </div>
         </div>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('sixSigma.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('sixSigma.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('sixSigma.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

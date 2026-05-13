@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface YearRow {
   year: number
@@ -50,50 +51,30 @@ export function StoryAnoSinExcusas() {
   const LEFT_FOR_DOT = (i: number) => LABEL_W + i * DOT_GAP_X + DOT_GAP_X / 2
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={isEs ? 'RUBLI · Tasa de adjudicación directa · 2019-2024' : 'RUBLI · Direct award rate · 2019-2024'}
+      headline={isEs
+        ? '2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa'
+        : '2023: the record year without a pandemic, without a declared emergency, without operational excuse'}
+      lede={isEs
+        ? 'Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023 batió el récord histórico verificable con ninguna de las dos excusas disponibles.'
+        : 'Each row is a year. Each dot is 2pp of direct-award rate. The cyan line marks the OECD ceiling (25%). The gray background indicates years with COVID active. 2023 broke the verifiable historical record with neither of the two available excuses.'}
+      stats={[
+        { value: '82.2%', label: isEs ? 'adj. directa 2023 · récord verificable' : 'direct award 2023 · verifiable record', accent: 'var(--color-risk-critical)' },
+        { value: '3.3x', label: isEs ? 'sobre el máximo OCDE de 25%' : 'above the 25% OECD ceiling', accent: 'var(--color-oecd)' },
+        { value: '+3.0pp', label: isEs ? 'vs. 2022 · sin emergencia que justifique' : 'vs. 2022 · no emergency to justify', accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{
+        label: isEs ? 'HALLAZGO' : 'FINDING',
+        body: isEs
+          ? 'Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023, subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en excepción temporal: se volvió hábito administrativo permanente.'
+          : 'During the pandemic years (2020-2021), the rate rose 5pp. Without a pandemic, in 2023, it climbed another 3pp to the record. The health emergency did not become a temporary exception — it became a permanent administrative habit.',
+      }}
+      footer={isEs
+        ? 'Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023'
+        : 'Source: COMPRANET 2019-2024 · Structure B-D · OECD Public Procurement Report 2023'}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {isEs
-          ? 'RUBLI · Tasa de adjudicación directa · 2019-2024'
-          : 'RUBLI · Direct award rate · 2019-2024'}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {isEs
-          ? '2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa'
-          : '2023: the record year without a pandemic, without a declared emergency, without operational excuse'}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {isEs
-          ? 'Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023 batió el récord histórico verificable con ninguna de las dos excusas disponibles.'
-          : 'Each row is a year. Each dot is 2pp of direct-award rate. The cyan line marks the OECD ceiling (25%). The gray background indicates years with COVID active. 2023 broke the verifiable historical record with neither of the two available excuses.'}
-      </p>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">82.2%</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {isEs ? 'adj. directa 2023 · récord verificable' : 'direct award 2023 · verifiable record'}
-          </div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">3.3x</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {isEs ? 'sobre el máximo OCDE de 25%' : 'above the 25% OECD ceiling'}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">+3.0pp</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {isEs ? 'vs. 2022 · sin emergencia que justifique' : 'vs. 2022 · no emergency to justify'}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -275,23 +256,6 @@ export function StoryAnoSinExcusas() {
           </text>
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {isEs ? 'HALLAZGO' : 'FINDING'}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {isEs
-            ? 'Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023, subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en excepción temporal: se volvió hábito administrativo permanente.'
-            : 'During the pandemic years (2020-2021), the rate rose 5pp. Without a pandemic, in 2023, it climbed another 3pp to the record. The health emergency did not become a temporary exception — it became a permanent administrative habit.'}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {isEs
-          ? 'Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023'
-          : 'Source: COMPRANET 2019-2024 · Structure B-D · OECD Public Procurement Report 2023'}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

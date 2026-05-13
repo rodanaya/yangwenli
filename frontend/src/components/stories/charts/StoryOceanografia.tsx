@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface YearRow {
   year: number
@@ -54,50 +55,23 @@ export function StoryOceanografia() {
   const peakYear = TIMELINE.find((r) => r.valueB === PEAK)!
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('oceanografia.kicker')}
+      headline={t('oceanografia.headline')}
+      lede={t('oceanografia.lede')}
+      stats={[
+        { value: `${total.toFixed(1)}B`, label: t('oceanografia.stat1Label'), accent: 'var(--color-risk-critical)' },
+        {
+          value: String(peakYear.year),
+          label: `${t('oceanografia.stat2LabelPrefix')} ${peakYear.valueB.toFixed(1)}${t('oceanografia.stat2LabelSuffix')}`,
+          accent: 'var(--color-risk-high)',
+        },
+        { value: t('oceanografia.stat3Value'), label: t('oceanografia.stat3Label'), accent: 'var(--color-oecd)' },
+      ]}
+      finding={{ label: t('oceanografia.findingLabel'), body: t('oceanografia.findingBody') }}
+      footer={t('oceanografia.footer')}
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('oceanografia.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('oceanografia.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('oceanografia.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
-            {total.toFixed(1)}B
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('oceanografia.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
-            {peakYear.year}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {`${t('oceanografia.stat2LabelPrefix')} ${peakYear.valueB.toFixed(1)}${t('oceanografia.stat2LabelSuffix')}`}
-          </div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)] tabular-nums">
-            {t('oceanografia.stat3Value')}
-          </div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('oceanografia.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -220,19 +194,6 @@ export function StoryOceanografia() {
           </g>
         </svg>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('oceanografia.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('oceanografia.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('oceanografia.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

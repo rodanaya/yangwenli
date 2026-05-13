@@ -6,32 +6,20 @@
  * The 2020 COVID procurement spike is visible as a horizontal red streak.
  */
 
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { RiskCalendarHeatmap } from '@/components/charts/RiskCalendarHeatmap'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 export function StoryRiskCalendar() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('riskCalendar.kicker')}
+      headline={t('riskCalendar.headline')}
+      lede={t('riskCalendar.lede')}
+      footer={t('riskCalendar.footer')}
+      tone="bare"
     >
-      {/* Section overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('riskCalendar.kicker')}
-      </p>
-
-      {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('riskCalendar.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('riskCalendar.lede')}
-      </p>
-
       {/* Annotation strip */}
       <div className="flex items-center gap-4 py-2 border-y border-border">
         <div className="flex items-center gap-1.5">
@@ -69,11 +57,6 @@ export function StoryRiskCalendar() {
           </p>
         </div>
       </div>
-
-      {/* Source */}
-      <p className="text-[10px] text-text-muted">
-        {t('riskCalendar.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

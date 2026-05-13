@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const RINGS = [
   { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: 'var(--color-sector-educacion)', track: '#1e3a8a' },
@@ -39,23 +40,13 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
 export function StoryCuartaAdjudicacion() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('cuartaAdjudicacion.kicker')}
+      headline={t('cuartaAdjudicacion.headline')}
+      subline={t('cuartaAdjudicacion.subline')}
+      finding={{ label: t('cuartaAdjudicacion.findingLabel'), body: t('cuartaAdjudicacion.findingBody') }}
+      footer={t('cuartaAdjudicacion.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('cuartaAdjudicacion.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('cuartaAdjudicacion.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-5">
-        {t('cuartaAdjudicacion.subline')}
-      </p>
-
       <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
         {/* The donut */}
         <div className="flex items-center justify-center">
@@ -170,20 +161,6 @@ export function StoryCuartaAdjudicacion() {
           ))}
         </div>
       </div>
-
-      {/* Finding */}
-      <div className="mt-5 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-critical mb-1">
-          {t('cuartaAdjudicacion.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('cuartaAdjudicacion.findingBody')}
-        </p>
-      </div>
-
-      <p className="mt-3 text-[10px] text-text-muted font-mono">
-        {t('cuartaAdjudicacion.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

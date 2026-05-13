@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface YearRow {
   year: number
@@ -64,44 +65,18 @@ export function StoryInfraestructura() {
   const oecdBidders = 5.2
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5 space-y-4"
+    <EditorialChartFrame
+      kicker={t('infraestructura.kicker')}
+      headline={t('infraestructura.headline')}
+      lede={t('infraestructura.lede')}
+      stats={[
+        { value: t('infraestructura.stat1Value'), label: t('infraestructura.stat1Label'), accent: 'var(--color-risk-high)' },
+        { value: String(avgBidders), label: t('infraestructura.stat2Label'), accent: 'var(--color-risk-critical)' },
+        { value: `${oecdBidders}+`, label: t('infraestructura.stat3Label'), accent: 'var(--color-oecd)' },
+      ]}
+      finding={{ label: t('infraestructura.findingLabel'), body: t('infraestructura.findingBody') }}
+      footer={t('infraestructura.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('infraestructura.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('infraestructura.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('infraestructura.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-orange-400">{t('infraestructura.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('infraestructura.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">{avgBidders}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('infraestructura.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-cyan-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-[color:var(--color-oecd)]">{oecdBidders}+</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('infraestructura.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
@@ -271,19 +246,6 @@ export function StoryInfraestructura() {
           {t('infraestructura.referenceLine')}
         </text>
       </svg>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('infraestructura.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('infraestructura.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('infraestructura.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

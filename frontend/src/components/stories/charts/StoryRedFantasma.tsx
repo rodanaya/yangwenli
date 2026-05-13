@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Ghost {
   id: number
@@ -93,38 +94,18 @@ function getColor(score: number): string {
 export function StoryRedFantasma() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5 space-y-4"
+    <EditorialChartFrame
+      kicker={t('ghostNetwork.kicker')}
+      headline={t('ghostNetwork.headline')}
+      lede={t('ghostNetwork.lede')}
+      stats={[
+        { value: t('ghostNetwork.stat1Value'), label: t('ghostNetwork.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('ghostNetwork.stat2Value'), label: t('ghostNetwork.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: t('ghostNetwork.stat3Value'), label: t('ghostNetwork.stat3Label'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('ghostNetwork.findingLabel'), body: t('ghostNetwork.findingBody') }}
+      footer={t('ghostNetwork.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('ghostNetwork.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('ghostNetwork.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('ghostNetwork.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-critical">{t('ghostNetwork.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-orange-400">{t('ghostNetwork.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat2Label')}</div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-xl font-mono font-bold text-risk-high">{t('ghostNetwork.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('ghostNetwork.stat3Label')}</div>
-        </div>
-      </div>
-
       <svg
         viewBox="0 0 600 440"
         className="w-full h-auto"
@@ -266,19 +247,6 @@ export function StoryRedFantasma() {
           <span>{t('ghostNetwork.legendUnder')}</span>
         </div>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('ghostNetwork.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('ghostNetwork.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('ghostNetwork.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

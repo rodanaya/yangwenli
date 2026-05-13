@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const data = [
   { year: '2019', contracts: 18025 },
@@ -32,37 +33,16 @@ function formatK(v: number): string {
 export function StoryHemoserSplitting() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('hemoserSplitting.kicker')}
+      headline={t('hemoserSplitting.headline')}
+      subline={t('hemoserSplitting.subline')}
+      stats={[
+        { value: t('hemoserSplitting.stat1Value'), label: t('hemoserSplitting.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('hemoserSplitting.stat2Value'), label: t('hemoserSplitting.stat2Label'), accent: 'var(--color-risk-high)' },
+      ]}
+      footer={t('hemoserSplitting.footer')}
     >
-      {/* Overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('hemoserSplitting.kicker')}
-      </p>
-
-      {/* Editorial headline */}
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('hemoserSplitting.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('hemoserSplitting.subline')}
-      </p>
-
-      {/* Hero stats row */}
-      <div className="flex gap-6 mb-5">
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('hemoserSplitting.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('hemoserSplitting.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-high">{t('hemoserSplitting.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('hemoserSplitting.stat2Label')}</div>
-        </div>
-      </div>
-
       {/* Dot-matrix vertical columns */}
       <svg
         viewBox={`0 0 ${CHART_W} ${CHART_H}`}
@@ -175,11 +155,6 @@ export function StoryHemoserSplitting() {
           {t('hemoserSplitting.annotationVendor')}
         </span>
       </div>
-
-      {/* Source */}
-      <p className="text-[10px] text-text-muted mt-3">
-        {t('hemoserSplitting.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

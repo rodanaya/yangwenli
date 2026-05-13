@@ -10,6 +10,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Node {
   id: string
@@ -81,44 +82,30 @@ export function StoryCommunityBubbles() {
   const highCount = NODES.filter((n) => n.risk >= 0.4 && n.risk < 0.6).length
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('communityBubbles.kicker')}
+      headline={t('communityBubbles.headline')}
+      lede={t('communityBubbles.lede')}
+      stats={[
+        { value: String(criticalCount), label: t('communityBubbles.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: String(highCount), label: t('communityBubbles.stat2Label'), accent: 'var(--color-risk-high)' },
+        { value: '22', label: t('communityBubbles.stat3Label'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('communityBubbles.findingLabel'), body: t('communityBubbles.findingBody') }}
+      footer={
+        <div className="flex items-center justify-between">
+          <span>{t('communityBubbles.footer')}</span>
+          <a
+            href="/network"
+            className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
+          >
+            <ExternalLink className="h-3 w-3" />
+            {t('communityBubbles.exploreLink')}
+          </a>
+        </div>
+      }
+      tone="bare"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('communityBubbles.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('communityBubbles.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('communityBubbles.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">{criticalCount}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('communityBubbles.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-orange-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-orange-400">{highCount}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('communityBubbles.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-high">22</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-            {t('communityBubbles.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -223,28 +210,6 @@ export function StoryCommunityBubbles() {
           <span className="text-text-muted ml-auto">{t('communityBubbles.legendSizeNote')}</span>
         </div>
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('communityBubbles.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('communityBubbles.findingBody')}
-        </p>
-      </div>
-
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] text-text-muted font-mono">
-          {t('communityBubbles.footer')}
-        </p>
-        <a
-          href="/network"
-          className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
-        >
-          <ExternalLink className="h-3 w-3" />
-          {t('communityBubbles.exploreLink')}
-        </a>
-      </div>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

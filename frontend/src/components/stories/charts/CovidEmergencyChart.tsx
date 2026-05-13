@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 import {
   EditorialComposedChart,
   type ComposedLayer,
@@ -21,34 +21,16 @@ type CovidRow = (typeof data)[number]
 export function CovidEmergencyChart() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card p-5"
+    <EditorialChartFrame
+      kicker={t('covidEmergency.kicker')}
+      headline={t('covidEmergency.headline')}
+      subline={t('covidEmergency.subline')}
+      stats={[
+        { value: t('covidEmergency.stat1Value'), label: t('covidEmergency.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('covidEmergency.stat2Value'), label: t('covidEmergency.stat2Label'), accent: 'var(--color-sector-trabajo)' },
+      ]}
+      footer={t('covidEmergency.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('covidEmergency.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('covidEmergency.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {t('covidEmergency.subline')}
-      </p>
-
-      {/* Key stat callout */}
-      <div className="flex gap-4 mb-4">
-        <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-risk-critical)' }}>
-          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-risk-critical)' }}>{t('covidEmergency.stat1Value')}</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('covidEmergency.stat1Label')}</p>
-        </div>
-        <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: 'var(--color-sector-trabajo)' }}>
-          <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-sector-trabajo)' }}>{t('covidEmergency.stat2Value')}</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('covidEmergency.stat2Label')}</p>
-        </div>
-      </div>
-
       <EditorialComposedChart<CovidRow>
         data={data}
         xKey="year"
@@ -81,9 +63,6 @@ export function CovidEmergencyChart() {
           <span className="text-[10px] font-mono text-text-muted">{t('covidEmergency.singleBidSeries')}</span>
         </div>
       </div>
-      <p className="mt-1 text-[10px] text-text-muted text-right font-mono">
-        {t('covidEmergency.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

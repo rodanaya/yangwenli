@@ -6,10 +6,10 @@
  * same vendor, a textbook threshold-splitting pattern.
  */
 
-import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
 import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const HEMOSER_SHAP = {
   price_volatility:      0.62,
@@ -25,33 +25,32 @@ const HEMOSER_SHAP = {
 export function StoryVendorFingerprint() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full space-y-4"
+    <EditorialChartFrame
+      kicker={t('vendorFingerprint.kicker')}
+      headline={t('vendorFingerprint.headline')}
+      lede={`${t('vendorFingerprint.ledePrefix')} 0.94 ${t('vendorFingerprint.ledeSuffix')}`}
+      footer={
+        <div className="flex items-center justify-between">
+          <span>{t('vendorFingerprint.footer')}</span>
+          <a
+            href="/aria"
+            className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
+          >
+            <ExternalLink className="h-3 w-3" />
+            {t('vendorFingerprint.ariaLink')}
+          </a>
+        </div>
+      }
+      tone="bare"
     >
-      {/* Section overline with risk pill */}
-      <div className="flex items-center gap-3">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-          {t('vendorFingerprint.kicker')}
-        </p>
+      {/* Section overline with risk pill — rendered as custom kicker row before content */}
+      <div className="flex items-center gap-3 -mt-1">
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
                         bg-risk-critical/10 border border-red-500/20 text-xs text-risk-critical">
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           {t('vendorFingerprint.criticalPill')}
         </div>
       </div>
-
-      {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('vendorFingerprint.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('vendorFingerprint.ledePrefix')}{' '}
-        <span className="text-risk-critical font-mono font-bold">0.94</span>{' '}
-        {t('vendorFingerprint.ledeSuffix')}
-      </p>
 
       {/* SHAP factor callouts */}
       <div className="grid grid-cols-4 gap-2">
@@ -92,20 +91,6 @@ export function StoryVendorFingerprint() {
           <strong className="text-teal-400">{t('vendorFingerprint.readGuideTealLabel')}</strong>{t('vendorFingerprint.readGuideTealSuffix')}
         </p>
       </div>
-
-      {/* Investigation hook */}
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] text-text-muted">
-          {t('vendorFingerprint.footer')}
-        </p>
-        <a
-          href="/aria"
-          className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
-        >
-          <ExternalLink className="h-3 w-3" />
-          {t('vendorFingerprint.ariaLink')}
-        </a>
-      </div>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

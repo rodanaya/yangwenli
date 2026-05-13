@@ -10,6 +10,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { RISK_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface ContractRow {
   contrato: string
@@ -54,31 +55,16 @@ export function ThresholdSplittingChart() {
   const thresholdDot = Math.round(THRESHOLD * DOT_PER_M) // = 75
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-background-card rounded-sm p-4 border border-border"
+    <EditorialChartFrame
+      kicker={t('thresholdSplitting.kicker')}
+      headline={t('thresholdSplitting.headline')}
+      subline={`${t('thresholdSplitting.sublinePrefix')}${totalValue.toLocaleString()}${t('thresholdSplitting.sublineMid')}${Math.round((totalValue / THRESHOLD) * 100) / 100}${t('thresholdSplitting.sublineSuffix')}`}
+      stats={[
+        { value: t('thresholdSplitting.heroValue'), label: t('thresholdSplitting.heroLabel'), accent: 'var(--color-risk-high)' },
+      ]}
+      finding={{ label: t('thresholdSplitting.findingLabel'), body: t('thresholdSplitting.findingBody') }}
+      footer={t('thresholdSplitting.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('thresholdSplitting.kicker')}
-      </p>
-      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        {t('thresholdSplitting.headline')}
-      </h3>
-      <p className="text-xs text-text-muted font-mono mb-4">
-        {`${t('thresholdSplitting.sublinePrefix')}${totalValue.toLocaleString()}${t('thresholdSplitting.sublineMid')}${Math.round((totalValue / THRESHOLD) * 100) / 100}${t('thresholdSplitting.sublineSuffix')}`}
-      </p>
-
-      <div className="border-l-2 pl-3 py-1 mb-4" style={{ borderColor: RISK_COLORS.high }}>
-        <div className="text-lg font-mono font-bold" style={{ color: RISK_COLORS.high }}>
-          {t('thresholdSplitting.heroValue')}
-        </div>
-        <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
-          {t('thresholdSplitting.heroLabel')}
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -189,20 +175,7 @@ export function ThresholdSplittingChart() {
           })}
         </svg>
       </div>
-
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-risk-high mb-0.5">
-          {t('thresholdSplitting.findingLabel')}
-        </p>
-        <p className="text-xs text-text-secondary leading-relaxed">
-          {t('thresholdSplitting.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted mt-2 font-mono">
-        {t('thresholdSplitting.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

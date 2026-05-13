@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Institution {
   id: string
@@ -71,44 +72,18 @@ export function StoryTrianguloFarmaceutico() {
   const maxValue = Math.max(...EDGES.map((e) => e.value))
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background border border-border p-5 space-y-4"
+    <EditorialChartFrame
+      kicker={t('trianguloFarmaceutico.kicker')}
+      headline={t('trianguloFarmaceutico.headline')}
+      lede={t('trianguloFarmaceutico.lede')}
+      stats={[
+        { value: t('trianguloFarmaceutico.stat1Value'), label: t('trianguloFarmaceutico.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('trianguloFarmaceutico.stat2Value'), label: t('trianguloFarmaceutico.stat2Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('trianguloFarmaceutico.stat3Value'), label: t('trianguloFarmaceutico.stat3Label'), accent: 'var(--color-risk-critical)' },
+      ]}
+      finding={{ label: t('trianguloFarmaceutico.findingLabel'), body: t('trianguloFarmaceutico.findingBody') }}
+      footer={t('trianguloFarmaceutico.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-        {t('trianguloFarmaceutico.kicker')}
-      </p>
-
-      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
-        {t('trianguloFarmaceutico.headline')}
-      </h3>
-      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
-        {t('trianguloFarmaceutico.lede')}
-      </p>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('trianguloFarmaceutico.stat1Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-red-400 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('trianguloFarmaceutico.stat2Label')}
-          </div>
-        </div>
-        <div className="border-l-2 border-red-300 pl-3 py-1">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('trianguloFarmaceutico.stat3Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">
-            {t('trianguloFarmaceutico.stat3Label')}
-          </div>
-        </div>
-      </div>
-
       <svg
         viewBox="0 0 440 440"
         className="w-full h-auto"
@@ -300,19 +275,6 @@ export function StoryTrianguloFarmaceutico() {
           )
         })}
       </div>
-
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
-        <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
-          {t('trianguloFarmaceutico.findingLabel')}
-        </p>
-        <p className="text-sm text-text-secondary">
-          {t('trianguloFarmaceutico.findingBody')}
-        </p>
-      </div>
-
-      <p className="text-[10px] text-text-muted font-mono">
-        {t('trianguloFarmaceutico.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }

@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface MonthRow {
   mes: string
@@ -66,28 +67,13 @@ export function MonthlySpendingChart() {
   const avgDot = Math.round(AVG * DOT_PER_B)
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card p-5"
+    <EditorialChartFrame
+      kicker={t('monthly.kicker')}
+      headline={t('monthly.headline')}
+      subline={t('monthly.subline')}
+      stats={[{ value: t('monthly.heroStat'), label: t('monthly.heroLabel'), accent: ALERT_COLOR }]}
+      footer={t('monthly.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('monthly.kicker')}
-      </p>
-      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('monthly.headline')}
-      </h3>
-      <p className="text-xs text-text-muted mb-4">
-        {t('monthly.subline')}
-      </p>
-
-      {/* Hero stat */}
-      <div className="border-l-2 pl-3 py-0.5 mb-4" style={{ borderColor: ALERT_COLOR }}>
-        <p className="text-xl font-mono font-bold" style={{ color: ALERT_COLOR }}>{t('monthly.heroStat')}</p>
-        <p className="text-[10px] text-text-muted uppercase tracking-wide">{t('monthly.heroLabel')}</p>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -197,11 +183,7 @@ export function MonthlySpendingChart() {
           })}
         </svg>
       </div>
-
-      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
-        {t('monthly.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 

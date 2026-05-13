@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface EraRow {
   era: string
@@ -48,34 +49,16 @@ const H = 40 + DATA.length * (ERA_BLOCK_H + ERA_GAP) + 10
 export function StoryAusteridadChart() {
   const { t } = useTranslation('storyCharts')
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="rounded-sm bg-background-card border border-border p-5"
+    <EditorialChartFrame
+      kicker={t('austeridad.kicker')}
+      headline={t('austeridad.headline')}
+      subline={t('austeridad.subline')}
+      stats={[
+        { value: t('austeridad.stat1Value'), label: t('austeridad.stat1Label') },
+        { value: t('austeridad.stat2Value'), label: t('austeridad.stat2Label'), accent: 'var(--color-risk-critical)' },
+      ]}
+      footer={t('austeridad.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
-        {t('austeridad.kicker')}
-      </p>
-
-      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
-        {t('austeridad.headline')}
-      </p>
-      <p className="text-xs text-text-muted mb-4">
-        {t('austeridad.subline')}
-      </p>
-
-      <div className="flex gap-6 mb-5">
-        <div className="border-l-2 border-border pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-text-secondary">{t('austeridad.stat1Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('austeridad.stat1Label')}</div>
-        </div>
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-risk-critical">{t('austeridad.stat2Value')}</div>
-          <div className="text-[10px] text-text-muted uppercase tracking-wide">{t('austeridad.stat2Label')}</div>
-        </div>
-      </div>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -214,11 +197,7 @@ export function StoryAusteridadChart() {
           })}
         </svg>
       </div>
-
-      <p className="text-[10px] text-text-muted mt-3">
-        {t('austeridad.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 
