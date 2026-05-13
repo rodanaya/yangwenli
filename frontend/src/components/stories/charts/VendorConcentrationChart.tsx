@@ -10,6 +10,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { RISK_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface VendorRow {
   vendor: string
@@ -55,22 +56,12 @@ export function VendorConcentrationChart() {
   const oecdDot = Math.round(OECD_LIMIT * DOT_PER_PCT) // = 20
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="bg-background-card rounded-sm p-4 border border-border"
+    <EditorialChartFrame
+      kicker={t('vendorConcentration.kicker')}
+      headline={t('vendorConcentration.headline')}
+      subline={t('vendorConcentration.subline')}
+      footer={t('vendorConcentration.footer')}
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-        {t('vendorConcentration.kicker')}
-      </p>
-      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
-        {t('vendorConcentration.headline')}
-      </h3>
-      <p className="text-xs text-text-muted font-mono mb-4">
-        {t('vendorConcentration.subline')}
-      </p>
-
       <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
@@ -200,10 +191,7 @@ export function VendorConcentrationChart() {
         </div>
       </div>
 
-      <p className="text-[10px] text-text-muted mt-2 font-mono">
-        {t('vendorConcentration.footer')}
-      </p>
-    </motion.div>
+    </EditorialChartFrame>
   )
 }
 
