@@ -49,4 +49,19 @@ EXPOSE 8001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
   CMD python -c "import httpx; httpx.get('http://localhost:8001/health', timeout=5)" || exit 1
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "4"]
+# gunicorn + uvicorn worker class:
+# --workers 6     : 2×CPU+1 for a dual-core VPS (Hetzner CX21)
+# --max-requests  : recycle workers after 1000 requests to prevent slow memory bloat
+# --max-requests-jitter : stagger recycling so not all workers restart simultaneously
+# --timeout 120   : kill workers stuck > 2 min (catches stuck SQLite queries)
+# --graceful-timeout 30: allow in-flight requests to finish on SIGTERM
+CMD ["gunicorn", "api.main:app",
+     "--worker-class", "uvicorn.workers.UvicornWorker",
+     "--workers", "6",
+     "--bind", "0.0.0.0:8001",
+     "--timeout", "120",
+     "--graceful-timeout", "30",
+     "--max-requests", "1000",
+     "--max-requests-jitter", "200",
+     "--access-logfile", "-",
+     "--error-logfile", "-"]
