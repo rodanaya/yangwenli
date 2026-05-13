@@ -447,7 +447,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
       // Slight vertical jitter, deterministic
       const jitter = ((ri + ci) % 2 === 0 ? -1 : 1) * 12
       const y = H * rowYs[ri] + jitter
-      positioned.push({ c, x, y, r: rOf(c.value) })
+      positioned.push({ c, x, y, r: rOf(c.vendors) })
     })
   })
 

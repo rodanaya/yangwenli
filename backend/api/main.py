@@ -140,6 +140,7 @@ def _warmup_caches():
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
         "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
         "/api/v1/analysis/vendor-concentration?top_n=3",  # Dashboard market concentration panel
+        "/api/v1/capture/top?limit=50",                    # Capture creep detection (full 2018-2025 scan — slow cold)
         "/api/v1/network/communities",                     # Network communities (28s cold — warm to avoid UX lag)
         "/api/v1/analysis/admin-breakdown",                # Administrations page (38s cold)
         "/api/v1/analysis/political-cycle",                # Political cycle chart (56s+ cold)
@@ -198,6 +199,8 @@ def _warmup_caches():
                 timeout = 120
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:
                 timeout = 90  # 38-60s cold; give headroom
+            elif "capture" in ep:
+                timeout = 120  # full 2018-2025 contract scan; cold = 60-90s
             elif "communities" in ep:
                 timeout = 45
             elif "publication" in ep:
