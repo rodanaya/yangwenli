@@ -2061,7 +2061,7 @@ export function ClevelandPairChart({
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-muted)"
               >
-                +{gap.toLocaleString()}
+                {gap >= 0 ? '+' : ''}{gap.toLocaleString()}
               </text>
             </g>
           )

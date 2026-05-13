@@ -1217,12 +1217,17 @@ export default function RedesKnownDossier() {
     (communitiesData?.graph_ready === true) && (communitiesData.communities.length > 0)
 
   const communities = useMemo(() => {
-    // Prefer real Louvain communities if available
+    // Prefer ARIA pattern spotlight (P1–P7): named patterns, real GT counts,
+    // meaningful vendor counts. Louvain communities currently lack sector data
+    // (0 sectors on all communities) and are not yet ready as primary view.
+    if (spotlightData?.patterns?.length) {
+      return buildCommunitiesFromSpotlight(spotlightData, isEs)
+    }
+    // Fall back to Louvain only when spotlight is unavailable
     if (communitiesData?.graph_ready && communitiesData.communities.length > 0) {
       return buildCommunitiesFromLouvain(communitiesData.communities, isEs)
     }
-    // Fall back to pattern spotlight aggregations
-    return buildCommunitiesFromSpotlight(spotlightData, isEs)
+    return []
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [communitiesData, spotlightData, isEs, i18n.language])
 
