@@ -33,8 +33,8 @@ export default function ChapterBanner({
       >
         {/* Large background number */}
         <span
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-[10rem] md:text-[14rem] font-bold font-mono leading-none select-none pointer-events-none"
-          style={{ color, opacity: 0.06 }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-[10rem] md:text-[14rem] font-bold leading-none select-none pointer-events-none"
+          style={{ color, opacity: 0.06, fontFamily: "'Playfair Display', Georgia, serif" }}
           aria-hidden="true"
         >
           {paddedNumber}
