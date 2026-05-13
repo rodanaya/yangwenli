@@ -55,13 +55,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
 # --max-requests-jitter : stagger recycling so not all workers restart simultaneously
 # --timeout 120   : kill workers stuck > 2 min (catches stuck SQLite queries)
 # --graceful-timeout 30: allow in-flight requests to finish on SIGTERM
-CMD ["gunicorn", "api.main:app",
-     "--worker-class", "uvicorn.workers.UvicornWorker",
-     "--workers", "6",
-     "--bind", "0.0.0.0:8001",
-     "--timeout", "120",
-     "--graceful-timeout", "30",
-     "--max-requests", "1000",
-     "--max-requests-jitter", "200",
-     "--access-logfile", "-",
+CMD ["gunicorn", "api.main:app", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--workers", "6", \
+     "--bind", "0.0.0.0:8001", \
+     "--timeout", "120", \
+     "--graceful-timeout", "30", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "200", \
+     "--access-logfile", "-", \
      "--error-logfile", "-"]
