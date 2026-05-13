@@ -248,7 +248,7 @@
     "levelHeader": "LEVEL",
     "contractsHeader": "% OF CONTRACTS (each dot = 2%)",
     "valueHeader": "% OF VALUE",
-    "summaryLine": "HR = 13.49% · RUBLI v0.8.5 model · test AUC 0.828",
+    "summaryLine": "HR = 11.01% · RUBLI v0.8.5 model · test AUC 0.785",
     "findingLabel": "FINDING",
     "findingPrefix": "The pyramid inverts when the measure shifts from count to value:",
     "findingStrong": "6% of contracts carry 42% of the money",

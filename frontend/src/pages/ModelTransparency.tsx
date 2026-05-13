@@ -67,9 +67,9 @@ const VERSION_HISTORY: VersionEntry[] = [
   {
     version: 'v0.8.5',
     date: '2026-03-25',
-    auc: 0.828,
-    hr: 13.49,
-    change: 'Institution-scoped GT labels reduced noise (IMSS Ghost −85%, COVID −73%). Structural FPs excluded. 9 active features after L1 regularization. Current active model.',
+    auc: 0.785,
+    hr: 11.01,
+    change: 'Phase F retraining (May 2, 2026). 18 active features, c_pu=0.32, ElasticNet C=0.2243. Institution-scoped GT labels. Structural FPs excluded. Current active model.',
     status: 'active',
   },
   {
@@ -199,7 +199,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             sub="Vendor-stratified hold-out. 0.5 = random, 1.0 = perfect."
           />
           <StatCard
-            value="13.49%"
+            value="11.01%"
             label="High-risk rate"
             sub="OECD compliant (2–15% benchmark)."
           />
@@ -485,7 +485,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
       <section>
         <SectionHeadline
           eyebrow={`Risk distribution · ${formatNumber(totalContracts)} contracts`}
-          headline="13.49 % of procurement volume crosses the high-risk threshold"
+          headline="11.01 % of procurement volume crosses the high-risk threshold"
           deck="Within the OECD 2–15 % benchmark range, with structural false-positive exclusions and ghost-companion boosts applied."
         />
 
@@ -779,7 +779,7 @@ export default function ModelTransparency() {
     return ACTIVE_COEFFICIENTS
   }, [modelCalibration])
 
-  const auc = modelMeta?.auc_test ?? 0.828
+  const auc = modelMeta?.auc_test ?? 0.785
   const nContracts = modelMeta?.n_contracts ?? 3_051_294
 
   const tabs = [
