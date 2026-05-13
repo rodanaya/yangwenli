@@ -1038,7 +1038,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
           className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
         >
-          {isEs ? 'Cómo fluye el dinero: comunidades → instituciones' : 'How money flows: communities → institutions'}
+          {isEs ? 'Cómo fluye el dinero: patrones → instituciones' : 'How money flows: patterns → institutions'}
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
           {isEs ? (
