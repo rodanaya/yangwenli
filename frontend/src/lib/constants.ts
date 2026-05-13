@@ -145,14 +145,14 @@ export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1401
 export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 861
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-13-v085-purge'
+export const BUILD_ID = '2026-05-13-queue-cleanup'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.
 // At 0.25, medium is 26.8% of contracts (investigable) and low is 59.4% (noise floor).
 // Structural FP vendors (pharma OEMs) capped at medium via DB risk_level override.
-// High+ rate: 13.49% | Train AUC: 0.798 | Test AUC: 0.828
+// High+ rate: 11.01% | Train AUC: 0.797 | Test AUC: 0.785 (v0.8.5, May 2 2026)
 // SINGLE SOURCE OF TRUTH — all other files import from here
 export const RISK_THRESHOLDS = {
   critical: 0.60, // Strongest similarity to known corruption patterns

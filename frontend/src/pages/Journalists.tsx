@@ -1193,9 +1193,9 @@ export default function Journalists() {
               lineHeight: 1.55,
             }}
           >
-            {t('masthead.deck', {
+            {totalCount}{' '}{t('masthead.deck', {
               defaultValue:
-                'Ten investigations into how MX$422 billion moved through Mexican federal procurement. Each story begins with 3.05 million contracts and ends with the people who signed them.',
+                'investigations into how MX$422 billion moved through Mexican federal procurement. Each story begins with 3.05 million contracts and ends with the people who signed them.',
             })}
           </p>
 

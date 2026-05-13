@@ -500,6 +500,8 @@ function App() {
               <Route path="investigations" element={<Navigate to="/investigation" replace />} />
               <Route path="for-journalists" element={<Navigate to="/journalists" replace />} />
               <Route path="newsroom" element={<Navigate to="/journalists" replace />} />
+              <Route path="stories" element={<Navigate to="/journalists" replace />} />
+              <Route path="metodologia" element={<Navigate to="/methodology" replace />} />
               <Route path="cases-library" element={<Navigate to="/cases" replace />} />
 
               {/* Red Thread — scroll-driven investigation narrative */}

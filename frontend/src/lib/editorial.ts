@@ -49,12 +49,12 @@ export const RISK_THRESHOLDS = {
   medium: 0.25,
 } as const
 
-// v0.8.5 deployed distribution (HR=13.49%)
-export const RISK_DISTRIBUTION_065 = {
-  critical: 0.0601,
-  high: 0.0748,
-  medium: 0.2684,
-  low: 0.5967,
+// v0.8.5 deployed distribution (HR=11.01%, May 2 2026)
+export const RISK_DISTRIBUTION_085 = {
+  critical: 0.0520,
+  high: 0.0590,
+  medium: 0.1620,
+  low: 0.7270,
 } as const
 
 // ── OECD reference ─────────────────────────────────────────────────────────
