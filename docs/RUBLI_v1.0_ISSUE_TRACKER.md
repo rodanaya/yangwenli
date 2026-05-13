@@ -116,31 +116,18 @@ we don't touch them until 2026-06-14.
 
 - **Decision:** 2026-05-12. Not actual duplication — the two charts share the "dot-per-%" motif but have different geometries (single-panel centered pyramid vs dual-panel butterfly), different DOT_R/spacing, different editorial compositions (story version wraps kicker/headline/stats/finding blocks; RiskPyramid is just the SVG + stats cards). Wrapping one to delegate to the other would require ~15 props and guarantee a visual regression. No action taken.
 
-### #017 — PENDING DECISION — Drop `/workspace` (Watchlist) entirely
+### #017 — CLOSED — Drop `/workspace` (Watchlist) entirely
 
-- **Filed:** 2026-05-07 (user — "we might have to drop the personal
-  investigation workplace since I don't feel that journalists will
-  work on my website... we are merely informative")
-- **Surface:** `frontend/src/pages/Watchlist.tsx` (1,366 LOC) +
-  sidebar entry + Atlas right-panel "Save investigation" feature
-- **Decision needed:** is RUBLI a publication or a workbench?
-- **If drop:**
-  1. Redirect `/workspace` and `/watchlist` → `/atlas` (or `/`).
-  2. Remove "Workspace" entry from sidebar (`AtlasLeftRail.tsx`
-     and the main `Sidebar.tsx`).
-  3. Remove "Save investigation" from Atlas right panel
-     (`AtlasRightPanel.tsx` selecting view).
-  4. ~1,366 LOC + ~80 LOC of localStorage hook becomes dead code
-     (delete file, remove imports, gates pass).
-- **If keep:** invest in making it actually useful — which is at
-  least 2 agent-days of polish, plus authentication for cross-device
-  saves (currently localStorage only).
-- **Recommended:** drop. Replace with shareable URL state (which
-  already exists in Atlas via `?lens=&zoom=&select=`) — that gives
-  a journalist exactly what they need (a sharable bookmark) without
-  pretending to be a workbench.
-- **Effort to drop:** ~30 minutes.
-- **Linked commit:** _(pending decision)_
+- **Closed:** 2026-05-13 by commit `fb7a9c01` (drop) + `43180087` (cleanup).
+- **Decision:** DROP — RUBLI is a publication, not a workbench.
+- **Fixed by:**
+  1. Deleted `Watchlist.tsx` (1,366 LOC) and `lib/atlas/saved-investigations.ts` (80 LOC).
+  2. `/workspace` + `/watchlist` → redirect to `/atlas`.
+  3. Removed "Save investigation" button from `AtlasRightPanel.tsx` (SelectingPanel).
+  4. Removed "INVESTIGATIONS" saved-state block from `AtlasLeftRail.tsx`.
+  5. Removed workspace `isActive` branch from `Sidebar.tsx`.
+  6. Removed stale workspace quick-nav from `CommandPalette.tsx`.
+  7. Build, TS, lint:tokens all green.
 
 ### #018 — PENDING DECISION — Haiku-scrape T2/T3 ARIA tiers for richer dossiers
 
@@ -165,7 +152,14 @@ we don't touch them until 2026-06-14.
   intact — verify before running.
 - **Sequenced:** parallel track to frontend work. Can run on the
   VPS overnight if pre-approval handled.
-- **Linked commit:** _(pending decision)_
+- **Decision (2026-05-13):** DEFER to v1.1. Honest audit #018 recommendation:
+  "DEFER — users can't reliably reach existing T1 dossiers yet. Adding
+  more data to a broken UX makes nothing better. Re-evaluate after
+  launch feedback."
+- **State:** T1 DONE (984 runs / 314 vendors). T2 was 53.4% done
+  (780/1,462) as of May 3; process stopped. T3 not started.
+- **v1.1:** Resume `centinela_web --tier 2` then `--tier 3` after
+  launch. Verify WAL-lock fix (commit `453e80e`) still intact.
 
 ### #016 — CLOSED — Merge Networks/Intersection/Capture into one `/relationships` surface
 
