@@ -986,7 +986,7 @@ export default function Administrations() {
                 </div>
                 {/* Mini sparkline */}
                 {agg && agg.years.length > 1 && (
-                  <div className="mt-2 h-6">
+                  <div className="mt-2 h-6" style={{ minWidth: 80 }}>
                     <ResponsiveContainer width="100%" minWidth={0} height="100%">
                       <ComposedChart data={agg.years} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                         <Line

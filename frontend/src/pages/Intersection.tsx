@@ -77,7 +77,7 @@ function VendorRow({
     : '#64748b'
   const secondary =
     showSecondaryMetric === 'ips'
-      ? `IPS ${(v.ips_final * 100).toFixed(0)}`
+      ? `IPS ${(v.ips_final * 100).toFixed(1)}`
       : showSecondaryMetric === 'risk'
         ? `${(v.avg_risk_score * 100).toFixed(0)}/100`
         : formatCompactMXN(v.total_value_mxn)

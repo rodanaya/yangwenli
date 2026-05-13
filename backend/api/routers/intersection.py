@@ -38,6 +38,24 @@ _RUBLI_FLAGS_THRESHOLD = 0.40   # High+ (Critical + High)
 _RUBLI_CLEAN_THRESHOLD = 0.25   # below Medium
 _MIN_CONTRACTS = 5              # exclude one-off vendors from rankings
 
+# Pharma/medical-gas OEM structural FPs: legitimate large-scale buyers whose
+# procurement patterns score high on price_volatility / vendor_concentration
+# features but reflect market structure, not corruption. Core 4 (BAXTER,
+# FRESENIUS, INFRA, PRAXAIR) are already in ground_truth, so the
+# no_registry_hit filter in novelty catches them. The names below cover pharma
+# OEMs not yet in the GT corpus but confirmed structural FPs in v0.8.5.
+_STRUCTURAL_FP_NAMES = (
+    'SANOFI', 'ASTRAZENECA', 'BOEHRINGER', 'ROCHE', 'NOVARTIS',
+    'GILEAD', 'JANSSEN', 'AMGEN', 'TAKEDA', 'BAYER', 'KEDRION',
+    'GRIFOLS', 'NOVO NORDISK', 'PFIZER',
+)
+# Pre-built SQL fragment for novelty exclusion. Uses module-level constants
+# only — not user input — so f-string interpolation is safe here.
+_no_structural_fp = " AND ".join(
+    f"UPPER(vendor_name) NOT LIKE '%{name}%'"
+    for name in _STRUCTURAL_FP_NAMES
+)
+
 
 def _vendor_row(r: sqlite3.Row) -> dict:
     """Project an aria_queue row into the intersection DTO shape."""
@@ -103,7 +121,8 @@ def get_intersection_summary(
         f"""
         SELECT
             SUM(CASE WHEN avg_risk_score >= {_RUBLI_FLAGS_THRESHOLD} AND {no_registry_hit}
-                          AND total_contracts >= {_MIN_CONTRACTS} THEN 1 ELSE 0 END) AS novelty,
+                          AND total_contracts >= {_MIN_CONTRACTS}
+                          AND {_no_structural_fp} THEN 1 ELSE 0 END) AS novelty,
             SUM(CASE WHEN avg_risk_score >= {_RUBLI_FLAGS_THRESHOLD} AND {registry_hit}
                      THEN 1 ELSE 0 END) AS confirmed,
             SUM(CASE WHEN avg_risk_score < {_RUBLI_CLEAN_THRESHOLD} AND {registry_hit}
@@ -134,6 +153,7 @@ def get_intersection_summary(
             f"WHERE avg_risk_score >= {_RUBLI_FLAGS_THRESHOLD} "
             f"AND {no_registry_hit} "
             f"AND total_contracts >= {_MIN_CONTRACTS} "
+            f"AND {_no_structural_fp} "
             f"ORDER BY ips_final DESC "
             f"LIMIT ?",
             (top_n_per_quadrant,),
