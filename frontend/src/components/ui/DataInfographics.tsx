@@ -54,7 +54,7 @@ const INFOGRAPHICS: Infographic[] = [
       'De 3.05 millones de contratos federales, 412,845 (13.49%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v0.8.5 — entrenado con 748 casos documentados.',
     caption_en:
       'Of 3.05 million federal contracts, 412,845 (13.49%) show high or critical corruption risk patterns per the RUBLI v0.8.5 model — trained on 748 documented cases.',
-    source: 'RUBLI v0.8.5 · AUC=0.828 · HR=13.49% (OECD 2–15% compliant)',
+    source: 'RUBLI v0.8.5 · AUC=0.785 · HR=11.0% (OECD 2–15% compliant)',
     tag_es: 'Modelo de Riesgo',
     tag_en: 'Risk Model',
     tagColor: '#f87171',

@@ -248,7 +248,7 @@
     "levelHeader": "NIVEL",
     "contractsHeader": "% DE CONTRATOS (cada punto = 2%)",
     "valueHeader": "% DEL VALOR",
-    "summaryLine": "HR = 13.49% · modelo RUBLI v0.8.5 · AUC test 0.828",
+    "summaryLine": "HR = 11.0% · modelo RUBLI v0.8.5 · AUC test 0.785",
     "findingLabel": "HALLAZGO",
     "findingPrefix": "La forma de la pirámide se invierte cuando la medida cambia de número a valor:",
     "findingStrong": "6% de contratos cargan 42% del dinero",

@@ -303,9 +303,20 @@ is mechanical:
    Only flag console errors that appear on a clean page load (no scroll).
 
 5. **First-visit auto-tours** — The Observatory launches a tour on first
-   visit (localStorage `rubli_atlas_visited_v1`). Playwright's localStorage
-   may or may not have this flag. Note whether tour launched or not, but
-   don't count either state as a bug.
+   visit (localStorage `rubli_atlas_visited_v1`). **BEFORE visiting /atlas**,
+   set this flag via `browser_evaluate`:
+   ```javascript
+   () => { localStorage.setItem('rubli_atlas_visited_v1', '1'); return 'set'; }
+   ```
+   The value MUST be `'1'` (string), NOT `'true'` — Atlas.tsx checks
+   `=== '1'` exactly. Using `'true'` silently fails to suppress the auto-tour.
+
+6. **`browser_evaluate()` can trigger navigation on keyboard-listener-heavy
+   pages** — Atlas, ARIA queue, and Administrations all have global keyboard
+   shortcuts. Playwright's evaluate() occasionally fires focus events that
+   trigger these shortcuts. If a page unexpectedly navigates away after an
+   evaluate() call, it is a Playwright/headless artifact. Do NOT flag as a
+   production bug without reproducing in a real browser.
 
 ---
 

@@ -59,7 +59,7 @@ function VendorRow({ v, rank, showSecondaryMetric, lang }: {
 }) {
   const sectorColor = v.primary_sector_name ? SECTOR_COLORS[v.primary_sector_name.toLowerCase()] ?? '#64748b' : '#64748b'
   const secondary =
-    showSecondaryMetric === 'ips' ? `IPS ${(v.ips_final * 100).toFixed(0)}`
+    showSecondaryMetric === 'ips' ? `IPS ${(v.ips_final * 100).toFixed(1)}`
     : showSecondaryMetric === 'risk' ? `${(v.avg_risk_score * 100).toFixed(0)}/100`
     : formatCompactMXN(v.total_value_mxn)
   return (
