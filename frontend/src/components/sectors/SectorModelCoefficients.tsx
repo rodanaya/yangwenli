@@ -1,7 +1,7 @@
 /**
  * SectorModelCoefficients
  *
- * Horizontal diverging bar chart of v0.6.5 logistic regression coefficients
+ * Horizontal diverging bar chart of v0.8.5 logistic regression coefficients
  * for a given sector. Positive coefficients (risk-increasing) extend right in
  * orange; negative coefficients (protective) extend left in sky blue.
  *

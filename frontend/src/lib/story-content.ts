@@ -4,7 +4,7 @@
  * These stories START from what RUBLI's algorithms discovered in 3,051,294 contracts
  * (2002-2025). External sources are cited to CORROBORATE findings — not the other way.
  *
- * Risk scores from v0.8.5 model (AUC 0.828 test, vendor-stratified split).
+ * Risk scores from v0.8.5 model (AUC 0.785 test, vendor-stratified split).
  * All statistics are verified against RUBLI_NORMALIZED.db (verified Apr 2026).
  */
 

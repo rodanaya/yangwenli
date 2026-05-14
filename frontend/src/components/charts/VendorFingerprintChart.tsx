@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { getRiskLevelFromScore } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
-// Feature definitions — the 9 active v6.5 coefficients
+// Feature definitions — 9 representative features from v0.8.5 (subset for chart readability)
 // ---------------------------------------------------------------------------
 
 interface FingerprintFeature {
