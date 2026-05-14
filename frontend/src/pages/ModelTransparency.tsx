@@ -713,17 +713,17 @@ function AuditTrailTab() {
           className="text-[10px] font-mono uppercase tracking-[0.2em] mb-3"
           style={{ color: ACCENT }}
         >
-          Reproducibility · run ID CAL-v6.1-202603251039
+          Reproducibility · run ID CAL-v8-202605020212
         </p>
         <p
           className="text-text-secondary leading-[1.7]"
           style={{ fontFamily: 'var(--font-family-serif)', fontSize: '0.98rem' }}
         >
-          Training hyperparameters fixed via Optuna TPE (150 trials, vendor-stratified 70/30 split):
+          Training hyperparameters fixed via Optuna TPE (200 trials, vendor-stratified 70/30 split):
           {' '}
-          <span className="font-mono text-text-primary text-sm">C = 0.0100</span>,{' '}
-          <span className="font-mono text-text-primary text-sm">l1_ratio = 0.9673</span>,{' '}
-          PU correction <span className="font-mono text-text-primary text-sm">c = 0.3000</span>{' '}
+          <span className="font-mono text-text-primary text-sm">C = 0.2243</span>,{' '}
+          <span className="font-mono text-text-primary text-sm">l1_ratio = 0.7545</span>,{' '}
+          PU correction <span className="font-mono text-text-primary text-sm">c = 0.3200</span>{' '}
           (floor). Full training manifest and coefficient matrix archived in{' '}
           <span className="font-mono text-text-primary text-sm">model_calibration</span>.
         </p>
