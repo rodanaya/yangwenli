@@ -255,29 +255,29 @@ export default function Relationships() {
   })
 
   const allCaptures = capData?.data ?? []
-  const [captureFilter, setCaptureFilter] = useState<string | null>(null)
+  const [captureFilter, setCaptureFilter] = useState<number | null>(null)
 
-  // Sector counts over the full (unfiltered) capture list — used by chip badges and top-sector stat
+  // Sector counts keyed by institution_sector_id (integer 1-12) — matches SECTORS[].id
   const captureSectorCounts = useMemo(() => {
-    const counts = new Map<string, number>()
+    const counts = new Map<number, number>()
     for (const c of allCaptures) {
-      const key = c.institution_sector_name?.toLowerCase() ?? 'otros'
-      counts.set(key, (counts.get(key) ?? 0) + 1)
+      const id = c.institution_sector_id
+      if (id != null) counts.set(id, (counts.get(id) ?? 0) + 1)
     }
     return counts
   }, [allCaptures])
 
   const topSectorEntry = useMemo(() => {
-    let best: { code: string; count: number } | null = null
-    for (const [code, count] of captureSectorCounts) {
-      if (!best || count > best.count) best = { code, count }
+    let best: { id: number; count: number } | null = null
+    for (const [id, count] of captureSectorCounts) {
+      if (!best || count > best.count) best = { id, count }
     }
     return best
   }, [captureSectorCounts])
 
   const captures = useMemo(() => {
-    if (!captureFilter) return allCaptures
-    return allCaptures.filter((c) => c.institution_sector_name?.toLowerCase() === captureFilter)
+    if (captureFilter === null) return allCaptures
+    return allCaptures.filter((c) => c.institution_sector_id === captureFilter)
   }, [allCaptures, captureFilter])
 
   const totalCaptures = capData?.total_captures ?? 0
@@ -531,26 +531,30 @@ export default function Relationships() {
                 <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Valor capturado' : 'Captured value'}</div>
               </div>
               <div className="text-right">
-                {capLoading ? <Skeleton className="h-5 w-14 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)}pt` : '—'}</div>}
+                {capLoading ? <Skeleton className="h-5 w-14 ml-auto" /> : <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{largestJump > 0 ? `${largestJump.toFixed(0)} pp` : '—'}</div>}
                 <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">{lang === 'es' ? 'Mayor salto' : 'Largest jump'}</div>
               </div>
               <div className="text-right">
                 {capLoading ? (
                   <Skeleton className="h-5 w-24 ml-auto" />
-                ) : topSectorEntry ? (
-                  <div className="flex items-baseline gap-1.5 justify-end">
-                    <span
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ background: SECTOR_COLORS[topSectorEntry.code] ?? '#64748b' }}
-                      aria-hidden="true"
-                    />
-                    <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
-                      {getSectorName(topSectorEntry.code, lang)}
-                    </span>
-                    <span className="font-mono tabular-nums text-[11px] text-text-muted">
-                      ({topSectorEntry.count})
-                    </span>
-                  </div>
+                ) : topSectorEntry ? (() => {
+                  const ts = SECTORS.find(s => s.id === topSectorEntry.id)
+                  return (
+                    <div className="flex items-baseline gap-1.5 justify-end">
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ background: ts ? SECTOR_COLORS[ts.code] : '#64748b' }}
+                        aria-hidden="true"
+                      />
+                      <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
+                        {getSectorName(ts?.code ?? 'otros', lang)}
+                      </span>
+                      <span className="font-mono tabular-nums text-[11px] text-text-muted">
+                        ({topSectorEntry.count})
+                      </span>
+                    </div>
+                  )
+                })()
                 ) : (
                   <div className="font-mono tabular-nums text-base font-semibold text-text-primary">—</div>
                 )}
@@ -594,15 +598,15 @@ export default function Relationships() {
                     <span className="tabular-nums opacity-70">{allCaptures.length}</span>
                   </button>
                   {SECTORS.map((s) => {
-                    const count = captureSectorCounts.get(s.code) ?? 0
-                    const active = captureFilter === s.code
+                    const count = captureSectorCounts.get(s.id) ?? 0
+                    const active = captureFilter === s.id
                     const disabled = count === 0
                     return (
                       <button
                         key={s.code}
                         type="button"
                         disabled={disabled}
-                        onClick={() => setCaptureFilter(active ? null : s.code)}
+                        onClick={() => setCaptureFilter(active ? null : s.id)}
                         aria-pressed={active}
                         className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
                           active
