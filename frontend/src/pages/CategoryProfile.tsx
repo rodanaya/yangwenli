@@ -32,6 +32,7 @@ import {
 import { FuentePill } from '@/components/ui/FuentePill'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { getLedeForCategory } from '@/lib/entity/lede'
+import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
 
 // =============================================================================
 // Types
@@ -74,9 +75,6 @@ function getRiskColor(score: number): string {
 function truncate(text: string, maxLen: number): string {
   return text.length > maxLen ? text.slice(0, maxLen - 1) + '\u2026' : text
 }
-
-// Imported from canonical lib/administrations — was a 4-file duplicate.
-import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
 
 const ADMIN_ORDER = [
   ADMIN_DISPLAY_CANONICAL.fox,

@@ -142,7 +142,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     return isEs ? (cat.name_es || cat.name_en || null) : (cat.name_en || cat.name_es || null)
   })()
   const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath))
-  const parentPath = getParentPath(currentPath)
+  const parentPath = (() => {
+    const parts = currentPath.split('/').filter(Boolean)
+    if (parts.length <= 1) return ''
+    const parentRoute = '/' + parts.slice(0, -1).join('/')
+    const parentKey = ROUTE_I18N_KEYS[parentRoute]
+    if (parentKey) return t(parentKey)
+    return getParentPath(currentPath)
+  })()
 
   // Editorial masthead date — locale-aware (F1 audit fix). Spanish users
   // see "MAR · 17 ABR · 2026" instead of the always-en-US "TUE · APR 17 · 2026".
