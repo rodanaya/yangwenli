@@ -1251,7 +1251,6 @@ export default function Executive() {
     const d = dashboard
     const totalContracts = d?.overview?.total_contracts ?? 3_051_294
     const totalValue = d?.overview?.total_value_mxn ?? 9_881_000_000_000
-    const highCriticalRate = 11.01
     const rd = Array.isArray(d?.risk_distribution) ? d!.risk_distribution : []
     const highCriticalCount =
       rd.reduce(
@@ -1259,6 +1258,10 @@ export default function Executive() {
           r.risk_level === 'critical' || r.risk_level === 'high' ? sum + (r.count ?? 0) : sum,
         0,
       ) || 337_693
+    const highCriticalRate =
+      totalContracts > 0
+        ? Math.round((highCriticalCount / totalContracts) * 1000) / 10
+        : 11.01
     // Estimated value-at-risk: high+critical contract count / total contract
     // count × total spend. This is an approximation that assumes uniform value
     // distribution across risk bands (which is NOT exact — high-risk contracts
