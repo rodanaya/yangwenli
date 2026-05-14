@@ -6,6 +6,10 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Sidebar } from '../components/layout/Sidebar'
 import i18n from '../i18n'
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ isAuthenticated: false, user: null, logout: vi.fn() }),
+}))
+
 // Ensure English for test assertions
 beforeAll(async () => {
   await i18n.changeLanguage('en')
@@ -42,9 +46,9 @@ describe('Sidebar', () => {
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
+    expect(screen.getByText('DISCOVER')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
-    expect(screen.getByText('DATA')).toBeInTheDocument()
+    expect(screen.getByText('EXPLORE')).toBeInTheDocument()
   })
 
   it('renders overview nav items', () => {
@@ -57,15 +61,15 @@ describe('Sidebar', () => {
 
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('The Archive')).toBeInTheDocument()
-    expect(screen.getByText('Networks')).toBeInTheDocument()
+    expect(screen.getByText('Risk Queue')).toBeInTheDocument()
     expect(screen.getByText('Cases')).toBeInTheDocument()
+    expect(screen.getByText('Networks')).toBeInTheDocument()
   })
 
   it('renders bottom nav items', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Methodology')).toBeInTheDocument()
-    expect(screen.getByText('Settings')).toBeInTheDocument()
+    expect(screen.getByText('Administrations')).toBeInTheDocument()
   })
 
   it('calls onToggle when collapse button is clicked', () => {
