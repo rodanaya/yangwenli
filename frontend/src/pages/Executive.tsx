@@ -1450,8 +1450,8 @@ export default function Executive() {
             }}
           >
             {lang === 'en'
-              ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Updated Apr 2026 · Model v0.8.5'
-              : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Actualizado abr 2026 · Modelo v0.8.5'}
+              ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Updated May 2026 · Model v0.8.5'
+              : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Actualizado may 2026 · Modelo v0.8.5'}
           </p>
 
           {/* Lede — EB Garamond regular 17px / 1.55, max-width 68ch */}

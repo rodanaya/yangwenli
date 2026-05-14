@@ -135,17 +135,17 @@ export const CURRENT_MODEL_VERSION = 'v0.8.5'
 // remaining 4 surfaces — CaseDetail, Intersection, ModelTransparency,
 // and the watchlist `caseDesc` JSON which uses {{count}} interpolation).
 // Update on every retraining unless we wire `useGroundTruthCount()` (v1.1).
-export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1401
+export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1415
 
 // Ground-truth vendor count fallback (vendors linked to ≥1 GT case).
 // Same fallback contract as GROUND_TRUTH_CASE_COUNT_FALLBACK — updates
 // on each retraining and is referenced by methodology/intersection
 // editorial copy. Live source: `/api/v1/executive/summary` →
 // `ground_truth.vendors`.
-export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 861
+export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1377
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-14-bilingual-stories-v2'
+export const BUILD_ID = '2026-05-14-gt-fallback-refresh'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
