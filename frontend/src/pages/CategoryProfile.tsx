@@ -373,6 +373,14 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // Derived: find the current category from the summary list.
+  // Must be declared BEFORE categoryExists which references it — otherwise
+  // esbuild merges everything into one const chain and creates a TDZ violation.
+  const category: CategoryStat | null = useMemo(() => {
+    if (!summaryData?.data) return null
+    return (summaryData.data as CategoryStat[]).find(c => c.category_id === categoryId) ?? null
+  }, [summaryData, categoryId])
+
   // Gate slow secondary queries on category existence — prevents retry storm on 404 pages.
   const categoryExists = !summaryLoading && !!category
 
@@ -403,12 +411,6 @@ export default function CategoryProfile() {
     enabled: !isNaN(categoryId) && categoryExists,
     staleTime: 10 * 60 * 1000,
   })
-
-  // Derived data
-  const category: CategoryStat | null = useMemo(() => {
-    if (!summaryData?.data) return null
-    return (summaryData.data as CategoryStat[]).find(c => c.category_id === categoryId) ?? null
-  }, [summaryData, categoryId])
 
   const sectorColor = category?.sector_code ? (SECTOR_COLORS[category.sector_code] || '#64748b') : '#64748b'
 
