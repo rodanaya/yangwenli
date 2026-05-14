@@ -2566,12 +2566,12 @@ export default function Executive() {
             <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
               {lang === 'en' ? (
                 <>
-                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 91 active spending categories · 1,843 investigative memos · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
+                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 91 active spending categories · 1,812 investigative memos · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
-                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 91 categorías activas · 1,843 memos · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
+                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 91 categorías activas · 1,812 memos · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
