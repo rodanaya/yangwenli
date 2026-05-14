@@ -16,6 +16,9 @@ docker rm -f rubli-backend rubli-frontend rubli-caddy rubli-aria-cron rubli-back
 docker network rm rubli_rubli-network 2>/dev/null || true
 
 # Step 3: build + bring up
+# --no-cache on frontend prevents stale layer reuse (esbuild TDZ incident May 2026:
+# cache kept returning old bundle even after source changes).
+docker compose -f docker-compose.prod.yml --env-file .env.prod build --no-cache frontend
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
 echo "=== Deploy complete ==="
