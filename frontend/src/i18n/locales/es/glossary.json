@@ -130,101 +130,101 @@
   "risk_factors": {
     "vendor_concentration": {
       "label": "Concentración de Proveedor",
-      "coefficient": "+0.3749",
+      "coefficient": "+0.327",
       "validation_strength": "Fuerte (múltiples países)",
       "key_citation": "Fazekas & Tóth (2016), Political Research Quarterly",
-      "mexico_note": "Segundo predictor más importante en v0.6.5. Refleja los patrones de corrupción basados en concentración: IMSS Empresas Fantasma, Segalmex y COVID-19."
+      "mexico_note": "4° predictor en v0.8.5 (era 2° en v0.6.5). Refleja los patrones de corrupción basados en concentración: IMSS Empresas Fantasma, Segalmex y COVID-19."
     },
     "price_volatility": {
       "label": "Volatilidad de Precio",
-      "coefficient": "+0.5343",
-      "validation_strength": "Fuerte (predictor principal v0.6.5)",
+      "coefficient": "+0.558",
+      "validation_strength": "Fuerte (predictor principal v0.8.5 — 43% sobre el #2)",
       "key_citation": "Porter & Zona (1993): La manipulación de precios es detectable",
-      "mexico_note": "Activo en v0.6.5. Proveedores con montos de contrato muy variables respecto a la norma del sector. El predictor más fuerte del modelo global v0.6.5."
+      "mexico_note": "Predictor más fuerte en v0.8.5. Coeficiente +0.558, superando las otras 17 variables. Huella forense de precios negociados, no competidos."
     },
     "institution_diversity": {
       "label": "Diversidad Institucional",
-      "coefficient": "-0.3821",
-      "validation_strength": "Negativo — factor protector",
+      "coefficient": "-0.388",
+      "validation_strength": "Negativo — 2° mayor coeficiente en valor absoluto",
       "key_citation": "Coviello & Mariniello (2014)",
-      "mexico_note": "Los proveedores que atienden a muchas instituciones son menos sospechosos. Coeficiente negativo."
+      "mexico_note": "Los proveedores que atienden a muchas instituciones son menos sospechosos. 2° en v0.8.5, coeficiente negativo (-0.388)."
     },
     "win_rate": {
       "label": "Tasa de Éxito",
-      "coefficient": "+0.0488",
-      "validation_strength": "Moderado",
+      "coefficient": "+0.049 (pequeño)",
+      "validation_strength": "Débil — activo en v0.8.5 con coeficiente pequeño",
       "key_citation": "Conley & Decarolis (2016)",
-      "mexico_note": "Activo en v0.6.5. Un proveedor que gana contratos muy por encima de la tasa base del sector sugiere acceso preferencial."
+      "mexico_note": "Activo en v0.8.5 con coeficiente positivo pequeño. Tasa de victorias muy por encima de la base sectorial sugiere acceso preferencial."
     },
     "single_bid": {
       "label": "Licitación con Un Solo Postor",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Fuerte globalmente, anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Fuerte globalmente, regularizado en v0.8.5",
       "key_citation": "Charron et al. (2017), Journal of Politics",
-      "mexico_note": "Regularizado a cero por penalización L1 en v0.6.5. En México se usa la adjudicación directa en lugar de licitaciones con un solo postor."
+      "mexico_note": "Regularizado a cero en v0.8.5. En México se usa la adjudicación directa en lugar de licitaciones con un solo postor."
     },
     "direct_award": {
       "label": "Adjudicación Directa",
-      "coefficient": "+0.0306",
-      "validation_strength": "Débil — dependiente del contexto",
+      "coefficient": "-0.081",
+      "validation_strength": "Protector — coeficiente se invirtió en v0.8.5",
       "key_citation": "OCDE (2016): Prevención de la Corrupción en Compras Públicas",
-      "mexico_note": "México emite ~70% de contratos por adjudicación directa. La puntuación z normaliza esta base. Activo con coeficiente positivo pequeño en v0.6.5."
+      "mexico_note": "Coeficiente INVERTIDO de +0.031 (v0.6.5) a -0.081 (v0.8.5). La base del 70%+ de adjudicaciones directas en México hace que la señal sea protectora, no predictiva."
     },
     "industry_mismatch": {
       "label": "Discrepancia de Industria",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Regularizado a cero en v0.8.5",
       "key_citation": "Fazekas & Kocsis (2020)",
-      "mexico_note": "Regularizado a cero en v0.6.5. La señal es absorbida por price_volatility y vendor_concentration."
+      "mexico_note": "Regularizado a cero en v0.8.5. La señal es absorbida por price_volatility y vendor_concentration."
     },
     "same_day_count": {
       "label": "Contratos en el Mismo Día",
-      "coefficient": "+0.0945",
-      "validation_strength": "Moderado — señal de fraccionamiento",
+      "coefficient": "+0.094 (pequeño)",
+      "validation_strength": "Débil — señal de fraccionamiento activa en v0.8.5",
       "key_citation": "ISO 37001 Sistemas Antisoborno",
-      "mexico_note": "Activo en v0.6.5. Múltiples contratos adjudicados al mismo proveedor el mismo día, sugiriendo fraccionamiento artificial."
+      "mexico_note": "Activo en v0.8.5. Múltiples contratos adjudicados al mismo proveedor el mismo día, sugiriendo fraccionamiento artificial para evitar umbrales de licitación."
     },
     "network_member_count": {
       "label": "Membresía en Red",
-      "coefficient": "+0.1811",
+      "coefficient": "+0.166",
       "validation_strength": "Moderado",
       "key_citation": "Fazekas, Skuhrovec & Wachs (2020)",
-      "mexico_note": "El proveedor pertenece a un grupo de entidades relacionadas. Coeficiente aumentó significativamente en v0.6.5 (de +0.064 en v5.1)."
+      "mexico_note": "El proveedor pertenece a un grupo de entidades relacionadas. Coeficiente en v0.8.5: +0.166 (era +0.181 en v0.6.5, +0.064 en v5.1)."
     },
     "year_end": {
       "label": "Contrato de Fin de Año",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Regularizado a cero en v0.8.5",
       "key_citation": "IMCO (México): Presupuesto de diciembre",
-      "mexico_note": "Regularizado a cero por penalización L1 en v0.6.5. Las adjudicaciones directas son comunes todo el año en México."
+      "mexico_note": "Regularizado a cero en v0.8.5. Las adjudicaciones directas son comunes todo el año en México, haciendo la señal de diciembre indistinguible."
     },
     "institution_risk": {
       "label": "Riesgo Institucional",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Regularizado a cero en v0.8.5",
       "key_citation": "Metodología CRI del FMI",
-      "mexico_note": "Regularizado a cero en v0.6.5. El riesgo institucional es capturado indirectamente por los modelos sectoriales."
+      "mexico_note": "Regularizado a cero en v0.8.5. El riesgo institucional es capturado indirectamente por los modelos sectoriales."
     },
     "ad_period_days": {
       "label": "Período de Publicación",
-      "coefficient": "+0.0423",
-      "validation_strength": "Débil positivo en v0.6.5",
+      "coefficient": "+0.090",
+      "validation_strength": "Moderado positivo en v0.8.5",
       "key_citation": "Directiva UE 2014/24",
-      "mexico_note": "Activo en v0.6.5 con coeficiente positivo pequeño (signo cambió respecto a v5.1). Períodos más largos aumentan levemente el riesgo."
+      "mexico_note": "Activo en v0.8.5 con +0.090 (más fuerte que +0.042 en v0.6.5). Períodos más largos aumentan levemente el riesgo — proveedores que aparentan cumplir con las formas."
     },
     "sector_spread": {
       "label": "Distribución Sectorial",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Regularizado a cero en v0.8.5",
       "key_citation": "Fazekas & Kocsis (2020)",
-      "mexico_note": "Regularizado a cero en v0.6.5. La señal es absorbida por institution_diversity."
+      "mexico_note": "Regularizado a cero en v0.8.5. La señal es absorbida por institution_diversity."
     },
     "price_ratio": {
       "label": "Ratio de Precio",
-      "coefficient": "+0.2345",
-      "validation_strength": "Moderado en v0.6.5",
+      "coefficient": "+0.358",
+      "validation_strength": "Fuerte en v0.8.5 (3° mayor coeficiente)",
       "key_citation": "Banco Mundial INT (2019)",
-      "mexico_note": "Activo en v0.6.5 con coeficiente significativo (era casi nulo -0.015 en v5.1). Monto del contrato vs. mediana sectorial ahora ocupa el 4° lugar en importancia."
+      "mexico_note": "Activo en v0.8.5 con +0.358 (era +0.234 en v0.6.5). Monto del contrato vs. mediana sectorial — ahora 3° en importancia de variables."
     },
     "co_bid_rate": {
       "label": "Tasa de Co-Licitación",
@@ -235,10 +235,10 @@
     },
     "price_hyp_confidence": {
       "label": "Confianza Hipótesis de Precio",
-      "coefficient": "0 (anulado en v0.6.5)",
-      "validation_strength": "Anulado en v0.6.5",
+      "coefficient": "0 (regularizado)",
+      "validation_strength": "Regularizado a cero en v0.8.5",
       "key_citation": "Método IQR de Tukey",
-      "mexico_note": "Regularizado a cero en v0.6.5. La señal de precio es absorbida de forma más efectiva por price_volatility y price_ratio."
+      "mexico_note": "Regularizado a cero en v0.8.5. La señal de precio es absorbida de forma más efectiva por price_volatility y price_ratio."
     }
   }
 }

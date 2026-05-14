@@ -130,101 +130,101 @@
   "risk_factors": {
     "vendor_concentration": {
       "label": "Vendor Concentration",
-      "coefficient": "+0.3749",
+      "coefficient": "+0.327",
       "validation_strength": "Strong (multiple country datasets)",
       "key_citation": "Fazekas & Tóth (2016), Political Research Quarterly",
-      "mexico_note": "RUBLI's second-strongest predictor in v0.6.5. Reflects concentration-based corruption patterns in IMSS Ghost Companies, Segalmex, and COVID-19 cases — the three largest training cases."
+      "mexico_note": "4th-strongest predictor in v0.8.5 (was 2nd in v0.6.5). Reflects concentration-based corruption patterns in IMSS Ghost Companies, Segalmex, and COVID-19 cases."
     },
     "price_volatility": {
       "label": "Price Volatility",
-      "coefficient": "+0.5343",
-      "validation_strength": "Strong (RUBLI v0.6.5 top predictor)",
+      "coefficient": "+0.558",
+      "validation_strength": "Strong (RUBLI v0.8.5 top predictor — 43% ahead of #2)",
       "key_citation": "Porter & Zona (1993): Price manipulation detectable in bid distributions",
-      "mexico_note": "Active in v0.6.5. Vendors with wildly varying contract amounts relative to sector norms. The strongest predictor in the v0.6.5 global model."
+      "mexico_note": "Strongest predictor in v0.8.5. Vendors with wildly varying contract amounts relative to sector norms. Coefficient +0.558, outperforming all other 17 features."
     },
     "institution_diversity": {
       "label": "Institution Diversity",
-      "coefficient": "-0.3821",
-      "validation_strength": "Negative — protective factor",
+      "coefficient": "-0.388",
+      "validation_strength": "Negative — protective factor (2nd largest absolute coefficient)",
       "key_citation": "Coviello & Mariniello (2014): Competition and transparency reduce award concentration",
-      "mexico_note": "Vendors serving many different institutions are less suspicious — they have legitimate broad reach. Negative coefficient."
+      "mexico_note": "Vendors serving many different institutions are less suspicious — they have legitimate broad reach. 2nd-strongest in v0.8.5, negative coefficient."
     },
     "win_rate": {
       "label": "Win Rate",
-      "coefficient": "+0.0488",
-      "validation_strength": "Moderate — abnormal win rates suggest market capture",
+      "coefficient": "+0.049 (small)",
+      "validation_strength": "Weak — active in v0.8.5 with small coefficient",
       "key_citation": "Conley & Decarolis (2016): Bid rings detectable via win pattern analysis",
-      "mexico_note": "Active in v0.6.5. A vendor winning contracts at a rate far above the sector baseline signals preferential access."
+      "mexico_note": "Active in v0.8.5 with a small positive coefficient. A vendor winning contracts at a rate far above the sector baseline signals preferential access."
     },
     "single_bid": {
       "label": "Single Bid",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Strong globally, zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Strong globally, regularized to zero in v0.8.5",
       "key_citation": "Charron et al. (2017), Journal of Politics",
-      "mexico_note": "Regularized to zero by L1 penalty in v0.6.5. Competitive procedures with 1 bidder are rare in Mexico — direct award is used instead when competition is restricted."
+      "mexico_note": "Regularized to zero by ElasticNet penalty in v0.8.5. Competitive procedures with 1 bidder are rare in Mexico — direct award is used instead when competition is restricted."
     },
     "direct_award": {
       "label": "Direct Award",
-      "coefficient": "+0.0306",
-      "validation_strength": "Weak — context-dependent",
+      "coefficient": "-0.081",
+      "validation_strength": "Protective — coefficient flipped negative in v0.8.5",
       "key_citation": "OECD (2016): Preventing Corruption in Public Procurement",
-      "mexico_note": "Mexico issues ~70% of contracts as direct awards. The z-score normalizes this baseline. Active with small positive coefficient in v0.6.5."
+      "mexico_note": "Coefficient FLIPPED from +0.031 (v0.6.5) to -0.081 (v0.8.5). Mexico's 70%+ direct award baseline makes the signal protective — direct award alone is not predictive when it's the norm."
     },
     "industry_mismatch": {
       "label": "Industry Mismatch",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Regularized to zero in v0.8.5",
       "key_citation": "Fazekas & Kocsis (2020), British Journal of Political Science",
-      "mexico_note": "Regularized to zero in v0.6.5. Vendor's primary industry doesn't match the contract sector. Signal absorbed by price_volatility and vendor_concentration."
+      "mexico_note": "Regularized to zero in v0.8.5. Vendor's primary industry doesn't match the contract sector. Signal absorbed by price_volatility and vendor_concentration."
     },
     "same_day_count": {
       "label": "Same-Day Award Count",
-      "coefficient": "+0.0945",
-      "validation_strength": "Moderate — threshold splitting signal",
+      "coefficient": "+0.094 (small)",
+      "validation_strength": "Weak — threshold splitting signal active in v0.8.5",
       "key_citation": "ISO 37001 Anti-Bribery Management Systems",
-      "mexico_note": "Active in v0.6.5. Multiple contracts awarded to the same vendor on the same day, suggesting artificial splitting to stay below competitive bidding thresholds."
+      "mexico_note": "Active in v0.8.5. Multiple contracts awarded to the same vendor on the same day, suggesting artificial splitting to stay below competitive bidding thresholds."
     },
     "network_member_count": {
       "label": "Network Membership",
-      "coefficient": "+0.1811",
+      "coefficient": "+0.166",
       "validation_strength": "Moderate",
       "key_citation": "Fazekas, Skuhrovec & Wachs (2020): Network analysis of procurement graphs",
-      "mexico_note": "Vendor belongs to a group of related entities sharing officers, addresses, or bidding patterns. Coefficient increased significantly in v0.6.5 (from +0.064 in v5.1)."
+      "mexico_note": "Vendor belongs to a group of related entities sharing officers, addresses, or bidding patterns. Coefficient in v0.8.5: +0.166 (was +0.181 in v0.6.5, +0.064 in v5.1)."
     },
     "year_end": {
       "label": "Year-End Award",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Regularized to zero in v0.8.5",
       "key_citation": "IMCO (Mexico): Budget rushing in December",
-      "mexico_note": "Regularized to zero by L1 penalty in v0.6.5. Direct awards are common year-round in Mexico, making the December signal indistinct."
+      "mexico_note": "Regularized to zero by ElasticNet penalty in v0.8.5. Direct awards are common year-round in Mexico, making the December signal indistinct."
     },
     "institution_risk": {
       "label": "Institution Risk Type",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Regularized to zero in v0.8.5",
       "key_citation": "IMF CRI Methodology",
-      "mexico_note": "Regularized to zero in v0.6.5. Institution type risk is captured indirectly through vendor concentration and sector-level models."
+      "mexico_note": "Regularized to zero in v0.8.5. Institution type risk is captured indirectly through vendor concentration and sector-level models."
     },
     "ad_period_days": {
       "label": "Advertisement Period",
-      "coefficient": "+0.0423",
-      "validation_strength": "Weak positive in v0.6.5",
+      "coefficient": "+0.090",
+      "validation_strength": "Moderate positive in v0.8.5",
       "key_citation": "EU Directive 2014/24 minimum timelines",
-      "mexico_note": "Active in v0.6.5 with small positive coefficient (sign changed from v5.1's -0.104). Longer ad periods now weakly increase risk — consistent with vendors gaming the appearance of compliance."
+      "mexico_note": "Active in v0.8.5 with +0.090 coefficient (stronger than v0.6.5's +0.042). Longer ad periods weakly increase risk — consistent with vendors gaming the appearance of compliance."
     },
     "sector_spread": {
       "label": "Sector Spread",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Regularized to zero in v0.8.5",
       "key_citation": "Fazekas & Kocsis (2020)",
-      "mexico_note": "Regularized to zero in v0.6.5. Cross-sector diversification signal absorbed by institution_diversity."
+      "mexico_note": "Regularized to zero in v0.8.5. Cross-sector diversification signal absorbed by institution_diversity."
     },
     "price_ratio": {
       "label": "Price Ratio",
-      "coefficient": "+0.2345",
-      "validation_strength": "Moderate in v0.6.5",
+      "coefficient": "+0.358",
+      "validation_strength": "Strong in v0.8.5 (3rd largest coefficient)",
       "key_citation": "World Bank INT (2019): Warning Signs of Fraud",
-      "mexico_note": "Active in v0.6.5 with meaningful positive coefficient (was near-zero -0.015 in v5.1). Contract amount vs. sector median now ranks 4th in feature importance."
+      "mexico_note": "Active in v0.8.5 with +0.358 (was +0.234 in v0.6.5). Contract amount vs. sector median now ranks 3rd in feature importance."
     },
     "co_bid_rate": {
       "label": "Co-Bid Rate",
@@ -235,10 +235,10 @@
     },
     "price_hyp_confidence": {
       "label": "Price Hypothesis Confidence",
-      "coefficient": "0 (zeroed in v0.6.5)",
-      "validation_strength": "Zeroed in v0.6.5",
+      "coefficient": "0 (regularized out)",
+      "validation_strength": "Regularized to zero in v0.8.5",
       "key_citation": "Tukey IQR method for outlier detection",
-      "mexico_note": "Regularized to zero in v0.6.5. IQR-based outlier signal fully absorbed by price_volatility and price_ratio."
+      "mexico_note": "Regularized to zero in v0.8.5. IQR-based outlier signal fully absorbed by price_volatility and price_ratio."
     }
   }
 }
