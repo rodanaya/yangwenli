@@ -1,4 +1,49 @@
 ---
+## Visual Review — 2026-05-14T00:06:31Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | ⚠ |
+| https://rubli.xyz/atlas | 403 | ⚠ |
+| https://rubli.xyz/aria | 403 | ⚠ |
+| https://rubli.xyz/sectors | 403 | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 | ⚠ |
+| https://rubli.xyz/cases | 403 | ⚠ |
+| https://rubli.xyz/methodology | 403 | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | ⚠ |
+
+Note: All HTTP checks returned `x-deny-reason: host_not_allowed` ("Host not in allowlist"). This is the same sandbox egress proxy block observed in all previous runs — not a rubli.xyz outage. TLS cert confirmed valid for rubli.xyz (37.60.232.109).
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (proxy: Host not in allowlist) | ⚠ |
+| /api/v1/sectors | 403 (proxy: Host not in allowlist) | ⚠ |
+
+Note: Same sandbox egress restriction — empty body, no JSON parseable. Not a backend failure.
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all false positives:
+- Company names (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`) in Executive.tsx
+- Type/tier key lookups (`TIER_STYLES[tierName as TierKey]`) in InstitutionScorecards.tsx:443
+- Academic author name (`Mahalanobis, P.C.`) in Methodology.tsx:118
+- Legal suffixes array (`'S.A.', 'S.C.', 'A.C.'`, etc.) in ExploreCanvas.tsx:1415-1416
+- Administration abbreviation (`A.M. Lopez Obrador`) in AdminSectorHeatmap.tsx:30
+- Comment text in CaseLibrary.tsx:216 (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by sandbox egress proxy (consistent with all prior runs — not a site outage). Bilingual gap scan completed locally: no genuine i18n leaks, no hardcoded English-only strings detected.
+
+---
 ## Visual Review — 2026-05-13T12:06:20Z
 
 ### HTTP Status
