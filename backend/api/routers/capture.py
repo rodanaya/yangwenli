@@ -219,6 +219,54 @@ def _enrich_with_names(
     return enriched
 
 
+def _read_precomputed(
+    conn: sqlite3.Connection,
+    limit: int,
+    sector_id: Optional[int],
+    cache_key: str,
+) -> Optional[dict]:
+    """Read from the precomputed capture_results table. Returns None if table absent."""
+    import json as _json
+    has_table = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='capture_results'"
+    ).fetchone()
+    if not has_table:
+        return None
+
+    if sector_id is not None:
+        rows = conn.execute(
+            "SELECT * FROM capture_results WHERE institution_sector_id = ? ORDER BY score DESC",
+            (sector_id,),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM capture_results ORDER BY score DESC"
+        ).fetchall()
+
+    total = len(rows)
+    data = []
+    for r in rows[:limit]:
+        rec = {k: r[k] for k in r.keys()}
+        rec["timeline"] = _json.loads(rec["timeline"]) if rec.get("timeline") else []
+        data.append(rec)
+
+    response = {
+        "thresholds": {
+            "min_inst_total_mxn": _MIN_INST_TOTAL,
+            "min_cumulative_value_mxn": _MIN_CUM_VALUE,
+            "floor_share_pct": _FLOOR_SHARE,
+            "ceil_share_pct": _CEIL_SHARE,
+            "min_years": _MIN_YEARS,
+            "year_window": "2018-2025",
+        },
+        "total_captures": total,
+        "total_unfiltered": total,
+        "data": data,
+    }
+    app_cache.set("capture", cache_key, response, maxsize=16, ttl=1800)
+    return response
+
+
 @router.get("/top")
 def get_top_captures(
     limit: int = Query(50, ge=1, le=200, description="Max captures to return"),
@@ -239,6 +287,10 @@ def get_top_captures(
     (with the usual "not proof of wrongdoing" caveat — legitimate
     concentration can emerge from technical certification, regional
     exclusivity, or single-source regulatory dependency).
+
+    Reads from the precomputed `capture_results` table when available
+    (run scripts/precompute_capture.py to populate). Falls back to
+    on-the-fly computation, which is expensive and may OOM on constrained VPS.
     """
     conn.row_factory = sqlite3.Row
     cache_key = f"top:{limit}:{sector_id or 'all'}"
@@ -246,6 +298,13 @@ def get_top_captures(
     if cached is not None:
         return cached
 
+    precomputed = _read_precomputed(conn, limit, sector_id, cache_key)
+    if precomputed is not None:
+        return precomputed
+
+    # Fallback: compute on-the-fly (expensive — may OOM on 1.5 GB VPS).
+    # Populate capture_results table via scripts/precompute_capture.py to avoid this path.
+    logger.warning("capture_results table missing — falling back to on-the-fly computation")
     candidates = _build_candidates(conn)
     enriched = _enrich_with_names(conn, candidates)
 
@@ -268,6 +327,5 @@ def get_top_captures(
         "total_unfiltered": len(candidates),
         "data": top,
     }
-    # Expensive computation; cache for 30 minutes.
     app_cache.set("capture", cache_key, response, maxsize=16, ttl=1800)
     return response

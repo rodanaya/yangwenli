@@ -224,42 +224,9 @@ def _warmup_caches():
     except Exception as e:
         logger.debug(f"Story packages warmup skipped: {e}")
 
-    # Direct in-process capture prewarm — bypasses all HTTP/proxy timeouts.
-    # The _build_candidates() query scans contracts 2018-2025 and takes 2-5 min
-    # on cold disk; any HTTP path (internal or external) times out before it
-    # finishes. Calling directly populates app_cache so the first real user
-    # request returns instantly from cache.
-    try:
-        import sqlite3 as _sqlite3
-        from .dependencies import DB_PATH as _DB_PATH
-        from .routers.capture import (
-            _build_candidates, _enrich_with_names,
-            _MIN_INST_TOTAL, _MIN_CUM_VALUE, _FLOOR_SHARE, _CEIL_SHARE, _MIN_YEARS,
-        )
-        _conn = _sqlite3.connect(str(_DB_PATH))
-        _conn.row_factory = _sqlite3.Row
-        _candidates = _build_candidates(_conn)
-        _enriched = _enrich_with_names(_conn, _candidates)
-        _conn.close()
-        _enriched.sort(key=lambda c: c["score"], reverse=True)
-        _thresholds = {
-            "min_inst_total_mxn": _MIN_INST_TOTAL,
-            "min_cumulative_value_mxn": _MIN_CUM_VALUE,
-            "floor_share_pct": _FLOOR_SHARE,
-            "ceil_share_pct": _CEIL_SHARE,
-            "min_years": _MIN_YEARS,
-            "year_window": "2018-2025",
-        }
-        for _lim in (50, 200):
-            app_cache.set("capture", f"top:{_lim}:all", {
-                "thresholds": _thresholds,
-                "total_captures": len(_enriched),
-                "total_unfiltered": len(_candidates),
-                "data": _enriched[:_lim],
-            }, maxsize=16, ttl=1800)
-        logger.info("capture_prewarm_complete", candidates=len(_candidates))
-    except Exception as e:
-        logger.debug(f"Capture direct prewarm failed: {e}")
+    # Capture results are served from the precomputed `capture_results` table
+    # (populated via scripts/precompute_capture.py). No in-process prewarm needed —
+    # the table read is O(1) memory and completes in <100ms.
 
 
 def _startup_checks():
