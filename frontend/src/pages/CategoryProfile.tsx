@@ -375,31 +375,34 @@ export default function CategoryProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: competitionData } = useQuery({
+  // Gate slow secondary queries on category existence — prevents retry storm on 404 pages.
+  const categoryExists = !summaryLoading && !!category
+
+  const { data: competitionData, isLoading: competitionLoading } = useQuery({
     queryKey: ['categories', 'competition', categoryId],
     queryFn: () => categoriesApi.getCompetition(categoryId),
-    enabled: !isNaN(categoryId),
+    enabled: !isNaN(categoryId) && categoryExists,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: seasonalityData } = useQuery({
+  const { data: seasonalityData, isLoading: seasonalityLoading } = useQuery({
     queryKey: ['categories', 'seasonality', categoryId],
     queryFn: () => categoriesApi.getSeasonality(categoryId),
-    enabled: !isNaN(categoryId),
+    enabled: !isNaN(categoryId) && categoryExists,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: patternsData } = useQuery({
+  const { data: patternsData, isLoading: patternsLoading } = useQuery({
     queryKey: ['categories', 'patterns', categoryId],
     queryFn: () => categoriesApi.getPatterns(categoryId),
-    enabled: !isNaN(categoryId),
+    enabled: !isNaN(categoryId) && categoryExists,
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: priceDistData } = useQuery({
+  const { data: priceDistData, isLoading: priceDistLoading } = useQuery({
     queryKey: ['categories', 'price-distribution', categoryId],
     queryFn: () => categoriesApi.getPriceDistribution(categoryId),
-    enabled: !isNaN(categoryId),
+    enabled: !isNaN(categoryId) && categoryExists,
     staleTime: 10 * 60 * 1000,
   })
 
@@ -1050,7 +1053,9 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* § 4 El Precio                                                    */}
       {/* ================================================================= */}
-      {priceDistData && priceDistData.n > 0 && priceDistData.p50 !== null && (() => {
+      {priceDistLoading ? (
+        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+      ) : priceDistData && priceDistData.n > 0 && priceDistData.p50 !== null ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { p25, p50, p75, mean, iqr, mean_median_ratio, outlier_count, yearly_trend } = priceDistData
         const heavySkew = mean_median_ratio !== null && mean_median_ratio >= 5
@@ -1267,12 +1272,14 @@ export default function CategoryProfile() {
             </Card>
           </section>
         )
-      })()}
+      })() : null}
 
       {/* ================================================================= */}
       {/* § 5 La Competencia                                               */}
       {/* ================================================================= */}
-      {competitionData && competitionData.total_contracts > 0 && (() => {
+      {competitionLoading ? (
+        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+      ) : competitionData && competitionData.total_contracts > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { procedure_breakdown, yearly_trend, sector_da_avg, sector_sb_avg } = competitionData
 
@@ -1465,12 +1472,14 @@ export default function CategoryProfile() {
             </Card>
           </section>
         )
-      })()}
+      })() : null}
 
       {/* ================================================================= */}
       {/* § 6 La Estacionalidad                                            */}
       {/* ================================================================= */}
-      {seasonalityData && seasonalityData.monthly.length > 0 && (() => {
+      {seasonalityLoading ? (
+        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+      ) : seasonalityData && seasonalityData.monthly.length > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { monthly, december_pct_value, december_index, yearly_december } = seasonalityData
         const maxPct = Math.max(...monthly.map(m => m.pct_value), 0.1)
@@ -1609,12 +1618,14 @@ export default function CategoryProfile() {
             </Card>
           </section>
         )
-      })()}
+      })() : null}
 
       {/* ================================================================= */}
       {/* § 7 Los Patrones                                                 */}
       {/* ================================================================= */}
-      {patternsData && patternsData.patterns.length > 0 && (() => {
+      {patternsLoading ? (
+        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+      ) : patternsData && patternsData.patterns.length > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { patterns, tier_distribution, vendors_in_aria, total_vendors, dominant_pattern } = patternsData
         const maxVendors = Math.max(...patterns.map(p => p.vendor_count), 1)
@@ -1713,7 +1724,7 @@ export default function CategoryProfile() {
             </Card>
           </section>
         )
-      })()}
+      })() : null}
 
       {/* ================================================================= */}
       {/* § 8 El Veredicto                                                  */}

@@ -128,7 +128,7 @@ export function getLedeForVendor(ctx: LedeContext): string {
 }
 
 export function getLedeForCategory(ctx: LedeContext): string {
-  const name = ctx.category_name_en || ctx.category_name || 'Categoría'
+  const name = ctx.category_name || ctx.category_name_en || 'Categoría'
 
   // Opening: value + contract count
   let sentence = ''

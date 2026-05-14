@@ -14,11 +14,11 @@
   },
   "profile": {
     "notFound": {
-      "title": "Categoria no encontrada",
-      "description": "No existe una categoria con ID {{id}} en la base de datos.",
-      "backLink": "Volver a Categorias"
+      "title": "Categoría no encontrada",
+      "description": "No existe una categoría con ID {{id}} en la base de datos.",
+      "backLink": "Volver a Categorías"
     },
-    "breadcrumb": "Categorias",
+    "breadcrumb": "Categorías",
     "concentration": {
       "high": "Altamente concentrado",
       "moderate": "Moderadamente concentrado",
