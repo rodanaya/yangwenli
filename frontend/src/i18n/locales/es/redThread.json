@@ -101,7 +101,8 @@
     "sectorReference": "p25–p75 del sector",
     "diagnosis": "{{anomalous}} de {{total}} valores fuera del rango de referencia del sector",
     "noData": "Datos de atribución de características no disponibles para este proveedor.",
-    "shapNote": "Los valores positivos aumentan la puntuación de riesgo (rojo). Los negativos la reducen (verde). Los valores son contribuciones de características estilo SHAP: β_i × (z_i − E[z_i])."
+    "shapNote": "Los valores positivos aumentan la puntuación de riesgo (rojo). Los negativos la reducen (verde). Los valores son contribuciones de características estilo SHAP: β_i × (z_i − E[z_i]).",
+    "sourceFooter": "Fuente: COMPRANET · RUBLI v0.8.5"
   },
   "network": {
     "heading": "Conexiones y Relaciones",
@@ -129,6 +130,7 @@
     "institutionalRibbonLabel": "HUELLA INSTITUCIONAL",
     "institutionalRibbonHeading": "A dónde aterrizaron las relaciones, año por año",
     "institutionalRibbonDescription": "Cada carril es una institución. La cinta abarca los años en que esa institución recibió contratos de este proveedor; el grosor codifica el valor total, el color codifica el riesgo promedio. Ordenadas de mayor a menor valor. Haga clic en cualquier carril para abrir la institución.",
+    "ribbonSourceFooter": "Fuente: COMPRANET · RUBLI v0.8.5 · Instituciones con ≥1 contrato",
     "institutionsServed": "Instituciones Atendidas",
     "sectorsActive": "Sectores Activos",
     "institutionsNote": {

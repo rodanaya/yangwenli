@@ -942,6 +942,9 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
           })}
         </p>
       )}
+      <p className="mt-3 text-[10px] font-mono text-text-muted/60 tracking-[0.08em]">
+        {t('timeline.sourceFooter')}
+      </p>
     </ChapterShell>
   )
 }
@@ -1816,7 +1819,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
           <p className="text-text-secondary mb-4 max-w-2xl text-xs leading-relaxed">
             {t('network.institutionalRibbonDescription')}
           </p>
-          <div className="bg-background-card border border-border rounded-sm p-3">
+          <div className="bg-background-card border border-border/60 rounded-sm p-3">
             <InstitutionalRibbon
               institutions={institutions}
               vendorFirstYear={vendor.first_contract_year ?? 2008}
@@ -1824,6 +1827,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
               i18n={i18n}
             />
           </div>
+          <p className="mt-2 text-[10px] font-mono text-text-muted/60 tracking-[0.08em]">
+            {t('network.ribbonSourceFooter')}
+          </p>
         </div>
       )}
 
@@ -2141,7 +2147,7 @@ function ChapterMoney({ timeline, t }: {
         </div>
       )}
 
-      <div className="bg-background-card border border-border rounded-sm p-4">
+      <div className="bg-background-card border border-border/60 rounded-sm p-3">
         <MoneyStaircase
           timeline={timeline}
           selectedYear={selectedYear}

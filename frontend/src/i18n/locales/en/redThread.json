@@ -101,7 +101,8 @@
     "sectorReference": "sector p25–p75",
     "diagnosis": "{{anomalous}} of {{total}} lab values outside sector reference range",
     "noData": "Feature attribution data not available for this vendor.",
-    "shapNote": "Positive values increase risk score (red). Negative values reduce it (green). Values are SHAP-style feature contributions: β_i × (z_i − E[z_i])."
+    "shapNote": "Positive values increase risk score (red). Negative values reduce it (green). Values are SHAP-style feature contributions: β_i × (z_i − E[z_i]).",
+    "sourceFooter": "Source: COMPRANET · RUBLI v0.8.5"
   },
   "network": {
     "heading": "Connections & Relationships",
@@ -129,6 +130,7 @@
     "institutionalRibbonLabel": "INSTITUTIONAL FOOTPRINT",
     "institutionalRibbonHeading": "Where the relationships landed, year by year",
     "institutionalRibbonDescription": "Each lane is one institution. The ribbon spans the years that institution received contracts from this vendor; thickness encodes total value, color encodes average risk. Sorted top-down by money received. Click any lane to open the institution.",
+    "ribbonSourceFooter": "Source: COMPRANET · RUBLI v0.8.5 · Institutions with ≥1 contract",
     "institutionsServed": "Institutions Served",
     "sectorsActive": "Sectors Active",
     "institutionsNote": {
