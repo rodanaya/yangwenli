@@ -588,31 +588,29 @@ export default function Relationships() {
                     onClick={() => setCaptureFilter(null)}
                     className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
                       captureFilter === null
-                        ? 'border border-text-primary text-text-primary bg-background-elevated'
+                        ? 'border border-text-primary text-text-primary bg-background-elevated font-semibold'
                         : 'border border-border text-text-muted hover:text-text-secondary hover:border-text-muted'
                     }`}
                     aria-pressed={captureFilter === null}
                   >
                     <span>{lang === 'es' ? 'Todos' : 'All'}</span>
+                    <span className="opacity-50" aria-hidden="true">·</span>
                     <span className="tabular-nums opacity-70">{allCaptures.length}</span>
                   </button>
                   {SECTORS.map((s) => {
                     const count = captureSectorCounts.get(s.id) ?? 0
+                    if (count === 0) return null
                     const active = captureFilter === s.id
-                    const disabled = count === 0
                     return (
                       <button
                         key={s.code}
                         type="button"
-                        disabled={disabled}
                         onClick={() => setCaptureFilter(active ? null : s.id)}
                         aria-pressed={active}
                         className={`flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider transition-colors ${
                           active
-                            ? 'bg-background-elevated text-text-primary'
-                            : disabled
-                            ? 'border border-border text-text-muted opacity-40 cursor-not-allowed'
-                            : 'border border-border text-text-muted hover:text-text-secondary'
+                            ? 'bg-background-elevated font-semibold'
+                            : 'border border-border text-text-muted hover:text-text-secondary hover:border-text-muted'
                         }`}
                         style={
                           active
@@ -623,10 +621,11 @@ export default function Relationships() {
                       >
                         <span
                           className="inline-block h-1.5 w-1.5 rounded-full"
-                          style={{ background: SECTOR_COLORS[s.code] ?? '#64748b', opacity: disabled ? 0.4 : 1 }}
+                          style={{ background: SECTOR_COLORS[s.code] ?? '#64748b' }}
                           aria-hidden="true"
                         />
                         <span>{lang === 'es' ? s.name : s.nameEN}</span>
+                        <span className="opacity-50" aria-hidden="true">·</span>
                         <span className="tabular-nums opacity-70">{count}</span>
                       </button>
                     )
