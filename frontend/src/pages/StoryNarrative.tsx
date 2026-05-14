@@ -1664,7 +1664,8 @@ function MethodologySection({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 function RelatedSection({ story }: { story: StoryDef }) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const navigate = useNavigate()
   const related = getRelatedStories(story.slug)
   if (related.length === 0) return null
@@ -1687,25 +1688,28 @@ function RelatedSection({ story }: { story: StoryDef }) {
           animate="animate"
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
-          {related.slice(0, 3).map((r) => (
-            <StoryCard
-              key={r.slug}
-              slug={r.slug}
-              outlet={r.outlet}
-              type={r.type}
-              headline={r.headline}
-              subheadline={r.subheadline}
-              leadStatValue={r.leadStat.value}
-              leadStatLabel={r.leadStat.label}
-              leadStatColor={r.leadStat.color}
-              estimatedMinutes={r.estimatedMinutes}
-              era={r.era ? getEraLabel(r.era, t) : undefined}
-              onClick={() => {
-                navigate(`/stories/${r.slug}`)
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }}
-            />
-          ))}
+          {related.slice(0, 3).map((r) => {
+            const loc = localizeStory(r, lang)
+            return (
+              <StoryCard
+                key={r.slug}
+                slug={r.slug}
+                outlet={r.outlet}
+                type={r.type}
+                headline={loc.headline}
+                subheadline={loc.subheadline}
+                leadStatValue={r.leadStat.value}
+                leadStatLabel={loc.leadStatLabel}
+                leadStatColor={r.leadStat.color}
+                estimatedMinutes={r.estimatedMinutes}
+                era={r.era ? getEraLabel(r.era, t) : undefined}
+                onClick={() => {
+                  navigate(`/stories/${r.slug}`)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
+            )
+          })}
         </motion.div>
       </section>
     </ScrollReveal>

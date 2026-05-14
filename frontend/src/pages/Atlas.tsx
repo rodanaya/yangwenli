@@ -1886,7 +1886,7 @@ export default function Atlas() {
           {/* Live T1 count */}
           <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
             <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
-            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 320)}</span>
+            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 314)}</span>
             <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
           </div>
         </div>
@@ -2386,8 +2386,8 @@ export default function Atlas() {
         if (selectedMeta && yearIndex > 0) {
           const prevSnap = effectiveSnapshot(yearIndex - 1)
           const curSnap = snapshot
-          // T1 scales with critical+high pct vs the v0.8.5 baseline (13.49%)
-          const BASELINE = 13.49
+          // T1 scales with critical+high pct vs the v0.8.5 baseline (11.01%)
+          const BASELINE = 11.01
           const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
           const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
           const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
