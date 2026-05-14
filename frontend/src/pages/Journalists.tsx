@@ -92,6 +92,50 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 1049729,
     brief: 'AMLO\'s 17.6% high-risk rate is the first in 23 years to breach the OECD ceiling. Four administrations, two parties — one relentlessly ascending line.',
   },
+  {
+    slug: 'el-ejercito-fantasma',
+    headline: 'The Ghost Army',
+    sub: '6,034 P2 ghost-pattern vendors · 23 years · every sector',
+    type: 'ghost_company',
+    status: 'reporteado',
+    amount: 0,
+    era: 'cross',
+    contracts: 0,
+    brief: 'RUBLI identified 6,034 vendors matching ghost company patterns across 23 years of Mexican federal procurement. They appear, win contracts, then vanish from the tax registry.',
+  },
+  {
+    slug: 'el-gran-precio',
+    headline: 'The Bigger the Contract, the Higher the Risk',
+    sub: 'Near-monotonic risk ladder across 3M contracts · all sectors',
+    type: 'overpricing',
+    status: 'solo_datos',
+    amount: 0,
+    era: 'cross',
+    contracts: 3000000,
+    brief: "RUBLI's risk model reveals a near-monotonic ladder across 3 million contracts: as contract size grows, corruption risk grows in lockstep. The biggest deals carry the most risk.",
+  },
+  {
+    slug: 'la-industria-del-intermediario',
+    headline: 'The Intermediary Industry',
+    sub: '2,974 P3 intermediary vendors · thin-margin pass-throughs',
+    type: 'procurement_fraud',
+    status: 'reporteado',
+    amount: 0,
+    era: 'cross',
+    contracts: 0,
+    brief: '2,974 vendors function as pure procurement intermediaries — no physical product, no technical service, just margin extraction between government agencies and real suppliers.',
+  },
+  {
+    slug: 'el-umbral-de-los-300k',
+    headline: 'The 300,000 Peso Threshold',
+    sub: '28,264 contracts at exactly 210K MXN · statistical impossibility',
+    type: 'overpricing',
+    status: 'solo_datos',
+    amount: 0,
+    era: 'cross',
+    contracts: 28264,
+    brief: 'Statistical spikes at 210K, 250K, and 300K MXN — mathematically impossible in a random pricing universe. The evidence points to systematic threshold manipulation to avoid competitive bidding requirements.',
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -305,6 +349,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
   const accent = FRAUD_COLOR[item.type]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
   const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
   return (
     <article
       onClick={() => navigate(`/stories/${item.slug}`)}
@@ -359,7 +404,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
               fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
             }}
           >
-            {item.brief}
+            {brief}
           </p>
 
           <div className="flex flex-wrap items-center gap-2.5 mb-7">
@@ -441,6 +486,7 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
   return (
     <Link
       to={`/stories/${item.slug}`}
@@ -482,7 +528,7 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
         </h3>
 
         <p className="text-[14px] leading-[1.6] text-text-secondary mb-5 flex-1 text-pretty">
-          {item.brief}
+          {brief}
         </p>
 
         {/* Stat row */}
@@ -766,6 +812,7 @@ function GridCard({ item }: { item: Investigation }) {
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
 
   return (
     <Link
@@ -811,7 +858,7 @@ function GridCard({ item }: { item: Investigation }) {
 
         {/* Brief abstract — pushed to bottom of content area */}
         <p className="mt-auto mb-5 text-[13px] leading-[1.6] text-text-primary">
-          {item.brief}
+          {brief}
         </p>
 
         {/* Footer */}
