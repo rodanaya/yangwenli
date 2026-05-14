@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Search, Database, Shield, Menu, LogOut, Briefcase } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { analysisApi } from '@/api/client'
+import { analysisApi, categoriesApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { getStoryBySlug } from '@/lib/story-content'
 
@@ -84,6 +84,18 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     refetchOnMount: false,  // Don't refetch on every page navigation
   })
 
+  // Category breadcrumb — resolve numeric ID to actual category name
+  const isCategoryPage = /^\/categories\/\d+/.test(location.pathname)
+  const breadcrumbCategoryId = isCategoryPage ? parseInt(location.pathname.split('/')[2]) : NaN
+  const { data: categorySummaryForBreadcrumb } = useQuery({
+    queryKey: ['categories', 'summary'],
+    queryFn: () => categoriesApi.getSummary(),
+    staleTime: 5 * 60 * 1000,
+    enabled: isCategoryPage,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  })
+
   const alertCount = anomalies?.total || 0
   const qualityScore = dataQuality?.overall_score
   // 2026-05-12 (Audit F023): header DQ chip used letter grades A/B/C/D/F.
@@ -122,7 +134,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const currentPath = location.pathname
   const i18nKey = ROUTE_I18N_KEYS[currentPath]
-  const title = i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath)
+  const categoryBreadcrumbName: string | null = (() => {
+    if (!isCategoryPage || !categorySummaryForBreadcrumb?.data || isNaN(breadcrumbCategoryId)) return null
+    const cat = (categorySummaryForBreadcrumb.data as Array<{ category_id: number; name_es?: string; name_en?: string }>)
+      .find(c => c.category_id === breadcrumbCategoryId)
+    if (!cat) return null
+    return isEs ? (cat.name_es || cat.name_en || null) : (cat.name_en || cat.name_es || null)
+  })()
+  const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath))
   const parentPath = getParentPath(currentPath)
 
   // Editorial masthead date — locale-aware (F1 audit fix). Spanish users
@@ -322,7 +341,7 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   vendors: 'Vendor Profile',
   institutions: 'Institution Profile',
   sectors: 'Sector Profile',
-  categories: 'Category',
+  categories: 'Categoría',
   cases: 'Case Detail',
   investigation: 'Investigation',
 }

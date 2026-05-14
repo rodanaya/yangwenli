@@ -649,6 +649,8 @@ export function Sectors() {
                                       id={cat.category_id}
                                       name={i18n.language === 'es' ? cat.name_es : cat.name_en}
                                       size="sm"
+                                      sectorCode={cat.sector_code ?? null}
+                                      riskScore={cat.avg_risk ?? null}
                                     />
                                   </div>
                                   {/* Top vendor chip */}
