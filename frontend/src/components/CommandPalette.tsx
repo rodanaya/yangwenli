@@ -59,7 +59,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'sectors',      label: 'Sectors Overview',         icon: BarChart3,       href: '/sectors',                          shortcut: 'G S' },
   { id: 'network',      label: 'Network Graph',            icon: Network,         href: '/network',                          shortcut: 'G N' },
   { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
-  { id: 'aria',         label: 'ARIA Queue',               description: 'Tier 1 — 320 vendors for immediate review', icon: Zap, href: '/aria', shortcut: 'G Q' },
+  { id: 'aria',         label: 'ARIA Queue',               description: 'Tier 1 — 299 vendors for immediate review', icon: Zap, href: '/aria', shortcut: 'G Q' },
   { id: 'administrations', label: 'Administrations',        description: 'Cross-sexenio procurement comparison', icon: GitBranch, href: '/administrations' },
   { id: 'methodology',  label: 'Risk Methodology',         icon: FlaskConical,    href: '/methodology' },
   { id: 'model',        label: 'Model Transparency',       icon: Scale,           href: '/model' },

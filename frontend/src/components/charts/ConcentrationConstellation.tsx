@@ -129,7 +129,7 @@ export function buildPatternMeta(isEs: boolean): ClusterMeta[] {
     // P6 — lower left (31 T1)
     { code: 'P6', label: isEs ? 'Captura Institucional' : 'Institutional Capture',      desc: isEs ? '>80% contratos de una sola institución — 31 T1' : '>80% of contracts from a single institution — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  highRiskPct: 0.28, fx: 0.28, fy: 0.72 },
     // P2 — lower center (1 T1)
-    { code: 'P2', label: isEs ? 'Empresa Fantasma' : 'Ghost Company',           desc: isEs ? 'Sin RFC, ≤10 contratos, desaparece — 1 T1' : 'No RFC, ≤10 contracts, disappears — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.78 },
+    { code: 'P2', label: isEs ? 'Empresa Fantasma' : 'Ghost Company',           desc: isEs ? 'Sin RFC, ≤10 contratos, desaparece — 1 T1' : 'No RFC, ≤10 contracts, disappears — 1 T1',                        color: '#57534e', vendors: 6118,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.78 },
     // P4 — top center (3 T1)
     { code: 'P4', label: isEs ? 'Colusión en Licitaciones' : 'Bid Collusion',   desc: isEs ? 'Co-licitación >50% + tasa de victoria >70% — 3 T1' : 'Co-bidding >50% + win rate >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.42, fy: 0.14 },
   ]

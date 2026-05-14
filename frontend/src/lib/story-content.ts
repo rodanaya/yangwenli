@@ -259,7 +259,7 @@ export interface StoryDef {
    * Optional per-story hero override. When present, StoryHero renders a 3-row
    * kicker-stat punchline INSTEAD of the default leadStat block. Use when the
    * story is built around a comparison (e.g. SAT confirmed 42 / RUBLI flagged
-   * 6,034 / 5,992 still doing business).
+   * 6,118 / 6,076 still doing business).
    */
   kickerStats?: Array<{
     /** Optional verb prefix shown in muted serif before the number (e.g. "SAT confirmed") */
@@ -338,7 +338,7 @@ export type SectorCode =
 export const STORIES: StoryDef[] = [
 
   // =========================================================================
-  // STORY 1: The Ghost Army — P2 Pattern, 6,034 vendors
+  // STORY 1: The Ghost Army — P2 Pattern, 6,118 vendors
   // =========================================================================
   {
     slug: 'el-ejercito-fantasma',
@@ -375,18 +375,18 @@ export const STORIES: StoryDef[] = [
           'Empresas fantasma — ghost companies — are the single most efficient form of procurement fraud ever documented in Mexico. A shell entity with a rented address, a rotating legal representative, and an RFC number purchased from a fixer wins a federal contract worth hundreds of millions of pesos. Payment is wired. Work is never delivered, or delivered by a completely different entity that pockets only a fraction of the invoice. The shell dissolves. The officials who approved the contract move on.',
           'Mexico\'s Servicio de Administración Tributaria (SAT) maintains an official definitive list of confirmed ghost companies under Article 69-B of the Código Fiscal de la Federación. As of April 2026 it contains 13,960 entities stretching back to 2014. That list took a decade to build and required investigators to prove each case individually — simulated invoices, fictitious operations, sworn testimony. It is the gold standard of ghost-company detection in Mexico, and it is catastrophically incomplete.',
           'RUBLI\'s Pattern 2 algorithm does not wait for SAT. It looks instead at the fingerprints ghost vendors leave in procurement data itself: sudden single-year appearances with contract values 10 to 50 times the sector median, no prior contracting history, no subsequent contracting history, RFC numbers that resolve to nothing in the Registro Único de Proveedores y Contratistas, and bursts of activity concentrated in weeks rather than years.',
-          'When RUBLI ran P2 across the full 3,051,294 federal contracts from 2002 through 2025, the algorithm flagged 6,034 vendors representing 37.2 billion pesos in total contract value. Cross-checking the P2 population against the SAT Art. 69-B definitive registry produced a single, damning statistic: 42 matches. The detection rate of official Mexican ghost-company enforcement, measured against RUBLI\'s behavioral population, is 0.7 percent.',
+          'When RUBLI ran P2 across the full 3,051,294 federal contracts from 2002 through 2025, the algorithm flagged 6,118 vendors representing 39.6 billion pesos in total contract value. Cross-checking the P2 population against the SAT Art. 69-B definitive registry produced a single, damning statistic: 42 matches. The detection rate of official Mexican ghost-company enforcement, measured against RUBLI\'s behavioral population, is 0.7 percent.',
         ],
         prose_es: [
           'Las empresas fantasma son la forma más eficiente de fraude en contratación pública jamás documentada en México. Una entidad de fachada con un domicilio rentado, un representante legal rotativo, y un RFC comprado a un coyote gana un contrato federal por cientos de millones de pesos. El pago se transfiere. El trabajo nunca se entrega, o lo entrega una entidad totalmente distinta que se queda con apenas una fracción de la factura. La empresa de fachada se disuelve. Los funcionarios que aprobaron el contrato siguen su carrera.',
           'El Servicio de Administración Tributaria (SAT) mantiene un listado oficial definitivo de empresas fantasma confirmadas conforme al Artículo 69-B del Código Fiscal de la Federación. A abril de 2026 contiene 13,960 entidades que se remontan a 2014. Esa lista tomó una década en construirse y exigió que los investigadores demostraran cada caso individualmente — facturas simuladas, operaciones ficticias, testimonios bajo protesta. Es el estándar de oro de la detección de empresas fantasma en México, y está catastróficamente incompleta.',
           'El algoritmo del Patrón 2 (P2) de RUBLI no espera al SAT. Mira en cambio las huellas que las empresas fantasma dejan en los datos mismos de contratación: aparición súbita en un solo año con valores de contrato 10 a 50 veces la mediana sectorial, sin historial previo de contratación, sin contratación posterior, números de RFC que no resuelven a nada en el Registro Único de Proveedores y Contratistas, y ráfagas de actividad concentradas en semanas más que en años.',
-          'Cuando RUBLI corrió el P2 sobre los 3,051,294 contratos federales completos de 2002 a 2025, el algoritmo identificó 6,034 proveedores que representan 37,200 MDP en valor total contratado. Cruzar la población P2 contra el padrón definitivo del SAT bajo el Art. 69-B arrojó una sola estadística devastadora: 42 coincidencias. La tasa de detección de la fiscalización oficial mexicana de empresas fantasma, medida contra la población conductual de RUBLI, es del 0.7 por ciento.',
+          'Cuando RUBLI corrió el P2 sobre los 3,051,294 contratos federales completos de 2002 a 2025, el algoritmo identificó 6,118 proveedores que representan 39,600 MDP en valor total contratado. Cruzar la población P2 contra el padrón definitivo del SAT bajo el Art. 69-B arrojó una sola estadística devastadora: 42 coincidencias. La tasa de detección de la fiscalización oficial mexicana de empresas fantasma, medida contra la población conductual de RUBLI, es del 0.7 por ciento.',
         ],
         pullquote: {
-          quote: 'One in 143 vendors the algorithm suspects is ghost-patterned has been officially confirmed by SAT. The other 142 are still contracting with the government.',
-          quote_es: 'Uno de cada 143 proveedores que el algoritmo sospecha tiene patrón fantasma ha sido confirmado oficialmente por el SAT. Los otros 142 siguen contratando con el gobierno.',
-          stat: '6,034',
+          quote: 'One in 145 vendors the algorithm suspects is ghost-patterned has been officially confirmed by SAT. The other 144 are still contracting with the government.',
+          quote_es: 'Uno de cada 145 proveedores que el algoritmo sospecha tiene patrón fantasma ha sido confirmado oficialmente por el SAT. Los otros 144 siguen contratando con el gobierno.',
+          stat: '6,118',
           statLabel: 'P2-flagged vendors',
           statLabel_es: 'proveedores marcados por P2',
           barValue: 0.007,
@@ -407,14 +407,14 @@ export const STORIES: StoryDef[] = [
         subtitle: 'A visual audit of Mexico\'s ghost-company enforcement gap',
         subtitle_es: 'Una auditoría visual de la brecha de fiscalización mexicana',
         prose: [
-          'The math of detection failure is easier to grasp as a picture than as a percentage. Imagine 6,034 vendors laid out as points on a grid — every vendor RUBLI\'s algorithm flagged as structurally consistent with ghost company operations. Color the 42 that SAT has confirmed. The rest of the field remains uncolored, which is the problem.',
+          'The math of detection failure is easier to grasp as a picture than as a percentage. Imagine 6,118 vendors laid out as points on a grid — every vendor RUBLI\'s algorithm flagged as structurally consistent with ghost company operations. Color the 42 that SAT has confirmed. The rest of the field remains uncolored, which is the problem.',
           'This is not a claim that every uncolored point represents fraud. P2 is a pattern classifier; it identifies vendors whose behavior resembles documented ghost companies, not vendors proven to be ghost companies. Some will turn out to be legitimate specialized suppliers. Some will turn out to be foreign vendors with genuinely thin Mexican contracting histories. Some will turn out to be one-time subcontractors on major projects.',
-          'But the baseline expectation in procurement fraud research is that somewhere between 20 and 40 percent of P2-type behavioral signatures correspond to actual fraud. Applied to RUBLI\'s 5,992 unconfirmed P2 vendors, that suggests a universe of somewhere between 1,200 and 2,400 unrecognized ghost companies currently operating in Mexican federal procurement. SAT has found 42.',
+          'But the baseline expectation in procurement fraud research is that somewhere between 20 and 40 percent of P2-type behavioral signatures correspond to actual fraud. Applied to RUBLI\'s 6,076 unconfirmed P2 vendors, that suggests a universe of somewhere between 1,200 and 2,400 unrecognized ghost companies currently operating in Mexican federal procurement. SAT has found 42.',
         ],
         prose_es: [
-          'Las matemáticas de la falla de detección son más fáciles de captar como imagen que como porcentaje. Imagina 6,034 proveedores dispuestos como puntos en una cuadrícula — cada proveedor que el algoritmo de RUBLI marcó como estructuralmente consistente con operaciones de empresa fantasma. Pinta los 42 que el SAT ha confirmado. El resto del campo permanece sin colorear, y ese es el problema.',
+          'Las matemáticas de la falla de detección son más fáciles de captar como imagen que como porcentaje. Imagina 6,118 proveedores dispuestos como puntos en una cuadrícula — cada proveedor que el algoritmo de RUBLI marcó como estructuralmente consistente con operaciones de empresa fantasma. Pinta los 42 que el SAT ha confirmado. El resto del campo permanece sin colorear, y ese es el problema.',
           'Esto no es una afirmación de que cada punto sin colorear represente fraude. P2 es un clasificador de patrones; identifica proveedores cuya conducta se asemeja a la de empresas fantasma documentadas, no proveedores probadamente fantasma. Algunos resultarán ser proveedores legítimos especializados. Algunos serán proveedores extranjeros con historiales mexicanos genuinamente delgados. Algunos serán subcontratistas únicos en proyectos mayores.',
-          'Pero la expectativa base en la investigación del fraude en contratación pública es que entre el 20 y el 40 por ciento de las firmas conductuales tipo P2 corresponden a fraude real. Aplicado a los 5,992 proveedores P2 no confirmados de RUBLI, eso sugiere un universo de entre 1,200 y 2,400 empresas fantasma no reconocidas operando actualmente en la contratación federal mexicana. El SAT ha encontrado 42.',
+          'Pero la expectativa base en la investigación del fraude en contratación pública es que entre el 20 y el 40 por ciento de las firmas conductuales tipo P2 corresponden a fraude real. Aplicado a los 6,076 proveedores P2 no confirmados de RUBLI, eso sugiere un universo de entre 1,200 y 2,400 empresas fantasma no reconocidas operando actualmente en la contratación federal mexicana. El SAT ha encontrado 42.',
         ],
         chartConfig: {
           type: 'inline-dot-grid',
@@ -424,10 +424,10 @@ export const STORIES: StoryDef[] = [
           data: {
             points: [
               { label: 'EFOS confirmed ghost companies',  label_es: 'EFOS — empresas fantasma confirmadas',     value: 42,  color: '#dc2626', highlight: true },
-              { label: 'P2-pattern, not on any official list', label_es: 'patrón P2, no en ningún padrón oficial', value: 5992, color: '#f59e0b' },
+              { label: 'P2-pattern, not on any official list', label_es: 'patrón P2, no en ningún padrón oficial', value: 6076, color: '#f59e0b' },
             ],
-            annotation: 'Each dot = 1 vendor. 6,034 total flagged by RUBLI P2 algorithm across 2002-2025.',
-            annotation_es: 'Cada punto = 1 proveedor. 6,034 marcados en total por el algoritmo P2 de RUBLI entre 2002-2025.',
+            annotation: 'Each dot = 1 vendor. 6,118 total flagged by RUBLI P2 algorithm across 2002-2025.',
+            annotation_es: 'Cada punto = 1 proveedor. 6,118 marcados en total por el algoritmo P2 de RUBLI entre 2002-2025.',
           },
         },
         pullquote: {
@@ -512,14 +512,14 @@ export const STORIES: StoryDef[] = [
         prose: [
           'If the detection rate is 0.7 percent, the accountability rate is lower still. Of the 42 confirmed EFOS definitivo vendors who appear in federal procurement records, public records show criminal prosecution for a fraction — most receive only fiscal sanctions and procurement exclusion. The officials who approved their contracts are rarely named, rarely investigated, and almost never prosecuted.',
           'This is the core of Mexico\'s procurement integrity failure: a ghost company is a two-sided transaction. Someone creates the shell entity and someone inside the government signs the approval. RUBLI\'s data is silent about the second half because COMPRANET records do not reliably link individual approving officials to specific contracts. That linkage exists in internal procurement-unit records but is not systematically published.',
-          'The Secretaría de la Función Pública (SFP) has the legal authority to audit procurement approvals and sanction individual officials. In practice, the SFP sanctions database shows 1,954 vendor-level sanctions across the full 23-year dataset — a tiny fraction of the 6,034 P2 vendors, and almost none of the approving officials named. The asymmetry of accountability — the shell entity is named and excluded, the official is anonymous and unsanctioned — ensures the next ghost company has no meaningful deterrent.',
-          'This is the gap that RUBLI was built to illuminate. The algorithm cannot prosecute. It cannot sanction. But it can force the question: of 6,034 vendors whose behavior mirrors documented ghost companies, which procurement officials signed their contracts, and why have those officials never been investigated?',
+          'The Secretaría de la Función Pública (SFP) has the legal authority to audit procurement approvals and sanction individual officials. In practice, the SFP sanctions database shows 1,954 vendor-level sanctions across the full 23-year dataset — a tiny fraction of the 6,118 P2 vendors, and almost none of the approving officials named. The asymmetry of accountability — the shell entity is named and excluded, the official is anonymous and unsanctioned — ensures the next ghost company has no meaningful deterrent.',
+          'This is the gap that RUBLI was built to illuminate. The algorithm cannot prosecute. It cannot sanction. But it can force the question: of 6,118 vendors whose behavior mirrors documented ghost companies, which procurement officials signed their contracts, and why have those officials never been investigated?',
         ],
         prose_es: [
           'Si la tasa de detección es del 0.7 por ciento, la tasa de rendición de cuentas es aún menor. De los 42 proveedores en el listado definitivo del SAT que aparecen en registros de contratación federal, los registros públicos muestran procesamiento penal para una fracción — la mayoría recibe solo sanciones fiscales y exclusión de contratación. Los funcionarios que aprobaron sus contratos rara vez son nombrados, rara vez son investigados, y casi nunca son procesados.',
           'Este es el núcleo de la falla de integridad en la contratación mexicana: una empresa fantasma es una transacción de dos lados. Alguien crea la entidad de fachada y alguien dentro del gobierno firma la aprobación. Los datos de RUBLI guardan silencio sobre la segunda mitad porque los registros de COMPRANET no vinculan de manera confiable a funcionarios aprobantes individuales con contratos específicos. Ese vínculo existe en registros internos de las unidades de contratación pero no se publica sistemáticamente.',
-          'La Secretaría de la Función Pública (SFP) tiene la facultad legal de auditar las aprobaciones de contratación y sancionar a funcionarios individuales. En la práctica, la base de datos de sanciones de la SFP muestra 1,954 sanciones a nivel proveedor en los 23 años completos del conjunto de datos — una fracción minúscula de los 6,034 proveedores P2, y casi ningún funcionario aprobante nombrado. La asimetría de la rendición de cuentas — la entidad de fachada es nombrada y excluida, el funcionario es anónimo y no sancionado — asegura que la próxima empresa fantasma no enfrente disuasión real.',
-          'Esta es la brecha que RUBLI fue construido para iluminar. El algoritmo no puede procesar. No puede sancionar. Pero puede forzar la pregunta: de 6,034 proveedores cuya conducta refleja la de empresas fantasma documentadas, ¿qué funcionarios firmaron sus contratos, y por qué esos funcionarios nunca han sido investigados?',
+          'La Secretaría de la Función Pública (SFP) tiene la facultad legal de auditar las aprobaciones de contratación y sancionar a funcionarios individuales. En la práctica, la base de datos de sanciones de la SFP muestra 1,954 sanciones a nivel proveedor en los 23 años completos del conjunto de datos — una fracción minúscula de los 6,118 proveedores P2, y casi ningún funcionario aprobante nombrado. La asimetría de la rendición de cuentas — la entidad de fachada es nombrada y excluida, el funcionario es anónimo y no sancionado — asegura que la próxima empresa fantasma no enfrente disuasión real.',
+          'Esta es la brecha que RUBLI fue construido para iluminar. El algoritmo no puede procesar. No puede sancionar. Pero puede forzar la pregunta: de 6,118 proveedores cuya conducta refleja la de empresas fantasma documentadas, ¿qué funcionarios firmaron sus contratos, y por qué esos funcionarios nunca han sido investigados?',
         ],
         pullquote: {
           quote: 'A ghost company is a two-sided transaction. Mexico names the shell. Mexico does not name the official who signed.',

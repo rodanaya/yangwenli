@@ -38,7 +38,7 @@ import { MacroArc } from '@/components/dashboard/MacroArc'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // § 2 La Lente — concentric-rings visualization showing how the platform
-// narrows 3.1M contracts down to 320 T1 priority leads. Five tiers, animated
+// narrows 3.1M contracts down to 299 T1 priority leads. Five tiers, animated
 // in from outside → in to evoke a telescope focusing.
 // ─────────────────────────────────────────────────────────────────────────────
 interface LensTier {
@@ -2483,8 +2483,8 @@ export default function Executive() {
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — From 3.1M COMPRANET records to 320 priority vendors; five filtering layers applied before human inspection.'
-              : 'Lámina — De 3.1M registros COMPRANET a 320 proveedores prioritarios; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
+              ? 'Plate — From 3.1M COMPRANET records to 299 priority vendors; five filtering layers applied before human inspection.'
+              : 'Lámina — De 3.1M registros COMPRANET a 299 proveedores prioritarios; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
           >
             {(() => {
               const lensTiers = buildLensTiers(
@@ -2798,8 +2798,8 @@ export default function Executive() {
             </h3>
             <p className="text-sm text-text-secondary mb-6 max-w-[56ch] leading-[1.6]">
               {lang === 'en'
-                ? 'Search by RFC, company name, or browse ARIA Tier 1 — 320 vendors flagged for immediate review by three independent signals.'
-                : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 320 proveedores señalados para revisión inmediata por tres señales independientes.'}
+                ? 'Search by RFC, company name, or browse ARIA Tier 1 — 299 vendors flagged for immediate review by three independent signals.'
+                : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores señalados para revisión inmediata por tres señales independientes.'}
             </p>
             <div className="flex flex-wrap gap-3">
               <button

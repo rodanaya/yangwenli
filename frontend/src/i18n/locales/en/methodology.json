@@ -307,7 +307,7 @@
     "tierIIIBodyStrong": " Most RUBLI findings are Tier III.",
     "scaleLabel": "Scale",
     "tierIIIEx1": "· 412K contracts at high/critical risk score",
-    "tierIIIEx2": "· 6,034 vendors with shell-company behavioral pattern",
+    "tierIIIEx2": "· 6,118 vendors with shell-company behavioral pattern",
     "tierIIIEx3": "· Collusion ring detections (co-bidding heuristic)",
     "tierIIISay": "\"statistical pattern consistent with\" · \"flagged for investigation\" · \"behavioral anomaly\"",
     "criticalRuleLabel": "Critical rule:",
