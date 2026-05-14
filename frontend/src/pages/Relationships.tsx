@@ -268,9 +268,12 @@ export default function Relationships() {
   }, [allCaptures])
 
   const topSectorEntry = useMemo(() => {
-    let best: { id: number; count: number } | null = null
+    let best: { id: number; code: string; count: number } | null = null
     for (const [id, count] of captureSectorCounts) {
-      if (!best || count > best.count) best = { id, count }
+      if (!best || count > best.count) {
+        const sec = SECTORS.find(s => s.id === id)
+        best = { id, code: sec?.code ?? 'otros', count }
+      }
     }
     return best
   }, [captureSectorCounts])
@@ -537,24 +540,20 @@ export default function Relationships() {
               <div className="text-right">
                 {capLoading ? (
                   <Skeleton className="h-5 w-24 ml-auto" />
-                ) : topSectorEntry ? (() => {
-                  const ts = SECTORS.find(s => s.id === topSectorEntry.id)
-                  return (
-                    <div className="flex items-baseline gap-1.5 justify-end">
-                      <span
-                        className="inline-block h-2 w-2 rounded-full"
-                        style={{ background: ts ? SECTOR_COLORS[ts.code] : '#64748b' }}
-                        aria-hidden="true"
-                      />
-                      <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
-                        {getSectorName(ts?.code ?? 'otros', lang)}
-                      </span>
-                      <span className="font-mono tabular-nums text-[11px] text-text-muted">
-                        ({topSectorEntry.count})
-                      </span>
-                    </div>
-                  )
-                })()
+                ) : topSectorEntry ? (
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ background: SECTOR_COLORS[topSectorEntry.code] ?? '#64748b' }}
+                      aria-hidden="true"
+                    />
+                    <span className="font-mono tabular-nums text-base font-semibold text-text-primary uppercase tracking-tight">
+                      {getSectorName(topSectorEntry.code, lang)}
+                    </span>
+                    <span className="font-mono tabular-nums text-[11px] text-text-muted">
+                      ({topSectorEntry.count})
+                    </span>
+                  </div>
                 ) : (
                   <div className="font-mono tabular-nums text-base font-semibold text-text-primary">—</div>
                 )}
