@@ -663,6 +663,7 @@ export function Sectors() {
                                         name={cat.top_vendor.name}
                                         size="xs"
                                         hideIcon
+                                        sectorCode={cat.sector_code ?? null}
                                       />
                                     </div>
                                   )}

@@ -773,7 +773,7 @@ export default function CategoryProfile() {
                           {idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" hideIcon />
+                          <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" hideIcon sectorCode={category?.sector_code ?? null} />
                         </div>
                         <div className="w-28 flex-shrink-0">
                           <div className="flex items-center gap-2">
@@ -876,7 +876,7 @@ export default function CategoryProfile() {
                         </span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <EntityIdentityChip type="vendor" id={pair.vendor_id} name={pair.vendor_name} size="xs" hideIcon />
+                            <EntityIdentityChip type="vendor" id={pair.vendor_id} name={pair.vendor_name} size="xs" hideIcon sectorCode={category?.sector_code ?? null} />
                             <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
                             <EntityIdentityChip type="institution" id={pair.institution_id} name={pair.institution_name} size="xs" hideIcon />
                           </div>
@@ -976,7 +976,7 @@ export default function CategoryProfile() {
                         </span>
                         <div className="w-24 text-right flex-shrink-0 hidden md:block">
                           {c.vendor_id ? (
-                            <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" hideIcon />
+                            <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="xs" hideIcon sectorCode={category?.sector_code ?? null} />
                           ) : <span className="text-xs text-text-muted">---</span>}
                         </div>
                         <span className="w-10 text-right text-[10px] text-text-muted font-mono flex-shrink-0 hidden md:block">
