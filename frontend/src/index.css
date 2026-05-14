@@ -16,7 +16,6 @@
   --color-sector-hacienda: #16a34a;
   --color-sector-gobernacion: #be123c;
   --color-sector-agricultura: #22c55e;
-  --color-sector-ambiente: #10b981;
   --color-sector-trabajo: #f97316;
   --color-sector-otros: #64748b;
 
@@ -125,6 +124,13 @@
   --spacing-lg: 32rem;   /* 512px  — matches Tailwind v3 max-w-lg  */
   --spacing-xl: 36rem;   /* 576px  — matches Tailwind v3 max-w-xl  */
   --spacing-2xl: 42rem;  /* 672px  — matches Tailwind v3 max-w-2xl */
+}
+
+/* Tailwind v4 strips --color-sector-ambiente (#10b981 = emerald-500 in oklch)
+   because it deduplicates @theme values that match built-in tokens.
+   Declare it here outside @theme so it survives the build. */
+:root {
+  --color-sector-ambiente: #10b981;
 }
 
 /* Base Styles */
