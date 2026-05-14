@@ -110,7 +110,11 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
       gcTime: 30 * 60 * 1000, // 30 minutes - keep in cache after unmount
-      retry: 2,
+      retry: (failureCount, error) => {
+        const status = (error as { response?: { status?: number } })?.response?.status
+        if (status != null && status >= 400 && status < 500) return false
+        return failureCount < 2
+      },
       refetchOnWindowFocus: false,
       placeholderData: keepPreviousData, // Keep previous data while fetching
     },

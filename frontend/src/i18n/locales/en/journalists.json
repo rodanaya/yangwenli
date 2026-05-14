@@ -62,6 +62,18 @@
     "solo_datos": "DATA LEAD"
   },
   "featuredLabel": "FEATURED INVESTIGATION",
+  "eraLabel": {
+    "pena": "EPN · 2012–2018",
+    "amlo": "4T · 2018–2024",
+    "cross": "CROSS-ERA"
+  },
+  "typeLabel": {
+    "ghost_company": "GHOST CO.",
+    "monopoly": "MONOPOLY",
+    "overpricing": "OVERPRICING",
+    "embezzlement": "EMBEZZLEMENT",
+    "procurement_fraud": "PROCUREMENT FRAUD"
+  },
   "cards": {
     "readStory": "Read story",
     "readInvestigation": "Read investigation",

@@ -62,6 +62,18 @@
     "solo_datos": "PISTA DE DATOS"
   },
   "featuredLabel": "INVESTIGACIÓN PRINCIPAL",
+  "eraLabel": {
+    "pena": "EPN · 2012–2018",
+    "amlo": "4T · 2018–2024",
+    "cross": "MULTI-SEXENIO"
+  },
+  "typeLabel": {
+    "ghost_company": "EMP. FANTASMA",
+    "monopoly": "MONOPOLIO",
+    "overpricing": "SOBREPRECIO",
+    "embezzlement": "MALVERSACIÓN",
+    "procurement_fraud": "FRAUDE EN LICITACIÓN"
+  },
   "cards": {
     "readStory": "Leer historia",
     "readInvestigation": "Leer investigación",

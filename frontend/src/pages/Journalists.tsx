@@ -393,7 +393,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
             </span>
             <span className="h-px flex-1 max-w-12" style={{ background: accent, opacity: 0.45 }} />
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-              {FRAUD_LABEL[item.type]}
+              {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
             </span>
           </div>
 
@@ -429,7 +429,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
               [{statusLabel}]
             </span>
             <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.14em] text-text-secondary border border-border bg-background rounded-sm">
-              {ERA_LABEL[item.era]}
+              {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
             </span>
             <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
@@ -520,11 +520,11 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
       <div className="relative p-6 sm:p-7 flex flex-col flex-1">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
-            {FRAUD_LABEL[item.type]}
+            {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
           </span>
           <span className="text-[9px] font-mono text-text-muted">·</span>
           <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {ERA_LABEL[item.era]}
+            {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
           </span>
         </div>
 
@@ -628,11 +628,11 @@ export function DataLeadsList({ items }: { items: Investigation[] }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="text-[9px] font-mono font-bold uppercase tracking-[0.16em]" style={{ color: accent }}>
-                    {FRAUD_LABEL[item.type]}
+                    {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
                   </span>
                   <span className="text-[9px] font-mono text-text-muted">·</span>
                   <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted">
-                    {ERA_LABEL[item.era]}
+                    {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
                   </span>
                 </div>
                 <h4
@@ -726,7 +726,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
             </span>
             <span className="h-px w-8 bg-red-500/50" />
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-              {FRAUD_LABEL[item.type]}
+              {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
             </span>
           </div>
 
@@ -758,7 +758,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
               [{status.label}]
             </span>
             <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-border bg-background-card rounded-sm">
-              {ERA_LABEL[item.era]}
+              {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
             </span>
             <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
@@ -849,11 +849,11 @@ function GridCard({ item }: { item: Investigation }) {
             className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]"
             style={{ color: accent }}
           >
-            {FRAUD_LABEL[item.type]}
+            {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
           </span>
           <span className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
           <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted">
-            {ERA_LABEL[item.era]}
+            {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
           </span>
         </div>
 
@@ -982,6 +982,7 @@ function FilterStrip({
     >
       {filters.map((f) => {
         const isActive = active === f.key
+        if (counts[f.key] === 0 && !isActive) return null
         return (
           <button
             key={f.key}
