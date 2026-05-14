@@ -350,6 +350,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
   const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
   const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
   return (
     <article
       onClick={() => navigate(`/stories/${item.slug}`)}
@@ -414,7 +415,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
                 status.color, status.border, status.bg,
               )}
             >
-              [{status.label}]
+              [{statusLabel}]
             </span>
             <span className="inline-flex items-center px-2.5 py-1 text-[10px] font-mono font-bold tracking-[0.14em] text-text-secondary border border-border bg-background rounded-sm">
               {ERA_LABEL[item.era]}
@@ -487,6 +488,7 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
   const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
   return (
     <Link
       to={`/stories/${item.slug}`}
@@ -569,7 +571,7 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
                 status.color, status.border, status.bg,
               )}
             >
-              [{status.label}]
+              [{statusLabel}]
             </span>
             <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
@@ -813,6 +815,7 @@ function GridCard({ item }: { item: Investigation }) {
   const status = STATUS_META[item.status]
   const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
   const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
 
   return (
     <Link
@@ -870,7 +873,7 @@ function GridCard({ item }: { item: Investigation }) {
                 status.color, status.border, status.bg
               )}
             >
-              [{status.label}]
+              [{statusLabel}]
             </span>
             <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
@@ -1117,12 +1120,14 @@ export default function Journalists() {
   // suppress unused-var: kept for narrative parity with previous version
   void lead
 
-  // Filter definitions (duplicated here for counts — keeps filter UI self-contained)
+  // Counts across ALL investigations (not just dossier) so featured stories
+  // are reflected in filter badge numbers. "Monopoly 2" is accurate even when
+  // both monopoly stories live in the promoted tier.
   const counts = useMemo<Record<FilterKey, number>>(() => {
     const base = (pred: (i: Investigation) => boolean) =>
-      remaining.filter(pred).length
+      INVESTIGATIONS.filter(pred).length
     return {
-      all: remaining.length,
+      all: INVESTIGATIONS.length,
       ghost_company: base((i) => i.type === 'ghost_company'),
       monopoly: base((i) => i.type === 'monopoly'),
       overpricing: base((i) => i.type === 'overpricing'),
@@ -1133,7 +1138,7 @@ export default function Journalists() {
       era_amlo: base((i) => i.era === 'amlo'),
       era_cross: base((i) => i.era === 'cross'),
     }
-  }, [remaining])
+  }, [])
 
   const filtered = useMemo(() => {
     switch (active) {
@@ -1179,6 +1184,11 @@ export default function Journalists() {
     if (!lensFilteredSlugs) return filtered
     return filtered.filter((i) => lensFilteredSlugs.has(i.slug))
   }, [filtered, lensFilteredSlugs])
+
+  // When a filter yields an empty dossier grid, this tells us how many
+  // matching stories are promoted (featured/editor's picks) — used in the
+  // empty state message so users know the stories exist above ↑
+  const promotedMatchCount = active === 'all' ? 0 : counts[active] - dossierFiltered.length
 
   // Summary stats for the masthead
   const totalCount = INVESTIGATIONS.length
@@ -1386,9 +1396,14 @@ export default function Journalists() {
           {dossierFiltered.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-border rounded-sm">
               <p className="text-sm font-mono text-text-muted">
-                {t('grid.empty', {
-                  defaultValue: 'No investigations match this filter.',
-                })}
+                {promotedMatchCount > 0
+                  ? t('grid.featuredAbove', {
+                      count: promotedMatchCount,
+                      defaultValue: `${promotedMatchCount} matching investigation${promotedMatchCount !== 1 ? 's' : ''} appear${promotedMatchCount === 1 ? 's' : ''} in the featured section above ↑`,
+                    })
+                  : t('grid.empty', {
+                      defaultValue: 'No investigations match this filter.',
+                    })}
               </p>
             </div>
           )}

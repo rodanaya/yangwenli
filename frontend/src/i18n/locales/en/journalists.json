@@ -8,7 +8,15 @@
     "satEfosLabel": "shell companies",
     "desk": "Investigations Desk",
     "updated": "Updated",
-    "activeLabel": "Active leads"
+    "activeLabel": "Active leads",
+    "deck": "investigations into how MX$422 billion moved through Mexican federal procurement. Each story begins with 3.05 million contracts and ends with the people who signed them.",
+    "totalLabel": "Investigations",
+    "prosecutedLabel": "Prosecuted"
+  },
+  "picks": {
+    "kicker": "Editor's Picks",
+    "title": "Investigations of consequence",
+    "dek": "Two stories where data, dollars, and documentation align."
   },
   "filters": {
     "all": "All",
@@ -28,7 +36,30 @@
     "aria": "Filter investigations"
   },
   "grid": {
-    "noStories": "No stories for this filter."
+    "noStories": "No stories for this filter.",
+    "kicker": "The Full Dossier",
+    "title": "Every investigation in the desk",
+    "showing": "showing",
+    "empty": "No investigations match this filter.",
+    "featuredAbove": "{{count}} matching investigation appears in the featured section above ↑",
+    "featuredAbove_plural": "{{count}} matching investigations appear in the featured section above ↑",
+    "fromObservatory": "From the Observatory:",
+    "clear": "CLEAR"
+  },
+  "lead": {
+    "statTotal": "Validated contract spend",
+    "statContracts": "Contracts",
+    "statSpan": "Time span"
+  },
+  "ticker": {
+    "aria": "Live investigations",
+    "label": "vendors under active investigation"
+  },
+  "status": {
+    "procesado": "PROSECUTED",
+    "auditado": "UNDER AUDIT",
+    "reporteado": "REPORTED",
+    "solo_datos": "DATA LEAD"
   },
   "featuredLabel": "FEATURED INVESTIGATION",
   "cards": {

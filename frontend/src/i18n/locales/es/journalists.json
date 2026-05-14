@@ -8,7 +8,15 @@
     "satEfosLabel": "empresas fantasma",
     "desk": "Mesa de Investigaciones",
     "updated": "Actualizado",
-    "activeLabel": "Pistas activas"
+    "activeLabel": "Pistas activas",
+    "deck": "investigaciones sobre cómo MX$422 mil millones de pesos transitaron por la contratación pública federal. Cada historia comienza con 3.05 millones de contratos y termina con las personas que los firmaron.",
+    "totalLabel": "Investigaciones",
+    "prosecutedLabel": "Procesadas"
+  },
+  "picks": {
+    "kicker": "Selección del Editor",
+    "title": "Investigaciones de peso",
+    "dek": "Dos historias donde los datos, el dinero y la documentación coinciden."
   },
   "filters": {
     "all": "Todos",
@@ -21,14 +29,37 @@
     "ghost": "Empresas Fantasma",
     "monopoly": "Monopolio",
     "overpricing": "Sobreprecio",
-    "fraud": "Fraude",
+    "fraud": "Fraude en Licitación",
     "eraPena": "Sexenio Peña",
     "eraAmlo": "Era 4T",
     "eraCross": "Múltiples sexenios",
     "aria": "Filtrar investigaciones"
   },
   "grid": {
-    "noStories": "No hay historias para este filtro."
+    "noStories": "No hay historias para este filtro.",
+    "kicker": "El Expediente Completo",
+    "title": "Todas las investigaciones en la mesa",
+    "showing": "mostrando",
+    "empty": "No hay investigaciones que coincidan con este filtro.",
+    "featuredAbove": "{{count}} investigación coincidente aparece en la sección destacada arriba ↑",
+    "featuredAbove_plural": "{{count}} investigaciones coincidentes aparecen en la sección destacada arriba ↑",
+    "fromObservatory": "Del Observatorio:",
+    "clear": "BORRAR"
+  },
+  "lead": {
+    "statTotal": "Gasto validado en contratos",
+    "statContracts": "Contratos",
+    "statSpan": "Período"
+  },
+  "ticker": {
+    "aria": "Investigaciones en curso",
+    "label": "proveedores bajo investigación activa"
+  },
+  "status": {
+    "procesado": "PROCESADO",
+    "auditado": "BAJO AUDITORÍA",
+    "reporteado": "REPORTADO",
+    "solo_datos": "PISTA DE DATOS"
   },
   "featuredLabel": "INVESTIGACIÓN PRINCIPAL",
   "cards": {
