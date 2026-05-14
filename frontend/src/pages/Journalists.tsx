@@ -84,13 +84,13 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'el-sexenio-del-riesgo',
     headline: 'The Riskiest Administration in 23 Years',
-    sub: 'AMLO era HR 17.6% · Fox 7.9% · Calderón 9.7% · Peña Nieto 12.4%',
+    sub: 'AMLO era HR 12.6% · Fox 7.5% · Calderón 8.2% · Peña Nieto 11.2% · v0.8.5',
     type: 'procurement_fraud',
     status: 'reporteado',
     amount: 2760,
     era: 'amlo',
     contracts: 1049729,
-    brief: 'AMLO\'s 17.6% high-risk rate is the first in 23 years to breach the OECD ceiling. Four administrations, two parties — one relentlessly ascending line.',
+    brief: 'AMLO\'s 12.6% high-risk rate is the highest of any administration in 23 years. Every administration since Fox has been riskier than its predecessor — 5.1 percentage points of drift in 24 years.',
   },
   {
     slug: 'el-ejercito-fantasma',

@@ -1924,7 +1924,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI Data Analysis Unit',
     estimatedMinutes: 18,
     status: 'reporteado',
-    leadStat: { value: '17.6%', label: 'high-risk rate, AMLO era (2019-2024)', label_es: 'tasa de alto riesgo, sexenio AMLO (2019-2024)', sublabel: 'vs 9.7% Calderón, 12.4% Peña Nieto, 7.9% Fox', sublabel_es: 'vs 9.7% Calderón, 12.4% Peña Nieto, 7.9% Fox', color: '#dc2626' },
+    leadStat: { value: '12.6%', label: 'high-risk rate, AMLO era (2019-2024) · v0.8.5', label_es: 'tasa de alto riesgo, sexenio AMLO (2019-2024) · v0.8.5', sublabel: 'vs 8.2% Calderón, 11.2% Peña Nieto, 7.5% Fox', sublabel_es: 'vs 8.2% Calderón, 11.2% Peña Nieto, 7.5% Fox', color: '#dc2626' },
     chapters: [
       {
         id: 'ch1',
