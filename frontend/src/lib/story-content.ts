@@ -347,13 +347,13 @@ export const STORIES: StoryDef[] = [
     era: 'cross',
     headline: 'The Ghost Army',
     headline_es: 'El Ejército Fantasma',
-    subheadline: 'RUBLI identified 6,034 vendors matching ghost company patterns across 23 years of Mexican federal procurement. Mexico\'s tax authority has officially confirmed 42 of them. The other 5,992 are still doing business with the government.',
-    subheadline_es: 'RUBLI identificó 6,034 proveedores con patrón de empresa fantasma a lo largo de 23 años de contratación federal mexicana. La autoridad fiscal confirmó oficialmente a 42. Los otros 5,992 siguen haciendo negocios con el gobierno.',
+    subheadline: 'RUBLI identified 6,118 vendors matching ghost company patterns across 23 years of Mexican federal procurement. Mexico\'s tax authority has officially confirmed 42 of them. The other 6,076 are still doing business with the government.',
+    subheadline_es: 'RUBLI identificó 6,118 proveedores con patrón de empresa fantasma a lo largo de 23 años de contratación federal mexicana. La autoridad fiscal confirmó oficialmente a 42. Los otros 6,076 siguen haciendo negocios con el gobierno.',
     byline: 'RUBLI Investigative Data Unit',
     estimatedMinutes: 16,
     status: 'solo_datos',
     leadStat: {
-      value: '6,034',
+      value: '6,118',
       label: 'ghost-pattern vendors',
       label_es: 'proveedores con patrón fantasma',
       sublabel: '0.7% officially detected',
@@ -362,8 +362,8 @@ export const STORIES: StoryDef[] = [
     },
     kickerStats: [
       { prefix: 'SAT confirmed', value: '42', suffix: 'ghosts.', tone: 'muted' },
-      { prefix: 'RUBLI flagged', value: '6,034', suffix: 'matching the same pattern.', tone: 'data' },
-      { value: '5,992', suffix: 'still doing business with the government.', tone: 'critical' },
+      { prefix: 'RUBLI flagged', value: '6,118', suffix: 'matching the same pattern.', tone: 'data' },
+      { value: '6,076', suffix: 'still doing business with the government.', tone: 'critical' },
     ],
     chapters: [
       {

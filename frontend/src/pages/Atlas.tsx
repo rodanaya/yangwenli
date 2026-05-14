@@ -1886,7 +1886,7 @@ export default function Atlas() {
           {/* Live T1 count */}
           <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
             <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
-            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 314)}</span>
+            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 299)}</span>
             <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
           </div>
         </div>

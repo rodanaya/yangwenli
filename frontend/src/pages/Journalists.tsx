@@ -95,7 +95,7 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'el-ejercito-fantasma',
     headline: 'The Ghost Army',
-    sub: '6,034 P2 ghost-pattern vendors · 23 years · every sector',
+    sub: '6,118 P2 ghost-pattern vendors · 23 years · every sector',
     type: 'ghost_company',
     status: 'reporteado',
     amount: 0,
