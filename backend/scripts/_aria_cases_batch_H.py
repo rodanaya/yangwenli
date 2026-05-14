@@ -1,153 +1,142 @@
-"""ARIA Cases batch_H: March 19 2026 GT mining session.
-
-Cases added:
-  - Case 752: HIDROVIAS Y CARRETERAS dredging SB capture (vendor 89737)
-    100% single-bid across CONAPESCA, CONAGUA, and state agencies 2010-2020.
-    266M MXN in dredging/canal work won as sole bidder in every competitive tender.
-  - Case 753: CONSTRUMAQUINAS DEL BAJIO Guanajuato construction SB capture (vendor 12221)
-    89.5% single-bid, 68% of value at Secretaria de Obra Publica de Guanajuato.
-    297M MXN in state infrastructure contracts 2003-2014, systematic sole-bidder pattern.
-
-Cases skipped:
-  - vendor 22384 CORPORATIVO SALTILLENSE: 98.7% of value from single 1.95B contract
-    at SCT in 2007. Not a systemic pattern — one anomalous contract, otherwise small
-    diversified vendor. Insufficient for GT labeling.
-  - vendor 90457 SUPERVISION TECNICA DEL NORTE: diversified vehicle leasing across
-    many institutions (IMP, ports, IMT, state). No clear institutional capture.
-    50.8% SB but spread across 14+ institutions over 13 years.
-
-Run from backend/ directory: python scripts/_aria_cases_batch_H.py
+#!/usr/bin/env python3
 """
-import sys
-sys.stdout.reconfigure(encoding="utf-8")
-import sqlite3
+GT Batch H — vendors: 55640, 2402, 13287, 8657, 89737, 12221
+4 ADDs (cases 1419..1422), 2 SKIPs
+Guard: max_id must be 1418
+
+Run: python -m scripts._aria_cases_batch_H [--dry-run]
+"""
+import sqlite3, sys, argparse
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+DB = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
+
+CASES = [
+    # (vendor_id, case_name, case_type, year_start, year_end, confidence_level, estimated_fraud_mxn, notes)
+    (2402,  "QUIMAE CFE Chemical Capture",
+            "institutional_capture", 2002, 2017, "high", 1_227_000_000,
+            "CFE 90.9% (1,228M of 1,350M lifetime), 53 contracts SB=50.9% DA=9.4%; chemical supplier "
+            "dominant CFE single-bid capture across 15 years then disappears post-2017 (P6 Capture, "
+            "energia sector, ips=0.659 T2)"),
+    (13287, "DIBITER IMSS-ISSSTE Healthcare Ring",
+            "institutional_capture", 2003, 2020, "high", 4_212_000_000,
+            "IMSS 78.9% (3,510M) + ISSSTE 15.8% (702M) = 94.7% in classic IMSS-ISSSTE healthcare "
+            "ring; 432 IMSS contracts DA=43.8%; peak bursts 2010/2013/2016/2017 ($597M-$776M); "
+            "activity ceases 2020 (P5, salud T2, ips=0.716)"),
+    (89737, "HIDROVIAS Y CARRETERAS Puebla-CONAPESCA SB",
+            "single_bid_capture", 2010, 2020, "high", 233_000_000,
+            "CONAPESCA 46.9% (125M) + Puebla-Finanzas 39.1% (104M) = 86%; 8 contracts SB=100%; "
+            "sector-mismatched name (highways) winning aquaculture+state finance contracts incl "
+            "single $104M Puebla 2016 award; bursty (P5, ips=0.816 T1)"),
+    (12221, "CONSTRUMAQUINAS BAJIO GTO Obra Publica SB",
+            "single_bid_capture", 2003, 2014, "high", 232_000_000,
+            "GTO-SOP 67.8% (201M) + UGTO+IIFE-GTO 27.6% = 95% Guanajuato-state capture; 19 "
+            "contracts SB=89.5% DA=10.5%; 10 single-bid contracts at SOP-GTO worth 201M over "
+            "2003-2008; classic state-level construction-machinery capture (P7, infraestructura T2)"),
+]
+
+SKIPS = [
+    (55640, "VIAJES INTERNACIONALES MONARCA: travel agency 16yr (2010-2025), IMSS 57.7%<60% "
+            "concentration, DA only 24.3%, diversified across IMSS/ISSSTE/COLEF/research institutes "
+            "- legitimate travel services with institutional diversity (protective signal)"),
+    (8657,  "CRYOINFRA: industrial cryogenic gas supplier (analog to INFRA/PRAXAIR structural FPs); "
+            "PEMEX-EP 68.9% is oligopoly-market concentration (3-4 suppliers exist nationally) not "
+            "corruption; single $2.14B 2008 contract is megaproject scale; post-2015 diversified "
+            "across IMSS/ISSSTE/CFE - structural monopoly market not procurement fraud"),
+]
 
 
-def get_max_case_id(conn):
-    row = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()
-    return row[0] if row[0] else 0
-
-
-def main():
-    conn = sqlite3.connect(str(DB_PATH), timeout=60)
+def run(dry_run=False):
+    conn = sqlite3.connect(DB, timeout=60)
+    conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=60000")
+    conn.execute("PRAGMA synchronous=NORMAL")
 
-    max_id = get_max_case_id(conn)
-    print(f"Current max GT case ID: {max_id}")
+    max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
+    assert max_id == 1418, f"Safety guard: expected max_id == 1418, got {max_id}"
+    print(f"Max GT case id: {max_id}")
+    print(f"Inserting cases {max_id+1}-{max_id+len(CASES)}")
+    print(f"Mode: {'DRY-RUN' if dry_run else 'LIVE'}\n")
 
-    if max_id < 751:
-        print(f"ERROR: Expected max_id >= 751, got {max_id}")
-        conn.close()
-        sys.exit(1)
+    inserted = []
+    total_contracts = 0
 
-    # Chain from current max
-    case_752 = max_id + 1
-    case_753 = max_id + 2
-
+    if not dry_run:
+        conn.execute("BEGIN TRANSACTION")
     try:
-        conn.execute("BEGIN")
+        for i, case in enumerate(CASES):
+            vid, cname, ctype, yr_s, yr_e, conf, fraud_est, notes = case
+            case_id_num = max_id + 1 + i
+            case_id = f"CASE-{case_id_num}"
 
-        # ---- Case 752: HIDROVIAS Y CARRETERAS — dredging single-bid capture ----
-        conn.execute("""INSERT OR IGNORE INTO ground_truth_cases
-            (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
-             source_news, year_start, year_end, notes)
-            VALUES (?,?,?,?,?,?,?,?,?,?)""", (
-            case_752,
-            f"CASE-{case_752}",
-            "HIDROVIAS Y CARRETERAS dredging single-bid capture",
-            "single_bid_capture",
-            "medium",
-            266_500_000,
-            "ARIA T3 investigation — systematic 100% single-bid pattern",
-            2010, 2020,
-            "Dredging/canal company winning 100% of competitive tenders as sole bidder "
-            "across CONAPESCA (5 contracts, 125M), CONAGUA, Tamaulipas, and Puebla state. "
-            "8 contracts totaling 266M MXN. Zero direct awards — all formally competitive "
-            "but with zero competition. Consistent with specification tailoring to exclude "
-            "competitors in niche dredging market."
-        ))
+            if not dry_run:
+                conn.execute("""
+                    INSERT OR IGNORE INTO ground_truth_cases
+                      (id, case_id, case_name, case_type, year_start, year_end,
+                       confidence_level, estimated_fraud_mxn, notes, case_origin)
+                    VALUES (?,?,?,?,?,?,?,?,?,'batch_H')
+                """, (case_id_num, case_id, cname, ctype, yr_s, yr_e, conf, fraud_est, notes))
 
-        conn.execute("""INSERT OR IGNORE INTO ground_truth_vendors
-            (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
-            VALUES (?,?,?,?,?)""", (
-            case_752, 89737,
-            "HIDROVIAS Y CARRETERAS SA DE CV",
-            "medium",
-            "aria_queue"
-        ))
+                conn.execute("""
+                    INSERT OR IGNORE INTO ground_truth_vendors
+                      (case_id, vendor_id, evidence_strength, match_method)
+                    VALUES (?, ?, ?, 'aria_batch_H')
+                """, (case_id, vid, conf))
 
-        print(f"  Inserted case {case_752}: HIDROVIAS Y CARRETERAS SB capture")
+                rows = conn.execute("""
+                    SELECT id FROM contracts WHERE vendor_id=? AND amount_mxn > 0
+                """, (vid,)).fetchall()
+                for (ctr_id,) in rows:
+                    conn.execute("""
+                        INSERT OR IGNORE INTO ground_truth_contracts (case_id, contract_id)
+                        VALUES (?, ?)
+                    """, (case_id, ctr_id))
+                n_contracts = len(rows)
 
-        # ---- Case 753: CONSTRUMAQUINAS DEL BAJIO — Guanajuato construction SB capture ----
-        conn.execute("""INSERT OR IGNORE INTO ground_truth_cases
-            (id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn,
-             source_news, year_start, year_end, notes)
-            VALUES (?,?,?,?,?,?,?,?,?,?)""", (
-            case_753,
-            f"CASE-{case_753}",
-            "CONSTRUMAQUINAS DEL BAJIO Guanajuato construction SB capture",
-            "single_bid_capture",
-            "medium",
-            297_200_000,
-            "ARIA T3 investigation — state-level construction monopoly via single-bid",
-            2003, 2014,
-            "Construction company with 89.5% single-bid rate concentrated in Guanajuato state. "
-            "10 contracts at Secretaria de Obra Publica de Guanajuato (201M, 68% of total value) "
-            "ALL single-bid. Also single-bid at Universidad de Guanajuato (46M) and INIFEG (19M). "
-            "19 contracts totaling 297M MXN. Largest single contract 86.8M (risk=0.747). "
-            "Classic state-level capture pattern: one company dominates competitive tenders "
-            "across multiple Guanajuato agencies 2003-2014."
-        ))
+                conn.execute(
+                    "UPDATE aria_queue SET review_status='confirmed', reviewer_notes=? "
+                    "WHERE vendor_id=?",
+                    (f"GT {case_id}: {cname}", vid)
+                )
+            else:
+                n_contracts = conn.execute(
+                    "SELECT COUNT(*) FROM contracts WHERE vendor_id=? AND amount_mxn > 0",
+                    (vid,)
+                ).fetchone()[0]
 
-        conn.execute("""INSERT OR IGNORE INTO ground_truth_vendors
-            (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
-            VALUES (?,?,?,?,?)""", (
-            case_753, 12221,
-            "CONSTRUMAQUINAS DEL BAJIO S.A DE C.V.",
-            "medium",
-            "aria_queue"
-        ))
+            total_contracts += n_contracts
+            inserted.append(case_id_num)
+            print(f"  Case {case_id_num} (v{vid}): linked {n_contracts} contracts ({yr_s}-{yr_e}) "
+                  f"[{conf}] {cname[:50]}")
 
-        print(f"  Inserted case {case_753}: CONSTRUMAQUINAS DEL BAJIO SB capture")
+        for vid, reason in SKIPS:
+            if not dry_run:
+                conn.execute(
+                    "UPDATE aria_queue SET review_status='reviewed', reviewer_notes=? "
+                    "WHERE vendor_id=?",
+                    (f"SKIP: {reason[:200]}", vid)
+                )
+            print(f"  v{vid}: SKIP -- {reason[:100]}")
 
-        # ---- Update aria_queue for added vendors ----
-        for vid in [89737, 12221]:
-            conn.execute(
-                "UPDATE aria_queue SET in_ground_truth = 1 WHERE vendor_id = ?",
-                (vid,)
-            )
-        print("  Updated aria_queue.in_ground_truth for vendors 89737, 12221")
+        if not dry_run:
+            conn.execute("COMMIT")
 
-        conn.execute("COMMIT")
-
-        # ---- Verify ----
-        total = conn.execute("SELECT COUNT(*) FROM ground_truth_cases").fetchone()[0]
-        vendors_total = conn.execute("SELECT COUNT(*) FROM ground_truth_vendors").fetchone()[0]
-        print(f"\nGT totals: {total} cases, {vendors_total} vendors")
-
-        for vid in [89737, 12221]:
-            row = conn.execute(
-                "SELECT in_ground_truth FROM aria_queue WHERE vendor_id=?", (vid,)
-            ).fetchone()
-            print(f"  vendor {vid}: in_ground_truth = {row[0]}")
+        print(f"\nDone. {'Would insert' if dry_run else 'Inserted'} {len(inserted)} cases "
+              f"({inserted[0] if inserted else '-'}-{inserted[-1] if inserted else '-'}), "
+              f"{'would link' if dry_run else 'linked'} {total_contracts} contracts, "
+              f"skipped {len(SKIPS)}.")
 
     except Exception as e:
-        conn.execute("ROLLBACK")
+        if not dry_run:
+            conn.execute("ROLLBACK")
         print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        raise
     finally:
         conn.close()
 
-    print("\nSkipped vendors (not added to GT):")
-    print("  22384 CORPORATIVO SALTILLENSE — single anomalous 1.95B contract, no systemic pattern")
-    print("  90457 SUPERVISION TECNICA DEL NORTE — diversified vehicle leasing, no capture pattern")
 
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    p = argparse.ArgumentParser()
+    p.add_argument('--dry-run', action='store_true')
+    args = p.parse_args()
+    run(dry_run=args.dry_run)
