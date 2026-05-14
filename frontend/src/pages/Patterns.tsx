@@ -225,6 +225,7 @@ function PatternCard({
                   name={v.vendor_name}
                   size="sm"
                   riskScore={v.avg_risk_score}
+                  sectorCode={v.primary_sector_name ?? null}
                 />
               </div>
             ))}

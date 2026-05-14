@@ -543,6 +543,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               name={item.vendor_name}
               size="sm"
               riskScore={item.avg_risk_score}
+              sectorCode={item.primary_sector_name ?? null}
               ariaTier={item.ips_tier}
               narrative
               hideIcon

@@ -380,6 +380,7 @@ export default function PatternDossier() {
                       name={v.vendor_name}
                       size="sm"
                       riskScore={v.avg_risk_score}
+                      sectorCode={v.primary_sector_name ?? null}
                       ariaTier={v.ips_tier}
                     />
                   </div>
