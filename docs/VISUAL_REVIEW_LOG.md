@@ -358,3 +358,46 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key le
 
 ### Overall: WARN
 HTTP and API checks blocked by sandbox egress proxy — not a site outage. Bilingual gap scan completed locally: no genuine i18n gaps or hardcoded English strings found. Run checks from VPS (37.60.232.109) or an unrestricted host to verify live site health.
+
+---
+## Visual Review — 2026-05-14T12:12:23Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/atlas | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/aria | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/sectors | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/cases | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/methodology | 403 (egress proxy: host_not_allowed) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy: host_not_allowed) | ⚠ |
+
+Note: All 403s confirmed as egress-proxy interception (`x-deny-reason: host_not_allowed`). The execution environment's outbound HTTPS to rubli.xyz is blocked. TLS handshake completed to 37.60.232.109:443 (cert OK) but the Caddy reverse proxy's access policy rejects this agent's IP. Consistent with the 2026-05-13 run — not a regression in the site itself.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (egress proxy blocked) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (egress proxy blocked) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (egress proxy blocked) | ⚠ |
+| /api/v1/sectors | 403 (egress proxy blocked) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all false positives (identical to 2026-05-13 run, no new regressions):
+- Company names in `Executive.tsx` (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`)
+- Type/tier key lookups (`TIER_STYLES[tierName as TierKey]` — `InstitutionScorecards.tsx:443`)
+- Academic author abbreviation (`Mahalanobis, P.C.` — `Methodology.tsx:118`)
+- Legal suffix constants (`'S.A.', 'S.C.', 'A.C.', 'C.V.'` etc. — `ExploreCanvas.tsx:1415–1416`)
+- Administration abbreviation (`A.M. Lopez Obrador` — `AdminSectorHeatmap.tsx:30`)
+- Comment string in `CaseLibrary.tsx:216` (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+Egress proxy blocks all outbound HTTPS from this environment — HTTP and API checks cannot complete from this sandbox. This is a persistent infrastructure limitation, not a site failure. Bilingual gap scan: no genuine i18n leaks or hardcoded English-only strings. No regressions vs. 2026-05-13 run. To get valid HTTP/API results, run from VPS (37.60.232.109) or an unrestricted host.
