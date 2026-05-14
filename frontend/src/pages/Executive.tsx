@@ -71,7 +71,7 @@ function buildLensTiers(t1Count: number, gtCount: number, hcCount: number): Lens
       count: hcCount,
       display: formatNumber(hcCount),
       label: { en: 'high + critical risk', es: 'riesgo alto + crítico' },
-      sublabel: { en: '13.5% of all contracts · OECD compliant band', es: '13.5% del total · banda OCDE cumplida' },
+      sublabel: { en: '11.0% of all contracts · OECD compliant band', es: '11.0% del total · banda OCDE cumplida' },
       ringR: 72,
       color: '#f59e0b',
       ringWidth: 1.1,
