@@ -745,7 +745,7 @@ interface PatternRiskEntry {
 // rather than observed price. Gap = pesosBn - baselineMdp = "corruption premium".
 const PATTERN_RISK: PatternRiskEntry[] = [
   { code: 'P5', label: { en: 'Systematic Overpricing',   es: 'Sobreprecio Sistemático' }, pesosBn: 240, baselineMdp: 10, vendors: 3985,  color: '#dc2626' },
-  { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  baselineMdp: 5,  vendors: 6034,  color: '#dc2626' },
+  { code: 'P2', label: { en: 'Ghost Companies',          es: 'Empresas Fantasma' },        pesosBn: 95,  baselineMdp: 5,  vendors: 6118,  color: '#dc2626' },
   { code: 'P6', label: { en: 'Institutional Capture',    es: 'Captura Institucional' },    pesosBn: 78,  baselineMdp: 12, vendors: 15923, color: '#dc2626' },
   { code: 'P1', label: { en: 'Concentrated Monopoly',    es: 'Monopolio Concentrado' },    pesosBn: 64,  baselineMdp: 3,  vendors: 44,    color: '#dc2626' },
   { code: 'P3', label: { en: 'Single-Use Intermediary',  es: 'Intermediaria Uso Único' },  pesosBn: 41,  baselineMdp: 2,  vendors: 2974,  color: '#b45309' },
@@ -1889,7 +1889,7 @@ export default function Executive() {
                   <ArrowUpRight className="h-2.5 w-2.5" />
                 </span>
               </div>
-              {/* Detection gap — magazine triptych: [42 official | 143× | 6,034 detected] */}
+              {/* Detection gap — magazine triptych: [42 official | 145× | 6,118 detected] */}
               <div className="mb-4 rounded-sm overflow-hidden" style={{ height: 92 }}>
                 <div className="flex h-full">
 
@@ -1919,7 +1919,7 @@ export default function Executive() {
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
                     <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#dc2626' }}>
-                      143×
+                      145×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
                   </div>
@@ -1949,7 +1949,7 @@ export default function Executive() {
                         className="font-mono font-bold text-[42px] leading-none tabular-nums"
                         style={{ color: '#dc2626' }}
                       >
-                        6,034
+                        6,118
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"

@@ -142,7 +142,7 @@ function buildPatternsFull(isEs: boolean): PatternFull[] {
         ? 'is_efos_definitivo → 0.90; OR no_rfc + years≤2 + contratos≤10 + DA>80% + valor≥1M → 0.50'
         : 'is_efos_definitivo → 0.90; OR no_rfc + years≤2 + contracts≤10 + DA>80% + value≥1M → 0.50',
       color: '#57534e',
-      vendors: 6034,
+      vendors: 6118,
       t1: 1,
       avgIps: 0.214,
       gtCases: 144,

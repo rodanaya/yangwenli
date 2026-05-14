@@ -101,7 +101,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
-    brief: 'RUBLI identified 6,034 vendors matching ghost company patterns across 23 years of Mexican federal procurement. They appear, win contracts, then vanish from the tax registry.',
+    brief: 'RUBLI identified 6,118 vendors matching ghost company patterns across 23 years of Mexican federal procurement. They appear, win contracts, then vanish from the tax registry.',
   },
   {
     slug: 'el-gran-precio',
