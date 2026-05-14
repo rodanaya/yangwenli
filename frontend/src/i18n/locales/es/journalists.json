@@ -115,7 +115,8 @@
     },
     "volatilidad-el-precio-del-riesgo": {
       "headline": "Volatilidad de Precios: La Pistola Humeante del Algoritmo",
-      "sub": "Predictor más fuerte del modelo v0.6.5 · coeficiente +0.5343 en 3M de contratos"
+      "sub": "Predictor más fuerte del modelo v0.8.5 · coeficiente +0.558 en 3M de contratos",
+      "brief": "La volatilidad de precios es el predictor más fuerte del modelo v0.8.5 de RUBLI, superando a las otras 17 variables por un margen del 43%. Captura la huella forense de precios negociados — no competidos."
     }
   }
 }

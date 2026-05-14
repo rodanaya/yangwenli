@@ -115,7 +115,8 @@
     },
     "volatilidad-el-precio-del-riesgo": {
       "headline": "Price Volatility: The Algorithm's Smoking Gun",
-      "sub": "Strongest predictor in v0.6.5 model · coefficient +0.5343 across 3M contracts"
+      "sub": "Strongest predictor in v0.8.5 model · coefficient +0.558 across 3M contracts",
+      "brief": "Price volatility is the single strongest predictor in RUBLI's v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices."
     }
   }
 }

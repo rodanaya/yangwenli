@@ -136,6 +136,17 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 28264,
     brief: 'Statistical spikes at 210K, 250K, and 300K MXN — mathematically impossible in a random pricing universe. The evidence points to systematic threshold manipulation to avoid competitive bidding requirements.',
   },
+  {
+    slug: 'volatilidad-el-precio-del-riesgo',
+    headline: "Price Volatility: The Algorithm's Smoking Gun",
+    sub: 'Strongest predictor in v0.8.5 model · coefficient +0.558 across 3M contracts',
+    type: 'overpricing',
+    status: 'solo_datos',
+    amount: 0,
+    era: 'cross',
+    contracts: 3051294,
+    brief: 'Price volatility is the single strongest predictor in RUBLI\'s v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices.',
+  },
 ]
 
 // ---------------------------------------------------------------------------
