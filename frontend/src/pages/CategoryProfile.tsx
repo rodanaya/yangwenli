@@ -1859,6 +1859,8 @@ export default function CategoryProfile() {
                             id={sc.category_id}
                             name={isEs ? sc.name_es : sc.name_en}
                             size="xs"
+                            sectorCode={sc.sector_code ?? null}
+                            riskScore={sc.avg_risk ?? null}
                           />
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
