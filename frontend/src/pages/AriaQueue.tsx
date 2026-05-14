@@ -724,15 +724,19 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
                   ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
                   : item.web_evidence_verdict === 'CORRUPTION_MENTION'
                     ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                    : 'bg-background-elevated text-text-secondary border-border'
+                    : item.web_evidence_verdict === 'SHELL_SIGNAL'
+                      ? 'bg-risk-medium/10 text-risk-medium border-risk-medium/30'
+                      : 'bg-background-elevated text-text-secondary border-border'
               )}
               title={`Evidencia web CENTINELA — ${item.web_evidence_verdict} (score ${((item.web_evidence_score ?? 0) * 100).toFixed(0)})`}
             >
               {item.web_evidence_verdict === 'SANCTION'
-                ? (isEs ? 'SANC·WEB' : 'SANC·WEB')
+                ? 'SANC·WEB'
                 : item.web_evidence_verdict === 'CORRUPTION_MENTION'
-                  ? (isEs ? 'CORR·WEB' : 'CORR·WEB')
-                  : (isEs ? 'PRENSA' : 'PRESS')}
+                  ? 'CORR·WEB'
+                  : item.web_evidence_verdict === 'SHELL_SIGNAL'
+                    ? (isEs ? 'FANTASMA·WEB' : 'SHELL·WEB')
+                    : (isEs ? 'PRENSA' : 'PRESS')}
             </span>
           )}
 
