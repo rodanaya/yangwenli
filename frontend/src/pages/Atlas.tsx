@@ -1638,8 +1638,8 @@ export default function Atlas() {
           }}
         >
           {lang === 'en'
-            ? <>Each mark = a slice of the federal contract record. Choose a <em style={{ color: 'var(--color-text-secondary)' }}>lens</em>, drag the year, click a cluster to drill in.</>
-            : <>Cada marca = una fracción del registro federal. Elige una <em style={{ color: 'var(--color-text-secondary)' }}>lente</em>, arrastra el año, haz clic para profundizar.</>
+            ? <>Pick a <em style={{ color: 'var(--color-text-secondary)' }}>story</em> to let data guide the narration, or choose a <em style={{ color: 'var(--color-text-secondary)' }}>lens</em> and drag the year to watch the procurement universe evolve from 2008 to 2025.</>
+            : <>Elige una <em style={{ color: 'var(--color-text-secondary)' }}>historia</em> y deja que los datos guíen el relato, o selecciona una <em style={{ color: 'var(--color-text-secondary)' }}>lente</em> y arrastra el año para ver el universo de contratación evolucionar de 2008 a 2025.</>
           }
         </p>
       </header>

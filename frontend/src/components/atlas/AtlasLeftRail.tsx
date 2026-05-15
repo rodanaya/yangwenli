@@ -199,6 +199,39 @@ export function AtlasLeftRail({
       {/* ── Scrollable body ─────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto">
 
+        {/* ── STORIES — lead with the editorial mission ─────────────── */}
+        <RailSection label={lang === 'en' ? 'STORIES' : 'HISTORIAS'} />
+
+        <div className="px-2 pb-3">
+          {ATLAS_STORIES.map((story) => (
+            <button
+              key={story.id}
+              onClick={() => onStoryOpen(story.id)}
+              className="w-full text-left px-3 py-2.5 rounded-sm transition-colors mb-0.5 flex items-start gap-2 hover:bg-background-elevated/40"
+              style={{ borderLeft: `2px solid ${story.accent}` }}
+            >
+              <BookOpen
+                className="h-3 w-3 flex-shrink-0 mt-0.5"
+                style={{ color: story.accent }}
+              />
+              <div className="min-w-0">
+                <div
+                  className="text-[11px] font-mono font-bold truncate"
+                  style={{ color: 'var(--color-text-primary)' }}
+                >
+                  {story.title[lang]}
+                </div>
+                <div
+                  className="text-[9px] font-mono mt-0.5"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {story.chapters.length} {lang === 'en' ? 'cap' : 'cap'} · {story.duration}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
         {/* ── LENS ──────────────────────────────────────────────────── */}
         <RailSection label={lang === 'en' ? 'LENS' : 'LENTE'} />
         <div className="px-2 pb-1" role="radiogroup" aria-label={lang === 'en' ? 'Observatory lens' : 'Lente del Observatorio'}>
@@ -402,51 +435,13 @@ export function AtlasLeftRail({
           </div>
         </div>
 
-        {/* ── STORIES ───────────────────────────────────────────────── */}
-        <RailSection label={lang === 'en' ? 'STORIES' : 'HISTORIAS'} />
-
-        <div className="px-2 pb-4">
-          {ATLAS_STORIES.map((story) => (
-            <button
-              key={story.id}
-              onClick={() => onStoryOpen(story.id)}
-              className="w-full text-left px-3 py-2.5 rounded-sm transition-colors mb-0.5 flex items-start gap-2 hover:bg-background-elevated/40"
-              style={{ borderLeft: `2px solid ${story.accent}` }}
-            >
-              <BookOpen
-                className="h-3 w-3 flex-shrink-0 mt-0.5"
-                style={{ color: story.accent }}
-              />
-              <div className="min-w-0">
-                <div
-                  className="text-[11px] font-mono font-bold truncate"
-                  style={{ color: 'var(--color-text-primary)' }}
-                >
-                  {story.title[lang]}
-                </div>
-                <div
-                  className="text-[9px] font-mono mt-0.5"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  {story.chapters.length} {lang === 'en' ? 'cap' : 'cap'} · {story.duration}
-                </div>
-              </div>
-            </button>
-          ))}
-
-          {/* Hairline divider + save stub (P5 will wire this fully) */}
-          <div
-            className="my-2 mx-1"
-            style={{ height: 1, background: 'var(--color-border)' }}
-          />
+        {/* ── SAVE VIEW (P5 stub) ───────────────────────────────────── */}
+        <div className="px-4 pb-4">
           <button
-            onClick={() => {
-              // P5: will serialize current state to localStorage
-              // For P1: no-op with visual feedback
-            }}
+            onClick={() => { /* P5: serialize state to localStorage */ }}
             className="w-full text-left px-3 py-2 rounded-sm transition-colors text-[10px] font-mono flex items-center gap-1.5 hover:bg-background-elevated/30"
-            style={{ color: 'var(--color-text-muted)' }}
-            title={lang === 'en' ? 'Coming in P5 — saves current lens, year, filters, and pin to a named view' : 'Disponible en P5 — guarda la lente, año, filtros y pin actuales como vista nombrada'}
+            style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+            title={lang === 'en' ? 'Coming soon — saves lens, year, filters, and pin' : 'Próximamente — guarda lente, año, filtros y pin'}
           >
             <span style={{ color: ACCENT }}>+</span>
             {lang === 'en' ? 'Save current view' : 'Guardar vista actual'}
