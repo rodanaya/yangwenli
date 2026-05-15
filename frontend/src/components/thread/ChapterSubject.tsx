@@ -123,6 +123,7 @@ interface ChapterSubjectProps {
 
 export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
   const { t } = useTranslation('redThread')
+  const { t: tc } = useTranslation('common')
 
   const sectorName = vendor.primary_sector_name ?? aria?.primary_sector_name ?? null
   const sectorColor = sectorName
@@ -131,6 +132,7 @@ export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
 
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const riskColor = RISK_DOT_COLORS[riskLevel]
+  const riskLevelLabel = tc(riskLevel)
 
   return (
     <ChapterShell id="chapter-subject">
@@ -169,7 +171,7 @@ export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
           className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em]"
           style={{ backgroundColor: riskColor + '14', color: riskColor, border: `1px solid ${riskColor}33` }}
         >
-          {t('subject.riskBadge', { level: riskLevel })}
+          {t('subject.riskBadge', { level: riskLevelLabel })}
         </span>
         {aria && (
           <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30">
