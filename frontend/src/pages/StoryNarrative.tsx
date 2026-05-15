@@ -1371,6 +1371,8 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   : stat.tone === 'data'
                     ? 'var(--color-accent)'
                     : 'var(--color-text-primary)'
+              const prefix = (lang === 'es' && stat.prefix_es) ? stat.prefix_es : stat.prefix
+              const suffix = (lang === 'es' && stat.suffix_es) ? stat.suffix_es : stat.suffix
               return (
                 <motion.div
                   key={idx}
@@ -1380,12 +1382,12 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   className="flex flex-wrap items-baseline gap-x-2"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
-                  {stat.prefix && (
+                  {prefix && (
                     <span
                       className="text-text-secondary italic"
                       style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
-                      {stat.prefix}
+                      {prefix}
                     </span>
                   )}
                   <span
@@ -1398,12 +1400,12 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                   >
                     {stat.value}
                   </span>
-                  {stat.suffix && (
+                  {suffix && (
                     <span
                       className="text-text-secondary italic"
                       style={{ fontSize: 'clamp(0.9rem, 1.2vw, 1.1rem)' }}
                     >
-                      {stat.suffix}
+                      {suffix}
                     </span>
                   )}
                 </motion.div>

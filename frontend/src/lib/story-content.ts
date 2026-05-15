@@ -264,10 +264,12 @@ export interface StoryDef {
   kickerStats?: Array<{
     /** Optional verb prefix shown in muted serif before the number (e.g. "SAT confirmed") */
     prefix?: string
+    prefix_es?: string
     /** The number itself — rendered enormous */
     value: string
     /** Tail text after the number (e.g. "ghosts.") — same line, smaller */
     suffix?: string
+    suffix_es?: string
     /** Visual emphasis: 'critical' = red callout, 'data' = amber, 'muted' = neutral */
     tone?: 'critical' | 'data' | 'muted'
   }>
@@ -361,9 +363,9 @@ export const STORIES: StoryDef[] = [
       color: '#f59e0b',
     },
     kickerStats: [
-      { prefix: 'SAT confirmed', value: '42', suffix: 'ghosts.', tone: 'muted' },
-      { prefix: 'RUBLI flagged', value: '6,118', suffix: 'matching the same pattern.', tone: 'data' },
-      { value: '6,076', suffix: 'still doing business with the government.', tone: 'critical' },
+      { prefix: 'SAT confirmed', prefix_es: 'El SAT confirmó', value: '42', suffix: 'ghosts.', suffix_es: 'empresas fantasma.', tone: 'muted' },
+      { prefix: 'RUBLI flagged', prefix_es: 'RUBLI identificó', value: '6,118', suffix: 'matching the same pattern.', suffix_es: 'con el mismo patrón.', tone: 'data' },
+      { value: '6,076', suffix: 'still doing business with the government.', suffix_es: 'siguen contratando con el gobierno.', tone: 'critical' },
     ],
     chapters: [
       {
