@@ -1314,23 +1314,23 @@ export default function AriaPage() {
             EDITORIAL TIER STRIP + DISTRIBUTION
             aria-P1: 4-row tier strip + approximate score distribution.
            ════════════════════════════════════════════════════════════════ */}
-        <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_380px]">
           {/* Left: tier strip */}
           <TierEditorialStrip counts={tierCounts} isEs={isEs} statsLoading={statsLoading} />
 
-          {/* Right: approximate risk score distribution */}
+          {/* Right: risk score distribution */}
           <div>
             <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
               {isEs ? '§ DISTRIBUCIÓN DE PUNTAJE · v0.8.5' : '§ SCORE DISTRIBUTION · v0.8.5'}
             </p>
             <div className="rounded-sm border border-border/60 bg-background-card p-3">
               {statsLoading ? (
-                <Skeleton className="h-[160px] w-full rounded-sm" />
+                <Skeleton className="h-[210px] w-full rounded-sm" />
               ) : (
                 <EditorialDistribution
                   data={synthesizeScoreData(tierCounts)}
                   domain={[0, 1]}
-                  height={160}
+                  height={210}
                   caption={
                     isEs
                       ? 'Distribución aproximada de puntajes · derivada de conteos por nivel · v0.8.5'

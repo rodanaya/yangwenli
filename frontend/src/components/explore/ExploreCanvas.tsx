@@ -948,12 +948,12 @@ function InstitutionBodyVisual({
   const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
   const lbl = shortLabel(inst.name)
 
-  // Crisp three-tier label strategy — no text ever floats behind another bubble:
-  //   large  (r ≥ 22): white acronym inside the circle  → always readable, zero overlap risk
-  //   medium (r ≥ 13): pill chip below the circle       → below is safe, nothing sits there
-  //   small  (r < 13): no label; browser <title> tooltip covers it
-  const insideLabel = r >= 22
-  const chipLabel   = !insideLabel && r >= 13
+  // Three-tier label strategy:
+  //   large  (r ≥ 20): white acronym inside the circle
+  //   medium (r ≥  9): pill chip below the circle (all acronym lengths shown)
+  //   small  (r <  9): no chip; full name surfaces in hover stat line
+  const insideLabel = r >= 20
+  const chipLabel   = !insideLabel && r >= 9
   const chipW = lbl.length * 5.8 + 10
   const chipH = 14
 
@@ -988,9 +988,8 @@ function InstitutionBodyVisual({
         </text>
       )}
 
-      {/* Medium: risk-tinted pill chip below the bubble — only when shortLabel
-          produced a compact acronym (≤ 8 chars); silently skip overlong ones. */}
-      {chipLabel && lbl.length <= 8 && (
+      {/* Medium: risk-tinted pill chip below the bubble for all acronyms */}
+      {chipLabel && (
         <>
           <rect
             x={cx - chipW / 2}
@@ -1021,17 +1020,19 @@ function InstitutionBodyVisual({
       )}
 
       {/* Hover stat line for large bubbles */}
-      {hovered && r >= 28 && (
+      {hovered && (
         <text
           x={cx}
-          y={cy + rEffective + 16}
+          y={cy + rEffective + (chipLabel ? chipH + 12 : 14)}
           textAnchor="middle"
-          fontSize={9}
+          fontSize={r < 13 ? 9 : 9}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
           style={{ pointerEvents: 'none' }}
         >
-          {formatNumber(inst.total_contracts)} · {formatCompactMXN(inst.total_amount_mxn)}
+          {r < 13
+            ? inst.name.length > 32 ? inst.name.slice(0, 31) + '…' : inst.name
+            : `${formatNumber(inst.total_contracts)} · ${formatCompactMXN(inst.total_amount_mxn)}`}
         </text>
       )}
     </motion.g>

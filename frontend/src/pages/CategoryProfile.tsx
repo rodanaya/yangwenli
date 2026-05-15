@@ -542,14 +542,14 @@ export default function CategoryProfile() {
     : 0
 
   return (
-    <div className="space-y-7 pb-12">
+    <div className="space-y-5 pb-8">
       {/* ================================================================= */}
       {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
-      <header className="border-b border-border pb-6">
+      <header className="border-b border-border pb-4">
         <Link
           to="/sectors?view=categories"
-          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-3"
         >
           <ArrowLeft className="h-3 w-3" />
           {t('profile.breadcrumb')}
@@ -644,7 +644,7 @@ export default function CategoryProfile() {
         >
           {/* Stat 1 — Total Value */}
           <div
-            className="bg-background-card px-5 py-4 border-l-[3px]"
+            className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: sectorColor }}
           >
             <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
@@ -671,7 +671,7 @@ export default function CategoryProfile() {
 
           {/* Stat 2 — Risk Indicator */}
           <div
-            className="bg-background-card px-5 py-4 border-l-[3px]"
+            className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: riskColor }}
           >
             <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
@@ -703,7 +703,7 @@ export default function CategoryProfile() {
 
           {/* Stat 3 — Direct Award vs OECD */}
           <div
-            className="bg-background-card px-5 py-4 border-l-[3px]"
+            className="bg-background-card px-4 py-3 border-l-[3px]"
             style={{ borderLeftColor: daColor }}
           >
             <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
@@ -743,8 +743,8 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §4 — Historical Timeline                                          */}
       {/* ================================================================= */}
-      <section className="pt-1">
-        <div className="mb-3 flex items-baseline justify-between gap-3 flex-wrap">
+      <section>
+        <div className="mb-2 flex items-baseline justify-between gap-3 flex-wrap">
           <div>
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
               §4 · {t('profile.sections.timeline')}
@@ -755,7 +755,7 @@ export default function CategoryProfile() {
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                 fontStyle: 'italic',
                 fontWeight: 500,
-                fontSize: '20px',
+                fontSize: '17px',
                 letterSpacing: '-0.005em',
               }}
             >
@@ -763,7 +763,7 @@ export default function CategoryProfile() {
             </h2>
           </div>
         </div>
-        <div className="border border-border/60 rounded-sm bg-background-card p-4">
+        <div className="border border-border/60 rounded-sm bg-background-card p-3">
             {trendsLoading ? (
               <ChartSkeleton height={320} type="area" />
             ) : timelineData.length > 0 ? (
@@ -805,8 +805,8 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §5 — Sexenio Comparison                                           */}
       {/* ================================================================= */}
-      <section className="pt-1">
-        <div className="mb-3">
+      <section>
+        <div className="mb-2">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
             §5 · {t('profile.sections.byAdmin')}
           </p>
@@ -816,14 +816,14 @@ export default function CategoryProfile() {
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
               fontWeight: 500,
-              fontSize: '20px',
+              fontSize: '17px',
               letterSpacing: '-0.005em',
             }}
           >
             {t('profile.sections.byAdminSubtitle')}
           </h2>
         </div>
-        <div className="border border-border/60 rounded-sm bg-background-card p-4">
+        <div className="border border-border/60 rounded-sm bg-background-card p-3">
             {sexenioLoading ? (
               <ChartSkeleton height={280} />
             ) : sexenioBarData.length > 0 && sexenioBarData.some(d => d.value > 0) ? (
@@ -846,8 +846,8 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §6 — Market Concentration (Top Vendors)                           */}
       {/* ================================================================= */}
-      <section className="pt-1">
-        <div className="mb-3">
+      <section>
+        <div className="mb-2">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
             §6 · {t('profile.sections.concentration')}
           </p>
@@ -857,7 +857,7 @@ export default function CategoryProfile() {
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
               fontWeight: 500,
-              fontSize: '20px',
+              fontSize: '17px',
               letterSpacing: '-0.005em',
             }}
           >
@@ -866,7 +866,7 @@ export default function CategoryProfile() {
         </div>
         <Card>
           {topVendorsLoading && !vendorsTimedOut ? (
-            <CardContent className="space-y-3 py-6">
+            <CardContent className="space-y-3 py-4">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
             </CardContent>
           ) : topVendorsError ? (
@@ -980,8 +980,8 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §7 — Vendor-Institution Pairs                                     */}
       {/* ================================================================= */}
-      <section className="pt-1">
-        <div className="mb-3">
+      <section>
+        <div className="mb-2">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
             §7 · {t('profile.sections.relations')}
           </p>
@@ -991,7 +991,7 @@ export default function CategoryProfile() {
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
               fontWeight: 500,
-              fontSize: '20px',
+              fontSize: '17px',
               letterSpacing: '-0.005em',
             }}
           >
@@ -1084,8 +1084,8 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §8 — Top Contracts                                                */}
       {/* ================================================================= */}
-      <section className="pt-1">
-        <div className="mb-3">
+      <section>
+        <div className="mb-2">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
             §8 · {t('profile.sections.contracts')}
           </p>
@@ -1095,7 +1095,7 @@ export default function CategoryProfile() {
               fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
               fontStyle: 'italic',
               fontWeight: 500,
-              fontSize: '20px',
+              fontSize: '17px',
               letterSpacing: '-0.005em',
             }}
           >
@@ -1177,8 +1177,8 @@ export default function CategoryProfile() {
       {/* §9 — Subcategories                                                */}
       {/* ================================================================= */}
       {(subcategoryLoading || (subcatBarData.length > 0)) && (
-        <section className="pt-1">
-          <div className="mb-3">
+        <section>
+          <div className="mb-2">
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
               §9 · {t('profile.sections.subcategories')}
             </p>
@@ -1188,7 +1188,7 @@ export default function CategoryProfile() {
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                 fontStyle: 'italic',
                 fontWeight: 500,
-                fontSize: '20px',
+                fontSize: '17px',
                 letterSpacing: '-0.005em',
               }}
             >
@@ -1939,8 +1939,8 @@ export default function CategoryProfile() {
         }
 
         return (
-          <section className="pt-1">
-            <div className="mb-3">
+          <section>
+            <div className="mb-2">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
                 {isEs ? '§14 · DIAGNÓSTICO' : '§14 · VERDICT'}
               </p>
@@ -1950,7 +1950,7 @@ export default function CategoryProfile() {
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                   fontStyle: 'italic',
                   fontWeight: 500,
-                  fontSize: '20px',
+                  fontSize: '17px',
                   letterSpacing: '-0.005em',
                 }}
               >
@@ -2003,8 +2003,8 @@ export default function CategoryProfile() {
         if (sisters.length === 0) return null
 
         return (
-          <section className="pt-1">
-            <div className="mb-3">
+          <section>
+            <div className="mb-2">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
                 {isEs ? '§15 · COMPARACIÓN' : '§15 · COMPARISON'}
               </p>
@@ -2014,7 +2014,7 @@ export default function CategoryProfile() {
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                   fontStyle: 'italic',
                   fontWeight: 500,
-                  fontSize: '20px',
+                  fontSize: '17px',
                   letterSpacing: '-0.005em',
                 }}
               >
