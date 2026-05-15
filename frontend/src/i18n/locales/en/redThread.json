@@ -89,7 +89,8 @@
     },
     "legend": {
       "sizeLabel": "Size = annual contract value"
-    }
+    },
+    "sourceFooter": "Source: COMPRANET · RUBLI v0.8.5"
   },
   "pattern": {
     "heading": "What the Algorithm Found",

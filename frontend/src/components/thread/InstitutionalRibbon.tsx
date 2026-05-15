@@ -143,7 +143,7 @@ export function InstitutionalRibbon({
                   />
                   {inst.institution_type && (
                     <div className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted truncate">
-                      {inst.institution_type}
+                      {inst.institution_type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
                     </div>
                   )}
                 </div>

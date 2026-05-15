@@ -89,7 +89,8 @@
     },
     "legend": {
       "sizeLabel": "Tamaño = valor anual de contratos"
-    }
+    },
+    "sourceFooter": "Fuente: COMPRANET · RUBLI v0.8.5"
   },
   "pattern": {
     "heading": "Lo Que Encontró el Algoritmo",

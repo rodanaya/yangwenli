@@ -236,7 +236,10 @@ def _fallback_institution_scorecards(
     params: list = []
 
     if federal_only:
-        where_clauses.append("i.geographic_scope = 'federal'")
+        where_clauses.append(
+            "(i.institution_scope = 'federal' "
+            "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM'))"
+        )
     if search:
         where_clauses.append("i.name LIKE ?")
         params.append(f"%{search}%")
@@ -420,7 +423,10 @@ def list_institution_scorecards(
         params: list = []
 
         if federal_only:
-            where_clauses.append("i.geographic_scope = 'federal'")
+            where_clauses.append(
+                "(i.institution_scope = 'federal' "
+                "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM'))"
+            )
         if grade:
             where_clauses.append("s.grade = ?")
             params.append(grade)
@@ -546,7 +552,10 @@ def get_institution_scorecard_stats(
                 "institution_scorecards s "
                 "JOIN institutions i ON i.id = s.institution_id"
             )
-            where_clause = "WHERE i.geographic_scope = 'federal'"
+            where_clause = (
+                "WHERE i.institution_scope = 'federal' "
+                "AND COALESCE(i.gobierno_nivel, '') NOT IN ('GE', 'GEM', 'GM')"
+            )
             join_params: tuple = ()
         else:
             base_from = "institution_scorecards s"
