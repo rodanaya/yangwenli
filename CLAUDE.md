@@ -119,7 +119,7 @@ python -m scripts.aria_generate_memos --tier 1 --limit 20
 
 Queue: 248,944 vendors, T1=299 / T2=1,490 / T3=5,578 / T4=241,577. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,974, P4=220, P5=3,985, P6 Capture=15,923, P7=257. Frontend: `/aria`.
 
-CENTINELA state: T1 DONE · T2 DONE (32 CORRUPTION_MENTION) · T3 IN PROGRESS (2,060/5,578 as of 2026-05-15).
+CENTINELA state: T1 DONE · T2 DONE (32 CORRUPTION_MENTION) · T3 DONE (5,578/5,578 — 4 CORRUPTION_MENTION, all SKIP/already-in-GT; batch K = 0 new cases).
 External registries via CENTINELA: `python -m scripts.centinela_web --tier N [--no-haiku]`.
 
 ---
@@ -284,7 +284,7 @@ StoryHero, StoryCard. Mexican media convention: never use English-loaned
 
 | Old claim | Honest version |
 |---|---|
-| "320 Tier-1 priority leads" | "320 GT-anchored T1 vendors · model-discovery uplift in calibration (S.7)" |
+| "299 Tier-1 priority leads" | "299 GT-anchored T1 vendors · model-discovery uplift in calibration (S.7)" |
 | "1,843 vendor LLM memos" | "~440 LLM-narrative · 699 templated search prompts (visually demoted) · 618 analyst stubs" |
 | "1,380 documented corruption cases" | "739 cases with vendor links · 641 orphan placeholders pending mining (S.5)" |
 | "$2.84T MXN estimated fraud" | "$2.84T summed from estimated_fraud_mxn (41 cases NULL on this field)" |
