@@ -137,9 +137,7 @@ function CaseRow({
   const accent = FRAUD_TYPE_LEFT[cas.fraud_type] ?? FRAUD_TYPE_LEFT.other
   const legal = LEGAL_STATUS_STYLE[cas.legal_status] ?? LEGAL_STATUS_STYLE.unresolved
   const name = lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
-  // summary_es only exists on ScandalDetail; list endpoint returns summary_en only.
-  const summaryEs = (cas as ScandalListItem & { summary_es?: string }).summary_es
-  const summary = lang === 'es' && summaryEs ? summaryEs : cas.summary_en
+  const summary = lang === 'es' && cas.summary_es ? cas.summary_es : cas.summary_en
 
   const yearLabel = cas.contract_year_start
     ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start

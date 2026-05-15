@@ -1320,6 +1320,7 @@ export interface ScandalListItem {
   legal_status: LegalStatus
   compranet_visibility: CompranetVisibility
   summary_en: string
+  summary_es?: string
   is_verified: number
   ground_truth_case_id?: number
 }

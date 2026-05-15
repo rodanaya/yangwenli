@@ -134,7 +134,7 @@ export function RiskFloorToggle({ lang }: { lang: 'en' | 'es' }) {
  * Future v1.1 lenses (patterns / categories / terms) attach here.
  */
 const LENSES: Array<{ value: 'sectors' | 'risk'; labelEn: string; labelEs: string }> = [
-  { value: 'sectors', labelEn: 'Money', labelEs: 'Gasto' },
+  { value: 'sectors', labelEn: 'Spend', labelEs: 'Gasto' },
   { value: 'risk', labelEn: 'Risk', labelEs: 'Riesgo' },
 ]
 

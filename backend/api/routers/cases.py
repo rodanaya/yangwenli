@@ -59,6 +59,7 @@ def _row_to_list_item(row, linked_vendor_ids: Optional[List[int]] = None) -> dic
         "legal_status": row["legal_status"],
         "compranet_visibility": row["compranet_visibility"],
         "summary_en": row["summary_en"],
+        "summary_es": row["summary_es"],
         "is_verified": row["is_verified"],
         "ground_truth_case_id": row["ground_truth_case_id"],
         "linked_vendor_ids": linked_vendor_ids,
@@ -155,7 +156,7 @@ def list_cases(
                sector_id, sector_ids_json, contract_year_start, contract_year_end,
                discovery_year, amount_mxn_low, amount_mxn_high,
                severity, legal_status, compranet_visibility,
-               summary_en, is_verified, ground_truth_case_id
+               summary_en, summary_es, is_verified, ground_truth_case_id
         FROM procurement_scandals
         {where}
         ORDER BY severity DESC, amount_mxn_low DESC NULLS LAST

@@ -270,7 +270,7 @@ function ProportionalQuadrantMap({
         >
           {/* Top row: NOVELTY dominates */}
           <div
-            style={{ height: `${topHeightPct}%`, position: 'relative' }}
+            style={{ flex: topHeightPct, position: 'relative', minHeight: 160 }}
             className="rounded-sm overflow-hidden"
           >
             <div
@@ -319,7 +319,7 @@ function ProportionalQuadrantMap({
 
           {/* Bottom row: BLIND SPOT | CONFIRMED, proportional */}
           <div
-            style={{ height: `${bottomHeightPct}%`, display: 'flex', gap: 6, minHeight: 80 }}
+            style={{ flex: bottomHeightPct, display: 'flex', gap: 6, minHeight: 80 }}
           >
             <div
               style={{

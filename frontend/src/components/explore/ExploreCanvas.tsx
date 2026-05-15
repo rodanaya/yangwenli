@@ -626,7 +626,7 @@ function Z0Layer({
       >
         {lens === 'risk'
           ? (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · RISK LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE RIESGO')
-          : (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · MONEY LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE GASTO')}
+          : (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · SPEND LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE GASTO')}
       </text>
       <text
         x={PAD}
