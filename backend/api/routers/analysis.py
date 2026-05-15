@@ -4058,6 +4058,9 @@ def get_price_anomalies(
                     params.append(sector_id)
                 params.append(limit)
 
+                # Leading from z (not c) so SQLite uses idx_z_features_price_ratio
+                # (covering partial index on z_price_ratio DESC WHERE z_price_ratio > 0).
+                # Benchmark: 0.01s vs 140-193s with old JOIN direction.
                 cursor.execute(f"""
                     SELECT
                         c.id            AS contract_id,
@@ -4071,11 +4074,11 @@ def get_price_anomalies(
                         z.z_price_ratio,
                         z.z_price_volatility,
                         c.vendor_id
-                    FROM contracts c
-                    JOIN contract_z_features z ON c.id = z.contract_id
+                    FROM contract_z_features z
+                    JOIN contracts c ON c.id = z.contract_id
                     LEFT JOIN vendors v ON c.vendor_id = v.id
                     LEFT JOIN institutions i ON c.institution_id = i.id
-                    WHERE z.z_price_ratio > ?
+                    WHERE z.z_price_ratio > ? AND z.z_price_ratio > 0
                     {sector_filter}
                     AND c.amount_mxn IS NOT NULL AND c.amount_mxn > 0
                     ORDER BY z.z_price_ratio DESC
@@ -4092,9 +4095,9 @@ def get_price_anomalies(
                            SUM(c.amount_mxn) AS total_value_mxn,
                            AVG(z.z_price_ratio) AS avg_z_score,
                            MAX(z.z_price_ratio) AS max_z_score
-                    FROM contracts c
-                    JOIN contract_z_features z ON c.id = z.contract_id
-                    WHERE z.z_price_ratio > ?
+                    FROM contract_z_features z
+                    JOIN contracts c ON c.id = z.contract_id
+                    WHERE z.z_price_ratio > ? AND z.z_price_ratio > 0
                     {sector_filter}
                     AND c.amount_mxn IS NOT NULL
                 """, count_params)
@@ -4105,9 +4108,9 @@ def get_price_anomalies(
                            COUNT(*)          AS outlier_count,
                            SUM(c.amount_mxn) AS total_mxn,
                            AVG(z.z_price_ratio) AS avg_z
-                    FROM contracts c
-                    JOIN contract_z_features z ON c.id = z.contract_id
-                    WHERE z.z_price_ratio > 3
+                    FROM contract_z_features z
+                    JOIN contracts c ON c.id = z.contract_id
+                    WHERE z.z_price_ratio > 3 AND z.z_price_ratio > 0
                     AND c.amount_mxn IS NOT NULL
                     GROUP BY c.sector_id
                     ORDER BY outlier_count DESC

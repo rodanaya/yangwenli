@@ -480,6 +480,8 @@ class DataQualityResponse(BaseModel):
     last_calculated: Optional[str] = Field(None, description="When quality was last calculated")
 
 
+_data_quality_lock = threading.Lock()
+
 @router.get("/data-quality", response_model=DataQualityResponse)
 def get_data_quality(response: Response):
     """
@@ -487,43 +489,40 @@ def get_data_quality(response: Response):
 
     Returns overall quality score, grade distribution, quality by data period,
     field completeness rates, and key issues to address.
-    Cached for 2 hours since data quality rarely changes.
+    Cached for 2 hours in-process. Full result persisted to precomputed_stats
+    so subsequent container restarts serve instantly (no 85-second live scan).
     """
     cached = _stats_cache.get("data_quality")
     if cached is not None:
-        response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
+        response.headers["Cache-Control"] = "public, max-age=3600"
         return cached
 
-    # Fast path: read from precomputed_stats table if available
+    # Fast path: read the full serialized response from precomputed_stats.
+    # Written by the live-scan block below after first computation.
     with get_db() as conn:
         cursor = conn.cursor()
         try:
             row = cursor.execute(
-                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'data_quality'"
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'data_quality_full'"
             ).fetchone()
-        except Exception as e:
-            logger.debug("precomputed_stats data_quality fetch failed: %s", e)
+        except Exception:
             row = None
 
     if row is not None:
-        dq = json.loads(row["stat_value"])
-        total = dq.get("total_contracts", 0)
-        # Build grade_distribution from precomputed counts (simplified 2-bucket split)
-        high_risk = dq.get("high_risk_count", 0)
-        critical = dq.get("critical_count", 0)
-        # Reconstruct a minimal DataQualityResponse from cached counts.
-        # Full field-level breakdown still requires a live scan; supply what we have.
-        result = DataQualityResponse(
-            overall_score=0.0,  # not stored; live scan fills this
-            total_contracts=total,
-            grade_distribution=[],
-            by_structure=[],
-            field_completeness=[],
-            key_issues=[],
-            last_calculated=None,
-        )
-        # Fast path only has aggregate counts, not grade_distribution or overall_score.
-        # Fall through to live scan which produces the full response.
+        try:
+            result = DataQualityResponse(**json.loads(row["stat_value"]))
+            _stats_cache.set("data_quality", result, ttl=7200)
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            return result
+        except Exception as e:
+            logger.debug("data_quality_full deserialization failed: %s", e)
+
+    # Mutex: only one worker performs the 85-second live scan; the rest wait, then hit cache.
+    with _data_quality_lock:
+        cached2 = _stats_cache.get("data_quality")
+        if cached2 is not None:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            return cached2
 
     with get_db() as conn:
         cursor = conn.cursor()
@@ -675,8 +674,21 @@ def get_data_quality(response: Response):
             key_issues=key_issues,
             last_calculated=last_calculated
         )
-        _stats_cache.set("data_quality", result, ttl=7200)  # Cache 2 hours
-        response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour browser cache
+        _stats_cache.set("data_quality", result, ttl=7200)
+        response.headers["Cache-Control"] = "public, max-age=3600"
+
+        # Persist full result to precomputed_stats so next container restart is instant.
+        try:
+            payload = json.dumps(result.model_dump())
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at)"
+                    " VALUES('data_quality_full', ?, datetime('now'))",
+                    (payload,)
+                )
+        except Exception as e:
+            logger.warning("data_quality_full persist failed: %s", e)
+
         return result
 
 

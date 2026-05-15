@@ -195,8 +195,10 @@ def _warmup_caches():
                 timeout = 60  # biggest categories take ~30s cold
             elif "/vendors/" in ep and ("waterfall" in ep or "timeline" in ep or "linked-scandals" in ep):
                 timeout = 45  # heavy SHAP / case-link queries
-            elif "executive" in ep or "price-anomalies" in ep:
+            elif "executive" in ep:
                 timeout = 120
+            elif "price-anomalies" in ep:
+                timeout = 15  # fast after JOIN-order fix (0.01s benchmark)
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:
                 timeout = 90  # 38-60s cold; give headroom
             elif "intersection" in ep:
@@ -206,7 +208,7 @@ def _warmup_caches():
             elif "publication" in ep:
                 timeout = 30
             elif "data-quality" in ep:
-                timeout = 20
+                timeout = 120  # 85s live scan on first ever call; fast after precomputed_stats write
             elif "statistics" in ep or "overview" in ep:
                 timeout = 12
             else:
