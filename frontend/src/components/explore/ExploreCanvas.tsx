@@ -87,6 +87,29 @@ function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Sector symbol glyphs — rendered as centered SVG <text> inside each Z0 body.
+// Chosen for cross-platform Unicode support: all six are in the Basic
+// Multilingual Plane and render on Windows, macOS, Linux, Android, iOS
+// without requiring any custom font. The ⚙ gear and ✚ cross are especially
+// well-supported at small display sizes.
+// ────────────────────────────────────────────────────────────────────────────
+
+const SECTOR_SYMBOLS: Record<string, string> = {
+  salud:           '✚',  // Medical cross (U+271A HEAVY GREEK CROSS)
+  educacion:       '◎',  // Open bullseye — book/lens (U+25CE BULLSEYE)
+  infraestructura: '△',  // Triangle — arch / structure (U+25B3)
+  energia:         '⚡', // Lightning bolt (U+26A1)
+  defensa:         '⬟',  // Pentagon (U+2B1F) — shield silhouette
+  tecnologia:      '⬡',  // Hexagon — circuit/chip (U+2B21)
+  hacienda:        '◈',  // Diamond with dot — coin/balance (U+25C8)
+  gobernacion:     '⬠',  // Pentagon variant — columns/seal (U+2B20)
+  agricultura:     '❋',  // Eight-petalled flower — wheat (U+274B)
+  ambiente:        '◉',  // Circle with dot — tree ring (U+25C9)
+  trabajo:         '⚙',  // Gear (U+2699 GEAR)
+  otros:           '⊕',  // Plus in circle — catch-all (U+2295)
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // BackgroundStars — decorative star field for Z0 atmosphere.
 // Deterministic Halton-derived scatter so the layout is stable across renders.
 // Pure decoration: pointer-events: none, no interaction, no labels.
@@ -596,6 +619,7 @@ function Z0Layer({
             r={r}
             color={bodyColor}
             label={b.name}
+            sectorCode={b.code}
             isPinned={isPinned}
             index={i}
             onClick={() =>
@@ -619,6 +643,7 @@ function SectorBodyVisual({
   r,
   color,
   label,
+  sectorCode,
   onClick,
   onHover,
   isPinned = false,
@@ -629,6 +654,7 @@ function SectorBodyVisual({
   r: number
   color: string
   label: string
+  sectorCode?: string
   onClick: () => void
   onHover: (hovering: boolean) => void
   isPinned?: boolean
@@ -636,6 +662,14 @@ function SectorBodyVisual({
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r + 6 : r
+  // Symbol glyph — scale to 58% of the current radius so it stays legible
+  // at the smallest sector circles (~22px r) and doesn't crowd the large ones
+  // (~50px r). On hover the circle expands +6px but we keep the glyph size
+  // anchored to r (not rEffective) so it doesn't appear to "shrink" relative
+  // to the circle as the body grows.
+  const glyphSize = Math.round(r * 0.58)
+  const glyph = sectorCode ? (SECTOR_SYMBOLS[sectorCode] ?? null) : null
+
   return (
     <motion.g
       initial={{ opacity: 0, scale: 0.15 }}
@@ -650,6 +684,23 @@ function SectorBodyVisual({
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 4} color={color} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
+
+      {/* Sector symbol glyph — white, centered, non-interactive */}
+      {glyph && (
+        <text
+          x={cx}
+          y={cy}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fontSize={glyphSize}
+          fill="rgba(255,255,255,0.92)"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+          aria-hidden="true"
+        >
+          {glyph}
+        </text>
+      )}
+
       <text
         x={cx}
         y={cy + r + 17}
