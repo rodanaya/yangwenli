@@ -11,7 +11,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
@@ -542,7 +541,7 @@ export default function CategoryProfile() {
     : 0
 
   return (
-    <div className="space-y-5 pb-8">
+    <div className="space-y-3 pb-8">
       {/* ================================================================= */}
       {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
@@ -864,19 +863,19 @@ export default function CategoryProfile() {
             {t('profile.sections.concentrationSubtitle')}
           </h2>
         </div>
-        <Card>
+        <div className="rounded-sm border border-border/60 overflow-hidden">
           {topVendorsLoading && !vendorsTimedOut ? (
-            <CardContent className="space-y-3 py-4">
+            <div className="space-y-3 px-4 py-3 bg-background-card">
               {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
-            </CardContent>
+            </div>
           ) : topVendorsError ? (
-            <CardContent className="py-8 text-center text-text-muted text-sm">
+            <div className="py-5 text-center text-text-muted text-sm px-4 bg-background-card">
               {t('profile.empty.noVendors')}
-            </CardContent>
+            </div>
           ) : topVendorsData ? (
             <>
               {/* Concentration header */}
-              <CardHeader className="pb-2">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-3 flex-wrap">
                   {(() => {
                     const badge = getConcentrationBadge(topVendorsData.concentration_label, t)
@@ -896,8 +895,8 @@ export default function CategoryProfile() {
                     {t('profile.concentrationMarket', { pct: topVendorsData.top3_share_pct.toFixed(1) })}
                   </span>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
+              </div>
+              <div>
                 {/* Header row */}
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-6 flex-shrink-0">#</span>
@@ -967,14 +966,14 @@ export default function CategoryProfile() {
                     )
                   })}
                 </div>
-              </CardContent>
+              </div>
             </>
           ) : (
-            <CardContent className="py-8 text-center text-text-muted text-sm">
+            <div className="py-5 text-center text-text-muted text-sm px-4 bg-background-card">
               {t('profile.empty.noVendors')}
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
       </section>
 
       {/* ================================================================= */}
@@ -998,8 +997,8 @@ export default function CategoryProfile() {
             {t('profile.sections.relationsSubtitle')}
           </h2>
         </div>
-        <Card>
-          <CardContent className="p-0">
+        <div className="rounded-sm border border-border/60 overflow-hidden">
+          <div>
             {vendorInstLoading ? (
               <div className="space-y-2 p-4">
                 {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
@@ -1077,8 +1076,8 @@ export default function CategoryProfile() {
                 {t('profile.empty.noRelations')}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </section>
 
       {/* ================================================================= */}
@@ -1102,8 +1101,8 @@ export default function CategoryProfile() {
             {t('profile.sections.contractsSubtitle')}
           </h2>
         </div>
-        <Card>
-          <CardContent className="p-0">
+        <div className="rounded-sm border border-border/60 overflow-hidden">
+          <div>
             {topContractsLoading ? (
               <div className="space-y-2 p-4">
                 {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-10 w-full" />)}
@@ -1160,8 +1159,8 @@ export default function CategoryProfile() {
                 {t('profile.empty.noContracts')}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
         <div className="mt-2">
           <button
             onClick={() => navigate(`/contracts?category_id=${categoryId}`)}
@@ -1195,8 +1194,8 @@ export default function CategoryProfile() {
               {t('profile.sections.subcategoriesSubtitle')}
             </h2>
           </div>
-          <Card>
-            <CardContent className="pt-6 pb-4">
+          <div className="rounded-sm border border-border/60 overflow-hidden">
+            <div className="px-4 pt-4 pb-4 bg-background-card">
               {subcategoryLoading ? (
                 <ChartSkeleton height={320} />
               ) : subcatBarData.length > 0 ? (
@@ -1213,8 +1212,8 @@ export default function CategoryProfile() {
                   {t('profile.empty.noSubcategories')}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
       )}
 
@@ -1222,7 +1221,7 @@ export default function CategoryProfile() {
       {/* § 4 El Precio                                                    */}
       {/* ================================================================= */}
       {priceDistLoading ? (
-        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+        <div className="rounded-sm border border-border/60 overflow-hidden"><div className="py-8 px-4 bg-background-card"><ChartSkeleton /></div></div>
       ) : priceDistData && priceDistData.n > 0 && priceDistData.p50 !== null ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { p25, p50, p75, mean, iqr, mean_median_ratio, outlier_count, yearly_trend } = priceDistData
@@ -1234,12 +1233,12 @@ export default function CategoryProfile() {
 
         return (
           <section aria-labelledby="price-section-title" className="scroll-mt-24">
-            <Card>
-              <CardHeader className="pb-2">
+            <div className="rounded-sm border border-border/60 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <CardTitle id="price-section-title" className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
+                  <h3 id="price-section-title" className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">
                     {isEs ? '§10 · El Precio' : '§10 · Pricing'}
-                  </CardTitle>
+                  </h3>
                   <div className="flex items-center gap-2">
                     {heavySkew && (
                       <span
@@ -1251,8 +1250,8 @@ export default function CategoryProfile() {
                     )}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
+              </div>
+              <div className="space-y-4 px-4 py-3 bg-background-card">
 
                 {/* KPI row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1436,8 +1435,8 @@ export default function CategoryProfile() {
                   </div>
                 )}
 
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })() : null}
@@ -1446,7 +1445,7 @@ export default function CategoryProfile() {
       {/* § 5 La Competencia                                               */}
       {/* ================================================================= */}
       {competitionLoading ? (
-        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+        <div className="rounded-sm border border-border/60 overflow-hidden"><div className="py-8 px-4 bg-background-card"><ChartSkeleton /></div></div>
       ) : competitionData && competitionData.total_contracts > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { procedure_breakdown, yearly_trend, sector_da_avg, sector_sb_avg } = competitionData
@@ -1475,8 +1474,8 @@ export default function CategoryProfile() {
 
         return (
           <section className="pt-2">
-            <Card>
-              <CardHeader className="pb-3">
+            <div className="rounded-sm border border-border/60 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§11 · COMPETENCIA' : '§11 · COMPETITION'}
@@ -1490,16 +1489,16 @@ export default function CategoryProfile() {
                     </span>
                   )}
                 </div>
-                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h3 className="text-[15px] font-bold" style={{ fontFamily: "var(--font-family-serif)" }}>
                   {isEs ? 'La Competencia' : 'Competition'}
-                </CardTitle>
+                </h3>
                 <p className="text-sm text-text-secondary">
                   {isEs
                     ? 'Cómo se distribuyen los contratos por tipo de procedimiento, y qué tan competitivo es este mercado.'
                     : 'How contracts distribute by procedure type, and how competitive this market is.'}
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
+              </div>
+              <div className="space-y-4 px-4 py-3 bg-background-card">
 
                 {/* KPI row */}
                 <div className="grid grid-cols-3 gap-4">
@@ -1636,8 +1635,8 @@ export default function CategoryProfile() {
                   )
                 })()}
 
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })() : null}
@@ -1646,7 +1645,7 @@ export default function CategoryProfile() {
       {/* § 6 La Estacionalidad                                            */}
       {/* ================================================================= */}
       {seasonalityLoading ? (
-        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+        <div className="rounded-sm border border-border/60 overflow-hidden"><div className="py-8 px-4 bg-background-card"><ChartSkeleton /></div></div>
       ) : seasonalityData && seasonalityData.monthly.length > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { monthly, december_pct_value, december_index, yearly_december } = seasonalityData
@@ -1657,8 +1656,8 @@ export default function CategoryProfile() {
 
         return (
           <section className="pt-2">
-            <Card>
-              <CardHeader className="pb-3">
+            <div className="rounded-sm border border-border/60 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§12 · ESTACIONALIDAD' : '§12 · SEASONALITY'}
@@ -1672,16 +1671,16 @@ export default function CategoryProfile() {
                     </span>
                   )}
                 </div>
-                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h3 className="text-[15px] font-bold" style={{ fontFamily: "var(--font-family-serif)" }}>
                   {isEs ? 'La Estacionalidad' : 'Seasonality'}
-                </CardTitle>
+                </h3>
                 <p className="text-sm text-text-secondary">
                   {isEs
                     ? 'Distribución mensual del gasto. Un pico en diciembre es señal de presión de fin de año y posible evasión de controles.'
                     : 'Monthly spend distribution. A December spike signals year-end pressure and potential control evasion.'}
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-5">
+              </div>
+              <div className="space-y-4 px-4 py-3 bg-background-card">
 
                 {/* December KPI */}
                 <div className="flex items-center gap-6">
@@ -1782,8 +1781,8 @@ export default function CategoryProfile() {
                   )
                 })()}
 
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })() : null}
@@ -1792,7 +1791,7 @@ export default function CategoryProfile() {
       {/* § 7 Los Patrones                                                 */}
       {/* ================================================================= */}
       {patternsLoading ? (
-        <Card><CardContent className="py-8"><ChartSkeleton /></CardContent></Card>
+        <div className="rounded-sm border border-border/60 overflow-hidden"><div className="py-8 px-4 bg-background-card"><ChartSkeleton /></div></div>
       ) : patternsData && patternsData.patterns.length > 0 ? (() => {
         const isEs = i18n.language.startsWith('es')
         const { patterns, tier_distribution, vendors_in_aria, total_vendors, dominant_pattern } = patternsData
@@ -1803,8 +1802,8 @@ export default function CategoryProfile() {
 
         return (
           <section className="pt-2">
-            <Card>
-              <CardHeader className="pb-3">
+            <div className="rounded-sm border border-border/60 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
                     {isEs ? '§13 · PATRONES' : '§13 · PATTERNS'}
@@ -1822,16 +1821,16 @@ export default function CategoryProfile() {
                     </span>
                   )}
                 </div>
-                <CardTitle className="text-lg font-bold" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h3 className="text-[15px] font-bold" style={{ fontFamily: "var(--font-family-serif)" }}>
                   {isEs ? 'Los Patrones' : 'Fraud Patterns'}
-                </CardTitle>
+                </h3>
                 <p className="text-sm text-text-secondary">
                   {isEs
                     ? `Qué patrones de fraude detecta el modelo ARIA en los ${vendors_in_aria.toLocaleString('es-MX')} proveedores activos en esta categoría.`
                     : `What fraud patterns the ARIA model detects across the ${vendors_in_aria.toLocaleString('en-US')} vendors active in this category.`}
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <div className="space-y-4 px-4 py-3 bg-background-card">
 
                 {/* T1/T2 KPI */}
                 {highPriorityCount > 0 && (
@@ -1888,8 +1887,8 @@ export default function CategoryProfile() {
                     ? `${vendors_in_aria.toLocaleString('es-MX')} de ${total_vendors.toLocaleString('es-MX')} proveedores (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) en la cola ARIA`
                     : `${vendors_in_aria.toLocaleString('en-US')} of ${total_vendors.toLocaleString('en-US')} vendors (${((vendors_in_aria / total_vendors) * 100).toFixed(0)}%) in the ARIA queue`}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })() : null}
@@ -2021,8 +2020,8 @@ export default function CategoryProfile() {
                 {isEs ? 'Categorías del mismo sector' : 'Sister Categories in Sector'}
               </h2>
             </div>
-            <Card>
-              <CardContent className="p-0">
+            <div className="rounded-sm border border-border/60 overflow-hidden">
+              <div>
                 <div className="divide-y divide-border/10">
                   {sisters.map((sc) => {
                     const scRisk = sc.avg_risk
@@ -2078,8 +2077,8 @@ export default function CategoryProfile() {
                     )
                   })}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })()}
