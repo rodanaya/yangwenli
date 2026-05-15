@@ -32,7 +32,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
@@ -741,11 +741,11 @@ export default function Administrations() {
 
           {/* Risk Trajectory by Term Year — all 5 administrations overlaid */}
           <div className="card mt-6">
-            <CardHeader className="pb-2">
+            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
               <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
                 {t('trajectoryChart.title')}
               </div>
-              <CardTitle className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
                 {t('trajectoryChart.title')}
                 <div className="flex gap-1">
                   {(['avg_risk', 'direct_award_pct', 'high_risk_pct'] as const).map((m) => (
@@ -763,12 +763,12 @@ export default function Administrations() {
                     </button>
                   ))}
                 </div>
-              </CardTitle>
+              </h3>
               <p className="text-xs text-text-muted mt-1">
                 {t('trajectoryChart.subtitle')}
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-3 bg-background-card">
               <Suspense fallback={<div className="h-[300px] bg-background-card animate-pulse rounded-sm" />}>
                 <AdminRiskTrajectory
                   administrations={adminTrajectoryLines}
@@ -776,7 +776,7 @@ export default function Administrations() {
                   loading={yoyLoading}
                 />
               </Suspense>
-            </CardContent>
+            </div>
           </div>
         </>
       )}
@@ -1119,12 +1119,12 @@ export default function Administrations() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L2: Administration Comparison Table */}
         <div className="card-elevated">
-          <CardHeader className="pb-2">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <CardTitle className="text-sm font-mono text-text-primary">
+                <h3 className="text-sm font-mono text-text-primary">
                   {t('comparisonTable')}
-                </CardTitle>
+                </h3>
                 <p className="text-xs text-text-muted mt-1">
                   {t('comparisonTableDesc')}
                 </p>
@@ -1139,8 +1139,8 @@ export default function Administrations() {
                 className="shrink-0"
               />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm" aria-label="Administration comparison metrics">
                 <thead>
@@ -1219,17 +1219,17 @@ export default function Administrations() {
               * Fox era (2002–2006) uses Structure A COMPRANET data (RFC coverage 0.1%). Direct award flags were not reliably recorded — 0% is a data artifact, not a true policy metric.
               Risk scores for this period are directional estimates only.
             </p>
-          </CardContent>
+          </div>
         </div>
 
         {/* L3: Yearly Deep Dive */}
         <div className="card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+            <h3 className="text-sm font-mono text-text-primary">
               {t('yearlyTrends', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {selectedAgg && selectedAgg.years.length > 0 ? (
               /* ── Pure SVG dual-axis chart: contract columns + pct polylines ── */
               (() => {
@@ -1391,7 +1391,7 @@ export default function Administrations() {
                 </div>
               </div>
             )}
-          </CardContent>
+          </div>
         </div>
       </div>
 
@@ -1400,13 +1400,13 @@ export default function Administrations() {
         {/* L4: Sector Heatmap */}
         <ScrollReveal direction="fade">
         <div className="card-elevated">
-          <CardHeader className="pb-2">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('evidenceLabel')}</div>
-                <CardTitle className="text-sm font-mono text-text-primary">
+                <h3 className="text-sm font-mono text-text-primary">
                   {t('sectorProfile', { admin: selectedAdmin })}
-                </CardTitle>
+                </h3>
                 <p className="text-xs text-text-muted mt-1">
                   {t('heatmapSubtitle')}
                 </p>
@@ -1423,8 +1423,8 @@ export default function Administrations() {
                 className="shrink-0"
               />
             </div>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
+          </div>
+          <div className="overflow-x-auto px-4 py-3 bg-background-card">
             <table className="w-full text-xs font-mono" aria-label="Sector risk metrics by administration">
               <thead>
                 <tr>
@@ -1483,21 +1483,21 @@ export default function Administrations() {
                 </div>
               </div>
             )}
-          </CardContent>
+          </div>
         </div>
         </ScrollReveal>
 
         {/* L5: Transition Impact */}
         <div className="card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+            <h3 className="text-sm font-mono text-text-primary">
               {t('transitionImpact')}
-            </CardTitle>
+            </h3>
             <p className="text-xs text-text-muted mt-1">
               {t('transitionSubtitle')}
             </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          </div>
+          <div className="space-y-3 px-4 py-3 bg-background-card">
             {transitions.map((tr, i) => {
               const isRelevant = tr.to === selectedAdmin || tr.from === selectedAdmin
               const sig = transitionSignificance.get(`${tr.from}-${tr.to}`)
@@ -1592,7 +1592,7 @@ export default function Administrations() {
                 {t('insufficientData')}
               </div>
             )}
-          </CardContent>
+          </div>
         </div>
       </div>
 
@@ -1606,16 +1606,16 @@ export default function Administrations() {
 
       {/* L6: Events Timeline */}
       <div className="card">
-        <CardHeader className="pb-2">
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('cronologiaLabel')}</div>
-          <CardTitle className="text-sm font-mono text-text-primary">
+          <h3 className="text-sm font-mono text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
-          </CardTitle>
+          </h3>
           <p className="text-xs text-text-muted mt-1">
             {t('keyEventsSubtitle')}
           </p>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="px-4 py-3 bg-background-card">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Ground truth note */}
             <div>
@@ -1641,26 +1641,26 @@ export default function Administrations() {
               <HardcodedEventsTimeline adminName={selectedAdmin} />
             </div>
           </div>
-        </CardContent>
+        </div>
       </div>
 
       {/* Top Vendors by Administration */}
       <div className="card">
-        <CardHeader className="pb-2">
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
             {t('vendorSection.title')}
           </div>
-          <CardTitle className="text-sm font-mono text-text-primary">
+          <h3 className="text-sm font-mono text-text-primary">
             {t('vendorSection.subtitle')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </h3>
+        </div>
+        <div className="px-4 py-3 bg-background-card">
           <AdminVendorBreakdown
             vendors={selectedVendors}
             eraColor={selectedMeta.color}
             loading={breakdownLoading}
           />
-        </CardContent>
+        </div>
       </div>
 
       </> /* end overview tab */
