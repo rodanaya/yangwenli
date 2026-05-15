@@ -158,6 +158,30 @@ const INVESTIGATIONS: Investigation[] = [
     yearSpan: '2002–2025',
     brief: 'Price volatility is the single strongest predictor in RUBLI\'s v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices.',
   },
+  {
+    slug: 'el-ano-de-la-emergencia',
+    headline: '2020: The Year Competition Stopped',
+    sub: '87% direct-award rate · COVID decree · HEMOSER MX$17.2B same-day awards',
+    type: 'procurement_fraud',
+    status: 'reporteado',
+    amount: 17.2,
+    era: 'amlo',
+    contracts: 215000,
+    yearSpan: '2020–2021',
+    brief: "Mexico's COVID emergency decree suspended competitive bidding rules overnight. The direct-award rate hit 87% — and ghost-company vendors like HEMOSER collected MX$17.2 billion in same-day awards from IMSS.",
+  },
+  {
+    slug: 'el-cartel-de-los-vales',
+    headline: 'The Voucher Cartel: 240 Billion in a Closed Market',
+    sub: 'Edenred 96.7% DA · Efectivale 2,210 single-bid wins · 3 vendors · 5 administrations',
+    type: 'monopoly',
+    status: 'auditado',
+    amount: 240,
+    era: 'cross',
+    contracts: 3000,
+    yearSpan: '2002–2025',
+    brief: "Three multinational voucher companies have divided Mexico's federal payment-card market across five administrations with a 96.7% direct-award rate and 2,868 single-bid wins. A market-structure problem, not just procurement.",
+  },
 ]
 
 // ---------------------------------------------------------------------------
