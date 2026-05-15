@@ -565,13 +565,22 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           )}
         </div>
 
-        {/* IPS score — FT lollipop: baseline + dot + label.
-            Replaces the bare integer. Title surfaces tier for screen readers. */}
+        {/* IPS score — lollipop on sm+, compact badge on xs */}
         <div
           className="shrink-0 flex items-center justify-end"
           title={`IPS ${ipsPct} · T${tier} (baseline tick = high-risk threshold 50)`}
         >
-          <LollipopScore ips={ips} tier={tier} />
+          {/* Compact badge — xs only */}
+          <span
+            className="sm:hidden font-mono tabular-nums text-xs font-bold px-1.5 py-0.5 rounded-sm"
+            style={{ color: riskColor, background: `${riskColor}18`, border: `1px solid ${riskColor}33` }}
+          >
+            {ipsPct}
+          </span>
+          {/* Lollipop — sm and above */}
+          <span className="hidden sm:flex items-center">
+            <LollipopScore ips={ips} tier={tier} />
+          </span>
         </div>
 
         {/* Review status glyph — visible inline, replaces the buried popover icon */}
@@ -850,54 +859,65 @@ function TierEditorialStrip({
 
       {statsLoading ? (
         <div className="space-y-1.5">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10 rounded-sm" />)}
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-sm" />)}
         </div>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {rows.map(({ tier, label, sublabel, color }) => {
             const count = counts[tier] ?? 0
             const fraction = total > 0 ? count / total : 0
             const pct = (fraction * 100).toFixed(1)
+            const isCritical = tier === 1
 
             return (
               <div
                 key={tier}
-                className="grid items-center gap-x-3 px-3 py-2 rounded-sm border border-border/60 bg-background-card"
+                className="px-3 py-2.5 rounded-sm border border-border/60"
                 style={{
-                  gridTemplateColumns: 'clamp(90px, 38%, 160px) 1fr auto',
                   borderLeft: `3px solid ${color}`,
+                  background: isCritical
+                    ? `linear-gradient(90deg, ${color}08 0%, transparent 60%)`
+                    : 'var(--color-background-card)',
                 }}
               >
-                {/* Label col */}
-                <div>
-                  <span className="text-xs font-mono font-bold" style={{ color }}>
-                    {label}
-                  </span>
-                  <p className="text-[10px] text-text-muted mt-0.5 leading-none">{sublabel}</p>
+                <div className="flex items-start justify-between gap-3 mb-1.5">
+                  {/* Label + sublabel */}
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.1em]" style={{ color }}>
+                      {label}
+                    </span>
+                    <p className="text-[9px] text-text-muted leading-none mt-0.5">{sublabel}</p>
+                  </div>
+
+                  {/* Count + pct — big number hero */}
+                  <div className="flex items-baseline gap-1.5 whitespace-nowrap shrink-0">
+                    <span
+                      className="tabular-nums leading-none"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: isCritical ? '1.5rem' : '1.25rem',
+                        fontWeight: 700,
+                        fontStyle: 'italic',
+                        color: isCritical ? color : 'var(--color-text-primary)',
+                      }}
+                    >
+                      {formatNumber(count)}
+                    </span>
+                    <span className="font-mono text-[10px] text-text-muted/70 self-center">
+                      {pct}%
+                    </span>
+                  </div>
                 </div>
 
-                {/* Progress track */}
-                <div className="relative h-1.5 rounded-full bg-background-elevated overflow-hidden">
+                {/* Progress track — thicker, gradient fill */}
+                <div className="relative h-2 rounded-full bg-background-elevated overflow-hidden">
                   <div
                     className="absolute inset-y-0 left-0 rounded-full"
-                    style={{ width: `${fraction * 100}%`, backgroundColor: color, opacity: 0.75 }}
+                    style={{
+                      width: `${fraction * 100}%`,
+                      background: `linear-gradient(90deg, ${color}cc 0%, ${color}55 100%)`,
+                    }}
                   />
-                </div>
-
-                {/* Count + pct
-                    2026-05-11 (Audit F057): JSX whitespace collapse caused
-                    counts and pcts to read as one number ("3140.1%",
-                    "1,4620.6%"). Wrapped in flex with explicit gap and
-                    a "·" separator so the two figures are never
-                    visually adjacent. */}
-                <div className="flex items-baseline justify-end gap-1.5 whitespace-nowrap">
-                  <span className="font-mono tabular-nums text-sm font-bold text-text-primary">
-                    {formatNumber(count)}
-                  </span>
-                  <span className="font-mono text-[10px] text-text-muted/60 select-none" aria-hidden>·</span>
-                  <span className="font-mono tabular-nums text-[10px] text-text-muted">
-                    {pct}%
-                  </span>
                 </div>
               </div>
             )
@@ -915,9 +935,11 @@ function TierEditorialStrip({
 function PatternDotStrip({
   patternCounts,
   isEs,
+  total,
 }: {
   patternCounts: Record<string, number>
   isEs: boolean
+  total?: number
 }) {
   const entries = Object.entries(patternCounts).sort(([, a], [, b]) => b - a)
   if (entries.length === 0) return null
@@ -952,11 +974,22 @@ function PatternDotStrip({
     }
   })
 
+  const totalVendors = Object.values(patternCounts).reduce((s, n) => s + n, 0)
+
   return (
     <div className="mb-5">
-      <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
-        {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
-      </p>
+      <div className="flex items-baseline justify-between mb-2">
+        <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
+          {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
+        </p>
+        {total != null && total > 0 && (
+          <p className="font-mono text-[10px] text-text-muted">
+            {totalVendors > total
+              ? (isEs ? `${formatNumber(totalVendors)} coincidencias / ${formatNumber(total)} proveedores` : `${formatNumber(totalVendors)} matches / ${formatNumber(total)} vendors`)
+              : (isEs ? `${formatNumber(total)} proveedores procesados` : `${formatNumber(total)} vendors processed`)}
+          </p>
+        )}
+      </div>
       <div className="rounded-sm border border-border/60 bg-background-card p-3">
         <DotStrip rows={stripRows} N={30} labelWidth={110} />
       </div>
@@ -1345,7 +1378,7 @@ export default function AriaPage() {
 
         {/* aria-P2: Pattern DotStrip (replaces donut/pie pattern composition) */}
         {Object.keys(patternCounts).length > 0 && (
-          <PatternDotStrip patternCounts={patternCounts} isEs={isEs} />
+          <PatternDotStrip patternCounts={patternCounts} isEs={isEs} total={stats?.queue_total} />
         )}
 
         {/* ════════════════════════════════════════════════════════════════
