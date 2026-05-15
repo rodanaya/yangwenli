@@ -81,7 +81,7 @@ Why: 7 trillion-peso decimal errors destroyed analytics in the predecessor proje
 
 ## Risk Model — v0.8.5 (ACTIVE)
 
-ElasticNet logistic regression with PU correction. Run ID `CAL-v8-202605020212` · Train AUC 0.797 · Test AUC 0.785 · HR 11.0% (OECD 2–15% compliant). Trained on 1,424 GT cases.
+ElasticNet logistic regression with PU correction. Run ID `CAL-v8-202605020212` · Train AUC 0.797 · Test AUC 0.785 · HR 11.0% (OECD 2–15% compliant). Trained on 1,417 GT cases.
 
 **Distribution**: Critical ≥0.60 (5.2%) · High ≥0.40 (5.9%) · Medium ≥0.25 (16.2%) · Low <0.25 (72.8%).
 
@@ -117,7 +117,7 @@ cd backend && python -m scripts.aria_init_schema && python -m scripts.aria_pipel
 python -m scripts.aria_generate_memos --tier 1 --limit 20
 ```
 
-Queue: 248,944 vendors, T1=299 / T2=1,490 / T3=5,578 / T4=241,577. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,974, P4=220, P5=3,985, P6 Capture=15,923, P7=257. Frontend: `/aria`.
+Queue: 248,944 vendors, T1=299 / T2=1,488 / T3=5,578 / T4=241,579. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,974, P4=220, P5=3,985, P6 Capture=15,923, P7=257. Frontend: `/aria`.
 
 CENTINELA state: T1 DONE · T2 DONE (32 CORRUPTION_MENTION) · T3 DONE (5,578/5,578 — 4 CORRUPTION_MENTION, all SKIP/already-in-GT; batch K = 0 new cases).
 External registries via CENTINELA: `python -m scripts.centinela_web --tier N [--no-haiku]`.
