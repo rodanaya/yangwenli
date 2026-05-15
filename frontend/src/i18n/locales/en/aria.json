@@ -187,7 +187,7 @@
   },
   "hero": {
     "headline": "{{vendorCount}} vendors monitored across 4 priority tiers",
-    "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 320 highest-priority cases for review.",
+    "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 299 highest-priority cases for review.",
     "t1RequireShort": "T1 critical leads"
   },
   "patternDesc": {

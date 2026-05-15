@@ -1816,7 +1816,7 @@ export default function AriaPage() {
             </div>
           )}
 
-          {/* List header — single tight line. The redundant "TIER 1 · 320 ·
+          {/* List header — single tight line. The redundant "TIER 1 · 299 ·
               CLEAR ALL (1)" was already covered by the Active Filter Bar
               above; review-status chips moved into "+ More filters" since
               they're a workflow filter most users don't touch. Header now

@@ -3,7 +3,7 @@
     "sectionLabel": "Recommended next steps — by audience",
     "a1": {
       "audience": "For Investigators",
-      "s1": "Focus on Tier 1 ARIA vendors (320) for immediate case referrals — these have been independently flagged by the risk model, anomaly detection, and external registries.",
+      "s1": "Focus on Tier 1 ARIA vendors (299) for immediate case referrals — these have been independently flagged by the risk model, anomaly detection, and external registries.",
       "s2": "Cross-reference with SAT EFOS ghost company registry (13,960 entities). Any active procurement relationship with a definitive-status EFOS vendor warrants immediate review.",
       "s3": "Price volatility is the strongest signal — 99.9% detection rate on the IMSS ghost network. Prioritize vendors whose contract amounts swing wildly across institutions."
     },
