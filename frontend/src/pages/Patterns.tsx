@@ -27,6 +27,8 @@ interface PatternMeta {
   nameEs: string
   descEn: string
   descEs: string
+  hookEn: string
+  hookEs: string
 }
 
 const PATTERN_META: PatternMeta[] = [
@@ -34,50 +36,64 @@ const PATTERN_META: PatternMeta[] = [
     code: 'P1',
     nameEn: 'Monopoly',
     nameEs: 'Monopolio',
-    descEn: 'Single vendor captures ≥60% of a regulated market segment over 3+ years.',
-    descEs: 'Un proveedor captura ≥60% de un segmento de mercado regulado durante 3+ años.',
+    descEn: 'Single vendor captures ≥60% of a regulated market segment over 3+ years. Suggests market division agreements or deliberate exclusion of competitors from bidding.',
+    descEs: 'Un proveedor captura ≥60% de un segmento de mercado regulado durante 3+ años. Sugiere acuerdos de división de mercado o exclusión deliberada de competidores.',
+    hookEn: 'Cross-reference with direct-award procedure codes. If the same institution–vendor pair appears across 10+ years, run a co-bidding network analysis to find who else is in the ring.',
+    hookEs: 'Crucen con códigos de adjudicación directa. Si el mismo par institución-proveedor aparece en 10+ años, ejecuten análisis de co-licitación para encontrar quién más está en el anillo.',
   },
   {
     code: 'P2',
     nameEn: 'Ghost Company',
     nameEs: 'Empresa Fantasma',
-    descEn: 'Vendor appears in one burst year with no prior/subsequent history. RFC unverifiable.',
-    descEs: 'Proveedor aparece en un año de ráfaga sin historia previa/posterior. RFC inverificable.',
+    descEn: 'Vendor wins contracts in one burst year with no prior or subsequent history. RFC registration date often postdates first contract. 39.6B MXN in spend traced to vendors matching this profile.',
+    descEs: 'Proveedor gana contratos en un año de ráfaga sin historia previa ni posterior. La fecha de registro RFC frecuentemente es posterior al primer contrato. 39.6B MXN en gasto rastreado a proveedores con este perfil.',
+    hookEn: 'Verify RFC registration date in SAT vs. first contract date. A company winning contracts before its RFC is formally registered is an automatic T1 lead.',
+    hookEs: 'Verifiquen la fecha de registro RFC en el SAT vs. el primer contrato. Una empresa que gana contratos antes de registrar su RFC es un lead T1 automático.',
   },
   {
     code: 'P3',
     nameEn: 'Intermediary',
     nameEs: 'Intermediario',
-    descEn: 'Vendor with zero employees or minimal footprint routes contracts to subcontractors.',
-    descEs: 'Proveedor sin empleados o huella mínima que enruta contratos a subcontratistas.',
+    descEn: 'Vendor with zero declared employees or minimal commercial footprint routes contracts to unnamed subcontractors. The company exists on paper to collect the margin.',
+    descEs: 'Proveedor sin empleados declarados o huella comercial mínima que enruta contratos a subcontratistas no identificados. La empresa existe en papel para cobrar el margen.',
+    hookEn: 'Look for cascade contracts: company A wins a large procedure, then company B — registered weeks later at the same address — wins identical procedures the following year.',
+    hookEs: 'Busquen contratos en cascada: empresa A gana un procedimiento grande, luego empresa B — registrada semanas después en la misma dirección — gana procedimientos idénticos el año siguiente.',
   },
   {
     code: 'P4',
     nameEn: 'Kickback',
     nameEs: 'Soborno',
-    descEn: 'Direct-award concentration to one institution + identical amounts + round numbers.',
-    descEs: 'Concentración en adjudicación directa a una institución + montos idénticos + números redondos.',
+    descEn: 'Direct-award concentration to a single institution, combined with identical contract amounts and round numbers. A signature of fixed-price kickback arrangements.',
+    descEs: 'Concentración de adjudicaciones directas a una sola institución, combinada con montos idénticos y números redondos. Una firma de arreglos de soborno a precio fijo.',
+    hookEn: 'Round-number contracts (exactly $500,000 / $1,000,000 MXN) issued quarterly to the same vendor are a strong kickback signal. Filter by `amount_residual_z = 0` in the risk model features.',
+    hookEs: 'Contratos de montos redondos (exactamente $500,000 / $1,000,000 MXN) emitidos trimestralmente al mismo proveedor son una señal fuerte de soborno. Filtren por `amount_residual_z = 0` en las características del modelo.',
   },
   {
     code: 'P5',
     nameEn: 'Bid Rotation',
     nameEs: 'Rotación de Ofertas',
-    descEn: 'Vendors rotate wins across procedures at the same institution.',
-    descEs: 'Proveedores rotan victorias entre procedimientos en la misma institución.',
+    descEn: 'A cluster of vendors alternates wins across competitive procedures at the same institution. Each vendor loses intentionally to ensure their turn comes around.',
+    descEs: 'Un grupo de proveedores alterna victorias entre procedimientos competitivos en la misma institución. Cada proveedor pierde intencionalmente para que llegue su turno.',
+    hookEn: 'Map the co-bidding graph: if three or more vendors always appear in the same procedures but take turns winning, you have a rotation ring. The Red Thread will surface the connections.',
+    hookEs: 'Mapeen el grafo de co-licitación: si tres o más proveedores siempre aparecen en los mismos procedimientos pero se turnan para ganar, tienen un anillo de rotación. El Hilo Rojo mostrará las conexiones.',
   },
   {
     code: 'P6',
     nameEn: 'Institutional Capture',
     nameEs: 'Captura Institucional',
-    descEn: 'One institution sends ≥70% of its spend to ≤3 vendors over a sexenio.',
-    descEs: 'Una institución envía ≥70% de su gasto a ≤3 proveedores durante un sexenio.',
+    descEn: 'One institution routes ≥70% of its procurement budget to ≤3 vendors across an entire presidential term. The largest pattern by vendor count — 15,923 flagged.',
+    descEs: 'Una institución envía ≥70% de su presupuesto de compras a ≤3 proveedores durante un sexenio completo. El patrón más grande por cantidad de proveedores — 15,923 señalados.',
+    hookEn: 'Run the Red Thread on the top vendor for each captured institution. Capture typically begins with a single direct award that becomes the de-facto preferred vendor for all subsequent competitive procedures.',
+    hookEs: 'Ejecuten el Hilo Rojo en el proveedor principal de cada institución capturada. La captura típicamente comienza con una adjudicación directa que se convierte en el proveedor preferido de facto para todos los procedimientos competitivos posteriores.',
   },
   {
     code: 'P7',
     nameEn: 'Budget Dump',
     nameEs: 'Vaciado de Presupuesto',
-    descEn: 'Concentration of contracts in December to exhaust annual budget.',
-    descEs: 'Concentración de contratos en diciembre para agotar el presupuesto anual.',
+    descEn: 'Disproportionate concentration of contracts in December to exhaust annual budget before fiscal year close. Short performance periods indicate no genuine delivery was expected.',
+    descEs: 'Concentración desproporcionada de contratos en diciembre para agotar el presupuesto anual antes del cierre fiscal. Los cortos periodos de ejecución indican que no se esperaba entrega genuina.',
+    hookEn: 'December contracts with 30-day performance periods issued to first-time vendors signal fiscal-year exhaustion, not genuine procurement need. Cross with P2 to find ghost companies created for year-end dumps.',
+    hookEs: 'Contratos de diciembre con periodos de ejecución de 30 días emitidos a proveedores por primera vez señalan agotamiento del año fiscal, no necesidad genuina. Crucen con P2 para encontrar empresas fantasma creadas para vaciados de fin de año.',
   },
 ]
 
@@ -110,14 +126,13 @@ function SeverityDotBar({ value, max }: { value: number; max: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Pattern Card
+// Pattern Card — editorial single-column investigation brief
 // ---------------------------------------------------------------------------
 function PatternCard({
   meta,
   spotlight,
   lang,
   maxT1,
-  maxValue,
   onClick,
 }: {
   meta: PatternMeta
@@ -130,144 +145,203 @@ function PatternCard({
   const isEs = lang === 'es'
   const name = isEs ? meta.nameEs : meta.nameEn
   const desc = isEs ? meta.descEs : meta.descEn
+  const hook = isEs ? meta.hookEs : meta.hookEn
   const t1 = spotlight?.t1_count ?? 0
+  const spend = spotlight?.total_value_mxn ?? 0
 
-  // Left-border thickness scales with severity: 1px floor, up to 4px for the most severe
-  const borderThickness = maxT1 > 0 ? 1 + Math.round((t1 / maxT1) * 3) : 1
+  // Value-heavy patterns lead with spend; investigation-heavy ones lead with T1 count
+  const heroIsSpend = ['P2', 'P3', 'P6'].includes(meta.code)
+  const heroValue = heroIsSpend && spend > 0
+    ? formatCompactMXN(spend)
+    : t1 > 0
+      ? t1.toLocaleString()
+      : (spotlight?.vendor_count ?? 0).toLocaleString()
+  const heroLabel = heroIsSpend && spend > 0
+    ? (isEs ? 'Gasto en riesgo' : 'Spend at risk')
+    : t1 > 0
+      ? 'T1 · Critical'
+      : (isEs ? 'Proveedores' : 'Vendors')
+  const heroColor = heroIsSpend ? '#a06820' : RISK_COLORS.critical
 
   return (
     <div
-      className="group relative border border-border rounded-sm bg-background hover:border-[color:var(--color-risk-critical)] hover:bg-[color:var(--color-accent-glow)] transition-all duration-150"
-      style={{ borderLeftWidth: `${borderThickness}px`, borderLeftColor: RISK_COLORS.critical }}
+      className="rounded-sm border border-border/60 bg-background-card overflow-hidden"
+      style={{ borderLeft: `3px solid ${RISK_COLORS.critical}` }}
     >
       <button
         type="button"
         onClick={onClick}
-        className="block w-full text-left p-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)] rounded-sm"
+        className="block w-full text-left px-5 pt-4 pb-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)] rounded-sm"
         aria-label={`${meta.code} ${name}`}
       >
-        {/* Code badge + name + severity rank */}
-        <div className="flex items-start gap-3 mb-3">
-          <span
-            className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2 py-0.5 text-[11px] font-bold font-mono tracking-wider"
-            style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: RISK_COLORS.critical }}
-          >
-            {meta.code}
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2
-                className="text-base font-semibold text-text-primary leading-snug"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {name}
-              </h2>
-              {spotlight && (
-                <div className="flex items-center gap-2 flex-shrink-0 text-text-muted">
-                  <span className="text-[9px] font-mono uppercase tracking-[0.14em]">
-                    {isEs ? 'Severidad' : 'Severity'}
-                  </span>
-                  <SeverityDotBar value={t1} max={maxT1} />
-                </div>
-              )}
-            </div>
-            <p className="mt-1 text-sm text-text-secondary leading-relaxed">{desc}</p>
+        {/* Header: code badge + name + severity rank */}
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2 py-0.5 text-[11px] font-bold font-mono tracking-wider"
+              style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: RISK_COLORS.critical }}
+            >
+              {meta.code}
+            </span>
+            <h2
+              className="text-[15px] font-semibold text-text-primary leading-snug truncate"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {name}
+            </h2>
           </div>
+          {spotlight && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className="hidden sm:block text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                {isEs ? 'Severidad' : 'Severity'}
+              </span>
+              <SeverityDotBar value={t1} max={maxT1} />
+            </div>
+          )}
         </div>
 
-        {/* Stats row — Vendors / T1 / Value / GT */}
+        {/* Hero anchor stat + secondary stats */}
         {spotlight && (
-          <>
-            <div className="flex items-center gap-5 mb-2 mt-3">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                  {isEs ? 'Proveedores' : 'Vendors'}
-                </span>
-                <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                  {spotlight.vendor_count.toLocaleString()}
-                </span>
+          <div className="flex items-end gap-6 mb-3 pb-3 border-b border-border/40">
+            {/* Primary hero */}
+            <div className="flex-shrink-0">
+              <div
+                className="tabular-nums leading-none"
+                style={{
+                  fontFamily: 'var(--font-family-serif)',
+                  fontStyle: 'italic',
+                  fontWeight: 700,
+                  fontSize: '2rem',
+                  color: heroColor,
+                }}
+              >
+                {heroValue}
               </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">T1</span>
-                <span
-                  className="text-sm font-mono font-semibold tabular-nums"
-                  style={{ color: RISK_COLORS.critical }}
-                >
-                  {spotlight.t1_count.toLocaleString()}
-                </span>
-              </div>
-              {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                    {isEs ? 'Gasto' : 'Spend'}
-                  </span>
-                  <span className="text-sm font-mono font-semibold tabular-nums" style={{ color: '#a06820' }}>
-                    {formatCompactMXN(spotlight.total_value_mxn)}
-                  </span>
-                </div>
-              )}
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                  {isEs ? 'Casos GT' : 'GT Cases'}
-                </span>
-                <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                  {spotlight.gt_case_count.toLocaleString()}
-                </span>
+              <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mt-1">
+                {heroLabel}
               </div>
             </div>
-            {/* Financial scale bar */}
-            {spotlight.total_value_mxn != null && maxValue > 0 && (
-              <div className="mb-2">
-                <div className="h-0.5 rounded-full bg-background-elevated overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.min(100, (spotlight.total_value_mxn / maxValue) * 100)}%`,
-                      backgroundColor: '#a06820',
-                      opacity: 0.6,
-                    }}
-                  />
+
+            {/* Secondary: the other big number */}
+            {heroIsSpend && t1 > 0 && (
+              <div className="flex-shrink-0">
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: '1.4rem',
+                    color: RISK_COLORS.critical,
+                  }}
+                >
+                  {t1.toLocaleString()}
+                </div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mt-1">
+                  T1 · Critical
                 </div>
               </div>
             )}
-          </>
-        )}
-
-        {/* Top vendor chips */}
-        {spotlight && spotlight.top_vendors.length > 0 && (
-          <div className="space-y-1.5 pt-2 border-t border-border">
-            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted mb-1.5">
-              {isEs ? 'Proveedores Principales' : 'Top Vendors'}
-            </div>
-            {spotlight.top_vendors.slice(0, 3).map((v) => (
-              <div key={v.vendor_id} onClick={(e) => e.stopPropagation()}>
-                <EntityIdentityChip
-                  type="vendor"
-                  id={v.vendor_id}
-                  name={v.vendor_name}
-                  size="sm"
-                  riskScore={v.avg_risk_score}
-                  sectorCode={v.primary_sector_name ?? null}
-                />
+            {!heroIsSpend && spend > 0 && (
+              <div className="flex-shrink-0">
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: '1.4rem',
+                    color: '#a06820',
+                  }}
+                >
+                  {formatCompactMXN(spend)}
+                </div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mt-1">
+                  {isEs ? 'Gasto en riesgo' : 'Spend at risk'}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Tertiary: vendors + GT cases */}
+            <div className="flex gap-4 ml-auto">
+              <div className="flex flex-col gap-0.5 text-right">
+                <span className="text-[13px] font-mono font-semibold tabular-nums text-text-primary">
+                  {spotlight.vendor_count.toLocaleString()}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                  {isEs ? 'Proveedores' : 'Vendors'}
+                </span>
+              </div>
+              {spotlight.gt_case_count > 0 && (
+                <div className="flex flex-col gap-0.5 text-right">
+                  <span className="text-[13px] font-mono font-semibold tabular-nums text-text-primary">
+                    {spotlight.gt_case_count.toLocaleString()}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                    {isEs ? 'Casos GT' : 'GT Cases'}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
+        {/* Description */}
+        <p className="text-sm text-text-secondary leading-relaxed">{desc}</p>
+
+        {/* Investigative hook */}
+        <p
+          className="text-[12px] italic text-text-muted leading-relaxed mt-2 pt-2 border-t border-border/40"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          ↳ {hook}
+        </p>
+
         {/* No data fallback */}
         {!spotlight && (
-          <div className="text-[11px] font-mono text-text-muted mt-1">
+          <div className="text-[11px] font-mono text-text-muted mt-2">
             {isEs ? 'Sin datos disponibles' : 'No data available'}
           </div>
         )}
       </button>
 
-      {/* Investigation pathway — outside the button to avoid nested click */}
-      {spotlight && (
-        <div className="px-5 pb-4 -mt-1 flex items-center justify-end">
+      {/* Top vendors + ARIA pathway — outside button to avoid nested interactive elements */}
+      {spotlight && spotlight.top_vendors.length > 0 && (
+        <div className="px-5 pb-4 border-t border-border/40">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted mt-3 mb-2">
+            {isEs ? 'Principales sospechosos' : 'Top suspects'}
+          </div>
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {spotlight.top_vendors.slice(0, 5).map((v) => (
+              <div key={v.vendor_id}>
+                <EntityIdentityChip
+                  type="vendor"
+                  id={v.vendor_id}
+                  name={v.vendor_name}
+                  size="xs"
+                  riskScore={v.avg_risk_score}
+                  sectorCode={v.primary_sector_name ?? null}
+                  narrative
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-end">
+            <Link
+              to={`/aria?pattern=${meta.code}`}
+              className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-[color:var(--color-accent)] transition-colors"
+            >
+              <ArrowUpRight className="h-3 w-3" />
+              {isEs ? 'Ver en cola ARIA' : 'View in ARIA queue'}
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {spotlight && spotlight.top_vendors.length === 0 && (
+        <div className="px-5 pb-4 flex items-center justify-end">
           <Link
             to={`/aria?pattern=${meta.code}`}
-            onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-[color:var(--color-accent)] transition-colors"
           >
             <ArrowUpRight className="h-3 w-3" />
@@ -419,7 +493,7 @@ export default function Patterns() {
       {/* Pattern list */}
       {!isLoading && !isError && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
             {PATTERN_META.map((meta) => (
               <PatternCard
                 key={meta.code}
