@@ -864,7 +864,7 @@ function TierEditorialStrip({
                 key={tier}
                 className="grid items-center gap-x-3 px-3 py-2 rounded-sm border border-border/60 bg-background-card"
                 style={{
-                  gridTemplateColumns: '160px 1fr auto',
+                  gridTemplateColumns: 'clamp(90px, 38%, 160px) 1fr auto',
                   borderLeft: `3px solid ${color}`,
                 }}
               >
@@ -958,7 +958,7 @@ function PatternDotStrip({
         {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
       </p>
       <div className="rounded-sm border border-border/60 bg-background-card p-3">
-        <DotStrip rows={stripRows} N={40} labelWidth={140} />
+        <DotStrip rows={stripRows} N={30} labelWidth={110} />
       </div>
     </div>
   )
