@@ -7,7 +7,6 @@ import type { YearOverYearChange, PoliticalCycleResponse } from '@/api/types'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RISK_COLORS } from '@/lib/constants'
 import {
   EditorialLineChart,
@@ -71,7 +70,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ScrollReveal delay={0} direction="up">
         <div className="card">
-          <CardContent className="p-4">
+          <div className="p-4 bg-background-card">
             <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.directAwardCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.da > 50 ? 'text-risk-critical' : allTimeAvg.da > 30 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.da.toFixed(1)}%
@@ -87,13 +86,13 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                 ? t('patternsView.directAwardPeak', { val: maxDA.toFixed(1), year: peakDAYear })
                 : `${maxDA.toFixed(1)}%`}
             </div>
-          </CardContent>
+          </div>
         </div>
         </ScrollReveal>
 
         <ScrollReveal delay={80} direction="up">
         <div className="card">
-          <CardContent className="p-4">
+          <div className="p-4 bg-background-card">
             <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.singleBidCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.sb > 30 ? 'text-risk-critical' : allTimeAvg.sb > 15 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.sb.toFixed(1)}%
@@ -104,13 +103,13 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
             <div className="mt-2 text-xs text-text-muted">
               {t('patternsView.singleBidPeak', { maxSB: maxSB.toFixed(1), maxHR: maxHR.toFixed(1) })}
             </div>
-          </CardContent>
+          </div>
         </div>
         </ScrollReveal>
 
         <ScrollReveal delay={160} direction="up">
         <div className="card">
-          <CardContent className="p-4">
+          <div className="p-4 bg-background-card">
             <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.highRiskCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.hr > 15 ? 'text-risk-critical' : allTimeAvg.hr > 8 ? 'text-risk-high' : 'text-risk-low')}>
               {allTimeAvg.hr.toFixed(1)}%
@@ -121,7 +120,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
             <div className="mt-2 text-xs text-text-muted">
               {t('patternsView.highRiskAvg', { val: (allTimeAvg.risk * 100).toFixed(1) })}
             </div>
-          </CardContent>
+          </div>
         </div>
         </ScrollReveal>
       </div>
@@ -129,15 +128,15 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
       {/* 23-year trend chart */}
       <ScrollReveal direction="fade">
       <div className="card">
-        <CardHeader className="pb-2">
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-mono text-text-primary">
+            <h3 className="text-sm font-mono text-text-primary">
               {t('patternsView.chartTitle')}
-            </CardTitle>
+            </h3>
             <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-23yr" />
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="px-4 py-3 bg-background-card">
           {yoyData.length > 0 ? (
             <div ref={systemicChartRef}>
               {(() => {
@@ -193,7 +192,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
               <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> {t('patternsView.regimeShiftNote')}
             </p>
           )}
-        </CardContent>
+        </div>
       </div>
       </ScrollReveal>
 
@@ -201,12 +200,12 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
       {politicalData && (politicalData.sexenio_year_breakdown?.length ?? 0) > 0 && (
         <ScrollReveal direction="fade">
         <div className="card">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+            <h3 className="text-sm font-mono text-text-primary">
               {t('patternsView.politicalCycleTitle')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <div className="mb-3 text-xs text-text-muted leading-relaxed">
               {t('patternsView.politicalCycleDesc')}
             </div>
@@ -258,7 +257,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                 {')'}
               </p>
             )}
-          </CardContent>
+          </div>
         </div>
         </ScrollReveal>
       )}

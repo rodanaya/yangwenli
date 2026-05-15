@@ -6,7 +6,6 @@ import { analysisApi } from '@/api/client'
 import type { ComparePeriodResponse } from '@/api/types'
 import { cn, formatCompactMXN } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const ADMIN_PRESETS = [
   { label: 'Zedillo',     start: '1994', end: '2000' },
@@ -85,16 +84,16 @@ export function ComparePeriodView() {
   return (
     <div className="space-y-6">
       <div className="card">
-        <CardHeader>
-          <CardTitle className="text-sm font-mono flex items-center gap-2">
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+          <h3 className="text-sm font-mono flex items-center gap-2">
             <ArrowRight className="h-4 w-4 text-accent" />
             Compare Periods
-          </CardTitle>
+          </h3>
           <p className="text-xs text-text-muted">
             Compare procurement risk and total spending between any two time windows. Click an administration preset to fill Period A.
           </p>
-        </CardHeader>
-        <CardContent className="space-y-5">
+        </div>
+        <div className="space-y-5 px-4 py-3 bg-background-card">
 
           {/* Administration presets */}
           <div>
@@ -180,39 +179,39 @@ export function ComparePeriodView() {
           >
             {isFetching ? 'Loading…' : 'Compare Periods'}
           </button>
-        </CardContent>
+        </div>
       </div>
 
       {/* Loading skeleton */}
       {isLoading && (
         <div className="card">
-          <CardContent className="pt-5 space-y-3">
+          <div className="pt-5 space-y-3 px-4 pb-3 bg-background-card">
             {Array.from({ length: 2 }).map((_, i) => (
               <Skeleton key={i} className="h-10 w-full" />
             ))}
-          </CardContent>
+          </div>
         </div>
       )}
 
       {/* Error state */}
       {isError && !isLoading && (
         <div className="card">
-          <CardContent className="pt-5 flex items-center gap-2 text-text-muted text-sm">
+          <div className="pt-5 flex items-center gap-2 text-text-muted text-sm px-4 pb-3 bg-background-card">
             <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
             <span>Period comparison data could not be loaded. Please try again.</span>
-          </CardContent>
+          </div>
         </div>
       )}
 
       {/* Results table */}
       {data && !isLoading && (
         <div className="card">
-          <CardHeader>
-            <CardTitle className="text-xs font-mono text-text-muted">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+            <h3 className="text-xs font-mono text-text-muted">
               Results: Period A ({data.period1?.period}) vs Period B ({data.period2?.period})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <div className="overflow-x-auto">
               <table className="w-full text-sm" role="table" aria-label="Period comparison results">
                 <thead>
@@ -260,7 +259,7 @@ export function ComparePeriodView() {
             <p className="text-[11px] text-text-muted mt-4 leading-relaxed">
               Signal: "Worse" = risk increased between periods. "Better" = risk decreased. Spending change is reported as neutral — higher spending may reflect legitimate growth or procurement expansion.
             </p>
-          </CardContent>
+          </div>
         </div>
       )}
     </div>

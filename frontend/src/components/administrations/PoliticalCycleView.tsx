@@ -7,7 +7,6 @@ import { ScrollReveal } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RISK_COLORS } from '@/lib/constants'
 import { EditorialComposedChart, type ComposedLayer } from '@/components/charts/editorial'
 
@@ -31,10 +30,10 @@ export function PoliticalCycleView() {
   if (isError || !data) {
     return (
       <div className="card">
-        <CardContent className="pt-6 flex items-center gap-2 text-text-muted text-sm">
+        <div className="pt-6 flex items-center gap-2 text-text-muted text-sm px-4 pb-3 bg-background-card">
           <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
           <span>{t('common.loadError', 'Political cycle data could not be loaded.')}</span>
-        </CardContent>
+        </div>
       </div>
     )
   }
@@ -54,14 +53,14 @@ export function PoliticalCycleView() {
     <div className="space-y-6">
       {/* Election Year Effect — 3 cards */}
       <div className="card">
-        <CardHeader>
-          <CardTitle className="text-sm font-mono flex items-center gap-2">
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+          <h3 className="text-sm font-mono flex items-center gap-2">
             <Activity className="h-4 w-4 text-accent" />
             Election Year Effect
-          </CardTitle>
+          </h3>
           <p className="text-xs text-text-muted">Average procurement risk in election vs non-election years (2002–2025)</p>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="px-4 py-3 bg-background-card">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Election years card */}
             <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
@@ -137,23 +136,23 @@ export function PoliticalCycleView() {
               )}
             </div>
           </div>
-        </CardContent>
+        </div>
       </div>
 
       {/* Sexenio Year Breakdown Chart */}
       {breakdownData.length > 0 && (
         <ScrollReveal>
           <div className="card">
-            <CardHeader>
-              <CardTitle className="text-sm font-mono flex items-center gap-2">
+            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+              <h3 className="text-sm font-mono flex items-center gap-2">
                 <Landmark className="h-4 w-4 text-accent" />
                 Sexenio Year Breakdown
-              </CardTitle>
+              </h3>
               <p className="text-xs text-text-muted">
                 Average procurement risk across Years 1–6 of the presidential term (all administrations pooled)
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-3 bg-background-card">
               {(() => {
                 type BreakdownRow = (typeof breakdownData)[number]
                 const layers: ComposedLayer<BreakdownRow>[] = [
@@ -180,7 +179,7 @@ export function PoliticalCycleView() {
                 Year 1 = first year of administration, Year 6 = final year before election.
                 Higher risk in late sexenio years may indicate &quot;budget dump&quot; spending.
               </p>
-            </CardContent>
+            </div>
           </div>
         </ScrollReveal>
       )}

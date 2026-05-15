@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ADMINISTRATIONS, PARTY_COLORS } from './data'
 import type { AdminName } from './types'
 
@@ -116,12 +115,12 @@ export function AdminSectorMatrix({
   const isLive = liveMatrix !== null
   return (
     <div className="card-elevated">
-      <CardHeader className="pb-2">
+      <div className="px-4 py-3 border-b border-border/60 bg-background-card">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <CardTitle className="text-sm font-mono text-text-primary">
+            <h3 className="text-sm font-mono text-text-primary">
               {t('matrixTitle')}
-            </CardTitle>
+            </h3>
             <p className="text-[11px] text-text-muted mt-0.5">
               {isLive ? t('matrixSubtitle') : t('matrixSubtitleLoading')}
             </p>
@@ -154,8 +153,8 @@ export function AdminSectorMatrix({
             </div>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
+      </div>
+      <div className="overflow-x-auto px-4 py-3 bg-background-card">
         <table className="border-separate" style={{ borderSpacing: 3 }} aria-label="Administration sector comparison matrix">
           <thead>
             <tr>
@@ -231,7 +230,7 @@ export function AdminSectorMatrix({
             {t('matrixLoadingNote')}
           </p>
         )}
-      </CardContent>
+      </div>
     </div>
   )
 }
