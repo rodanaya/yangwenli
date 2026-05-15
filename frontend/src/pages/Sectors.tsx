@@ -851,7 +851,9 @@ export function Sectors() {
                 {t('treemap.saturationNote')}
               </div>
             </div>
-            <SectorTreemap sectors={sectors} />
+            <div className="max-w-4xl mx-auto">
+              <SectorTreemap sectors={sectors} />
+            </div>
           </section>
         )}
 
