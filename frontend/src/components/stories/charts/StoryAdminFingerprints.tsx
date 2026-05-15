@@ -2,14 +2,62 @@
  * StoryAdminFingerprints — Editorial: 5 presidents, 5 procurement styles
  *
  * Radar charts comparing procurement fingerprints across administrations.
- * Each president has a distinctive pattern: Pena Nieto spent the most but
- * had the lowest risk rate; AMLO had the highest direct award percentage;
- * Sheinbaum's early data shows the highest risk rate yet.
+ * Fetches live YOY data so fingerprints match the current model version.
  */
 
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { Suspense, useMemo } from 'react'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 import { EditorialChartFrame } from '../EditorialChartFrame'
+import { analysisApi } from '@/api/client'
+import { ADMINISTRATIONS } from '@/components/administrations/data'
+import type { AdminAgg } from '@/components/administrations/types'
+import type { YearOverYearChange } from '@/api/types'
+
+function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
+  return ADMINISTRATIONS.map((admin) => {
+    const years = yoyData.filter((y) => y.year >= admin.dataStart && y.year < admin.end)
+    const totalContracts = years.reduce((s, y) => s + y.contracts, 0)
+    const totalValue = years.reduce((s, y) => s + y.total_value, 0)
+    const yearCount = years.length || 1
+    const wRisk = totalContracts > 0 ? years.reduce((s, y) => s + y.avg_risk * y.contracts, 0) / totalContracts : 0
+    const wDA   = totalContracts > 0 ? years.reduce((s, y) => s + y.direct_award_pct * y.contracts, 0) / totalContracts : 0
+    const wSB   = totalContracts > 0 ? years.reduce((s, y) => s + y.single_bid_pct * y.contracts, 0) / totalContracts : 0
+    const wHR   = totalContracts > 0 ? years.reduce((s, y) => s + y.high_risk_pct * y.contracts, 0) / totalContracts : 0
+    return {
+      name: admin.name,
+      contracts: totalContracts,
+      totalValue,
+      avgRisk: wRisk,
+      directAwardPct: wDA,
+      singleBidPct: wSB,
+      highRiskPct: wHR,
+      valueAtRisk: totalValue * wHR / 100,
+      vendorCount: 0,
+      institutionCount: 0,
+      years,
+      contractsPerYear: totalContracts / yearCount,
+      valuePerYear: totalValue / yearCount,
+      yearCount,
+    }
+  })
+}
+
+function FingerprintsWithData() {
+  const { data: yoyResp } = useQuery({
+    queryKey: ['analysis', 'yoy'],
+    queryFn: () => analysisApi.getYearOverYear(),
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const adminAggs = useMemo(
+    () => aggregateByAdmin(yoyResp?.data ?? []),
+    [yoyResp],
+  )
+
+  return <AdministrationFingerprints adminAggs={adminAggs} />
+}
 
 export function StoryAdminFingerprints() {
   const { t } = useTranslation('storyCharts')
@@ -27,12 +75,12 @@ export function StoryAdminFingerprints() {
       footer={t('adminFingerprints.footer')}
       tone="bare"
     >
-      {/* Chart */}
       <div className="rounded-sm border border-border bg-background p-4">
-        <AdministrationFingerprints />
+        <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
+          <FingerprintsWithData />
+        </Suspense>
       </div>
 
-      {/* Caveat */}
       <div className="rounded-sm border border-border bg-background-card p-3">
         <p className="text-xs font-mono uppercase tracking-wide text-text-muted mb-1">
           {t('adminFingerprints.caveatLabel')}

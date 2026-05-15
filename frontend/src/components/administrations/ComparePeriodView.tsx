@@ -46,7 +46,7 @@ function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
       p1: formatCompactMXN(data.period1?.total_value ?? 0),
       p2: formatCompactMXN(data.period2?.total_value ?? 0),
       delta: valueDelta,
-      deltaFmt: (valueDelta > 0 ? '+' : '') + formatCompactMXN(valueDelta),
+      deltaFmt: (valueDelta >= 0 ? '+' : '−') + formatCompactMXN(Math.abs(valueDelta)),
       signal: 'neutral',
       unit: 'MXN',
     },

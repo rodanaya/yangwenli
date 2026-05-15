@@ -1,10 +1,8 @@
 /**
  * AdministrationFingerprints — 5-panel radar comparison of Mexican presidents
  *
- * Each administration gets a radar chart showing normalized metrics:
- * risk score, high-risk %, direct award %, total value, and volume.
- *
- * Migrated to EditorialRadarChart (Apr 2026). Hex admin colors → token palette.
+ * Accepts live adminAggs from Administrations.tsx — no hardcoded stats.
+ * Year ranges sourced from ADMINISTRATIONS in data.ts (dataStart, end).
  */
 
 import { useTranslation } from 'react-i18next'
@@ -13,170 +11,110 @@ import {
   type RadarSeries,
   type ColorToken,
 } from '@/components/charts/editorial'
+import type { AdminAgg } from '@/components/administrations/types'
+import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
-// Static data
+// Static metadata per admin (color tokens, accent CSS var)
 // ---------------------------------------------------------------------------
 
-const ADMIN_DATA = [
-  {
-    name: 'Fox\n2000-06',
-    shortName: 'Fox',
-    yearRange: '2000-06',
-    contracts: 207659,
-    avgRisk: 0.1272,
-    hrPct: 10.85,
-    directAwardPct: 40.19,
-    totalBillions: 938.9,
-    colorToken: 'sector-educacion' as ColorToken,
-    accentColorVar: 'var(--color-sector-educacion)',
-  },
-  {
-    name: 'Calderon\n2007-12',
-    shortName: 'Calderon',
-    yearRange: '2007-12',
-    contracts: 487722,
-    avgRisk: 0.0986,
-    hrPct: 8.37,
-    directAwardPct: 42.51,
-    totalBillions: 2420.8,
-    colorToken: 'oecd' as ColorToken,
-    accentColorVar: 'var(--color-oecd)',
-  },
-  {
-    name: 'Pena Nieto\n2013-18',
-    shortName: 'EPN',
-    yearRange: '2013-18',
-    contracts: 1253865,
-    avgRisk: 0.091,
-    hrPct: 7.59,
-    directAwardPct: 73.35,
-    totalBillions: 3076.5,
-    colorToken: 'sector-infraestructura' as ColorToken,
-    accentColorVar: 'var(--color-sector-infraestructura)',
-  },
-  {
-    name: 'AMLO\n2019-24',
-    shortName: 'AMLO',
-    yearRange: '2019-24',
-    contracts: 1067913,
-    avgRisk: 0.1154,
-    hrPct: 10.24,
-    directAwardPct: 79.52,
-    totalBillions: 2772.0,
-    colorToken: 'sector-tecnologia' as ColorToken,
-    accentColorVar: 'var(--color-sector-tecnologia)',
-  },
-  {
-    name: 'Sheinbaum\n2025+',
-    shortName: 'Sheinbaum',
-    yearRange: '2025+',
-    contracts: 92848,
-    avgRisk: 0.1266,
-    hrPct: 11.97,
-    directAwardPct: 68.04,
-    totalBillions: 719.3,
-    colorToken: 'sector-gobernacion' as ColorToken,
-    accentColorVar: 'var(--color-sector-gobernacion)',
-  },
-]
-
-// ---------------------------------------------------------------------------
-// Normalization
-// ---------------------------------------------------------------------------
-
-const MAX_AVG_RISK = 0.1272
-const MAX_HR_PCT = 11.97
-const MAX_DA_PCT = 79.52
-const MAX_BILLIONS = 3076.5
-const MAX_CONTRACTS = 1253865
-
-function normalize(value: number, max: number): number {
-  return value / max  // 0..1 for editorial radar valueDomain default
+const ADMIN_META: Record<string, {
+  colorToken: ColorToken
+  accentColorVar: string
+  yearLabel: string
+}> = {
+  Fox:        { colorToken: 'sector-educacion'    as ColorToken, accentColorVar: 'var(--color-sector-educacion)',    yearLabel: '2002–06' },
+  Calderon:   { colorToken: 'oecd'                as ColorToken, accentColorVar: 'var(--color-oecd)',                yearLabel: '2006–12' },
+  'Pena Nieto': { colorToken: 'sector-infraestructura' as ColorToken, accentColorVar: 'var(--color-sector-infraestructura)', yearLabel: '2012–18' },
+  AMLO:       { colorToken: 'sector-tecnologia'   as ColorToken, accentColorVar: 'var(--color-sector-tecnologia)',   yearLabel: '2018–24' },
+  Sheinbaum:  { colorToken: 'sector-gobernacion'  as ColorToken, accentColorVar: 'var(--color-sector-gobernacion)',  yearLabel: '2024–' },
 }
 
-// Consensus polygon — average of all 5 administrations on each axis,
-// normalized to the same 0..1 scale. Computed once at module load.
-const CONSENSUS_DATA: number[] = (() => {
-  const n = ADMIN_DATA.length
-  const sumRisk = ADMIN_DATA.reduce((s, a) => s + a.avgRisk, 0)
-  const sumHr = ADMIN_DATA.reduce((s, a) => s + a.hrPct, 0)
-  const sumDa = ADMIN_DATA.reduce((s, a) => s + a.directAwardPct, 0)
-  const sumVal = ADMIN_DATA.reduce((s, a) => s + a.totalBillions, 0)
-  const sumVol = ADMIN_DATA.reduce((s, a) => s + a.contracts, 0)
-  return [
-    normalize(sumRisk / n, MAX_AVG_RISK),
-    normalize(sumHr / n, MAX_HR_PCT),
-    normalize(sumDa / n, MAX_DA_PCT),
-    normalize(sumVal / n, MAX_BILLIONS),
-    normalize(sumVol / n, MAX_CONTRACTS),
-  ]
-})()
+// ---------------------------------------------------------------------------
+// Normalization helpers (computed from live data, not hardcoded maxes)
+// ---------------------------------------------------------------------------
 
-function buildSeries(admin: (typeof ADMIN_DATA)[0], axes: string[]): RadarSeries[] {
+function buildMaxes(aggs: AdminAgg[]) {
+  return {
+    avgRisk:      Math.max(...aggs.map((a) => a.avgRisk), 0.001),
+    hrPct:        Math.max(...aggs.map((a) => a.highRiskPct), 0.001),
+    daPct:        Math.max(...aggs.map((a) => a.directAwardPct), 0.001),
+    totalBillions:Math.max(...aggs.map((a) => a.totalValue / 1e9), 0.001),
+    contracts:    Math.max(...aggs.map((a) => a.contracts), 1),
+  }
+}
+
+function buildConsensus(aggs: AdminAgg[], maxes: ReturnType<typeof buildMaxes>): number[] {
+  const n = aggs.length || 1
   return [
-    {
-      name: admin.shortName,
-      colorToken: admin.colorToken,
-      values: {
-        [axes[0]]: normalize(admin.avgRisk, MAX_AVG_RISK),
-        [axes[1]]: normalize(admin.hrPct, MAX_HR_PCT),
-        [axes[2]]: normalize(admin.directAwardPct, MAX_DA_PCT),
-        [axes[3]]: normalize(admin.totalBillions, MAX_BILLIONS),
-        [axes[4]]: normalize(admin.contracts, MAX_CONTRACTS),
-      },
-    },
+    aggs.reduce((s, a) => s + a.avgRisk, 0) / n / maxes.avgRisk,
+    aggs.reduce((s, a) => s + a.highRiskPct, 0) / n / maxes.hrPct,
+    aggs.reduce((s, a) => s + a.directAwardPct, 0) / n / maxes.daPct,
+    aggs.reduce((s, a) => s + a.totalValue / 1e9, 0) / n / maxes.totalBillions,
+    aggs.reduce((s, a) => s + a.contracts, 0) / n / maxes.contracts,
   ]
+}
+
+function buildSeries(agg: AdminAgg, axes: string[], maxes: ReturnType<typeof buildMaxes>): RadarSeries[] {
+  const meta = ADMIN_META[agg.name] ?? ADMIN_META['Sheinbaum']
+  return [{
+    name: agg.name,
+    colorToken: meta.colorToken,
+    values: {
+      [axes[0]]: agg.avgRisk / maxes.avgRisk,
+      [axes[1]]: agg.highRiskPct / maxes.hrPct,
+      [axes[2]]: agg.directAwardPct / maxes.daPct,
+      [axes[3]]: (agg.totalValue / 1e9) / maxes.totalBillions,
+      [axes[4]]: agg.contracts / maxes.contracts,
+    },
+  }]
 }
 
 // ---------------------------------------------------------------------------
 // Single admin radar panel
 // ---------------------------------------------------------------------------
 
-function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
+function AdminRadarPanel({
+  agg,
+  axes,
+  maxes,
+  consensus,
+}: {
+  agg: AdminAgg
+  axes: string[]
+  maxes: ReturnType<typeof buildMaxes>
+  consensus: number[]
+}) {
   const { t } = useTranslation('administrations')
-  const axes = [
-    t('radar.axisRiskScore'),
-    t('radar.axisHighRisk'),
-    t('radar.axisDirectAward'),
-    t('radar.axisTotalValue'),
-    t('radar.axisVolume'),
-  ]
+  const meta = ADMIN_META[agg.name] ?? ADMIN_META['Sheinbaum']
+
   return (
     <div className="flex flex-col items-center rounded-sm border border-border bg-background-card/60 p-4 gap-2">
-      {/* Title */}
       <div className="text-center">
-        <p className="text-sm font-bold text-text-primary leading-tight">{admin.shortName}</p>
-        <p className="text-[10px] text-text-muted font-mono">{admin.yearRange}</p>
+        <p className="text-sm font-bold text-text-primary leading-tight">{agg.name}</p>
+        <p className="text-[10px] text-text-muted font-mono">{meta.yearLabel}</p>
       </div>
-
-      {/* Radar — explicit min-width on the wrapper so the radar's
-          ResponsiveContainer doesn't fire its width(-1) warning on first
-          paint when the 5-col grid hasn't resolved its track widths yet.
-          120px is the practical floor for a readable radar. */}
       <div className="w-full" style={{ minWidth: 120 }}>
         <EditorialRadarChart
           axes={axes}
-          series={buildSeries(admin, axes)}
+          series={buildSeries(agg, axes, maxes)}
           height={180}
           valueDomain={[0, 1]}
-          consensusData={CONSENSUS_DATA}
+          consensusData={consensus}
           consensusLabel={t('radar.subtitle', { defaultValue: 'Promedio · 5 sexenios' })}
         />
       </div>
-
-      {/* Mini stats */}
       <div className="w-full grid grid-cols-2 gap-1 mt-1">
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
           <p className="text-[10px] text-text-muted font-mono">{t('radar.miniHighRisk')}</p>
-          <p className="text-xs font-mono font-semibold" style={{ color: admin.accentColorVar }}>
-            {admin.hrPct.toFixed(1)}%
+          <p className="text-xs font-mono font-semibold" style={{ color: meta.accentColorVar }}>
+            {agg.highRiskPct.toFixed(1)}%
           </p>
         </div>
         <div className="text-center bg-background-elevated/50 rounded-md py-1">
           <p className="text-[10px] text-text-muted font-mono">{t('radar.miniDirectAward')}</p>
-          <p className="text-xs font-mono font-semibold" style={{ color: admin.accentColorVar }}>
-            {admin.directAwardPct.toFixed(0)}%
+          <p className="text-xs font-mono font-semibold" style={{ color: meta.accentColorVar }}>
+            {agg.directAwardPct.toFixed(0)}%
           </p>
         </div>
       </div>
@@ -188,23 +126,13 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
 // Insight stat card — dark editorial
 // ---------------------------------------------------------------------------
 
-function InsightCard({
-  label,
-  value,
-  note,
-  color,
-}: {
-  label: string
-  value: string
-  note: string
-  color: string
+function InsightCard({ label, value, note, color }: {
+  label: string; value: string; note: string; color: string
 }) {
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-border bg-background-card/60 p-4">
       <p className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">{label}</p>
-      <p className="text-base font-bold font-mono" style={{ color }}>
-        {value}
-      </p>
+      <p className="text-base font-bold font-mono" style={{ color }}>{value}</p>
       <p className="text-[11px] text-text-secondary">{note}</p>
     </div>
   )
@@ -214,12 +142,40 @@ function InsightCard({
 // Main component
 // ---------------------------------------------------------------------------
 
-export default function AdministrationFingerprints() {
+interface AdministrationFingerprintsProps {
+  adminAggs: AdminAgg[]
+}
+
+export default function AdministrationFingerprints({ adminAggs }: AdministrationFingerprintsProps) {
   const { t } = useTranslation('administrations')
+
+  // Sort by chronological order
+  const order = ['Fox', 'Calderon', 'Pena Nieto', 'AMLO', 'Sheinbaum']
+  const sorted = [...adminAggs].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
+
+  const maxes = buildMaxes(sorted)
+
+  const axes = [
+    t('radar.axisRiskScore'),
+    t('radar.axisHighRisk'),
+    t('radar.axisDirectAward'),
+    t('radar.axisTotalValue'),
+    t('radar.axisVolume'),
+  ]
+
+  const consensus = buildConsensus(sorted, maxes)
+
+  // Compute live insight cards from actual data
+  const lowestHR = sorted.reduce((min, a) => a.highRiskPct < min.highRiskPct ? a : min, sorted[0] ?? { name: '—', highRiskPct: 0, directAwardPct: 0, totalValue: 0 })
+  const highestDA = sorted.reduce((max, a) => a.directAwardPct > max.directAwardPct ? a : max, sorted[0] ?? { name: '—', directAwardPct: 0, highRiskPct: 0, totalValue: 0 })
+  const biggestSpender = sorted.reduce((max, a) => a.totalValue > max.totalValue ? a : max, sorted[0] ?? { name: '—', totalValue: 0, highRiskPct: 0, directAwardPct: 0 })
+
+  if (sorted.length === 0) {
+    return <div className="h-[420px] bg-background-card animate-pulse rounded-sm" />
+  }
 
   return (
     <div className="space-y-4">
-      {/* Section header — editorial overline */}
       <div>
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           RUBLI v0.8.5 · Procurement Governance
@@ -232,32 +188,36 @@ export default function AdministrationFingerprints() {
         </p>
       </div>
 
-      {/* 5-panel radar grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-        {ADMIN_DATA.map((admin) => (
-          <AdminRadarPanel key={admin.shortName} admin={admin} />
+        {sorted.map((agg) => (
+          <AdminRadarPanel
+            key={agg.name}
+            agg={agg}
+            axes={axes}
+            maxes={maxes}
+            consensus={consensus}
+          />
         ))}
       </div>
 
-      {/* Insight strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
         <InsightCard
           label={t('fingerprints.insight_lowest_risk')}
-          value="Pena Nieto -- 7.59%"
+          value={`${lowestHR.name} — ${lowestHR.highRiskPct.toFixed(1)}%`}
           note={t('radar.insightLowestNote')}
-          color="var(--color-sector-infraestructura)"
+          color={ADMIN_META[lowestHR.name]?.accentColorVar ?? '#ef4444'}
         />
         <InsightCard
           label={t('fingerprints.insight_highest_da')}
-          value="AMLO -- 79.5%"
+          value={`${highestDA.name} — ${highestDA.directAwardPct.toFixed(0)}%`}
           note={t('radar.insightHighestDaNote')}
-          color="var(--color-sector-tecnologia)"
+          color={ADMIN_META[highestDA.name]?.accentColorVar ?? '#f59e0b'}
         />
         <InsightCard
           label={t('fingerprints.insight_biggest_spender')}
-          value="Pena Nieto -- 3.08T MXN"
+          value={`${biggestSpender.name} — ${formatCompactMXN(biggestSpender.totalValue)}`}
           note={t('radar.insightBiggestNote')}
-          color="var(--color-sector-infraestructura)"
+          color={ADMIN_META[biggestSpender.name]?.accentColorVar ?? '#64748b'}
         />
       </div>
     </div>

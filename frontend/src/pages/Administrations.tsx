@@ -112,15 +112,19 @@ const ADMIN_COLORS: Record<string, string> = {
 // AdminName imported above from components/administrations/types.
 // MATRIX_SECTORS imported from AdminSectorMatrix.
 
-// Comparison table metric definitions — use fields from AdminAgg
-const ADMIN_METRIC_KEYS = [
-  { key: 'contractsPerYear' as const, labelKey: 'metrics.contractsPerYear', format: (v: number) => formatNumber(Math.round(v)) },
-  { key: 'valuePerYear' as const,     labelKey: 'metrics.avgAnnualSpend',   format: (v: number) => formatCompactMXN(v) },
-  { key: 'avgRisk' as const,          labelKey: 'metrics.avgRiskScore',     format: (v: number) => (v * 100).toFixed(1) + '%' },
-  { key: 'directAwardPct' as const,   labelKey: 'metrics.directAwardPct',   format: (v: number) => v.toFixed(1) + '%' },
-  { key: 'highRiskPct' as const,      labelKey: 'metrics.highRiskPct',      format: (v: number) => v.toFixed(1) + '%' },
-  { key: 'valueAtRisk' as const,      labelKey: 'metrics.valueAtRisk',      format: (v: number) => formatCompactMXN(v) },
-  { key: 'singleBidPct' as const,     labelKey: 'metrics.singleBidPct',     format: (v: number) => v.toFixed(1) + '%' },
+// Comparison table metric definitions — direct bilingual labels (no i18n lookup needed)
+const ADMIN_METRIC_KEYS: Array<{
+  key: keyof AdminAgg
+  label: { en: string; es: string }
+  format: (v: number) => string
+}> = [
+  { key: 'contractsPerYear', label: { en: 'Contracts / yr', es: 'Contratos / año' }, format: (v) => formatNumber(Math.round(v)) },
+  { key: 'valuePerYear',     label: { en: 'Avg annual spend', es: 'Gasto anual prom.' }, format: (v) => formatCompactMXN(v) },
+  { key: 'avgRisk',          label: { en: 'Avg risk score', es: 'Riesgo promedio' }, format: (v) => (v * 100).toFixed(1) + '%' },
+  { key: 'directAwardPct',   label: { en: 'Direct award', es: 'Adj. directa' }, format: (v) => v.toFixed(1) + '%' },
+  { key: 'highRiskPct',      label: { en: 'High-risk rate', es: 'Tasa alto riesgo' }, format: (v) => v.toFixed(1) + '%' },
+  { key: 'valueAtRisk',      label: { en: 'Value at risk', es: 'Gasto en riesgo' }, format: (v) => formatCompactMXN(v) },
+  { key: 'singleBidPct',     label: { en: 'Single bid', es: 'Lic. única' }, format: (v) => v.toFixed(1) + '%' },
 ]
 
 // =============================================================================
@@ -954,7 +958,7 @@ export default function Administrations() {
         }
       >
         <Suspense fallback={<div className="h-[420px] bg-background-card animate-pulse rounded-sm" />}>
-          <AdministrationFingerprints />
+          <AdministrationFingerprints adminAggs={adminAggs} />
         </Suspense>
       </PlateFrame>
 
@@ -1128,7 +1132,7 @@ export default function Administrations() {
               <TableExportButton
                 filename="rubli-administraciones-comparativa.csv"
                 data={ADMIN_METRIC_KEYS.map((metric) => {
-                  const row: Record<string, unknown> = { metric: t(metric.labelKey) }
+                  const row: Record<string, unknown> = { metric: isEs ? metric.label.es : metric.label.en }
                   adminAggs.forEach((a) => { row[a.name] = a.contracts > 0 ? metric.format(a[metric.key] as number) : '—' })
                   return row
                 })}
@@ -1171,7 +1175,7 @@ export default function Administrations() {
                     const range = maxVal - minVal
                     return (
                       <tr key={metric.key}>
-                        <td className="data-cell text-text-muted">{t(metric.labelKey)}</td>
+                        <td className="data-cell text-text-muted">{isEs ? metric.label.es : metric.label.en}</td>
                         {adminAggs.map((a) => {
                           const value = a[metric.key] as number
                           const hasData = a.contracts > 0

@@ -8,7 +8,7 @@
  * Sort: total spend (default) | avg risk score | contract count | name
  */
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useSearchParams } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
@@ -22,6 +22,7 @@ import {
   SECTOR_TEXT_COLORS,
   RISK_COLORS,
   getRiskLevelFromScore,
+  getSectorName,
 } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { Building2 } from 'lucide-react'
@@ -30,6 +31,7 @@ import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { CompetitionSlopeChart } from '@/components/sectors/CompetitionSlopeChart'
 import { SectorTreemap } from '@/components/sectors/SectorTreemap'
+import { SectorRadialTree } from '@/components/sectors/SectorRadialTree'
 import { CategorySectorSwimlane } from '@/components/sectors/CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 import { RiskSpendBeeswarm } from '@/components/sectors/RiskSpendBeeswarm'
@@ -205,6 +207,165 @@ function SectorCardSkeleton() {
   )
 }
 
+// ── CategoryTreeView ─────────────────────────────────────────────────────────
+// Collapsible sector → category tree for the WHAT tab "Tree" mode.
+
+interface CatSummary {
+  category_id: number
+  name_es: string
+  name_en: string
+  sector_id: number | null
+  sector_code: string | null
+  total_contracts: number
+  total_value: number
+  avg_risk: number
+  direct_award_pct: number
+  single_bid_pct: number
+  top_vendor: { id: number; name: string } | null
+  top_institution: { id: number; name: string } | null
+}
+
+interface SectorRow {
+  sector_code: string
+  total_value_mxn: number
+  total_contracts: number
+  avg_risk_score: number
+  sector_id: number
+}
+
+interface CategoryTreeViewProps {
+  orderedSectors: string[]
+  sectorGroups: Map<string, CatSummary[]>
+  sectors: SectorRow[]
+  lang: string
+}
+
+function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: CategoryTreeViewProps) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+  const isEs = lang === 'es'
+
+  const toggle = (code: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (next.has(code)) next.delete(code)
+      else next.add(code)
+      return next
+    })
+  }
+
+  const sectorMap = useMemo(() => {
+    const m = new Map<string, SectorRow>()
+    for (const s of sectors) m.set(s.sector_code, s)
+    return m
+  }, [sectors])
+
+  const maxSpend = useMemo(() => {
+    let max = 0
+    for (const cats of sectorGroups.values()) {
+      for (const c of cats) { if (c.total_value > max) max = c.total_value }
+    }
+    return max
+  }, [sectorGroups])
+
+  return (
+    <div className="rounded-sm border border-border overflow-hidden">
+      {orderedSectors.map((sectorCode) => {
+        const cats = sectorGroups.get(sectorCode) ?? []
+        const color = SECTOR_COLORS[sectorCode] ?? '#64748b'
+        const sectorData = sectorMap.get(sectorCode)
+        const isOpen = !collapsed.has(sectorCode)
+
+        return (
+          <div key={sectorCode}>
+            {/* Sector header row */}
+            <button
+              type="button"
+              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-[color:var(--color-background-elevated)] transition-colors text-left"
+              style={{ borderLeft: `3px solid ${color}` }}
+              onClick={() => toggle(sectorCode)}
+              aria-expanded={isOpen}
+            >
+              <span className="text-[11px] font-mono text-text-muted w-4 flex-shrink-0">
+                {isOpen ? '▼' : '▶'}
+              </span>
+              <span
+                className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] flex-1"
+                style={{ color }}
+              >
+                {getSectorName(sectorCode, isEs ? 'es' : 'en')}
+              </span>
+              <span className="text-[10px] font-mono text-text-muted">
+                {cats.length} {isEs ? 'cat.' : 'cat.'}
+              </span>
+              {sectorData && (
+                <span className="text-[11px] font-mono tabular-nums text-text-secondary">
+                  {formatSpend(sectorData.total_value_mxn)}
+                </span>
+              )}
+            </button>
+
+            {/* Category leaves */}
+            {isOpen && cats.map((cat, idx) => {
+              const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+              const sbDotClass =
+                (cat.single_bid_pct ?? 0) > 25 ? 'bg-red-500'
+                : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-amber-500'
+                : 'bg-zinc-400'
+              const barWidth = maxSpend > 0 ? Math.min(100, (cat.total_value / maxSpend) * 100) : 0
+
+              return (
+                <div
+                  key={cat.category_id}
+                  className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                  style={{ borderLeft: `3px solid ${color}33` }}
+                >
+                  <span className="flex-shrink-0 w-5 font-mono text-[10px] text-text-muted tabular-nums">
+                    {String(idx + 1).padStart(2, '0')}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <EntityIdentityChip
+                      type="category"
+                      id={cat.category_id}
+                      name={isEs ? cat.name_es : cat.name_en}
+                      size="sm"
+                      sectorCode={cat.sector_code ?? null}
+                      riskScore={cat.avg_risk ?? null}
+                    />
+                    {/* Spend bar */}
+                    <div className="mt-1 h-px rounded-full bg-background-elevated overflow-hidden w-full max-w-[160px]">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${barWidth}%`, backgroundColor: color, opacity: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <div className="font-mono text-xs tabular-nums text-text-primary">
+                      {formatSpend(cat.total_value)}
+                    </div>
+                  </div>
+                  <div
+                    className="flex-shrink-0 font-mono text-xs font-bold tabular-nums w-14 text-right"
+                    style={{ color: RISK_COLORS[riskLevel] }}
+                  >
+                    {(cat.avg_risk * 100).toFixed(1)}%
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-1 w-10 justify-end">
+                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} />
+                    <span className="font-mono text-[10px] tabular-nums text-text-secondary">
+                      {cat.direct_award_pct.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const SORT_KEYS: ReadonlyArray<SortKey> = ['total_value_mxn', 'avg_risk_score', 'total_contracts', 'name']
@@ -239,6 +400,16 @@ export function Sectors() {
     const next = new URLSearchParams(searchParams)
     if (v === 'sectors') next.delete('view')
     else next.set('view', v)
+    setSearchParams(next, { replace: true })
+  }
+
+  // Category list display: 'list' (ranked flat) or 'tree' (grouped by sector)
+  const cviewParam = searchParams.get('cview') as 'list' | 'tree' | null
+  const cview: 'list' | 'tree' = cviewParam === 'tree' ? 'tree' : 'list'
+  const setCview = (v: 'list' | 'tree') => {
+    const next = new URLSearchParams(searchParams)
+    if (v === 'list') next.delete('cview')
+    else next.set('cview', v)
     setSearchParams(next, { replace: true })
   }
 
@@ -567,14 +738,33 @@ export function Sectors() {
                     <CategoryCaptureDumbbell categories={categoryData.data} />
                   </div>
 
-                  {/* ── § 3 — RANKED TABLE ───────────────────────────────── */}
-                  {/* cat-P3: § kicker */}
-                  <div className="mb-3">
+                  {/* ── § 3 — CATALOG (List or Tree) ────────────────────── */}
+                  <div className="mb-3 flex items-center justify-between gap-4">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                       {i18n.language === 'es'
                         ? 'El Catálogo · 72 Categorías'
                         : 'The Catalog · 72 Categories'}
                     </p>
+                    <div className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0">
+                      {(['list', 'tree'] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setCview(v)}
+                          className={cn(
+                            'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                            cview === v
+                              ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                              : 'text-text-muted hover:text-text-secondary',
+                          )}
+                          aria-pressed={cview === v}
+                        >
+                          {v === 'list'
+                            ? (i18n.language === 'es' ? 'Lista' : 'List')
+                            : (i18n.language === 'es' ? 'Árbol' : 'Tree')}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   {(() => {
                     // cat-P3 D: sort rows per ?sort= param
@@ -590,15 +780,38 @@ export function Sectors() {
                         })
                       }
                       if (catSortKey === 'capture') {
-                        // Proxy: descending direct_award_pct (top1_share − top2_share
-                        // not available on getSummary without an extra backend call)
                         return [...categoryData.data].sort(
                           (a, b) => b.direct_award_pct - a.direct_award_pct,
                         )
                       }
-                      // default: risk (descending avg_risk)
                       return sortedByRisk
                     })()
+
+                    // Tree view: categories grouped under collapsible sector headers
+                    if (cview === 'tree') {
+                      // Group categories by sector (null → 'otros')
+                      const sectorGroups = new Map<string, typeof categoryData.data>()
+                      for (const cat of sortedByRisk) {
+                        const key = cat.sector_code ?? 'otros'
+                        if (!sectorGroups.has(key)) sectorGroups.set(key, [])
+                        sectorGroups.get(key)!.push(cat)
+                      }
+                      // Order sectors by their total spend
+                      const sectorOrder = sorted.map((s) => s.sector_code)
+                      const orderedSectors = sectorOrder.filter((sc) => sectorGroups.has(sc))
+                      const othersGroup = sectorGroups.get('otros')
+                      if (othersGroup && !orderedSectors.includes('otros')) orderedSectors.push('otros')
+
+                      return (
+                        <CategoryTreeView
+                          orderedSectors={orderedSectors}
+                          sectorGroups={sectorGroups}
+                          sectors={sorted}
+                          lang={i18n.language}
+                        />
+                      )
+                    }
+
                     return (
                       <div className="rounded-sm border border-border overflow-hidden">
                         {catRows.map((cat, idx) => {
@@ -805,57 +1018,104 @@ export function Sectors() {
             removed. P2-P4 will reintroduce one slope chart, one treemap,
             one beeswarm. See docs/SECTORS_REDESIGN_PLAN.md. */}
 
-        {/* ── § 2 HERO 1: Sector Treemap ───────────────────────────────────
-            docs/SECTORS_REDESIGN_PLAN.md §5 HERO 1.
-            Area = total_value_mxn; saturation = avg_risk_score.
-            Amber border on OECD violators; editorial pull-arrow on Agricultura. */}
-        {!isLoading && sectors.length > 0 && (
-          <section
-            aria-labelledby="treemap-heading"
-            className="mb-10 pb-8 border-b border-border"
-          >
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-              {t('treemap.kicker')}
-            </p>
-            <h2
-              id="treemap-heading"
-              className="text-text-primary leading-[1.1] mb-2"
-              style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-              }}
+        {/* ── § 2 HERO 1: Sector Overview (Tree or Map) ────────────────────
+            Tree = radial node-link; Map = squarified treemap.
+            Default is Tree (more visually distinctive). */}
+        {!isLoading && sectors.length > 0 && (() => {
+          const sectorMapParam = searchParams.get('smap') as 'tree' | 'map' | null
+          const sectorMap: 'tree' | 'map' =
+            sectorMapParam === 'map' ? 'map' : 'tree'
+          const setSectorMap = (v: 'tree' | 'map') => {
+            const next = new URLSearchParams(searchParams)
+            if (v === 'tree') next.delete('smap')
+            else next.set('smap', v)
+            setSearchParams(next, { replace: true })
+          }
+          return (
+            <section
+              aria-labelledby="treemap-heading"
+              className="mb-10 pb-8 border-b border-border"
             >
-              {t('treemap.headline')}
-            </h2>
-            <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-1">
-              {t('treemap.deck')}
-            </p>
-            {/* Legend row */}
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                <span
-                  className="inline-block h-2.5 w-4 rounded-sm border border-amber-500"
-                  style={{ background: 'rgba(245,158,11,0.15)' }}
-                  aria-hidden="true"
-                />
-                {t('treemap.oecdViolatorNote')}
+              <div className="flex items-end justify-between gap-4 flex-wrap mb-2">
+                <div>
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+                    {t('treemap.kicker')}
+                  </p>
+                  <h2
+                    id="treemap-heading"
+                    className="text-text-primary leading-[1.1]"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                      fontWeight: 800,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {t('treemap.headline')}
+                  </h2>
+                </div>
+                {/* View toggle: Tree / Map */}
+                <div className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0">
+                  {(['tree', 'map'] as const).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setSectorMap(v)}
+                      className={cn(
+                        'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                        sectorMap === v
+                          ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                          : 'text-text-muted hover:text-text-secondary',
+                      )}
+                      aria-pressed={sectorMap === v}
+                    >
+                      {v === 'tree'
+                        ? (i18n.language === 'es' ? 'Árbol' : 'Tree')
+                        : (i18n.language === 'es' ? 'Mapa' : 'Map')}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                <span
-                  className="inline-block h-2.5 w-4 rounded-sm"
-                  style={{ background: 'linear-gradient(90deg, rgba(220,38,38,0.35) 0%, rgba(220,38,38,0.90) 100%)' }}
-                  aria-hidden="true"
-                />
-                {t('treemap.saturationNote')}
-              </div>
-            </div>
-            <div className="max-w-4xl mx-auto">
-              <SectorTreemap sectors={sectors} />
-            </div>
-          </section>
-        )}
+              <p className="text-sm text-text-secondary leading-relaxed max-w-2xl mb-3">
+                {sectorMap === 'tree'
+                  ? (i18n.language === 'es'
+                      ? 'Doce sectores vinculados al gasto federal total. Tamaño del nodo = gasto; saturación de color = indicador de riesgo. ⚠ = supera el umbral OCDE del 25% en adjudicación directa.'
+                      : 'Twelve sectors linked to the federal procurement total. Node size = spend; color saturation = risk indicator. ⚠ = exceeds the OECD 25% direct-award threshold.')
+                  : t('treemap.deck')
+                }
+              </p>
+              {sectorMap === 'tree' ? (
+                <div className="max-w-4xl mx-auto">
+                  <SectorRadialTree sectors={sectors} />
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                      <span
+                        className="inline-block h-2.5 w-4 rounded-sm border border-amber-500"
+                        style={{ background: 'rgba(245,158,11,0.15)' }}
+                        aria-hidden="true"
+                      />
+                      {t('treemap.oecdViolatorNote')}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                      <span
+                        className="inline-block h-2.5 w-4 rounded-sm"
+                        style={{ background: 'linear-gradient(90deg, rgba(220,38,38,0.35) 0%, rgba(220,38,38,0.90) 100%)' }}
+                        aria-hidden="true"
+                      />
+                      {t('treemap.saturationNote')}
+                    </div>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <SectorTreemap sectors={sectors} />
+                  </div>
+                </>
+              )}
+            </section>
+          )
+        })()}
 
         {/* ── § 3 HERO 2: Competition Slope Chart ──────────────────────────
             docs/SECTORS_REDESIGN_PLAN.md §5 HERO 2.

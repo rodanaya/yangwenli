@@ -52,7 +52,8 @@ export function AdminDossierPanel({
   vendorsLoading,
   sectorData,
 }: DossierPanelProps) {
-  const { t } = useTranslation('administrations')
+  const { t, i18n } = useTranslation('administrations')
+  const isEs = i18n.language?.startsWith('es') ?? false
   const dossier = DOSSIER_DATA[adminName]
   const partyColor = PARTY_COLORS[adminMeta.party] || '#64748b'
 
@@ -145,7 +146,7 @@ export function AdminDossierPanel({
             </div>
             <div>
               <div className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5">
-                MXN at risk
+                {isEs ? 'MXN en riesgo' : 'MXN at risk'}
               </div>
               <div className="text-sm font-bold font-mono text-text-primary">
                 {formatCompactMXN(agg.valueAtRisk)}
