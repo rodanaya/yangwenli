@@ -1663,19 +1663,21 @@ export default function Atlas() {
         <div className="relative">
           <button
             onClick={() => setStoriesMenuOpen(!storiesMenuOpen)}
-            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
+            className="text-[11px] font-mono inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition-all uppercase tracking-[0.1em] font-bold"
             style={{
-              background: activeStory ? (activeStory.accent) : 'transparent',
-              color: activeStory ? 'white' : 'var(--color-text-muted)',
-              border: '1px solid var(--color-border)',
+              background: activeStory
+                ? activeStory.accent
+                : 'rgba(160,104,32,0.15)',
+              color: activeStory ? 'white' : '#a06820',
+              border: `1px solid ${activeStory ? activeStory.accent : 'rgba(160,104,32,0.4)'}`,
             }}
             aria-expanded={storiesMenuOpen}
             aria-label={lang === 'en' ? 'Open stories menu' : 'Abrir menú de historias'}
           >
-            <BookOpen className="h-3 w-3" />
+            <BookOpen className="h-3.5 w-3.5" />
             {activeStory
-              ? (lang === 'en' ? `${activeStory.title.en}` : `${activeStory.title.es}`)
-              : (lang === 'en' ? 'Stories' : 'Historias')
+              ? (lang === 'en' ? activeStory.title.en : activeStory.title.es)
+              : (lang === 'en' ? '▶ Stories' : '▶ Historias')
             }
           </button>
           {storiesMenuOpen && (
