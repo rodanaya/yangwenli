@@ -312,6 +312,7 @@ function App() {
                   working unchanged. */}
               <Route path="observatorio" element={<Navigate to="/atlas" replace />} />
               <Route path="observatory"  element={<Navigate to="/atlas" replace />} />
+              <Route path="spatial" element={<Navigate to="/explore" replace />} />
               <Route
                 path="sectors"
                 element={

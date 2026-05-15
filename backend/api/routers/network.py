@@ -572,6 +572,7 @@ class PatternSpotlight(BaseModel):
     t2_count: int
     avg_ips: float
     gt_case_count: int
+    total_value_mxn: Optional[float]
     top_vendors: List[PatternVendorItem]
 
 
@@ -617,7 +618,8 @@ def get_pattern_spotlight():
                 SELECT COUNT(*) as total,
                        SUM(CASE WHEN ips_tier = 1 THEN 1 ELSE 0 END) as t1,
                        SUM(CASE WHEN ips_tier = 2 THEN 1 ELSE 0 END) as t2,
-                       AVG(ips_final) as avg_ips
+                       AVG(ips_final) as avg_ips,
+                       SUM(total_value_mxn) as total_value
                 FROM aria_queue
                 WHERE primary_pattern = ?
             """, (code,)).fetchone()
@@ -651,6 +653,7 @@ def get_pattern_spotlight():
                 t2_count=agg["t2"] or 0,
                 avg_ips=round(float(agg["avg_ips"] or 0), 3),
                 gt_case_count=gt_count,
+                total_value_mxn=float(agg["total_value"]) if agg["total_value"] else None,
                 top_vendors=[
                     PatternVendorItem(
                         vendor_id=r["vendor_id"],

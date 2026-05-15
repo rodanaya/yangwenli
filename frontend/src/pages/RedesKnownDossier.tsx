@@ -100,7 +100,7 @@ function buildCommunitiesFromSpotlight(
       sector: PATTERN_SECTORS[p.code] ?? 'otros',
       pattern: p.code as PatternCode,
       vendors: p.vendor_count,
-      value: 0,            // unknown — do NOT show fake MXN
+      value: p.total_value_mxn ?? 0,
       institution: '',     // unknown at pattern aggregate level
       avgRisk: p.avg_ips,
       confirmed: p.gt_case_count,

@@ -1716,6 +1716,7 @@ export interface PatternSpotlight {
   t2_count: number
   avg_ips: number
   gt_case_count: number
+  total_value_mxn: number | null
   top_vendors: PatternVendorItem[]
 }
 
