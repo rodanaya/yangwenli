@@ -2971,8 +2971,10 @@ export const scorecardApi = {
     const { data } = await api.get(`/scorecards/institutions?${q}`)
     return data
   },
-  async getInstitutionStats() {
-    const { data } = await api.get('/scorecards/institutions/stats')
+  async getInstitutionStats(params: { federal_only?: boolean } = {}) {
+    const q = buildQueryParams(params)
+    const suffix = q ? `?${q}` : ''
+    const { data } = await api.get(`/scorecards/institutions/stats${suffix}`)
     return data
   },
   async getInstitution(id: number) {

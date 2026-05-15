@@ -25,7 +25,6 @@ import {
 import {
   ArrowLeft,
   ExternalLink,
-  AlertTriangle,
   Building2,
   User,
 } from 'lucide-react'
@@ -450,24 +449,61 @@ export default function CategoryProfile() {
       .slice(0, 15)
   }, [subcategoryData])
 
-  // 404 state
+  // 404 state — editorial "archived folio" treatment
   if (!summaryLoading && !category) {
+    const missingFolio = String(Number(id) || 0).padStart(3, '0')
     return (
-      <div className="max-w-3xl mx-auto py-16 text-center">
-        <AlertTriangle className="h-12 w-12 text-text-muted mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-text-primary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          {t('profile.notFound.title')}
-        </h1>
-        <p className="text-sm text-text-muted mb-6">
-          {t('profile.notFound.description', { id })}
-        </p>
-        <Link
-          to="/sectors?view=categories"
-          className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors"
+      <div className="max-w-2xl py-16">
+        <div
+          className="mb-4 flex items-center gap-3"
+          style={{
+            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-muted)',
+            fontWeight: 400,
+          }}
         >
-          <ArrowLeft className="h-4 w-4" />
-          {t('profile.notFound.backLink')}
-        </Link>
+          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+            Folio · {missingFolio}
+          </span>
+          <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+            {i18n.language.startsWith('es') ? 'Archivado · sin registro' : 'Archived · no record'}
+          </span>
+        </div>
+        <div className="flex items-start gap-4">
+          <div
+            className="self-stretch w-[3px] rounded-full shrink-0 mt-2 bg-border"
+            aria-hidden
+          />
+          <div className="flex-1 min-w-0">
+            <h1
+              className="text-text-primary leading-tight mb-3"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: 'clamp(24px, 3vw, 32px)',
+                letterSpacing: '-0.012em',
+              }}
+            >
+              {t('profile.notFound.title')}
+            </h1>
+            <p className="text-sm text-text-secondary leading-[1.65] mb-5"
+              style={{ fontFamily: 'var(--font-family-serif)' }}>
+              {t('profile.notFound.description', { id })}
+            </p>
+            <Link
+              to="/sectors?view=categories"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1.5 rounded-sm"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {t('profile.notFound.backLink')}
+            </Link>
+          </div>
+        </div>
       </div>
     )
   }
@@ -489,140 +525,245 @@ export default function CategoryProfile() {
     institution_name: string | null
   }>
 
+  const isEs = i18n.language.startsWith('es')
+  const folioNumber = String(categoryId).padStart(3, '0')
+  const sectorLabel = category?.sector_code
+    ? (isEs ? (category.sector_code === 'infraestructura' ? 'Infraestructura'
+              : category.sector_code === 'salud' ? 'Salud'
+              : category.sector_code === 'educacion' ? 'Educación'
+              : category.sector_code === 'energia' ? 'Energía'
+              : category.sector_code === 'tecnologia' ? 'Tecnología'
+              : category.sector_code === 'gobernacion' ? 'Gobernación'
+              : category.sector_code.charAt(0).toUpperCase() + category.sector_code.slice(1))
+            : category.sector_code.charAt(0).toUpperCase() + category.sector_code.slice(1))
+    : null
+  const avgContractValue = category && category.total_contracts > 0
+    ? category.total_value / category.total_contracts
+    : 0
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-7 pb-12">
       {/* ================================================================= */}
-      {/* 1. Back navigation + Header                                       */}
+      {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
-      <div>
+      <header className="border-b border-border pb-6">
         <Link
           to="/sectors?view=categories"
-          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-4"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3 w-3" />
           {t('profile.breadcrumb')}
         </Link>
 
         {summaryLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-96" />
-            <Skeleton className="h-5 w-48" />
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-48" />
+            <Skeleton className="h-10 w-[28rem]" />
+            <Skeleton className="h-4 w-72" />
           </div>
         ) : category ? (
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <h1
-                className="text-2xl font-bold text-text-primary leading-tight"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {category.name_es || category.name_en}
-              </h1>
-              {category.sector_code && (
+          <>
+            {/* Folio eyebrow — matches AriaQueue rhythm */}
+            <div
+              className="mb-3 flex items-center gap-3 flex-wrap"
+              style={{
+                fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+                fontSize: '10px',
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: 'var(--color-text-muted)',
+                fontWeight: 400,
+              }}
+            >
+              <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+                {isEs ? 'Categoría' : 'Category'}·{folioNumber}
+              </span>
+              <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+              {sectorLabel && category.sector_code && (
                 <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.15em]"
-                  style={{
-                    color: sectorColor,
-                    backgroundColor: `${sectorColor}15`,
-                    border: `1px solid ${sectorColor}30`,
-                  }}
+                  className="inline-flex items-center gap-1.5"
+                  style={{ color: sectorColor }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} />
-                  {category.sector_code}
+                  <span style={{ fontStyle: 'italic', fontWeight: 500 }}>{sectorLabel}</span>
                 </span>
               )}
+              <span style={{ width: 18, height: 1, background: 'rgba(160, 104, 32, 0.25)' }} />
+              <span style={{ fontStyle: 'italic', fontWeight: 300 }}>COMPRANET 2002–2025</span>
             </div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
-              COMPRANET 2002-2025
-            </p>
-          </div>
+
+            {/* Editorial headline — Playfair Italic, sector-spine accent */}
+            <div className="flex items-start gap-4">
+              <div
+                className="self-stretch w-[3px] rounded-full shrink-0 mt-1"
+                style={{ backgroundColor: sectorColor }}
+                aria-hidden
+              />
+              <div className="flex-1 min-w-0">
+                <h1
+                  className="text-text-primary"
+                  style={{
+                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 500,
+                    fontSize: 'clamp(26px, 3.6vw, 36px)',
+                    lineHeight: 1.0,
+                    letterSpacing: '-0.012em',
+                  }}
+                >
+                  {category.name_es || category.name_en}
+                </h1>
+                <p className="text-sm text-text-secondary leading-[1.6] mt-3 max-w-prose"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}>
+                  {getLedeForCategory({
+                    category_name: category.name_es,
+                    category_name_en: category.name_en,
+                    total_value_mxn: category.total_value,
+                    total_contracts: category.total_contracts,
+                    direct_award_pct: category.direct_award_pct,
+                    avg_risk_score: category.avg_risk,
+                  })}
+                </p>
+              </div>
+            </div>
+          </>
         ) : null}
-      </div>
+      </header>
 
       {/* ================================================================= */}
-      {/* 1b. Editorial Lede                                                */}
-      {/* ================================================================= */}
-      {category && (
-        <p className="text-sm text-text-secondary leading-[1.65] max-w-prose" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          {getLedeForCategory({
-            category_name: category.name_es,
-            category_name_en: category.name_en,
-            total_value_mxn: category.total_value,
-            total_contracts: category.total_contracts,
-            direct_award_pct: category.direct_award_pct,
-            avg_risk_score: category.avg_risk,
-          })}
-        </p>
-      )}
-
-      {/* ================================================================= */}
-      {/* 2. KPI Strip                                                      */}
+      {/* HERO TRIPTYCH — Playfair Italic 800 anchor stats with risk-spine   */}
       {/* ================================================================= */}
       {summaryLoading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border/30 rounded-sm overflow-hidden">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-28 w-full" />)}
         </div>
       ) : category ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/20 rounded-sm overflow-hidden">
-          <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.totalAmount')}</p>
-            <p className="text-2xl font-mono font-bold text-text-primary leading-tight">
+        <section
+          aria-label={isEs ? 'Hallazgos principales' : 'Headline numbers'}
+          className="grid grid-cols-1 md:grid-cols-3 gap-px bg-border/30 rounded-sm overflow-hidden"
+        >
+          {/* Stat 1 — Total Value */}
+          <div
+            className="bg-background-card px-5 py-4 border-l-[3px]"
+            style={{ borderLeftColor: sectorColor }}
+          >
+            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              §1 · {t('profile.kpi.totalAmount')}
+            </p>
+            <p
+              className="tabular-nums text-text-primary leading-none"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 800,
+                fontSize: 'clamp(28px, 3.4vw, 36px)',
+                color: sectorColor,
+              }}
+            >
               {formatCompactMXN(category.total_value)}
             </p>
-          </div>
-          <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.contracts')}</p>
-            <p className="text-2xl font-mono font-bold text-text-primary leading-tight">
-              {formatNumber(category.total_contracts)}
-            </p>
-            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5">
-              {t('profile.kpi.avgAmount', { value: formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0) })}
+            <p className="text-[11px] font-mono text-text-muted mt-1.5">
+              {formatNumber(category.total_contracts)} {t('profile.kpi.contracts').toLowerCase()}
+              <span className="text-text-muted/50"> · </span>
+              {formatCompactMXN(avgContractValue)} {isEs ? 'promedio' : 'avg'}
             </p>
           </div>
-          <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.avgRisk')}</p>
+
+          {/* Stat 2 — Risk Indicator */}
+          <div
+            className="bg-background-card px-5 py-4 border-l-[3px]"
+            style={{ borderLeftColor: riskColor }}
+          >
+            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              §2 · {t('profile.kpi.avgRisk')}
+            </p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-mono font-bold leading-tight" style={{ color: riskColor }}>
-                {(category.avg_risk * 100).toFixed(1)}%
-              </p>
-              <span
-                className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded"
-                style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
+              <p
+                className="tabular-nums leading-none"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  fontSize: 'clamp(28px, 3.4vw, 36px)',
+                  color: riskColor,
+                }}
               >
-                {riskLevel}
-              </span>
-            </div>
-          </div>
-          <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.directAward')}</p>
-            <p className="text-2xl font-mono font-bold leading-tight" style={{ color: daColor }}>
-              {daPct.toFixed(0)}%
-            </p>
-            {daPct > 25 && (
-              <p className="text-[10px] text-[color:var(--color-oecd)] font-mono mt-0.5">
-                {t('profile.kpi.oecd')}
+                {(category.avg_risk * 100).toFixed(0)}
               </p>
-            )}
+              <span className="text-base font-mono text-text-muted">/100</span>
+            </div>
+            <p className="text-[11px] font-mono mt-1.5" style={{ color: riskColor }}>
+              <span className="uppercase tracking-[0.1em]">{riskLevel}</span>
+              <span className="text-text-muted/50"> · </span>
+              <span className="text-text-muted">
+                {isEs ? 'indicador estadístico' : 'statistical indicator'}
+              </span>
+            </p>
           </div>
-        </div>
+
+          {/* Stat 3 — Direct Award vs OECD */}
+          <div
+            className="bg-background-card px-5 py-4 border-l-[3px]"
+            style={{ borderLeftColor: daColor }}
+          >
+            <p className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+              §3 · {t('profile.kpi.directAward')}
+            </p>
+            <div className="flex items-baseline gap-2">
+              <p
+                className="tabular-nums leading-none"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  fontSize: 'clamp(28px, 3.4vw, 36px)',
+                  color: daColor,
+                }}
+              >
+                {daPct.toFixed(0)}
+              </p>
+              <span className="text-base font-mono text-text-muted">%</span>
+            </div>
+            <p className="text-[11px] font-mono text-text-muted mt-1.5">
+              {daPct > 25 ? (
+                <>
+                  <span style={{ color: 'var(--color-oecd)' }}>
+                    {(daPct / 25).toFixed(1)}×
+                  </span>
+                  {' '}{isEs ? 'el límite OCDE (25%)' : 'OECD limit (25%)'}
+                </>
+              ) : (
+                <>{isEs ? 'dentro del límite OCDE (25%)' : 'within OECD limit (25%)'}</>
+              )}
+            </p>
+          </div>
+        </section>
       ) : null}
 
       {/* ================================================================= */}
-      {/* 3. Historical Timeline                                            */}
+      {/* §4 — Historical Timeline                                          */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {t('profile.sections.eyebrow')}{t('profile.sections.timeline')}
-          </p>
-          <h2
-            className="text-lg font-bold text-text-primary leading-tight"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {t('profile.sections.timelineSubtitle')}
-          </h2>
+      <section className="pt-1">
+        <div className="mb-3 flex items-baseline justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+              §4 · {t('profile.sections.timeline')}
+            </p>
+            <h2
+              className="text-text-primary leading-tight"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: '20px',
+                letterSpacing: '-0.005em',
+              }}
+            >
+              {t('profile.sections.timelineSubtitle')}
+            </h2>
+          </div>
         </div>
-        <Card>
-          <CardContent className="pt-6 pb-4">
+        <div className="border border-border/60 rounded-sm bg-background-card p-4">
             {trendsLoading ? (
               <ChartSkeleton height={320} type="area" />
             ) : timelineData.length > 0 ? (
@@ -658,27 +799,31 @@ export default function CategoryProfile() {
                 {t('profile.empty.noTrend')}
               </div>
             )}
-          </CardContent>
-        </Card>
+        </div>
       </section>
 
       {/* ================================================================= */}
-      {/* 4. Sexenio Comparison                                             */}
+      {/* §5 — Sexenio Comparison                                           */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {t('profile.sections.eyebrow')}{t('profile.sections.byAdmin')}
+      <section className="pt-1">
+        <div className="mb-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            §5 · {t('profile.sections.byAdmin')}
           </p>
           <h2
-            className="text-lg font-bold text-text-primary leading-tight"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-text-primary leading-tight"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '20px',
+              letterSpacing: '-0.005em',
+            }}
           >
             {t('profile.sections.byAdminSubtitle')}
           </h2>
         </div>
-        <Card>
-          <CardContent className="pt-6 pb-4">
+        <div className="border border-border/60 rounded-sm bg-background-card p-4">
             {sexenioLoading ? (
               <ChartSkeleton height={280} />
             ) : sexenioBarData.length > 0 && sexenioBarData.some(d => d.value > 0) ? (
@@ -695,21 +840,26 @@ export default function CategoryProfile() {
             <p className="text-[10px] text-text-muted/50 mt-2 font-mono">
               {t('profile.footnote')}
             </p>
-          </CardContent>
-        </Card>
+        </div>
       </section>
 
       {/* ================================================================= */}
-      {/* 5. Market Concentration (Top Vendors)                             */}
+      {/* §6 — Market Concentration (Top Vendors)                           */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {t('profile.sections.eyebrow')}{t('profile.sections.concentration')}
+      <section className="pt-1">
+        <div className="mb-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            §6 · {t('profile.sections.concentration')}
           </p>
           <h2
-            className="text-lg font-bold text-text-primary leading-tight"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-text-primary leading-tight"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '20px',
+              letterSpacing: '-0.005em',
+            }}
           >
             {t('profile.sections.concentrationSubtitle')}
           </h2>
@@ -828,16 +978,22 @@ export default function CategoryProfile() {
       </section>
 
       {/* ================================================================= */}
-      {/* 6. Vendor-Institution Pairs                                       */}
+      {/* §7 — Vendor-Institution Pairs                                     */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {t('profile.sections.eyebrow')}{t('profile.sections.relations')}
+      <section className="pt-1">
+        <div className="mb-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            §7 · {t('profile.sections.relations')}
           </p>
           <h2
-            className="text-lg font-bold text-text-primary leading-tight"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-text-primary leading-tight"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '20px',
+              letterSpacing: '-0.005em',
+            }}
           >
             {t('profile.sections.relationsSubtitle')}
           </h2>
@@ -926,16 +1082,22 @@ export default function CategoryProfile() {
       </section>
 
       {/* ================================================================= */}
-      {/* 7. Top Contracts                                                  */}
+      {/* §8 — Top Contracts                                                */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {t('profile.sections.eyebrow')}{t('profile.sections.contracts')}
+      <section className="pt-1">
+        <div className="mb-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            §8 · {t('profile.sections.contracts')}
           </p>
           <h2
-            className="text-lg font-bold text-text-primary leading-tight"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-text-primary leading-tight"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '20px',
+              letterSpacing: '-0.005em',
+            }}
           >
             {t('profile.sections.contractsSubtitle')}
           </h2>
@@ -1012,17 +1174,23 @@ export default function CategoryProfile() {
       </section>
 
       {/* ================================================================= */}
-      {/* 8. Subcategories                                                  */}
+      {/* §9 — Subcategories                                                */}
       {/* ================================================================= */}
       {(subcategoryLoading || (subcatBarData.length > 0)) && (
-        <section>
-          <div className="mb-4">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-              {t('profile.sections.eyebrow')}{t('profile.sections.subcategories')}
+        <section className="pt-1">
+          <div className="mb-3">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+              §9 · {t('profile.sections.subcategories')}
             </p>
             <h2
-              className="text-lg font-bold text-text-primary leading-tight"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="text-text-primary leading-tight"
+              style={{
+                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontStyle: 'italic',
+                fontWeight: 500,
+                fontSize: '20px',
+                letterSpacing: '-0.005em',
+              }}
             >
               {t('profile.sections.subcategoriesSubtitle')}
             </h2>
@@ -1070,7 +1238,7 @@ export default function CategoryProfile() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <CardTitle id="price-section-title" className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
-                    {isEs ? '§ 4 · El Precio' : '§ 4 · Pricing'}
+                    {isEs ? '§10 · El Precio' : '§10 · Pricing'}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     {heavySkew && (
@@ -1311,7 +1479,7 @@ export default function CategoryProfile() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
-                    {isEs ? '§ 5 · COMPETENCIA' : '§ 5 · COMPETITION'}
+                    {isEs ? '§11 · COMPETENCIA' : '§11 · COMPETITION'}
                   </span>
                   {daAboveSector && (
                     <span
@@ -1493,7 +1661,7 @@ export default function CategoryProfile() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
-                    {isEs ? '§ 6 · ESTACIONALIDAD' : '§ 6 · SEASONALITY'}
+                    {isEs ? '§12 · ESTACIONALIDAD' : '§12 · SEASONALITY'}
                   </span>
                   {decemberRush && (
                     <span
@@ -1639,7 +1807,7 @@ export default function CategoryProfile() {
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-text-muted">
-                    {isEs ? '§ 7 · PATRONES' : '§ 7 · PATTERNS'}
+                    {isEs ? '§13 · PATRONES' : '§13 · PATTERNS'}
                   </span>
                   {dominant_pattern && (
                     <span
@@ -1771,43 +1939,50 @@ export default function CategoryProfile() {
         }
 
         return (
-          <section>
-            <div className="mb-4">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-                {isEs ? '§ 8 · DIAGNÓSTICO' : '§ 8 · VERDICT'}
+          <section className="pt-1">
+            <div className="mb-3">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+                {isEs ? '§14 · DIAGNÓSTICO' : '§14 · VERDICT'}
               </p>
               <h2
-                className="text-lg font-bold text-text-primary leading-tight"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
+                className="text-text-primary leading-tight"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: '20px',
+                  letterSpacing: '-0.005em',
+                }}
               >
                 {isEs ? 'El Veredicto' : 'Market Health Verdict'}
               </h2>
             </div>
-            <Card>
-              <CardContent className="pt-5 pb-5">
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0">
-                    <span
-                      className="inline-flex items-center px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold uppercase tracking-[0.15em]"
-                      style={{ color: verdictColor, backgroundColor: `${verdictColor}15`, border: `1px solid ${verdictColor}30` }}
-                    >
-                      {isEs ? verdictEs : verdictEn}
-                    </span>
-                  </div>
-                  <div className="space-y-2 flex-1">
-                    <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
-                      {isEs ? descEs : descEn}
-                    </p>
-                    <div className="flex flex-wrap gap-4 text-[11px] font-mono text-text-muted/70">
-                      <span>HHI <span className="font-bold" style={{ color: verdictColor }}>{hhi.toFixed(0)}</span></span>
-                      <span>Top 3 <span className="font-bold" style={{ color: verdictColor }}>{top3.toFixed(0)}%</span></span>
-                      <span>DA <span className="font-bold" style={{ color: daColor }}>{da.toFixed(0)}%</span></span>
-                      <span>Riesgo <span className="font-bold" style={{ color: riskColor }}>{(risk * 100).toFixed(0)}/100</span></span>
-                    </div>
+            <div
+              className="border border-border/60 rounded-sm bg-background-card p-5 border-l-[3px]"
+              style={{ borderLeftColor: verdictColor }}
+            >
+              <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
+                <div className="shrink-0">
+                  <span
+                    className="inline-flex items-center px-3 py-1.5 rounded-sm text-[11px] font-mono font-bold uppercase tracking-[0.15em]"
+                    style={{ color: verdictColor, backgroundColor: `${verdictColor}15`, border: `1px solid ${verdictColor}30` }}
+                  >
+                    {isEs ? verdictEs : verdictEn}
+                  </span>
+                </div>
+                <div className="space-y-3 flex-1 min-w-0">
+                  <p className="text-sm text-text-secondary leading-[1.65]" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                    {isEs ? descEs : descEn}
+                  </p>
+                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] font-mono text-text-muted/80 pt-2 border-t border-border/40">
+                    <span>HHI <span className="font-bold tabular-nums" style={{ color: verdictColor }}>{hhi.toFixed(0)}</span></span>
+                    <span>Top 3 <span className="font-bold tabular-nums" style={{ color: verdictColor }}>{top3.toFixed(0)}%</span></span>
+                    <span>{isEs ? 'AD' : 'DA'} <span className="font-bold tabular-nums" style={{ color: daColor }}>{da.toFixed(0)}%</span></span>
+                    <span>{isEs ? 'Riesgo' : 'Risk'} <span className="font-bold tabular-nums" style={{ color: riskColor }}>{(risk * 100).toFixed(0)}/100</span></span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
         )
       })()}
@@ -1828,14 +2003,20 @@ export default function CategoryProfile() {
         if (sisters.length === 0) return null
 
         return (
-          <section>
-            <div className="mb-4">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-                {isEs ? '§ 9 · COMPARACIÓN' : '§ 9 · COMPARISON'}
+          <section className="pt-1">
+            <div className="mb-3">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+                {isEs ? '§15 · COMPARACIÓN' : '§15 · COMPARISON'}
               </p>
               <h2
-                className="text-lg font-bold text-text-primary leading-tight"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
+                className="text-text-primary leading-tight"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: '20px',
+                  letterSpacing: '-0.005em',
+                }}
               >
                 {isEs ? 'Categorías del mismo sector' : 'Sister Categories in Sector'}
               </h2>

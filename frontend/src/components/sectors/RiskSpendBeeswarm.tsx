@@ -91,6 +91,58 @@ function circleRadius(totalContracts: number): number {
   return clamp(6, Math.sqrt(totalContracts) * k, 28)
 }
 
+// ── sector glyphs ─────────────────────────────────────────────────────────────
+// Each sector gets a thematic symbol instead of a plain circle. All paths are
+// designed in a [-10, 10] coordinate space (20-unit bounding box) centered at
+// the origin so a `scale(r/10)` matches the visual weight of a circle radius r.
+// Why glyphs (vs. circles): on a scatter where every dot has the same shape,
+// readers can't preattentively distinguish sectors — they must trace label-to-
+// dot. Sector-coded symbols make the chart legible even without labels and
+// reinforce the 12-sector taxonomy as a vocabulary, not just a color key.
+const SECTOR_GLYPHS: Record<string, string> = {
+  // salud — medical cross (the universal hospital sign)
+  salud:
+    'M -3 -10 H 3 V -3 H 10 V 3 H 3 V 10 H -3 V 3 H -10 V -3 H -3 Z',
+  // educacion — open book (two pages)
+  educacion:
+    'M -9 -7 L -1 -8 L -1 8 L -9 7 Z M 1 -8 L 9 -7 L 9 7 L 1 8 Z',
+  // infraestructura — hexagon nut/bolt
+  infraestructura:
+    'M 0 -10 L 8.66 -5 L 8.66 5 L 0 10 L -8.66 5 L -8.66 -5 Z',
+  // energia — lightning bolt
+  energia:
+    'M 2 -10 L -6 2 L -1 2 L -3 10 L 6 -2 L 1 -2 Z',
+  // defensa — shield
+  defensa:
+    'M 0 -10 L 9 -7 L 9 2 Q 9 8 0 10 Q -9 8 -9 2 L -9 -7 Z',
+  // tecnologia — chip / square with notched pins
+  tecnologia:
+    'M -8 -8 H 8 V 8 H -8 Z M -10 -5 H -8 M -10 -1 H -8 M -10 3 H -8 M 8 -5 H 10 M 8 -1 H 10 M 8 3 H 10 M -5 -10 V -8 M -1 -10 V -8 M 3 -10 V -8 M -5 8 V 10 M -1 8 V 10 M 3 8 V 10',
+  // hacienda — coin stack (three discs, slight 3D)
+  hacienda:
+    'M -9 -8 Q -9 -10 0 -10 Q 9 -10 9 -8 L 9 -5 Q 9 -3 0 -3 Q -9 -3 -9 -5 Z M -9 -1 Q -9 -3 0 -3 Q 9 -3 9 -1 L 9 2 Q 9 4 0 4 Q -9 4 -9 2 Z M -9 6 Q -9 4 0 4 Q 9 4 9 6 L 9 9 Q 9 11 0 11 Q -9 11 -9 9 Z',
+  // gobernacion — capitol dome / civic building
+  gobernacion:
+    'M -10 10 H 10 V 7 H -10 Z M -8 7 V -2 H -6 V 7 Z M -2 7 V -2 H 2 V 7 Z M 6 7 V -2 H 8 V 7 Z M -10 -2 H 10 L 0 -10 Z',
+  // agricultura — leaf
+  agricultura:
+    'M -8 8 Q -10 -2 -2 -8 Q 6 -10 10 -8 Q 10 0 4 6 Q -2 10 -8 8 Z M -8 8 L 8 -8',
+  // ambiente — water drop
+  ambiente:
+    'M 0 -10 Q 7 -2 7 3 Q 7 10 0 10 Q -7 10 -7 3 Q -7 -2 0 -10 Z',
+  // trabajo — gear / cog (8 teeth, central hole)
+  trabajo:
+    'M -2 -10 H 2 L 3 -7 L 6 -8 L 8 -6 L 7 -3 L 10 -2 V 2 L 7 3 L 8 6 L 6 8 L 3 7 L 2 10 H -2 L -3 7 L -6 8 L -8 6 L -7 3 L -10 2 V -2 L -7 -3 L -8 -6 L -6 -8 L -3 -7 Z M 0 -4 A 4 4 0 0 0 0 4 A 4 4 0 0 0 0 -4 Z',
+  // otros — rhombus / diamond
+  otros:
+    'M 0 -10 L 10 0 L 0 10 L -10 0 Z',
+}
+
+/** Get a sector glyph path (centered at origin, 20-unit bounding box). */
+function getSectorGlyph(code: string): string {
+  return SECTOR_GLYPHS[code] ?? SECTOR_GLYPHS.otros
+}
+
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface BeeNode extends SimulationNodeDatum {
@@ -272,11 +324,17 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
   const isEs = i18n.language === 'es'
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative mx-auto w-full" ref={containerRef}>
       {/* ── SVG chart ──────────────────────────────────────────────────────── */}
+      {/* preserveAspectRatio="xMidYMid meet" guarantees the chart is centered
+          inside any container width once the ResizeObserver has measured.
+          display: block + margin: 0 auto removes the inline-text whitespace
+          gap and re-centers on narrow viewports. */}
       <svg
         width={width}
         height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={
           isEs
@@ -285,7 +343,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
         }
         tabIndex={0}
         onKeyDown={handleKeyDown}
-        style={{ outline: 'none', display: 'block' }}
+        style={{ outline: 'none', display: 'block', margin: '0 auto' }}
         onBlur={() => setFocusedIdx(null)}
       >
         <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
@@ -362,31 +420,28 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
             {isEs ? 'OCDE 25%' : 'OECD 25%'}
           </text>
 
-          {/* ── Circles ────────────────────────────────────────────────── */}
+          {/* ── Sector glyphs ──────────────────────────────────────────── */}
+          {/* Each sector renders its thematic symbol (cross for salud,
+              shield for defensa, lightning for energia, etc.) at a size
+              equal to the original circle's radius. Glyph paths live in
+              a [-10, 10] coordinate space; we scale by r/10 to keep the
+              chart's data encoding intact. */}
           {nodes.map((node) => {
             const isHovered = activeId === node.sector.sector_id
             const isDimmed = activeId !== null && !isHovered
             const isFocused = focusedSector?.sector_id === node.sector.sector_id
             const color = SECTOR_COLORS[node.sector.sector_code] ?? '#64748b'
+            const scale = (node.r / 10) * (isHovered ? 1.15 : 1)
+            const glyphPath = getSectorGlyph(node.sector.sector_code)
 
             return (
-              <circle
+              <g
                 key={node.sector.sector_id}
-                cx={node.cx}
-                cy={node.cy}
-                r={node.r}
-                fill={color}
-                fillOpacity={isDimmed ? 0.18 : 0.85}
-                stroke="white"
-                strokeWidth={1.5}
-                strokeOpacity={isDimmed ? 0.1 : 0.6}
+                transform={`translate(${node.cx}, ${node.cy}) scale(${scale})`}
                 style={{
-                  transform: isHovered ? `scale(1.15)` : 'scale(1)',
-                  transformOrigin: `${node.cx}px ${node.cy}px`,
-                  transformBox: 'fill-box',
-                  transition: 'transform 0.15s ease, fill-opacity 0.15s, stroke-opacity 0.15s',
+                  transition: 'transform 0.18s ease, opacity 0.15s',
+                  opacity: isDimmed ? 0.22 : 1,
                   cursor: 'pointer',
-                  outline: isFocused ? `2px solid ${color}` : undefined,
                 }}
                 role="button"
                 aria-label={`${getSectorName(node.sector.sector_code, isEs ? 'es' : 'en')} — ${(node.sector.avg_risk_score * 100).toFixed(1)}% ${isEs ? 'riesgo' : 'risk'}, ${formatCompactMXN(node.sector.total_value_mxn)}`}
@@ -394,7 +449,36 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                 onMouseEnter={() => setHoveredId(node.sector.sector_id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => navigate(`/sectors/${node.sector.sector_id}`)}
-              />
+              >
+                {/* Soft halo behind the glyph keeps small symbols (otros, ambiente)
+                    legible against grid lines and the priority-quadrant tint. */}
+                <circle
+                  r={11}
+                  fill={color}
+                  fillOpacity={isDimmed ? 0.06 : 0.14}
+                  aria-hidden="true"
+                />
+                <path
+                  d={glyphPath}
+                  fill={color}
+                  fillOpacity={isDimmed ? 0.4 : 0.92}
+                  stroke="white"
+                  strokeWidth={0.8}
+                  strokeOpacity={isDimmed ? 0.12 : 0.55}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
+                {isFocused && (
+                  <circle
+                    r={13}
+                    fill="none"
+                    stroke={color}
+                    strokeWidth={1.4}
+                    strokeDasharray="2 2"
+                    aria-hidden="true"
+                  />
+                )}
+              </g>
             )
           })}
 

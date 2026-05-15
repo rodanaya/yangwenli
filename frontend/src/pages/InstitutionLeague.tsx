@@ -43,8 +43,27 @@ import {
   Flag,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
+
+// Reverse-lookup: sector display name (Spanish or English) → canonical code,
+// so we can resolve a SECTOR_COLORS swatch from the `sector_name` returned by
+// the scorecards API (which sends the localized name_es, not the code).
+const SECTOR_NAME_TO_CODE: Record<string, string> = SECTORS.reduce<Record<string, string>>(
+  (acc, s) => {
+    acc[s.name.toLowerCase()] = s.code
+    acc[s.nameEN.toLowerCase()] = s.code
+    acc[s.code.toLowerCase()] = s.code
+    return acc
+  },
+  {},
+)
+
+function getSectorColorFromName(sectorName: string | null | undefined): string {
+  if (!sectorName) return SECTOR_COLORS.otros
+  const code = SECTOR_NAME_TO_CODE[sectorName.toLowerCase()] ?? 'otros'
+  return SECTOR_COLORS[code] ?? SECTOR_COLORS.otros
+}
 
 const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
 const ReportCard = lazy(() => import('./ReportCard'))
@@ -761,6 +780,12 @@ export default function InstitutionLeague() {
   const search = searchParams.get('q') || ''
   const sortBy = (searchParams.get('sort') || 'total_score') as SortKey
   const sortOrder = (searchParams.get('order') || 'desc') as 'asc' | 'desc'
+  // Federal-only toggle — defaults to true.
+  // COMPRANET is a federal procurement registry, but a handful of state
+  // institutions slip in. Including them skews the league because their
+  // sample sizes are tiny and their procedures aren't directly comparable.
+  // URL param `all=1` flips to "include state-level" for power users.
+  const federalOnly = searchParams.get('all') !== '1'
   const PER_PAGE = 50
 
   const updateParams = useCallback(
@@ -783,15 +808,16 @@ export default function InstitutionLeague() {
     }
   }
 
-  // Data fetching
+  // Data fetching — every query is federal-aware so the headline numbers
+  // (median, total_scored, top/worst) match the table population below.
   const { data: statsData } = useQuery<InstitutionStats>({
-    queryKey: ['institution-scorecard-stats'],
-    queryFn: () => scorecardApi.getInstitutionStats(),
+    queryKey: ['institution-scorecard-stats', federalOnly],
+    queryFn: () => scorecardApi.getInstitutionStats({ federal_only: federalOnly }),
     staleTime: 10 * 60 * 1000,
   })
 
   const { data: listData, isLoading, isError } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-federal', page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
+    queryKey: ['institution-scorecards', federalOnly, page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
     queryFn: () =>
       scorecardApi.getInstitutions({
         page,
@@ -801,7 +827,7 @@ export default function InstitutionLeague() {
         grade: gradeFilter || undefined,
         sector: sectorFilter || undefined,
         search: search || undefined,
-        federal_only: true,
+        federal_only: federalOnly,
       }),
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
@@ -809,17 +835,17 @@ export default function InstitutionLeague() {
 
   // Top 5 champions (first page, sorted by score desc, no filters)
   const { data: championsData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-federal-top5'],
+    queryKey: ['institution-scorecards-top5', federalOnly],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'desc', federal_only: true }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'desc', federal_only: federalOnly }),
     staleTime: 30 * 60 * 1000,
   })
 
   // Bottom 5 red flags (first page, sorted by score asc, no filters)
   const { data: redFlagsData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-federal-bottom5'],
+    queryKey: ['institution-scorecards-bottom5', federalOnly],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'asc', federal_only: true }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'asc', federal_only: federalOnly }),
     staleTime: 30 * 60 * 1000,
   })
 
@@ -1150,8 +1176,41 @@ export default function InstitutionLeague() {
             </select>
           </div>
 
+          {/* Federal-only toggle — default ON.
+              COMPRANET is federal, but a handful of state institutions
+              slip into the data with tiny samples and incomparable
+              procedures. Most users should leave this on; turning it off
+              is a power-user lens for full-population analysis. */}
+          <label
+            className="flex items-center gap-2 cursor-pointer select-none ml-auto"
+            title={federalOnly
+              ? 'Mostrando solo instituciones federales. Click para incluir todas (incluye estatales).'
+              : 'Mostrando todas las instituciones. Click para restringir a federales.'}
+          >
+            <span className="relative inline-flex h-4 w-7 items-center">
+              <input
+                type="checkbox"
+                checked={federalOnly}
+                onChange={(e) => updateParams({ all: e.target.checked ? undefined : '1', page: '1' })}
+                className="peer sr-only"
+                aria-label="Federal only"
+              />
+              <span
+                aria-hidden="true"
+                className={`h-4 w-7 rounded-full transition-colors ${federalOnly ? 'bg-accent' : 'bg-background-elevated border border-border'}`}
+              />
+              <span
+                aria-hidden="true"
+                className={`absolute h-3 w-3 rounded-full bg-text-primary transition-transform ${federalOnly ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
+              />
+            </span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary">
+              {federalOnly ? 'Federal only' : 'Todas (incl. estatales)'}
+            </span>
+          </label>
+
           {/* Result count */}
-          <span className="text-text-muted text-[10px] font-mono ml-auto tabular-nums tracking-wide">
+          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
             {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>
@@ -1200,12 +1259,12 @@ export default function InstitutionLeague() {
               <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border bg-background/80">
-                    <th className="px-3 py-2.5 text-left w-10">
-                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
+                    <th className="px-2 py-2 text-left w-12">
+                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         #
                       </span>
                     </th>
-                    <th className="px-3 py-2.5 text-left">
+                    <th className="px-2 py-2 text-left">
                       <SortHeader
                         label={t('columns.institution')}
                         sortKey="institution_name"
@@ -1214,7 +1273,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left w-32">
+                    <th className="px-2 py-2 text-left w-24">
                       <SortHeader
                         label={t('columns.score')}
                         sortKey="total_score"
@@ -1223,22 +1282,22 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-center w-28">
-                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
+                    <th className="px-2 py-2 text-center w-24">
+                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden sm:table-cell w-32">
-                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
+                    <th className="px-2 py-2 text-left hidden sm:table-cell w-28">
+                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.pillars')}
                       </span>
                     </th>
-                    <th className="px-3 py-2.5 text-center w-16 hidden sm:table-cell">
-                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
+                    <th className="px-2 py-2 text-center w-12 hidden sm:table-cell">
+                      <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.trend')}
                       </span>
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden md:table-cell w-28">
+                    <th className="px-2 py-2 text-left hidden md:table-cell w-24">
                       <SortHeader
                         label={t('columns.percentile')}
                         sortKey="national_percentile"
@@ -1283,91 +1342,103 @@ export default function InstitutionLeague() {
                         tabIndex={0}
                         role="button"
                         aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
-                        style={{ borderLeft: `4px solid ${tier.color}` }}
+                        style={{ borderLeft: `3px solid ${tier.color}`, height: '41px' }}
                       >
-                        {/* Rank — large bold mono */}
-                        <td className="px-3 py-3 font-mono tabular-nums text-right w-16">
-                          <div className="flex items-center justify-end gap-1.5">
+                        {/* Rank — compact mono, ARIA-style */}
+                        <td className="px-2 py-0 font-mono tabular-nums text-right w-12 align-middle">
+                          <div className="flex items-center justify-end gap-1">
                             {isTopMedalist && (
                               <Crown
-                                className="h-4 w-4 flex-shrink-0"
+                                className="h-3 w-3 flex-shrink-0"
                                 style={{ color: rankColor }}
                                 aria-hidden="true"
                               />
                             )}
                             <span
-                              className="text-3xl font-mono font-bold leading-none"
-                              style={{ color: rankColor, opacity: isWorstPerformer || isTopMedalist ? 1 : 0.55 }}
+                              className="text-[13px] font-mono font-bold leading-none tabular-nums"
+                              style={{ color: rankColor, opacity: isWorstPerformer || isTopMedalist ? 1 : 0.65 }}
                             >
-                              #{rank}
+                              {rank}
                             </span>
                           </div>
                           {isWorstPerformer && (
-                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-[0.15em] text-risk-critical whitespace-nowrap">
+                            <div className="mt-0.5 text-[7px] font-mono font-bold uppercase tracking-[0.12em] text-risk-critical whitespace-nowrap leading-none">
                               {t('worstPerformerBadge')}
                             </div>
                           )}
                         </td>
 
-                        {/* Institution name + risk driver pill + expand caret */}
-                        <td className="px-3 py-3">
-                          <div className="flex items-start gap-2">
+                        {/* Sector color dot + institution name + sector label
+                            + risk-driver pill — all on one line. The dot is
+                            the sector-palette accent (SECTOR_COLORS), the
+                            tier color stays on the left border. */}
+                        <td className="px-2 py-0 align-middle">
+                          <div className="flex items-center gap-2 min-w-0">
                             <button
                               type="button"
                               onClick={toggleExpand}
-                              className="flex-shrink-0 mt-0.5 p-0.5 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors"
+                              className="flex-shrink-0 p-0.5 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors"
                               aria-label={isExpanded ? t('collapseRow') : t('expandRow')}
                               aria-expanded={isExpanded}
                             >
                               <ChevronDown
-                                className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                                 aria-hidden="true"
                               />
                             </button>
-                            <div className="min-w-0 flex-1">
-                              <span className="text-text-secondary group-hover:text-text-primary transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
-                                {item.institution_name}
+                            <span
+                              aria-hidden="true"
+                              className="h-2 w-2 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: getSectorColorFromName(item.sector_name) }}
+                              title={item.sector_name ?? ''}
+                            />
+                            <span
+                              className="text-[13px] text-text-secondary group-hover:text-text-primary transition-colors font-medium truncate"
+                              title={item.institution_name}
+                            >
+                              {item.institution_name}
+                            </span>
+                            {item.sector_name && (
+                              <span className="text-text-muted text-[9px] font-mono uppercase tracking-[0.1em] flex-shrink-0 hidden lg:inline">
+                                · {item.sector_name}
                               </span>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {item.sector_name && (
-                                  <span className="text-text-muted text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
-                                )}
-                                {item.top_risk_driver && (
-                                  <RiskDriverPill driver={item.top_risk_driver} />
-                                )}
-                              </div>
-                            </div>
+                            )}
+                            {item.top_risk_driver && (
+                              <span className="flex-shrink-0 hidden xl:inline">
+                                <RiskDriverPill driver={item.top_risk_driver} />
+                              </span>
+                            )}
                           </div>
                         </td>
 
-                        {/* Score as PRIMARY display */}
-                        <td className="px-3 py-3">
+                        {/* Score as PRIMARY display — compact */}
+                        <td className="px-2 py-0 align-middle">
                           <div className="flex items-baseline gap-1">
-                            <span className="text-xl font-bold font-mono tabular-nums" style={{ color: tier.color }}>
+                            <span className="text-[17px] font-bold font-mono tabular-nums leading-none" style={{ color: tier.color }}>
                               {item.total_score.toFixed(1)}
                             </span>
-                            <span className="text-text-muted text-[10px] font-mono">/100</span>
+                            <span className="text-text-muted text-[9px] font-mono">/100</span>
                           </div>
                         </td>
 
                         {/* Tier badge */}
-                        <td className="px-3 py-3 text-center">
+                        <td className="px-2 py-0 text-center align-middle">
                           <TierBadge grade={item.grade} />
                         </td>
 
-                        {/* Pillar sparkbars */}
-                        <td className="px-3 py-3 hidden sm:table-cell">
+                        {/* Pillar sparkbars — denser */}
+                        <td className="px-2 py-0 hidden sm:table-cell align-middle">
                           <PillarSparkBars item={item} />
                         </td>
 
                         {/* Trend icon */}
-                        <td className="px-3 py-3 text-center hidden sm:table-cell">
+                        <td className="px-2 py-0 text-center hidden sm:table-cell align-middle">
                           <TrendIcon direction={item.trend_direction} />
                         </td>
 
                         {/* National percentile */}
-                        <td className="px-3 py-3 hidden md:table-cell">
-                          <span className="text-text-secondary text-xs font-mono tabular-nums">
+                        <td className="px-2 py-0 hidden md:table-cell align-middle">
+                          <span className="text-text-secondary text-[11px] font-mono tabular-nums">
                             {item.national_percentile !== null
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
@@ -1377,7 +1448,7 @@ export default function InstitutionLeague() {
                       {isExpanded && (
                         <tr
                           className="border-b border-border bg-background/60"
-                          style={{ borderLeft: `4px solid ${tier.color}` }}
+                          style={{ borderLeft: `3px solid ${tier.color}` }}
                         >
                           <td colSpan={7} className="px-5 py-4">
                             <PillarRadar item={item} />

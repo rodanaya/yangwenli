@@ -12,12 +12,12 @@
  * interest in a ranked list of unsuspicious vendors.
  */
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { intersectionApi, type IntersectionVendor } from '@/api/client'
+import { intersectionApi, type IntersectionVendor, type IntersectionSummary } from '@/api/client'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
@@ -212,6 +212,226 @@ function QuadrantCard({
         </Link>
       )}
     </section>
+  )
+}
+
+// ─── Quadrant scatter plot ────────────────────────────────────────────────────
+// FT/Economist-style 2×2 battlespace matrix. X = RUBLI risk (0–1),
+// Y = external registry hits (EFOS + SFP + GT, 0–3). Dot size = √contracts.
+// Color encodes the quadrant the vendor falls into. Deterministic jitter
+// breaks up the (0-flag, low-risk) "clean" stack at the bottom.
+
+function QuadrantScatterPlot({
+  data,
+  lang,
+}: {
+  data: IntersectionSummary
+  lang: string
+}) {
+  const allVendors = useMemo(() => {
+    const novelty = data.rankings.novelty.map((v) => ({ ...v, quadrant: 'novelty' as const }))
+    const confirmed = data.rankings.confirmed.map((v) => ({ ...v, quadrant: 'confirmed' as const }))
+    const blindspot = data.rankings.blindspot.map((v) => ({ ...v, quadrant: 'blindspot' as const }))
+    return [...novelty, ...confirmed, ...blindspot]
+  }, [data])
+
+  const W = 580
+  const H = 320
+  const PAD = { top: 20, right: 20, bottom: 32, left: 36 }
+  const plotW = W - PAD.left - PAD.right
+  const plotH = H - PAD.top - PAD.bottom
+
+  const toX = (score: number) => PAD.left + Math.max(0, Math.min(1, score)) * plotW
+  const toY = (flags: number, jitter = 0) =>
+    PAD.top + (1 - Math.max(0, Math.min(3, flags)) / 3) * plotH + jitter
+
+  // Quadrant accent colors (no raw-hex risk palette — these are the
+  // canonical sector/risk tokens reused for the scatter dots).
+  const COLORS: Record<'novelty' | 'confirmed' | 'blindspot', string> = {
+    novelty: '#dc2626', // critical
+    confirmed: '#a06820', // dashboard amber
+    blindspot: '#64748b', // muted
+  }
+
+  // Dividers at 40% (rubli_flags) and at 1.0/3 of Y (any external hit)
+  const flagsDividerX = PAD.left + (data.thresholds.rubli_flags ?? 0.4) * plotW
+  const flagsDividerY = PAD.top + (1 - 0.5 / 3) * plotH // halfway between 0 and 1 flag
+
+  return (
+    <div className="relative rounded-sm border border-border bg-background-card overflow-hidden mb-6">
+      <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+          {lang === 'es'
+            ? 'Mapa de cuadrantes · modelo vs. registros externos'
+            : 'Quadrant map · model vs. external registries'}
+        </p>
+        <p className="text-[10px] font-mono text-text-muted tabular-nums">
+          {formatNumber(allVendors.length)} {lang === 'es' ? 'proveedores trazados' : 'vendors plotted'}
+        </p>
+      </div>
+      <div className="p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+          aria-hidden="true"
+        >
+          {/* Plot frame */}
+          <rect
+            x={PAD.left}
+            y={PAD.top}
+            width={plotW}
+            height={plotH}
+            fill="none"
+            stroke="var(--color-border)"
+            strokeWidth="0.5"
+            opacity="0.6"
+          />
+
+          {/* Quadrant divider lines */}
+          <line
+            x1={flagsDividerX}
+            y1={PAD.top}
+            x2={flagsDividerX}
+            y2={PAD.top + plotH}
+            stroke="var(--color-border)"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+          <line
+            x1={PAD.left}
+            y1={flagsDividerY}
+            x2={PAD.left + plotW}
+            y2={flagsDividerY}
+            stroke="var(--color-border)"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
+
+          {/* Quadrant labels — placed in each corner */}
+          <text
+            x={PAD.left + plotW * 0.22}
+            y={PAD.top + 16}
+            textAnchor="middle"
+            fill={COLORS.blindspot}
+            fontSize="9"
+            fontFamily="monospace"
+            fontWeight="700"
+            letterSpacing="0.12em"
+          >
+            {lang === 'es' ? 'PUNTO CIEGO' : 'BLIND SPOT'}
+          </text>
+          <text
+            x={PAD.left + plotW * 0.78}
+            y={PAD.top + 16}
+            textAnchor="middle"
+            fill={COLORS.confirmed}
+            fontSize="9"
+            fontFamily="monospace"
+            fontWeight="700"
+            letterSpacing="0.12em"
+          >
+            {lang === 'es' ? 'CONFIRMADO' : 'CONFIRMED'}
+          </text>
+          <text
+            x={PAD.left + plotW * 0.78}
+            y={PAD.top + plotH - 8}
+            textAnchor="middle"
+            fill={COLORS.novelty}
+            fontSize="9"
+            fontFamily="monospace"
+            fontWeight="700"
+            letterSpacing="0.12em"
+          >
+            {lang === 'es' ? 'NOVEDAD' : 'NOVELTY'}
+          </text>
+          <text
+            x={PAD.left + plotW * 0.22}
+            y={PAD.top + plotH - 8}
+            textAnchor="middle"
+            fill="var(--color-text-muted)"
+            fontSize="9"
+            fontFamily="monospace"
+            fontWeight="400"
+            letterSpacing="0.12em"
+            opacity="0.5"
+          >
+            {lang === 'es' ? 'LIMPIO' : 'CLEAN'}
+          </text>
+
+          {/* Dots — drawn after labels so they sit on top */}
+          {allVendors.map((v, i) => {
+            const flags =
+              (v.is_efos_definitivo ? 1 : 0) +
+              (v.is_sfp_sanctioned ? 1 : 0) +
+              (v.in_ground_truth ? 1 : 0)
+            // Deterministic pseudo-random jitter to break up integer-flag stacking
+            const jitterY = (((i * 7919) % 21) - 10) * 0.7
+            const jitterX = (((i * 5237) % 17) - 8) * 0.4
+            const r = Math.min(12, Math.max(3, Math.sqrt(v.total_contracts) * 0.4))
+            const cx = toX(v.avg_risk_score) + jitterX
+            const cy = toY(flags, jitterY)
+            const color = COLORS[v.quadrant]
+            return (
+              <circle
+                key={v.vendor_id}
+                cx={cx}
+                cy={cy}
+                r={r}
+                fill={color}
+                fillOpacity={0.55}
+                stroke={color}
+                strokeWidth="0.5"
+                strokeOpacity={0.85}
+              />
+            )
+          })}
+
+          {/* Axis labels */}
+          <text
+            x={PAD.left + plotW / 2}
+            y={H - 6}
+            textAnchor="middle"
+            fill="var(--color-text-muted)"
+            fontSize="9"
+            fontFamily="monospace"
+            letterSpacing="0.12em"
+          >
+            {lang === 'es' ? '← RIESGO RUBLI →' : '← RUBLI RISK SCORE →'}
+          </text>
+          <text
+            x={12}
+            y={PAD.top + plotH / 2}
+            textAnchor="middle"
+            fill="var(--color-text-muted)"
+            fontSize="9"
+            fontFamily="monospace"
+            letterSpacing="0.12em"
+            transform={`rotate(-90, 12, ${PAD.top + plotH / 2})`}
+          >
+            {lang === 'es' ? 'REGISTROS EXT. ↑' : 'REGISTRY FLAGS ↑'}
+          </text>
+        </svg>
+      </div>
+      <div className="px-5 py-2.5 border-t border-border flex items-center gap-4 flex-wrap">
+        {[
+          { q: 'novelty', label: lang === 'es' ? 'Novedad' : 'Novelty', color: '#dc2626' },
+          { q: 'confirmed', label: lang === 'es' ? 'Confirmado' : 'Confirmed', color: '#a06820' },
+          { q: 'blindspot', label: lang === 'es' ? 'Punto ciego' : 'Blind spot', color: '#64748b' },
+        ].map(({ q, label, color }) => (
+          <div key={q} className="flex items-center gap-1.5">
+            <div
+              className="h-2 w-2 rounded-full flex-shrink-0"
+              style={{ background: color }}
+              aria-hidden="true"
+            />
+            <span className="text-[10px] font-mono text-text-muted">{label}</span>
+          </div>
+        ))}
+        <span className="text-[10px] font-mono text-text-muted ml-auto">
+          {lang === 'es' ? 'Tamaño = volumen de contratos' : 'Size = contract volume'}
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -433,6 +653,7 @@ export default function Intersection() {
                   : 'Plate — Three RUBLI × regulator quadrants. Novelty: high model risk, no external mark. Confirmed: methods agree. Blind spot: model misses what the regulator registered.'
               }
             >
+              <QuadrantScatterPlot data={data} lang={lang} />
               <div className="space-y-6">
             {/* NOVELTY — the pitch quadrant */}
             <QuadrantCard

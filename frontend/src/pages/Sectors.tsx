@@ -771,7 +771,7 @@ export function Sectors() {
                         identity is already carried by the kicker above. */}
                     <span className="text-text-primary">{topSectorName}</span>
                     {' '}{t('featured.leadsRisk')}{' '}
-                    <span className="font-mono tabular-nums" style={{ color: topSectorTextColor }}>{topRiskPct}%</span>
+                    <span className="font-mono tabular-nums" style={{ color: 'var(--color-accent, #a06820)' }}>{topRiskPct}%</span>
                     {' '}{t('featured.avgRiskSuffix')}
                   </>
                 }
@@ -934,8 +934,12 @@ export function Sectors() {
                 {i18n.language === 'es' ? 'OCDE 25%' : 'OECD 25%'}
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
-                <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
-                {i18n.language === 'es' ? 'Tamaño = contratos totales' : 'Size = total contracts'}
+                <span className="inline-flex items-center gap-0.5" aria-hidden="true">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-text-muted opacity-40" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-text-muted opacity-40" />
+                  <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" />
+                </span>
+                {i18n.language === 'es' ? 'Tamaño = contratos · Símbolo = sector' : 'Size = contracts · Symbol = sector'}
               </div>
             </div>
             <RiskSpendBeeswarm sectors={sectors} />

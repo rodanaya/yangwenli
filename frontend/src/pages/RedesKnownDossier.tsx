@@ -19,6 +19,7 @@
  * much money flows through it.
  */
 import { useMemo, useRef, useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ariaApi, networkApi, type PatternSpotlight, type PatternSpotlightResponse, type CommunityItem } from '@/api/client'
@@ -568,7 +569,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
         {/* Floating tooltip for active community */}
         {active && (
           <div
-            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background/95 shadow-xl px-3.5 py-2.5 text-[11px] backdrop-blur-sm"
+            className="absolute z-10 rounded-sm border border-border bg-background/95 shadow-xl px-3.5 py-2.5 text-[11px] backdrop-blur-sm"
             style={{
               left: `${Math.min(80, (active.x / W) * 100)}%`,
               top: `${(active.y / H) * 100}%`,
@@ -623,8 +624,18 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 {active.c.pattern} · {buildPatternLabel(isEs)[active.c.pattern]}
               </span>
             </div>
-            <div className="mt-1.5 text-[10px] text-text-muted italic">
-              {isEs ? 'Clic para ver dossier →' : 'Click to view dossier →'}
+            <div className="mt-2 flex items-center justify-between gap-2 pointer-events-auto">
+              <span className="text-[10px] text-text-muted italic">
+                {isEs ? 'Clic para ver dossier ↓' : 'Click to view dossier ↓'}
+              </span>
+              <Link
+                to={`/aria?pattern=${active.c.pattern}`}
+                className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm transition-colors"
+                style={{ color: PATTERN_HEX[active.c.pattern], background: `${PATTERN_HEX[active.c.pattern]}18`, border: `1px solid ${PATTERN_HEX[active.c.pattern]}40` }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {isEs ? 'ARIA →' : 'ARIA →'}
+              </Link>
             </div>
           </div>
         )}
@@ -915,6 +926,35 @@ function CommunityDossier({
 
         {/* Real ARIA top vendors for this pattern */}
         <TopVendorsPanel spotlight={patternSpotlight} color={fill} isEs={isEs} />
+      </div>
+
+      {/* Investigation CTA footer */}
+      <div className="px-5 py-3 border-t border-border flex items-center justify-between gap-3 bg-background-elevated/40">
+        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
+          {c.vendors > 0 ? `${formatNumber(c.vendors)} ${isEs ? 'proveedores' : 'vendors'} · ${c.pattern}` : c.pattern}
+        </span>
+        <div className="flex items-center gap-2">
+          {c.pattern.startsWith('P') && (
+            <Link
+              to={`/aria?pattern=${c.pattern}`}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider transition-colors"
+              style={{
+                background: `${fill}18`,
+                color: fill,
+                border: `1px solid ${fill}40`,
+              }}
+            >
+              {isEs ? 'Investigar en ARIA' : 'Investigate in ARIA'}
+              <ChevronRight className="h-3 w-3" />
+            </Link>
+          )}
+          <Link
+            to={`/patterns`}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-text-secondary transition-colors border border-border hover:border-border-hover"
+          >
+            {isEs ? 'Ver patrones' : 'All patterns'}
+          </Link>
+        </div>
       </div>
     </div>
   )

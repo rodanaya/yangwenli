@@ -519,40 +519,92 @@ class InstitutionScorecardStats(BaseModel):
 
 
 @router.get("/institutions/stats", response_model=InstitutionScorecardStats)
-def get_institution_scorecard_stats():
-    """Aggregate statistics across all institution scorecards."""
+def get_institution_scorecard_stats(
+    federal_only: bool = Query(
+        True,
+        description=(
+            "When true (default), restrict all aggregate stats — total_scored, "
+            "median_score, top/worst performer, grade_distribution — to federal "
+            "institutions only (geographic_scope = 'federal'). This keeps the "
+            "headline numbers consistent with the federal-only ranking list and "
+            "avoids state institutions skewing the league averages."
+        ),
+    ),
+):
+    """Aggregate statistics across institution scorecards.
+
+    Federal-only by default to match the federal-scope ranking list. Set
+    federal_only=false to include state-level institutions (some of which
+    appear in COMPRANET data but distort federal-procurement benchmarks).
+    """
     with get_db() as conn:
-        agg = conn.execute("""
-            SELECT COUNT(*), AVG(total_score)
-            FROM institution_scorecards
-        """).fetchone()
+        # Build a shared federal WHERE clause + JOIN once so every aggregate
+        # query below sees the same population. When federal_only is false we
+        # fall back to the original "all scorecards" path.
+        if federal_only:
+            base_from = (
+                "institution_scorecards s "
+                "JOIN institutions i ON i.id = s.institution_id"
+            )
+            where_clause = "WHERE i.geographic_scope = 'federal'"
+            join_params: tuple = ()
+        else:
+            base_from = "institution_scorecards s"
+            where_clause = ""
+            join_params = ()
+
+        agg = conn.execute(
+            f"SELECT COUNT(*), AVG(s.total_score) FROM {base_from} {where_clause}",
+            join_params,
+        ).fetchone()
         total_scored = agg[0] or 0
 
-        # Median via NTILE approximation (SQLite has no MEDIAN)
+        # Median via OFFSET approximation (SQLite has no MEDIAN)
         mid = total_scored // 2
-        median_row = conn.execute("""
-            SELECT total_score FROM institution_scorecards
-            ORDER BY total_score
+        median_row = conn.execute(
+            f"""
+            SELECT s.total_score
+            FROM {base_from}
+            {where_clause}
+            ORDER BY s.total_score
             LIMIT 1 OFFSET ?
-        """, (max(0, mid - 1),)).fetchone()
+            """,
+            (*join_params, max(0, mid - 1)),
+        ).fetchone()
         median_score = round(median_row[0], 1) if median_row else 0.0
 
-        top_row = conn.execute("""
+        # Top + worst must always join institutions (we need the name) so we
+        # use the federal-aware FROM directly. For the non-federal path we
+        # still join institutions to surface the name.
+        top_from = "institution_scorecards s JOIN institutions i ON i.id = s.institution_id"
+        top_row = conn.execute(
+            f"""
             SELECT s.institution_id, i.name, s.total_score
-            FROM institution_scorecards s
-            JOIN institutions i ON i.id = s.institution_id
+            FROM {top_from}
+            {where_clause}
             ORDER BY s.total_score DESC
             LIMIT 1
-        """).fetchone()
-        worst_row = conn.execute("""
+            """,
+            join_params,
+        ).fetchone()
+        worst_row = conn.execute(
+            f"""
             SELECT s.institution_id, i.name, s.total_score
-            FROM institution_scorecards s
-            JOIN institutions i ON i.id = s.institution_id
+            FROM {top_from}
+            {where_clause}
             ORDER BY s.total_score ASC
             LIMIT 1
-        """).fetchone()
+            """,
+            join_params,
+        ).fetchone()
         dist_rows = conn.execute(
-            "SELECT grade, COUNT(*) FROM institution_scorecards GROUP BY grade"
+            f"""
+            SELECT s.grade, COUNT(*)
+            FROM {base_from}
+            {where_clause}
+            GROUP BY s.grade
+            """,
+            join_params,
         ).fetchall()
         grade_dist = {r[0]: r[1] for r in dist_rows}
 
