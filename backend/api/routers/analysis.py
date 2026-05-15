@@ -335,6 +335,57 @@ MONTH_NAMES = [
 # MODEL METADATA ENDPOINT
 # =============================================================================
 
+# Hardcoded v0.8.5 fallback — returned when the global model_calibration row
+# is the stale v6.0 entry (no global v0.8.5 row was written by _score_v8_now.py).
+_V085_METADATA = {
+    "version": "v0.8.5",
+    "trained_at": "2026-05-02T02:12:02",
+    "n_contracts": 3_051_294,
+    "auc_test": 0.785,
+    "auc_train": 0.797,
+    "pu_correction": 0.320,
+    "updated_at": "2026-05-02T02:12:02",
+}
+
+# Averaged global coefficients from 13 per-sector v0.8.5 calibration rows
+_V085_COEFFICIENTS = [
+    {"factor": "price_volatility",    "beta": 0.5576,  "ci_lower": None, "ci_upper": None},
+    {"factor": "institution_diversity","beta": -0.3881, "ci_lower": None, "ci_upper": None},
+    {"factor": "price_ratio",         "beta": 0.3579,  "ci_lower": None, "ci_upper": None},
+    {"factor": "vendor_concentration","beta": 0.3269,  "ci_lower": None, "ci_upper": None},
+    {"factor": "cobid_herfindahl",    "beta": 0.2719,  "ci_lower": None, "ci_upper": None},
+    {"factor": "recency_z",           "beta": -0.2468, "ci_lower": None, "ci_upper": None},
+    {"factor": "amount_residual_z",   "beta": -0.1871, "ci_lower": None, "ci_upper": None},
+    {"factor": "network_member_count","beta": 0.1663,  "ci_lower": None, "ci_upper": None},
+    {"factor": "amendment_flag",      "beta": 0.1018,  "ci_lower": None, "ci_upper": None},
+    {"factor": "ad_period_days",      "beta": 0.0897,  "ci_lower": None, "ci_upper": None},
+    {"factor": "direct_award",        "beta": -0.0808, "ci_lower": None, "ci_upper": None},
+    {"factor": "pub_delay_z",         "beta": -0.0546, "ci_lower": None, "ci_upper": None},
+    {"factor": "institution_risk",    "beta": -0.0342, "ci_lower": None, "ci_upper": None},
+    {"factor": "sector_spread",       "beta": 0.0335,  "ci_lower": None, "ci_upper": None},
+    {"factor": "industry_mismatch",   "beta": -0.0170, "ci_lower": None, "ci_upper": None},
+    {"factor": "year_end",            "beta": 0.0168,  "ci_lower": None, "ci_upper": None},
+    {"factor": "same_day_count",      "beta": 0.0142,  "ci_lower": None, "ci_upper": None},
+    {"factor": "single_bid",          "beta": -0.0017, "ci_lower": None, "ci_upper": None},
+]
+
+_V085_CALIBRATION = {
+    "model_version": "v0.8.5",
+    "run_id": "CAL-v8-202605020212",
+    "created_at": "2026-05-02T02:12:02",
+    "global_intercept": -2.6157,
+    "coefficients": _V085_COEFFICIENTS,
+    "auc_train": 0.7973,
+    "auc_test": 0.7851,
+    "pu_correction_c": 0.320,
+    "n_positive": None,
+    "n_negative": None,
+    "hyperparameters": {"C": 0.2243, "l1_ratio": 0.7545, "c_pu": 0.32},
+}
+
+_ACTIVE_MODEL_VERSION = "v0.8.5"
+
+
 @router.get("/model/metadata", response_model=ModelMetadataResponse)
 def get_model_metadata():
     """
@@ -360,13 +411,19 @@ def get_model_metadata():
                 "FROM model_calibration WHERE sector_id IS NULL "
                 "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
-            if not row:
-                return {
-                    "version": "v0.8.5", "trained_at": "2026-05-02",
-                    "n_contracts": 3058286, "auc_test": 0.785,
-                    "auc_train": 0.797, "pu_correction": 0.320,
-                    "updated_at": "2026-05-02",
-                }
+            if not row or row["model_version"] != _ACTIVE_MODEL_VERSION:
+                # No global row or stale (v6.0 entry predates v0.8.5 scoring)
+                meta = dict(_V085_METADATA)
+                # Still fill n_contracts from precomputed_stats if available
+                try:
+                    stats_row = cursor.execute(
+                        "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'"
+                    ).fetchone()
+                    if stats_row:
+                        meta["n_contracts"] = json.loads(stats_row["stat_value"]).get("total_contracts")
+                except Exception:
+                    pass
+                return meta
             train_auc = None
             test_auc_val = None
             if row["temporal_metrics"]:
@@ -437,8 +494,9 @@ def get_model_calibration():
                 "WHERE sector_id IS NULL ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
 
-            if not row:
-                raise HTTPException(status_code=404, detail="No model calibration data found")
+            if not row or row["model_version"] != _ACTIVE_MODEL_VERSION:
+                # No global row or stale v6.0 entry — return hardcoded v0.8.5 calibration
+                return _V085_CALIBRATION
 
             coefficients_raw: Dict[str, float] = json.loads(row["coefficients"]) if row["coefficients"] else {}
             bootstrap_ci_raw: Dict[str, Any] = json.loads(row["bootstrap_ci"]) if row["bootstrap_ci"] else {}

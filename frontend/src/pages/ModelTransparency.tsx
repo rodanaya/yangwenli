@@ -35,23 +35,28 @@ interface Coefficient {
   note?: string
 }
 
+// v0.8.5 global coefficients (averaged across 13 per-sector calibration rows)
 const ACTIVE_COEFFICIENTS: Coefficient[] = [
-  { factor: 'price_volatility', label: 'Price Volatility', beta: 0.5343, note: 'Strongest signal — vendor contract-size variance vs sector norm' },
-  { factor: 'price_ratio', label: 'Price Ratio', beta: 0.4159, note: 'Contract amount / sector median' },
-  { factor: 'institution_diversity', label: 'Institution Diversity', beta: -0.2736, note: 'Protective — vendors serving many institutions are less suspicious' },
-  { factor: 'vendor_concentration', label: 'Vendor Concentration', beta: 0.2736, note: 'Vendor value share within sector' },
-  { factor: 'network_member_count', label: 'Network Members', beta: 0.1404, note: 'Co-contracting network size' },
-  { factor: 'same_day_count', label: 'Same-Day Contracts', beta: 0.1084, note: 'Threshold splitting signal' },
-  { factor: 'ad_period_days', label: 'Ad Period Days', beta: 0.0781, note: 'Publication period length' },
-  { factor: 'single_bid', label: 'Single Bid', beta: 0.0587, note: 'Competitive procedure with only one bidder' },
-  { factor: 'direct_award', label: 'Direct Award', beta: 0.0306, note: 'Direct award flag' },
+  { factor: 'price_volatility',     label: 'Price Volatility',       beta:  0.5576, note: 'Strongest signal — vendor contract-size variance vs sector norm' },
+  { factor: 'institution_diversity',label: 'Institution Diversity',   beta: -0.3881, note: 'Protective — vendors serving many institutions are less suspicious' },
+  { factor: 'price_ratio',          label: 'Price Ratio',            beta:  0.3579, note: 'Contract amount vs sector median; flagged when outlier' },
+  { factor: 'vendor_concentration', label: 'Vendor Concentration',   beta:  0.3269, note: 'Vendor value share within sector' },
+  { factor: 'cobid_herfindahl',     label: 'Co-Bid HHI',             beta:  0.2719, note: 'Herfindahl concentration of co-bidding relationships' },
+  { factor: 'recency_z',            label: 'Recency Z-Score',        beta: -0.2468, note: 'Protective — recently active vendors appear less suspicious' },
+  { factor: 'amount_residual_z',    label: 'Amount Residual',        beta: -0.1871, note: 'Protective — unusual contract sizes in the negative direction' },
+  { factor: 'network_member_count', label: 'Network Members',        beta:  0.1663, note: 'Co-contracting network size' },
+  { factor: 'amendment_flag',       label: 'Contract Amendments',    beta:  0.1018, note: 'Post-award modifications signal' },
+  { factor: 'ad_period_days',       label: 'Ad Period Days',         beta:  0.0897, note: 'Publication period length' },
+  { factor: 'direct_award',         label: 'Direct Award',           beta: -0.0808, note: 'Direct award procedure flag (negative — per-sector calibrated)' },
+  { factor: 'pub_delay_z',          label: 'Publication Delay',      beta: -0.0546, note: 'Protective — timely publication indicates transparency' },
 ]
 
+// v0.8.5 distribution (scored May 2 2026; HR=11.0%)
 const RISK_DISTRIBUTION = [
-  { level: 'Critical', threshold: '≥ 0.60', count: 184_031, pct: 6.01, color: RISK_COLORS.critical },
-  { level: 'High',     threshold: '≥ 0.40', count: 228_814, pct: 7.48, color: RISK_COLORS.high },
-  { level: 'Medium',   threshold: '≥ 0.25', count: 821_251, pct: 26.84, color: RISK_COLORS.medium },
-  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: RISK_COLORS.low },
+  { level: 'Critical', threshold: '≥ 0.60', count: 152_001, pct: 4.98, color: RISK_COLORS.critical },
+  { level: 'High',     threshold: '≥ 0.40', count: 182_065, pct: 5.97, color: RISK_COLORS.high },
+  { level: 'Medium',   threshold: '≥ 0.25', count: 494_158, pct: 16.20, color: RISK_COLORS.medium },
+  { level: 'Low',      threshold: '< 0.25', count: 2_223_070, pct: 72.86, color: RISK_COLORS.low },
 ]
 
 interface VersionEntry {

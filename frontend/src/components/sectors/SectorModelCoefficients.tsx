@@ -29,22 +29,28 @@ interface SectorModelCoefficientsProps {
 }
 
 const FEATURE_LABELS_ES: Record<string, string> = {
-  price_volatility: 'Volatilidad de precios',
+  price_volatility:     'Volatilidad de precios',
   vendor_concentration: 'Concentración de proveedor',
-  institution_diversity: 'Diversidad institucional',
-  price_ratio: 'Ratio de precio',
+  institution_diversity:'Diversidad institucional',
+  price_ratio:          'Ratio de precio',
   network_member_count: 'Red de proveedores',
-  same_day_count: 'Contratos simultáneos',
-  direct_award: 'Adjudicación directa',
-  single_bid: 'Licitación única',
-  ad_period_days: 'Días de publicación',
-  win_rate: 'Tasa de adjudicación',
-  industry_mismatch: 'Desajuste sectorial',
-  institution_risk: 'Riesgo institucional',
-  year_end: 'Cierre de año',
-  co_bid_rate: 'Tasa de co-licitación',
+  same_day_count:       'Contratos simultáneos',
+  direct_award:         'Adjudicación directa',
+  single_bid:           'Licitación única',
+  ad_period_days:       'Días de publicación',
+  win_rate:             'Tasa de adjudicación',
+  industry_mismatch:    'Desajuste sectorial',
+  institution_risk:     'Riesgo institucional',
+  year_end:             'Cierre de año',
+  co_bid_rate:          'Tasa de co-licitación',
   price_hyp_confidence: 'Hipótesis de precio',
-  sector_spread: 'Dispersión sectorial',
+  sector_spread:        'Dispersión sectorial',
+  // v0.8.5 new features
+  cobid_herfindahl:     'Concentración HHI co-licitación',
+  recency_z:            'Actividad reciente (z)',
+  amount_residual_z:    'Residual de monto (z)',
+  amendment_flag:       'Modificaciones contractuales',
+  pub_delay_z:          'Retraso de publicación (z)',
 }
 
 function humanizeFeature(key: string): string {
