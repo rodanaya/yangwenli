@@ -25,7 +25,7 @@ import { analysisApi, contractApi, ariaApi, caseLibraryApi, categoriesApi } from
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
@@ -1237,7 +1237,7 @@ export default function Executive() {
     staleTime: 60 * 60 * 1000,
     retry: 0,
   })
-  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1424
+  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? GROUND_TRUTH_CASE_COUNT_FALLBACK
 
   // § 2 La Lente — GT case corpus growth signal
   const { data: caseStats } = useQuery({
