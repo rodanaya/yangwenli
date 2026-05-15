@@ -624,17 +624,22 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 {active.c.pattern} · {buildPatternLabel(isEs)[active.c.pattern]}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-2 pointer-events-auto">
-              <span className="text-[10px] text-text-muted italic">
-                {isEs ? 'Clic para ver dossier ↓' : 'Click to view dossier ↓'}
-              </span>
+            <div className="mt-2 flex items-center gap-2 pointer-events-auto flex-wrap">
+              <Link
+                to={`/patterns/${active.c.pattern}`}
+                className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm transition-colors"
+                style={{ color: PATTERN_HEX[active.c.pattern], background: `${PATTERN_HEX[active.c.pattern]}18`, border: `1px solid ${PATTERN_HEX[active.c.pattern]}40` }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {isEs ? 'Dossier →' : 'Dossier →'}
+              </Link>
               <Link
                 to={`/aria?pattern=${active.c.pattern}`}
                 className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm transition-colors"
                 style={{ color: PATTERN_HEX[active.c.pattern], background: `${PATTERN_HEX[active.c.pattern]}18`, border: `1px solid ${PATTERN_HEX[active.c.pattern]}40` }}
                 onClick={(e) => e.stopPropagation()}
               >
-                {isEs ? 'ARIA →' : 'ARIA →'}
+                ARIA →
               </Link>
             </div>
           </div>
@@ -773,12 +778,14 @@ function CommunityDossier({
               style={{ color: fill }}
               aria-hidden="true"
             />
-            <span
-              className="text-[9px] font-mono font-bold uppercase tracking-[0.15em]"
+            <Link
+              to={`/patterns/${c.pattern}`}
+              className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] hover:underline"
               style={{ color: fill }}
+              onClick={(e) => e.stopPropagation()}
             >
               {c.pattern} · {buildPatternLabel(isEs)[c.pattern]}
-            </span>
+            </Link>
           </div>
           <div
             className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-semibold border"
