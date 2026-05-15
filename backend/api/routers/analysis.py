@@ -3086,6 +3086,16 @@ def get_political_cycle():
     if cached and (_time.time() - cached["ts"]) < _POLITICAL_CYCLE_TTL:
         return cached["data"]
 
+    try:
+        with get_db() as _pc:
+            row = _pc.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key=?", (cache_key,)).fetchone()
+        if row and row["stat_value"]:
+            result = json.loads(row["stat_value"])
+            _political_cycle_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
+    except Exception:
+        pass
+
     with get_db() as conn:
         # 1. Election year effect
         conn.row_factory = sqlite3.Row
@@ -3180,6 +3190,14 @@ def get_political_cycle():
         }
 
         _political_cycle_cache[cache_key] = {"ts": _time.time(), "data": result}
+        try:
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
+                    (cache_key, json.dumps(result, default=str)),
+                )
+        except Exception as e:
+            logger.warning("political_cycle persist failed: %s", e)
         return result
 
 
@@ -4347,6 +4365,7 @@ _ADMIN_ERAS = [
 ]
 
 _admin_breakdown_cache = SimpleCache()
+_admin_breakdown_lock = threading.Lock()
 
 
 @router.get("/admin-breakdown", response_model=AdminBreakdownResponse)
@@ -4360,22 +4379,29 @@ def get_admin_breakdown(response: Response):
         response.headers["Cache-Control"] = "public, max-age=3600"
         return cached
 
-    with get_db() as conn:
-        # Check precomputed_stats table
-        try:
-            row = conn.execute(
+    # Persistent fallback — survives container restarts
+    try:
+        with get_db() as _pc_conn:
+            row = _pc_conn.execute(
                 "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
                 (cache_key,)
             ).fetchone()
-            if row:
-                payload = json.loads(row["stat_value"])
-                result = AdminBreakdownResponse(**payload)
-                _admin_breakdown_cache.set(cache_key, result, ttl_seconds=3600)
-                response.headers["Cache-Control"] = "public, max-age=3600"
-                return result
-        except Exception as pc_err:
-            logger.debug("admin_breakdown precomputed_stats skip: %s", pc_err)
+        if row and row["stat_value"]:
+            result = AdminBreakdownResponse(**json.loads(row["stat_value"]))
+            _admin_breakdown_cache.set(cache_key, result, ttl_seconds=3600)
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            return result
+    except Exception as pc_err:
+        logger.debug("admin_breakdown precomputed_stats skip: %s", pc_err)
 
+    # Compute under mutex to prevent 6 workers computing simultaneously (38s query)
+    with _admin_breakdown_lock:
+        cached2 = _admin_breakdown_cache.get(cache_key)
+        if cached2 is not None:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+            return cached2
+
+    with get_db() as conn:
         # Live computation
         eras_out: List[AdminEraStats] = []
         for era_name, yr_start, yr_end in _ADMIN_ERAS:
@@ -4487,6 +4513,14 @@ def get_admin_breakdown(response: Response):
         cached_at=datetime.utcnow().isoformat(),
     )
     _admin_breakdown_cache.set(cache_key, result, ttl_seconds=3600)
+    try:
+        with get_db() as wconn:
+            wconn.execute(
+                "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) VALUES(?,?,datetime('now'))",
+                (cache_key, result.model_dump_json()),
+            )
+    except Exception as e:
+        logger.warning("admin_breakdown persist failed: %s", e)
     response.headers["Cache-Control"] = "public, max-age=3600"
     return result
 

@@ -7,6 +7,7 @@ industry risk clusters, seasonal risk, monthly risk summary, procedure risk
 comparison, top-by-period, sector growth, and year summary.
 """
 
+import json
 import sqlite3
 import logging
 import threading
@@ -183,8 +184,13 @@ _YEAR_SUMMARY_TTL = 86400  # 24 hours
 # caches both endpoints take 48–60s and miss the 30s axios timeout.
 _value_concentration_cache: Dict[str, Any] = {}
 _VALUE_CONCENTRATION_TTL = 3600
+_value_concentration_lock = threading.Lock()
+_VC_DB_KEY = "vc_default"
+
 _flash_vendors_cache: Dict[str, Any] = {}
 _FLASH_VENDORS_TTL = 3600
+_flash_vendors_lock = threading.Lock()
+_FV_DB_KEY = "fv_default"
 
 _MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -310,9 +316,22 @@ def get_value_concentration(
     Identifies market concentration and potential lock-in situations.
     """
     cache_key = f"vc:{min_pct}:{limit}"
+    is_default = (min_pct == 10.0 and limit == 20)
+
     cached = _value_concentration_cache.get(cache_key)
     if cached and (_time.time() - cached["ts"]) < _VALUE_CONCENTRATION_TTL:
         return cached["data"]
+
+    if is_default:
+        try:
+            with get_db() as _pc:
+                row = _pc.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key=?", (_VC_DB_KEY,)).fetchone()
+            if row and row["stat_value"]:
+                result = ValueConcentrationResponse(**json.loads(row["stat_value"]))
+                _value_concentration_cache[cache_key] = {"ts": _time.time(), "data": result}
+                return result
+        except Exception:
+            pass
     try:
         min_share = min_pct / 100.0
         with get_db() as conn:
@@ -373,6 +392,15 @@ def get_value_concentration(
         ]
         result = ValueConcentrationResponse(data=items, total=len(items), min_pct=min_pct)
         _value_concentration_cache[cache_key] = {"ts": _time.time(), "data": result}
+        if is_default:
+            try:
+                with get_db() as wconn:
+                    wconn.execute(
+                        "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
+                        (_VC_DB_KEY, result.model_dump_json()),
+                    )
+            except Exception as e:
+                logger.warning("value_concentration persist failed: %s", e)
         return result
 
     except sqlite3.OperationalError as e:
@@ -402,9 +430,23 @@ def get_flash_vendors(
     Results are sorted by avg_risk_score DESC.
     """
     cache_key = f"fv:{max_active_years}:{min_value}:{limit}"
+    is_fv_default = (max_active_years == 3 and min_value == 500_000_000.0 and limit == 50)
+
     cached = _flash_vendors_cache.get(cache_key)
     if cached and (_time.time() - cached["ts"]) < _FLASH_VENDORS_TTL:
         return cached["data"]
+
+    if is_fv_default:
+        try:
+            with get_db() as _pc:
+                row = _pc.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key=?", (_FV_DB_KEY,)).fetchone()
+            if row and row["stat_value"]:
+                result = FlashVendorsResponse(**json.loads(row["stat_value"]))
+                _flash_vendors_cache[cache_key] = {"ts": _time.time(), "data": result}
+                return result
+        except Exception:
+            pass
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -480,6 +522,15 @@ def get_flash_vendors(
             min_value=min_value,
         )
         _flash_vendors_cache[cache_key] = {"ts": _time.time(), "data": result}
+        if is_fv_default:
+            try:
+                with get_db() as wconn:
+                    wconn.execute(
+                        "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
+                        (_FV_DB_KEY, result.model_dump_json()),
+                    )
+            except Exception as e:
+                logger.warning("flash_vendors persist failed: %s", e)
         return result
 
     except sqlite3.OperationalError as e:
