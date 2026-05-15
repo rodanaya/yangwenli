@@ -135,7 +135,8 @@ function CaseRow({
   lang: string
 }) {
   const accent = FRAUD_TYPE_LEFT[cas.fraud_type] ?? FRAUD_TYPE_LEFT.other
-  const legal = LEGAL_STATUS_STYLE[cas.legal_status] ?? LEGAL_STATUS_STYLE.unresolved
+  const legalStatusKey = cas.legal_status || 'unresolved'
+  const legal = LEGAL_STATUS_STYLE[legalStatusKey] ?? LEGAL_STATUS_STYLE.unresolved
   const name = lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
   const summary = lang === 'es' && cas.summary_es ? cas.summary_es : cas.summary_en
 
@@ -261,7 +262,7 @@ function CaseRow({
                 style={{ background: legal.dot, borderRadius: 999 }}
               />
               <span style={{ color: legal.text }} className="tracking-wider">
-                {t(`legalStatuses.${cas.legal_status}`, { defaultValue: legal.label }).toUpperCase()}
+                {t(`legalStatuses.${legalStatusKey}`, { defaultValue: legal.label }).toUpperCase()}
               </span>
             </span>
             <span className="text-text-muted">·</span>
