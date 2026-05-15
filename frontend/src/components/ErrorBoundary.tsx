@@ -1,6 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 
@@ -28,14 +27,14 @@ function ErrorFallbackUI({
   const { t } = useTranslation('common')
   return (
     <div className="flex min-h-[400px] items-center justify-center p-4">
-      <Card className="w-full max-w-md border-risk-high/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-risk-high">
+      <div className="w-full max-w-md rounded-sm border border-border/60 overflow-hidden bg-background-card" style={{ borderColor: 'var(--color-risk-high, #f59e0b)' }}>
+        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+          <h3 className="flex items-center gap-2 text-risk-high">
             <AlertTriangle className="h-5 w-5" />
             {t('emptyState.errorTitle')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </h3>
+        </div>
+        <div className="space-y-4 px-4 py-3 bg-background-card">
           <p className="text-sm text-text-muted">
             {t('emptyState.unexpectedError')}
           </p>
@@ -54,8 +53,8 @@ function ErrorFallbackUI({
               {t('emptyState.goHome')}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
