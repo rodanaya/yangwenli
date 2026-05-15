@@ -1,4 +1,48 @@
 ---
+## Visual Review — 2026-05-15T00:02:16Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | ⚠ |
+| https://rubli.xyz/atlas | 403 | ⚠ |
+| https://rubli.xyz/aria | 403 | ⚠ |
+| https://rubli.xyz/sectors | 403 | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 | ⚠ |
+| https://rubli.xyz/cases | 403 | ⚠ |
+| https://rubli.xyz/methodology | 403 | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | ⚠ |
+
+Note: All 403s confirmed as egress-proxy interception (`x-deny-reason: host_not_allowed`). Sandbox outbound HTTPS to rubli.xyz is blocked by the execution environment's proxy. Consistent with all prior runs — not a regression in the site itself. To validate true HTTP status, run from VPS (37.60.232.109) or an unrestricted host.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/sectors | 403 (egress proxy blocked — empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all false positives (no new regressions vs. prior runs):
+- Company names in `Executive.tsx` (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`)
+- Type/tier key lookups (`TIER_STYLES[tierName as TierKey]`) — `InstitutionScorecards.tsx:443`
+- Academic author abbreviation (`Mahalanobis, P.C.`) — `Methodology.tsx:118`
+- Legal suffix constants (`'S.A.', 'S.C.', 'A.C.', 'C.V.'` etc.) — `ExploreCanvas.tsx:1415–1416`
+- Sankey mock vendor names (`Maypo S.A.`) — `StoryMoneySankeyChart.tsx:22,37`
+- Administration abbreviation (`A.M. Lopez Obrador`) — `AdminSectorHeatmap.tsx:30`
+- Comment string in `CaseLibrary.tsx:216` (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+Egress proxy blocks all outbound HTTPS from this sandbox — HTTP and API checks cannot be validated from this environment. This is a persistent infrastructure limitation, not a site failure. Bilingual gap scan: no genuine i18n leaks or new hardcoded English-only strings. No regressions vs. 2026-05-14T18:08:58Z run.
+
+---
 ## Visual Review — 2026-05-14T18:08:58Z
 
 ### HTTP Status
