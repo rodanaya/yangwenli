@@ -30,7 +30,7 @@
     "sameWinner": "mismo ganador",
     "ofTime": "de las veces",
     "involves": "Involucra:",
-    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v0.6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado.",
+    "heuristicNote": "Este es un análisis heurístico independiente. Nota: la concentración de co-licitación (cobid_herfindahl) está incluida en el modelo v0.8.5 con coeficiente +0.272. Las tasas brutas de co-licitación aquí son una vista complementaria.",
     "roleDecoy": "Señuelo",
     "roleDominant": "Dominante",
     "roleRotation": "Rotación",
@@ -51,7 +51,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
     "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
-    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v0.6.5, que asigna co_bid_rate un coeficiente de 0.000)",
+    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — concentración cobid_herfindahl incluida en modelo v0.8.5 con coeficiente +0.272)",
     "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
     "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)",
     "sectionLabel": "POR QUÉ ESTE PROVEEDOR ESTÁ MARCADO",

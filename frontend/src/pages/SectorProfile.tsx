@@ -1076,7 +1076,7 @@ export function SectorProfile() {
       stats.total_contracts > 0
         ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
         : 0
-    const platformBaseline = 0.135 // v6.5 HR
+    const platformBaseline = 0.110 // v0.8.5 HR
 
     if (highRiskRate > platformBaseline * 1.3) {
       result.push({
