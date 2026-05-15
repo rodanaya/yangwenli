@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Search, FolderPlus, Download, ChevronRight, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface WorkspaceJournalistGuideProps {
@@ -135,8 +134,8 @@ export default function WorkspaceJournalistGuide({
       </button>
 
       {/* Example investigations */}
-      <Card className="mt-10 w-full text-left">
-        <CardContent className="pt-4">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="pt-4 bg-background-card">
           <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
             {t('guide.exampleInvestigations')}
           </p>
@@ -151,8 +150,8 @@ export default function WorkspaceJournalistGuide({
               </li>
             ))}
           </ul>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Expandable "How it works" section */}
       <button

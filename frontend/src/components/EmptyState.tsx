@@ -6,7 +6,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { AlertCircle, RefreshCw, FileX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { fadeIn } from '@/lib/animations'
 import { useTranslation } from 'react-i18next'
@@ -142,8 +141,8 @@ export function EmptyState({
   const Illustration = config.Illustration
 
   return (
-    <Card className={`${config.containerClass} ${className}`}>
-      <CardContent className="py-12 px-8 text-center">
+    <div className={`rounded-sm border border-border/60 overflow-hidden bg-background-card ${config.containerClass} ${className}`}>
+      <div className="py-12 px-8 text-center bg-background-card">
         <motion.div
           variants={fadeIn}
           initial="initial"
@@ -178,8 +177,8 @@ export function EmptyState({
             </Button>
           )}
         </motion.div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

@@ -1,5 +1,4 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 /**
  * Chart-specific loading skeleton with animated bars
@@ -106,8 +105,8 @@ export function ChartSkeleton({ height = 250, type = 'bar' }: { height?: number;
  */
 export function KPICardSkeleton() {
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-4">
+    <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+      <div className="p-4 bg-background-card">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
             <Skeleton className="h-3 w-20" />
@@ -116,8 +115,8 @@ export function KPICardSkeleton() {
           </div>
           <Skeleton className="h-12 w-12 rounded-sm" />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -130,8 +129,8 @@ export function DashboardSkeleton() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="p-4 bg-background-card">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-20" />
@@ -140,47 +139,47 @@ export function DashboardSkeleton() {
                 </div>
                 <Skeleton className="h-10 w-10 rounded-sm" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Charts Row */}
       <div className="grid gap-4 lg:grid-cols-2">
         {[...Array(2)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
               <Skeleton className="h-5 w-32" />
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-3 bg-background-card">
               <Skeleton className="h-[250px]" />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Bottom Row */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <Skeleton className="h-5 w-40" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <Skeleton className="h-[250px]" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
+          </div>
+        </div>
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12" />
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -207,8 +206,8 @@ export function TablePageSkeleton() {
       </div>
 
       {/* Table */}
-      <Card>
-        <CardContent className="p-0">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="p-0 bg-background-card">
           <div className="space-y-0">
             {/* Header */}
             <div className="flex border-b border-border p-3">
@@ -225,8 +224,8 @@ export function TablePageSkeleton() {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
@@ -263,8 +262,8 @@ export function CardGridSkeleton() {
       {/* Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(9)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="p-4 bg-background-card">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Skeleton className="h-8 w-8 rounded-sm" />
@@ -283,8 +282,8 @@ export function CardGridSkeleton() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -319,37 +318,37 @@ export function DetailPageSkeleton() {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 space-y-2">
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="p-4 space-y-2 bg-background-card">
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-7 w-24" />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Content */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <Skeleton className="h-[300px]" />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
+          </div>
+        </div>
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <Skeleton className="h-5 w-32" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             <div className="space-y-3">
               {[...Array(8)].map((_, i) => (
                 <Skeleton key={i} className="h-10" />
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -370,8 +369,8 @@ export function SectorsSkeleton() {
       {/* Sector Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(12)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="p-4 bg-background-card">
               <div className="flex items-center gap-3 mb-4">
                 <Skeleton className="h-10 w-10 rounded-sm" />
                 <div className="space-y-1">
@@ -387,8 +386,8 @@ export function SectorsSkeleton() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -405,16 +404,16 @@ export function GenericPageSkeleton() {
         <Skeleton className="h-7 w-32" />
         <Skeleton className="h-4 w-64" />
       </div>
-      <Card>
-        <CardContent className="p-6 space-y-4">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="p-6 space-y-4 bg-background-card">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="space-y-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-10 w-full" />
             </div>
           ))}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
@@ -435,19 +434,19 @@ export function PageSkeleton() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
+          <div key={i} className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="p-4 bg-background-card">
               <Skeleton className="h-16" />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
-      <Card>
-        <CardContent className="p-4">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="p-4 bg-background-card">
           <Skeleton className="h-[400px]" />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

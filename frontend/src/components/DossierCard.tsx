@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { Folder, FolderOpen, Trash2, AlertTriangle, ExternalLink, Download } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
@@ -53,12 +52,12 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
   const hasRisk = dossier.highest_risk_score != null && dossier.highest_risk_score >= RISK_THRESHOLDS.medium
 
   return (
-    <Card
-      className="relative overflow-hidden cursor-pointer hover:border-accent/40 transition-colors group"
+    <div
+      className="rounded-sm border border-border/60 overflow-hidden bg-background-card relative cursor-pointer hover:border-accent/40 transition-colors group"
       style={{ borderLeftWidth: 3, borderLeftColor: dossier.color }}
       onClick={() => onOpen(dossier.id)}
     >
-      <CardContent className="p-4">
+      <div className="p-4 bg-background-card">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {dossier.status === 'active'
@@ -132,8 +131,8 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
           <span>·</span>
           <span>Actualizado {formatDate(dossier.updated_at)}</span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 

@@ -5,7 +5,6 @@ import { motion } from 'framer-motion'
 import { slideUp } from '@/lib/animations'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -1020,8 +1019,8 @@ export function Contracts() {
       </motion.div>
 
       {/* Contracts table */}
-      <Card>
-        <CardContent className="p-0">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="p-0 bg-background-card">
           {isLoading ? (
             <div className="space-y-2 p-4">
               {[...Array(10)].map((_, i) => (
@@ -1153,8 +1152,8 @@ export function Contracts() {
             </div>
             </ExpandableProvider>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Pagination — Fix 6: use filters.per_page throughout */}
       {data && (data?.pagination?.total ?? 0) > 0 && (
