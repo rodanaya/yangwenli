@@ -145,18 +145,21 @@ def build_evidence_package(row: dict, conn: sqlite3.Connection) -> dict:
     # Get top SHAP features if available
     shap_features = []
     try:
-        shap_rows = conn.execute(
-            """
-            SELECT feature_name, shap_value FROM vendor_shap_v52
-            WHERE vendor_id = ?
-            ORDER BY ABS(shap_value) DESC LIMIT 3
-            """,
+        shap_row = conn.execute(
+            "SELECT top_risk_factors, top_protect_factors FROM vendor_shap_v52 WHERE vendor_id = ?",
             (row["vendor_id"],),
-        ).fetchall()
-        shap_features = [
-            {"feature": r[0], "shap_value": round(r[1], 4)}
-            for r in shap_rows
-        ]
+        ).fetchone()
+        if shap_row:
+            risk_factors = json.loads(shap_row[0] or "[]")
+            protect_factors = json.loads(shap_row[1] or "[]")
+            all_factors = [
+                {"feature": f["factor"], "shap_value": round(f["shap"], 4)}
+                for f in risk_factors[:2]
+            ] + [
+                {"feature": f["factor"], "shap_value": round(f["shap"], 4)}
+                for f in protect_factors[:1]
+            ]
+            shap_features = all_factors
     except Exception as e:
         logger.warning(f"SHAP features unavailable for vendor {row['vendor_id']}: {e}")
 
