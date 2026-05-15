@@ -1,25 +1,22 @@
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export type OutletType = 'longform' | 'investigative' | 'data_analysis' | 'rubli'
 
-const OUTLET_CONFIG: Record<OutletType, { label: string; bg: string; text: string }> = {
+const OUTLET_CONFIG: Record<OutletType, { bg: string; text: string }> = {
   longform: {
-    label: 'FORMATO LARGO',
     bg: 'bg-background-elevated',
     text: 'text-text-secondary',
   },
   investigative: {
-    label: 'INVESTIGACIÓN',
     bg: 'bg-background-elevated',
     text: 'text-text-secondary',
   },
   data_analysis: {
-    label: 'ANÁLISIS DE DATOS',
     bg: 'bg-background-elevated',
     text: 'text-text-secondary',
   },
   rubli: {
-    label: 'RUBLI',
     bg: 'bg-[#dc2626]',
     text: 'text-text-primary',
   },
@@ -31,7 +28,9 @@ interface OutletBadgeProps {
 }
 
 export function OutletBadge({ outlet, className }: OutletBadgeProps) {
+  const { t } = useTranslation('common')
   const config = OUTLET_CONFIG[outlet]
+  const label = t(`outletLabels.${outlet}`, { defaultValue: outlet.toUpperCase() })
   return (
     <span
       className={cn(
@@ -41,7 +40,7 @@ export function OutletBadge({ outlet, className }: OutletBadgeProps) {
         className
       )}
     >
-      {config.label}
+      {label}
     </span>
   )
 }

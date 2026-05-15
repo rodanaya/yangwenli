@@ -216,6 +216,12 @@
     "closing": "Closing",
     "pullquote": "Pull quote"
   },
+  "outletLabels": {
+    "longform": "LONG FORM",
+    "investigative": "INVESTIGATION",
+    "data_analysis": "DATA ANALYSIS",
+    "rubli": "RUBLI"
+  },
   "era": {
     "fox": "Fox (2000-2006)",
     "calderon": "Calderón (2006-2012)",

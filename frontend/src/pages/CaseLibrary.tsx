@@ -263,7 +263,7 @@ function CaseRow({
                 style={{ background: legal.dot, borderRadius: 999 }}
               />
               <span style={{ color: legal.text }} className="tracking-wider">
-                {legal.label}
+                {t(`legalStatuses.${cas.legal_status}`, { defaultValue: legal.label }).toUpperCase()}
               </span>
             </span>
             <span className="text-text-muted">·</span>
