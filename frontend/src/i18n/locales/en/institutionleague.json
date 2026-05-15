@@ -56,6 +56,13 @@
     "tier": "Level",
     "results": "{{num}} institutions"
   },
+  "scope": {
+    "label": "Scope",
+    "federalOnly": "Federal agencies only",
+    "all": "All institutions",
+    "disclaimerFederal": "Analysis scoped to federal-scale institutions. State agencies are excluded by default — their low contract volumes inflate transparency scores and they cannot be benchmarked against federal-procurement norms.",
+    "disclaimerAll": "Showing every institution in COMPRANET, including state-level agencies. Note: state entities have small sample sizes and may rank artificially high on direct-award and competition metrics."
+  },
   "stats": {
     "totalScored": "Scored Institutions",
     "medianScore": "Median Score",

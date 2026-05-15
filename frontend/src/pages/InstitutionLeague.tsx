@@ -983,6 +983,58 @@ export default function InstitutionLeague() {
               {t('lede', { total: formatNumber(totalInstitutions) })}
             </p>
           )}
+
+          {/* Federal scope segmented control + disclaimer.
+              Lifted out of the Act II filter row so it sits next to the
+              Honor Roll / Red Flags it actually governs. State-level
+              institutions have tiny sample sizes and incomparable
+              procedures; including them puts state secretarías at the top
+              of the league and buries the federal agencies that matter
+              for reform (IMSS, ISSSTE, PEMEX, etc.). */}
+          <div className="mt-4 pt-3 border-t border-border/60">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                  {t('scope.label')}
+                </span>
+                <div
+                  role="radiogroup"
+                  aria-label={t('scope.label')}
+                  className="inline-flex rounded-sm border border-border bg-background overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={federalOnly}
+                    onClick={() => updateParams({ all: undefined, page: '1' })}
+                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                      federalOnly
+                        ? 'bg-accent/15 text-accent border-r border-border'
+                        : 'text-text-muted hover:text-text-secondary border-r border-border'
+                    }`}
+                  >
+                    {t('scope.federalOnly')}
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={!federalOnly}
+                    onClick={() => updateParams({ all: '1', page: '1' })}
+                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-[0.12em] transition-colors ${
+                      !federalOnly
+                        ? 'bg-accent/15 text-accent'
+                        : 'text-text-muted hover:text-text-secondary'
+                    }`}
+                  >
+                    {t('scope.all')}
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] font-mono leading-relaxed text-text-muted mt-2 max-w-3xl">
+              {federalOnly ? t('scope.disclaimerFederal') : t('scope.disclaimerAll')}
+            </p>
+          </div>
         </header>
       {/* Editorial finding headline — bible §2 cream-mode callout: tint stays
           subtle so the card doesn't read as alarm on a cream page. */}
@@ -1176,41 +1228,10 @@ export default function InstitutionLeague() {
             </select>
           </div>
 
-          {/* Federal-only toggle — default ON.
-              COMPRANET is federal, but a handful of state institutions
-              slip into the data with tiny samples and incomparable
-              procedures. Most users should leave this on; turning it off
-              is a power-user lens for full-population analysis. */}
-          <label
-            className="flex items-center gap-2 cursor-pointer select-none ml-auto"
-            title={federalOnly
-              ? 'Mostrando solo instituciones federales. Click para incluir todas (incluye estatales).'
-              : 'Mostrando todas las instituciones. Click para restringir a federales.'}
-          >
-            <span className="relative inline-flex h-4 w-7 items-center">
-              <input
-                type="checkbox"
-                checked={federalOnly}
-                onChange={(e) => updateParams({ all: e.target.checked ? undefined : '1', page: '1' })}
-                className="peer sr-only"
-                aria-label="Federal only"
-              />
-              <span
-                aria-hidden="true"
-                className={`h-4 w-7 rounded-full transition-colors ${federalOnly ? 'bg-accent' : 'bg-background-elevated border border-border'}`}
-              />
-              <span
-                aria-hidden="true"
-                className={`absolute h-3 w-3 rounded-full bg-text-primary transition-transform ${federalOnly ? 'translate-x-[14px]' : 'translate-x-[2px]'}`}
-              />
-            </span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary">
-              {federalOnly ? 'Federal only' : 'Todas (incl. estatales)'}
-            </span>
-          </label>
-
-          {/* Result count */}
-          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
+          {/* Result count — federal-scope toggle now lives in the page
+              header (above Act I) so it visibly governs the Honor Roll
+              + Red Flags + triptych stats, not just the table. */}
+          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide ml-auto">
             {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>

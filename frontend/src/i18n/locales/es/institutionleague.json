@@ -46,6 +46,13 @@
     "critical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{failing}} se encuentran en nivel Crítico.",
     "normal": "Solo el {{pct}}% de las {{total}} instituciones evaluadas alcanza nivel Satisfactorio o superior."
   },
+  "scope": {
+    "label": "Alcance",
+    "federalOnly": "Solo dependencias federales",
+    "all": "Todas las instituciones",
+    "disclaimerFederal": "Análisis enfocado en instituciones de escala federal. Las instituciones estatales se excluyen por defecto — sus bajos volúmenes de contratación inflan las puntuaciones de transparencia y no pueden compararse con los estándares de adquisiciones federales.",
+    "disclaimerAll": "Se muestran todas las instituciones de CompraNet, incluidas las estatales. Nota: las entidades estatales tienen muestras pequeñas y pueden ubicarse artificialmente alto en métricas de adjudicación directa y competencia."
+  },
   "filters": {
     "searchPlaceholder": "Buscar instituciones…",
     "sectorLabel": "Sector",
