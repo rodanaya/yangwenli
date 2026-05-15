@@ -1237,7 +1237,7 @@ export default function Executive() {
     staleTime: 60 * 60 * 1000,
     retry: 0,
   })
-  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1401
+  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1422
 
   // § 2 La Lente — GT case corpus growth signal
   const { data: caseStats } = useQuery({
@@ -1963,7 +1963,7 @@ export default function Executive() {
                 </div>
               </div>
               <h3 className="font-semibold text-[13px] text-text-primary leading-[1.3] mb-1.5">
-                {lang === 'en' ? 'SAT officially confirmed 42. RUBLI found 143× more.' : 'SAT confirmó 42 oficialmente. RUBLI encontró 143× más.'}
+                {lang === 'en' ? 'SAT officially confirmed 42. RUBLI found 145× more.' : 'SAT confirmó 42 oficialmente. RUBLI encontró 145× más.'}
               </h3>
               <p className="text-xs text-text-secondary leading-[1.6]">
                 {lang === 'en'
@@ -2470,7 +2470,7 @@ export default function Executive() {
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
         <section className="mb-12" aria-labelledby="la-lente-title">
           <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
-            {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 320' : '§ 2 · La Lente — de 3.1M a 320'}
+            {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 299' : '§ 2 · La Lente — de 3.1M a 299'}
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
@@ -2488,8 +2488,8 @@ export default function Executive() {
           >
             {(() => {
               const lensTiers = buildLensTiers(
-                ariaStats?.latest_run?.tier1_count ?? 320,
-                caseStats?.total_cases ?? 1_380,
+                ariaStats?.latest_run?.tier1_count ?? 299,
+                caseStats?.total_cases ?? 1_422,
                 stats.highCriticalCount,
               )
               // Fixed total height — both columns lock to ROWS×ROW_H so the
