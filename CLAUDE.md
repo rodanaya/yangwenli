@@ -79,19 +79,19 @@ Why: 7 trillion-peso decimal errors destroyed analytics in the predecessor proje
 
 ---
 
-## Risk Model — v0.6.5 (ACTIVE)
+## Risk Model — v0.8.5 (ACTIVE)
 
-Per-sector calibrated logistic regression with PU correction. Run ID `CAL-v6.1-202603251039` · Train AUC 0.798 · Test AUC 0.828 · HR 13.49% (OECD 2–15% compliant).
+ElasticNet logistic regression with PU correction. Run ID `CAL-v8-202605020212` · Train AUC 0.797 · Test AUC 0.785 · HR 11.0% (OECD 2–15% compliant). Trained on 1,424 GT cases.
 
-**Distribution**: Critical ≥0.60 (6.01%) · High ≥0.40 (7.48%) · Medium ≥0.25 (26.84%) · Low <0.25 (59.39%) · 8,298 NULL.
+**Distribution**: Critical ≥0.60 (5.2%) · High ≥0.40 (5.9%) · Medium ≥0.25 (16.2%) · Low <0.25 (72.8%).
 
-**9 active features** (16 total, 7 regularized to 0): price_volatility +0.534, institution_diversity −0.382, vendor_concentration +0.375, price_ratio +0.234, network_member_count +0.181, same_day_count +0.094, win_rate +0.049, ad_period_days +0.042, direct_award +0.031. Intercept −2.384. PU c=0.300 (floor).
+**18 active features** (C=0.2243, l1_ratio=0.7545, c_pu=0.32): price_volatility +0.558, institution_diversity −0.388, price_ratio +0.358, vendor_concentration +0.327, cobid_herfindahl +0.272, recency_z −0.247, amount_residual_z −0.187, network_member_count +0.166, amendment_flag +0.102, ad_period_days +0.090, direct_award −0.081, pub_delay_z −0.055 (+6 small). Intercept −2.616. PU c=0.32.
 
-**Curriculum learning** weights GT cases (confirmed 1.0 / high 0.8 / medium 0.5 / low 0.2). Structural FPs excluded: BAXTER, FRESENIUS, INFRA, PRAXAIR.
+**Curriculum learning** weights GT cases (confirmed 1.0 / high 0.8 / medium 0.5 / low 0.2). Structural FPs excluded: BAXTER, FRESENIUS, INFRA, PRAXAIR, TECNICAS REUNIDAS, ICA FLUOR DANIEL.
 
-**DO NOT** run `_score_v6_now.py` without verifying calibration sanity (intercept < −0.5, PU c > 0.30).
+**DO NOT** run scoring without verifying intercept < −0.5 and c_pu > 0.30.
 
-**Preserved scores**: `risk_score_v5` (v5.1, AUC 0.957), `risk_score_v4` (v4.0, AUC 0.942), `risk_score_v3` (v3.3 checklist). Full methodology lives in `docs/RISK_METHODOLOGY_v6.md` — read on demand, not auto-loaded.
+**Preserved scores**: `risk_score_v6` (v0.6.5, AUC 0.828, superseded May 2), `risk_score_v5` (v5.1, AUC 0.957 — temporal leakage), `risk_score_v4` (v4.0, AUC 0.942). Full methodology lives in `docs/RISK_METHODOLOGY_v6.md` — read on demand, not auto-loaded.
 
 ---
 
@@ -117,9 +117,10 @@ cd backend && python -m scripts.aria_init_schema && python -m scripts.aria_pipel
 python -m scripts.aria_generate_memos --tier 1 --limit 20
 ```
 
-Queue: 198K vendors, T1=285 / T2=894 / T3=5,151 / T4=191,708. Patterns: P1 Monopoly, P2 Ghost, P3 Intermediary, P6 Capture, P7. Frontend: `/aria`.
+Queue: 248,944 vendors, T1=299 / T2=1,490 / T3=5,578 / T4=241,577. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,974, P4=220, P5=3,985, P6 Capture=15,923, P7=257. Frontend: `/aria`.
 
-External registries via CENTINELA: `python -m scripts.centinela`.
+CENTINELA state: T1 DONE · T2 DONE (32 CORRUPTION_MENTION) · T3 IN PROGRESS (2,060/5,578 as of 2026-05-15).
+External registries via CENTINELA: `python -m scripts.centinela_web --tier N [--no-haiku]`.
 
 ---
 
