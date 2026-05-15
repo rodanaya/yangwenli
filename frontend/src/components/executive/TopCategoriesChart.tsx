@@ -47,6 +47,24 @@ interface CategoryCell {
 // Fallback data
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Editorial captions keyed by name_es prefix — applied to live data cells
+// so the Pudding "annotation-as-chart" principle holds even with live data.
+// Keys match the first word or two of the live category name to be robust
+// against minor name changes between DB versions.
+const LIVE_CAPTIONS: Record<string, { en: string; es: string }> = {
+  'Medicamentos':              { en: 'IMSS-ISSSTE cluster · 1 in 4 pesos',   es: 'Clúster IMSS-ISSSTE · 1 de cada 4 pesos' },
+  'Combustibles':              { en: 'Pemex-CFE supply chain',                es: 'Cadena suministro Pemex-CFE' },
+  'Obra pública':              { en: 'Peña Nieto infra boom',                 es: 'Boom infra Peña Nieto' },
+  'Tecnologías de Información':{ en: 'Toka-Infotec monopoly ring',            es: 'Monopolio Toka-Infotec' },
+  'Servicios profesionales':   { en: 'Gobernación revolving door',            es: 'Puerta giratoria gobernación' },
+  'Vehículos':                 { en: 'SCT fleet concentration',               es: 'Concentración flota SCT' },
+  'Equipo médico':             { en: 'COVID 2020 equipment surge',            es: 'Pico de compras COVID 2020' },
+  'Alimentos':                 { en: 'P6 capture · Segalmex',                 es: 'Captura P6 Segalmex' },
+  'Material de curación':      { en: 'IMSS-ISSSTE medical supplies',          es: 'Insumos médicos IMSS-ISSSTE' },
+  'Servicios generales':       { en: 'Gobernación service concentration',     es: 'Concentración servicios gobernación' },
+  'Construcción':              { en: 'Military-civil overlap',                es: 'Solapamiento militar-civil' },
+}
+
 // Curated fallback — illustrative figures that round to the v0.8.5 distribution.
 // Used only when category_stats is unavailable (the table doesn't exist on
 // every environment yet — precompute job ships separately).
@@ -84,14 +102,22 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
       const sorted = [...live]
         .sort((a, b) => b.total_value - a.total_value)
         .slice(0, 8)
-        .map<CategoryCell>((c) => ({
-          id: String(c.category_id),
-          name_es: c.name_es,
-          name_en: c.name_en || c.name_es,
-          sector_code: c.sector_code,
-          total_value: c.total_value,
-          avg_risk: c.avg_risk,
-        }))
+        .map<CategoryCell>((c) => {
+          // Match against LIVE_CAPTIONS by longest prefix match so minor
+          // name variations in future DB versions still find a caption.
+          const captionKey = Object.keys(LIVE_CAPTIONS).find((k) => c.name_es.startsWith(k))
+          const cap = captionKey ? LIVE_CAPTIONS[captionKey] : undefined
+          return {
+            id: String(c.category_id),
+            name_es: c.name_es,
+            name_en: c.name_en || c.name_es,
+            sector_code: c.sector_code,
+            total_value: c.total_value,
+            avg_risk: c.avg_risk,
+            caption_es: cap?.es,
+            caption_en: cap?.en,
+          }
+        })
       return { items: sorted, usingFallback: false }
     }
     return { items: FALLBACK_CATEGORIES, usingFallback: true }
@@ -173,13 +199,13 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
             >
               {formatCompactMXN(cat.total_value)}
             </div>
-            {primary && (cat.caption_es || cat.caption_en) && (
+            {(cat.caption_es || cat.caption_en) && (
               <div
-                className="text-[8px] leading-[1.3] mt-0.5 italic"
+                className={`leading-[1.3] mt-0.5 italic ${primary ? 'text-[8px]' : 'text-[7px]'}`}
                 style={{
                   fontFamily: "'Playfair Display', Georgia, serif",
                   color: 'var(--color-text-muted)',
-                  opacity: 0.75,
+                  opacity: primary ? 0.75 : 0.65,
                 }}
               >
                 {lang === 'en' ? (cat.caption_en ?? cat.caption_es) : (cat.caption_es ?? cat.caption_en)}

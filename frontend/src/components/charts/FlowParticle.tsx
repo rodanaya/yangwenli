@@ -138,13 +138,13 @@ export function FlowParticle({
           key={`sl-${n.id}`}
           x={srcX - 6}
           y={srcY[n.id]}
-          fill="var(--color-text-muted)"
-          fontSize={10}
+          fill="var(--color-text-secondary)"
+          fontSize={11}
           textAnchor="end"
           dominantBaseline="middle"
           fontFamily="'Playfair Display', Georgia, serif"
           fontStyle="italic"
-          fontWeight="400"
+          fontWeight="600"
         >
           {n.label.slice(0, 20)}
         </text>
