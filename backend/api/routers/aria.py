@@ -20,13 +20,15 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from ..cache import app_cache
-from ..dependencies import get_db_dep, require_write_key
+from ..dependencies import get_db, get_db_dep, require_write_key
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/aria", tags=["aria"])
 
 _STATS_CACHE_KEY = "aria_stats"
+_aria_stats_lock = threading.Lock()
+_ARIA_STATS_DB_KEY = "aria_stats_full"
 
 # ---------------------------------------------------------------------------
 # In-memory run status tracker (lightweight, no DB needed)
@@ -520,6 +522,25 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     if cached is not None:
         return cached
 
+    # Persistent fallback: read from precomputed_stats (survives container restarts)
+    try:
+        row = conn.execute(
+            "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+            (_ARIA_STATS_DB_KEY,)
+        ).fetchone()
+        if row and row["stat_value"]:
+            persisted = json.loads(row["stat_value"])
+            app_cache.set("aria", _STATS_CACHE_KEY, persisted, maxsize=4, ttl=300)
+            return persisted
+    except Exception:
+        pass
+
+    # Mutex: only one worker computes; others wait and re-check cache
+    with _aria_stats_lock:
+        cached2 = app_cache.get("aria", _STATS_CACHE_KEY)
+        if cached2 is not None:
+            return cached2
+
     latest_run = None
     if _table_exists(conn, "aria_runs"):
         run_row = conn.execute(
@@ -623,6 +644,18 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         "t1_reviewed_count": t1_reviewed_count,
     }
     app_cache.set("aria", _STATS_CACHE_KEY, result, maxsize=4, ttl=300)
+
+    # Persist to precomputed_stats so container restarts skip the live scan
+    try:
+        with get_db() as wconn:
+            wconn.execute(
+                "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at)"
+                " VALUES(?, ?, datetime('now'))",
+                (_ARIA_STATS_DB_KEY, json.dumps(result, default=str))
+            )
+    except Exception as e:
+        logger.warning("aria_stats persist failed: %s", e)
+
     return result
 
 

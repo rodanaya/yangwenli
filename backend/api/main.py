@@ -146,6 +146,7 @@ def _warmup_caches():
         "/api/v1/analysis/political-cycle",                # Political cycle chart (56s+ cold)
         "/api/v1/analysis/flash-vendors",                  # Flash vendors widget (60s cold)
         "/api/v1/analysis/value-concentration",            # Value concentration widget (48s cold)
+        "/api/v1/aria/stats",                              # ARIA queue stats (8s cold — 248K row scan)
         "/api/v1/analysis/leads",                          # Investigation leads (169s cold!)
         *[f"/api/v1/reports/sector/{i}" for i in range(1, 13)],  # Sector reports (346s cold each)
         # Categories capture-dumbbell — top categories by spend; the
@@ -189,8 +190,10 @@ def _warmup_caches():
             # Per-endpoint timeout based on observed cold-start latency
             if "reports/sector" in ep:
                 timeout = 400  # 346s cold per audit; give headroom
+            elif "aria/stats" in ep:
+                timeout = 20   # 8s cold; fast after precomputed_stats write
             elif "analysis/leads" in ep:
-                timeout = 200  # 169s cold per audit
+                timeout = 30   # ~0ms after INDEXED BY fix; headroom for first-run
             elif "/top-vendors" in ep:
                 timeout = 60  # biggest categories take ~30s cold
             elif "/vendors/" in ep and ("waterfall" in ep or "timeline" in ep or "linked-scandals" in ep):

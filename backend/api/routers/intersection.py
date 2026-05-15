@@ -16,18 +16,22 @@ C (drift) require precomputed vendor-level aggregates that don't yet
 exist as DB tables — planned for v2.
 """
 
+import json
 import logging
 import sqlite3
+import threading
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 
 from ..cache import app_cache
-from ..dependencies import get_db_dep
+from ..dependencies import get_db, get_db_dep
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/intersection", tags=["intersection"])
+
+_intersection_lock = threading.Lock()
 
 # Risk thresholds aligned with v0.6.5 (see docs/RISK_METHODOLOGY_v6.md):
 # Critical >= 0.60, High >= 0.40, Medium >= 0.25, Low < 0.25.
@@ -110,6 +114,26 @@ def get_intersection_summary(
     cached = app_cache.get("intersection", cache_key)
     if cached is not None:
         return cached
+
+    # Persistent fallback: survives container restarts (5 sequential scans = 17-23s cold)
+    db_key = f"intersection_summary_{top_n_per_quadrant}"
+    try:
+        row = conn.execute(
+            "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+            (db_key,)
+        ).fetchone()
+        if row and row["stat_value"]:
+            persisted = json.loads(row["stat_value"])
+            app_cache.set("intersection", cache_key, persisted, maxsize=8, ttl=600)
+            return persisted
+    except Exception:
+        pass
+
+    # Mutex: only one worker runs the 5 full-table scans; others wait and re-check
+    with _intersection_lock:
+        cached2 = app_cache.get("intersection", cache_key)
+        if cached2 is not None:
+            return cached2
 
     registry_hit = "(is_efos_definitivo=1 OR is_sfp_sanctioned=1 OR in_ground_truth=1)"
     no_registry_hit = "(is_efos_definitivo=0 AND is_sfp_sanctioned=0 AND in_ground_truth=0)"
@@ -215,6 +239,18 @@ def get_intersection_summary(
         },
     }
     app_cache.set("intersection", cache_key, response, maxsize=8, ttl=600)
+
+    # Persist to precomputed_stats so subsequent container restarts skip the 5 full-table scans
+    try:
+        with get_db() as wconn:
+            wconn.execute(
+                "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at)"
+                " VALUES(?, ?, datetime('now'))",
+                (db_key, json.dumps(response, default=str))
+            )
+    except Exception as e:
+        logger.warning("intersection_summary persist failed: %s", e)
+
     return response
 
 
