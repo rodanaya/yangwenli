@@ -403,7 +403,7 @@
     "readGuideRedSuffix": " son factores que aumentan el riesgo;",
     "readGuideTealLabel": " los pétalos turquesa",
     "readGuideTealSuffix": " son protectores. El tamaño del pétalo es proporcional a la contribución SHAP — pétalos más grandes elevan el puntaje. El centro muestra el puntaje global.",
-    "footer": "Fuente: explicaciones SHAP RUBLI v6.5 · tabla vendor_shap_v52",
+    "footer": "Fuente: explicaciones SHAP RUBLI v0.8.5 · tabla vendor_shap_v52",
     "ariaLink": "Ver cola de investigación ARIA"
   },
   "moneySankey": {

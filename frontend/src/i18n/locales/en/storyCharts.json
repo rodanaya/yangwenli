@@ -403,7 +403,7 @@
     "readGuideRedSuffix": " are risk-increasing factors;",
     "readGuideTealLabel": " teal petals",
     "readGuideTealSuffix": " are protective. Petal size is proportional to the SHAP contribution — larger petals drive the risk score higher. The center badge shows the overall score.",
-    "footer": "Source: RUBLI v6.5 SHAP explanations · vendor_shap_v52 table",
+    "footer": "Source: RUBLI v0.8.5 SHAP explanations · vendor_shap_v52 table",
     "ariaLink": "View ARIA investigation queue"
   },
   "moneySankey": {
