@@ -57,21 +57,24 @@ interface SectorBody {
 }
 
 function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
-  // Manual placement — same fractions as the legacy ConcentrationConstellation
-  // sectors lens, scaled to the wider 1200×720 canvas.
+  // 3×4 grid — three columns centered at 20/50/80%, four rows at 18/38/60/80%.
+  // The 4×3 layout pushed the rightmost column to fx=0.84, which reads as
+  // "far right" on narrow canvases (sidebar + briefing panel eat ~570px on
+  // a 1280px screen, leaving ~710px for the map). The 3×4 grid keeps max
+  // fx=0.80 and gives each sector more vertical breathing room.
   const layout: Record<string, { fx: number; fy: number }> = {
-    salud:           { fx: 0.18, fy: 0.22 },
-    educacion:       { fx: 0.40, fy: 0.22 },
-    infraestructura: { fx: 0.62, fy: 0.22 },
-    energia:         { fx: 0.84, fy: 0.22 },
-    defensa:         { fx: 0.18, fy: 0.50 },
-    tecnologia:      { fx: 0.40, fy: 0.50 },
-    hacienda:        { fx: 0.62, fy: 0.50 },
-    gobernacion:     { fx: 0.84, fy: 0.50 },
-    agricultura:     { fx: 0.18, fy: 0.78 },
-    ambiente:        { fx: 0.40, fy: 0.78 },
-    trabajo:         { fx: 0.62, fy: 0.78 },
-    otros:           { fx: 0.84, fy: 0.78 },
+    salud:           { fx: 0.20, fy: 0.18 },
+    educacion:       { fx: 0.50, fy: 0.18 },
+    infraestructura: { fx: 0.80, fy: 0.18 },
+    energia:         { fx: 0.20, fy: 0.38 },
+    gobernacion:     { fx: 0.50, fy: 0.38 },
+    hacienda:        { fx: 0.80, fy: 0.38 },
+    defensa:         { fx: 0.20, fy: 0.60 },
+    tecnologia:      { fx: 0.50, fy: 0.60 },
+    agricultura:     { fx: 0.80, fy: 0.60 },
+    ambiente:        { fx: 0.20, fy: 0.82 },
+    trabajo:         { fx: 0.50, fy: 0.82 },
+    otros:           { fx: 0.80, fy: 0.82 },
   }
   return SECTORS.map((s) => ({
     id: s.id,
@@ -1440,6 +1443,40 @@ const CANONICAL_ACRONYMS: Record<string, string> = {
   'SECRETARIA DE EDUCACION PUBLICA': 'SEP',
   'SECRETARIA DE BIENESTAR': 'BIENESTAR',
   'CONSEJO NACIONAL DE CIENCIA Y TECNOLOGIA': 'CONACYT',
+  // Additional high-volume federal institutions
+  'COMISION FEDERAL DE ELECTRICIDAD': 'CFE',
+  'BANCO NACIONAL DE OBRAS Y SERVICIOS PUBLICOS': 'BANOBRAS',
+  'BANCO NACIONAL DE COMERCIO EXTERIOR': 'BANCOMEXT',
+  'INSTITUTO DEL FONDO NACIONAL DE LA VIVIENDA PARA LOS TRABAJADORES': 'INFONAVIT',
+  'SECRETARIA DE MEDIO AMBIENTE Y RECURSOS NATURALES': 'SEMARNAT',
+  'INSTITUTO MEXICANO DEL SEGURO SOCIAL': 'IMSS',
+  'SECRETARIA DE GOBERNACION': 'SEGOB',
+  'SECRETARIA DE AGRICULTURA Y DESARROLLO RURAL': 'SADER',
+  'SECRETARIA DE AGRICULTURA GANADERIA DESARROLLO RURAL PESCA Y ALIMENTACION': 'SAGARPA',
+  'SECRETARIA DE ENERGIA': 'SENER',
+  'INSTITUTO NACIONAL ELECTORAL': 'INE',
+  'COMISION NACIONAL PARA EL DESARROLLO DE LOS PUEBLOS INDIGENAS': 'CDI',
+  'COMISION NACIONAL DE VIVIENDA': 'CONAVI',
+  'FONDO NACIONAL DE HABITACIONES POPULARES': 'FONHAPO',
+  'SISTEMA DE ADMINISTRACION TRIBUTARIA': 'SAT',
+  'AGENCIA DE SEGURIDAD ENERGIA Y AMBIENTE': 'ASEA',
+  'COMISION REGULADORA DE ENERGIA': 'CRE',
+  'COMISION NACIONAL BANCARIA Y DE VALORES': 'CNBV',
+  'INSTITUTO NACIONAL DE ESTADISTICA Y GEOGRAFIA': 'INEGI',
+  'COORDINACION NACIONAL DE PROTECCION CIVIL': 'CNPC',
+  'SECRETARIA DE SEGURIDAD Y PROTECCION CIUDADANA': 'SSPC',
+  'INSTITUTO NACIONAL DE SALUD PUBLICA': 'INSP',
+  'COMISION COORDINADORA DE INSTITUTOS NACIONALES DE SALUD': 'CCINSHAE',
+  'HOSPITAL GENERAL DE MEXICO': 'HGM',
+  'INSTITUTO NACIONAL DE CANCEROLOGIA': 'INCAN',
+  'INSTITUTO NACIONAL DE CARDIOLOGIA': 'INC',
+  'INSTITUTO NACIONAL DE CIENCIAS MEDICAS Y NUTRICION': 'INCMN',
+  'INSTITUTO NACIONAL DE NEUROLOGIA Y NEUROCIRUGIA': 'INNN',
+  'INSTITUTO NACIONAL DE PEDIATRIA': 'INP',
+  'INSTITUTO NACIONAL DE PERINATOLOGIA': 'INPER',
+  'INSTITUTO NACIONAL DE PSIQUIATRIA': 'INPRF',
+  'INSTITUTO NACIONAL DE REHABILITACION': 'INR',
+  'INSTITUTO NACIONAL DE ENFERMEDADES RESPIRATORIAS': 'INER',
 }
 
 /** Strip diacritics so DB names like "PETRÓLEOS" match the canonical map keys. */

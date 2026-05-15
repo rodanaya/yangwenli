@@ -87,7 +87,7 @@ export function RiskFloorToggle({ lang }: { lang: 'en' | 'es' }) {
   const dispatch = useExploreDispatch()
   return (
     <div
-      className="absolute top-3 right-3 z-10 flex"
+      className="absolute bottom-16 left-3 z-10 flex"
       style={{
         background: 'var(--color-background-card, #fff)',
         border: '1px solid var(--color-border)',
@@ -206,7 +206,7 @@ export function ShareViewButton({ lang }: { lang: 'en' | 'es' }) {
     <button
       type="button"
       onClick={onShare}
-      className="absolute top-12 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
+      className="absolute top-3 right-3 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
       style={{
         background: 'var(--color-background-card, #fff)',
         border: '1px solid var(--color-border)',
