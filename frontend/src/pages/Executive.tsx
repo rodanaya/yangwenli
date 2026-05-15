@@ -1237,7 +1237,7 @@ export default function Executive() {
     staleTime: 60 * 60 * 1000,
     retry: 0,
   })
-  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1422
+  const gtCaseCount = executiveSummary?.ground_truth?.cases ?? 1424
 
   // § 2 La Lente — GT case corpus growth signal
   const { data: caseStats } = useQuery({

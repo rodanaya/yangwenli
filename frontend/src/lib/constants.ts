@@ -135,7 +135,7 @@ export const CURRENT_MODEL_VERSION = 'v0.8.5'
 // remaining 4 surfaces — CaseDetail, Intersection, ModelTransparency,
 // and the watchlist `caseDesc` JSON which uses {{count}} interpolation).
 // Update on every retraining unless we wire `useGroundTruthCount()` (v1.1).
-export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1415
+export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1424
 
 // Ground-truth vendor count fallback (vendors linked to ≥1 GT case).
 // Same fallback contract as GROUND_TRUTH_CASE_COUNT_FALLBACK — updates

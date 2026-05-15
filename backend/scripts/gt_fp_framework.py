@@ -68,6 +68,14 @@ STRUCTURAL_FP_VENDOR_IDS = {
     # IMSS cannot competitively bid what doesn't exist.
     5319:  "structural_market_monopoly:peritoneal_dialysis", # BAXTER SA DE CV 28.1B
     4726:  "structural_market_monopoly:hemodialysis",        # FRESENIUS MEDICAL CARE 12.4B
+
+    # EPC oligopoly — PEMEX/CFE petrochemical and refinery engineering.
+    # These JVs and international EPC contractors receive large DA contracts
+    # because PEMEX plant-specific technology licensing, safety certifications,
+    # and engineering know-how are held by a handful of global firms.
+    # High DA rates reflect structural necessity, not bribery.
+    22164: "structural_market_monopoly:epc_petrochemical",   # TECNICAS REUNIDAS SA 7.2B
+    9045:  "structural_market_monopoly:epc_energy_jv",       # ICA FLUOR DANIEL 32.0B
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -144,8 +152,9 @@ def assert_not_structural_fp(vendor_id: int, conn) -> None:
     perpetrator (tier 3/4).  Raises ValueError if the vendor is in the
     STRUCTURAL_FP_VENDOR_IDS list, which would contaminate training data.
 
-    Structural FPs (BAXTER, FRESENIUS, INFRA SA DE CV, PRAXAIR MEXICO and
-    others listed in STRUCTURAL_FP_VENDOR_IDS) must NEVER be inserted as
+    Structural FPs (BAXTER, FRESENIUS, INFRA SA DE CV, PRAXAIR MEXICO,
+    TECNICAS REUNIDAS, ICA FLUOR DANIEL, and others listed in
+    STRUCTURAL_FP_VENDOR_IDS) must NEVER be inserted as
     positive training examples.  Their is_false_positive flag must stay 1 and
     their curriculum_weight must stay 0.0 unconditionally — not derived from
     evidence_strength.
