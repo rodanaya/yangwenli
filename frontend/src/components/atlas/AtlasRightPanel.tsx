@@ -38,20 +38,20 @@ const IDLE_STATS = {
   totalContracts: '3.06M',
   totalSpend: '$9.88T MXN',
   riskDistribution: [
-    { label: { en: 'CRITICAL', es: 'CRÍTICO' }, pct: 6.0, count: '183K', color: '#ef4444' },
-    { label: { en: 'HIGH',     es: 'ALTO' },    pct: 7.5, count: '229K', color: '#f59e0b' },
-    { label: { en: 'MEDIUM',   es: 'MEDIO' },   pct: 26.8, count: '819K', color: '#a16207' },
-    { label: { en: 'LOW',      es: 'BAJO' },    pct: 59.7, count: '1.83M', color: '#71717a' },
+    { label: { en: 'CRITICAL', es: 'CRÍTICO' }, pct: 5.0,  count: '152K',  color: '#ef4444' },
+    { label: { en: 'HIGH',     es: 'ALTO' },    pct: 5.95, count: '182K',  color: '#f59e0b' },
+    { label: { en: 'MEDIUM',   es: 'MEDIO' },   pct: 16.2, count: '494K',  color: '#a16207' },
+    { label: { en: 'LOW',      es: 'BAJO' },    pct: 72.7, count: '2.22M', color: '#71717a' },
   ],
   topPatterns: [
-    { code: 'P5', label: { en: 'Systematic Overpricing', es: 'Sobreprecio Sistemático' }, t1: 180 },
-    { code: 'P7', label: { en: 'Contractor Networks',    es: 'Red de Contratistas' },      t1: 56 },
-    { code: 'P6', label: { en: 'Institutional Capture',  es: 'Captura Institucional' },    t1: 31 },
+    { code: 'P5', label: { en: 'Systematic Overpricing', es: 'Sobreprecio Sistemático' }, t1: 154 },
+    { code: 'P2', label: { en: 'Ghost Companies',        es: 'Empresas Fantasma' },       t1: 40 },
+    { code: 'P7', label: { en: 'Contractor Networks',    es: 'Red de Contratistas' },     t1: 44 },
   ],
   team: {
-    t1Vendors: 314,
-    centinelaReady: 984,
-    gtCases: 1401,
+    t1Vendors: 299,
+    centinelaReady: 299,
+    gtCases: 1417,
   },
 }
 
