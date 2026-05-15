@@ -31,6 +31,9 @@ export interface AdminAgg {
   yearCount: number
 }
 
+/** Metric selector for the Admin × Sector heatmap matrix. */
+export type MatrixMetric = 'risk' | 'da' | 'hr' | 'sb'
+
 /** Static dossier metadata — political context + known scandals per admin. */
 export interface ScandalRef {
   /** i18n key under `administrations.dossier.scandals.*` */
