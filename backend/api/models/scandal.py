@@ -40,6 +40,7 @@ class ScandalListItem(BaseModel):
     legal_status: str
     compranet_visibility: str
     summary_en: str
+    summary_es: Optional[str] = None
     is_verified: int
     ground_truth_case_id: Optional[Union[int, str]] = None
     # IDs of vendors linked to this case via ground_truth_vendors.
