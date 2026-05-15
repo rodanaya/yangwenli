@@ -1252,17 +1252,22 @@ export default function RedesKnownDossier() {
   const { i18n } = useTranslation('redes')
   const isEs = i18n.language.startsWith('es')
 
-  const { data: spotlightData } = useQuery({
+  const { data: spotlightData, isLoading: spotlightLoading, isError: spotlightError } = useQuery({
     queryKey: ['pattern-spotlight'],
     queryFn: () => networkApi.getPatternSpotlight(),
     staleTime: 30 * 60 * 1000,
+    retry: 2,
   })
 
-  const { data: communitiesData } = useQuery({
+  const { data: communitiesData, isLoading: communitiesLoading, isError: communitiesError } = useQuery({
     queryKey: ['network-communities-v2'],
     queryFn: () => networkApi.getCommunities({ min_size: 3, min_avg_risk: 0.0, limit: 20 }),
     staleTime: 60 * 60 * 1000,
+    retry: 2,
   })
+
+  const dataLoading = spotlightLoading || communitiesLoading
+  const dataError = (spotlightError && communitiesError)
 
   const usingLouvain =
     (communitiesData?.graph_ready === true) && (communitiesData.communities.length > 0)
@@ -1302,6 +1307,51 @@ export default function RedesKnownDossier() {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [activeId])
+
+  if (dataLoading) {
+    return (
+      <div className="max-w-6xl mx-auto pb-12 space-y-6">
+        <div className="border-b border-border/60 pb-8 space-y-4">
+          <div className="h-3 w-40 rounded bg-border/40 animate-pulse" />
+          <div className="h-12 w-2/3 rounded bg-border/40 animate-pulse" />
+          <div className="h-5 w-full max-w-xl rounded bg-border/30 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="h-20 rounded border border-border/40 bg-border/20 animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 rounded border border-border/40 bg-border/20 animate-pulse" />
+      </div>
+    )
+  }
+
+  if (dataError) {
+    return (
+      <div className="max-w-6xl mx-auto pb-12">
+        <div className="mt-8 rounded border border-border/60 bg-surface px-6 py-8 text-center">
+          <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" />
+          <p
+            className="text-text-primary mb-1"
+            style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontSize: '1.15rem' }}
+          >
+            {isEs ? 'Red no disponible' : 'Network unavailable'}
+          </p>
+          <p className="text-[12px] text-text-muted font-mono">
+            {isEs
+              ? 'No se pudieron cargar los datos de red. El servidor puede estar reiniciando — intenta actualizar.'
+              : 'Network data could not be loaded. The server may be restarting — try refreshing.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 text-[11px] font-mono tracking-wider uppercase border border-border/60 rounded hover:bg-border/20 transition-colors text-text-muted"
+          >
+            {isEs ? 'Reintentar' : 'Retry'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative space-y-8 max-w-6xl mx-auto pb-12">
