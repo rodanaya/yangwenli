@@ -147,6 +147,7 @@ def _warmup_caches():
         "/api/v1/analysis/flash-vendors",                  # Flash vendors widget (60s cold)
         "/api/v1/analysis/value-concentration",            # Value concentration widget (48s cold)
         "/api/v1/aria/stats",                              # ARIA queue stats (8s cold — 248K row scan)
+        "/api/v1/executive/capture-leaders",               # Executive P6 pair chart (13s cold — strftime→contract_year fix)
         "/api/v1/analysis/leads",                          # Investigation leads (169s cold!)
         *[f"/api/v1/reports/sector/{i}" for i in range(1, 13)],  # Sector reports (346s cold each)
         # Categories capture-dumbbell — top categories by spend; the

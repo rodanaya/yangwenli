@@ -727,14 +727,17 @@ def get_exchange_rates(response: Response):
         return cached
 
     rates: Dict[str, float] = {}
-    with get_db() as conn:
-        cursor = conn.cursor()
-        # month=0 is the sentinel for annual-average rows (schema enforces NOT NULL)
-        cursor.execute(
-            "SELECT year, mxn_usd_fix FROM exchange_rates WHERE month = 0 AND mxn_usd_fix IS NOT NULL ORDER BY year"
-        )
-        for row in cursor.fetchall():
-            rates[str(row["year"])] = row["mxn_usd_fix"]
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            # month=0 is the sentinel for annual-average rows (schema enforces NOT NULL)
+            cursor.execute(
+                "SELECT year, mxn_usd_fix FROM exchange_rates WHERE month = 0 AND mxn_usd_fix IS NOT NULL ORDER BY year"
+            )
+            for row in cursor.fetchall():
+                rates[str(row["year"])] = row["mxn_usd_fix"]
+    except Exception:
+        pass  # Table may not exist in deploy DB — fall back to hardcoded rates below
 
     if not rates:
         rates = {str(y): r for y, r in _FALLBACK_RATES.items()}

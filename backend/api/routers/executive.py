@@ -522,12 +522,12 @@ def get_capture_leaders():
                 ),
                 inst_peak_totals AS (
                     SELECT c.institution_id,
-                           strftime('%Y', c.contract_date) AS yr,
+                           c.contract_year AS yr,
                            SUM(c.amount_mxn) AS total
                     FROM contracts c
                     JOIN capture_top5 ct
                          ON c.institution_id = ct.institution_id
-                        AND strftime('%Y', c.contract_date) = CAST(ct.peak_year AS TEXT)
+                        AND c.contract_year = ct.peak_year
                     WHERE c.amount_mxn > 0
                     GROUP BY c.institution_id, yr
                 ),
@@ -542,7 +542,7 @@ def get_capture_leaders():
                     JOIN vendors v ON c.vendor_id = v.id
                     JOIN capture_top5 ct
                          ON c.institution_id = ct.institution_id
-                        AND strftime('%Y', c.contract_date) = CAST(ct.peak_year AS TEXT)
+                        AND c.contract_year = ct.peak_year
                     JOIN inst_peak_totals ipt ON c.institution_id = ipt.institution_id
                     WHERE c.amount_mxn > 0
                     GROUP BY c.institution_id, c.vendor_id, v.name, ipt.total
