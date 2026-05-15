@@ -278,7 +278,7 @@ def export_vendor_dossier(vendor_id: int):
                 f"<strong>${total_value:,.0f} MXN</strong> between "
                 f"<strong>{agg['first_year']}</strong> and <strong>{agg['last_year']}</strong>. "
                 f"<strong>{da_pct:.1f}%</strong> were awarded without competitive bidding "
-                f"(OECD guidance: under 25%). The RUBLI v0.6.5 model scores the vendor at "
+                f"(OECD guidance: under 25%). The RUBLI v0.8.5 model scores the vendor at "
                 f"<strong>{avg_risk*100:.0f}/100 average pattern match</strong>, with "
                 f"<strong>{hr_count:,}</strong> contracts flagged high or critical."
             )
