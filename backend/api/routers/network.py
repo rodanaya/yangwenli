@@ -4,6 +4,7 @@ API router for network graph and relationship analysis endpoints.
 Provides vendor connection graphs, co-bidding analysis, and institution-vendor networks.
 """
 
+import json
 import sqlite3
 import logging
 import threading
@@ -55,6 +56,11 @@ class _NetworkCache:
             self._expiry[key] = time.time() + ttl
 
 _network_cache = _NetworkCache()
+
+# Mutex preventing 6 Gunicorn workers from computing communities simultaneously.
+# Same double-checked-locking + precomputed_stats pattern as aria.py / intersection.py.
+_communities_compute_lock = threading.Lock()
+_COMMUNITIES_DB_KEY = "communities_default"  # key for default-param call
 
 router = APIRouter(prefix="/network", tags=["network"])
 
@@ -695,18 +701,50 @@ def get_communities(
     If graph is not yet built, returns graph_ready=false with empty list.
     """
     cache_key = f"communities:{min_size}:{min_avg_risk}:{sector_id}:{limit}"
+    is_default = (min_size == 3 and min_avg_risk == 0.0 and sector_id is None and limit == 50)
+
     cached = _network_cache.get(cache_key)
     if cached is not None:
         return cached
 
-    with get_db() as conn:
-        data = network_service.get_communities(
-            conn,
-            min_size=min_size,
-            min_avg_risk=min_avg_risk,
-            sector_id=sector_id,
-            limit=limit,
-        )
+    # Persistent fallback for default params — survives container restarts
+    if is_default:
+        try:
+            with get_db() as pconn:
+                row = pconn.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                    (_COMMUNITIES_DB_KEY,),
+                ).fetchone()
+            if row and row["stat_value"]:
+                persisted = CommunitiesResponse(**json.loads(row["stat_value"]))
+                _network_cache.set(cache_key, persisted, ttl=3600)
+                return persisted
+        except Exception:
+            pass
+
+    # Compute under mutex to prevent 6 workers computing simultaneously
+    if is_default:
+        with _communities_compute_lock:
+            cached2 = _network_cache.get(cache_key)
+            if cached2 is not None:
+                return cached2
+            with get_db() as conn:
+                data = network_service.get_communities(
+                    conn,
+                    min_size=min_size,
+                    min_avg_risk=min_avg_risk,
+                    sector_id=sector_id,
+                    limit=limit,
+                )
+    else:
+        with get_db() as conn:
+            data = network_service.get_communities(
+                conn,
+                min_size=min_size,
+                min_avg_risk=min_avg_risk,
+                sector_id=sector_id,
+                limit=limit,
+            )
 
     result = CommunitiesResponse(
         communities=[
@@ -724,6 +762,17 @@ def get_communities(
     )
 
     _network_cache.set(cache_key, result, ttl=3600)
+
+    if is_default:
+        try:
+            payload = result.model_dump()
+            with get_db() as wconn:
+                wconn.execute(
+                    "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) VALUES(?, ?, datetime('now'))",
+                    (_COMMUNITIES_DB_KEY, json.dumps(payload, default=str)),
+                )
+        except Exception as e:
+            logger.warning("communities persist failed: %s", e)
     return result
 
 
