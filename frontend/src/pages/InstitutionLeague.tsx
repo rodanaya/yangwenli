@@ -163,13 +163,13 @@ function TrendIcon({ direction }: { direction: string | null }) {
 /** 5 mini vertical bars showing all pillars at a glance */
 function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
   const pillars = [
-    { key: 'O', value: item.pillar_openness, max: 20 },
-    { key: 'P', value: item.pillar_price, max: 25 },
-    { key: 'V', value: item.pillar_vendors, max: 20 },
-    { key: 'R', value: item.pillar_process, max: 15 },
-    { key: 'E', value: item.pillar_external, max: 20 },
+    { key: 'O', label: 'Openness', value: item.pillar_openness, max: 20 },
+    { key: 'P', label: 'Price', value: item.pillar_price, max: 25 },
+    { key: 'V', label: 'Vendors', value: item.pillar_vendors, max: 20 },
+    { key: 'R', label: 'Process', value: item.pillar_process, max: 15 },
+    { key: 'E', label: 'External', value: item.pillar_external, max: 20 },
   ]
-  const tooltip = pillars.map(p => `${p.key}:${p.value.toFixed(0)}/${p.max}`).join(' ')
+  const tooltip = pillars.map(p => `${p.label}: ${p.value.toFixed(0)}/${p.max}`).join(' · ')
   return (
     <div
       className="flex items-end gap-[3px]"
@@ -1308,9 +1308,9 @@ export default function InstitutionLeague() {
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left hidden sm:table-cell w-28">
+                    <th className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
-                        {t('columns.pillars')}
+                        {t('columns.pillars')} <span className="opacity-50 normal-case">O P V R E</span>
                       </span>
                     </th>
                     <th className="px-2 py-2 text-center w-12 hidden sm:table-cell">
