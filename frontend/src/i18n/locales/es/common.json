@@ -2,7 +2,6 @@
   "loading": "Cargando...",
   "error": "Error",
   "retry": "Reintentar",
-  "goToDashboard": "Ir al Panel",
   "noResults": "Sin resultados",
   "search": "Buscar",
   "filters": "Filtros",
@@ -37,17 +36,13 @@
     "classroomsBuilt": "aulas construidas",
     "basicEducationYears": "años de educación básica"
   },
-  "viewDetails": "Ver detalles",
   "exportCSV": "Exportar CSV",
-  "exportExcel": "Exportar Excel",
   "dateNote": "Granularidad de fecha disponible para ~48% de los contratos.",
   "groundTruth": {
     "caseName": "Nombre del Caso",
     "caseType": "Tipo",
     "sector": "Sector",
-    "vendorsMatched": "Proveedores Coincidentes",
     "contracts": "Contratos",
-    "detectionRate": "Tasa de Detección",
     "avgScore": "Puntaje Promedio",
     "estimatedFraud": "Fraude Estimado",
     "modelComparison": "Comparación de Modelos",
@@ -81,8 +76,6 @@
     "live": "EN VIVO",
     "connectedToDb": "Conectado a la base de datos",
     "dataQuality": "Calidad de datos: Grado {{grade}} ({{score}}%)",
-    "switchToLight": "Cambiar a modo claro",
-    "switchToDark": "Cambiar a modo oscuro",
     "openMenu": "Abrir menú",
     "toggleTheme": "Cambiar tema",
     "home": "Inicio",
@@ -140,8 +133,6 @@
     "actRelatedDossiers": "EXPEDIENTES RELACIONADOS",
     "actReturnToIndex": "VOLVER AL ÍNDICE",
     "notFoundSubtitle": "La investigación solicitada no pudo encontrarse.",
-    "sources_one": "1 fuente",
-    "sources_other": "{{count}} fuentes",
     "viewCitations": "ver citas",
     "collapse": "cerrar"
   },
@@ -151,7 +142,6 @@
     "step1Desc": "ARIA clasifica cada proveedor en 4 niveles por prioridad de investigación. El Tier 1 muestra 299 proveedores marcados para revisión inmediata — combinando puntuaciones de riesgo, detección de anomalías y registros externos de sanciones (SAT EFOS, SFP, ASF) en un puntaje IPS único.",
     "step2Title": "Modelo de Riesgo v0.8.5",
     "step2Desc": "3.1 millones de contratos puntuados por una regresión logística entrenada con 1,417 casos documentados de corrupción. AUC de prueba 0.785 (split por proveedor), tasa de alto riesgo 11.0% — dentro del rango OCDE de 2–15%. Los puntajes miden similitud con patrones de fraude conocidos, no prueba de corrupción.",
-    "step2ScoreLabel": "Ejemplo: Puntuación 0.68",
     "step2Critical": "Crítico ≥ 0.60",
     "step2High": "Alto ≥ 0.40",
     "step2Medium": "Medio ≥ 0.25",
@@ -396,12 +386,6 @@
     "sector": "Sector",
     "procedure": "Procedimiento",
     "flags": "Indicadores"
-  },
-  "riskExplanation": {
-    "whyThisScore": "Por qué esta puntuación",
-    "sectorModel": "modelo sectorial",
-    "globalModel": "modelo global",
-    "moreFactors": "+{{count}} factores más"
   },
   "riskExplainer": {
     "whatItDetects": "Qué detecta",
