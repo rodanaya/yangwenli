@@ -1485,7 +1485,8 @@ function ChapterNav({
   accentColor: string
   activeChapterId: string | null
 }) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <nav
       className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 flex-col gap-3"
@@ -1493,12 +1494,13 @@ function ChapterNav({
     >
       {chapters.map((ch) => {
         const isActive = ch.id === activeChapterId
+        const chapterTitle = lang === 'es' ? (ch.title_es ?? ch.title) : ch.title
         return (
           <a
             key={ch.id}
             href={`#chapter-${ch.id}`}
             className="group relative flex items-center justify-end gap-2"
-            aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${ch.title}`}
+            aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${chapterTitle}`}
             aria-current={isActive ? 'step' : undefined}
           >
             <span
@@ -1507,7 +1509,7 @@ function ChapterNav({
                 isActive ? 'opacity-100 text-text-secondary' : 'opacity-0 group-hover:opacity-100 text-text-secondary'
               )}
             >
-              {ch.title}
+              {chapterTitle}
             </span>
             <span
               className={cn(
