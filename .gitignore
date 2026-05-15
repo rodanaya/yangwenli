@@ -214,3 +214,4 @@ audit/
 # Local audit + harness runs (large image dirs, JSONL transcripts)
 data/audit_runs/
 data/explore_runs/
+*.db.gz
