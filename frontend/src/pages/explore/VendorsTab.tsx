@@ -6,7 +6,6 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import {
@@ -448,8 +447,8 @@ export default function VendorsTab() {
           ))}
         </div>
       ) : error ? (
-        <Card>
-          <CardContent className="p-8 text-center">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="p-8 text-center bg-background-card">
             <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
             <p className="text-sm text-text-primary mb-2">Failed to load vendors</p>
             <p className="text-xs text-text-muted mb-3">
@@ -461,8 +460,8 @@ export default function VendorsTab() {
               <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
               Retry
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
           <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />

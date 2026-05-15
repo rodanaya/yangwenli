@@ -5,7 +5,6 @@
 import { useState, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
@@ -310,8 +309,8 @@ export default function TrendsTab() {
   return (
     <div className="space-y-4">
       {/* Year Selector + Admin Badge */}
-      <Card>
-        <CardContent className="p-4">
+      <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+        <div className="p-4 bg-background-card">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -350,8 +349,8 @@ export default function TrendsTab() {
               </Badge>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Stat Pills */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-sm font-mono">
@@ -412,22 +411,22 @@ export default function TrendsTab() {
       {/* Row 1: Historical Trends + Procurement Health Indicators */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Chart 1: Historical Trends */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm flex items-center gap-2">
+                <h3 className="text-sm flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   Historical Trends
-                </CardTitle>
-                <CardDescription className="text-xs">
+                </h3>
+                <p className="text-xs text-text-muted">
                   Contract volume and avg risk, 2002-2025
-                </CardDescription>
+                </p>
               </div>
               <ChartDownloadButton targetRef={historicalChartRef} filename="rubli-historical-trends" />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
@@ -470,26 +469,26 @@ export default function TrendsTab() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Chart 2: Procurement Transparency Pulse */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm flex items-center gap-2">
+                <h3 className="text-sm flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
                   Procurement Transparency Pulse
-                </CardTitle>
-                <CardDescription className="text-xs">
+                </h3>
+                <p className="text-xs text-text-muted">
                   Layered health metrics — darker fill = less transparent procurement
-                </CardDescription>
+                </p>
               </div>
               <ChartDownloadButton targetRef={transparencyChartRef} filename="rubli-transparency-pulse" />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
@@ -518,20 +517,20 @@ export default function TrendsTab() {
                 })()}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Row 2: Sector Risk DNA Radar + Sector Landscape Bubble */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Chart 3: Sector Risk DNA Radar */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-sm flex items-center gap-2">
+              <h3 className="text-sm flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Sector Risk DNA
-              </CardTitle>
+              </h3>
               <div className="flex items-center gap-1.5">
                 {RADAR_PRESETS.map((p) => (
                   <button
@@ -550,9 +549,9 @@ export default function TrendsTab() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <CardDescription className="text-xs">
+              <p className="text-xs text-text-muted">
                 {radarShowAll ? 'All 12' : 'Top 6'} sectors, {RADAR_PRESETS.find(p => p.id === radarPreset)?.axes.length ?? 5} dimensions (0-100)
-              </CardDescription>
+              </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => { setRadarShowAll(!radarShowAll); setHiddenSectors(new Set()) }}
@@ -563,8 +562,8 @@ export default function TrendsTab() {
                 <ChartDownloadButton targetRef={radarChartRef} filename="rubli-sector-risk-dna" />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {sectorLoading ? (
               <Skeleton className="h-[300px]" />
             ) : radarData.chartData && radarData.sectors.length > 0 ? (
@@ -627,26 +626,26 @@ export default function TrendsTab() {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Chart 4: Sector Landscape Bubble */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm flex items-center gap-2">
+                <h3 className="text-sm flex items-center gap-2">
                   <Compass className="h-4 w-4" />
                   Sector Landscape
-                </CardTitle>
-                <CardDescription className="text-xs">
+                </h3>
+                <p className="text-xs text-text-muted">
                   Contracts vs avg risk per sector (bubble size = total value)
-                </CardDescription>
+                </p>
               </div>
               <ChartDownloadButton targetRef={bubbleChartRef} filename="rubli-sector-landscape" />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {sectorLoading ? (
               <Skeleton className="h-[300px]" />
             ) : sectorBubbleData.length > 0 ? (
@@ -684,34 +683,34 @@ export default function TrendsTab() {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Row 3: Monthly Patterns + Market Structure */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Chart 5: Monthly Patterns */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm flex items-center gap-2">
+                <h3 className="text-sm flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   {selectedYear} Monthly Patterns
-                </CardTitle>
-                <CardDescription className="text-xs">
+                </h3>
+                <p className="text-xs text-text-muted">
                   Volume, direct award %, and risk by month
                   {monthlyBreakdown?.december_spike != null && (
                     <span className="ml-1 text-risk-high">
                       (Dec spike: {monthlyBreakdown.december_spike.toFixed(1)}x)
                     </span>
                   )}
-                </CardDescription>
+                </p>
               </div>
               <ChartDownloadButton targetRef={monthlyChartRef} filename={`rubli-monthly-patterns-${selectedYear}`} />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {monthlyLoading ? (
               <Skeleton className="h-[280px]" />
             ) : monthlyChartData.length > 0 ? (
@@ -751,26 +750,26 @@ export default function TrendsTab() {
                 No monthly data for {selectedYear}
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Chart 6: Market Dynamics */}
-        <Card>
-          <CardHeader className="pb-2">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm flex items-center gap-2">
+                <h3 className="text-sm flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   Market Dynamics
-                </CardTitle>
-                <CardDescription className="text-xs">
+                </h3>
+                <p className="text-xs text-text-muted">
                   Vendor pool size (area) and contracts per vendor (line) — rising line = market concentrating
-                </CardDescription>
+                </p>
               </div>
               <ChartDownloadButton targetRef={marketChartRef} filename="rubli-market-dynamics" />
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="px-4 py-3 bg-background-card">
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
@@ -794,15 +793,15 @@ export default function TrendsTab() {
                 })()}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Events Footer */}
       {allEvents.length > 0 && (
-        <Card>
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-xs flex items-center gap-1.5 text-text-muted">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="px-4 pt-3 pb-1 border-b border-border/60 bg-background-card">
+            <h3 className="text-xs flex items-center gap-1.5 text-text-muted">
               <Flag className="h-3.5 w-3.5" />
               Key Events
               {yearEvents.length > 0 && (
@@ -810,9 +809,9 @@ export default function TrendsTab() {
                   {yearEvents.length} in {selectedYear}
                 </Badge>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
+            </h3>
+          </div>
+          <div className="px-4 pb-3 bg-background-card">
             <ScrollArea className="max-h-[140px]">
               <div className="space-y-1.5">
                 {yearEvents.map((event) => {
@@ -875,8 +874,8 @@ export default function TrendsTab() {
                 )}
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )
