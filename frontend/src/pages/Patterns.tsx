@@ -16,6 +16,7 @@ import { networkApi } from '@/api/client'
 import type { PatternSpotlight } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RISK_COLORS } from '@/lib/constants'
+import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Hardcoded editorial metadata per pattern
@@ -116,12 +117,14 @@ function PatternCard({
   spotlight,
   lang,
   maxT1,
+  maxValue,
   onClick,
 }: {
   meta: PatternMeta
   spotlight: PatternSpotlight | undefined
   lang: string
   maxT1: number
+  maxValue: number
   onClick: () => void
 }) {
   const isEs = lang === 'es'
@@ -172,43 +175,62 @@ function PatternCard({
           </div>
         </div>
 
-        {/* Stats row — 4 columns: Vendors / T1 / GT / Avg IPS */}
+        {/* Stats row — Vendors / T1 / Value / GT */}
         {spotlight && (
-          <div className="flex items-center gap-6 mb-3 mt-3">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                {isEs ? 'Proveedores' : 'Vendors'}
-              </span>
-              <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                {spotlight.vendor_count.toLocaleString()}
-              </span>
+          <>
+            <div className="flex items-center gap-5 mb-2 mt-3">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
+                  {isEs ? 'Proveedores' : 'Vendors'}
+                </span>
+                <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
+                  {spotlight.vendor_count.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">T1</span>
+                <span
+                  className="text-sm font-mono font-semibold tabular-nums"
+                  style={{ color: RISK_COLORS.critical }}
+                >
+                  {spotlight.t1_count.toLocaleString()}
+                </span>
+              </div>
+              {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
+                    {isEs ? 'Gasto' : 'Spend'}
+                  </span>
+                  <span className="text-sm font-mono font-semibold tabular-nums" style={{ color: '#a06820' }}>
+                    {formatCompactMXN(spotlight.total_value_mxn)}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
+                  {isEs ? 'Casos GT' : 'GT Cases'}
+                </span>
+                <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
+                  {spotlight.gt_case_count.toLocaleString()}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">T1</span>
-              <span
-                className="text-sm font-mono font-semibold tabular-nums"
-                style={{ color: RISK_COLORS.critical }}
-              >
-                {spotlight.t1_count.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                {isEs ? 'Casos GT' : 'GT Cases'}
-              </span>
-              <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                {spotlight.gt_case_count.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                {isEs ? 'IPS Prom.' : 'Avg IPS'}
-              </span>
-              <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                {spotlight.avg_ips != null ? spotlight.avg_ips.toFixed(2) : '—'}
-              </span>
-            </div>
-          </div>
+            {/* Financial scale bar */}
+            {spotlight.total_value_mxn != null && maxValue > 0 && (
+              <div className="mb-2">
+                <div className="h-0.5 rounded-full bg-background-elevated overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min(100, (spotlight.total_value_mxn / maxValue) * 100)}%`,
+                      backgroundColor: '#a06820',
+                      opacity: 0.6,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Top vendor chips */}
@@ -311,7 +333,9 @@ export default function Patterns() {
   const totalVendors = patterns.reduce((sum, p) => sum + (p.vendor_count ?? 0), 0)
   const totalT1 = patterns.reduce((sum, p) => sum + (p.t1_count ?? 0), 0)
   const totalGtCases = patterns.reduce((sum, p) => sum + (p.gt_case_count ?? 0), 0)
+  const totalValue = patterns.reduce((sum, p) => sum + (p.total_value_mxn ?? 0), 0)
   const maxT1 = patterns.reduce((m, p) => Math.max(m, p.t1_count ?? 0), 0)
+  const maxValue = patterns.reduce((m, p) => Math.max(m, p.total_value_mxn ?? 0), 0)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -344,7 +368,7 @@ export default function Patterns() {
           <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-4">
             {isEs ? 'El universo' : 'The universe'}
           </div>
-          <div className="grid grid-cols-3 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             <HeadlineStat
               value={totalVendors.toLocaleString()}
               label={isEs ? 'Proveedores marcados' : 'Vendors flagged'}
@@ -358,6 +382,13 @@ export default function Patterns() {
               value={totalGtCases.toLocaleString()}
               label={isEs ? 'Casos GT vinculados' : 'GT cases linked'}
             />
+            {totalValue > 0 && (
+              <HeadlineStat
+                value={formatCompactMXN(totalValue)}
+                label={isEs ? 'Gasto en riesgo' : 'Spend at risk'}
+                color="#a06820"
+              />
+            )}
           </div>
           <p className="mt-4 text-[11px] text-text-muted leading-relaxed">
             {isEs
@@ -396,6 +427,7 @@ export default function Patterns() {
                 spotlight={spotlightByCode[meta.code]}
                 lang={i18n.language}
                 maxT1={maxT1}
+                maxValue={maxValue}
                 onClick={() => navigate(`/patterns/${meta.code}`)}
               />
             ))}
