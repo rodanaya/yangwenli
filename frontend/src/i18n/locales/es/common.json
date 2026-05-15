@@ -114,7 +114,7 @@
     "methodology": "Metodología",
     "methodologyP1": "Este análisis fue producido por la plataforma RUBLI, que procesa",
     "methodologyP2": "contratos federales registrados en COMPRANET entre 2002 y 2025.",
-    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v0.8.5 (AUC 0.785, split por proveedor), entrenado con 1,422 casos documentados de corrupción y 861 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
+    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v0.8.5 (AUC 0.785, split por proveedor), entrenado con 1,424 casos documentados de corrupción y 861 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
     "methodologyP4": "Todas las cifras provienen de datos públicos de COMPRANET. Los cálculos de adjudicación directa se basan en el campo procedure_type del registro oficial. Las clasificaciones sectoriales usan la taxonomía de 12 sectores de RUBLI basada en códigos de ramo presupuestal.",
     "nextSteps": "Próximos pasos para periodistas",
     "fullMethodology": "Metodología completa",
@@ -150,7 +150,7 @@
     "step1Title": "Cola de Investigación ARIA",
     "step1Desc": "ARIA clasifica cada proveedor en 4 niveles por prioridad de investigación. El Tier 1 muestra 320 proveedores marcados para revisión inmediata — combinando puntuaciones de riesgo, detección de anomalías y registros externos de sanciones (SAT EFOS, SFP, ASF) en un puntaje IPS único.",
     "step2Title": "Modelo de Riesgo v0.8.5",
-    "step2Desc": "3.1 millones de contratos puntuados por una regresión logística entrenada con 1,422 casos documentados de corrupción. AUC de prueba 0.785 (split por proveedor), tasa de alto riesgo 11.0% — dentro del rango OCDE de 2–15%. Los puntajes miden similitud con patrones de fraude conocidos, no prueba de corrupción.",
+    "step2Desc": "3.1 millones de contratos puntuados por una regresión logística entrenada con 1,424 casos documentados de corrupción. AUC de prueba 0.785 (split por proveedor), tasa de alto riesgo 11.0% — dentro del rango OCDE de 2–15%. Los puntajes miden similitud con patrones de fraude conocidos, no prueba de corrupción.",
     "step2ScoreLabel": "Ejemplo: Puntuación 0.68",
     "step2Critical": "Crítico ≥ 0.60",
     "step2High": "Alto ≥ 0.40",
@@ -222,7 +222,7 @@
       "other": "Otro"
     }
   },
-  "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 1,422 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.xyz/metodologia",
+  "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 1,424 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.xyz/metodologia",
   "aboutDataToggle": "Acerca de estos datos",
   "storyType": {
     "era": "Análisis de Era",

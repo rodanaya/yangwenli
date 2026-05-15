@@ -712,7 +712,7 @@ export function Methodology() {
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.highRiskRate')}</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,422</div>
+                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">1,424</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{t('heroHeader.gtCases')}</div>
               </div>
             </div>
@@ -782,7 +782,7 @@ export function Methodology() {
             source={t('pullQuotes.highRiskSource')}
           />
           <PullQuote
-            stat="1,422"
+            stat="1,424"
             label={t('pullQuotes.gtCasesLabel')}
             source={t('pullQuotes.gtCasesSource')}
           />
