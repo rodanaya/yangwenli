@@ -399,6 +399,7 @@ def get_value_concentration(
                         "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
                         (_VC_DB_KEY, result.model_dump_json()),
                     )
+                    wconn.commit()
             except Exception as e:
                 logger.warning("value_concentration persist failed: %s", e)
         return result
@@ -529,6 +530,7 @@ def get_flash_vendors(
                         "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
                         (_FV_DB_KEY, result.model_dump_json()),
                     )
+                    wconn.commit()
             except Exception as e:
                 logger.warning("flash_vendors persist failed: %s", e)
         return result

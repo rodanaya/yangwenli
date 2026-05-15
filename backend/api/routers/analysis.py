@@ -3196,6 +3196,7 @@ def get_political_cycle():
                     "INSERT OR REPLACE INTO precomputed_stats(stat_key,stat_value,updated_at) VALUES(?,?,datetime('now'))",
                     (cache_key, json.dumps(result, default=str)),
                 )
+                wconn.commit()
         except Exception as e:
             logger.warning("political_cycle persist failed: %s", e)
         return result
@@ -4519,6 +4520,7 @@ def get_admin_breakdown(response: Response):
                 "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) VALUES(?,?,datetime('now'))",
                 (cache_key, result.model_dump_json()),
             )
+            wconn.commit()
     except Exception as e:
         logger.warning("admin_breakdown persist failed: %s", e)
     response.headers["Cache-Control"] = "public, max-age=3600"

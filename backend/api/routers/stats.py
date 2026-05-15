@@ -686,6 +686,7 @@ def get_data_quality(response: Response):
                     " VALUES('data_quality_full', ?, datetime('now'))",
                     (payload,)
                 )
+                wconn.commit()
         except Exception as e:
             logger.warning("data_quality_full persist failed: %s", e)
 

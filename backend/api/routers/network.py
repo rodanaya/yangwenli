@@ -771,6 +771,7 @@ def get_communities(
                     "INSERT OR REPLACE INTO precomputed_stats(stat_key, stat_value, updated_at) VALUES(?, ?, datetime('now'))",
                     (_COMMUNITIES_DB_KEY, json.dumps(payload, default=str)),
                 )
+                wconn.commit()
         except Exception as e:
             logger.warning("communities persist failed: %s", e)
     return result

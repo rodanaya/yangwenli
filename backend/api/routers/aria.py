@@ -653,6 +653,7 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
                 " VALUES(?, ?, datetime('now'))",
                 (_ARIA_STATS_DB_KEY, json.dumps(result, default=str))
             )
+            wconn.commit()
     except Exception as e:
         logger.warning("aria_stats persist failed: %s", e)
 

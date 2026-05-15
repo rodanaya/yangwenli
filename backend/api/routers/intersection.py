@@ -248,6 +248,7 @@ def get_intersection_summary(
                 " VALUES(?, ?, datetime('now'))",
                 (db_key, json.dumps(response, default=str))
             )
+            wconn.commit()
     except Exception as e:
         logger.warning("intersection_summary persist failed: %s", e)
 
