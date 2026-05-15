@@ -15,7 +15,7 @@ const CommandPalette = lazy(() =>
 
 // Route path → nav i18n key mapping
 const ROUTE_I18N_KEYS: Record<string, string> = {
-  '/': 'dashboard',
+  '/': 'explore',
   '/dashboard': 'dashboard',
   '/explore': 'explore',
   '/money-flow': 'captureHeatmap',
@@ -34,10 +34,17 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/categories': 'categories',
   '/cases': 'caseLibrary',
   '/journalists': 'journalists',
+  '/newsroom': 'newsroom',
   '/aria': 'ariaQueue',
   '/report-card': 'reportCard',
   '/year-in-review': 'yearInReview',
   '/thread': 'journalists',
+  '/atlas': 'atlas',
+  '/intersection': 'intersection',
+  '/institutions': 'institutions',
+  '/relationships': 'relationships',
+  '/patterns': 'patterns',
+  '/spatial': 'explore',
 }
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
