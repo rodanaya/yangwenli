@@ -487,35 +487,54 @@ def get_investigation_leads(
             leads = []
             high_priority = 0
 
-            # Type 1: Top risk contracts
+            def _batch_names(rows: list) -> tuple[dict, dict]:
+                """Batch-fetch vendor + institution names for a list of contract rows."""
+                vids = {r['vendor_id'] for r in rows if r['vendor_id']}
+                iids = {r['institution_id'] for r in rows if r['institution_id']}
+                vnames: dict = {}
+                inames: dict = {}
+                if vids:
+                    ph = ",".join("?" * len(vids))
+                    for vr in cursor.execute(
+                        f"SELECT id, name FROM vendors WHERE id IN ({ph})", list(vids)
+                    ).fetchall():
+                        vnames[vr['id']] = vr['name']
+                if iids:
+                    ph = ",".join("?" * len(iids))
+                    for ir in cursor.execute(
+                        f"SELECT id, name FROM institutions WHERE id IN ({ph})", list(iids)
+                    ).fetchall():
+                        inames[ir['id']] = ir['name']
+                return vnames, inames
+
+            # Type 1: Top risk contracts — INDEXED BY forces idx_c_risk_score; amount
+            # filter moved to Python because SQL amount filter causes planner to pick
+            # idx_c_amount + USE TEMP B-TREE FOR ORDER BY (6.97s vs 0.000s).
             if lead_type is None or lead_type == 'risk':
-                conditions = [
-                    "c.risk_score IS NOT NULL",
-                    "c.amount_mxn > 1000000",
-                    "c.amount_mxn < ?"
-                ]
-                params: List[Any] = [MAX_CONTRACT_VALUE]
-
+                t1_params: List[Any] = []
+                sector_clause = ""
                 if sector_id:
-                    conditions.append("c.sector_id = ?")
-                    params.append(sector_id)
+                    sector_clause = "AND sector_id = ?"
+                    t1_params.append(sector_id)
+
+                all_rows = cursor.execute(f"""
+                    SELECT id, risk_score, risk_level, amount_mxn, vendor_id, institution_id
+                    FROM contracts INDEXED BY idx_c_risk_score
+                    WHERE risk_score IS NOT NULL
+                    {sector_clause}
+                    ORDER BY risk_score DESC
+                    LIMIT 500
+                """, t1_params).fetchall()
+
+                # Filter amount in Python to avoid wrong index choice in SQL planner
+                batch_limit = limit // 3
+                filtered = [r for r in all_rows if r['amount_mxn'] and r['amount_mxn'] > 1_000_000 and r['amount_mxn'] < MAX_CONTRACT_VALUE]
                 if min_amount:
-                    conditions.append("c.amount_mxn >= ?")
-                    params.append(min_amount)
+                    filtered = [r for r in filtered if r['amount_mxn'] >= min_amount]
+                rows = filtered[:batch_limit]
 
-                cursor.execute(f"""
-                    SELECT
-                        c.id, c.risk_score, c.risk_level, c.amount_mxn,
-                        v.name as vendor_name, i.name as institution_name
-                    FROM contracts c
-                    LEFT JOIN vendors v ON c.vendor_id = v.id
-                    LEFT JOIN institutions i ON c.institution_id = i.id
-                    WHERE {" AND ".join(conditions)}
-                    ORDER BY c.risk_score DESC
-                    LIMIT ?
-                """, params + [limit // 3])
-
-                for row in cursor.fetchall():
+                vnames, inames = _batch_names(rows)
+                for row in rows:
                     prio = "HIGH" if row['risk_score'] >= 0.5 else "MEDIUM"
                     if prio == "HIGH":
                         high_priority += 1
@@ -526,8 +545,8 @@ def get_investigation_leads(
                         lead_type="high_risk_contract",
                         priority=prio,
                         contract_id=row['id'],
-                        vendor_name=row['vendor_name'],
-                        institution_name=row['institution_name'],
+                        vendor_name=vnames.get(row['vendor_id'], 'Desconocido'),
+                        institution_name=inames.get(row['institution_id'], 'Desconocida'),
                         amount_mxn=row['amount_mxn'],
                         risk_score=row['risk_score'],
                         risk_indicators=[f"Risk level: {row['risk_level']}", f"Score: {row['risk_score']:.3f}"],
@@ -538,34 +557,31 @@ def get_investigation_leads(
                         ]
                     ))
 
-            # Type 2: Year-end patterns
+            # Type 2: Year-end patterns — no JOIN; uses idx_c_risk_score (risk_score filter)
             if lead_type is None or lead_type == 'year_end':
                 conditions = [
-                    "c.is_year_end = 1",
-                    "c.risk_score >= 0.3",
-                    "c.amount_mxn > 10000000",
-                    "c.amount_mxn < ?"
+                    "is_year_end = 1",
+                    "risk_score >= 0.3",
+                    "amount_mxn > 10000000",
+                    "amount_mxn < ?"
                 ]
                 params = [MAX_CONTRACT_VALUE]
 
                 if sector_id:
-                    conditions.append("c.sector_id = ?")
+                    conditions.append("sector_id = ?")
                     params.append(sector_id)
 
-                cursor.execute(f"""
-                    SELECT
-                        c.id, c.risk_score, c.amount_mxn,
-                        c.is_direct_award, c.is_single_bid,
-                        v.name as vendor_name, i.name as institution_name
-                    FROM contracts c
-                    LEFT JOIN vendors v ON c.vendor_id = v.id
-                    LEFT JOIN institutions i ON c.institution_id = i.id
+                rows = cursor.execute(f"""
+                    SELECT id, risk_score, amount_mxn, is_direct_award, is_single_bid,
+                           vendor_id, institution_id
+                    FROM contracts
                     WHERE {" AND ".join(conditions)}
-                    ORDER BY c.risk_score DESC
+                    ORDER BY risk_score DESC
                     LIMIT ?
-                """, params + [limit // 3])
+                """, params + [limit // 3]).fetchall()
 
-                for row in cursor.fetchall():
+                vnames, inames = _batch_names(rows)
+                for row in rows:
                     compounding = []
                     if row['is_direct_award']:
                         compounding.append("Direct award")
@@ -582,8 +598,8 @@ def get_investigation_leads(
                         lead_type="year_end_pattern",
                         priority=prio,
                         contract_id=row['id'],
-                        vendor_name=row['vendor_name'],
-                        institution_name=row['institution_name'],
+                        vendor_name=vnames.get(row['vendor_id'], 'Desconocido'),
+                        institution_name=inames.get(row['institution_id'], 'Desconocida'),
                         amount_mxn=row['amount_mxn'],
                         risk_score=row['risk_score'],
                         risk_indicators=["December contract"] + compounding,
