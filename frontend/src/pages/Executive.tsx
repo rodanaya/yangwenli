@@ -175,6 +175,14 @@ export default function Executive() {
     retry: 0,
   })
 
+  // Finding 04 — P6 capture leaders: live top-5 by capture score
+  const { data: captureLeadersData } = useQuery({
+    queryKey: ['executive', 'capture-leaders'],
+    queryFn: () => analysisApi.getCaptureLeaders(),
+    staleTime: 60 * 60 * 1000,
+    retry: 0,
+  })
+
   const stats = useMemo(() => {
     const d = dashboard
     const totalContracts = d?.overview?.total_contracts ?? 3_051_294
@@ -1223,14 +1231,14 @@ export default function Executive() {
                   open dot = second vendor share. Gap reveals capture. */}
               <div className="mb-4">
                 {(() => {
-                  // Sorted by gap desc so ISSSTE (captured) leads — story reads in one glance.
-                  // top / second vendor market share (illustrative — pattern is real, pcts simplified)
-                  const INST_DATA = [
-                    { label: 'ISSSTE', top: 91, second:  9, captured: true  },
-                    { label: 'SEP',    top: 35, second: 27, captured: false },
-                    { label: 'CFE',    top: 32, second: 24, captured: false },
-                    { label: 'IMSS',   top: 30, second: 25, captured: false },
-                    { label: 'SCT',    top: 28, second: 26, captured: false },
+                  // Live top-5 from capture_results (sorted by capture score DESC).
+                  // Fallback to static values if the API hasn't resolved yet.
+                  const INST_DATA = captureLeadersData?.leaders ?? [
+                    { label: 'ASIPONA', top: 76, second: 20, captured: true  },
+                    { label: 'LOTERIA', top: 77, second:  2, captured: true  },
+                    { label: 'SIAP',    top: 81, second: 16, captured: true  },
+                    { label: 'SPF',     top: 70, second:  9, captured: true  },
+                    { label: 'AFAC',    top: 81, second: 10, captured: true  },
                   ]
                   const SVG_W = 240
                   const PAD_L = 10

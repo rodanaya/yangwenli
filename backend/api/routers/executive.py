@@ -469,3 +469,116 @@ def _build_summary(conn) -> dict:
         "model": model,
         "generated_at": datetime.utcnow().isoformat(),
     }
+
+
+# Cache for capture leaders (longer TTL — data rarely changes)
+_capture_cache: dict = {"data": None, "expires": 0}
+_CAPTURE_TTL = 3600  # 1 hour
+
+
+def _short_label(name: str) -> str:
+    """Derive a ≤10-char display label from an institution name."""
+    # Strip trailing punctuation/spaces
+    name = name.strip().rstrip(".,")
+    if len(name) <= 10:
+        return name
+    # Strip geographic qualifier after dash (e.g. "ASIPONA- Salina Cruz" → "ASIPONA")
+    import re
+    m = re.match(r'^([A-Z0-9]+)', name)
+    if m and len(m.group(1)) >= 3:
+        return m.group(1)
+    # Take the part before first comma or " - "
+    short = name.split(",")[0].split(" - ")[0].strip()
+    if len(short) <= 10:
+        return short
+    # Acronym: initials of words ≥3 chars starting uppercase
+    words = short.split()
+    acronym = "".join(w[0] for w in words if len(w) >= 3 and w[0].isupper())
+    return acronym if len(acronym) >= 2 else short[:9]
+
+
+@router.get("/capture-leaders")
+def get_capture_leaders():
+    """Return top 5 institutional-capture leaders from capture_results with peer shares.
+
+    Each row: institution label, top-vendor peak share %, second-vendor share %, capture gap.
+    Used by Executive Summary Finding 04 (P6 Cleveland pair chart).
+    Cached 1 hour.
+    """
+    now = time.time()
+    if _capture_cache["data"] and now < _capture_cache["expires"]:
+        return _capture_cache["data"]
+
+    try:
+        with get_db() as conn:
+            cur = conn.cursor()
+            cur.execute("""
+                WITH capture_top5 AS (
+                    SELECT institution_id, vendor_id AS cap_vendor_id,
+                           institution_name, vendor_name AS cap_vendor_name,
+                           peak_year, peak_share_pct, score
+                    FROM capture_results
+                    ORDER BY score DESC LIMIT 5
+                ),
+                inst_peak_totals AS (
+                    SELECT c.institution_id,
+                           strftime('%Y', c.contract_date) AS yr,
+                           SUM(c.amount_mxn) AS total
+                    FROM contracts c
+                    JOIN capture_top5 ct
+                         ON c.institution_id = ct.institution_id
+                        AND strftime('%Y', c.contract_date) = CAST(ct.peak_year AS TEXT)
+                    WHERE c.amount_mxn > 0
+                    GROUP BY c.institution_id, yr
+                ),
+                inst_vendor_shares AS (
+                    SELECT c.institution_id, c.vendor_id, v.name AS vendor_name,
+                           ROUND(SUM(c.amount_mxn) * 100.0 / ipt.total, 1) AS share_pct,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY c.institution_id
+                               ORDER BY SUM(c.amount_mxn) DESC
+                           ) AS rn
+                    FROM contracts c
+                    JOIN vendors v ON c.vendor_id = v.id
+                    JOIN capture_top5 ct
+                         ON c.institution_id = ct.institution_id
+                        AND strftime('%Y', c.contract_date) = CAST(ct.peak_year AS TEXT)
+                    JOIN inst_peak_totals ipt ON c.institution_id = ipt.institution_id
+                    WHERE c.amount_mxn > 0
+                    GROUP BY c.institution_id, c.vendor_id, v.name, ipt.total
+                )
+                SELECT ct.institution_name,
+                       MAX(CASE WHEN ivs.rn = 1 THEN ivs.share_pct END) AS top_pct,
+                       MAX(CASE WHEN ivs.rn = 2 THEN ivs.share_pct END) AS second_pct,
+                       ct.peak_year,
+                       ct.score
+                FROM capture_top5 ct
+                JOIN inst_vendor_shares ivs
+                     ON ct.institution_id = ivs.institution_id AND ivs.rn <= 2
+                GROUP BY ct.institution_id, ct.institution_name, ct.peak_year, ct.score
+                ORDER BY ct.score DESC
+            """)
+            rows = cur.fetchall()
+
+        leaders = []
+        for row in rows:
+            top = round(row["top_pct"] or 0, 1)
+            second = round(row["second_pct"] or 0, 1)
+            leaders.append({
+                "label": _short_label(row["institution_name"]),
+                "institution_name": row["institution_name"],
+                "top": top,
+                "second": second,
+                "gap": round(top - second, 1),
+                "peak_year": row["peak_year"],
+                "captured": (top - second) >= 40,
+            })
+
+        result = {"leaders": leaders}
+        _capture_cache["data"] = result
+        _capture_cache["expires"] = time.time() + _CAPTURE_TTL
+        return result
+
+    except Exception as e:
+        logger.error(f"Capture leaders error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch capture leaders")

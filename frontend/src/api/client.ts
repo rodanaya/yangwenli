@@ -1129,6 +1129,25 @@ export const analysisApi = {
   },
 
   /**
+   * Get top 5 institutional-capture leaders (P6) with peer vendor shares.
+   * Used by Executive Summary Finding 04 Cleveland pair chart.
+   */
+  async getCaptureLeaders(): Promise<{
+    leaders: Array<{
+      label: string
+      institution_name: string
+      top: number
+      second: number
+      gap: number
+      peak_year: number
+      captured: boolean
+    }>
+  }> {
+    const { data } = await api.get('/executive/capture-leaders')
+    return data
+  },
+
+  /**
    * Get December spike analysis — average spike ratio vs. average month
    */
   async getDecemberSpike(startYear = 2015, endYear = 2024): Promise<{
