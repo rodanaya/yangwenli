@@ -473,8 +473,8 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
           {isEs
-            ? 'Cada círculo representa un patrón de corrupción ARIA (P1–P7). El tamaño refleja el número de proveedores en ese patrón; el color, el tipo de corrupción dominante. Datos en tiempo real de la base de datos ARIA.'
-            : 'Each circle represents one ARIA corruption pattern (P1–P7). Size reflects the vendor count in that pattern; color encodes the dominant corruption type. Live data from the ARIA database.'}
+            ? 'Cada círculo representa un patrón de corrupción ARIA (P1–P7). El tamaño refleja el número de proveedores en ese patrón; el color, el tipo dominante. Haz clic en un círculo para ver el dossier de ese patrón abajo.'
+            : 'Each circle represents one ARIA corruption pattern (P1–P7). Size reflects vendor count; color encodes the dominant corruption type. Click a circle to jump to that pattern\'s dossier below.'}
         </p>
       </div>
 
@@ -704,7 +704,7 @@ function TopVendorsPanel({
               {i + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" />
+              <EntityIdentityChip type="vendor" id={v.vendor_id} name={v.vendor_name} size="xs" narrative />
             </div>
             <span
               className="text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
@@ -941,6 +941,16 @@ function CommunityDossier({
           {c.vendors > 0 ? `${formatNumber(c.vendors)} ${isEs ? 'proveedores' : 'vendors'} · ${c.pattern}` : c.pattern}
         </span>
         <div className="flex items-center gap-2">
+          {/* Deep-link to top vendor's Red Thread if available */}
+          {patternSpotlight?.top_vendors?.[0] && (
+            <Link
+              to={`/thread/${patternSpotlight.top_vendors[0].vendor_id}`}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-text-secondary transition-colors border border-border hover:border-border-hover"
+              title={isEs ? `Abrir hilo rojo: ${patternSpotlight.top_vendors[0].vendor_name}` : `Open red thread: ${patternSpotlight.top_vendors[0].vendor_name}`}
+            >
+              {isEs ? 'Hilo Rojo ↗' : 'Red Thread ↗'}
+            </Link>
+          )}
           {c.pattern.startsWith('P') && (
             <Link
               to={`/aria?pattern=${c.pattern}`}
@@ -951,16 +961,10 @@ function CommunityDossier({
                 border: `1px solid ${fill}40`,
               }}
             >
-              {isEs ? 'Investigar en ARIA' : 'Investigate in ARIA'}
+              {isEs ? 'Cola ARIA' : 'ARIA Queue'}
               <ChevronRight className="h-3 w-3" />
             </Link>
           )}
-          <Link
-            to={`/patterns`}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-text-secondary transition-colors border border-border hover:border-border-hover"
-          >
-            {isEs ? 'Ver patrones' : 'All patterns'}
-          </Link>
         </div>
       </div>
     </div>
