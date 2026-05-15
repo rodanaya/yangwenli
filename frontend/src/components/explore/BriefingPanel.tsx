@@ -8,7 +8,7 @@
  */
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { atlasApi, contractApi, institutionApi, vendorApi } from '@/api/client'
+import { atlasApi, contractApi, institutionApi, sectorApi, vendorApi } from '@/api/client'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
@@ -173,6 +173,31 @@ function focusLabel(f: Focus, lang: 'en' | 'es'): string {
 // ────────────────────────────────────────────────────────────────────────────
 
 function SystemBriefing({ lang, hoverId }: { lang: 'en' | 'es'; hoverId: number | null }) {
+  const dispatch = useExploreDispatch()
+
+  // Fetch aggregated sector stats for the Z0 summary panel.
+  // Same query key as Z1Layer so the cache is shared.
+  const { data: sectorStats } = useQuery({
+    queryKey: ['explore', 'z0-sector-stats'],
+    queryFn: () => sectorApi.getAll(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // Aggregate platform-wide totals from the sector list response.
+  // SectorListResponse has top-level total_contracts / total_value_mxn;
+  // avg risk is derived from the per-sector rows.
+  const totals = sectorStats
+    ? {
+        contracts: sectorStats.total_contracts,
+        value: sectorStats.total_value_mxn,
+        highRiskPct:
+          sectorStats.data.length > 0
+            ? sectorStats.data.reduce((s, x) => s + (Number(x.avg_risk_score) || 0), 0) /
+              sectorStats.data.length
+            : null,
+      }
+    : null
+
   if (hoverId != null) {
     const sector = SECTORS.find((s) => s.id === hoverId)
     if (sector) {
@@ -180,15 +205,81 @@ function SystemBriefing({ lang, hoverId }: { lang: 'en' | 'es'; hoverId: number 
       return <SectorHoverPreview sector={sector} accent={accent} lang={lang} />
     }
   }
+
   return (
     <div>
       <Eyebrow>{lang === 'en' ? 'System view · Z0' : 'Vista de sistema · Z0'}</Eyebrow>
-      <h2 className="text-lg font-bold mb-2 text-text-primary">{lang === 'en' ? '12 federal sectors' : '12 sectores federales'}</h2>
-      <p className="text-xs text-text-secondary leading-relaxed mb-3">
-        {lang === 'en'
-          ? 'Each body is a sector. Hover for a preview. Click to drill into the institutions inside.'
-          : 'Cada cuerpo es un sector. Pasa el cursor para una vista previa. Haz clic para profundizar.'}
-      </p>
+      <h2 className="text-lg font-bold mb-1 text-text-primary">
+        {lang === 'en' ? '12 federal sectors' : '12 sectores federales'}
+      </h2>
+
+      {/* Platform-wide totals */}
+      {totals ? (
+        <>
+          <Stat
+            label={lang === 'en' ? 'Contracts' : 'Contratos'}
+            value={formatNumber(totals.contracts)}
+          />
+          <Stat
+            label={lang === 'en' ? 'Total value' : 'Valor total'}
+            value={formatCompactMXN(totals.value)}
+          />
+          {totals.highRiskPct != null && (
+            <Stat
+              label={lang === 'en' ? 'Avg risk score' : 'Riesgo promedio'}
+              value={`${(totals.highRiskPct * 100).toFixed(1)}%`}
+            />
+          )}
+        </>
+      ) : (
+        <div className="space-y-2 my-3">
+          <div className="h-3 w-3/4 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
+        </div>
+      )}
+
+      {/* Sector quick-nav — clickable buttons for each of the 12 sectors */}
+      <div className="mt-3 mb-1">
+        <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-2">
+          {lang === 'en' ? 'Click a sector to drill in' : 'Haz clic en un sector para profundizar'}
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          {SECTORS.map((s) => {
+            const accent = SECTOR_COLORS[s.code] ?? '#64748b'
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() =>
+                  dispatch({ type: 'drill-into-sector', sectorId: s.id, sectorCode: s.code })
+                }
+                className="flex items-center gap-1.5 px-2 py-1.5 text-left transition-colors rounded-sm"
+                style={{
+                  background: `${accent}12`,
+                  border: `1px solid ${accent}30`,
+                  cursor: 'pointer',
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: accent,
+                    flexShrink: 0,
+                    display: 'inline-block',
+                  }}
+                />
+                <span className="text-[10px] font-mono truncate leading-none">
+                  {getSectorName(s.code, lang)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       <Tip lang={lang} />
     </div>
   )

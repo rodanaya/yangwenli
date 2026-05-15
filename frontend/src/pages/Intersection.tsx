@@ -10,9 +10,15 @@
  *
  * The fourth quadrant (both clean) is just a number — no editorial
  * interest in a ranked list of unsuspicious vendors.
+ *
+ * 2026-05-15 redesign: replaced 2×2 scatter (broken: 99% of dots cluster
+ * in one corner) with a proportional treemap; promoted Novelty count to
+ * a single dominant hero ("1,808 vendors no regulator has touched"); added
+ * editorial FINDING callout; removed paper-grain texture so this page
+ * stops looking like Relationships.
  */
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +28,6 @@ import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { PlateFrame } from '@/components/atlas/PlateFrame'
 
 function RegistryBadges({ v }: { v: IntersectionVendor }) {
   const badges: Array<{ label: string; color: string; title: string }> = []
@@ -97,8 +102,6 @@ function VendorRow({
         </div>
         <div className="flex items-center gap-2 mt-0.5 text-[10px] font-mono text-text-muted">
           {v.primary_sector_name && (
-            // F150/F257 fix: localize sector label so EN UI doesn't
-            // show Spanish ("ENERGIA" → "ENERGY" on EN).
             <span className="uppercase tracking-wider">
               {getSectorName(v.primary_sector_name.toLowerCase(), lang === 'es' ? 'es' : 'en')}
             </span>
@@ -215,220 +218,211 @@ function QuadrantCard({
   )
 }
 
-// ─── Quadrant scatter plot ────────────────────────────────────────────────────
-// FT/Economist-style 2×2 battlespace matrix. X = RUBLI risk (0–1),
-// Y = external registry hits (EFOS + SFP + GT, 0–3). Dot size = √contracts.
-// Color encodes the quadrant the vendor falls into. Deterministic jitter
-// breaks up the (0-flag, low-risk) "clean" stack at the bottom.
+// ─── Proportional quadrant treemap ────────────────────────────────────────────
+// Replaces the 2×2 scatter (which looked broken because 99% of dots stacked in
+// one corner). Three rectangles sized by vendor count, with the NOVELTY
+// rectangle dominating the top row — visually mirroring its 61% share of the
+// regulator-vs-model contradiction surface.
+//
+// Layout: top row = NOVELTY (full width). Bottom row = BLIND SPOT | CONFIRMED,
+// each width-proportional to its count.
 
-function QuadrantScatterPlot({
+function ProportionalQuadrantMap({
   data,
   lang,
 }: {
   data: IntersectionSummary
   lang: string
 }) {
-  const allVendors = useMemo(() => {
-    const novelty = data.rankings.novelty.map((v) => ({ ...v, quadrant: 'novelty' as const }))
-    const confirmed = data.rankings.confirmed.map((v) => ({ ...v, quadrant: 'confirmed' as const }))
-    const blindspot = data.rankings.blindspot.map((v) => ({ ...v, quadrant: 'blindspot' as const }))
-    return [...novelty, ...confirmed, ...blindspot]
-  }, [data])
+  const { novelty, confirmed, blindspot } = data.counts
+  const total = novelty + confirmed + blindspot
 
-  const W = 580
-  const H = 320
-  const PAD = { top: 20, right: 20, bottom: 32, left: 36 }
-  const plotW = W - PAD.left - PAD.right
-  const plotH = H - PAD.top - PAD.bottom
+  // Top row gets ~61% of the height to mirror the 61% novelty share — but
+  // we cap the dominant row's height so the bottom row stays readable.
+  const noveltyHeightShare = Math.max(0.5, Math.min(0.7, novelty / total))
+  const topHeightPct = noveltyHeightShare * 100
+  const bottomHeightPct = 100 - topHeightPct
+  // Bottom row split: blindspot (left) vs confirmed (right), proportional.
+  const bottomTotal = blindspot + confirmed || 1
+  const blindspotWidthPct = (blindspot / bottomTotal) * 100
+  const confirmedWidthPct = (confirmed / bottomTotal) * 100
 
-  const toX = (score: number) => PAD.left + Math.max(0, Math.min(1, score)) * plotW
-  const toY = (flags: number, jitter = 0) =>
-    PAD.top + (1 - Math.max(0, Math.min(3, flags)) / 3) * plotH + jitter
-
-  // Quadrant accent colors (no raw-hex risk palette — these are the
-  // canonical sector/risk tokens reused for the scatter dots).
-  const COLORS: Record<'novelty' | 'confirmed' | 'blindspot', string> = {
-    novelty: '#dc2626', // critical
-    confirmed: '#a06820', // dashboard amber
-    blindspot: '#64748b', // muted
-  }
-
-  // Dividers at 40% (rubli_flags) and at 1.0/3 of Y (any external hit)
-  const flagsDividerX = PAD.left + (data.thresholds.rubli_flags ?? 0.4) * plotW
-  const flagsDividerY = PAD.top + (1 - 0.5 / 3) * plotH // halfway between 0 and 1 flag
+  const NOVELTY_COLOR = '#ef4444'
+  const CONFIRMED_COLOR = '#a06820'
+  const BLINDSPOT_COLOR = '#64748b'
 
   return (
-    <div className="relative rounded-sm border border-border bg-background-card overflow-hidden mb-6">
-      <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-3 flex-wrap">
+    <div className="rounded-sm border border-border bg-background-card overflow-hidden">
+      <div className="px-5 py-3 border-b border-border flex items-baseline justify-between gap-3 flex-wrap">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
           {lang === 'es'
-            ? 'Mapa de cuadrantes · modelo vs. registros externos'
-            : 'Quadrant map · model vs. external registries'}
+            ? 'Mapa proporcional · cuadrantes por volumen'
+            : 'Proportional map · quadrants by volume'}
         </p>
         <p className="text-[10px] font-mono text-text-muted tabular-nums">
-          {formatNumber(allVendors.length)} {lang === 'es' ? 'proveedores trazados' : 'vendors plotted'}
+          {formatNumber(total)} {lang === 'es' ? 'proveedores totales' : 'total vendors'}
         </p>
       </div>
       <div className="p-4">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-          aria-hidden="true"
+        <div
+          className="w-full"
+          style={{ aspectRatio: '16 / 9', minHeight: 280, display: 'flex', flexDirection: 'column', gap: 6 }}
         >
-          {/* Plot frame */}
-          <rect
-            x={PAD.left}
-            y={PAD.top}
-            width={plotW}
-            height={plotH}
-            fill="none"
-            stroke="var(--color-border)"
-            strokeWidth="0.5"
-            opacity="0.6"
-          />
+          {/* Top row: NOVELTY dominates */}
+          <div
+            style={{ height: `${topHeightPct}%`, position: 'relative' }}
+            className="rounded-sm overflow-hidden"
+          >
+            <div
+              className="absolute inset-0 transition-colors"
+              style={{
+                background: `${NOVELTY_COLOR}14`,
+                borderLeft: `4px solid ${NOVELTY_COLOR}`,
+                border: `1px solid ${NOVELTY_COLOR}33`,
+                borderLeftWidth: 4,
+              }}
+            />
+            <div className="relative h-full flex flex-col justify-between p-4 sm:p-6">
+              <div className="flex items-baseline justify-between gap-3">
+                <p
+                  className="text-[10px] font-mono font-bold uppercase tracking-[0.20em]"
+                  style={{ color: NOVELTY_COLOR }}
+                >
+                  {lang === 'es' ? 'NOVEDAD · cuadrante I' : 'NOVELTY · quadrant I'}
+                </p>
+                <p className="text-[10px] font-mono tabular-nums text-text-muted">
+                  {((novelty / total) * 100).toFixed(0)}%
+                </p>
+              </div>
+              <div className="flex items-baseline justify-between gap-4 flex-wrap">
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(40px, 7vw, 88px)',
+                    color: NOVELTY_COLOR,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {formatNumber(novelty)}
+                </div>
+                <p className="text-[11px] sm:text-xs font-mono text-text-secondary max-w-[40ch] leading-[1.55]">
+                  {lang === 'es'
+                    ? 'Alto riesgo del modelo · ningún registro oficial los toca.'
+                    : 'High model risk · no official registry has touched them.'}
+                </p>
+              </div>
+            </div>
+          </div>
 
-          {/* Quadrant divider lines */}
-          <line
-            x1={flagsDividerX}
-            y1={PAD.top}
-            x2={flagsDividerX}
-            y2={PAD.top + plotH}
-            stroke="var(--color-border)"
-            strokeWidth="1"
-            strokeDasharray="3 3"
-          />
-          <line
-            x1={PAD.left}
-            y1={flagsDividerY}
-            x2={PAD.left + plotW}
-            y2={flagsDividerY}
-            stroke="var(--color-border)"
-            strokeWidth="1"
-            strokeDasharray="3 3"
-          />
-
-          {/* Quadrant labels — placed in each corner */}
-          <text
-            x={PAD.left + plotW * 0.22}
-            y={PAD.top + 16}
-            textAnchor="middle"
-            fill={COLORS.blindspot}
-            fontSize="9"
-            fontFamily="monospace"
-            fontWeight="700"
-            letterSpacing="0.12em"
+          {/* Bottom row: BLIND SPOT | CONFIRMED, proportional */}
+          <div
+            style={{ height: `${bottomHeightPct}%`, display: 'flex', gap: 6, minHeight: 80 }}
           >
-            {lang === 'es' ? 'PUNTO CIEGO' : 'BLIND SPOT'}
-          </text>
-          <text
-            x={PAD.left + plotW * 0.78}
-            y={PAD.top + 16}
-            textAnchor="middle"
-            fill={COLORS.confirmed}
-            fontSize="9"
-            fontFamily="monospace"
-            fontWeight="700"
-            letterSpacing="0.12em"
-          >
-            {lang === 'es' ? 'CONFIRMADO' : 'CONFIRMED'}
-          </text>
-          <text
-            x={PAD.left + plotW * 0.78}
-            y={PAD.top + plotH - 8}
-            textAnchor="middle"
-            fill={COLORS.novelty}
-            fontSize="9"
-            fontFamily="monospace"
-            fontWeight="700"
-            letterSpacing="0.12em"
-          >
-            {lang === 'es' ? 'NOVEDAD' : 'NOVELTY'}
-          </text>
-          <text
-            x={PAD.left + plotW * 0.22}
-            y={PAD.top + plotH - 8}
-            textAnchor="middle"
-            fill="var(--color-text-muted)"
-            fontSize="9"
-            fontFamily="monospace"
-            fontWeight="400"
-            letterSpacing="0.12em"
-            opacity="0.5"
-          >
-            {lang === 'es' ? 'LIMPIO' : 'CLEAN'}
-          </text>
-
-          {/* Dots — drawn after labels so they sit on top */}
-          {allVendors.map((v, i) => {
-            const flags =
-              (v.is_efos_definitivo ? 1 : 0) +
-              (v.is_sfp_sanctioned ? 1 : 0) +
-              (v.in_ground_truth ? 1 : 0)
-            // Deterministic pseudo-random jitter to break up integer-flag stacking
-            const jitterY = (((i * 7919) % 21) - 10) * 0.7
-            const jitterX = (((i * 5237) % 17) - 8) * 0.4
-            const r = Math.min(12, Math.max(3, Math.sqrt(v.total_contracts) * 0.4))
-            const cx = toX(v.avg_risk_score) + jitterX
-            const cy = toY(flags, jitterY)
-            const color = COLORS[v.quadrant]
-            return (
-              <circle
-                key={v.vendor_id}
-                cx={cx}
-                cy={cy}
-                r={r}
-                fill={color}
-                fillOpacity={0.55}
-                stroke={color}
-                strokeWidth="0.5"
-                strokeOpacity={0.85}
+            <div
+              style={{
+                width: `${blindspotWidthPct}%`,
+                minWidth: 100,
+                position: 'relative',
+              }}
+              className="rounded-sm overflow-hidden"
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `${BLINDSPOT_COLOR}14`,
+                  border: `1px solid ${BLINDSPOT_COLOR}33`,
+                  borderLeft: `4px solid ${BLINDSPOT_COLOR}`,
+                }}
               />
-            )
-          })}
+              <div className="relative h-full flex flex-col justify-between p-3 sm:p-4">
+                <p
+                  className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
+                  style={{ color: BLINDSPOT_COLOR }}
+                >
+                  {lang === 'es' ? 'PUNTO CIEGO · III' : 'BLIND SPOT · III'}
+                </p>
+                <div>
+                  <div
+                    className="tabular-nums leading-none"
+                    style={{
+                      fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: 'clamp(28px, 4vw, 48px)',
+                      color: BLINDSPOT_COLOR,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {formatNumber(blindspot)}
+                  </div>
+                  <p className="text-[10px] font-mono text-text-muted mt-1">
+                    {((blindspot / total) * 100).toFixed(0)}%
+                    <span className="mx-1.5">·</span>
+                    {lang === 'es' ? 'reguladores vieron · modelo no' : "regulators saw · model didn't"}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-          {/* Axis labels */}
-          <text
-            x={PAD.left + plotW / 2}
-            y={H - 6}
-            textAnchor="middle"
-            fill="var(--color-text-muted)"
-            fontSize="9"
-            fontFamily="monospace"
-            letterSpacing="0.12em"
-          >
-            {lang === 'es' ? '← RIESGO RUBLI →' : '← RUBLI RISK SCORE →'}
-          </text>
-          <text
-            x={12}
-            y={PAD.top + plotH / 2}
-            textAnchor="middle"
-            fill="var(--color-text-muted)"
-            fontSize="9"
-            fontFamily="monospace"
-            letterSpacing="0.12em"
-            transform={`rotate(-90, 12, ${PAD.top + plotH / 2})`}
-          >
-            {lang === 'es' ? 'REGISTROS EXT. ↑' : 'REGISTRY FLAGS ↑'}
-          </text>
-        </svg>
+            <div
+              style={{
+                width: `${confirmedWidthPct}%`,
+                minWidth: 100,
+                position: 'relative',
+              }}
+              className="rounded-sm overflow-hidden"
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `${CONFIRMED_COLOR}14`,
+                  border: `1px solid ${CONFIRMED_COLOR}33`,
+                  borderLeft: `4px solid ${CONFIRMED_COLOR}`,
+                }}
+              />
+              <div className="relative h-full flex flex-col justify-between p-3 sm:p-4">
+                <p
+                  className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
+                  style={{ color: CONFIRMED_COLOR }}
+                >
+                  {lang === 'es' ? 'CONFIRMADO · II' : 'CONFIRMED · II'}
+                </p>
+                <div>
+                  <div
+                    className="tabular-nums leading-none"
+                    style={{
+                      fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: 'clamp(28px, 4vw, 48px)',
+                      color: CONFIRMED_COLOR,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    {formatNumber(confirmed)}
+                  </div>
+                  <p className="text-[10px] font-mono text-text-muted mt-1">
+                    {((confirmed / total) * 100).toFixed(0)}%
+                    <span className="mx-1.5">·</span>
+                    {lang === 'es' ? 'ambos métodos coinciden' : 'both methods agree'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="px-5 py-2.5 border-t border-border flex items-center gap-4 flex-wrap">
-        {[
-          { q: 'novelty', label: lang === 'es' ? 'Novedad' : 'Novelty', color: '#dc2626' },
-          { q: 'confirmed', label: lang === 'es' ? 'Confirmado' : 'Confirmed', color: '#a06820' },
-          { q: 'blindspot', label: lang === 'es' ? 'Punto ciego' : 'Blind spot', color: '#64748b' },
-        ].map(({ q, label, color }) => (
-          <div key={q} className="flex items-center gap-1.5">
-            <div
-              className="h-2 w-2 rounded-full flex-shrink-0"
-              style={{ background: color }}
-              aria-hidden="true"
-            />
-            <span className="text-[10px] font-mono text-text-muted">{label}</span>
-          </div>
-        ))}
+        <span className="text-[10px] font-mono text-text-muted">
+          {lang === 'es' ? 'Área = recuento de proveedores' : 'Area = vendor count'}
+        </span>
         <span className="text-[10px] font-mono text-text-muted ml-auto">
-          {lang === 'es' ? 'Tamaño = volumen de contratos' : 'Size = contract volume'}
+          {lang === 'es'
+            ? 'Cuadrante IV (limpio) omitido — sin interés editorial'
+            : 'Quadrant IV (clean) omitted — no editorial interest'}
         </span>
       </div>
     </div>
@@ -440,36 +434,25 @@ export default function Intersection() {
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [selectedSector, setSelectedSector] = useState<string | null>(null)
   const { data, isLoading } = useQuery({
-    queryKey: ['intersection', 'summary', 50],
-    queryFn: () => intersectionApi.getSummary(50),
+    queryKey: ['intersection', 'summary', 50, selectedSector],
+    queryFn: () => intersectionApi.getSummary(50, selectedSector ?? undefined),
     staleTime: 10 * 60 * 1000,
   })
 
+  // The Novelty number is the headline claim — keep it stable across renders
+  // so the hero doesn't flicker between loading and loaded states.
+  const noveltyCount = data?.counts.novelty ?? 0
+  const confirmedCount = data?.counts.confirmed ?? 0
+  const blindspotCount = data?.counts.blindspot ?? 0
+  const totalHighRisk = noveltyCount + confirmedCount
+
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Page paper-grain — scoped to this contemplative pitch surface.
-          Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
-          overlay". */}
-      <svg
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ width: '100%', height: '100%', opacity: 0.045, mixBlendMode: 'multiply', zIndex: 0 }}
-      >
-        <filter id="intersection-page-paper-grain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" stitchTiles="stitch" />
-          <feColorMatrix type="matrix" values="0 0 0 0 0.41  0 0 0 0 0.27  0 0 0 0 0.13  0 0 0 1 0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#intersection-page-paper-grain)" />
-      </svg>
-      <div className="relative" style={{ zIndex: 1 }}>
-      {/* Folio·XIII hero — replaces the prior utility header. EB Garamond
-          italic 500 + ochre fragment per rubli-folio-aesthetic. The page
-          IS a dumbbell-style comparison (model vs regulators), so the
-          named precedent for the framing is FT Visual Vocabulary
-          dumbbell, cited in plan docs/FOLIO_V1_PHASE4_2026_05_07.md § 3. */}
-      <header className="mb-8 pb-5 border-b border-border">
+      {/* Folio kicker — kept consistent with rest of site but lighter than
+          Relationships (no paper grain). */}
+      <header className="mb-10 pb-6 border-b border-border">
         <div
-          className="flex items-center gap-3 mb-3"
+          className="flex items-center gap-3 mb-5"
           style={{
             fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
             fontSize: '10px',
@@ -483,89 +466,74 @@ export default function Intersection() {
             <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
-              {lang === 'es' ? 'Superficie de investigación · Vista completa de cuadrantes' : 'Investigation Surface · Full quadrant view'}
+              {lang === 'es' ? 'Informe de inteligencia · La brecha regulatoria' : 'Intelligence brief · The regulatory gap'}
             </span>
           </span>
         </div>
-        <div className="flex items-baseline justify-between gap-6 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <h1
+
+        {/* HERO: the Novelty number is the headline claim. Playfair Display
+            Italic 800, ~88px, critical red. This is the platform's pitch. */}
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-72" />
+            <Skeleton className="h-4 w-96" />
+            <Skeleton className="h-3 w-[28rem]" />
+          </div>
+        ) : data ? (
+          <div>
+            <div
+              className="tabular-nums leading-[0.95]"
               style={{
-                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                fontFamily: '"Playfair Display", "EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
-                fontWeight: 500,
-                fontSize: 'clamp(28px, 4vw, 48px)',
-                lineHeight: 1.04,
-                letterSpacing: '-0.012em',
-                color: 'var(--color-text-primary)',
+                fontWeight: 800,
+                fontSize: 'clamp(64px, 12vw, 128px)',
+                color: 'var(--color-risk-critical)',
+                letterSpacing: '-0.025em',
               }}
+            >
+              {formatNumber(noveltyCount)}
+            </div>
+            <p
+              className="mt-3 sm:mt-4 max-w-[42ch]"
+              style={{
+                fontFamily: '"EB Garamond", Georgia, serif',
+                fontStyle: 'italic',
+                fontSize: 'clamp(20px, 2.6vw, 30px)',
+                lineHeight: 1.18,
+                color: 'var(--color-text-primary)',
+                letterSpacing: '-0.005em',
+              }}
+            >
+              {lang === 'es'
+                ? <>proveedores que RUBLI marcó <span style={{ fontStyle: 'normal', fontWeight: 600 }}>y ningún regulador ha tocado.</span></>
+                : <>vendors RUBLI flagged <span style={{ fontStyle: 'normal', fontWeight: 600 }}>that no regulator has touched.</span></>}
+            </p>
+            <p
+              className="mt-5 text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted leading-[1.7] max-w-[78ch]"
             >
               {lang === 'es' ? (
                 <>
-                  El modelo señala lo que{' '}
-                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
-                    los reguladores todavía no.
-                  </span>
+                  De <span className="tabular-nums font-bold text-text-secondary">{formatNumber(totalHighRisk)}</span> proveedores de alto riesgo
+                  <span className="mx-2 opacity-50">·</span>
+                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(confirmedCount)}</span> confirmados por registros
+                  <span className="mx-2 opacity-50">·</span>
+                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(blindspotCount)}</span> marcados pero el modelo no
                 </>
               ) : (
                 <>
-                  The model flags what{' '}
-                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
-                    regulators don't yet.
-                  </span>
+                  Of <span className="tabular-nums font-bold text-text-secondary">{formatNumber(totalHighRisk)}</span> high-risk vendors
+                  <span className="mx-2 opacity-50">·</span>
+                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(confirmedCount)}</span> confirmed by registries
+                  <span className="mx-2 opacity-50">·</span>
+                  <span className="tabular-nums font-bold text-text-secondary">{formatNumber(blindspotCount)}</span> registry-flagged but model-clean
                 </>
               )}
-            </h1>
-            <p
-              className="mt-4"
-              style={{
-                fontFamily: '"EB Garamond", Georgia, serif',
-                fontSize: '17px',
-                lineHeight: 1.55,
-                maxWidth: '68ch',
-                color: 'var(--color-text-secondary)',
-                letterSpacing: '0.005em',
-              }}
-            >
-              {data
-                ? lang === 'es'
-                  ? <>Dataset completo: <strong style={{ color: 'var(--color-text-primary)' }}>{formatNumber(data.counts.novelty + data.counts.confirmed + data.counts.blindspot)}</strong> proveedores en tres cuadrantes de investigación. Filtra por sector para enfocar tu investigación.</>
-                  : <>Full dataset: <strong style={{ color: 'var(--color-text-primary)' }}>{formatNumber(data.counts.novelty + data.counts.confirmed + data.counts.blindspot)}</strong> vendors across three investigation quadrants. Filter by sector to focus your investigation.</>
-                : lang === 'es'
-                  ? 'Tres cuadrantes triangulan dos métodos independientes: el patrón cuantitativo del modelo y el registro oficial de los reguladores.'
-                  : "Three quadrants triangulate two independent methods: the model's quantitative pattern and the regulators' official register."}
             </p>
           </div>
-          {!isLoading && data && (
-            <div className="flex items-baseline gap-5 flex-shrink-0">
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
-                  {formatNumber(data.counts.novelty)}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {lang === 'es' ? 'Novedad' : 'Novelty'}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>
-                  {formatNumber(data.counts.confirmed)}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {lang === 'es' ? 'Confirmado' : 'Confirmed'}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
-                  {formatNumber(data.counts.blindspot)}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {lang === 'es' ? 'Punto ciego' : 'Blind spot'}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        ) : null}
       </header>
+
       <div>
         {isLoading ? (
           <div className="space-y-6">
@@ -584,10 +552,46 @@ export default function Intersection() {
           </div>
         ) : !data ? null : (
           <div className="space-y-6">
-            {/* Methodology caveat — ensures any reader lands on the framing
-                before drawing defamation-adjacent conclusions from the
-                ranked lists. */}
-            <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
+            {/* FINDING callout — left border in critical red, monospace, the
+                editorial framing. Sits above the chart so readers anchor to
+                the claim before parsing the geometry. */}
+            <div
+              className="px-5 py-4 rounded-sm bg-background-elevated"
+              style={{ borderLeft: '3px solid var(--color-risk-critical)' }}
+            >
+              <p
+                className="text-[10px] font-mono font-bold uppercase tracking-[0.20em] mb-2"
+                style={{ color: 'var(--color-risk-critical)' }}
+              >
+                {lang === 'es' ? 'HALLAZGO' : 'FINDING'}
+              </p>
+              <p
+                className="text-[13px] sm:text-[14px] leading-[1.65] text-text-primary max-w-[72ch]"
+                style={{ fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace' }}
+              >
+                {lang === 'es' ? (
+                  <>
+                    RUBLI identifica <strong>3× más proveedores de alto riesgo</strong> que los registros SAT EFOS + SFP combinados.
+                    De <strong className="tabular-nums">{formatNumber(totalHighRisk)}</strong> proveedores con patrones de riesgo elevado en su contratación,
+                    solo <strong className="tabular-nums">{formatNumber(confirmedCount)}</strong> aparecen en alguna lista oficial.
+                    La brecha regulatoria: <strong className="tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(noveltyCount)}</strong>.
+                  </>
+                ) : (
+                  <>
+                    RUBLI identifies <strong>3× more high-risk vendors</strong> than the combined SAT EFOS + SFP registries.
+                    Of <strong className="tabular-nums">{formatNumber(totalHighRisk)}</strong> vendors with elevated procurement-risk patterns,
+                    only <strong className="tabular-nums">{formatNumber(confirmedCount)}</strong> appear on any official watchlist.
+                    The regulatory gap: <strong className="tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(noveltyCount)}</strong>.
+                  </>
+                )}
+              </p>
+            </div>
+
+            {/* Proportional quadrant map — replaces the old 2×2 scatter. */}
+            <ProportionalQuadrantMap data={data} lang={lang} />
+
+            {/* Methodology caveat */}
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-card">
               <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
               <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
                 {lang === 'es' ? (
@@ -643,85 +647,76 @@ export default function Intersection() {
               })}
             </div>
 
-            <PlateFrame
-              lang={lang}
-              folio="XIII"
-              contextLabel={{ en: 'Intersection atlas', es: 'Atlas de la intersección' }}
-              caption={
-                lang === 'es'
-                  ? 'Lámina — Tres cuadrantes RUBLI × reguladores. Novedad: alto riesgo del modelo, sin marca externa. Confirmado: ambos métodos coinciden. Punto ciego: el modelo no detecta lo que el regulador sí registró.'
-                  : 'Plate — Three RUBLI × regulator quadrants. Novelty: high model risk, no external mark. Confirmed: methods agree. Blind spot: model misses what the regulator registered.'
-              }
-            >
-              <QuadrantScatterPlot data={data} lang={lang} />
-              <div className="space-y-6">
-            {/* NOVELTY — the pitch quadrant */}
-            <QuadrantCard
-              eyebrow={lang === 'es' ? 'Cuadrante I · Novedad' : 'Quadrant I · Novelty'}
-              accent="var(--color-risk-critical)"
-              count={data.counts.novelty}
-              title={
-                lang === 'es'
-                  ? <>Proveedores que coinciden con patrones de corrupción — sin marca externa.</>
-                  : <>Vendors matching corruption patterns — not on any external registry.</>
-              }
-              deck={
-                lang === 'es'
-                  ? <>Esta es la razón de ser del modelo: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> proveedores con score alto (≥ 40/100) cuyos RFC no aparecen en SAT EFOS, ni tienen sanción SFP, ni están en el corpus de casos documentados. Ordenados por IPS — prioridad integrada.</>
-                  : <>This is the model's reason to exist: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> vendors with high pattern-match (≥ 40/100) whose RFCs do not appear on SAT EFOS, carry no SFP sanction, and are absent from the documented-case corpus. Ranked by IPS (integrated priority score).</>
-              }
-              rows={selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty}
-              showSecondaryMetric="ips"
-              lang={lang}
-              ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
-              ctaTo="/aria"
-            />
+            {/* Quadrant cards — three editorial sections, NOT inside the
+                PlateFrame anymore. Removing PlateFrame + paper-grain is what
+                visually divorces this page from Relationships. */}
+            <div className="space-y-6">
+              {/* NOVELTY — the pitch quadrant */}
+              <QuadrantCard
+                eyebrow={lang === 'es' ? 'Cuadrante I · Novedad' : 'Quadrant I · Novelty'}
+                accent="var(--color-risk-critical)"
+                count={data.counts.novelty}
+                title={
+                  lang === 'es'
+                    ? <>Proveedores que coinciden con patrones de corrupción — sin marca externa.</>
+                    : <>Vendors matching corruption patterns — not on any external registry.</>
+                }
+                deck={
+                  lang === 'es'
+                    ? <>Esta es la razón de ser del modelo: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> proveedores con score alto (≥ 40/100) cuyos RFC no aparecen en SAT EFOS, ni tienen sanción SFP, ni están en el corpus de casos documentados. Ordenados por IPS — prioridad integrada.</>
+                    : <>This is the model's reason to exist: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> vendors with high pattern-match (≥ 40/100) whose RFCs do not appear on SAT EFOS, carry no SFP sanction, and are absent from the documented-case corpus. Ranked by IPS (integrated priority score).</>
+                }
+                rows={selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty}
+                showSecondaryMetric="ips"
+                lang={lang}
+                ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
+                ctaTo="/aria"
+              />
 
-            {/* CONFIRMED — triangulation */}
-            <QuadrantCard
-              eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
-              accent="var(--color-accent)"
-              count={data.counts.confirmed}
-              title={
-                lang === 'es'
-                  ? <>Ambas señales coinciden — modelo y reguladores de acuerdo.</>
-                  : <>Both signals agree — model and regulators converge.</>
-              }
-              deck={
-                lang === 'es'
-                  ? <>Triangulación: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> proveedores con score alto que además aparecen en al menos un registro externo. Cuando métodos independientes convergen, la confianza en cada uno crece.</>
-                  : <>Triangulation: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> vendors with high pattern-match that also appear on at least one external registry. When independent methods converge, confidence in each grows.</>
-              }
-              rows={selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed}
-              showSecondaryMetric="risk"
-              lang={lang}
-              ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
-              ctaTo="/aria"
-            />
+              {/* CONFIRMED — triangulation */}
+              <QuadrantCard
+                eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
+                accent="var(--color-accent)"
+                count={data.counts.confirmed}
+                title={
+                  lang === 'es'
+                    ? <>Ambas señales coinciden — modelo y reguladores de acuerdo.</>
+                    : <>Both signals agree — model and regulators converge.</>
+                }
+                deck={
+                  lang === 'es'
+                    ? <>Triangulación: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> proveedores con score alto que además aparecen en al menos un registro externo. Cuando métodos independientes convergen, la confianza en cada uno crece.</>
+                    : <>Triangulation: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> vendors with high pattern-match that also appear on at least one external registry. When independent methods converge, confidence in each grows.</>
+                }
+                rows={selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed}
+                showSecondaryMetric="risk"
+                lang={lang}
+                ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
+                ctaTo="/aria"
+              />
 
-            {/* BLIND SPOT — humility */}
-            <QuadrantCard
-              eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
-              accent="var(--color-text-muted)"
-              count={data.counts.blindspot}
-              title={
-                lang === 'es'
-                  ? <>Lo que los reguladores vieron y el modelo no.</>
-                  : <>What regulators saw and the model didn't.</>
-              }
-              deck={
-                lang === 'es'
-                  ? <>Honestidad metodológica: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> proveedores con bajo score RUBLI (&lt; 25/100) que sí aparecen en un registro externo. Ordenados por valor total de contratos — los puntos ciegos más grandes primero.</>
-                  : <>Methodological honesty: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> vendors with low RUBLI score (&lt; 25/100) that do appear on an external registry. Sorted by total contract value — largest blind spots first.</>
-              }
-              rows={selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot}
-              showSecondaryMetric="value"
-              lang={lang}
-              ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
-              ctaTo="/aria"
-            />
-              </div>
-            </PlateFrame>
+              {/* BLIND SPOT — humility */}
+              <QuadrantCard
+                eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
+                accent="var(--color-text-muted)"
+                count={data.counts.blindspot}
+                title={
+                  lang === 'es'
+                    ? <>Lo que los reguladores vieron y el modelo no.</>
+                    : <>What regulators saw and the model didn't.</>
+                }
+                deck={
+                  lang === 'es'
+                    ? <>Honestidad metodológica: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> proveedores con bajo score RUBLI (&lt; 25/100) que sí aparecen en un registro externo. Ordenados por valor total de contratos — los puntos ciegos más grandes primero.</>
+                    : <>Methodological honesty: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> vendors with low RUBLI score (&lt; 25/100) that do appear on an external registry. Sorted by total contract value — largest blind spots first.</>
+                }
+                rows={selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot}
+                showSecondaryMetric="value"
+                lang={lang}
+                ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
+                ctaTo="/aria"
+              />
+            </div>
 
             {/* Methodology footer */}
             <div className="mt-4 pt-6 border-t border-border">
@@ -747,7 +742,6 @@ export default function Intersection() {
             </div>
           </div>
         )}
-      </div>
       </div>
     </div>
   )

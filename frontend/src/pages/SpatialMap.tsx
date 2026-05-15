@@ -75,7 +75,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
 
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-[1fr_320px]"
+      className="grid grid-cols-1 lg:grid-cols-[1fr_280px]"
       style={{
         height: 'calc(100vh - var(--topbar-h, 64px))',
         background: 'var(--color-background, #faf9f6)',

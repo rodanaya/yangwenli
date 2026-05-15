@@ -3097,9 +3097,11 @@ export interface IntersectionQuadrantPage {
 }
 
 export const intersectionApi = {
-  async getSummary(topN = 10): Promise<IntersectionSummary> {
+  async getSummary(topN = 10, sector?: string): Promise<IntersectionSummary> {
+    const params = new URLSearchParams({ top_n_per_quadrant: String(topN) })
+    if (sector) params.set('sector', sector)
     const { data } = await api.get<IntersectionSummary>(
-      `/intersection/summary?top_n_per_quadrant=${topN}`,
+      `/intersection/summary?${params.toString()}`,
     )
     return data
   },

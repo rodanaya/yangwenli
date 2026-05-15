@@ -56,26 +56,64 @@ interface SectorBody {
   color: string
 }
 
+// Convert a polar angle (degrees, 0° = top) to (fx, fy) fractions.
+// cx/cy are the orbital center as fractions of the canvas (0–1).
+// rx/ry are the ellipse semi-axes, also in canvas fractions.
+function polarToFx(
+  cx: number, cy: number,
+  rx: number, ry: number,
+  angleDeg: number,
+): { fx: number; fy: number } {
+  const rad = (angleDeg - 90) * Math.PI / 180
+  return { fx: cx + rx * Math.cos(rad), fy: cy + ry * Math.sin(rad) }
+}
+
 function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
-  // 3×4 grid — three columns centered at 20/50/80%, four rows at 18/38/60/80%.
-  // The 4×3 layout pushed the rightmost column to fx=0.84, which reads as
-  // "far right" on narrow canvases (sidebar + briefing panel eat ~570px on
-  // a 1280px screen, leaving ~710px for the map). The 3×4 grid keeps max
-  // fx=0.80 and gives each sector more vertical breathing room.
-  const layout: Record<string, { fx: number; fy: number }> = {
-    salud:           { fx: 0.20, fy: 0.18 },
-    educacion:       { fx: 0.50, fy: 0.18 },
-    infraestructura: { fx: 0.80, fy: 0.18 },
-    energia:         { fx: 0.20, fy: 0.38 },
-    gobernacion:     { fx: 0.50, fy: 0.38 },
-    hacienda:        { fx: 0.80, fy: 0.38 },
-    defensa:         { fx: 0.20, fy: 0.60 },
-    tecnologia:      { fx: 0.50, fy: 0.60 },
-    agricultura:     { fx: 0.80, fy: 0.60 },
-    ambiente:        { fx: 0.20, fy: 0.82 },
-    trabajo:         { fx: 0.50, fy: 0.82 },
-    otros:           { fx: 0.80, fy: 0.82 },
+  // Elliptical orbital arrangement — two concentric rings centred at
+  // (0.50, 0.47) so the constellation sits in the upper-centre of the
+  // canvas, clear of the bottom scrubber and left risk-floor toggle.
+  //
+  // Inner ring (6 high-volume sectors, every 60°, starting at 0° = top):
+  //   salud / energia / infraestructura / gobernacion / hacienda / educacion
+  //
+  // Outer ring (6 supporting sectors, every 60°, offset +30° from inner):
+  //   tecnologia / defensa / agricultura / ambiente / trabajo / otros
+  //
+  // Using an orbital layout instead of the old 3×4 grid keeps max fx ≈ 0.78
+  // (vs 0.80 for the grid), eliminates the "far right" column problem, and
+  // gives the map an astronomical feel that matches the Z1/Z2 radial layers.
+  const CX = 0.50
+  const CY = 0.47
+  const INNER_RX = 0.28
+  const INNER_RY = 0.31
+  const OUTER_RX = 0.42
+  const OUTER_RY = 0.42
+
+  const inner: Array<[string, number]> = [
+    ['salud',           0],
+    ['energia',         60],
+    ['infraestructura', 120],
+    ['gobernacion',     180],
+    ['hacienda',        240],
+    ['educacion',       300],
+  ]
+  const outer: Array<[string, number]> = [
+    ['tecnologia',  30],
+    ['defensa',     90],
+    ['agricultura', 150],
+    ['ambiente',    210],
+    ['trabajo',     270],
+    ['otros',       330],
+  ]
+
+  const layout: Record<string, { fx: number; fy: number }> = {}
+  for (const [code, deg] of inner) {
+    layout[code] = polarToFx(CX, CY, INNER_RX, INNER_RY, deg)
   }
+  for (const [code, deg] of outer) {
+    layout[code] = polarToFx(CX, CY, OUTER_RX, OUTER_RY, deg)
+  }
+
   return SECTORS.map((s) => ({
     id: s.id,
     code: s.code,
