@@ -164,7 +164,7 @@
       "mahalanobisNote": "Covariance estimated with Ledoit-Wolf shrinkage for stability in small sectors. P-values computed against chi-squared distribution with 16 degrees of freedom.",
       "logisticTitle": "Per-Sector Logistic Regression",
       "logisticP1": "Optuna-tuned ElasticNet (C=0.2243, l1_ratio=0.7545, 200 trials) trained on ~302K known-bad contracts from 1,422 corruption cases with vendor-stratified 70/30 split (no vendor in both train and test). 12 per-sector sub-models + 1 global fallback capture sector-specific corruption patterns.",
-      "logisticNote": "Train AUC: 0.797, Test AUC: 0.785. ElasticNet mix drives 6 uninformative features to exactly zero while preserving more features than near-pure L1, improving robustness over v0.8.5.",
+      "logisticNote": "Train AUC: 0.797, Test AUC: 0.785. ElasticNet mix drives 6 uninformative features to exactly zero while preserving more features than near-pure L1, improving robustness over v0.6.5.",
       "puTitle": "PU-Learning Correction (Elkan & Noto 2008)",
       "puP1Start": "Since unlabeled contracts are not necessarily clean (some may be corrupt but undetected), we apply a Positive-Unlabeled learning correction: ",
       "puNote": "v0.8.5 estimated c = 0.32 via Elkan & Noto holdout on 13 models (1 global + 12 per-sector). This reflects the heterogeneity of the ground truth (861 vendors with diverse patterns). With c=0.32, scores are rescaled by ~3.1x and capped at 1.0. IMPORTANT: The SCAR assumption is structurally violated — known cases are high-profile scandals, not a random sample of all corruption.",
