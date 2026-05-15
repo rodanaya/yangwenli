@@ -11,6 +11,7 @@ import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { getRiskLevelFromScore, SECTOR_COLORS } from '@/lib/constants'
+import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Hardcoded editorial data per pattern
@@ -241,7 +242,7 @@ export default function PatternDossier() {
   const caseType = CASE_TYPE_BY_PATTERN[codeUpper]
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
       {/* Breadcrumb */}
       <Link
         to="/patterns"
@@ -383,6 +384,11 @@ export default function PatternDossier() {
                       sectorCode={v.primary_sector_name ?? null}
                       ariaTier={v.ips_tier}
                     />
+                    {v.total_value_mxn > 0 && (
+                      <div className="text-[10px] font-mono text-text-muted tabular-nums mt-0.5">
+                        {formatCompactMXN(v.total_value_mxn)} · {v.total_contracts} {isEs ? 'contratos' : 'contracts'}
+                      </div>
+                    )}
                   </div>
 
                   {/* Risk level badge */}

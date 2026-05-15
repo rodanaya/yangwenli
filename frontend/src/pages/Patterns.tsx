@@ -314,7 +314,7 @@ export default function Patterns() {
   const maxT1 = patterns.reduce((m, p) => Math.max(m, p.t1_count ?? 0), 0)
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Editorial folio header */}
       <header className="mb-8">
         <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
@@ -328,7 +328,7 @@ export default function Patterns() {
             ? 'Siete formas en que desaparece el dinero público.'
             : 'Seven ways public money disappears.'}
         </h1>
-        <p className="mt-4 text-sm text-text-secondary leading-relaxed max-w-lg">
+        <p className="mt-4 text-sm text-text-secondary leading-relaxed max-w-2xl">
           {isEs
             ? 'Tipologías de irregularidad detectadas por el motor ARIA en 3.1 millones de contratos federales. Cada patrón es una pregunta de investigación, no una sentencia.'
             : 'Irregularity typologies detected by the ARIA engine across 3.1 million federal contracts. Each pattern is an investigative question, not a verdict.'}
@@ -388,7 +388,7 @@ export default function Patterns() {
       {/* Pattern list */}
       {!isLoading && !isError && (
         <>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {PATTERN_META.map((meta) => (
               <PatternCard
                 key={meta.code}
