@@ -478,7 +478,16 @@ export default function CaseLibrary() {
             </div>
             <div className="flex items-baseline gap-5">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                    color: 'var(--color-text-primary)',
+                  }}
+                >
                   {totalCases}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -486,7 +495,16 @@ export default function CaseLibrary() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#a06820' }}>
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                    color: '#a06820',
+                  }}
+                >
                   {totalLoss > 0 ? formatMXNHero(totalLoss, i18n.language === 'es' ? 'es' : 'en') : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -494,7 +512,16 @@ export default function CaseLibrary() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#22d3ee' }}>
+                <div
+                  className="tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontStyle: 'italic',
+                    fontWeight: 700,
+                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                    color: '#22d3ee',
+                  }}
+                >
                   {prosecutedCount}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
