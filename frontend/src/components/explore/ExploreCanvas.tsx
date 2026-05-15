@@ -950,10 +950,10 @@ function InstitutionBodyVisual({
 
   // Three-tier label strategy:
   //   large  (r ≥ 20): white acronym inside the circle
-  //   medium (r ≥  9): pill chip below the circle (all acronym lengths shown)
-  //   small  (r <  9): no chip; full name surfaces in hover stat line
+  //   medium (r ≥  7): pill chip below the circle (all acronym lengths shown)
+  //   small  (r <  7): no chip; full name surfaces in hover stat line
   const insideLabel = r >= 20
-  const chipLabel   = !insideLabel && r >= 9
+  const chipLabel   = !insideLabel && r >= 7
   const chipW = lbl.length * 5.8 + 10
   const chipH = 14
 
@@ -988,25 +988,24 @@ function InstitutionBodyVisual({
         </text>
       )}
 
-      {/* Medium: risk-tinted pill chip below the bubble for all acronyms */}
+      {/* Medium: pill chip below the bubble — opaque bg for readability */}
       {chipLabel && (
         <>
           <rect
             x={cx - chipW / 2}
-            y={cy + r + 5}
+            y={cy + r + 4}
             width={chipW}
             height={chipH}
             rx={chipH / 2}
-            fill={fill}
-            fillOpacity={0.22}
+            fill="var(--color-background)"
             stroke={fill}
-            strokeWidth={0.5}
-            strokeOpacity={0.7}
+            strokeWidth={1}
+            strokeOpacity={0.9}
             style={{ pointerEvents: 'none' }}
           />
           <text
             x={cx}
-            y={cy + r + 5 + chipH * 0.72}
+            y={cy + r + 4 + chipH * 0.72}
             textAnchor="middle"
             fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
