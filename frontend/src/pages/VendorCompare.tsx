@@ -12,7 +12,6 @@ import {
   EditorialRadarChart,
   type RadarSeries,
 } from '@/components/charts/editorial'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { COMPARE_HEX } from '@/lib/compare-colors'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
@@ -824,16 +823,16 @@ export default function VendorCompare() {
           <ComparisonStatCards vendorA={vendorA} vendorB={vendorB} />
 
           {/* Radar Comparison */}
-          <Card className="mb-8 bg-background/40 border-border">
-            <CardHeader>
-              <CardTitle className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+              <h3 className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}> 
                 {t('radarTitle')}
-              </CardTitle>
+              </h3>
               <p className="text-xs text-text-muted">
                 {t('radarSubtitle')}
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-3 bg-background-card">
               {loadingWfA || loadingWfB ? (
                 <Skeleton className="h-[320px] w-full" />
               ) : radarA.length > 0 && radarB.length > 0 ? (
@@ -861,28 +860,28 @@ export default function VendorCompare() {
                   {t('noRadarData')}
                 </p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Detailed Metric Table */}
-          <Card className="bg-background/40 border-border">
-            <CardHeader>
-              <CardTitle className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+              <h3 className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}> 
                 {t('metricTitle')}
-              </CardTitle>
+              </h3>
               <p className="text-xs text-text-muted">
                 {t('metricSubtitle')}
               </p>
-            </CardHeader>
-            <CardContent>
+            </div>
+            <div className="px-4 py-3 bg-background-card">
               <MetricTable
                 vendorA={vendorA}
                 vendorB={vendorB}
                 aName={toTitleCase(vendorA.name)}
                 bName={toTitleCase(vendorB.name)}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Bottom Verdict Callout */}
           <VerdictCallout vendorA={vendorA} vendorB={vendorB} />

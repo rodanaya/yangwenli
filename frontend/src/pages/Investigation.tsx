@@ -14,7 +14,6 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent } from '@/components/ui/card'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/constants'
@@ -536,12 +535,12 @@ export function Investigation() {
   if (casesError) {
     return (
       <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-6 text-muted-foreground">
+        <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
+          <div className="flex items-center gap-3 p-6 text-muted-foreground bg-background-card">
             <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
             <span>{t('loadingError')}</span>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }
