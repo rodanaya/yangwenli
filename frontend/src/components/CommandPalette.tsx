@@ -4,7 +4,7 @@
  * Section 5 addition: saved searches (localStorage, max 8).
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -51,68 +51,28 @@ interface QuickAction {
   shortcut?: string
 }
 
-const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'dashboard',    label: 'Dashboard',                icon: LayoutDashboard, href: '/',                                  shortcut: 'G D' },
-  { id: 'contracts',    label: 'Contracts',                description: 'Browse 3.1M contracts', icon: FileText,              href: '/contracts',                         shortcut: 'G C' },
-  { id: 'vendors',      label: 'Explore Vendors',          icon: Users,           href: '/explore?tab=vendors',               shortcut: 'G V' },
-  { id: 'institutions', label: 'Explore Institutions',     icon: Building2,       href: '/explore?tab=institutions',          shortcut: 'G I' },
-  { id: 'sectors',      label: 'Sectors Overview',         icon: BarChart3,       href: '/sectors',                          shortcut: 'G S' },
-  { id: 'network',      label: 'Network Graph',            icon: Network,         href: '/network',                          shortcut: 'G N' },
-  { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
-  { id: 'aria',         label: 'ARIA Queue',               description: 'Tier 1 — 299 vendors for immediate review', icon: Zap, href: '/aria', shortcut: 'G Q' },
-  { id: 'administrations', label: 'Administrations',        description: 'Cross-sexenio procurement comparison', icon: GitBranch, href: '/administrations' },
-  { id: 'methodology',  label: 'Risk Methodology',         icon: FlaskConical,    href: '/methodology' },
-  { id: 'model',        label: 'Model Transparency',       icon: Scale,           href: '/model' },
-]
+// Static icon/href/shortcut config — labels are derived inside component via t()
+const QUICK_ACTION_CONFIG = [
+  { id: 'dashboard',    icon: LayoutDashboard, href: '/',                           shortcut: 'G D' },
+  { id: 'contracts',    icon: FileText,         href: '/contracts',                  shortcut: 'G C' },
+  { id: 'vendors',      icon: Users,            href: '/explore?tab=vendors',        shortcut: 'G V' },
+  { id: 'institutions', icon: Building2,        href: '/explore?tab=institutions',   shortcut: 'G I' },
+  { id: 'sectors',      icon: BarChart3,        href: '/sectors',                   shortcut: 'G S' },
+  { id: 'network',      icon: Network,          href: '/network',                   shortcut: 'G N' },
+  { id: 'cases',        icon: BookOpen,         href: '/cases',                     shortcut: 'G L' },
+  { id: 'aria',         icon: Zap,              href: '/aria',                      shortcut: 'G Q' },
+  { id: 'administrations', icon: GitBranch,     href: '/administrations' },
+  { id: 'methodology',  icon: FlaskConical,     href: '/methodology' },
+  { id: 'model',        icon: Scale,            href: '/model' },
+] as const
 
-// Research actions — shown when palette opens with no query
-const RESEARCH_ACTIONS: QuickAction[] = [
-  {
-    id: 'critical-contracts',
-    label: 'Show critical risk contracts',
-    description: 'Contracts with risk score >= 0.60',
-    icon: AlertTriangle,
-    href: '/contracts?risk_level=critical',
-  },
-  {
-    id: 'single-bid-contracts',
-    label: 'Single bid contracts',
-    description: 'Competitive procedures with only 1 bidder',
-    icon: Filter,
-    href: '/contracts?is_single_bid=true',
-  },
-  {
-    id: 'compare-sectors',
-    label: 'Compare sectors',
-    description: 'Risk and spend side-by-side across all 12 sectors',
-    icon: BarChart3,
-    href: '/sectors',
-  },
-  {
-    id: 'top-risk-vendors',
-    label: 'Top risk vendors',
-    description: 'Vendors ranked by average risk score',
-    icon: TrendingUp,
-    href: '/explore?tab=vendors&sort_by=risk_score',
-  },
-  {
-    id: 'imss-vendors',
-    label: 'IMSS vendor investigation',
-    description: 'Vendors contracted by IMSS',
-    icon: Users,
-    href: '/explore?tab=vendors&search=IMSS',
-  },
-]
-
-// Suggested search terms shown in idle state
-const SUGGESTED_SEARCHES = [
-  { label: 'RFC: search by tax ID', query: '' },
-  { label: 'PEMEX', query: 'PEMEX' },
-  { label: 'Segalmex', query: 'Segalmex' },
-  { label: 'IMSS', query: 'IMSS' },
-  { label: 'single bid', query: 'single bid' },
-  { label: 'CFE', query: 'CFE' },
-]
+const RESEARCH_ACTION_CONFIG = [
+  { id: 'critical-contracts', icon: AlertTriangle, href: '/contracts?risk_level=critical' },
+  { id: 'single-bid-contracts', icon: Filter,      href: '/contracts?is_single_bid=true' },
+  { id: 'compare-sectors',    icon: BarChart3,     href: '/sectors' },
+  { id: 'top-risk-vendors',   icon: TrendingUp,    href: '/explore?tab=vendors&sort_by=risk_score' },
+  { id: 'imss-vendors',       icon: Users,         href: '/explore?tab=vendors&search=IMSS' },
+] as const
 
 const SAVED_SEARCHES_KEY = 'rubli_saved_searches'
 
@@ -155,6 +115,27 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
+
+  const QUICK_ACTIONS = useMemo((): QuickAction[] => QUICK_ACTION_CONFIG.map((cfg) => ({
+    ...cfg,
+    label: t(`cmdPalette.action.${cfg.id}.label`, cfg.id),
+    description: t(`cmdPalette.action.${cfg.id}.desc`, ''),
+  })), [t])
+
+  const RESEARCH_ACTIONS = useMemo((): QuickAction[] => RESEARCH_ACTION_CONFIG.map((cfg) => ({
+    ...cfg,
+    label: t(`cmdPalette.action.${cfg.id}.label`, cfg.id),
+    description: t(`cmdPalette.action.${cfg.id}.desc`, ''),
+  })), [t])
+
+  const SUGGESTED_SEARCHES = useMemo(() => [
+    { label: t('cmdPalette.suggested.rfcSearch', 'RFC: search by tax ID'), query: '' },
+    { label: 'PEMEX', query: 'PEMEX' },
+    { label: 'Segalmex', query: 'Segalmex' },
+    { label: 'IMSS', query: 'IMSS' },
+    { label: t('cmdPalette.suggested.singleBid', 'single bid'), query: 'single bid' },
+    { label: 'CFE', query: 'CFE' },
+  ], [t])
   const debouncedQuery = useDebouncedValue(query, 250)
   const { items: savedSearches, save: saveSearch, remove: removeSavedSearch } = useSavedSearches(SAVED_SEARCHES_KEY)
 
@@ -462,10 +443,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
       {/* Footer hint — hidden on mobile to avoid overflow */}
       <div className="hidden md:flex border-t border-border/40 px-3 py-2 items-center gap-3 text-[10px] text-text-muted">
-        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↑↓</kbd> navigate</span>
-        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↵</kbd> select</span>
-        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">Esc</kbd> close</span>
-        <span className="ml-auto">Tip: type an RFC (e.g. <kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">ABC123456789</kbd>) to find a vendor</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↑↓</kbd> {t('cmdPalette.hintNavigate')}</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">↵</kbd> {t('cmdPalette.hintSelect')}</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-background-elevated border border-border/40 font-mono">Esc</kbd> {t('cmdPalette.hintClose')}</span>
+        <span className="ml-auto">{t('cmdPalette.rfcTip')}</span>
       </div>
     </CommandDialog>
   )

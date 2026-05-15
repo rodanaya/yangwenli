@@ -274,7 +274,77 @@
     "contractsCount_other": "{{count}} contracts",
     "applySavedSearch": "Apply saved search: {{label}}",
     "removeSavedSearch": "Remove saved search: {{label}}",
-    "saveCurrentSearch": "Save search “{{query}}”"
+    "saveCurrentSearch": "Save search “{{query}}”",
+    "action": {
+      "dashboard": {
+        "label": "Dashboard",
+        "desc": ""
+      },
+      "contracts": {
+        "label": "Contracts",
+        "desc": "Browse 3.1M contracts"
+      },
+      "vendors": {
+        "label": "Explore Vendors",
+        "desc": ""
+      },
+      "institutions": {
+        "label": "Explore Institutions",
+        "desc": ""
+      },
+      "sectors": {
+        "label": "Sectors Overview",
+        "desc": ""
+      },
+      "network": {
+        "label": "Network Graph",
+        "desc": ""
+      },
+      "cases": {
+        "label": "Case Library",
+        "desc": ""
+      },
+      "aria": {
+        "label": "ARIA Queue",
+        "desc": "Tier 1 — 299 vendors for immediate review"
+      },
+      "administrations": {
+        "label": "Administrations",
+        "desc": "Cross-sexenio procurement comparison"
+      },
+      "methodology": {
+        "label": "Risk Methodology",
+        "desc": ""
+      },
+      "model": {
+        "label": "Model Transparency",
+        "desc": ""
+      },
+      "critical-contracts": {
+        "label": "Show critical risk contracts",
+        "desc": "Contracts with risk score ≥ 0.60"
+      },
+      "single-bid-contracts": {
+        "label": "Single bid contracts",
+        "desc": "Competitive procedures with only 1 bidder"
+      },
+      "compare-sectors": {
+        "label": "Compare sectors",
+        "desc": "Risk and spend side-by-side across all 12 sectors"
+      },
+      "top-risk-vendors": {
+        "label": "Top risk vendors",
+        "desc": "Vendors ranked by average risk indicator"
+      },
+      "imss-vendors": {
+        "label": "IMSS vendor investigation",
+        "desc": "Vendors contracted by IMSS"
+      }
+    },
+    "suggested": {
+      "rfcSearch": "RFC: search by tax ID",
+      "singleBid": "single bid"
+    }
   },
   "contractDetail": {
     "procurement": "Procurement",

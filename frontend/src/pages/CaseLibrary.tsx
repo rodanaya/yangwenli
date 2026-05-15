@@ -468,7 +468,9 @@ export default function CaseLibrary() {
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {/* ES: formatMXNHero already returns "X MDP" / "X billones" — don't double-tag with MXN */}
-                {i18n.language === 'es'
+                {!stats
+                  ? <span className="opacity-40">{yearSpan} · {i18n.language === 'es' ? 'cargando…' : 'loading…'}</span>
+                  : i18n.language === 'es'
                   ? <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos sin enjuiciar · {yearSpan} · {formatMXNHero(totalLoss, 'es')} documentados</>
                   : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss, 'en')} MXN documented</>
                 }

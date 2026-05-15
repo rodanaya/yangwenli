@@ -1132,14 +1132,13 @@ export default function Journalists() {
   // suppress unused-var: kept for narrative parity with previous version
   void lead
 
-  // Counts across ALL investigations (not just dossier) so featured stories
-  // are reflected in filter badge numbers. "Monopoly 2" is accurate even when
-  // both monopoly stories live in the promoted tier.
+  // Count within dossier only — promoted/featured stories are shown above the
+  // filter strip so their count would mislead (badge shows 10, grid shows 7).
   const counts = useMemo<Record<FilterKey, number>>(() => {
     const base = (pred: (i: Investigation) => boolean) =>
-      INVESTIGATIONS.filter(pred).length
+      dossier.filter(pred).length
     return {
-      all: INVESTIGATIONS.length,
+      all: dossier.length,
       ghost_company: base((i) => i.type === 'ghost_company'),
       monopoly: base((i) => i.type === 'monopoly'),
       overpricing: base((i) => i.type === 'overpricing'),
@@ -1150,7 +1149,7 @@ export default function Journalists() {
       era_amlo: base((i) => i.era === 'amlo'),
       era_cross: base((i) => i.era === 'cross'),
     }
-  }, [])
+  }, [dossier])
 
   const filtered = useMemo(() => {
     switch (active) {
@@ -1197,10 +1196,27 @@ export default function Journalists() {
     return filtered.filter((i) => lensFilteredSlugs.has(i.slug))
   }, [filtered, lensFilteredSlugs])
 
-  // When a filter yields an empty dossier grid, this tells us how many
-  // matching stories are promoted (featured/editor's picks) — used in the
-  // empty state message so users know the stories exist above ↑
-  const promotedMatchCount = active === 'all' ? 0 : counts[active] - dossierFiltered.length
+  // When a filter yields an empty dossier grid, tell users how many matching
+  // stories are in the promoted (featured/editor's picks) tier above ↑
+  const promoted = useMemo(
+    () => INVESTIGATIONS.filter((i) => tierTwoSlugSet.has(i.slug)),
+    [tierTwoSlugSet],
+  )
+  const promotedMatchCount = useMemo(() => {
+    if (active === 'all') return 0
+    return promoted.filter((i) => {
+      switch (active) {
+        case 'ghost_company': return i.type === 'ghost_company'
+        case 'monopoly': return i.type === 'monopoly'
+        case 'overpricing': return i.type === 'overpricing'
+        case 'procurement_fraud': return i.type === 'procurement_fraud' || i.type === 'embezzlement'
+        case 'era_pena': return i.era === 'pena'
+        case 'era_amlo': return i.era === 'amlo'
+        case 'era_cross': return i.era === 'cross'
+        default: return false
+      }
+    }).length
+  }, [active, promoted])
 
   // Summary stats for the masthead
   const totalCount = INVESTIGATIONS.length

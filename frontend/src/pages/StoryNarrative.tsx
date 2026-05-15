@@ -1239,6 +1239,11 @@ const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: 
 // Hero
 // ---------------------------------------------------------------------------
 
+const BYLINE_ES: Record<string, string> = {
+  'RUBLI Data Analysis Unit': 'Unidad de Análisis de Datos de RUBLI',
+  'RUBLI Investigative Data Unit': 'Unidad Investigativa de RUBLI',
+}
+
 function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: string }) {
   const { t, i18n } = useTranslation('common')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
@@ -1319,7 +1324,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           animate="animate"
           className="flex flex-wrap items-center gap-3 text-sm text-text-muted mb-10"
         >
-          <span>{story.byline}</span>
+          <span>{lang === 'es' ? (BYLINE_ES[story.byline] ?? story.byline) : story.byline}</span>
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />

@@ -283,7 +283,77 @@
     "contractsCount_other": "{{count}} contratos",
     "applySavedSearch": "Aplicar búsqueda guardada: {{label}}",
     "removeSavedSearch": "Eliminar búsqueda guardada: {{label}}",
-    "saveCurrentSearch": "Guardar búsqueda “{{query}}”"
+    "saveCurrentSearch": "Guardar búsqueda “{{query}}”",
+    "action": {
+      "dashboard": {
+        "label": "Panel",
+        "desc": ""
+      },
+      "contracts": {
+        "label": "Contratos",
+        "desc": "Explorar 3.1M contratos"
+      },
+      "vendors": {
+        "label": "Explorar Proveedores",
+        "desc": ""
+      },
+      "institutions": {
+        "label": "Explorar Instituciones",
+        "desc": ""
+      },
+      "sectors": {
+        "label": "Panorama de Sectores",
+        "desc": ""
+      },
+      "network": {
+        "label": "Grafo de Redes",
+        "desc": ""
+      },
+      "cases": {
+        "label": "Biblioteca de Casos",
+        "desc": ""
+      },
+      "aria": {
+        "label": "Cola ARIA",
+        "desc": "Nivel 1 — 299 proveedores para revisión inmediata"
+      },
+      "administrations": {
+        "label": "Administraciones",
+        "desc": "Comparación de compras entre sexenios"
+      },
+      "methodology": {
+        "label": "Metodología de Riesgo",
+        "desc": ""
+      },
+      "model": {
+        "label": "Transparencia del Modelo",
+        "desc": ""
+      },
+      "critical-contracts": {
+        "label": "Ver contratos de riesgo crítico",
+        "desc": "Contratos con indicador de riesgo ≥ 0.60"
+      },
+      "single-bid-contracts": {
+        "label": "Contratos de licitación única",
+        "desc": "Procedimientos competitivos con solo 1 licitante"
+      },
+      "compare-sectors": {
+        "label": "Comparar sectores",
+        "desc": "Riesgo y gasto en los 12 sectores"
+      },
+      "top-risk-vendors": {
+        "label": "Proveedores de mayor riesgo",
+        "desc": "Proveedores ordenados por indicador de riesgo"
+      },
+      "imss-vendors": {
+        "label": "Investigación de proveedores IMSS",
+        "desc": "Proveedores contratados por el IMSS"
+      }
+    },
+    "suggested": {
+      "rfcSearch": "RFC: buscar por RFC",
+      "singleBid": "licitación única"
+    }
   },
   "contractDetail": {
     "procurement": "Adquisición",
