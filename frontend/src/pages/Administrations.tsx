@@ -644,98 +644,44 @@ export default function Administrations() {
               </div>
             </div>
           </div>
+          {/* Dynamic risk annotations + source attribution row */}
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            {(() => {
+              if (adminAggs.length === 0) return null
+              const sorted = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
+              const highest = sorted[0]
+              const lowest = sorted[sorted.length - 1]
+              return (
+                <>
+                  <div className="flex items-center gap-2 text-xs text-text-muted">
+                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+                    <span>
+                      {t('classifiedHeader.highestRiskNote')}{' '}
+                      <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-text-muted">
+                    <span className="w-2 h-2 rounded-full bg-risk-low" />
+                    <span>
+                      {t('classifiedHeader.lowestRiskNote')}{' '}
+                      <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
+                    </span>
+                  </div>
+                </>
+              )
+            })()}
+            <div className="ml-auto flex items-center gap-3">
+              <FuentePill source="COMPRANET" verified={true} />
+              <MetodologiaTooltip
+                title={t('narrative')}
+                body={t('comparisonTableDesc')}
+                link="/methodology"
+              />
+              <ShareButton label={t('share', 'Share')} />
+            </div>
+          </div>
         </header>
     <div className="space-y-8 max-w-[1600px] mx-auto">
-      {/* ── EDITORIAL MASTHEAD ── */}
-      <header className="border-b pb-8 mb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        {/* Dateline */}
-        <div
-          className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
-          style={{ color: 'rgba(255,255,255,0.55)' }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
-          <span>RUBLI</span>
-          <span aria-hidden>·</span>
-          <span>{t('classifiedHeader.eyebrow', 'Political cycle analysis')}</span>
-          <span aria-hidden>·</span>
-          <span className="font-mono tabular-nums">v0.8.5</span>
-        </div>
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="text-kicker text-kicker--investigation mb-3">
-              {t('classifiedHeader.eyebrow')}
-            </div>
-            <h1
-              className="font-bold text-text-primary leading-[1.05] mb-4"
-              style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                letterSpacing: '-0.025em',
-              }}
-            >
-              {t('classifiedHeader.title')}
-            </h1>
-            <p
-              className="italic text-text-secondary leading-[1.55] max-w-2xl"
-              style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
-              }}
-            >
-              {/* 2026-05-12 (Audit F160): subhead and hero showed two
-                  precisions of the same totals side by side (3,049,988
-                  vs 3.1M; 9.87T vs 9.9T). Aligned to the hero figures
-                  so the reader sees one consistent number. The
-                  precise breakdown lives in /methodology. */}
-              {t('classifiedHeader.subtitle', { contracts: '3.1M', value: '9.9T' })}
-            </p>
-          </div>
-          <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
-        </div>
-        {/* 2026-05-12 (Audit V011-V014): the header used to hardcode
-            15.82% (highest) and 3.84% (lowest) — values from an
-            earlier snapshot of the aggregate. The per-administration
-            cards below use the live weighted-HR computation, so the
-            header disagreed with its own page. Now we pick highest /
-            lowest dynamically from adminAggs and the page is
-            internally consistent. */}
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          {(() => {
-            if (adminAggs.length === 0) return null
-            const sorted = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
-            const highest = sorted[0]
-            const lowest = sorted[sorted.length - 1]
-            return (
-              <>
-                <div className="flex items-center gap-2 text-xs text-text-muted">
-                  <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-                  <span>
-                    {t('classifiedHeader.highestRiskNote')}{' '}
-                    <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-text-muted">
-                  <span className="w-2 h-2 rounded-full bg-risk-low" />
-                  <span>
-                    {t('classifiedHeader.lowestRiskNote')}{' '}
-                    <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
-                  </span>
-                </div>
-              </>
-            )
-          })()}
-        </div>
-      </header>
-
-      {/* Data source + methodology */}
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <FuentePill source="COMPRANET" verified={true} />
-        <MetodologiaTooltip
-          title={t('narrative')}
-          body={t('comparisonTableDesc')}
-          link="/methodology"
-        />
-      </div>
 
       {/* Tab Switcher — standalone row */}
       <div className="flex flex-wrap items-center gap-1 rounded-sm border border-border/50 p-0.5 bg-background-elevated/30 w-fit">
