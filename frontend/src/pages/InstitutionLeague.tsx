@@ -292,26 +292,6 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
 }
 
 // ---------------------------------------------------------------------------
-// Tier badge (inline colored badge)
-// ---------------------------------------------------------------------------
-
-function TierBadge({ grade, size = 'sm' }: { grade: string; size?: 'sm' | 'md' }) {
-  const getTier = useTierInfo()
-  const tier = getTier(grade)
-  const sizeClass = size === 'md'
-    ? 'px-2.5 py-1 text-[11px]'
-    : 'px-2 py-0.5 text-[9px]'
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-mono font-bold uppercase tracking-wide ${sizeClass}`}
-      style={{ backgroundColor: tier.bg, borderColor: tier.border, color: tier.color, border: '1px solid' }}
-    >
-      {tier.label}
-    </span>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // ChampionCard — editorial "honor roll" card for top performers
 // Gold accent, score as the visual anchor, verdict-style tier badge
 // ---------------------------------------------------------------------------
@@ -352,12 +332,26 @@ function ChampionCard({
         )}
       </div>
 
-      {/* Score — the visual anchor */}
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-5xl font-black font-mono tabular-nums leading-none" style={{ color: tier.color }}>
-          {item.total_score.toFixed(0)}
+      {/* Editorial verdict (tier) — set in Playfair Italic so it reads as a
+          headline classification, not a UI chip. Score is demoted to a
+          mono caption below. */}
+      <div className="flex flex-col gap-0.5">
+        <span
+          className="leading-none"
+          style={{
+            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 600,
+            fontSize: '26px',
+            color: tier.color,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {tier.label}
         </span>
-        <span className="text-text-muted text-[11px] font-mono">/100</span>
+        <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
+          {item.total_score.toFixed(1)}<span className="opacity-60"> / 100</span>
+        </span>
       </div>
 
       {/* Institution name — clipped */}
@@ -365,9 +359,8 @@ function ChampionCard({
         {item.institution_name}
       </p>
 
-      {/* Sector + tier */}
+      {/* Sector chip */}
       <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
-        <TierBadge grade={item.grade} size="sm" />
         {item.sector_name && (
           <span className="text-text-muted text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
         )}
@@ -408,12 +401,24 @@ function RedFlagCard({
         <Flag className="h-4 w-4 text-risk-critical flex-shrink-0" aria-hidden="true" />
       </div>
 
-      {/* Score — red */}
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-5xl font-black font-mono tabular-nums leading-none text-risk-critical">
-          {item.total_score.toFixed(0)}
+      {/* Editorial verdict (tier) — Playfair Italic so the verdict reads
+          as the headline. Score is demoted to caption. */}
+      <div className="flex flex-col gap-0.5">
+        <span
+          className="leading-none text-risk-critical"
+          style={{
+            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 600,
+            fontSize: '26px',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {tier.label}
         </span>
-        <span className="text-text-muted text-[11px] font-mono">/100</span>
+        <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
+          {item.total_score.toFixed(1)}<span className="opacity-60"> / 100</span>
+        </span>
       </div>
 
       {/* Institution name */}
@@ -421,11 +426,12 @@ function RedFlagCard({
         {item.institution_name}
       </p>
 
-      {/* Risk driver pill + tier */}
+      {/* Risk driver pill — the "why" behind the verdict */}
       <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
-        <TierBadge grade={item.grade} size="sm" />
-        {item.top_risk_driver && (
+        {item.top_risk_driver ? (
           <RiskDriverPill driver={item.top_risk_driver} />
+        ) : item.sector_name && (
+          <span className="text-text-muted text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
         )}
       </div>
     </button>
@@ -937,17 +943,47 @@ export default function InstitutionLeague() {
             /sectors. Institution Ranking is a working surface
             (compare 100+ institutions, drill into one). */}
         <header className="mb-5 pb-4 border-b border-border">
+          {/* Folio strip — archival eyebrow matching /aria, /atlas pattern.
+              "Folio·VII" anchors this page in the broader RUBLI catalog;
+              the ranking is a section of an ongoing accountability series,
+              not a standalone tool. */}
+          <div
+            className="mb-3 flex items-center gap-3"
+            style={{
+              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--color-text-muted)',
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+              Folio·VII
+            </span>
+            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
+              {t('kicker')}
+            </span>
+            <span aria-hidden style={{ opacity: 0.5 }}>·</span>
+            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>{t('meta')}</span>
+          </div>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
+            <div className="max-w-3xl">
+              <h1
+                className="text-text-primary"
+                style={{
+                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                  fontStyle: 'italic',
+                  fontWeight: 500,
+                  fontSize: 'clamp(28px, 4vw, 40px)',
+                  lineHeight: 1.02,
+                  letterSpacing: '-0.012em',
+                }}
+              >
                 {t('headline.before')}{' '}
-                <span className="text-accent">{t('headline.accent')}</span>
+                <span style={{ color: 'var(--color-accent)' }}>{t('headline.accent')}</span>
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                {t('kicker')}
-                <span className="mx-1.5" aria-hidden>·</span>
-                {t('meta')}
-              </p>
             </div>
             {!isLoading && (
               <div className="flex items-baseline gap-5">
@@ -1337,9 +1373,14 @@ export default function InstitutionLeague() {
                     const isWorstPerformer = sortBy === 'total_score' && sortOrder === 'asc' && idx < 5
                     // Top 3 medals (only visible when sorted by score descending on first page)
                     const isTopMedalist = sortBy === 'total_score' && sortOrder === 'desc' && rank <= 3
+                    // Critico tier always reads as dominant — red wash on the
+                    // row, thicker left border, stronger left-border weight.
+                    // This is the editorial promise: a reader scrolling past
+                    // a Critico row cannot miss it.
+                    const isCritico = item.grade === 'F' || item.grade === 'F-'
                     const rankColor = isTopMedalist
                       ? (rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706')
-                      : isWorstPerformer
+                      : isWorstPerformer || isCritico
                         ? '#dc2626'
                         : tier.color
                     const isExpanded = expandedRowId === item.institution_id
@@ -1351,7 +1392,7 @@ export default function InstitutionLeague() {
                       <React.Fragment key={item.institution_id}>
                       <tr
                         className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
-                          isWorstPerformer ? 'bg-risk-critical/10' : ''
+                          isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''
                         } ${isExpanded ? 'bg-background-elevated' : ''}`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         onKeyDown={(e) => {
@@ -1363,7 +1404,10 @@ export default function InstitutionLeague() {
                         tabIndex={0}
                         role="button"
                         aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
-                        style={{ borderLeft: `3px solid ${tier.color}`, height: '41px' }}
+                        style={{
+                          borderLeft: `${isCritico ? '4px' : '3px'} solid ${tier.color}`,
+                          height: '44px',
+                        }}
                       >
                         {/* Rank — compact mono, ARIA-style */}
                         <td className="px-2 py-0 font-mono tabular-nums text-right w-12 align-middle">
@@ -1432,19 +1476,47 @@ export default function InstitutionLeague() {
                           </div>
                         </td>
 
-                        {/* Score as PRIMARY display — compact */}
+                        {/* Score — secondary numeric, demoted from primary
+                            anchor. The tier label below is now the
+                            editorial verdict; the score is the supporting
+                            measurement. */}
                         <td className="px-2 py-0 align-middle">
                           <div className="flex items-baseline gap-1">
-                            <span className="text-[17px] font-bold font-mono tabular-nums leading-none" style={{ color: tier.color }}>
+                            <span
+                              className="text-[14px] font-mono tabular-nums leading-none"
+                              style={{ color: tier.color, fontWeight: isCritico ? 700 : 600, opacity: isCritico ? 1 : 0.85 }}
+                            >
                               {item.total_score.toFixed(1)}
                             </span>
                             <span className="text-text-muted text-[9px] font-mono">/100</span>
                           </div>
                         </td>
 
-                        {/* Tier badge */}
+                        {/* Tier — now the primary editorial verdict. Rendered
+                            as a bold mono label, not a small pill. Critico
+                            gets the dominant red-bar treatment to match the
+                            row tint. */}
                         <td className="px-2 py-0 text-center align-middle">
-                          <TierBadge grade={item.grade} />
+                          <div
+                            className="inline-flex flex-col items-center justify-center px-2 py-1 rounded-sm"
+                            style={{
+                              backgroundColor: tier.bg,
+                              border: `1px solid ${tier.border}`,
+                              minWidth: '92px',
+                            }}
+                          >
+                            <span
+                              className="font-mono uppercase tabular-nums leading-none"
+                              style={{
+                                color: tier.color,
+                                fontSize: isCritico ? '11px' : '10px',
+                                fontWeight: 800,
+                                letterSpacing: '0.08em',
+                              }}
+                            >
+                              {tier.label}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Pillar sparkbars — denser */}

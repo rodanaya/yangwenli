@@ -541,7 +541,7 @@ export default function CategoryProfile() {
     : 0
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="space-y-3 pb-8 max-w-5xl mx-auto">
       {/* ================================================================= */}
       {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
