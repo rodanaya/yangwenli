@@ -1356,7 +1356,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               ? 'Stories are static analyses of a COMPRANET snapshot dated through this period. Live data updates in the Observatory and ARIA queue, not in the story body.'
               : 'Las historias son análisis estáticos de un corte de CompraNet hasta esta fecha. Los datos en vivo se actualizan en el Observatorio y la cola ARIA, no en el cuerpo del artículo.'}
           >
-            {lang === 'en' ? 'Analysis as of April 2026' : 'Análisis a abril de 2026'}
+            {lang === 'en' ? 'Analysis as of May 2026' : 'Análisis a mayo de 2026'}
           </span>
         </motion.div>
 

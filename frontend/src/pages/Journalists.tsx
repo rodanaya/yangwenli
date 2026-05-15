@@ -34,6 +34,7 @@ interface Investigation {
   era: Era
   contracts: number // kept for featured card stats panel
   brief: string // 2-sentence abstract shown on the grid card
+  yearSpan?: string // explicit time span for featured card (e.g. '2018–2024')
 }
 
 const INVESTIGATIONS: Investigation[] = [
@@ -46,6 +47,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 133.2,
     era: 'cross',
     contracts: 6303,
+    yearSpan: '2002–2025',
     brief: 'Four pharmaceutical distributors collected 326 billion pesos from IMSS over 23 years with no meaningful competition. Their combined risk score averages 0.96.',
   },
   {
@@ -57,6 +59,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    yearSpan: '2010–2023',
     brief: 'For 14 straight years, over 45% of Mexico\'s "competitive" procurement had exactly one bidder. The OECD flags anything above 15% as a structural red flag.',
   },
   {
@@ -68,6 +71,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 787,
     era: 'cross',
     contracts: 530000,
+    yearSpan: '2002–2025',
     brief: '15,923 vendors show behavioral capture signatures at IMSS, CFE, PEMEX, SCT, and CONAGUA. That\'s nearly a trillion pesos of systematically captured contracting.',
   },
   {
@@ -79,6 +83,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    yearSpan: '2010–2023',
     brief: '82.2% of 2023 federal contracts were direct awards — no competition, no public tender. Every administration since 2010 has been worse than the one before it.',
   },
   {
@@ -90,6 +95,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 2760,
     era: 'amlo',
     contracts: 1049729,
+    yearSpan: '2018–2024',
     brief: 'AMLO\'s 12.6% high-risk rate is the highest of any administration in 23 years. Every administration since Fox has been riskier than its predecessor — 5.1 percentage points of drift in 24 years.',
   },
   {
@@ -101,6 +107,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    yearSpan: '2002–2025',
     brief: 'RUBLI identified 6,118 vendors matching ghost company patterns across 23 years of Mexican federal procurement. They appear, win contracts, then vanish from the tax registry.',
   },
   {
@@ -112,6 +119,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 3000000,
+    yearSpan: '2002–2025',
     brief: "RUBLI's risk model reveals a near-monotonic ladder across 3 million contracts: as contract size grows, corruption risk grows in lockstep. The biggest deals carry the most risk.",
   },
   {
@@ -123,6 +131,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 0,
+    yearSpan: '2002–2025',
     brief: '2,974 vendors function as pure procurement intermediaries — no physical product, no technical service, just margin extraction between government agencies and real suppliers.',
   },
   {
@@ -134,6 +143,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 28264,
+    yearSpan: '2018–2023',
     brief: 'Statistical spikes at 210K, 250K, and 300K MXN — mathematically impossible in a random pricing universe. The evidence points to systematic threshold manipulation to avoid competitive bidding requirements.',
   },
   {
@@ -145,6 +155,7 @@ const INVESTIGATIONS: Investigation[] = [
     amount: 0,
     era: 'cross',
     contracts: 3051294,
+    yearSpan: '2002–2025',
     brief: 'Price volatility is the single strongest predictor in RUBLI\'s v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices.',
   },
 ]
@@ -468,7 +479,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
             </div>
             <div className="border-l-2 border-border-hover pl-3">
               <div className="text-2xl font-mono font-bold text-text-primary tabular-nums leading-none">
-                {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
+                {item.yearSpan ?? item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
               </div>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {t('lead.statSpan', { defaultValue: 'Time span' })}
@@ -802,7 +813,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
             </div>
             <div className="border-l-2 border-border-hover pl-3">
               <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
-                {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
+                {item.yearSpan ?? item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
               </div>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
                 Time span
