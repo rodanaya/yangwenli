@@ -254,6 +254,7 @@ function App() {
                   Component files preserved for v1.1. See docs/RUBLI_v1.0_LAUNCH_PLAN.md. */}
               <Route path="investigation/:caseId" element={<Navigate to="/aria" replace />} />
               <Route path="investigation" element={<Navigate to="/aria" replace />} />
+              <Route path="cola" element={<Navigate to="/aria" replace />} />
               <Route
                 path="aria"
                 element={

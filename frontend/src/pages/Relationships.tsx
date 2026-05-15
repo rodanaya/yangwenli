@@ -59,7 +59,10 @@ function ShareSparkline({ timeline, peakShare }: { timeline: CaptureItem['timeli
 
 function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en' | 'es' }) {
   const navigate = useNavigate()
-  const sectorColor = c.institution_sector_name ? SECTOR_COLORS[c.institution_sector_name.toLowerCase()] ?? '#64748b' : '#64748b'
+  // Use sector_id for color + localized name — API returns name_en (English)
+  // regardless of UI language, so id-based lookup is the correct approach.
+  const sector = SECTORS.find(s => s.id === c.institution_sector_id)
+  const sectorColor = sector ? SECTOR_COLORS[sector.code] : '#64748b'
   const delta = c.peak_share_pct - c.earliest_share_pct
   const years = `${c.earliest_year}–${c.peak_year}`
   const goToInstitution = (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -83,16 +86,13 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
         <ShareSparkline timeline={c.timeline} peakShare={c.peak_share_pct} />
       </div>
       <div className="flex-1 min-w-0">
-        <h4
-          className="text-text-primary leading-tight mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.01em' }}
-        >
-          <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" />
-          {' '}
-          <span className="text-text-muted" style={{ fontWeight: 400 }}>{lang === 'es' ? 'capturó' : 'captured'}</span>
-          {' '}
-          <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" />
-        </h4>
+        <div className="flex flex-col gap-0.5 mb-1.5">
+          <EntityIdentityChip type="vendor" id={c.vendor_id} name={c.vendor_name} size="sm" className="self-start max-w-full" />
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] text-text-muted font-mono uppercase tracking-wider">{lang === 'es' ? 'capturó' : 'captured'}</span>
+            <EntityIdentityChip type="institution" id={c.institution_id} name={c.institution_name} size="sm" className="flex-1 min-w-0" />
+          </div>
+        </div>
         <p className="text-[13px] text-text-secondary leading-[1.55]">
           {lang === 'es' ? (
             <>De <strong className="text-text-primary font-mono tabular-nums">{c.earliest_share_pct}%</strong> en {c.earliest_year} a{' '}
@@ -103,8 +103,8 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
           )}
         </p>
         <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px] font-mono tracking-wider uppercase text-text-muted">
-          {c.institution_sector_name && (
-            <span><span className="inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle" style={{ background: sectorColor }} />{c.institution_sector_name}</span>
+          {sector && (
+            <span><span className="inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle" style={{ background: sectorColor }} />{getSectorName(sector.code, lang).toUpperCase()}</span>
           )}
           <span>·</span>
           <span className="tabular-nums">{years}</span>
