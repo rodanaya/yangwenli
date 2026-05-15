@@ -28,10 +28,10 @@ RISK_THRESHOLDS_V4 = {
     'low': 0.0,
 }
 
-# v0.6.5 thresholds — recalibrated for PU-corrected scores (c=0.300)
-# PU correction: Elkan & Noto floor c=0.300
-# HR=13.49% OECD compliant (within 2-15% benchmark)
-# GT detection: vendor-stratified test AUC=0.828
+# v0.8.5 thresholds — recalibrated for PU-corrected scores (c_pu=0.32)
+# PU correction: Elkan & Noto floor c=0.32
+# HR=11.0% OECD compliant (within 2-15% benchmark)
+# GT detection: vendor-stratified test AUC=0.785
 RISK_THRESHOLDS_V6 = {
     'critical': 0.60,   # Strongest similarity to known corruption patterns
     'high': 0.40,       # Strong similarity
@@ -43,8 +43,8 @@ RISK_THRESHOLDS_V6 = {
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V6
 
 # Active model version
-# v0.6.5: institution-scoped GT labels, structural FP exclusions, test AUC 0.828 (vendor-stratified)
-CURRENT_MODEL_VERSION = 'v0.6.5'
+# v0.8.5: ElasticNet, 18 features, c_pu=0.32, test AUC 0.785, HR=11.0%, trained 2026-05-02
+CURRENT_MODEL_VERSION = 'v0.8.5'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

@@ -329,8 +329,8 @@ def _build_summary(conn) -> dict:
             high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception as e:
         logger.warning("Ground truth query failed, using hardcoded fallback: %s", e)
-        gt_cases, gt_vendors, gt_contracts = 1363, 911, 288000
-        detection_rate, high_plus_rate = 99.8, 93.0
+        gt_cases, gt_vendors, gt_contracts = 1424, 926, 337000
+        detection_rate, high_plus_rate = 95.0, 36.1
 
     # Per-case detection stats — uses precomputed vendor_stats to avoid 3.1M scan
     try:
@@ -364,8 +364,8 @@ def _build_summary(conn) -> dict:
         "contracts": gt_contracts,
         "detection_rate": detection_rate,
         "high_plus_rate": high_plus_rate,
-        "auc": 0.828,
-        "train_auc": 0.798,
+        "auc": 0.785,
+        "train_auc": 0.797,
         "case_details": case_details,
     }
 
@@ -408,25 +408,25 @@ def _build_summary(conn) -> dict:
             test_auc_val = cal_row["test_auc"]
         except (IndexError, KeyError):
             pass
-        is_v6 = cal_row["model_version"] >= 'v6.0'
+        is_v8 = cal_row["model_version"] >= 'v0.8'
         model = {
             "version": cal_row["model_version"],
-            "features": 9,
+            "features": 18 if is_v8 else 9,
             "sub_models": 13,
-            "auc": round(test_auc_val, 3) if test_auc_val else 0.828,
-            "train_auc": round(train_auc, 3) if train_auc else 0.798,
+            "auc": round(test_auc_val, 3) if test_auc_val else 0.785,
+            "train_auc": round(train_auc, 3) if train_auc else 0.797,
             "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
             "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
         }
     else:
         model = {
-            "version": "v0.6.5",
-            "features": 9,
+            "version": "v0.8.5",
+            "features": 18,
             "sub_models": 13,
-            "auc": 0.828,
-            "train_auc": 0.798,
+            "auc": 0.785,
+            "train_auc": 0.797,
             "brier": 0.090,
-            "pu_correction": 0.300,
+            "pu_correction": 0.320,
         }
 
     # Lift from v4.0 comparison report (stable between retrainings)

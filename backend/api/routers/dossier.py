@@ -113,7 +113,7 @@ def _dossier_html(ctx: dict) -> str:
 <body>
 <div class="kicker">RUBLI · {e(ctx.get("dossier_type", "DOSSIER"))}</div>
 <h1>{e(ctx.get("title") or "")}</h1>
-<div class="dateline">Built by RUBLI · Data: COMPRANET {e(ctx.get("year_range") or "2002-2025")} · Generated {e(ctx.get("generated_at") or "")} · Model v0.6.5 · STATISTICAL INDICATOR, NOT A FINDING OF WRONGDOING</div>
+<div class="dateline">Built by RUBLI · Data: COMPRANET {e(ctx.get("year_range") or "2002-2025")} · Generated {e(ctx.get("generated_at") or "")} · Model v0.8.5 · STATISTICAL INDICATOR, NOT A FINDING OF WRONGDOING</div>
 
 <div class="disclaimer">
   <strong>Reader note:</strong> This dossier compiles COMPRANET public records and RUBLI model output. Risk scores are statistical indicators of similarity to documented corruption patterns — not calibrated probabilities, and not findings of wrongdoing. Every contract listed is a public record you can verify via COMPRANET folio. A high "pattern match" score warrants investigation, not accusation.
@@ -135,7 +135,7 @@ def _dossier_html(ctx: dict) -> str:
 
 <h2>Methodology</h2>
 <p style="font-size: 9.5pt; line-height: 1.6;">
-RUBLI v0.6.5 — per-sector logistic regression with Positive-Unlabeled correction (Elkan and Noto 2008), trained on 748 institution-scoped windowed ground-truth cases. Test AUC 0.828 (vendor-stratified hold-out). OECD-compliant high-risk rate 13.49%. External registries cross-referenced: SAT EFOS Art. 69-B (13,960 RFCs), SFP sanctions (544), RUBLI ground-truth corpus (1,363 cases). Full methodology: <span class="mono">https://rubli.xyz/methodology</span>.
+RUBLI v0.8.5 — ElasticNet logistic regression with Positive-Unlabeled correction (Elkan and Noto 2008, c_pu=0.32), trained on 1,424 documented corruption cases. Test AUC 0.785 (vendor-stratified hold-out). OECD-compliant high-risk rate 11.0%. External registries cross-referenced: SAT EFOS Art. 69-B (13,960 RFCs), SFP sanctions (544), RUBLI ground-truth corpus (1,424 cases). Full methodology: <span class="mono">https://rubli.xyz/methodology</span>.
 </p>
 
 <footer>

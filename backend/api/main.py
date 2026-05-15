@@ -330,7 +330,7 @@ for Mexican federal government procurement (2002-2025).
 - **3.1M** contracts analyzed
 - **320,000+** vendors profiled
 - **12** federal sectors
-- **v0.6.5** risk model (test AUC 0.828, vendor-stratified)
+- **v0.8.5** risk model (test AUC 0.785, vendor-stratified)
 
 ### Core Endpoints
 
