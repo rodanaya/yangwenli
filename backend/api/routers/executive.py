@@ -329,7 +329,7 @@ def _build_summary(conn) -> dict:
             high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception as e:
         logger.warning("Ground truth query failed, using hardcoded fallback: %s", e)
-        gt_cases, gt_vendors, gt_contracts = 1424, 926, 337000
+        gt_cases, gt_vendors, gt_contracts = 1424, 1368, 337000
         detection_rate, high_plus_rate = 95.0, 36.1
 
     # Per-case detection stats — uses precomputed vendor_stats to avoid 3.1M scan
@@ -408,9 +408,12 @@ def _build_summary(conn) -> dict:
             test_auc_val = cal_row["test_auc"]
         except (IndexError, KeyError):
             pass
-        is_v8 = cal_row["model_version"] >= 'v0.8'
+        # 'v6.0' is the DB version name for the v0.8.5 model (CAL-v8-202605020212 naming mismatch)
+        raw_version = cal_row["model_version"] or ""
+        version_str = "v0.8.5" if raw_version == "v6.0" else raw_version
+        is_v8 = version_str >= 'v0.8'
         model = {
-            "version": cal_row["model_version"],
+            "version": version_str,
             "features": 18 if is_v8 else 9,
             "sub_models": 13,
             "auc": round(test_auc_val, 3) if test_auc_val else 0.785,
@@ -432,22 +435,25 @@ def _build_summary(conn) -> dict:
     # Lift from v4.0 comparison report (stable between retrainings)
     model["lift"] = 4.04
 
-    # Static model interpretation (v0.6.5 coefficients — 9 active features)
+    # v0.8.5 coefficients — 18 active features (ElasticNet, C=0.2243, l1_ratio=0.7545)
     model["top_predictors"] = [
-        {"name": "price_volatility", "beta": 0.534, "direction": "positive"},
-        {"name": "institution_diversity", "beta": -0.382, "direction": "negative"},
-        {"name": "vendor_concentration", "beta": 0.375, "direction": "positive"},
-        {"name": "price_ratio", "beta": 0.235, "direction": "positive"},
-        {"name": "network_member_count", "beta": 0.181, "direction": "positive"},
-        {"name": "same_day_count", "beta": 0.095, "direction": "positive"},
-        {"name": "win_rate", "beta": 0.049, "direction": "positive"},
-        {"name": "ad_period_days", "beta": 0.042, "direction": "positive"},
-        {"name": "direct_award", "beta": 0.031, "direction": "positive"},
+        {"name": "price_volatility", "beta": 0.558, "direction": "positive"},
+        {"name": "institution_diversity", "beta": -0.388, "direction": "negative"},
+        {"name": "price_ratio", "beta": 0.358, "direction": "positive"},
+        {"name": "vendor_concentration", "beta": 0.327, "direction": "positive"},
+        {"name": "cobid_herfindahl", "beta": 0.272, "direction": "positive"},
+        {"name": "recency_z", "beta": -0.247, "direction": "negative"},
+        {"name": "amount_residual_z", "beta": -0.187, "direction": "negative"},
+        {"name": "network_member_count", "beta": 0.166, "direction": "positive"},
+        {"name": "amendment_flag", "beta": 0.102, "direction": "positive"},
+        {"name": "ad_period_days", "beta": 0.090, "direction": "positive"},
+        {"name": "direct_award", "beta": -0.081, "direction": "negative"},
+        {"name": "pub_delay_z", "beta": -0.055, "direction": "negative"},
     ]
     model["counterintuitive"] = [
         "Institution diversity is protective — vendors serving many institutions are less suspicious.",
         "Price volatility is the #1 predictor — vendors with wildly varying contract sizes are most suspicious.",
-        "Direct award and ad period have near-zero coefficients — concentration dominates the signal.",
+        "Direct award has a protective coefficient — concentration and price irregularities dominate the signal.",
     ]
 
     return {
