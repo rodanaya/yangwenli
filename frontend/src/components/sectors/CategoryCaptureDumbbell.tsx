@@ -120,8 +120,8 @@ interface Props {
 const LEFT_W = 180   // px reserved for category label column
 const RIGHT_W = 88   // px reserved for "XX% vs YY%" numerics
 const PILL_W = 130   // px for "MERCADO CAPTURADO" pill column (only when any row qualifies)
-const ROW_H_DESKTOP = 36
-const ROW_H_MOBILE = 30
+const ROW_H_DESKTOP = 28
+const ROW_H_MOBILE = 24
 const HEADER_H = 36
 const FOOTER_H = 44
 

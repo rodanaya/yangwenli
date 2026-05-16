@@ -637,7 +637,7 @@ export function Sectors() {
               return (
                 <>
                   {/* Editorial lede */}
-                  <div className="mb-4 pb-4 border-b border-border">
+                  <div className="mb-3 pb-3 border-b border-border">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                       {i18n.language === 'es' ? 'Hallazgo · Categorías' : 'Finding · Categories'}
                     </p>
@@ -685,7 +685,7 @@ export function Sectors() {
                   </div>
 
                   {/* ── § 1 — SWIMLANE HERO ───────────────────────────────── */}
-                  <div className="mb-4 pb-4 border-b border-border">
+                  <div className="mb-3 pb-3 border-b border-border">
                     <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {i18n.language === 'es'
@@ -702,7 +702,7 @@ export function Sectors() {
                   </div>
 
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
-                  <div className="mb-4 pb-4 border-b border-border">
+                  <div className="mb-3 pb-3 border-b border-border">
                     <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {i18n.language === 'es'
@@ -929,12 +929,24 @@ export function Sectors() {
                                     {i18n.language === 'es' ? 'cont.' : 'contracts'}
                                   </div>
                                 </div>
-                                <div className="flex-shrink-0 text-right min-w-[80px]">
-                                  <div
-                                    className="font-mono text-sm font-bold tabular-nums"
-                                    style={{ color: RISK_COLORS[riskLevel] }}
-                                  >
-                                    {(cat.avg_risk * 100).toFixed(1)}%
+                                <div className="flex-shrink-0 min-w-[90px]">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <div className="w-14 h-1 rounded-full bg-background-elevated overflow-hidden hidden sm:block">
+                                      <div
+                                        className="h-full rounded-full"
+                                        style={{
+                                          width: `${Math.min(cat.avg_risk * 100 / 40 * 100, 100)}%`,
+                                          background: RISK_COLORS[riskLevel],
+                                          opacity: 0.8,
+                                        }}
+                                      />
+                                    </div>
+                                    <div
+                                      className="font-mono text-[11px] font-bold tabular-nums text-right"
+                                      style={{ color: RISK_COLORS[riskLevel] }}
+                                    >
+                                      {(cat.avg_risk * 100).toFixed(1)}%
+                                    </div>
                                   </div>
                                 </div>
                                 {/* cat-P3 A: DA% with single-bid dot to its left */}

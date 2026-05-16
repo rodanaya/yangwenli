@@ -52,8 +52,8 @@ interface SimNode extends CategoryDatum {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const LANE_H_DESKTOP = 36
-const LANE_H_MOBILE = 28
+const LANE_H_DESKTOP = 28
+const LANE_H_MOBILE = 24
 const LABEL_W = 100  // left margin for lane labels
 const RIGHT_PAD = 24
 const TOP_PAD = 48   // space for x-axis tick labels
