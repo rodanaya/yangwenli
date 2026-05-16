@@ -831,21 +831,45 @@ function TierEditorialStrip({
           : '§ FOUR RINGS · INVESTIGATION QUEUE'}
       </p>
 
-      {/* Stacked proportion bar — shows T1:T2:T3:T4 at a glance */}
+      {/* Stacked proportion bar — shows T1:T2:T3:T4 at a glance.
+          Segments are labeled to surface the editorial insight: T1+T2
+          are a small fraction but represent the highest-priority leads. */}
       {!statsLoading && total > 0 && (
-        <div className="h-2.5 w-full rounded-full overflow-hidden flex mb-3">
-          {rows.map(({ tier, color }) => {
-            const count = counts[tier] ?? 0
-            const pct = (count / total) * 100
-            if (pct < 0.1) return null
-            return (
-              <div
-                key={tier}
-                title={`T${tier}: ${pct.toFixed(1)}%`}
-                style={{ width: `${pct}%`, backgroundColor: color, opacity: tier === 4 ? 0.3 : tier === 3 ? 0.55 : 1 }}
-              />
-            )
-          })}
+        <div className="mb-3">
+          <div className="h-2.5 w-full overflow-hidden flex mb-1.5">
+            {rows.map(({ tier, color }) => {
+              const count = counts[tier] ?? 0
+              const pct = (count / total) * 100
+              if (pct < 0.05) return null
+              return (
+                <div
+                  key={tier}
+                  title={`T${tier}: ${formatNumber(count)} (${pct.toFixed(1)}%)`}
+                  style={{
+                    width: `${pct}%`,
+                    backgroundColor: color,
+                    opacity: tier === 4 ? 0.25 : tier === 3 ? 0.55 : 1,
+                    minWidth: tier <= 2 ? 6 : undefined,
+                  }}
+                />
+              )
+            })}
+          </div>
+          {/* Proportion legend — T1+T2 elevated percentage callout */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {rows.slice(0, 2).map(({ tier, color }) => {
+              const count = counts[tier] ?? 0
+              const pct = ((count / total) * 100).toFixed(2)
+              return (
+                <span key={tier} className="inline-flex items-center gap-1 text-[9px] font-mono tabular-nums">
+                  <span className="h-1.5 w-3 rounded-sm inline-block" style={{ background: color }} />
+                  <span style={{ color }}>T{tier}</span>
+                  <span className="text-text-muted">{formatNumber(count)} ({pct}%)</span>
+                </span>
+              )
+            })}
+            <span className="text-text-muted text-[9px] font-mono">· T3 {formatNumber(counts[3] ?? 0)} · T4 {formatNumber(counts[4] ?? 0)}</span>
+          </div>
         </div>
       )}
 
@@ -901,13 +925,13 @@ function TierEditorialStrip({
                   </div>
                 </div>
 
-                {/* Progress track — thicker, gradient fill */}
-                <div className="relative h-2 rounded-full bg-background-elevated overflow-hidden">
+                {/* Progress track — shows tier's share of full 248K queue */}
+                <div className="relative h-1.5 rounded-full bg-background-elevated overflow-hidden">
                   <div
-                    className="absolute inset-y-0 left-0 rounded-full"
+                    className="absolute inset-y-0 left-0 rounded-full transition-[width]"
                     style={{
-                      width: `${fraction * 100}%`,
-                      background: `linear-gradient(90deg, ${color}cc 0%, ${color}55 100%)`,
+                      width: `${Math.max(fraction * 100, fraction > 0 ? 0.4 : 0)}%`,
+                      background: `linear-gradient(90deg, ${color}cc 0%, ${color}44 100%)`,
                     }}
                   />
                 </div>
@@ -982,10 +1006,8 @@ function PatternDotStrip({
           </p>
         )}
       </div>
-      <div className="rounded-sm border border-border/60 bg-background-card p-3 overflow-x-auto">
-        <div className="min-w-[420px]">
-          <DotStrip rows={stripRows} N={30} labelWidth={110} />
-        </div>
+      <div className="rounded-sm border border-border/60 bg-background-card p-3">
+        <DotStrip rows={stripRows} N={22} labelWidth={100} />
       </div>
     </div>
   )
