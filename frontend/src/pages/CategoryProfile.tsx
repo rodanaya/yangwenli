@@ -745,7 +745,7 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-2 flex items-baseline justify-between gap-3 flex-wrap">
           <div>
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
               §4 · {t('profile.sections.timeline')}
             </p>
             <h2
@@ -806,7 +806,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §5 · {t('profile.sections.byAdmin')}
           </p>
           <h2
@@ -847,7 +847,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §6 · {t('profile.sections.concentration')}
           </p>
           <h2
@@ -914,7 +914,7 @@ export default function CategoryProfile() {
                       <div
                         key={v.vendor_id}
                         className={cn(
-                          'flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors group',
+                          'flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/40 transition-colors group',
                           idx === 0 && v.market_share_pct > 20 && 'border-l-2 border-l-amber-500/60',
                         )}
                       >
@@ -981,7 +981,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §7 · {t('profile.sections.relations')}
           </p>
           <h2
@@ -1024,7 +1024,7 @@ export default function CategoryProfile() {
                     return (
                       <div
                         key={`${pair.vendor_id}-${pair.institution_id}`}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors group"
+                        className="flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/40 transition-colors group"
                       >
                         <span className="text-[11px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">
                           {idx + 1}
@@ -1085,7 +1085,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
             §8 · {t('profile.sections.contracts')}
           </p>
           <h2
@@ -1123,7 +1123,7 @@ export default function CategoryProfile() {
                     return (
                       <div
                         key={c.id}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/30 transition-colors"
+                        className="flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/30 transition-colors"
                       >
                         <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
@@ -1178,7 +1178,7 @@ export default function CategoryProfile() {
       {(subcategoryLoading || (subcatBarData.length > 0)) && (
         <section>
           <div className="mb-2">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
               §9 · {t('profile.sections.subcategories')}
             </p>
             <h2
@@ -1251,7 +1251,7 @@ export default function CategoryProfile() {
                   </div>
                 </div>
               </div>
-              <div className="space-y-4 px-4 py-3 bg-background-card">
+              <div className="space-y-3 px-4 py-2.5 bg-background-card">
 
                 {/* KPI row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1498,7 +1498,7 @@ export default function CategoryProfile() {
                     : 'How contracts distribute by procedure type, and how competitive this market is.'}
                 </p>
               </div>
-              <div className="space-y-4 px-4 py-3 bg-background-card">
+              <div className="space-y-3 px-4 py-2.5 bg-background-card">
 
                 {/* KPI row */}
                 <div className="grid grid-cols-3 gap-4">
@@ -1680,7 +1680,7 @@ export default function CategoryProfile() {
                     : 'Monthly spend distribution. A December spike signals year-end pressure and potential control evasion.'}
                 </p>
               </div>
-              <div className="space-y-4 px-4 py-3 bg-background-card">
+              <div className="space-y-3 px-4 py-2.5 bg-background-card">
 
                 {/* December KPI */}
                 <div className="flex items-center gap-6">
@@ -1830,7 +1830,7 @@ export default function CategoryProfile() {
                     : `What fraud patterns the ARIA model detects across the ${vendors_in_aria.toLocaleString('en-US')} vendors active in this category.`}
                 </p>
               </div>
-              <div className="space-y-4 px-4 py-3 bg-background-card">
+              <div className="space-y-3 px-4 py-2.5 bg-background-card">
 
                 {/* T1/T2 KPI */}
                 {highPriorityCount > 0 && (
@@ -1940,7 +1940,7 @@ export default function CategoryProfile() {
         return (
           <section>
             <div className="mb-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
                 {isEs ? '§14 · DIAGNÓSTICO' : '§14 · VERDICT'}
               </p>
               <h2
@@ -1957,7 +1957,7 @@ export default function CategoryProfile() {
               </h2>
             </div>
             <div
-              className="border border-border/60 rounded-sm bg-background-card p-5 border-l-[3px]"
+              className="border border-border/60 rounded-sm bg-background-card p-4 border-l-[3px]"
               style={{ borderLeftColor: verdictColor }}
             >
               <div className="flex items-start gap-4 flex-wrap md:flex-nowrap">
@@ -2004,7 +2004,7 @@ export default function CategoryProfile() {
         return (
           <section>
             <div className="mb-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
                 {isEs ? '§15 · COMPARACIÓN' : '§15 · COMPARISON'}
               </p>
               <h2
@@ -2031,7 +2031,7 @@ export default function CategoryProfile() {
                     return (
                       <div
                         key={sc.category_id}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-background-elevated/40 transition-colors"
+                        className="flex items-center gap-3 px-4 py-1.5 hover:bg-background-elevated/40 transition-colors"
                       >
                         <div className="flex-1 min-w-0">
                           <EntityIdentityChip
