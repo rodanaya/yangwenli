@@ -27,7 +27,7 @@ import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
 import { FlowParticle, type FlowLink, type FlowNode } from '@/components/charts/FlowParticle'
-import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, Activity } from 'lucide-react'
+import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, ChevronDown, Activity } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 
@@ -690,9 +690,11 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
         {(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'] as PatternCode[]).map((p) => {
           const label = buildPatternLabel(isEs)[p]
           return (
-            <span
+            <Link
               key={p}
-              className="inline-flex items-center gap-1.5 text-[10px] text-text-muted/70"
+              to={`/aria?pattern=${p}`}
+              className="inline-flex items-center gap-1.5 text-[10px] text-text-muted/70 hover:text-text-primary transition-colors"
+              title={isEs ? `Ver ${p} en cola ARIA` : `View ${p} in ARIA queue`}
             >
               <span
                 className="h-2 w-2 rounded-full shrink-0"
@@ -700,7 +702,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
               />
               <span className="font-mono font-bold text-[10px]">{p}</span>
               <span className="text-[10px]">{label}</span>
-            </span>
+            </Link>
           )
         })}
       </div>
@@ -822,7 +824,7 @@ function CommunityDossier({
       }}
     >
       <div className="p-5 space-y-3.5">
-        {/* Header row: pattern badge + institution */}
+        {/* Header row: pattern badge + institution + expand chevron */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <Icon
@@ -839,19 +841,26 @@ function CommunityDossier({
               {c.pattern} · {buildPatternLabel(isEs)[c.pattern]}
             </Link>
           </div>
-          <div
-            className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-semibold border"
-            style={{
-              color: sectorTextColor,
-              borderColor: `${sectorFill}55`,
-              backgroundColor: `${sectorFill}12`,
-            }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full shrink-0"
-              style={{ backgroundColor: sectorFill }}
+          <div className="flex items-center gap-2">
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-semibold border"
+              style={{
+                color: sectorTextColor,
+                borderColor: `${sectorFill}55`,
+                backgroundColor: `${sectorFill}12`,
+              }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: sectorFill }}
+              />
+              {c.institution}
+            </div>
+            <ChevronDown
+              className="h-3.5 w-3.5 text-text-muted/50 transition-transform"
+              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              aria-hidden="true"
             />
-            {c.institution}
           </div>
         </div>
 
@@ -997,13 +1006,8 @@ function CommunityDossier({
         className="px-5 py-3 border-t border-border flex items-center justify-between gap-3 bg-background-elevated/40"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex items-center gap-2">
+        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
           {c.vendors > 0 ? `${formatNumber(c.vendors)} ${isEs ? 'proveedores' : 'vendors'} · ${c.pattern}` : c.pattern}
-          {isExpanded ? (
-            <span className="text-[9px] text-text-muted/40">{isEs ? '▲ contraer' : '▲ collapse'}</span>
-          ) : (
-            <span className="text-[9px] text-text-muted/40">{isEs ? '▼ expandir' : '▼ expand'}</span>
-          )}
         </span>
         <div className="flex items-center gap-2">
           {/* Deep-link to top vendor's Red Thread if available */}
