@@ -26,7 +26,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorName, SECTORS, RISK_COLORS } from '@/lib/constants'
+import { getSectorName, SECTORS, RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { DotStrip } from '@/components/charts/editorial'
 import {
   Search,
@@ -831,6 +831,24 @@ function TierEditorialStrip({
           : '§ FOUR RINGS · INVESTIGATION QUEUE'}
       </p>
 
+      {/* Stacked proportion bar — shows T1:T2:T3:T4 at a glance */}
+      {!statsLoading && total > 0 && (
+        <div className="h-2.5 w-full rounded-full overflow-hidden flex mb-3">
+          {rows.map(({ tier, color }) => {
+            const count = counts[tier] ?? 0
+            const pct = (count / total) * 100
+            if (pct < 0.1) return null
+            return (
+              <div
+                key={tier}
+                title={`T${tier}: ${pct.toFixed(1)}%`}
+                style={{ width: `${pct}%`, backgroundColor: color, opacity: tier === 4 ? 0.3 : tier === 3 ? 0.55 : 1 }}
+              />
+            )
+          })}
+        </div>
+      )}
+
       {statsLoading ? (
         <div className="space-y-1.5">
           {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-sm" />)}
@@ -929,13 +947,13 @@ function PatternDotStrip({
   // Aligned to backend canon here so /aria, the aria filter row, and
   // /patterns now agree.
   const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
-    P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: RISK_COLORS.critical },
-    P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: RISK_COLORS.high },
-    P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: RISK_COLORS.high },
-    P4: { es: 'P4 · Manipulación', en: 'P4 · Bid Rigging', color: RISK_COLORS.medium },
-    P5: { es: 'P5 · Sobreprecio', en: 'P5 · Overpricing', color: RISK_COLORS.medium },
-    P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: RISK_COLORS.critical },
-    P7: { es: 'P7 · Conflicto', en: 'P7 · Conflict of Interest', color: RISK_COLORS.high },
+    P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: PATTERN_COLORS.P1 ?? RISK_COLORS.critical },
+    P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: PATTERN_COLORS.P2 ?? RISK_COLORS.high },
+    P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
+    P4: { es: 'P4 · Manipulación', en: 'P4 · Bid Rigging', color: PATTERN_COLORS.P4 ?? RISK_COLORS.medium },
+    P5: { es: 'P5 · Sobreprecio', en: 'P5 · Overpricing', color: PATTERN_COLORS.P5 ?? RISK_COLORS.medium },
+    P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: PATTERN_COLORS.P6 ?? RISK_COLORS.critical },
+    P7: { es: 'P7 · Conflicto', en: 'P7 · Conflict of Interest', color: PATTERN_COLORS.P7 ?? RISK_COLORS.high },
   }
 
   const stripRows = entries.map(([key, count]) => {
