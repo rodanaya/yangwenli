@@ -253,7 +253,7 @@ export default function PatternDossier() {
 
       {/* §0 Cabecera */}
       <section aria-labelledby="pattern-heading">
-        <SectionKicker label="§ 0 · CABECERA" />
+        <SectionKicker label={isEs ? '§ 0 · CABECERA' : '§ 0 · HEADER'} />
         <div className="flex items-start gap-3">
           <span
             className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2.5 py-1 text-sm font-bold font-mono tracking-wider"

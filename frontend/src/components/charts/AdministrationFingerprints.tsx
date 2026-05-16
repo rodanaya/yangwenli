@@ -14,6 +14,15 @@ import {
 import type { AdminAgg } from '@/components/administrations/types'
 import { formatCompactMXN } from '@/lib/utils'
 
+// Display names with correct diacritics (agg.name is the ASCII key used for lookups)
+const DISPLAY_NAMES: Record<string, string> = {
+  Fox: 'Fox',
+  Calderon: 'Calderón',
+  'Pena Nieto': 'Peña Nieto',
+  AMLO: 'AMLO',
+  Sheinbaum: 'Sheinbaum',
+}
+
 // ---------------------------------------------------------------------------
 // Static metadata per admin (color tokens, accent CSS var)
 // ---------------------------------------------------------------------------
@@ -91,7 +100,7 @@ function AdminRadarPanel({
   return (
     <div className="flex flex-col items-center rounded-sm border border-border bg-background-card/60 p-4 gap-2">
       <div className="text-center">
-        <p className="text-sm font-bold text-text-primary leading-tight">{agg.name}</p>
+        <p className="text-sm font-bold text-text-primary leading-tight">{DISPLAY_NAMES[agg.name] ?? agg.name}</p>
         <p className="text-[10px] text-text-muted font-mono">{meta.yearLabel}</p>
       </div>
       <div className="w-full" style={{ minWidth: 120 }}>
@@ -203,19 +212,19 @@ export default function AdministrationFingerprints({ adminAggs }: Administration
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
         <InsightCard
           label={t('fingerprints.insight_lowest_risk')}
-          value={`${lowestHR.name} — ${lowestHR.highRiskPct.toFixed(1)}%`}
+          value={`${DISPLAY_NAMES[lowestHR.name] ?? lowestHR.name} — ${lowestHR.highRiskPct.toFixed(1)}%`}
           note={t('radar.insightLowestNote')}
           color={ADMIN_META[lowestHR.name]?.accentColorVar ?? '#ef4444'}
         />
         <InsightCard
           label={t('fingerprints.insight_highest_da')}
-          value={`${highestDA.name} — ${highestDA.directAwardPct.toFixed(0)}%`}
+          value={`${DISPLAY_NAMES[highestDA.name] ?? highestDA.name} — ${highestDA.directAwardPct.toFixed(0)}%`}
           note={t('radar.insightHighestDaNote')}
           color={ADMIN_META[highestDA.name]?.accentColorVar ?? '#f59e0b'}
         />
         <InsightCard
           label={t('fingerprints.insight_biggest_spender')}
-          value={`${biggestSpender.name} — ${formatCompactMXN(biggestSpender.totalValue)}`}
+          value={`${DISPLAY_NAMES[biggestSpender.name] ?? biggestSpender.name} — ${formatCompactMXN(biggestSpender.totalValue)}`}
           note={t('radar.insightBiggestNote')}
           color={ADMIN_META[biggestSpender.name]?.accentColorVar ?? '#64748b'}
         />

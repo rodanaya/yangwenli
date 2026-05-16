@@ -54,7 +54,7 @@ export function EditorialComposedChart<T extends object>({
 
   return (
     <ResponsiveContainer width="100%" minWidth={0} height={height}>
-      <ComposedChart data={data} margin={{ top: 8, right: hasRightAxis ? 8 : 12, left: 0, bottom: 4 }}>
+      <ComposedChart data={data} margin={{ top: 8, right: hasRightAxis ? 8 : 12, left: 4, bottom: 4 }}>
         <defs>
           {layers
             .filter((l) => l.kind === 'area')

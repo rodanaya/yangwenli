@@ -37,7 +37,7 @@ export function EditorialAreaChart<T extends object>({
 
   return (
     <ResponsiveContainer width="100%" minWidth={0} height={height}>
-      <AreaChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+      <AreaChart data={data} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={fillColor} stopOpacity={CHART_TOKENS.area.fillOpacityTop} />

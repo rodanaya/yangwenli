@@ -12,7 +12,7 @@ export const CHART_TOKENS = {
     tickFontFamily: 'var(--font-family-mono)',
     tickLine: false,
     axisLine: false,
-    width: 44,
+    width: 56,
   },
   /* Grid — horizontal hairlines only, low opacity (bible §4 implicit) */
   grid: {

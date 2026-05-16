@@ -1245,9 +1245,9 @@ export default function Administrations() {
                 const pctY = (p: number) => MT + cH - Math.max(0, Math.min(100, p)) / 100 * cH
                 const eventSet = new Set(adminBreaks.map((b) => b.year))
                 const lines: Array<{ key: string; pct: (y: typeof years[0]) => number; color: string; label: string }> = [
-                  { key: 'da', pct: (y) => y.direct_award_pct, color: '#3b82f6', label: 'Direct Award %' },
-                  { key: 'sb', pct: (y) => y.single_bid_pct, color: '#fbbf24', label: 'Single Bid %' },
-                  { key: 'hr', pct: (y) => y.high_risk_pct, color: RISK_COLORS.high, label: 'High Risk %' },
+                  { key: 'da', pct: (y) => y.direct_award_pct, color: '#3b82f6', label: t('statCards.directAward') },
+                  { key: 'sb', pct: (y) => y.single_bid_pct, color: '#fbbf24', label: t('statCards.singleBid') },
+                  { key: 'hr', pct: (y) => y.high_risk_pct, color: RISK_COLORS.high, label: t('statCards.highRisk') },
                 ]
                 return (
                   <>
