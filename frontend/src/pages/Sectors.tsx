@@ -637,7 +637,7 @@ export function Sectors() {
               return (
                 <>
                   {/* Editorial lede */}
-                  <div className="mb-6 pb-5 border-b border-border">
+                  <div className="mb-4 pb-4 border-b border-border">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                       {i18n.language === 'es' ? 'Hallazgo · Categorías' : 'Finding · Categories'}
                     </p>
@@ -645,9 +645,9 @@ export function Sectors() {
                       className="text-text-primary leading-[1.1] mb-3"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
-                        fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                        fontWeight: 800,
-                        letterSpacing: '-0.02em',
+                        fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
+                        fontWeight: 700,
+                        letterSpacing: '-0.015em',
                       }}
                     >
                       {i18n.language === 'es' ? (
@@ -671,7 +671,7 @@ export function Sectors() {
                         </>
                       )}
                     </h2>
-                    <p className="text-base text-text-secondary leading-[1.6] max-w-prose">
+                    <p className="text-sm text-text-secondary leading-[1.6] max-w-prose">
                       {i18n.language === 'es' ? (
                         <>
                           Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el gobierno — medicamentos, obra pública, software — independientemente de quién. Por volumen, <strong className="text-text-primary">{topByValue.name_es}</strong> lidera con <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> en contratos. Por riesgo, {topByRisk.name_es} encabeza la lista.
@@ -685,89 +685,99 @@ export function Sectors() {
                   </div>
 
                   {/* ── § 1 — SWIMLANE HERO ───────────────────────────────── */}
-                  <div className="mb-6 pb-5 border-b border-border">
-                    <div className="flex items-baseline gap-3 mb-3">
+                  <div className="mb-4 pb-4 border-b border-border">
+                    <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {i18n.language === 'es'
-                          ? 'Lo que el Estado compra · 12 carriles'
-                          : 'What the State Buys · 12 Lanes'}
+                          ? '§ Lo que el Estado compra · 12 carriles'
+                          : '§ What the State Buys · 12 Lanes'}
                       </p>
-                      <span className="text-[10px] text-text-muted/50 font-mono">
+                      <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
                         {i18n.language === 'es'
-                          ? '· posición = riesgo · tamaño = gasto · línea cyan = umbral alto'
-                          : '· position = risk · size = spend · cyan = high-risk threshold'}
+                          ? 'posición = riesgo · tamaño = gasto'
+                          : 'position = risk · size = spend'}
                       </span>
                     </div>
-                    <h3
-                      className="text-text-primary leading-[1.1] mb-3"
-                      style={{
-                        fontFamily: 'var(--font-family-serif)',
-                        fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
-                        fontWeight: 800,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {i18n.language === 'es' ? 'Doce mercados, una hoja' : 'Twelve markets, one sheet'}
-                    </h3>
                     <CategorySectorSwimlane categories={categoryData.data} />
                   </div>
 
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
-                  <div className="mb-6 pb-5 border-b border-border">
-                    <div className="flex items-baseline gap-3 mb-3">
+                  <div className="mb-4 pb-4 border-b border-border">
+                    <div className="flex items-baseline gap-3 mb-2">
                       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                         {i18n.language === 'es'
-                          ? 'La Brecha · #1 vs #2'
-                          : 'The Gap · #1 vs #2'}
+                          ? '§ La Brecha · #1 vs #2'
+                          : '§ The Gap · #1 vs #2'}
                       </p>
-                      <span className="text-[10px] text-text-muted/50 font-mono">
+                      <span className="text-[9px] text-text-muted/50 font-mono hidden sm:block">
                         {i18n.language === 'es'
-                          ? '· 12 categorías más concentradas · círculo lleno = líder'
-                          : '· 12 most concentrated categories · filled = leader'}
+                          ? '12 categorías más concentradas'
+                          : '12 most concentrated categories'}
                       </span>
                     </div>
-                    <h3
-                      className="text-text-primary leading-[1.1] mb-3"
-                      style={{
-                        fontFamily: 'var(--font-family-serif)',
-                        fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
-                        fontWeight: 800,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {i18n.language === 'es'
-                        ? 'Donde un proveedor se traga el mercado'
-                        : 'Where one vendor swallows the market'}
-                    </h3>
                     <CategoryCaptureDumbbell categories={categoryData.data} />
                   </div>
 
                   {/* ── § 3 — CATALOG (List or Tree) ────────────────────── */}
-                  <div className="mb-3 flex items-center justify-between gap-4">
+                  <div className="mb-2 flex items-center justify-between gap-3 flex-wrap">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
                       {i18n.language === 'es'
-                        ? 'El Catálogo · 72 Categorías'
-                        : 'The Catalog · 72 Categories'}
+                        ? `§ El Catálogo · ${categoryData.total} categorías`
+                        : `§ The Catalog · ${categoryData.total} categories`}
                     </p>
-                    <div className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0">
-                      {(['list', 'tree'] as const).map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setCview(v)}
-                          className={cn(
-                            'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
-                            cview === v
-                              ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
-                              : 'text-text-muted hover:text-text-secondary',
-                          )}
-                          aria-pressed={cview === v}
-                        >
-                          {v === 'list'
-                            ? (i18n.language === 'es' ? 'Lista' : 'List')
-                            : (i18n.language === 'es' ? 'Árbol' : 'Tree')}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      {/* Sort chips — visible UI for catSortKey */}
+                      {cview === 'list' && (
+                        <div className="flex items-center gap-1">
+                          {([
+                            { key: 'risk',    labelEs: 'Riesgo',   labelEn: 'Risk' },
+                            { key: 'spend',   labelEs: 'Gasto',    labelEn: 'Spend' },
+                            { key: 'capture', labelEs: 'Captura',  labelEn: 'Capture' },
+                            { key: 'name',    labelEs: 'Nombre',   labelEn: 'Name' },
+                          ] as const).map(({ key, labelEs, labelEn }) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => {
+                                const next = new URLSearchParams(searchParams)
+                                if (key === 'risk') next.delete('sort')
+                                else next.set('sort', key)
+                                setSearchParams(next, { replace: true })
+                              }}
+                              className={cn(
+                                'px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
+                                catSortKey === key
+                                  ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)] border-transparent'
+                                  : 'text-text-muted border-border hover:text-text-secondary',
+                              )}
+                              aria-pressed={catSortKey === key}
+                            >
+                              {i18n.language === 'es' ? labelEs : labelEn}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {/* List/Tree toggle */}
+                      <div className="flex items-center gap-0 border border-border rounded overflow-hidden flex-shrink-0">
+                        {(['list', 'tree'] as const).map((v) => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setCview(v)}
+                            className={cn(
+                              'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
+                              cview === v
+                                ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                                : 'text-text-muted hover:text-text-secondary',
+                            )}
+                            aria-pressed={cview === v}
+                          >
+                            {v === 'list'
+                              ? (i18n.language === 'es' ? 'Lista' : 'List')
+                              : (i18n.language === 'es' ? 'Árbol' : 'Tree')}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                   {(() => {
