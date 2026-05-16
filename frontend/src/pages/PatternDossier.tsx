@@ -286,37 +286,28 @@ export default function PatternDossier() {
                 ? `Abrir Cola ARIA filtrada por ${codeUpper}`
                 : `Open ARIA Queue filtered by ${codeUpper}`}
             </Link>
-            {/* Stats */}
+            {/* Stats grid */}
             {spotlight && (
-              <div className="flex flex-wrap items-center gap-4 mt-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                    {isEs ? 'Proveedores' : 'Vendors'}
-                  </span>
-                  <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                    {spotlight.vendor_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">T1</span>
-                  <span className="text-sm font-mono font-semibold tabular-nums" style={{ color: '#dc2626' }}>
-                    {spotlight.t1_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">T2</span>
-                  <span className="text-sm font-mono font-semibold tabular-nums text-text-secondary">
-                    {spotlight.t2_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
-                    {isEs ? 'Casos GT' : 'GT Cases'}
-                  </span>
-                  <span className="text-sm font-mono font-semibold tabular-nums text-text-primary">
-                    {spotlight.gt_case_count.toLocaleString()}
-                  </span>
-                </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+                {[
+                  { label: isEs ? 'Proveedores' : 'Vendors', value: spotlight.vendor_count.toLocaleString(), color: undefined },
+                  { label: 'T1', value: spotlight.t1_count.toLocaleString(), color: '#dc2626' },
+                  { label: 'T2', value: spotlight.t2_count.toLocaleString(), color: undefined },
+                  { label: isEs ? 'Casos GT' : 'GT Cases', value: spotlight.gt_case_count.toLocaleString(), color: undefined },
+                  ...(spotlight.avg_da_rate != null ? [{ label: 'DA%', value: `${Math.round(spotlight.avg_da_rate * 100)}%`, color: spotlight.avg_da_rate > 0.5 ? '#ef4444' : undefined }] : []),
+                  ...(spotlight.avg_sb_rate != null ? [{ label: isEs ? 'Prop. Única' : 'Single Bid', value: `${Math.round(spotlight.avg_sb_rate * 100)}%`, color: spotlight.avg_sb_rate > 0.3 ? '#f59e0b' : undefined }] : []),
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5">
+                    <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{label}</div>
+                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: color ?? 'var(--color-text-primary)' }}>{value}</div>
+                  </div>
+                ))}
+                {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
+                  <div className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5 col-span-2 sm:col-span-1">
+                    <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{isEs ? 'Gasto total' : 'Total spend'}</div>
+                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: '#ef4444' }}>{formatCompactMXN(spotlight.total_value_mxn)}</div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -412,38 +403,93 @@ export default function PatternDossier() {
         )}
       </section>
 
-      {/* §3 Sector Breakdown — top 5 sectors from spotlight.top_vendors */}
-      {sectorBreakdown.length > 0 && (
-        <section aria-label={isEs ? 'Distribución sectorial' : 'Sector breakdown'}>
-          <SectionKicker
-            label={isEs ? '§ 3 · DESGLOSE SECTORIAL' : '§ 3 · SECTOR BREAKDOWN'}
-          />
-          <p className="text-[11px] font-mono text-text-muted mb-3">
-            {isEs
-              ? `Sectores principales en ${spotlight?.top_vendors.length ?? 0} proveedores destacados`
-              : `Top sectors across ${spotlight?.top_vendors.length ?? 0} highlighted vendors`}
-          </p>
-          <div className="space-y-2">
-            {sectorBreakdown.map(({ name: sectorName, count, color }) => (
-              <div key={sectorName} className="flex items-center gap-3">
-                <span className="text-[11px] font-mono text-text-secondary w-32 flex-shrink-0 truncate">
-                  {sectorName}
-                </span>
-                <DotBar
-                  value={count}
-                  max={maxBreakdownCount}
-                  color={color}
-                  dots={18}
-                  ariaLabel={`${sectorName}: ${count} vendors`}
-                />
-                <span className="text-[10px] font-mono tabular-nums text-text-muted flex-shrink-0">
-                  {count}
-                </span>
+      {/* §3 Network Signature + Sector Breakdown */}
+      <section aria-label={isEs ? 'Firma de red' : 'Network signature'}>
+        <SectionKicker
+          label={isEs ? '§ 3 · FIRMA DE RED' : '§ 3 · NETWORK SIGNATURE'}
+        />
+        <div className="space-y-5">
+          {/* Rates — shown when spotlight has real data */}
+          {spotlight && (spotlight.avg_da_rate != null || spotlight.avg_sb_rate != null) && (
+            <div className="rounded-sm border border-border/60 bg-background-card p-4">
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-3">
+                {isEs ? 'Tasas promedio · vendedores en este patrón' : 'Average rates · vendors in this pattern'}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+              <div className="space-y-2">
+                {spotlight.avg_da_rate != null && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-mono text-text-muted/70 w-36 flex-shrink-0">
+                      {isEs ? 'Adjudicación Directa' : 'Direct Award'}
+                    </span>
+                    <div className="flex-1 relative">
+                      <DotBar
+                        value={spotlight.avg_da_rate}
+                        max={1}
+                        color={spotlight.avg_da_rate > 0.5 ? '#ef4444' : '#f59e0b'}
+                        dots={22}
+                        ariaLabel={`DA rate ${Math.round(spotlight.avg_da_rate * 100)}%`}
+                      />
+                    </div>
+                    <span className="text-[11px] font-mono font-bold tabular-nums w-10 text-right"
+                      style={{ color: spotlight.avg_da_rate > 0.5 ? '#ef4444' : 'var(--color-text-primary)' }}>
+                      {Math.round(spotlight.avg_da_rate * 100)}%
+                    </span>
+                  </div>
+                )}
+                {spotlight.avg_sb_rate != null && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-mono text-text-muted/70 w-36 flex-shrink-0">
+                      {isEs ? 'Propuesta Única' : 'Single Bid'}
+                    </span>
+                    <div className="flex-1 relative">
+                      <DotBar
+                        value={spotlight.avg_sb_rate}
+                        max={1}
+                        color={spotlight.avg_sb_rate > 0.3 ? '#f59e0b' : '#71717a'}
+                        dots={22}
+                        ariaLabel={`Single bid rate ${Math.round(spotlight.avg_sb_rate * 100)}%`}
+                      />
+                    </div>
+                    <span className="text-[11px] font-mono font-bold tabular-nums w-10 text-right"
+                      style={{ color: spotlight.avg_sb_rate > 0.3 ? '#f59e0b' : 'var(--color-text-primary)' }}>
+                      {Math.round(spotlight.avg_sb_rate * 100)}%
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {/* Sector breakdown */}
+          {sectorBreakdown.length > 0 && (
+            <div>
+              <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+                {isEs
+                  ? `Sectores · ${spotlight?.top_vendors.length ?? 0} proveedores destacados`
+                  : `Sectors · ${spotlight?.top_vendors.length ?? 0} highlighted vendors`}
+              </div>
+              <div className="space-y-1.5">
+                {sectorBreakdown.map(({ name: sectorName, count, color }) => (
+                  <div key={sectorName} className="flex items-center gap-3">
+                    <span className="text-[11px] font-mono text-text-secondary w-32 flex-shrink-0 truncate">
+                      {sectorName}
+                    </span>
+                    <DotBar
+                      value={count}
+                      max={maxBreakdownCount}
+                      color={color}
+                      dots={18}
+                      ariaLabel={`${sectorName}: ${count} vendors`}
+                    />
+                    <span className="text-[10px] font-mono tabular-nums text-text-muted flex-shrink-0">
+                      {count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* §4 Detection Signal */}
       <section aria-label={isEs ? 'Señal de detección' : 'Detection signal'}>
