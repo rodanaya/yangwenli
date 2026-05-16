@@ -107,6 +107,11 @@ interface SectorRadialTreeProps {
   sectors: SectorStatistics[]
 }
 
+// Top-down tree layout: hub at top center → two rows of 6 sectors below.
+// Sorted by spend so biggest sectors are in row 1 (prominent position).
+// Hub → row1 edges are straight; row1 → row2 edges use short vertical drops
+// to give a genuine "branch" feel.
+
 export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
   const { i18n } = useTranslation('sectors')
   const lang = i18n.language
@@ -115,112 +120,129 @@ export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
   const [hovered, setHovered] = useState<number | null>(null)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
 
-  // Canvas dimensions — responsive via container (max-w-4xl = 896px)
-  const W = 720
-  const H = 560
-  const cx = W / 2
-  const cy = H / 2
+  // Canvas — 760 × 480, hub at top-center
+  const W = 760
+  const H = 480
+  const HUB_X = W / 2
+  const HUB_Y = 66
+  const HUB_R = 42
 
-  // Sort by spend desc so biggest sector gets most prominent angle position
+  // Sort by spend desc — row 1 gets the biggest 6
   const sorted = useMemo(
     () => [...sectors].sort((a, b) => b.total_value_mxn - a.total_value_mxn),
     [sectors],
   )
 
-  // Node radius proportional to sqrt(spend) — range 18px…52px
+  // Node radius proportional to sqrt(spend) — 16px…44px
   const maxSpend = sorted[0]?.total_value_mxn ?? 1
   const nodeRadius = (s: SectorStatistics) => {
     const frac = Math.sqrt(s.total_value_mxn / maxSpend)
-    return 18 + frac * 34  // 18..52
+    return 16 + frac * 28
   }
 
-  // Place 12 nodes on a ring. Offset start so biggest node is top-center.
-  // Two rings: top 6 (bigger) on inner ring, bottom 6 (smaller) on outer ring
-  // for a more tree-like top-heavy appearance.
-  const INNER_R = 185
-  const OUTER_R = 248
-  const nodePositions = useMemo(() => {
-    const n = sorted.length
-    return sorted.map((s, i) => {
-      // Distribute evenly in a circle; start at -90° (top), go clockwise
-      const angle = (-Math.PI / 2) + (2 * Math.PI * i) / n
-      // Alternate between two rings for visual depth
-      const ring = i < Math.ceil(n / 2) ? INNER_R : OUTER_R
-      return {
-        sector: s,
-        x: cx + ring * Math.cos(angle),
-        y: cy + ring * Math.sin(angle),
-        angle,
-        r: nodeRadius(s),
-      }
-    })
-  }, [sorted, cx, cy])
+  // Layout: two rows of 6
+  const N_ROW1 = 6
+  const ROW1_Y = 228
+  const ROW2_Y = 404
+  const PAD_X = 54  // left/right padding
 
-  // Hub radius reflects total spend
-  const HUB_R = 38
-  const totalSpend = sectors.reduce((sum, s) => sum + s.total_value_mxn, 0)
+  const nodePositions = useMemo(() => {
+    return sorted.map((s, i) => {
+      const row = i < N_ROW1 ? 1 : 2
+      const j   = i < N_ROW1 ? i : i - N_ROW1
+      const n   = i < N_ROW1 ? N_ROW1 : sorted.length - N_ROW1
+      const xStep = (W - PAD_X * 2) / Math.max(n - 1, 1)
+      const x = n === 1 ? W / 2 : PAD_X + j * xStep
+      const y = row === 1 ? ROW1_Y : ROW2_Y
+      return { sector: s, x, y, r: nodeRadius(s), row }
+    })
+  }, [sorted])
+
+  // Row-1 node that is directly "above" each row-2 node (pair by index)
+  const row1Nodes = nodePositions.filter((n) => n.row === 1)
+  const row2Nodes = nodePositions.filter((n) => n.row === 2)
+
+  const totalSpend     = sectors.reduce((sum, s) => sum + s.total_value_mxn, 0)
   const totalContracts = sectors.reduce((sum, s) => sum + s.total_contracts, 0)
 
+  // Horizontal "tier bus" lines — faint guide at row boundaries
+  const ROW1_BUS_Y = ROW1_Y
+  const ROW2_BUS_Y = ROW2_Y
+
   return (
-    <div className="relative select-none">
+    <div className="relative select-none flex justify-center">
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
-        style={{ maxWidth: W, display: 'block', margin: '0 auto' }}
+        style={{ maxWidth: W, display: 'block' }}
         role="list"
-        aria-label={lang === 'es' ? 'Árbol radial de sectores' : 'Sector radial tree'}
+        aria-label={lang === 'es' ? 'Árbol de sectores de presupuesto federal' : 'Federal budget sector tree'}
       >
-        {/* Subtle grid rings for visual depth */}
-        {[INNER_R - 30, INNER_R + 10, OUTER_R + 22].map((r) => (
-          <circle
-            key={r}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
+        {/* Faint tier bus lines (horizontal reference at each row) */}
+        {[ROW1_BUS_Y, ROW2_BUS_Y].map((busY) => (
+          <line
+            key={busY}
+            x1={PAD_X - 10}
+            y1={busY}
+            x2={W - PAD_X + 10}
+            y2={busY}
             stroke="var(--color-border)"
             strokeWidth={0.5}
-            strokeDasharray="3 6"
-            opacity={0.4}
+            strokeDasharray="4 8"
+            opacity={0.35}
           />
         ))}
 
-        {/* Edges: curved bezier from hub to each sector node */}
-        {nodePositions.map(({ sector: s, x, y }) => {
+        {/* Hub → Row-1 edges */}
+        {row1Nodes.map(({ sector: s, x, y }) => {
           const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
           const isHov = hovered === s.sector_id
-          // Control point pulls the curve outward from center
-          const midX = (cx + x) / 2
-          const midY = (cy + y) / 2
+          // Elbow: vertical drop from hub, then angled to node
+          const elbowY = HUB_Y + HUB_R + (y - HUB_Y - HUB_R) * 0.35
           return (
             <path
-              key={`edge-${s.sector_id}`}
-              d={`M ${cx} ${cy} Q ${midX} ${midY} ${x} ${y}`}
+              key={`edge-hub-${s.sector_id}`}
+              d={`M ${HUB_X} ${HUB_Y + HUB_R} L ${HUB_X} ${elbowY} L ${x} ${elbowY} L ${x} ${y - nodeRadius(s)}`}
               fill="none"
               stroke={color}
               strokeWidth={isHov ? 2 : 1}
-              opacity={
-                hovered === null ? 0.35
-                : isHov ? 0.75
-                : 0.12
-              }
+              opacity={hovered === null ? 0.30 : isHov ? 0.70 : 0.10}
               style={{ transition: 'opacity 0.15s, stroke-width 0.15s', pointerEvents: 'none' }}
             />
           )
         })}
 
-        {/* Sector nodes */}
+        {/* Row-1 → Row-2 connector lines (pair by position order) */}
+        {row2Nodes.map(({ sector: s2, x: x2, y: y2 }, j) => {
+          const parent = row1Nodes[j] ?? row1Nodes[row1Nodes.length - 1]
+          const isHov  = hovered === s2.sector_id || hovered === parent.sector.sector_id
+          const color  = SECTOR_COLORS[s2.sector_code] ?? '#64748b'
+          const dropY  = (parent.y + y2) / 2
+          return (
+            <path
+              key={`edge-r1r2-${s2.sector_id}`}
+              d={`M ${parent.x} ${parent.y + parent.r} L ${parent.x} ${dropY} L ${x2} ${dropY} L ${x2} ${y2 - nodeRadius(s2)}`}
+              fill="none"
+              stroke={color}
+              strokeWidth={isHov ? 1.5 : 0.75}
+              strokeDasharray="3 4"
+              opacity={hovered === null ? 0.22 : isHov ? 0.55 : 0.08}
+              style={{ transition: 'opacity 0.15s', pointerEvents: 'none' }}
+            />
+          )
+        })}
+
+        {/* Sector nodes — rows 1 and 2 */}
         {nodePositions.map(({ sector: s, x, y, r }) => {
-          const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-          const fill = nodeFill(s.sector_code, s.avg_risk_score)
-          const isHov = hovered === s.sector_id
-          const anyHov = hovered !== null
-          const opacity = anyHov && !isHov ? 0.35 : 1
-          const symbol = SECTOR_SYMBOL[s.sector_code] ?? '◻'
-          const name = getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')
-          const daPct = s.direct_award_pct ?? 0
-          const isOECDViolator = daPct > 25
+          const color    = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+          const fill     = nodeFill(s.sector_code, s.avg_risk_score)
+          const isHov    = hovered === s.sector_id
+          const anyHov   = hovered !== null
+          const opacity  = anyHov && !isHov ? 0.30 : 1
+          const symbol   = SECTOR_SYMBOL[s.sector_code] ?? '◻'
+          const name     = getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')
+          const isOECD   = (s.direct_award_pct ?? 0) > 25
 
           return (
             <g
@@ -229,137 +251,84 @@ export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
               style={{ opacity, cursor: 'pointer' }}
               tabIndex={0}
               aria-label={`${name} — ${formatCompactMXN(s.total_value_mxn)}`}
-              onPointerEnter={(e) => {
-                setHovered(s.sector_id)
-                setTooltip({ sector: s, x: e.clientX, y: e.clientY })
-              }}
-              onPointerMove={(e) => {
-                setTooltip((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : null)
-              }}
-              onPointerLeave={() => { setHovered(null); setTooltip(null) }}
+              onPointerEnter={(e) => { setHovered(s.sector_id); setTooltip({ sector: s, x: e.clientX, y: e.clientY }) }}
+              onPointerMove={(e)  => { setTooltip((prev) => prev ? { ...prev, x: e.clientX, y: e.clientY } : null) }}
+              onPointerLeave={()  => { setHovered(null); setTooltip(null) }}
               onClick={() => navigate(`/sectors/${s.sector_id}`)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  navigate(`/sectors/${s.sector_id}`)
-                }
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/sectors/${s.sector_id}`) } }}
             >
-              {/* Node circle */}
               <circle
-                cx={x}
-                cy={y}
-                r={r}
+                cx={x} cy={y} r={r}
                 fill={fill}
-                stroke={isOECDViolator ? '#f59e0b' : color}
-                strokeWidth={isHov ? 2.5 : isOECDViolator ? 1.5 : 1}
-                style={{ transition: 'r 0.15s, stroke-width 0.15s' }}
+                stroke={isOECD ? '#f59e0b' : color}
+                strokeWidth={isHov ? 2.5 : isOECD ? 1.5 : 1}
+                style={{ transition: 'stroke-width 0.12s' }}
               />
-
-              {/* Sector symbol */}
               <text
-                x={x}
-                y={y - (r > 30 ? 6 : 3)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontSize={r > 32 ? 16 : r > 22 ? 12 : 9}
+                x={x} y={y - (r > 26 ? 5 : 2)}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={r > 32 ? 15 : r > 22 ? 11 : 8}
+                fill="var(--color-text-primary)" opacity={0.9}
                 style={{ pointerEvents: 'none', userSelect: 'none' }}
-                fill="var(--color-text-primary)"
-                opacity={0.85}
               >
                 {symbol}
               </text>
-
-              {/* Sector name — below symbol for larger nodes */}
-              {r > 26 && (
+              {r > 22 && (
                 <text
-                  x={x}
-                  y={y + (r > 32 ? 11 : 8)}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={r > 38 ? 9 : 8}
-                  fontFamily="var(--font-family-mono)"
-                  fontWeight={700}
-                  fill="var(--color-text-primary)"
-                  opacity={0.8}
-                  style={{ pointerEvents: 'none', userSelect: 'none', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  x={x} y={y + (r > 32 ? 10 : 7)}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fontSize={r > 36 ? 8.5 : 7.5}
+                  fontFamily="var(--font-family-mono)" fontWeight={700}
+                  fill="var(--color-text-primary)" opacity={0.75}
+                  style={{ pointerEvents: 'none', userSelect: 'none', textTransform: 'uppercase', letterSpacing: '0.04em' }}
                 >
-                  {name.length > 8 ? name.slice(0, 8) : name}
+                  {name.length > 9 ? name.slice(0, 9) : name}
                 </text>
               )}
-
-              {/* OECD chip in top-right corner of node */}
-              {isOECDViolator && r > 22 && (
+              {isOECD && r > 20 && (
                 <g style={{ pointerEvents: 'none' }}>
                   <circle cx={x + r - 5} cy={y - r + 5} r={5} fill="#f59e0b" opacity={0.9} />
-                  <text
-                    x={x + r - 5}
-                    y={y - r + 5}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fontSize={6}
-                    fontWeight={800}
-                    fontFamily="var(--font-family-mono)"
-                    fill="#1a1714"
-                  >
-                    !
-                  </text>
+                  <text x={x + r - 5} y={y - r + 5} textAnchor="middle" dominantBaseline="middle"
+                    fontSize={6} fontWeight={800} fontFamily="var(--font-family-mono)" fill="#1a1714">!</text>
                 </g>
               )}
             </g>
           )
         })}
 
-        {/* Central hub */}
+        {/* Hub (rendered on top so edges don't overlap it) */}
         <g style={{ pointerEvents: 'none' }}>
-          <circle
-            cx={cx}
-            cy={cy}
-            r={HUB_R}
-            fill="var(--color-background-card)"
-            stroke="var(--color-border)"
-            strokeWidth={1.5}
-          />
-          <circle cx={cx} cy={cy} r={HUB_R - 2} fill="none" stroke="var(--color-border)" strokeWidth={0.5} strokeDasharray="3 4" />
-          <text
-            x={cx}
-            y={cy - 10}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={13}
-            fontFamily="var(--font-family-serif)"
-            fontStyle="italic"
-            fontWeight={700}
-            fill="var(--color-text-primary)"
-          >
+          <circle cx={HUB_X} cy={HUB_Y} r={HUB_R}
+            fill="var(--color-background-card)" stroke="var(--color-border)" strokeWidth={1.5} />
+          <circle cx={HUB_X} cy={HUB_Y} r={HUB_R - 2}
+            fill="none" stroke="var(--color-border)" strokeWidth={0.5} strokeDasharray="3 4" />
+          <text x={HUB_X} y={HUB_Y - 9} textAnchor="middle" dominantBaseline="middle"
+            fontSize={12} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={700}
+            fill="var(--color-text-primary)">
             {formatCompactMXN(totalSpend).replace(' MXN', '')}
           </text>
-          <text
-            x={cx}
-            y={cy + 6}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={7.5}
-            fontFamily="var(--font-family-mono)"
-            fontWeight={600}
-            fill="var(--color-text-muted)"
-            style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
-          >
+          <text x={HUB_X} y={HUB_Y + 5} textAnchor="middle" dominantBaseline="middle"
+            fontSize={7} fontFamily="var(--font-family-mono)" fontWeight={600}
+            fill="var(--color-text-muted)" style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}>
             MXN TOTAL
           </text>
-          <text
-            x={cx}
-            y={cy + 18}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={7}
-            fontFamily="var(--font-family-mono)"
-            fill="var(--color-text-muted)"
-            opacity={0.7}
-          >
+          <text x={HUB_X} y={HUB_Y + 17} textAnchor="middle" dominantBaseline="middle"
+            fontSize={6.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.7}>
             {formatNumber(totalContracts)} {lang === 'es' ? 'contratos' : 'contracts'}
           </text>
         </g>
+
+        {/* Row labels */}
+        <text x={PAD_X - 18} y={ROW1_Y} textAnchor="end" dominantBaseline="middle"
+          fontSize={7} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.5}
+          style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          {lang === 'es' ? 'Mayor' : 'Larger'}
+        </text>
+        <text x={PAD_X - 18} y={ROW2_Y} textAnchor="end" dominantBaseline="middle"
+          fontSize={7} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.5}
+          style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          {lang === 'es' ? 'Menor' : 'Smaller'}
+        </text>
       </svg>
 
       {tooltip && <Tooltip data={tooltip} lang={lang} />}
