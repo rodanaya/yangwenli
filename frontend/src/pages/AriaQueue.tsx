@@ -1030,15 +1030,15 @@ function PatternEditorialBars({
                 {name}
               </span>
 
-              {/* Proportion bar — hidden on narrow mobile, shown sm+ */}
-              <div className="hidden sm:flex items-center gap-1.5 w-28 shrink-0">
-                <div className="flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
+              {/* Proportion bar — compact on mobile, full on sm+ */}
+              <div className="flex items-center gap-1.5 sm:w-28 shrink-0">
+                <div className="hidden sm:block flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{ width: `${barFrac * 100}%`, background: meta.color, opacity: 0.85 }}
                   />
                 </div>
-                <span className="font-mono text-[9px] text-text-muted w-8 text-right tabular-nums shrink-0">
+                <span className="font-mono text-[9px] text-text-muted tabular-nums shrink-0 sm:w-8 sm:text-right">
                   {pct}%
                 </span>
               </div>
