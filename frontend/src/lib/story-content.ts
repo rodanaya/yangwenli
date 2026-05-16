@@ -635,8 +635,10 @@ export const STORIES: StoryDef[] = [
         },
         pullquote: {
           quote: 'The 112 largest contracts in the dataset carry an average risk score of 0.94. In RUBLI\'s framework, 0.60 is the line above which investigation is warranted.',
+          quote_es: 'Los 112 contratos más grandes en la base de datos tienen una calificación de riesgo promedio de 0.94. En el marco de RUBLI, 0.60 es el umbral a partir del cual se justifica una investigación.',
           stat: '0.94',
           statLabel: 'avg risk, contracts above 5B MXN',
+          statLabel_es: 'riesgo prom., contratos por encima de 5 mil millones MXN',
           barValue: 0.94,
           barLabel: 'critical threshold: 0.60',
           vizTemplate: 'redline-gauge',
@@ -665,8 +667,10 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: 'Large contracts remove three of OECD\'s four integrity controls: competitive pricing, public advertising, and systematic evaluation.',
+          quote_es: 'Los contratos grandes eliminan tres de los cuatro controles de integridad de la OCDE: precios competitivos, publicidad pública y evaluación sistemática.',
           stat: '~90%',
           statLabel: 'direct-award rate for contracts >10M MXN in salud & energía',
+          statLabel_es: 'tasa de adjudicación directa para contratos >10M MXN en salud y energía',
           barValue: 0.90,
           barLabel: 'OECD recommended maximum: 25-30%',
           vizTemplate: 'breach-ceiling',
