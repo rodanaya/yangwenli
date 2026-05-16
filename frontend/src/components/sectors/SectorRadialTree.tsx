@@ -299,18 +299,16 @@ export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
                 isOECD ? '#f59e0b' : color,
                 isHov ? 2.5 : isOECD ? 1.5 : 1,
               )}
-              {r > 22 && (
-                <text
-                  x={x} y={y + r + 10}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize={r > 36 ? 8.5 : 7.5}
-                  fontFamily="var(--font-family-mono)" fontWeight={700}
-                  fill="var(--color-text-primary)" opacity={0.75}
-                  style={{ pointerEvents: 'none', userSelect: 'none', textTransform: 'uppercase', letterSpacing: '0.04em' }}
-                >
-                  {name.length > 9 ? name.slice(0, 9) : name}
-                </text>
-              )}
+              <text
+                x={x} y={y + r + 10}
+                textAnchor="middle" dominantBaseline="middle"
+                fontSize={r > 36 ? 8.5 : r > 22 ? 7.5 : 6.5}
+                fontFamily="var(--font-family-mono)" fontWeight={700}
+                fill="var(--color-text-primary)" opacity={0.75}
+                style={{ pointerEvents: 'none', userSelect: 'none', textTransform: 'uppercase', letterSpacing: '0.04em' }}
+              >
+                {name.length > 9 ? name.slice(0, 9) : name}
+              </text>
               {isOECD && r > 20 && (
                 <g style={{ pointerEvents: 'none' }}>
                   <circle cx={x + r - 5} cy={y - r + 5} r={5} fill="#f59e0b" opacity={0.9} />
