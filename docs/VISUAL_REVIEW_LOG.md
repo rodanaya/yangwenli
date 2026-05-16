@@ -706,3 +706,47 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key le
 
 ### Overall: WARN
 Egress proxy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks cannot complete (same as prior runs 2026-05-16T00:04:32Z, 2026-05-15). No change in bilingual gap status: no genuine i18n key leaks, no hardcoded English strings missing Spanish variants. One note: `StoryMoneySankeyChart.tsx` hardcodes demo vendor `Maypo S.A.` — not an i18n issue but worth replacing with dynamic data eventually. To obtain valid HTTP/API results, run health check from VPS (37.60.232.109) or an unrestricted host.
+
+---
+## Visual Review — 2026-05-16T12:15:09Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/atlas | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/aria | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/cases | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/methodology | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | ⚠ |
+
+**Note**: All 403 responses carry `x-deny-reason: host_not_allowed` — egress proxy blocks all outbound HTTPS from this remote execution environment. Persistent across all prior runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | blocked (egress proxy) | ⚠ |
+| /api/v1/cases?limit=5 | blocked (egress proxy) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | blocked (egress proxy) | ⚠ |
+| /api/v1/sectors | blocked (egress proxy) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 16 hits — all false positives (no new regressions):
+- Pattern label map in `AriaQueue.tsx:951–957` (bilingual `{es:…, en:…}` objects — legitimate)
+- Company names in `Executive.tsx` (`GRUPO FARMACOS ESPECIALIZADOS`, `LICONSA`, `HEMOSER`)
+- `TIER_STYLES[tierName as TierKey]` — type-safe lookup, not a UI string (`InstitutionScorecards.tsx:443`)
+- Academic citation abbreviation `Mahalanobis, P.C.` (`Methodology.tsx:118`)
+- Legal suffix array (`'S.A.', 'S.C.', 'A.C.'` etc. — `ExploreCanvas.tsx:1619–1620`)
+- Sankey chart hardcoded vendor names `Maypo S.A.` (`StoryMoneySankeyChart.tsx:22,37` — story demo data)
+- Comment in `CaseLibrary.tsx:304` (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+Egress proxy blocks all outbound HTTPS from this remote execution environment — HTTP and API checks cannot complete (same as all prior runs). No change in bilingual gap status: no genuine i18n key leaks, no hardcoded English strings missing Spanish variants. To obtain valid HTTP/API results, run health check from VPS (37.60.232.109) or an unrestricted host.
