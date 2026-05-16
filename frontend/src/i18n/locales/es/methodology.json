@@ -86,7 +86,7 @@
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
       "formulaDescStart": "Donde z = características z-score, beta = coeficientes aprendidos, sigma = sigmoide logística, c = corrección PU (0.32). S(z) es un ",
       "formulaDescStrong": "indicador de similitud de riesgo",
-      "formulaDescEnd": " — mide qué tan estrechamente las características de contratación de un contrato se asemejan a las de casos documentados de corrupción. No es una probabilidad literal de corrupción.",
+      "formulaDescEnd": " — mide qué tan estrechamente las características de contratación de un contrato se asemejan a las de casos documentados de corrupción. La puntuación es una señal de similitud de patrones, no una estimación de probabilidad de corrupción.",
       "riskThresholdsLabel": "UMBRALES DE NIVEL DE RIESGO",
       "tableColLevel": "Nivel",
       "tableColThreshold": "Umbral",

@@ -77,7 +77,7 @@
   },
   "calibratedProbability": {
     "title": "Puntuación de Riesgo",
-    "description": "Un indicador estadístico de riesgo que mide la similitud con patrones documentados de corrupción. La puntuación se deriva de regresión logística pero debe interpretarse como un indicador de riesgo, no como una probabilidad literal de corrupción."
+    "description": "Un indicador estadístico de riesgo que mide la similitud con patrones documentados de corrupción. La puntuación se deriva de regresión logística y debe interpretarse como una señal de similitud de patrones, no como una estimación de probabilidad de corrupción."
   },
   "perSectorModel": {
     "title": "Modelo por Sector",

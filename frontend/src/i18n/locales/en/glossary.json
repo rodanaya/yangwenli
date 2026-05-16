@@ -77,7 +77,7 @@
   },
   "calibratedProbability": {
     "title": "Risk Score",
-    "description": "A statistical risk indicator measuring similarity to documented corruption patterns. The score is derived from logistic regression but should be interpreted as a risk indicator, not a literal probability of corruption."
+    "description": "A statistical risk indicator measuring similarity to documented corruption patterns. The score is derived from logistic regression and should be interpreted as a pattern-similarity signal, not a corruption probability estimate."
   },
   "perSectorModel": {
     "title": "Per-Sector Model",

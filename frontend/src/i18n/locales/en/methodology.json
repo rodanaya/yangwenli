@@ -86,7 +86,7 @@
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
       "formulaDescStart": "Where z = z-score features, beta = learned coefficients, sigma = logistic sigmoid, c = PU correction (0.32). S(z) is a ",
       "formulaDescStrong": "risk similarity score",
-      "formulaDescEnd": " — it measures how closely a contract's procurement characteristics resemble those from documented corruption cases. It is not a literal probability of corruption.",
+      "formulaDescEnd": " — it measures how closely a contract's procurement characteristics resemble those from documented corruption cases. The score is a pattern-similarity signal, not a corruption probability estimate.",
       "riskThresholdsLabel": "RISK LEVEL THRESHOLDS",
       "tableColLevel": "Level",
       "tableColThreshold": "Threshold",

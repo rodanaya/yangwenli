@@ -117,7 +117,7 @@ cd backend && python -m scripts.aria_init_schema && python -m scripts.aria_pipel
 python -m scripts.aria_generate_memos --tier 1 --limit 20
 ```
 
-Queue: 248,944 vendors, T1=299 / T2=1,488 / T3=5,578 / T4=241,579. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,974, P4=220, P5=3,985, P6 Capture=15,923, P7=257. Frontend: `/aria`.
+Queue: 248,944 vendors, T1=299 / T2=1,488 / T3=5,578 / T4=241,579. Patterns: P1=44, P2 Ghost=6,118 (39.6B MXN), P3 Intermediary=2,972, P4=220, P5=3,772, P6 Capture=15,939, P7=285. Frontend: `/aria`.
 
 CENTINELA state: T1 DONE · T2 DONE (32 CORRUPTION_MENTION) · T3 DONE (5,578/5,578 — 4 CORRUPTION_MENTION, all SKIP/already-in-GT; batch K = 0 new cases).
 External registries via CENTINELA: `python -m scripts.centinela_web --tier N [--no-haiku]`.
