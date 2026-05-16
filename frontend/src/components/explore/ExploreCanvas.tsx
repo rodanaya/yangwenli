@@ -481,7 +481,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
       <svg
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         className="w-full h-full"
-        preserveAspectRatio="xMidYMid meet"
+        preserveAspectRatio="xMidYMid slice"
         overflow="hidden"
       >
         <g
@@ -618,11 +618,11 @@ function Z0Layer({
           Pure decoration, deterministic, no interaction. */}
       <BackgroundStars />
 
-      {/* Eyebrow — names the current lens so the user knows what the
-          sizing/coloring means. */}
+      {/* Eyebrow — centered so it stays visible when xMidYMid slice clips the left/right margins. */}
       <text
-        x={PAD}
+        x={SVG_W / 2}
         y={PAD}
+        textAnchor="middle"
         fontSize={11}
         fontFamily="var(--font-family-mono, monospace)"
         fontWeight={700}
@@ -634,8 +634,9 @@ function Z0Layer({
           : (lang === 'en' ? 'Z0 · SYSTEM · 12 SECTORS · SPEND LENS' : 'Z0 · SISTEMA · 12 SECTORES · LENTE DE GASTO')}
       </text>
       <text
-        x={PAD}
+        x={SVG_W / 2}
         y={SVG_H - PAD * 0.5}
+        textAnchor="middle"
         fontSize={10}
         fontFamily="var(--font-family-mono, monospace)"
         fill="var(--color-text-muted)"
