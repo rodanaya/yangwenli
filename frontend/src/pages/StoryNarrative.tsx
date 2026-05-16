@@ -770,8 +770,10 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
         color={accentColor}
       />
 
-      {/* Two-column layout on desktop: prose + breakout pullquote */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6">
+      {/* Two-column layout on desktop: prose + breakout pullquote.
+          isolate creates a stacking context so the sticky aside's z-index
+          is scoped inside the grid — the chart below (z-20) stays on top. */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6 isolate">
         {/* Body column */}
         <div className="lg:col-span-7 lg:col-start-1">
           {chapter.prose.map((paragraph, i) => (
@@ -802,9 +804,10 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
         )}
       </div>
 
-      {/* Chart spans full editorial width below — relative z-10 keeps it above the sticky aside */}
+      {/* Chart spans full editorial width below the grid — z-20 ensures it
+          renders above the isolated grid's stacking context */}
       {chapter.chartConfig && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 relative z-20">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}
