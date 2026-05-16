@@ -15,8 +15,9 @@ import { ArrowUpRight } from 'lucide-react'
 import { networkApi } from '@/api/client'
 import type { PatternSpotlight } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotStrip } from '@/components/charts/editorial'
 import { RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Hardcoded editorial metadata per pattern
@@ -99,7 +100,7 @@ const PATTERN_META: PatternMeta[] = [
 ]
 
 // ---------------------------------------------------------------------------
-// Cross-pattern ranked comparison strip (vendor count × T1 count)
+// Cross-pattern ranked comparison strip — DotStrip ranked by vendor count
 // ---------------------------------------------------------------------------
 function CrossPatternComparison({
   patterns,
@@ -112,67 +113,20 @@ function CrossPatternComparison({
 }) {
   const sorted = [...patterns].sort((a, b) => (b.vendor_count ?? 0) - (a.vendor_count ?? 0))
   const maxVendors = sorted[0]?.vendor_count ?? 1
-  const maxT1 = sorted.reduce((m, p) => Math.max(m, p.t1_count ?? 0), 0)
 
-  return (
-    <div className="space-y-1">
-      {sorted.map((p) => {
-        const m = meta.find((x) => x.code === p.code)
-        if (!m) return null
-        const color = PATTERN_COLORS[p.code] ?? '#64748b'
-        const vendorPct = (p.vendor_count / maxVendors) * 100
-        const t1Pct = maxT1 > 0 ? (p.t1_count / maxT1) * 100 : 0
-        const name = isEs ? m.nameEs : m.nameEn
-        return (
-          <div key={p.code} className="flex items-center gap-3">
-            <span
-              className="flex-shrink-0 w-6 text-[10px] font-bold font-mono text-right"
-              style={{ color }}
-            >
-              {p.code}
-            </span>
-            <span className="w-28 flex-shrink-0 text-[11px] text-text-secondary truncate hidden sm:block">
-              {name}
-            </span>
-            <div className="flex-1 min-w-0 relative h-4 flex items-center gap-1">
-              {/* Vendor bar */}
-              <div
-                className="h-2 rounded-full opacity-40 transition-all"
-                style={{ width: `${vendorPct}%`, backgroundColor: color, minWidth: 4 }}
-              />
-              {/* T1 bar overlaid */}
-              <div
-                className="h-3 rounded-full absolute left-0 transition-all"
-                style={{ width: `${t1Pct}%`, backgroundColor: color, minWidth: t1Pct > 0 ? 2 : 0, opacity: 0.85 }}
-              />
-            </div>
-            <span className="flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted w-20 text-right">
-              {p.vendor_count.toLocaleString()}
-              {p.t1_count > 0 && (
-                <span className="text-[9px] ml-1" style={{ color }}>
-                  +{p.t1_count}T1
-                </span>
-              )}
-            </span>
-          </div>
-        )
-      })}
-      <div className="flex items-center gap-3 pt-1">
-        <span className="w-6 flex-shrink-0" />
-        <span className="w-28 flex-shrink-0 hidden sm:block" />
-        <div className="flex-1 flex items-center gap-4 text-[9px] font-mono text-text-muted/60 uppercase tracking-wider">
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-4 h-1.5 rounded-full bg-current opacity-40" />
-            {isEs ? 'Proveedores' : 'Vendors'}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-4 h-2.5 rounded-full bg-current" style={{ opacity: 0.85 }} />
-            T1 · Critical
-          </span>
-        </div>
-      </div>
-    </div>
-  )
+  const rows = sorted.map((p) => {
+    const m = meta.find((x) => x.code === p.code)
+    const color = PATTERN_COLORS[p.code] ?? '#64748b'
+    const name = m ? (isEs ? m.nameEs : m.nameEn) : p.code
+    return {
+      label: `${p.code} · ${name}`,
+      fraction: maxVendors > 0 ? (p.vendor_count ?? 0) / maxVendors : 0,
+      colorRaw: color,
+      valueLabel: formatNumber(p.vendor_count ?? 0),
+    }
+  })
+
+  return <DotStrip rows={rows} N={22} labelWidth={140} />
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +182,9 @@ function PatternCard({
   const t1 = spotlight?.t1_count ?? 0
   const spend = spotlight?.total_value_mxn ?? 0
 
+  // patternColor must be declared before heroColor (TDZ — const has no hoisting)
+  const patternColor = PATTERN_COLORS[meta.code] ?? RISK_COLORS.critical
+
   // Value-heavy patterns lead with spend; investigation-heavy ones lead with T1 count
   const heroIsSpend = ['P2', 'P3', 'P6'].includes(meta.code)
   const heroValue = heroIsSpend && spend > 0
@@ -241,8 +198,6 @@ function PatternCard({
       ? 'T1 · Critical'
       : (isEs ? 'Proveedores' : 'Vendors')
   const heroColor = heroIsSpend ? '#a06820' : patternColor
-
-  const patternColor = PATTERN_COLORS[meta.code] ?? RISK_COLORS.critical
 
   return (
     <div
@@ -343,8 +298,18 @@ function PatternCard({
               </div>
             )}
 
-            {/* Tertiary: vendors + GT cases */}
+            {/* Tertiary: T2 count + vendors + GT cases */}
             <div className="flex gap-4 ml-auto">
+              {spotlight.t2_count > 0 && (
+                <div className="flex flex-col gap-0.5 text-right">
+                  <span className="text-[13px] font-mono font-semibold tabular-nums text-text-primary">
+                    {spotlight.t2_count.toLocaleString()}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
+                    T2 · High
+                  </span>
+                </div>
+              )}
               <div className="flex flex-col gap-0.5 text-right">
                 <span className="text-[13px] font-mono font-semibold tabular-nums text-text-primary">
                   {spotlight.vendor_count.toLocaleString()}
@@ -369,6 +334,66 @@ function PatternCard({
 
         {/* Description */}
         <p className="text-sm text-text-secondary leading-relaxed">{desc}</p>
+
+        {/* § Fingerprint — procurement signal rates from the model features */}
+        {spotlight && (spotlight.avg_da_rate != null || spotlight.avg_sb_rate != null) && (
+          <div className="mt-3 pt-2.5 border-t border-border/30 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {spotlight.avg_da_rate != null && (
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+                  {isEs ? 'Adj. directa prom.' : 'Avg. direct award'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono tabular-nums font-bold text-sm" style={{ color: patternColor }}>
+                    {(spotlight.avg_da_rate * 100).toFixed(0)}%
+                  </span>
+                  <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(spotlight.avg_da_rate * 100, 100)}%`,
+                        backgroundColor: patternColor,
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {spotlight.avg_sb_rate != null && (
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+                  {isEs ? 'Licitación única prom.' : 'Avg. single bid'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono tabular-nums font-bold text-sm" style={{ color: patternColor }}>
+                    {(spotlight.avg_sb_rate * 100).toFixed(0)}%
+                  </span>
+                  <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(spotlight.avg_sb_rate * 100, 100)}%`,
+                        backgroundColor: patternColor,
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            {spotlight.avg_ips > 0 && (
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
+                  {isEs ? 'IPS promedio' : 'Avg. IPS'}
+                </div>
+                <span className="font-mono tabular-nums font-bold text-sm" style={{ color: patternColor }}>
+                  {Math.round(spotlight.avg_ips * 100)}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Investigative hook — styled callout */}
         <div
@@ -407,7 +432,7 @@ function PatternCard({
             {isEs ? 'Principales sospechosos' : 'Top suspects'}
           </div>
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {spotlight.top_vendors.slice(0, 5).map((v) => (
+            {spotlight.top_vendors.slice(0, 8).map((v) => (
               <div key={v.vendor_id}>
                 <EntityIdentityChip
                   type="vendor"
