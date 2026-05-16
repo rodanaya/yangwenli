@@ -637,7 +637,7 @@ export function Sectors() {
               return (
                 <>
                   {/* Editorial lede */}
-                  <div className="mb-8 pb-6 border-b border-border">
+                  <div className="mb-6 pb-5 border-b border-border">
                     <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
                       {i18n.language === 'es' ? 'Hallazgo · Categorías' : 'Finding · Categories'}
                     </p>
@@ -685,14 +685,21 @@ export function Sectors() {
                   </div>
 
                   {/* ── § 1 — SWIMLANE HERO ───────────────────────────────── */}
-                  <div className="mb-10 pb-8 border-b border-border">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-                      {i18n.language === 'es'
-                        ? 'Lo que el Estado compra · 12 carriles'
-                        : 'What the State Buys · 12 Lanes'}
-                    </p>
+                  <div className="mb-6 pb-5 border-b border-border">
+                    <div className="flex items-baseline gap-3 mb-3">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                        {i18n.language === 'es'
+                          ? 'Lo que el Estado compra · 12 carriles'
+                          : 'What the State Buys · 12 Lanes'}
+                      </p>
+                      <span className="text-[10px] text-text-muted/50 font-mono">
+                        {i18n.language === 'es'
+                          ? '· posición = riesgo · tamaño = gasto · línea cyan = umbral alto'
+                          : '· position = risk · size = spend · cyan = high-risk threshold'}
+                      </span>
+                    </div>
                     <h3
-                      className="text-text-primary leading-[1.1] mb-2"
+                      className="text-text-primary leading-[1.1] mb-3"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
@@ -702,23 +709,25 @@ export function Sectors() {
                     >
                       {i18n.language === 'es' ? 'Doce mercados, una hoja' : 'Twelve markets, one sheet'}
                     </h3>
-                    <p className="text-sm text-text-muted leading-relaxed mb-5 max-w-prose">
-                      {i18n.language === 'es'
-                        ? 'Cada carril es un sector; cada punto, una categoría. La posición horizontal es el indicador de riesgo v0.8.5; el tamaño, el gasto. La línea cyan marca el umbral de riesgo alto.'
-                        : 'Each lane is a sector; each dot, a category. Horizontal position is the v0.8.5 risk indicator; size encodes spend. The cyan line marks the high-risk threshold.'}
-                    </p>
                     <CategorySectorSwimlane categories={categoryData.data} />
                   </div>
 
                   {/* ── § 2 — CAPTURE DUMBBELL HERO ─────────────────────── */}
-                  <div className="mb-10 pb-8 border-b border-border">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
-                      {i18n.language === 'es'
-                        ? 'La Brecha · #1 vs #2'
-                        : 'The Gap · #1 vs #2'}
-                    </p>
+                  <div className="mb-6 pb-5 border-b border-border">
+                    <div className="flex items-baseline gap-3 mb-3">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                        {i18n.language === 'es'
+                          ? 'La Brecha · #1 vs #2'
+                          : 'The Gap · #1 vs #2'}
+                      </p>
+                      <span className="text-[10px] text-text-muted/50 font-mono">
+                        {i18n.language === 'es'
+                          ? '· 12 categorías más concentradas · círculo lleno = líder'
+                          : '· 12 most concentrated categories · filled = leader'}
+                      </span>
+                    </div>
                     <h3
-                      className="text-text-primary leading-[1.1] mb-2"
+                      className="text-text-primary leading-[1.1] mb-3"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: 'clamp(1.15rem, 2.5vw, 1.65rem)',
@@ -730,11 +739,6 @@ export function Sectors() {
                         ? 'Donde un proveedor se traga el mercado'
                         : 'Where one vendor swallows the market'}
                     </h3>
-                    <p className="text-sm text-text-muted leading-relaxed mb-5 max-w-prose">
-                      {i18n.language === 'es'
-                        ? 'En las doce categorías más concentradas, el primer proveedor se queda con esta porción del mercado. Cuando el círculo lleno se aleja del círculo abierto, alguien capturó el contrato.'
-                        : 'In the twelve most concentrated categories, the leading vendor takes this share of the market. When the filled circle pulls away from the open one, somebody captured the contract.'}
-                    </p>
                     <CategoryCaptureDumbbell categories={categoryData.data} />
                   </div>
 
@@ -814,6 +818,14 @@ export function Sectors() {
 
                     return (
                       <div className="rounded-sm border border-border overflow-hidden">
+                        {/* Column headers */}
+                        <div className="flex items-center gap-4 px-5 py-1.5 bg-background-elevated border-b border-border text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50">
+                          <span className="w-8 flex-shrink-0">#</span>
+                          <span className="flex-1">{i18n.language === 'es' ? 'Categoría' : 'Category'}</span>
+                          <span className="flex-shrink-0 min-w-[90px] text-right">{i18n.language === 'es' ? 'Gasto' : 'Spend'}</span>
+                          <span className="flex-shrink-0 min-w-[80px] text-right">{i18n.language === 'es' ? 'Riesgo' : 'Risk'}</span>
+                          <span className="flex-shrink-0 min-w-[80px] text-right">DA%</span>
+                        </div>
                         {catRows.map((cat, idx) => {
                           const riskLevel = getRiskLevelFromScore(cat.avg_risk)
                           const sectorColor =
@@ -849,7 +861,7 @@ export function Sectors() {
                                 />
                               )}
                               <div
-                                className="flex items-center gap-4 px-5 py-2.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
                                 style={{ borderLeft: `3px solid ${sectorColor}` }}
                               >
                                 <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
@@ -865,38 +877,38 @@ export function Sectors() {
                                       sectorCode={cat.sector_code ?? null}
                                       riskScore={cat.avg_risk ?? null}
                                     />
+                                    {/* Top vendor + institution — inline single row */}
+                                    {(cat.top_vendor || cat.top_institution) && (
+                                      <span className="flex items-center gap-1.5 text-[10px] text-text-muted/70 font-mono">
+                                        {cat.top_vendor && (
+                                          <EntityIdentityChip
+                                            type="vendor"
+                                            id={cat.top_vendor.id}
+                                            name={cat.top_vendor.name}
+                                            size="xs"
+                                            hideIcon
+                                            sectorCode={cat.sector_code ?? null}
+                                          />
+                                        )}
+                                        {cat.top_vendor && cat.top_institution && (
+                                          <span className="opacity-40">·</span>
+                                        )}
+                                        {cat.top_institution && (
+                                          <EntityIdentityChip
+                                            type="institution"
+                                            id={cat.top_institution.id}
+                                            name={
+                                              cat.top_institution.name.length > 28
+                                                ? cat.top_institution.name.slice(0, 28) + '…'
+                                                : cat.top_institution.name
+                                            }
+                                            size="xs"
+                                            hideIcon
+                                          />
+                                        )}
+                                      </span>
+                                    )}
                                   </div>
-                                  {/* Top vendor chip */}
-                                  {cat.top_vendor && (
-                                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
-                                      <span>{i18n.language === 'es' ? 'Top:' : 'Top:'}</span>
-                                      <EntityIdentityChip
-                                        type="vendor"
-                                        id={cat.top_vendor.id}
-                                        name={cat.top_vendor.name}
-                                        size="xs"
-                                        hideIcon
-                                        sectorCode={cat.sector_code ?? null}
-                                      />
-                                    </div>
-                                  )}
-                                  {/* cat-P3 B: top institution chip — below top vendor */}
-                                  {cat.top_institution && (
-                                    <div className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
-                                      <span>{i18n.language === 'es' ? 'Inst:' : 'Inst:'}</span>
-                                      <EntityIdentityChip
-                                        type="institution"
-                                        id={cat.top_institution.id}
-                                        name={
-                                          cat.top_institution.name.length > 32
-                                            ? cat.top_institution.name.slice(0, 32) + '…'
-                                            : cat.top_institution.name
-                                        }
-                                        size="xs"
-                                        hideIcon
-                                      />
-                                    </div>
-                                  )}
                                 </div>
                                 <div className="flex-shrink-0 text-right min-w-[90px]">
                                   <div className="font-mono text-sm tabular-nums text-text-primary">
