@@ -964,8 +964,10 @@ function PatternDotStrip({
           </p>
         )}
       </div>
-      <div className="rounded-sm border border-border/60 bg-background-card p-3">
-        <DotStrip rows={stripRows} N={30} labelWidth={110} />
+      <div className="rounded-sm border border-border/60 bg-background-card p-3 overflow-x-auto">
+        <div className="min-w-[420px]">
+          <DotStrip rows={stripRows} N={30} labelWidth={110} />
+        </div>
       </div>
     </div>
   )
@@ -1259,15 +1261,15 @@ export default function AriaPage() {
               {isEs ? 'Cola de investigación · ARIA' : 'Investigation queue · ARIA'}
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-4 flex-wrap">
-            <div>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
               <h1
                 className="text-text-primary"
                 style={{
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                   fontStyle: 'italic',
                   fontWeight: 500,
-                  fontSize: 'clamp(28px, 4vw, 38px)',
+                  fontSize: 'clamp(24px, 4vw, 38px)',
                   lineHeight: 0.98,
                   letterSpacing: '-0.012em',
                 }}
