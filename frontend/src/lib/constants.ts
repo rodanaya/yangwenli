@@ -157,7 +157,7 @@ export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1427
 export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1378
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-16-methodology-copy-pattern-counts'
+export const BUILD_ID = '2026-05-16-gt-count-sync-atlas-url'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)

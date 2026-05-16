@@ -1196,7 +1196,7 @@ function ReportCard() {
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
   // Ground truth cases count — live from executive summary (audit 2026-05-12)
-  const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1417
+  const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1427
 
   return (
     <main className="min-h-screen bg-background" id="main-content">

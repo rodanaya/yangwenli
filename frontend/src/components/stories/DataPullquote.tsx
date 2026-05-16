@@ -95,7 +95,7 @@ const TEMPLATE_FAMILY: Record<VizTemplate, VizFamily> = {
 }
 
 function parseStatNumber(stat: string): { num: number; suffix: string; decimals: number } | null {
-  const match = stat.match(/^([0-9.,]+)\s*(%|B|M|K|T)?$/)
+  const match = stat.match(/^[~≈]?([0-9.,]+)\s*(%|B|M|K|T)?$/)
   if (!match) return null
   const cleaned = match[1].replace(/,/g, '')
   const num = parseFloat(cleaned)

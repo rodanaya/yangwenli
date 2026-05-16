@@ -1174,6 +1174,19 @@ export default function Atlas() {
     return () => clearInterval(id)
   }, [isPlayingB, compareMode])
 
+  // Sync interactive state back to URL so shareable links stay current after
+  // the user switches lens, year, pin, or risk floor.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    p.set('lens', mode)
+    const year = YEAR_SNAPSHOTS[yearIndex]?.year
+    if (year && yearIndex < YEAR_SNAPSHOTS.length - 1) p.set('year', String(year))
+    else p.delete('year')
+    if (pinnedCode) p.set('pin', pinnedCode); else p.delete('pin')
+    if (riskFloor !== 'all') p.set('floor', riskFloor); else p.delete('floor')
+    window.history.replaceState(null, '', `${window.location.pathname}?${p.toString()}`)
+  }, [mode, yearIndex, pinnedCode, riskFloor])
+
   // ─── STORY playback ──────────────────────────────────────────────────────
   // Each chapter applies (mode, year, pin) and either auto-advances after
   // its dwellMs (when storyPlaying) or waits for the user to hit Continue.

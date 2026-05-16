@@ -42,7 +42,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory (Klitgaard 1988): Monopoly power is the primary enabling condition for procurement corruption — it eliminates price competition and reduces the ability to compare against market rates.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
     rubli_note:
-      "Strong predictor globally in v0.8.5 (+0.238). Expanded ground truth (1,417 cases, 861 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
+      "Strong predictor globally in v0.8.5 (+0.238). Expanded ground truth (1,427 cases, 1,378 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
   },
   price_volatility: {
     title: 'Price Volatility',
@@ -54,7 +54,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Rent-Seeking Theory (Tullock 1967): Rents are extracted through price inflation above competitive levels. Porter & Zona (1993): Price manipulation is detectable in bid distributions — colluding firms show unusual variance patterns.',
     citation: 'Porter & Zona (1993): Price manipulation detectable in bid distributions',
     rubli_note:
-      'Top global predictor in v0.8.5 (+1.857). Remains strongest across 1,417 documented cases. Vendors with wildly varying contract amounts relative to sector norms consistently scored highest.',
+      'Top global predictor in v0.8.5 (+1.857). Remains strongest across 1,427 documented cases. Vendors with wildly varying contract amounts relative to sector norms consistently scored highest.',
   },
   institution_diversity: {
     title: 'Institution Diversity',
@@ -88,7 +88,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       "Vendors operating across many sectors have diversified risk exposure. However, v0.8.5 analysis shows some corruption networks intentionally operate across sectors to avoid detection. Cross-sector presence is a weak positive signal.",
     theory:
       'Extended ground truth: Some major corruption cases (LICONSA ecosystem, IMSS networks) span multiple sectors. Sector spread alone is insufficient for distinguishing corruption.',
-    citation: 'RUBLI v0.8.5 ground truth analysis (1,417 institution-scoped cases)',
+    citation: 'RUBLI v0.8.5 ground truth analysis (1,427 institution-scoped cases)',
     rubli_note:
       'Zeroed by sign constraint in v0.8.5. Cross-sector presence is ambiguous — some corruption networks span sectors, but many legitimate vendors also operate broadly.',
   },

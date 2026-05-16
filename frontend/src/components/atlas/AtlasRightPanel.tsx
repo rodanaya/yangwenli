@@ -51,7 +51,7 @@ const IDLE_STATS = {
   team: {
     t1Vendors: 299,
     centinelaReady: 299,
-    gtCases: 1417,
+    gtCases: 1427,
   },
 }
 
