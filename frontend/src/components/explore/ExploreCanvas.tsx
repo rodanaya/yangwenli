@@ -152,6 +152,95 @@ const SECTOR_SYMBOLS: Record<string, string> = {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Sector shape helpers — each returns an SVG <polygon> or <path> centered at
+// (cx, cy) with an inscribed radius of r. Used in SectorBubble to replace the
+// plain circle with a shape that visually encodes the sector identity.
+// All shapes are convex polygons except salud (cross) and energia (bolt).
+// ────────────────────────────────────────────────────────────────────────────
+
+function polyPoints(cx: number, cy: number, r: number, sides: number, rotationDeg = 0): string {
+  return Array.from({ length: sides }, (_, i) => {
+    const angle = ((i * 360) / sides + rotationDeg) * (Math.PI / 180)
+    return `${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`
+  }).join(' ')
+}
+
+function starPoints(cx: number, cy: number, R: number, r: number, points: number): string {
+  const pts: string[] = []
+  for (let i = 0; i < points * 2; i++) {
+    const rad = ((i * 180) / points - 90) * (Math.PI / 180)
+    const d = i % 2 === 0 ? R : r
+    pts.push(`${(cx + d * Math.cos(rad)).toFixed(2)},${(cy + d * Math.sin(rad)).toFixed(2)}`)
+  }
+  return pts.join(' ')
+}
+
+function getSectorShapeElement(
+  code: string,
+  cx: number, cy: number, r: number,
+  fill: string, fillOpacity: number,
+  stroke: string, strokeWidth: number,
+): React.ReactElement {
+  const props = { fill, fillOpacity, stroke, strokeWidth }
+  switch (code) {
+    case 'salud': {
+      // Medical cross — thick plus sign
+      const arm = r * 0.42, w = r * 0.35
+      const d = [
+        `M ${cx - w} ${cy - arm}`, `L ${cx + w} ${cy - arm}`,
+        `L ${cx + w} ${cy - w}`, `L ${cx + arm} ${cy - w}`,
+        `L ${cx + arm} ${cy + w}`, `L ${cx + w} ${cy + w}`,
+        `L ${cx + w} ${cy + arm}`, `L ${cx - w} ${cy + arm}`,
+        `L ${cx - w} ${cy + w}`, `L ${cx - arm} ${cy + w}`,
+        `L ${cx - arm} ${cy - w}`, `L ${cx - w} ${cy - w}`, 'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+    case 'defensa':
+      // Pentagon (shield-like, point up)
+      return <polygon points={polyPoints(cx, cy, r, 5, -90)} {...props} />
+    case 'tecnologia':
+      // Hexagon (flat-top)
+      return <polygon points={polyPoints(cx, cy, r, 6, 0)} {...props} />
+    case 'hacienda':
+      // Diamond (rotated square)
+      return <polygon points={polyPoints(cx, cy, r, 4, -45)} {...props} />
+    case 'infraestructura':
+      // Equilateral triangle, point up
+      return <polygon points={polyPoints(cx, cy, r, 3, -90)} {...props} />
+    case 'gobernacion':
+      // 5-pointed star
+      return <polygon points={starPoints(cx, cy, r, r * 0.42, 5)} {...props} />
+    case 'agricultura':
+      // Octagon (leaf-like 8-gon)
+      return <polygon points={polyPoints(cx, cy, r, 8, 22.5)} {...props} />
+    case 'ambiente':
+      // 6-pointed star (snowflake / tree ring)
+      return <polygon points={starPoints(cx, cy, r, r * 0.5, 6)} {...props} />
+    case 'energia': {
+      // Lightning bolt — irregular 7-point polygon
+      const p = r
+      const d = [
+        `M ${cx + p * 0.15} ${cy - p}`,
+        `L ${cx - p * 0.1} ${cy - p * 0.05}`,
+        `L ${cx + p * 0.25} ${cy - p * 0.05}`,
+        `L ${cx - p * 0.15} ${cy + p}`,
+        `L ${cx + p * 0.1} ${cy + p * 0.1}`,
+        `L ${cx - p * 0.2} ${cy + p * 0.1}`,
+        `L ${cx + p * 0.15} ${cy - p}`, 'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+    case 'trabajo':
+      // 12-sided rounded-ish polygon (gear approximation)
+      return <polygon points={polyPoints(cx, cy, r, 12, 15)} {...props} />
+    default:
+      // Circle fallback for 'educacion', 'otros', unknown
+      return <circle cx={cx} cy={cy} r={r} {...props} />
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // BackgroundStars — decorative star field for Z0 atmosphere.
 // Deterministic Halton-derived scatter so the layout is stable across renders.
 // Pure decoration: pointer-events: none, no interaction, no labels.
@@ -727,7 +816,12 @@ function SectorBodyVisual({
       <title>{label}</title>
       {hovered && <circle cx={cx} cy={cy} r={rEffective + 8} fill={color} fillOpacity={0.15} />}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 4} color={color} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={color} fillOpacity={hovered ? 0.95 : 0.85} stroke="var(--color-background)" strokeWidth={2} />
+      {getSectorShapeElement(
+        sectorCode ?? '',
+        cx, cy, rEffective,
+        color, hovered ? 0.95 : 0.85,
+        'var(--color-background)', 2,
+      )}
 
       {/* Sector symbol glyph — white, centered, non-interactive */}
       {glyph && (
