@@ -847,7 +847,7 @@ function TierEditorialStrip({
           are a small fraction but represent the highest-priority leads. */}
       {!statsLoading && total > 0 && (
         <div className="mb-3">
-          <div className="h-2.5 w-full overflow-hidden flex mb-1.5">
+          <div className="h-5 w-full overflow-hidden flex mb-1.5 rounded-sm">
             {rows.map(({ tier, color }) => {
               const count = counts[tier] ?? 0
               const pct = (count / total) * 100
