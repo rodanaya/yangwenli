@@ -578,13 +578,13 @@ export function Sectors() {
       </header>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
         {/* ── WHO / WHAT axis toggle ─────────────────────────────────
             Sectors = WHO bought (12 agency taxonomy).
             Categories = WHAT was bought (72 Partida/CUCoP classifications).
             One page, two investigative lenses. */}
-        <div className="mb-8 flex items-center gap-0 border-b border-border">
+        <div className="mb-5 flex items-center gap-0 border-b border-border">
           <button
             type="button"
             onClick={() => setView('sectors')}
@@ -657,7 +657,7 @@ export function Sectors() {
                             {topByRisk.name_es}
                           </span>
                           {' '}es la categoría de mayor riesgo:{' '}
-                          <span className="font-mono tabular-nums" style={{ letterSpacing: 0 }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
                           {' '}promedio.
                         </>
                       ) : (
@@ -666,7 +666,7 @@ export function Sectors() {
                             {topByRisk.name_en}
                           </span>
                           {' '}is the highest-risk category:{' '}
-                          <span className="font-mono tabular-nums" style={{ letterSpacing: 0 }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          <span style={{ fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.01em' }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
                           {' '}average.
                         </>
                       )}
