@@ -1361,44 +1361,45 @@ export default function AriaPage() {
               >
                 {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">
-                {lastRunAt && (
-                  <>
-                    <span>{isEs ? `Sincronizado ${lastRunAt}` : `Synced ${lastRunAt}`}</span>
-                    <span aria-hidden>·</span>
-                  </>
-                )}
-                <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
-                <span>{isEs ? 'proveedores procesados' : 'vendors processed'}</span>
-                <span aria-hidden>·</span>
-                <span>v0.8.5</span>
-                <MetodologiaTooltip
-                  title={t('methodology.title')}
-                  body={t('methodology.body')}
-                  link="/methodology"
-                />
-              </p>
+              {statsLoading ? (
+                <span className="mt-1.5 inline-flex items-center gap-2">
+                  <span className="h-2 w-32 rounded bg-background-elevated animate-pulse inline-block" />
+                  <span className="h-2 w-16 rounded bg-background-elevated animate-pulse inline-block" />
+                </span>
+              ) : (
+                <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">
+                  {lastRunAt && (
+                    <>
+                      <span>{isEs ? `Sincronizado ${lastRunAt}` : `Synced ${lastRunAt}`}</span>
+                      <span aria-hidden>·</span>
+                    </>
+                  )}
+                  <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
+                  <span>{isEs ? 'proveedores procesados' : 'vendors processed'}</span>
+                  <span aria-hidden>·</span>
+                  <span>v0.8.5</span>
+                  <MetodologiaTooltip
+                    title={t('methodology.title')}
+                    body={t('methodology.body')}
+                    link="/methodology"
+                  />
+                </p>
+              )}
             </div>
-            {!statsLoading && (
-              <div className="flex items-baseline gap-5">
-                <div className="text-right">
-                  <div
-                    className="tabular-nums leading-none"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(22px, 3vw, 32px)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: 'var(--color-risk-critical)',
-                    }}
-                  >
-                    {formatNumber(tierCounts[1])}
+            <div className="flex items-baseline gap-5">
+              {statsLoading ? (
+                <>
+                  <div className="text-right">
+                    <Skeleton className="h-8 w-16 mb-1" />
+                    <Skeleton className="h-2 w-14" />
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
-                    {isEs ? 'T1 prioridad' : 'T1 priority'}
+                  <div className="text-right">
+                    <Skeleton className="h-8 w-20 mb-1" />
+                    <Skeleton className="h-2 w-12" />
                   </div>
-                </div>
-                {elevatedValue > 0 && (
+                </>
+              ) : (
+                <>
                   <div className="text-right">
                     <div
                       className="tabular-nums leading-none"
@@ -1407,18 +1408,37 @@ export default function AriaPage() {
                         fontSize: 'clamp(22px, 3vw, 32px)',
                         fontWeight: 700,
                         fontStyle: 'italic',
-                        color: 'var(--color-text-primary)',
+                        color: 'var(--color-risk-critical)',
                       }}
                     >
-                      {formatCompactMXN(elevatedValue)}
+                      {formatNumber(tierCounts[1])}
                     </div>
                     <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
-                      {isEs ? 'en riesgo' : 'at risk'}
+                      {isEs ? 'T1 prioridad' : 'T1 priority'}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                  {elevatedValue > 0 && (
+                    <div className="text-right">
+                      <div
+                        className="tabular-nums leading-none"
+                        style={{
+                          fontFamily: 'var(--font-family-serif)',
+                          fontSize: 'clamp(22px, 3vw, 32px)',
+                          fontWeight: 700,
+                          fontStyle: 'italic',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {formatCompactMXN(elevatedValue)}
+                      </div>
+                      <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
+                        {isEs ? 'en riesgo' : 'at risk'}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </header>
 
