@@ -197,11 +197,9 @@ export const Z1SectorMap = memo(function Z1SectorMap({
                 onMouseLeave={() => onInstitutionHover?.(null)}
                 aria-label={`${inst.name} · ${formatCompactMXN(inst.total_amount_mxn)} · ${formatNumber(inst.total_contracts)} ${lang === 'en' ? 'contracts' : 'contratos'}`}
               />
-              {/* Label every body that's at least medium-size, plus the
-                  top spenders. Threshold 0.35 lets ~6-8 bodies in a typical
-                  20-institution sector get an inline acronym so the reader
-                  can identify them without hovering. */}
-              {inst.size > 0.35 && (
+              {/* Label every body that's at least medium-size.
+                  Guard: skip if label would render above PAD_T or clip below SVG_H. */}
+              {inst.size > 0.35 && cy - r - 5 > PAD_T && (
                 <text
                   x={cx}
                   y={cy - r - 4}
@@ -215,8 +213,8 @@ export const Z1SectorMap = memo(function Z1SectorMap({
                   {shortLabel(inst.name)}
                 </text>
               )}
-              {/* Sub-label: contract count for the heaviest bodies */}
-              {inst.size > 0.6 && (
+              {/* Sub-label: contract count — only when it fits inside the SVG viewport */}
+              {inst.size > 0.6 && cy + r + 12 < SVG_H && (
                 <text
                   x={cx}
                   y={cy + r + 11}
