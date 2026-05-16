@@ -1603,7 +1603,10 @@ export default function RedesKnownDossier() {
           communities={communities}
           activeId={effectiveActive}
           onHover={setHoverId}
-          onSelect={(id) => setActiveId(id === activeId ? null : id)}
+          onSelect={(id) => {
+              setActiveId(id === activeId ? null : id)
+              setExpandedId(id === activeId ? null : id)
+            }}
           isEs={isEs}
         />
       </PlateFrame>
