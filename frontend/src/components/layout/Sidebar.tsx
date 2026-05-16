@@ -99,7 +99,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'relationships', href: '/relationships', icon: GitCompareArrows },
+      { i18nKey: 'capture', href: '/captura', icon: GitCompareArrows },
       { i18nKey: 'intersection', href: '/intersection', icon: Scale },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
     ],

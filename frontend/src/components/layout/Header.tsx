@@ -42,7 +42,8 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/atlas': 'atlas',
   '/intersection': 'intersection',
   '/institutions': 'institutions',
-  '/relationships': 'relationships',
+  '/relationships': 'capture',
+  '/captura': 'capture',
   '/patterns': 'patterns',
   '/spatial': 'explore',
 }

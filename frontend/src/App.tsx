@@ -280,13 +280,15 @@ function App() {
                 }
               />
               <Route
-                path="relationships"
+                path="captura"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Relationships />
                   </SuspenseBoundary>
                 }
               />
+              {/* Legacy aliases → canonical /captura */}
+              <Route path="relationships" element={<Navigate to="/captura" replace />} />
               <Route
                 path="intersection"
                 element={
@@ -295,8 +297,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="captura" element={<Navigate to="/relationships#captura" replace />} />
-              <Route path="capture" element={<Navigate to="/relationships#captura" replace />} />
+              <Route path="capture" element={<Navigate to="/captura" replace />} />
               {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
               <Route path="clusters" element={<Navigate to="/atlas" replace />} />
               <Route
