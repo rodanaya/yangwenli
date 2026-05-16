@@ -7,6 +7,7 @@ import { useUrlSearch } from '@/hooks'
 import { caseLibraryApi } from '@/api/client'
 import type {
   ScandalListItem,
+  ScandalStats,
   FraudType,
   Administration,
   LegalStatus,
@@ -119,6 +120,91 @@ function FilterPill({
     >
       {label.toUpperCase()}
     </button>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Justice State Bar — proportional horizontal bar showing accountability
+// ─────────────────────────────────────────────────────────────────────────────
+
+const JUSTICE_GROUPS = [
+  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: '#ef4444', labelEs: 'Impunidad', labelEn: 'Impunity' },
+  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: '#f59e0b', labelEs: 'Investigación', labelEn: 'Investigation' },
+  { key: 'prosecuted', statuses: ['prosecuted'], color: '#3b82f6', labelEs: 'Procesados', labelEn: 'Prosecuted' },
+  { key: 'convicted', statuses: ['convicted'], color: '#22d3ee', labelEs: 'Condenados', labelEn: 'Convicted' },
+  { key: 'other', statuses: ['acquitted', 'dismissed', 'settled'], color: '#71717a', labelEs: 'Otros', labelEn: 'Other' },
+] as const
+
+function JusticeStateBar({ stats, lang }: { stats: ScandalStats; lang: string }) {
+  const total = stats.total_cases
+  if (!total) return null
+
+  const groups = JUSTICE_GROUPS.map((g) => ({
+    ...g,
+    count: g.statuses.reduce(
+      (sum, s) => sum + (stats.cases_by_legal_status.find((b) => b.legal_status === s)?.count ?? 0),
+      0
+    ),
+  })).filter((g) => g.count > 0)
+
+  const isEs = lang === 'es'
+
+  return (
+    <div className="mb-5">
+      <div
+        className="flex items-center gap-2 mb-2"
+        style={{ fontFamily: 'var(--font-family-mono)' }}
+      >
+        <span
+          className="text-[9px] tracking-[0.2em] uppercase font-bold"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {isEs ? 'Estado de Justicia' : 'State of Justice'}
+        </span>
+        <span className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
+        <span className="text-[9px] tracking-wider text-text-muted tabular-nums">
+          {total} {isEs ? 'casos' : 'cases'}
+        </span>
+      </div>
+
+      {/* Proportional segmented bar */}
+      <div
+        className="flex w-full overflow-hidden mb-2"
+        style={{ height: 10, gap: 2, borderRadius: 2 }}
+      >
+        {groups.map((g) => (
+          <div
+            key={g.key}
+            title={`${isEs ? g.labelEs : g.labelEn}: ${g.count}`}
+            style={{
+              flex: g.count,
+              background: g.color,
+              opacity: 0.85,
+              borderRadius: 2,
+              minWidth: g.count > 0 ? 4 : 0,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 flex-wrap" style={{ fontFamily: 'var(--font-family-mono)' }}>
+        {groups.map((g) => (
+          <span key={g.key} className="inline-flex items-center gap-1.5">
+            <span
+              className="inline-block h-1.5 w-2.5"
+              style={{ background: g.color, borderRadius: 1 }}
+            />
+            <span className="text-[9px] tracking-wide text-text-muted">
+              {isEs ? g.labelEs : g.labelEn}
+            </span>
+            <span className="text-[9px] tabular-nums" style={{ color: g.color }}>
+              {g.count}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -635,6 +721,9 @@ export default function CaseLibrary() {
           </p>
         </div>
 
+        {/* Justice State Bar — shows accountability landscape before filters */}
+        {stats && <JusticeStateBar stats={stats} lang={i18n.language} />}
+
         {/* ─────────── Filter strip ─────────── */}
         <section className="mb-6 space-y-3">
           {/* Search */}
@@ -917,11 +1006,28 @@ export default function CaseLibrary() {
                           marginBottom: 24,
                         }}
                       >
-                        {featured.map((cas) => (
+                        {featured.map((cas, idx) => (
                           <div
                             key={cas.id}
-                            style={{ background: 'rgba(212,146,42,0.03)' }}
+                            style={{ background: idx === 0 ? 'rgba(212,146,42,0.055)' : 'rgba(212,146,42,0.025)' }}
                           >
+                            {idx === 0 && (
+                              <div
+                                className="flex items-center gap-2 px-5 pt-3 pb-0"
+                                style={{ fontFamily: 'var(--font-family-mono)' }}
+                              >
+                                <span
+                                  className="text-[9px] font-bold tracking-[0.2em] uppercase px-2 py-0.5"
+                                  style={{
+                                    color: '#d4922a',
+                                    background: 'rgba(212,146,42,0.12)',
+                                    border: '1px solid rgba(212,146,42,0.3)',
+                                  }}
+                                >
+                                  {i18n.language === 'es' ? 'Caso líder · Mayor pérdida documentada' : 'Lead case · Largest documented loss'}
+                                </span>
+                              </div>
+                            )}
                             <CaseRow
                               cas={cas}
                               onClick={() => navigate(caseUrl(cas))}
