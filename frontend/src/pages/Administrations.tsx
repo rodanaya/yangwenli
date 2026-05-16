@@ -644,15 +644,15 @@ export default function Administrations() {
             </div>
             <div className="flex items-baseline gap-5 flex-shrink-0">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">5</div>
+                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-text-primary)' }}>5</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Administraciones' : 'Administrations'}</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>9.9T MXN</div>
+                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-accent)' }}>9.9T MXN</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Gasto total' : 'Total spend'}</div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">3.1M</div>
+                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-text-primary)' }}>3.1M</div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Contratos' : 'Contracts'}</div>
               </div>
             </div>
