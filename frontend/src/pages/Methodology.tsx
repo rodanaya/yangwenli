@@ -985,7 +985,7 @@ export function Methodology() {
                                 style={{ backgroundColor: r.color }}
                                 aria-hidden="true"
                               />
-                              <span className="font-medium text-text-primary">{r.level}</span>
+                              <span className="font-medium text-text-primary">{t(`dataLabels.level${r.meaningKey}`, r.level)}</span>
                             </div>
                           </td>
                           <td className="py-2 pr-3 font-mono text-text-secondary">

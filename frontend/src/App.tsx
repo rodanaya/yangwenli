@@ -475,6 +475,19 @@ function App() {
                 }
               />
 
+              {/* English-slug aliases for Observatory story titles → canonical Spanish slugs */}
+              <Route path="stories/the-pharmaceutical-cartel" element={<Navigate to="/stories/el-monopolio-invisible" replace />} />
+              <Route path="stories/the-intermediary-industry" element={<Navigate to="/stories/la-industria-del-intermediario" replace />} />
+              <Route path="stories/the-covid-year" element={<Navigate to="/stories/el-ano-de-la-emergencia" replace />} />
+              <Route path="stories/the-ghost-army" element={<Navigate to="/stories/el-ejercito-fantasma" replace />} />
+              <Route path="stories/the-big-price" element={<Navigate to="/stories/el-gran-precio" replace />} />
+              <Route path="stories/the-invisible-monopoly" element={<Navigate to="/stories/el-monopolio-invisible" replace />} />
+              <Route path="stories/the-illusion-of-competition" element={<Navigate to="/stories/la-ilusion-competitiva" replace />} />
+              <Route path="stories/institutional-capture" element={<Navigate to="/stories/captura-institucional" replace />} />
+              <Route path="stories/the-tide-of-awards" element={<Navigate to="/stories/marea-de-adjudicaciones" replace />} />
+              <Route path="stories/the-decade-of-risk" element={<Navigate to="/stories/el-sexenio-del-riesgo" replace />} />
+              <Route path="stories/the-300k-threshold" element={<Navigate to="/stories/el-umbral-de-los-300k" replace />} />
+
               {/* v1.0 launch cut — InstitutionCompare deferred to v1.1. */}
               <Route path="institutions/compare" element={<Navigate to="/institutions" replace />} />
 

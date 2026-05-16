@@ -148,7 +148,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     if (!cat) return null
     return isEs ? (cat.name_es || cat.name_en || null) : (cat.name_en || cat.name_es || null)
   })()
-  const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath))
+  const title = categoryBreadcrumbName ?? (i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath, isEs))
   const parentPath = (() => {
     const parts = currentPath.split('/').filter(Boolean)
     if (parts.length <= 1) return ''
@@ -377,7 +377,7 @@ function slugToTitle(slug: string): string {
     .join(' ')
 }
 
-function getBreadcrumbTitle(path: string): string {
+function getBreadcrumbTitle(path: string, isEs = false): string {
   const parts = path.split('/').filter(Boolean)
   if (parts.length === 0) return 'Dashboard'
 
@@ -388,9 +388,7 @@ function getBreadcrumbTitle(path: string): string {
   if (parts.length === 2 && parts[0] === 'stories') {
     const story = getStoryBySlug(lastPart)
     if (story) {
-      // Prefer Spanish title when present; the i18n locale isn't trivially
-      // accessible from this util, and Spanish is our primary locale.
-      return story.headline_es || story.headline
+      return isEs ? (story.headline_es || story.headline) : story.headline
     }
     return slugToTitle(lastPart)
   }

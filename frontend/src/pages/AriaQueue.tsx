@@ -950,7 +950,7 @@ function TierEditorialStrip({
 const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
   P1: { es: 'Monopolio Concentrado',     en: 'Concentrated Monopoly',  color: PATTERN_COLORS.P1 ?? RISK_COLORS.critical },
   P2: { es: 'Empresa Fantasma',          en: 'Ghost Company',           color: PATTERN_COLORS.P2 ?? RISK_COLORS.high },
-  P3: { es: 'Intermediario',             en: 'Intermediary',            color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
+  P3: { es: 'Intermediario de Contrato',  en: 'Contract Intermediary',   color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
   P4: { es: 'Manipulación de Licitación',en: 'Bid Rigging',             color: PATTERN_COLORS.P4 ?? RISK_COLORS.medium },
   P5: { es: 'Sobreprecio',               en: 'Overpricing',             color: PATTERN_COLORS.P5 ?? RISK_COLORS.medium },
   P6: { es: 'Captura Institucional',     en: 'Institutional Capture',   color: PATTERN_COLORS.P6 ?? RISK_COLORS.critical },

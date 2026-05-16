@@ -326,6 +326,10 @@
     "interpretationBody": " Risk scores are statistical indicators — not verdicts. A high score means strong similarity to documented corruption patterns. A low score does not certify a contract is clean. Use scores for investigation triage only; follow-up with primary sources to establish facts."
   },
   "dataLabels": {
+    "levelCritical": "Critical",
+    "levelHigh": "High",
+    "levelMedium": "Medium",
+    "levelLow": "Low",
     "riskMeaningCritical": "Very high similarity to known corruption patterns",
     "riskMeaningHigh": "High similarity to known corruption patterns",
     "riskMeaningMedium": "Moderate similarity to known corruption patterns",

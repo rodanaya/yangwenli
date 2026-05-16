@@ -326,6 +326,10 @@
     "interpretationBody": " Los puntajes de riesgo son indicadores estadísticos — no veredictos. Un puntaje alto significa fuerte semejanza con patrones de corrupción documentados. Un puntaje bajo no certifica que un contrato esté limpio. Usa los puntajes solo para triaje de investigación; haz seguimiento con fuentes primarias para establecer hechos."
   },
   "dataLabels": {
+    "levelCritical": "Crítico",
+    "levelHigh": "Alto",
+    "levelMedium": "Medio",
+    "levelLow": "Bajo",
     "riskMeaningCritical": "Similitud muy alta con patrones de corrupción conocidos",
     "riskMeaningHigh": "Similitud alta con patrones de corrupción conocidos",
     "riskMeaningMedium": "Similitud moderada con patrones de corrupción conocidos",
