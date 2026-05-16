@@ -1396,9 +1396,11 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
                     </span>
                   )}
                   <span
-                    className="font-bold tabular-nums leading-none"
+                    className="tabular-nums leading-none"
                     style={{
                       fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
+                      fontStyle: 'italic',
+                      fontWeight: 800,
                       letterSpacing: '-0.035em',
                       color: valueColor,
                     }}

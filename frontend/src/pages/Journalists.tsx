@@ -1498,11 +1498,15 @@ export default function Journalists() {
               {t('masthead.totalLabel', { defaultValue: 'Investigations' })}
             </span>
             <span className="text-text-primary">·</span>
-            <span>
+            <span
+              title={i18n.language.startsWith('es')
+                ? 'Casos con acusación formal de corrupción registrada en medios oficiales o resolución judicial'
+                : 'Cases with formal corruption charges documented in official media or judicial resolution'}
+            >
               <span className="text-risk-critical font-bold tabular-nums">
-                {prosecutedCount}
+                {prosecutedCount === 0 ? '0' : prosecutedCount}
               </span>{' '}
-              {t('masthead.prosecutedLabel', { defaultValue: 'Prosecuted' })}
+              {i18n.language.startsWith('es') ? 'procesados' : 'prosecuted'}
             </span>
             <span className="text-text-primary">·</span>
             <span>
