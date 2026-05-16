@@ -14,6 +14,7 @@
  */
 
 import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
+import { DotBar } from '@/components/ui/DotBar'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -736,22 +737,14 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>
-              {(() => {
-                const N = 20, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((pct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={pct}
+                max={100}
+                color={barColor}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={20}
+              />
               <span className="text-[10px] font-mono tabular-nums text-text-secondary w-10 text-right">
                 {p.value.toFixed(0)}/{p.max}
               </span>

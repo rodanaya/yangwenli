@@ -23,6 +23,7 @@ import {
   formatCompactUSD,
   formatDate,
 } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import type { ContractDetail as ContractDetailType } from '@/api/types'
 import {
@@ -318,29 +319,17 @@ export default function ContractDetail() {
                   )}
                 </div>
                 {/* Dot-matrix 0-1 with threshold markers */}
-                {(() => {
-                  const N = 40, DR = 3, DG = 8
-                  const pct = Math.min((contract.risk_score ?? 0), 1)
-                  const filled = Math.round(pct * N)
-                  const totalW = N * DG
-                  const markerX = (t: number) => (t / 100) * totalW
-                  return (
-                    <svg viewBox={`0 0 ${totalW} 12`} width={totalW} height={12} aria-hidden="true">
-                      {Array.from({ length: N }).map((_, k) => (
-                        <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                          fill={k < filled ? riskPalette.color : 'var(--color-background-elevated)'}
-                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                          strokeWidth={k < filled ? 0 : 0.5}
-                          fillOpacity={k < filled ? 0.85 : 1}
-                        />
-                      ))}
-                      {/* Threshold markers */}
-                      {[25, 40, 60].map((t) => (
-                        <line key={t} x1={markerX(t)} y1={0} x2={markerX(t)} y2={12} stroke="var(--color-text-muted)" strokeWidth={0.6} strokeOpacity={0.5} strokeDasharray="2 2" />
-                      ))}
-                    </svg>
-                  )
-                })()}
+                <DotBar
+                  value={contract.risk_score ?? 0}
+                  max={1}
+                  color={riskPalette.color}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border-hover)"
+                  dots={40}
+                  dotR={3}
+                  dotGap={8}
+                  thresholds={[0.25, 0.40, 0.60]}
+                />
                 <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
@@ -783,24 +772,16 @@ function AnomalyScoreCard({
           IForest +<br />COPOD
         </span>
       </div>
-      {(() => {
-        const N = 24, DR = 2, DG = 5.5
-        const pct = Math.min(score, 1)
-        const filled = Math.max(1, Math.round(pct * N))
-        const color = isAiConfirmed ? '#f87171' : 'var(--color-text-muted)'
-        return (
-          <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                fill={k < filled ? color : 'var(--color-background-elevated)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={score}
+        max={1}
+        color={isAiConfirmed ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
+        emptyColor="var(--color-background-elevated)"
+        emptyStroke="var(--color-border-hover)"
+        dots={24}
+        dotR={2}
+        dotGap={5.5}
+      />
     </div>
   )
 }

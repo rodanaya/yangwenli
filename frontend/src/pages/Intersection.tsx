@@ -671,6 +671,21 @@ export default function Intersection() {
                 Confirmed + Blind Spot share a compact 2-column grid below.
                 This hierarchy mirrors the actual editorial weight: Novelty is
                 the platform's pitch; the other two are context + humility. */}
+            {selectedSector && (() => {
+              const sectorLower = selectedSector.toLowerCase()
+              const noveltyFiltered = data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const confirmedFiltered = data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const blindspotFiltered = data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const allEmpty = noveltyFiltered.length === 0 && confirmedFiltered.length === 0 && blindspotFiltered.length === 0
+              if (!allEmpty) return null
+              return (
+                <div className="py-8 text-center text-text-muted text-sm font-mono">
+                  {lang === 'es'
+                    ? 'Sin proveedores clasificados en este sector para el umbral de riesgo actual.'
+                    : 'No vendors in this sector meet the current risk threshold.'}
+                </div>
+              )
+            })()}
             <div className="space-y-5">
               {/* NOVELTY — dominant, full width */}
               <QuadrantCard

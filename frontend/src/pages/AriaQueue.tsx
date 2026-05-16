@@ -535,7 +535,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             stopPropagation still prevents double-navigation if the chip
             and row both fire. */}
         <div className="min-w-0 flex items-center gap-2">
-          <div onClick={(e) => e.stopPropagation()} className="min-w-0">
+          <div onClick={(e) => e.stopPropagation()} className="min-w-0 max-w-full overflow-hidden">
             <EntityIdentityChip
               type="vendor"
               id={item.vendor_id}
@@ -546,6 +546,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               ariaTier={item.ips_tier}
               narrative
               hideIcon
+              className="max-w-full"
             />
           </div>
           {item.new_vendor_risk && (
@@ -1568,7 +1569,33 @@ export default function AriaPage() {
         </div>
 
         {/* aria-P2: Pattern editorial bars (replaces donut/pie pattern composition) */}
-        {Object.keys(patternCounts).length > 0 && (
+        {statsLoading ? (
+          <div className="mb-5">
+            <div className="flex items-baseline justify-between mb-2">
+              <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
+                {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
+              </p>
+              <div className="h-3 w-16 bg-background-elevated rounded animate-pulse" />
+            </div>
+            <div className="rounded-sm border border-border/60 bg-background-card overflow-hidden">
+              {Object.entries(PATTERN_LABELS).map(([key, meta], i) => (
+                <div key={key} className={cn('flex items-center gap-3 px-3 py-2.5', i > 0 && 'border-t border-border/40')}>
+                  <span
+                    className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none"
+                    style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}50` }}
+                  >
+                    {key}
+                  </span>
+                  <span className="text-[11px] font-mono text-text-secondary min-w-0 truncate flex-1">
+                    {isEs ? meta.es : meta.en}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-background-elevated rounded-sm animate-pulse max-w-[120px]" />
+                  <span className="text-[10px] font-mono tabular-nums text-text-muted w-8 text-right">—</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : Object.keys(patternCounts).length > 0 ? (
           <PatternEditorialBars
             patternCounts={patternCounts}
             isEs={isEs}
@@ -1579,7 +1606,7 @@ export default function AriaPage() {
               setPage(1)
             }}
           />
-        )}
+        ) : null}
 
         {/* ════════════════════════════════════════════════════════════════
             UNIFIED FILTER BAR
@@ -1677,18 +1704,54 @@ export default function AriaPage() {
                     {preset.label}
                   </button>
                 ))}
-                <button
-                  onClick={() => setMoreFiltersOpen((v) => !v)}
-                  className={cn(
-                    'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
-                    moreFiltersOpen
-                      ? 'bg-background-elevated text-text-primary'
-                      : 'text-text-muted hover:text-text-primary'
-                  )}
-                  aria-expanded={moreFiltersOpen}
-                >
-                  {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
-                </button>
+                {(() => {
+                  // U-061: count secondary filters that are active so the
+                  // button surfaces hidden state. Primary slicers (tier,
+                  // pattern, search) live in the always-visible row and
+                  // are excluded here.
+                  const secondaryActiveCount =
+                    (sectorFilter != null ? 1 : 0) +
+                    (newVendorOnly ? 1 : 0) +
+                    (novelOnly ? 1 : 0) +
+                    (adminFilter != null ? 1 : 0) +
+                    (gtOnly ? 1 : 0) +
+                    (efosOnly ? 1 : 0) +
+                    (sfpOnly ? 1 : 0) +
+                    (webEvidenceOnly ? 1 : 0) +
+                    (llmMemoOnly ? 1 : 0) +
+                    (reviewStatusFilter != null ? 1 : 0)
+                  return (
+                    <button
+                      onClick={() => setMoreFiltersOpen((v) => !v)}
+                      className={cn(
+                        'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                        moreFiltersOpen
+                          ? 'bg-background-elevated text-text-primary'
+                          : secondaryActiveCount > 0
+                            ? 'text-accent hover:text-text-primary'
+                            : 'text-text-muted hover:text-text-primary'
+                      )}
+                      aria-expanded={moreFiltersOpen}
+                      aria-label={
+                        secondaryActiveCount > 0
+                          ? (isEs
+                              ? `Más filtros, ${secondaryActiveCount} activos`
+                              : `More filters, ${secondaryActiveCount} active`)
+                          : (isEs ? 'Más filtros' : 'More filters')
+                      }
+                    >
+                      {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
+                      {secondaryActiveCount > 0 && (
+                        <span
+                          className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent/15 text-accent text-[10px] font-mono tabular-nums font-bold"
+                          aria-hidden
+                        >
+                          {secondaryActiveCount}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })()}
               </div>
             )
           })()}

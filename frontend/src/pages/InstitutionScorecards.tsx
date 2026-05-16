@@ -44,6 +44,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { scorecardApi } from '@/api/client'
 import { formatNumber } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -227,26 +228,20 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
     <div className="space-y-1" aria-label={t('pillarsChart.ariaLabel')}>
       {pillars.map(({ key, labelKey, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
-        const color = pct > 70 ? '#71717a' : pct > 40 ? '#fbbf24' : '#f87171'
+        const color = pct > 70 ? 'var(--color-text-muted)' : pct > 40 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
           <div key={key} className="flex items-center gap-2">
             <span className="text-[9px] font-mono text-text-muted w-8 flex-shrink-0">{t(labelKey)}</span>
-            {(() => {
-              const N = 14, DR = 1.5, DG = 4
-              const filled = Math.max(1, Math.round((pct / 100) * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                      fill={k < filled ? color : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={pct}
+              max={100}
+              color={color}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={14}
+              dotR={1.5}
+              dotGap={4}
+            />
             <span className="text-[9px] font-mono tabular-nums text-text-muted w-8 text-right flex-shrink-0">
               {value.toFixed(1)}/{max}
             </span>

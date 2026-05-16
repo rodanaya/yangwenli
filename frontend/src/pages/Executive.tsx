@@ -357,17 +357,17 @@ export default function Executive() {
               <>
                 Twenty-three years.{' '}
                 <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 trillion</span>
-                {' '}in federal contracts.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Three out of four</span>
-                {' '}awarded without competition.
+                {' '}in federal contracts. More than{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>7 in 10</span>
+                {' '}bypass competitive bidding.
               </>
             ) : (
               <>
                 Veintitrés años.{' '}
                 <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 billones</span>
-                {' '}en contratos federales.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Tres de cada cuatro</span>
-                {' '}sin licitación.
+                {' '}en contratos federales. Más de{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>7 de cada 10</span>
+                {' '}evitan la licitación competitiva.
               </>
             )}
           </h1>
@@ -1319,7 +1319,7 @@ export default function Executive() {
                                 fontWeight="700"
                                 fill={inst.captured ? '#a06820' : 'var(--color-text-muted)'}
                               >
-                                +{gap}pp
+                                +{Number.isInteger(gap) ? gap : gap.toFixed(1)}pp
                               </text>
                             </motion.svg>
                           </div>
@@ -1352,6 +1352,15 @@ export default function Executive() {
         <section className="mb-12" aria-labelledby="pesos-title">
           <div id="pesos-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
+          </div>
+          {/* U-007: surface the methodological caveat that previously only
+              lived as a code comment. The aggregate scales high+critical
+              contract counts by total spend, assuming each risk band's
+              average ticket equals the population mean. */}
+          <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/70 mb-2">
+            {lang === 'en'
+              ? '(estimated · assumes uniform value distribution across risk bands)'
+              : '(estimado · supone distribución uniforme de valor entre bandas de riesgo)'}
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'

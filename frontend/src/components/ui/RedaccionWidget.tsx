@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RISK_COLORS } from '@/lib/constants'
 import { ArrowRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 interface StoryCard {
   vendorId: number
@@ -118,24 +119,14 @@ export default function RedaccionWidget() {
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TIER_COLORS[story.tier] ?? TIER_COLORS[4]}`}>
                   T{story.tier}
                 </span>
-                {(() => {
-                  const N = 20, DR = 2, DG = 5
-                  const pct = Math.min(story.ipsScore, 1)
-                  const filled = Math.round(pct * N)
-                  const color = ipsColor(story.ipsScore)
-                  return (
-                    <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                      {Array.from({ length: N }).map((_, i) => (
-                        <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                          fill={i < filled ? color : '#f3f1ec'}
-                          stroke={i < filled ? undefined : '#e2ddd6'}
-                          strokeWidth={i < filled ? 0 : 0.5}
-                          fillOpacity={i < filled ? 0.85 : 1}
-                        />
-                      ))}
-                    </svg>
-                  )
-                })()}
+                <DotBar
+                  value={story.ipsScore}
+                  max={1}
+                  color={ipsColor(story.ipsScore)}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border)"
+                  dots={20}
+                />
                 <span className="text-[10px] font-mono text-text-muted">
                   {(story.ipsScore * 100).toFixed(0)}
                 </span>

@@ -31,6 +31,7 @@ import {
   Archive,
 } from 'lucide-react'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ============================================================================
 // Types & Constants
@@ -1113,27 +1114,17 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
         <div key={field.field_name} className="flex items-center gap-3">
           <div className="w-28 text-sm font-medium truncate">{field.field_name}</div>
           <div className="flex-1">
-            {(() => {
-              const N = 24, DR = 2, DG = 5
-              const filled = Math.max(1, Math.round((field.fill_rate / 100) * N))
-              // No green low — best fill bucket = OECD cyan. Tokens.
-              const color = field.fill_rate >= 90 ? 'var(--color-oecd)'
+            <DotBar
+              value={field.fill_rate}
+              max={100}
+              color={field.fill_rate >= 90 ? 'var(--color-oecd)'
                 : field.fill_rate >= 70 ? 'var(--color-accent-data)'
                 : field.fill_rate >= 50 ? 'var(--color-risk-medium)'
-                : '#f87171'
-              return (
-                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? color : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+                : 'var(--color-risk-critical)'}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={24}
+            />
           </div>
           <div className="w-16 text-right text-sm font-mono tabular-nums">{field.fill_rate.toFixed(1)}%</div>
         </div>

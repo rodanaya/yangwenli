@@ -330,8 +330,11 @@ function SectorHoverPreview({
         {getSectorName(sector.code, lang)}
       </h2>
       {isLoading && (
-        <div className="text-[10px] font-mono text-text-muted opacity-70 py-1">
-          {lang === 'en' ? 'loading preview…' : 'cargando vista…'}
+        <div className="space-y-2 py-1" aria-live="polite">
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-3/5 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/5 bg-background-elevated rounded animate-pulse" />
         </div>
       )}
       {totals && (
@@ -744,8 +747,10 @@ function BriefingShell({
     <div>
       {header}
       {state === 'loading' && (
-        <div className="text-[11px] font-mono text-text-muted opacity-70 py-3" aria-live="polite">
-          {loadingLabel ?? (lang === 'en' ? 'Loading…' : 'Cargando…')}
+        <div className="space-y-2 py-2" aria-live="polite" aria-label={loadingLabel ?? (lang === 'en' ? 'Loading…' : 'Cargando…')}>
+          <div className="h-4 w-3/4 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
         </div>
       )}
       {state === 'empty' && (

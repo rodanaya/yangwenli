@@ -13,6 +13,7 @@ import { motion } from 'framer-motion'
 import { AlertTriangle, TrendingUp, Info, Calendar, Zap } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import { cn, formatNumber } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { Act } from '@/components/layout/Act'
@@ -478,47 +479,35 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
           <div className="space-y-1.5">
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-orange-400">{t('decemberSection.december')}</span>
+                <span style={{ color: 'var(--color-risk-high)' }}>{t('decemberSection.december')}</span>
                 <span className="text-text-secondary font-mono">{formatNumber(stats.decemberContracts)}</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((decBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#f97316' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={decBarWidth}
+                max={100}
+                color="var(--color-risk-high)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-text-muted">{t('decemberSection.monthlyAvg')}</span>
                 <span className="text-text-muted font-mono">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((avgBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={avgBarWidth}
+                max={100}
+                color="var(--color-text-muted)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
           </div>
         </div>
@@ -534,44 +523,32 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-risk-critical">{t('decemberSection.december')}</span>
                 <span className="text-text-secondary font-mono">{decRiskPct}%</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((decRiskBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#ef4444' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={decRiskBarWidth}
+                max={100}
+                color="var(--color-risk-critical)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-text-muted">{t('decemberSection.restOfYear')}</span>
                 <span className="text-text-muted font-mono">{annualRiskPct}%</span>
               </div>
-              {(() => {
-                const N = 30, DR = 2.5, DG = 6.5
-                const filled = Math.max(1, Math.round((avgRiskBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                        fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={avgRiskBarWidth}
+                max={100}
+                color="var(--color-text-muted)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={2.5}
+                dotGap={6.5}
+              />
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
+import { DotBar } from '@/components/ui/DotBar'
 import {
   Building2,
   Calendar,
@@ -236,24 +237,14 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             </Badge>
                           )}
                         </div>
-                        {(() => {
-                          const N = 20, DR = 2, DG = 5
-                          const pct = Math.min(contract.ensemble_anomaly_score, 1)
-                          const filled = Math.max(1, Math.round(pct * N))
-                          const color = isAiConfirmed ? '#f87171' : '#9ca3af'
-                          return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                              {Array.from({ length: N }).map((_, k) => (
-                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? color : 'var(--color-background-elevated)'}
-                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                  strokeWidth={k < filled ? 0 : 0.5}
-                                  fillOpacity={k < filled ? 0.85 : 1}
-                                />
-                              ))}
-                            </svg>
-                          )
-                        })()}
+                        <DotBar
+                          value={contract.ensemble_anomaly_score}
+                          max={1}
+                          color={isAiConfirmed ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
+                          emptyColor="var(--color-background-elevated)"
+                          emptyStroke="var(--color-border-hover)"
+                          dots={20}
+                        />
                       </div>
                       <div className="text-right text-[10px] text-text-muted">
                         <p>{tCommon('contractDetail.ensemble')}</p>

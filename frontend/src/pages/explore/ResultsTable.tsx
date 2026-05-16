@@ -6,6 +6,7 @@ import { vendorApi, institutionApi, dossierApi } from '@/api/client'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { RISK_COLORS, SECTORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ExternalLink,
@@ -315,23 +316,17 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
                 <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
                   {(score * 100).toFixed(0)}%
                 </span>
-                {(() => {
-                  const N = 14, DR = 1.75, DG = 4
-                  const pct = Math.min(score, 1)
-                  const filled = Math.max(1, Math.round(pct * N))
-                  return (
-                    <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                      {Array.from({ length: N }).map((_, k) => (
-                        <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                          fill={k < filled ? color : 'var(--color-background-elevated)'}
-                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                          strokeWidth={k < filled ? 0 : 0.5}
-                          fillOpacity={k < filled ? 0.85 : 1}
-                        />
-                      ))}
-                    </svg>
-                  )
-                })()}
+                <DotBar
+                  value={score}
+                  max={1}
+                  color={color}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border-hover)"
+                  dots={14}
+                  dotR={1.75}
+                  dotGap={4}
+                  thresholds={[0.25, 0.40, 0.60]}
+                />
               </>
             )
           })()}

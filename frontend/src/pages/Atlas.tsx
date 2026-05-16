@@ -1313,19 +1313,29 @@ export default function Atlas() {
   // floor, lens, pin) — the user has a specific view they want to restore.
   useEffect(() => {
     const VISITED_KEY = 'rubli_atlas_visited_v1'
-    const hasUrlState = searchParams.toString().length > 0
-    // Skip auto-tour if URL has Atlas-C specific params (shared investigation link)
-    const hasSharedState = hasAtlasCParams(searchParams)
-    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
-    // constellation off-screen — the chart it's narrating becomes invisible
-    // until the reader scrolls past several hundred pixels of editorial copy.
-    // Suppress the first-visit auto-launch on mobile; the user can still tap
-    // "Play story" explicitly. Don't set the visited flag so they still get
-    // the tour when they later open the same URL on desktop.
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    // D-048: read the flag synchronously from localStorage AND from the
+    // current URL (not the React searchParams closure, which may not be
+    // populated on the very first render). The auto-tour must fire at
+    // most once per browser, never re-fire on lens/year/mode changes.
     let visited = false
     try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
-    if (!visited && !hasUrlState && !hasSharedState && !isMobile) {
+    if (visited) {
+      // Already visited — never auto-launch again, period.
+      return
+    }
+    // Read URL state directly from window.location so we don't depend on
+    // the router's async population of searchParams.
+    const rawSearch = typeof window !== 'undefined' ? window.location.search : ''
+    const hasUrlState = rawSearch.length > 1 // accounts for the leading "?"
+    const liveParams = new URLSearchParams(rawSearch)
+    const hasSharedState = hasAtlasCParams(liveParams)
+    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
+    // constellation off-screen — suppress the first-visit auto-launch on
+    // mobile; the user can still tap "Play story" explicitly. Don't set the
+    // visited flag so they still get the tour when they later open the same
+    // URL on desktop.
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    if (!hasUrlState && !hasSharedState && !isMobile) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
@@ -1337,10 +1347,11 @@ export default function Atlas() {
       return () => clearTimeout(id)
     }
     // Mark as visited if arriving via ?story= or any Atlas-C shared state
-    if (searchParams.get('story') || hasSharedState) {
+    if (liveParams.get('story') || hasSharedState) {
       try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
     }
-    // intentionally only on mount
+    // intentionally only on mount — do NOT include searchParams in deps,
+    // otherwise the effect re-evaluates when lens/year/mode change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

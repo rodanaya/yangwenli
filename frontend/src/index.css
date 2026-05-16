@@ -430,11 +430,12 @@
   }
 
   /* Canonical editorial surface — white card on cream ground (bible §5).
-     2px radius, 1px warm-gray border, no shadow by default. */
+     2px radius, 1px warm-gray border, subtle lift shadow. */
   .surface-card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
     border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   }
   .surface-card--elevated {
     background: var(--color-bg-elevated);

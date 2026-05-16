@@ -89,6 +89,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   // If avg score is "low" but ≥5% of contracts are high+critical, show at least medium
   // so the badge doesn't mislead readers skimming sector cards.
   const total = sector.total_contracts || 1
+  const highCritPct = total > 0 ? (highPlusCritical / total) * 100 : 0
   const effectiveLevel = (riskLevel === 'low' && highPlusCritical / total >= 0.05) ? 'medium' as const : riskLevel
   const daPct = sector.direct_award_pct ?? 0
   const exceedsOECD = daPct > 25
@@ -123,12 +124,20 @@ function SectorCard({ sector, rank }: SectorCardProps) {
               {t(sector.sector_code)}
             </h2>
           </div>
-          <div className="flex items-center gap-1.5">
-            {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
-              OCDE {exceedsOECD ? '\u2717' : '\u2713'}
-            </span>
-            <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
+          <div className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-1.5">
+              {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
+              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
+                OCDE {exceedsOECD ? '✗' : '✓'}
+              </span>
+              <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
+            </div>
+            {/* High+critical share gives numeric context below the badge */}
+            {highCritPct > 0 && (
+              <span className="text-[9px] font-mono tabular-nums text-text-muted">
+                {highCritPct.toFixed(0)}% H+C
+              </span>
+            )}
           </div>
         </div>
 

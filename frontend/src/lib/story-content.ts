@@ -700,7 +700,7 @@ export const STORIES: StoryDef[] = [
           'El caso más agresivo en todo el universo de mega-contratos es MANTENIMIENTO EXPRESS MARÍTIMO S.A.P.I. DE C.V., que recibió un contrato por 69.9 mil millones de pesos con una calificación de riesgo perfecta de 1.000 — mantenimiento marino Pemex, adjudicado como contrato de proveedor único. URBANISSA S.A. DE C.V. recibió un solo contrato por 58 mil millones con una calificación de 0.969. CONSTRUCTORA ARHNOS, S.A. DE C.V. recibió un solo contrato por 31.9 mil millones con calificación de 1.000. Cada uno de estos es un contrato individual que, por sí solo, es mayor que el presupuesto anual completo de varios estados mexicanos.',
         ],
         chartConfig: {
-          type: 'editorial-beeswarm',
+          type: 'inline-bar',
           title: 'Top 12 Mega-Contract Vendors — Total Pesos in Contracts ≥1B MXN',
           title_es: 'Top 12 proveedores de mega-contratos — Pesos totales en contratos ≥1 mil millones',
           chartId: 'mega-vendors',

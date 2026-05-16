@@ -68,6 +68,7 @@ import {
   type ComposedLayer,
 } from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 
@@ -839,22 +840,13 @@ export function InstitutionProfile() {
                                 <span className="text-xs font-bold font-mono" style={{ color: r.color }}>{r.pct.toFixed(0)}%</span>
                               </div>
                             </div>
-                            {(() => {
-                              const N = 22, DR = 2, DG = 5.5
-                              const filled = Math.max(1, Math.round((r.pct / 100) * N))
-                              return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                                  {Array.from({ length: N }).map((_, k) => (
-                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? r.color : 'var(--color-background-elevated)'}
-                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                      strokeWidth={k < filled ? 0 : 0.5}
-                                      fillOpacity={k < filled ? 0.85 : 1}
-                                    />
-                                  ))}
-                                </svg>
-                              )
-                            })()}
+                            <DotBar
+                              value={r.pct}
+                              max={100}
+                              color={r.color}
+                              emptyStroke="var(--color-border-hover)"
+                              dotGap={5.5}
+                            />
                           </div>
                         ))}
                         {riskProfile?.effective_risk != null && (
@@ -1813,25 +1805,17 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           )}
         </div>
       </div>
-      {(() => {
-        const N = 30, DR = 2.5, DG = 6
-        const filled = Math.max(1, Math.round((Math.min(100, value) / 100) * N))
-        const benchIdx = Math.round((benchmark / 100) * N)
-        const benchX = benchIdx * DG + DR
-        return (
-          <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-            <line x1={benchX} y1={0} x2={benchX} y2={8} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} />
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={Math.min(100, value)}
+        max={100}
+        color={barColor}
+        emptyColor="var(--color-background-elevated)"
+        emptyStroke="var(--color-border-hover)"
+        dots={30}
+        dotR={2.5}
+        dotGap={6}
+        thresholds={[{ value: benchmark, color: 'var(--color-text-muted)' }]}
+      />
       <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
         <span>0%</span><span>{lang === 'en' ? 'Avg.' : 'Prom.'} {benchmark}%</span><span>100%</span>
       </div>
@@ -1960,22 +1944,15 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-              {(() => {
-                const N = 30, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((barW / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? 'var(--color-oecd)' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.7 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={barW}
+                max={100}
+                color="var(--color-oecd)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={2}
+                dotGap={5}
+              />
             </div>
           </div>
         )

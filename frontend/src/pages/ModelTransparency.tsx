@@ -388,9 +388,9 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         />
 
         {/* Divergent-bar chart, hairline rows */}
-        <div className="border-y border-border">
+        <div className="border-y border-border overflow-x-auto">
           {/* Header row */}
-          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border">
+          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[480px]">
             <span>Feature</span>
             <span className="text-center">Protective ← 0 → Risk-increasing</span>
             <span className="text-right font-mono tabular-nums w-20">β</span>
@@ -402,7 +402,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
             return (
               <div
                 key={c.factor}
-                className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 items-center py-3.5 px-1 group hover:bg-background-elevated transition-colors"
+                className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 items-center py-3.5 px-1 group hover:bg-background-elevated transition-colors min-w-[480px]"
                 style={{
                   borderBottom: i < liveCoefficients.length - 1 ? '1px solid var(--color-border)' : undefined,
                 }}
@@ -525,8 +525,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         </div>
 
         {/* Editorial hairline table */}
-        <div className="border-y border-border">
-          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border">
+        <div className="border-y border-border overflow-x-auto">
+          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-border min-w-[520px]">
             <span>Level</span>
             <span>Threshold</span>
             <span className="text-right">Contracts</span>
@@ -535,7 +535,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           {RISK_DISTRIBUTION.map((row, i) => (
             <div
               key={row.level}
-              className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 items-center py-3.5 px-1 hover:bg-background-elevated transition-colors"
+              className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 items-center py-3.5 px-1 hover:bg-background-elevated transition-colors min-w-[520px]"
               style={{
                 borderBottom: i < RISK_DISTRIBUTION.length - 1 ? '1px solid var(--color-border)' : undefined,
               }}
@@ -744,7 +744,7 @@ function AuditTrailTab() {
 export default function ModelTransparency() {
   const { t } = useTranslation('methodology')
   // Live metadata (AUC + freshness)
-  const { data: modelMeta } = useQuery({
+  const { data: modelMeta, isError: metaIsError } = useQuery({
     queryKey: ['model', 'metadata'],
     queryFn: () => analysisApi.getModelMetadata(),
     staleTime: Infinity,
@@ -793,12 +793,48 @@ export default function ModelTransparency() {
     { key: 'audit', label: 'Audit Trail', icon: History },
   ]
 
-  const isLoading = !modelMeta
+  // Graceful degradation: if the live metadata endpoint fails, fall through
+  // to the static v0.8.5 values (auc=0.785, n=3,051,294) rather than blocking
+  // the page on a loading skeleton forever.
+  const isLoading = !modelMeta && !metaIsError
 
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-        <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+        {/* Header skeleton */}
+        <div className="mb-5 pb-4 border-b border-border">
+          <div className="flex items-baseline justify-between gap-4 flex-wrap">
+            <div className="space-y-2">
+              <div className="h-6 w-64 rounded bg-background-elevated animate-pulse" />
+              <div className="h-3 w-80 rounded bg-background-elevated animate-pulse" />
+            </div>
+            <div className="flex items-baseline gap-5">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-1 text-right">
+                  <div className="h-5 w-16 rounded bg-background-elevated animate-pulse" />
+                  <div className="h-2.5 w-20 rounded bg-background-elevated animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Tab strip skeleton */}
+        <div className="flex gap-4 mb-8 pb-3 border-b border-border">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-7 w-24 rounded bg-background-elevated animate-pulse" />
+          ))}
+        </div>
+        {/* Stat row skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 mb-12">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="pl-4 py-1 border-l-2 border-border space-y-2">
+              <div className="h-9 w-20 rounded bg-background-elevated animate-pulse" />
+              <div className="h-2.5 w-24 rounded bg-background-elevated animate-pulse" />
+              <div className="h-3 w-32 rounded bg-background-elevated animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <p className="sr-only">Loading model transparency data…</p>
       </div>
     )
   }

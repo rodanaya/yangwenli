@@ -28,6 +28,7 @@ import {
   User,
 } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
+import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { getLedeForCategory } from '@/lib/entity/lede'
 import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
@@ -926,22 +927,16 @@ export default function CategoryProfile() {
                         </div>
                         <div className="w-28 flex-shrink-0">
                           <div className="flex items-center gap-2">
-                            {(() => {
-                              const N = 14, DR = 2, DG = 4.5
-                              const filled = Math.max(1, Math.round((Math.min(v.market_share_pct, 100) / 100) * N))
-                              return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                                  {Array.from({ length: N }).map((_, k) => (
-                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? vendorRiskColor : 'var(--color-background-elevated)'}
-                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                      strokeWidth={k < filled ? 0 : 0.5}
-                                      fillOpacity={k < filled ? 0.7 : 1}
-                                    />
-                                  ))}
-                                </svg>
-                              )
-                            })()}
+                            <DotBar
+                              value={v.market_share_pct}
+                              max={100}
+                              color={vendorRiskColor}
+                              emptyColor="var(--color-background-elevated)"
+                              emptyStroke="var(--color-border-hover)"
+                              dots={14}
+                              dotR={2}
+                              dotGap={4.5}
+                            />
                             <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
                               {v.market_share_pct.toFixed(1)}%
                             </span>
@@ -1035,24 +1030,16 @@ export default function CategoryProfile() {
                             <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
                             <EntityIdentityChip type="institution" id={pair.institution_id} name={pair.institution_name} size="xs" hideIcon />
                           </div>
-                          {(() => {
-                            const pct = Math.min(pair.total_value / maxVal, 1)
-                            const N = 30, DR = 1.5, DG = 4
-                            const filled = Math.max(1, Math.round(pct * N))
-                            const color = getRiskColor(pair.avg_risk)
-                            return (
-                              <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-                                {Array.from({ length: N }).map((_, k) => (
-                                  <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                                    fill={k < filled ? color : 'var(--color-background-elevated)'}
-                                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                    strokeWidth={k < filled ? 0 : 0.5}
-                                    fillOpacity={k < filled ? 0.7 : 1}
-                                  />
-                                ))}
-                              </svg>
-                            )
-                          })()}
+                          <DotBar
+                            value={Math.min(pair.total_value / maxVal, 1)}
+                            max={1}
+                            color={getRiskColor(pair.avg_risk)}
+                            emptyColor="var(--color-background-elevated)"
+                            emptyStroke="var(--color-border-hover)"
+                            dots={30}
+                            dotR={1.5}
+                            dotGap={4}
+                          />
                         </div>
                         <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
                           {formatCompactMXN(pair.total_value)}
@@ -2026,8 +2013,6 @@ export default function CategoryProfile() {
                   {sisters.map((sc) => {
                     const scRisk = sc.avg_risk
                     const scColor = getRiskColor(scRisk)
-                    const N = 12, DR = 1.75, DG = 4
-                    const filled = Math.max(1, Math.round(Math.min(scRisk, 1) * N))
                     return (
                       <div
                         key={sc.category_id}
@@ -2044,25 +2029,17 @@ export default function CategoryProfile() {
                           />
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <svg
-                            viewBox={`0 0 ${N * DG} 6`}
-                            width={N * DG}
-                            height={6}
-                            aria-hidden="true"
-                          >
-                            {Array.from({ length: N }).map((_, k) => (
-                              <circle
-                                key={k}
-                                cx={k * DG + DR}
-                                cy={3}
-                                r={DR}
-                                fill={k < filled ? scColor : 'var(--color-background-elevated)'}
-                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                strokeWidth={k < filled ? 0 : 0.5}
-                                fillOpacity={k < filled ? 0.7 : 1}
-                              />
-                            ))}
-                          </svg>
+                          <DotBar
+                            value={scRisk}
+                            max={1}
+                            color={scColor}
+                            emptyColor="var(--color-background-elevated)"
+                            emptyStroke="var(--color-border-hover)"
+                            dots={12}
+                            dotR={1.75}
+                            dotGap={4}
+                            thresholds={[0.25, 0.40, 0.60]}
+                          />
                           <span
                             className="text-xs font-mono tabular-nums w-8 text-right"
                             style={{ color: scColor }}

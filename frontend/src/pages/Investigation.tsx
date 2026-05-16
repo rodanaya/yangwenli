@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/constants'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -179,8 +180,8 @@ const SIGNAL_TAG_CLASS: Record<string, string> = {
   year_end_concentration: 'text-text-secondary bg-border/15 border-border/30',
   high_avg_risk_score: 'text-risk-critical bg-risk-critical/10 border-risk-critical/25',
   high_direct_award_rate: 'text-text-secondary bg-border/15 border-border/30',
-  corporate_group_pattern: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
-  multi_entity_anomaly: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
+  corporate_group_pattern: 'text-text-secondary bg-border/15 border-border/30',
+  multi_entity_anomaly: 'text-text-secondary bg-border/15 border-border/30',
 }
 
 // ============================================================================
@@ -351,24 +352,22 @@ function CaseCard({
 
         {/* Risk bar — dot-matrix */}
         <div className="mt-3">
-          {(() => {
-            const DOTS = 30, DOT_R = 2.5, DOT_GAP = 6
-            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
-            const riskColor = caseItem.suspicion_score >= 0.6 ? '#ef4444'
-              : caseItem.suspicion_score >= 0.4 ? '#f59e0b'
-              : caseItem.suspicion_score >= 0.25 ? '#a16207' : 'var(--color-text-muted)'
-            return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} width={DOTS * DOT_GAP} height={10}>
-                {Array.from({ length: DOTS }).map((_, i) => (
-                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
-                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
-                    strokeWidth={0.5}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={caseItem.suspicion_score}
+            max={1}
+            color={
+              caseItem.suspicion_score >= 0.6 ? 'var(--color-risk-critical)'
+              : caseItem.suspicion_score >= 0.4 ? 'var(--color-risk-high)'
+              : caseItem.suspicion_score >= 0.25 ? 'var(--color-risk-medium)'
+              : 'var(--color-text-muted)'
+            }
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={30}
+            dotR={2.5}
+            dotGap={6}
+            thresholds={[0.25, 0.40, 0.60]}
+          />
         </div>
 
         {/* Verify panel — stops click propagation so opening it doesn't navigate */}
@@ -875,24 +874,22 @@ function CaseTableRow({
             <RiskScoreDisclaimer />
           </div>
           {/* Mini dot-matrix in table cell */}
-          {(() => {
-            const DOTS = 20, DOT_R = 2, DOT_GAP = 5
-            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
-            const riskColor = priority.level === 'critical' ? '#ef4444'
-              : priority.level === 'high' ? '#f59e0b'
-              : priority.level === 'medium' ? '#a16207' : 'var(--color-text-muted)'
-            return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} width={DOTS * DOT_GAP} height={8}>
-                {Array.from({ length: DOTS }).map((_, i) => (
-                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
-                    strokeWidth={0.5}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={caseItem.suspicion_score}
+            max={1}
+            color={
+              priority.level === 'critical' ? 'var(--color-risk-critical)'
+              : priority.level === 'high' ? 'var(--color-risk-high)'
+              : priority.level === 'medium' ? 'var(--color-risk-medium)'
+              : 'var(--color-text-muted)'
+            }
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+            dotR={2}
+            dotGap={5}
+            thresholds={[0.25, 0.40, 0.60]}
+          />
         </div>
       </td>
 
@@ -929,17 +926,19 @@ function CaseTableRow({
             </span>
           )}
           {caseItem.total_contracts > 50 && caseItem.suspicion_score >= 0.4 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+              style={{ backgroundColor: 'var(--color-risk-high)15', color: 'var(--color-risk-high)', borderColor: 'color-mix(in srgb, var(--color-risk-high) 30%, transparent)' }}>
               Alta concentracion
             </span>
           )}
           {caseItem.vendor_count <= 1 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border text-text-secondary bg-border/15 border-border/30">
               Inst. unica
             </span>
           )}
           {caseItem.signals_triggered.includes('multiple_price_anomalies') && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+              style={{ backgroundColor: 'var(--color-risk-critical)15', color: 'var(--color-risk-critical)', borderColor: 'color-mix(in srgb, var(--color-risk-critical) 25%, transparent)' }}>
               Precios anomalos
             </span>
           )}

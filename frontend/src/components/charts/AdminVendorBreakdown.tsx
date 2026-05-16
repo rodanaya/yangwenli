@@ -1,6 +1,7 @@
 import { cn, formatCompactMXN } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from 'react-i18next'
+import { DotBar } from '@/components/ui/DotBar'
 
 interface AdminVendorEntry {
   name: string
@@ -42,7 +43,6 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
     <div className="space-y-2">
       {vendors.map((v, i) => {
         const pct = Math.min(100, (v.total_mxn / maxTotal) * 100)
-        const riskOpacity = 0.3 + (v.risk_pct / 100) * 0.7
         return (
           <div key={i} className="group">
             <div className="flex items-center justify-between text-xs mb-0.5">
@@ -56,26 +56,16 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                 {formatCompactMXN(v.total_mxn)}
               </span>
             </div>
-            {(() => {
-              const N = 30, DR = 3, DG = 8
-              const filled = Math.round((pct / 100) * N)
-              return (
-                <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, i) => (
-                    <circle
-                      key={i}
-                      cx={i * DG + DR}
-                      cy={5}
-                      r={DR}
-                      fill={i < filled ? eraColor : '#f3f1ec'}
-                      stroke={i < filled ? undefined : '#e2ddd6'}
-                      strokeWidth={i < filled ? 0 : 0.5}
-                      fillOpacity={i < filled ? riskOpacity : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={pct}
+              max={100}
+              color={eraColor}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border)"
+              dots={30}
+              dotR={3}
+              dotGap={8}
+            />
             <div className="text-xs text-text-muted mt-0.5">
               <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
             </div>

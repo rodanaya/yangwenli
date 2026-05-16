@@ -15,6 +15,7 @@ import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -872,22 +873,16 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                     aria-valuemax={100}
                     aria-label={`${displayName}: ${combinedPct.toFixed(1)}% ${t('sectorHighRisk')}`}
                   >
-                    {(() => {
-                      const N = 30, DR = 3, DG = 8
-                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
-                      return (
-                        <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
-                          {Array.from({ length: N }).map((_, k) => (
-                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : 'var(--color-background-elevated)'}
-                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                              strokeWidth={k < filled ? 0 : 0.5}
-                              fillOpacity={k < filled ? 0.85 : 1}
-                            />
-                          ))}
-                        </svg>
-                      )
-                    })()}
+                    <DotBar
+                      value={barWidth}
+                      max={100}
+                      color={color}
+                      emptyColor="var(--color-background-elevated)"
+                      emptyStroke="var(--color-border-hover)"
+                      dots={30}
+                      dotR={3}
+                      dotGap={8}
+                    />
                   </div>
 
                   {/* Pct label */}

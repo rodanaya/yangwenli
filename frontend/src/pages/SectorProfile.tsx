@@ -18,6 +18,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
+import { DotBar } from '@/components/ui/DotBar'
 import { Act } from '@/components/layout/Act'
 import {
   cn,
@@ -226,22 +227,14 @@ function InstitutionList({
               </span>
             </div>
             <div className="ml-6">
-              {(() => {
-                const N = 24, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((barPct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={barPct}
+                max={100}
+                color={color}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={24}
+              />
             </div>
           </div>
         )
@@ -317,22 +310,17 @@ function VendorTable({
                   <td className="py-2.5 px-3">
                     <div>
                       <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name ?? vendor.name ?? ''} size="sm" />
-                      {(() => {
-                        const N = 16, DR = 2, DG = 4
-                        const filled = Math.max(1, Math.round((barPct / 100) * N))
-                        return (
-                          <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="mt-1" aria-hidden="true">
-                            {Array.from({ length: N }).map((_, k) => (
-                              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={k < filled ? color : 'var(--color-background-elevated)'}
-                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                strokeWidth={k < filled ? 0 : 0.5}
-                                fillOpacity={k < filled ? 0.85 : 1}
-                              />
-                            ))}
-                          </svg>
-                        )
-                      })()}
+                      <DotBar
+                        value={barPct}
+                        max={100}
+                        color={color}
+                        emptyColor="var(--color-background-elevated)"
+                        emptyStroke="var(--color-border-hover)"
+                        dots={16}
+                        dotR={2}
+                        dotGap={4}
+                        className="mt-1"
+                      />
                     </div>
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono font-bold tabular-nums text-text-primary">
@@ -415,23 +403,13 @@ function RiskDonut({
                 </span>
               </div>
             </div>
-            {(() => {
-              const N = 22, DR = 2, DG = 5
-              const filled = Math.max(1, Math.round((d.pct / 100) * N))
-              const color = RISK_COLORS[d.level as keyof typeof RISK_COLORS]
-              return (
-                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? color : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={d.pct}
+              max={100}
+              color={RISK_COLORS[d.level as keyof typeof RISK_COLORS]}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+            />
           </div>
         ))}
       </div>
@@ -486,22 +464,13 @@ function FactorRankList({
               <p className="text-[10px] text-text-muted ml-6 mb-1 leading-tight">{desc}</p>
             )}
             <div className="ml-6">
-              {(() => {
-                const N = 22, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((barWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={barWidth}
+                max={100}
+                color={color}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+              />
             </div>
           </div>
         )
@@ -1503,8 +1472,6 @@ export function SectorProfile() {
                   {sectorCategories.map((cat, idx) => {
                     const catRisk = cat.avg_risk
                     const catColor = RISK_COLORS[getRiskLevelFromScore(catRisk)]
-                    const N = 16, DR = 1.75, DG = 4
-                    const filled = Math.max(1, Math.round(Math.min(catRisk, 1) * N))
                     return (
                       <div
                         key={cat.category_id}
@@ -1522,16 +1489,17 @@ export function SectorProfile() {
                           />
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                            {Array.from({ length: N }).map((_, k) => (
-                              <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                fill={k < filled ? catColor : 'var(--color-background-elevated)'}
-                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                strokeWidth={k < filled ? 0 : 0.5}
-                                fillOpacity={k < filled ? 0.7 : 1}
-                              />
-                            ))}
-                          </svg>
+                          <DotBar
+                            value={catRisk}
+                            max={1}
+                            color={catColor}
+                            emptyColor="var(--color-background-elevated)"
+                            emptyStroke="var(--color-border-hover)"
+                            dots={16}
+                            dotR={1.75}
+                            dotGap={4}
+                            thresholds={[0.25, 0.40, 0.60]}
+                          />
                           <span className="text-xs font-mono tabular-nums w-8 text-right" style={{ color: catColor }}>
                             {(catRisk * 100).toFixed(0)}%
                           </span>

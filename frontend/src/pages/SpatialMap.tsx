@@ -27,7 +27,7 @@ import {
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
-import { YearScrubber, RiskFloorToggle, ShareViewButton, LensToggle } from '@/components/explore/CanvasControls'
+import { YearScrubber, RiskFloorToggle, ShareViewButton, LensToggle, MapLegend } from '@/components/explore/CanvasControls'
 import { SearchOverlay } from '@/components/explore/SearchOverlay'
 
 const FIRST_VISIT_KEY = 'rubli_explore_visited_v1'
@@ -89,6 +89,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
         <LensToggle lang={lang} />
         <RiskFloorToggle lang={lang} />
         <ShareViewButton lang={lang} />
+        <MapLegend lang={lang} />
         <YearScrubber lang={lang} />
         {showHint && (
           <button
@@ -114,7 +115,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
                 : 'Haz clic en un sector para ver sus instituciones, luego un proveedor, luego un contrato.'}
             </div>
             <div className="text-[10px] text-text-muted mt-1.5 font-mono">
-              {lang === 'en' ? 'esc · back · ⌘K · search' : 'esc · atrás · ⌘K · buscar'}
+              {lang === 'en' ? 'esc · back · Ctrl+K · search' : 'esc · atrás · Ctrl+K · buscar'}
             </div>
           </button>
         )}

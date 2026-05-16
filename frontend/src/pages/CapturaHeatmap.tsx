@@ -21,6 +21,7 @@ import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { Info } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Hook: detect mobile viewport (below md = 768px)
@@ -383,22 +384,16 @@ function CaptureBarChart({
 
                 {/* Horizontal bar */}
                 <div className="flex items-center gap-2">
-                  {(() => {
-                    const N = 30, DR = 2.5, DG = 6
-                    const filled = Math.max(1, Math.round((Math.min(100, pct) / 100) * N))
-                    return (
-                      <svg viewBox={`0 0 ${N * DG} 7`} width={N * DG} height={7} aria-hidden="true">
-                        {Array.from({ length: N }).map((_, k) => (
-                          <circle key={k} cx={k * DG + DR} cy={3.5} r={DR}
-                            fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                            stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                            strokeWidth={k < filled ? 0 : 0.5}
-                            fillOpacity={k < filled ? 0.85 : 1}
-                          />
-                        ))}
-                      </svg>
-                    )
-                  })()}
+                  <DotBar
+                    value={Math.min(100, pct)}
+                    max={100}
+                    color={barColor}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border-hover)"
+                    dots={30}
+                    dotR={2.5}
+                    dotGap={6}
+                  />
                   <span
                     className="text-sm font-bold font-mono tabular-nums shrink-0 w-14 text-right"
                     style={{ color: textColor }}

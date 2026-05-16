@@ -25,6 +25,7 @@ import { formatCompactMXN, formatPercentSafe, formatNumber, toTitleCase, cn } fr
 import { ArrowLeft, AlertCircle, Search, TrendingUp, TrendingDown, Minus, Scale } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ============================================================================
 // Constants
@@ -496,6 +497,8 @@ function TopVendorsComparison({
   nameB,
   totalA,
   totalB,
+  loadingA,
+  loadingB,
 }: {
   vendorsA: InstitutionVendorItem[]
   vendorsB: InstitutionVendorItem[]
@@ -503,6 +506,8 @@ function TopVendorsComparison({
   nameB: string
   totalA: number
   totalB: number
+  loadingA?: boolean
+  loadingB?: boolean
 }) {
   const { t, i18n } = useTranslation('institutions')
   const isEs = i18n.language.startsWith('es')
@@ -514,11 +519,13 @@ function TopVendorsComparison({
     accentColor,
     instName,
     total,
+    loading,
   }: {
     vendors: InstitutionVendorItem[]
     accentColor: string
     instName: string
     total: number
+    loading?: boolean
   }) {
     return (
       <div className="flex-1 min-w-0">
@@ -528,7 +535,13 @@ function TopVendorsComparison({
         >
           {instName}
         </h4>
-        {vendors.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded" />
+            ))}
+          </div>
+        ) : vendors.length === 0 ? (
           <p className="text-xs text-text-muted italic">{t('profile.noVendorData')}</p>
         ) : (
           <div className="space-y-2">
@@ -573,22 +586,14 @@ function TopVendorsComparison({
                     </div>
                   </div>
                   {/* Share dot-matrix */}
-                  {(() => {
-                    const N = 22, DR = 2, DG = 5
-                    const filled = Math.max(1, Math.round((Math.min(share, 100) / 100) * N))
-                    return (
-                      <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="mt-1.5" aria-hidden="true">
-                        {Array.from({ length: N }).map((_, k) => (
-                          <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                            fill={k < filled ? accentColor : 'var(--color-background-elevated)'}
-                            stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                            strokeWidth={k < filled ? 0 : 0.5}
-                            fillOpacity={k < filled ? 0.85 : 1}
-                          />
-                        ))}
-                      </svg>
-                    )
-                  })()}
+                  <DotBar
+                    value={Math.min(share, 100)}
+                    max={100}
+                    color={accentColor}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border-hover)"
+                    className="mt-1.5"
+                  />
                 </div>
               )
             })}
@@ -612,8 +617,8 @@ function TopVendorsComparison({
           : 'Top 5 vendors by contracted value. The percentage indicates each vendor\'s share of total institutional spending.'}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} />
-        <VendorColumn vendors={top5B} accentColor={COLOR_B} instName={nameB} total={totalB} />
+        <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} loading={loadingA} />
+        <VendorColumn vendors={top5B} accentColor={COLOR_B} instName={nameB} total={totalB} loading={loadingB} />
       </div>
     </section>
   )
@@ -1023,13 +1028,13 @@ export default function InstitutionCompare() {
   })
 
   // Top vendors for each institution
-  const { data: vendorsAResp } = useQuery({
+  const { data: vendorsAResp, isLoading: loadingVendorsA } = useQuery({
     queryKey: ['institution-vendors', effectiveA],
     queryFn: () => institutionApi.getVendors(effectiveA!, 10),
     enabled: effectiveA !== null && instA !== undefined,
   })
 
-  const { data: vendorsBResp } = useQuery({
+  const { data: vendorsBResp, isLoading: loadingVendorsB } = useQuery({
     queryKey: ['institution-vendors', effectiveB],
     queryFn: () => institutionApi.getVendors(effectiveB!, 10),
     enabled: effectiveB !== null && instB !== undefined,
@@ -1164,6 +1169,8 @@ export default function InstitutionCompare() {
             nameB={nameB}
             totalA={instA.total_amount_mxn ?? 0}
             totalB={instB.total_amount_mxn ?? 0}
+            loadingA={loadingVendorsA}
+            loadingB={loadingVendorsB}
           />
 
           {/* Risk distribution */}

@@ -30,6 +30,7 @@ import {
   useState,
 } from 'react'
 import { cn } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 /* ============================================================
    1. GlowCard --- Animated conic-gradient glow border on hover
@@ -551,23 +552,17 @@ export function ProgressReveal({
         aria-valuemax={100}
         aria-label={label ?? `Progress: ${clamped}%`}
       >
-        {(() => {
-          const N = 30, DR = 3, DG = 8
-          const target = isInView || reduced ? clamped : 0
-          const filled = Math.max(target > 0 ? 1 : 0, Math.round((target / 100) * N))
-          return (
-            <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: Math.max(Number(height) || 10, 10) }} preserveAspectRatio="none" aria-hidden="true">
-              {Array.from({ length: N }).map((_, k) => (
-                <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                  fill={k < filled ? color : 'var(--color-background-elevated)'}
-                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                  strokeWidth={k < filled ? 0 : 0.5}
-                  fillOpacity={k < filled ? 0.85 : 1}
-                />
-              ))}
-            </svg>
-          )
-        })()}
+        <DotBar
+          value={isInView || reduced ? clamped : 0}
+          max={100}
+          color={color}
+          emptyColor="var(--color-background-elevated)"
+          emptyStroke="var(--color-border-hover)"
+          dots={30}
+          dotR={3}
+          dotGap={8}
+          className="w-full"
+        />
       </div>
     </div>
   )

@@ -217,6 +217,21 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     )
   }
 
+  if (items.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted">
+          {lang === 'en' ? 'No sector data available' : 'Sin datos sectoriales disponibles'}
+        </p>
+        <p className="mt-2 text-[10px] text-text-muted/70 leading-relaxed max-w-md mx-auto">
+          {lang === 'en'
+            ? 'category_stats precompute pending — try again after the next ETL run.'
+            : 'Precómputo de category_stats pendiente — intenta de nuevo tras el siguiente ETL.'}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Row 1 — top 3 categories, taller cells */}

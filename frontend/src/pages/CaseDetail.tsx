@@ -2039,7 +2039,12 @@ function CaseBody({
                       {/* DotBar risk viz */}
                       {score != null && (
                         <div style={{ maxWidth: 340 }}>
-                          <DotBar value={score} max={1} color={scoreColor} />
+                          <DotBar
+                            value={score}
+                            max={1}
+                            color={scoreColor}
+                            thresholds={[0.25, 0.40, 0.60]}
+                          />
                         </div>
                       )}
 

@@ -441,11 +441,6 @@ function ComplementaryTypologyCard({
   typology: ComplementaryTypology
   isEs: boolean
 }) {
-  // Render each stat as a 20-dot row where `filled = round(value / max * 20)`.
-  const DOTS = 20
-  const DOT_SIZE = 6
-  const DOT_GAP = 3
-  const ROW_W = DOTS * (DOT_SIZE + DOT_GAP) - DOT_GAP
   return (
     <article
       className="rounded-sm p-5 transition-colors hover:bg-background-elevated"
@@ -474,8 +469,6 @@ function ComplementaryTypologyCard({
       {/* Dot-viz rows: one per stat */}
       <div className="space-y-2.5">
         {typology.stats.map((stat) => {
-          const ratio = Math.max(0, Math.min(1, stat.value / stat.max))
-          const filled = Math.round(ratio * DOTS)
           const accent = stat.color ?? typology.color
           return (
             <div key={stat.label}>
@@ -493,24 +486,13 @@ function ComplementaryTypologyCard({
                   )}
                 </span>
               </div>
-              <svg
-                width={ROW_W}
-                height={DOT_SIZE}
-                style={{ display: 'block' }}
-                aria-hidden
-              >
-                {Array.from({ length: DOTS }, (_, i) => (
-                  <circle
-                    key={i}
-                    cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
-                    cy={DOT_SIZE / 2}
-                    r={DOT_SIZE / 2}
-                    fill={i < filled ? accent : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={i < filled ? 0 : 0.5}
-                  />
-                ))}
-              </svg>
+              <DotBar
+                value={Math.max(0, Math.min(1, stat.value / stat.max))}
+                color={accent}
+                dots={20}
+                size={6}
+                gap={3}
+              />
             </div>
           )
         })}

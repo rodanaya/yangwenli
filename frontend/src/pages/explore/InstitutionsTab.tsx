@@ -16,6 +16,7 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { institutionApi, analysisApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
@@ -829,23 +830,17 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
       <td className="px-3 py-2 text-right">
         {institution.avg_risk_score != null ? (
           <div className="flex items-center justify-end gap-1.5">
-            {(() => {
-              const N = 10, DR = 1.5, DG = 4
-              const pct = Math.min(institution.avg_risk_score, 1)
-              const filled = Math.max(1, Math.round(pct * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={institution.avg_risk_score}
+              max={1}
+              color={riskColor}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={10}
+              dotR={1.5}
+              dotGap={4}
+              thresholds={[0.25, 0.40, 0.60]}
+            />
             <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(institution.avg_risk_score * 100).toFixed(0)}%
             </span>

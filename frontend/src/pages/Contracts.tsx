@@ -22,6 +22,7 @@ import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { DotBar } from '@/components/ui/DotBar'
 import { RiskExplainTooltip } from '@/components/RiskExplainTooltip'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
@@ -1340,24 +1341,20 @@ function ContractRow({
           {contract.risk_score != null && (
             <div className="flex items-center gap-1.5">
               {(() => {
-                const N = 12, DR = 1.75, DG = 4
-                const pct = Math.min(contract.risk_score, 1)
-                const filled = Math.max(1, Math.round(pct * N))
                 const color = contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
                   : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
                   : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
                   : RISK_COLORS.low
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
+                  <DotBar
+                    value={contract.risk_score}
+                    max={1}
+                    color={color}
+                    dots={12}
+                    dotR={1.75}
+                    dotGap={4}
+                    thresholds={[0.25, 0.40, 0.60]}
+                  />
                 )
               })()}
               <span className="font-mono text-[10px] text-text-muted tabular-nums">{contract.risk_score.toFixed(3)}</span>
@@ -1490,23 +1487,18 @@ function ContractRow({
           {contract.ensemble_anomaly_score != null ? (
             <div className="flex items-center gap-1.5 justify-end" title={`PyOD ensemble score: ${contract.ensemble_anomaly_score.toFixed(3)}`}>
               {(() => {
-                const N = 12, DR = 1.75, DG = 4
-                const pct = Math.min(contract.ensemble_anomaly_score, 1)
-                const filled = Math.max(1, Math.round(pct * N))
                 const color = contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
                   : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
                   : '#94a3b8'
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
+                  <DotBar
+                    value={contract.ensemble_anomaly_score}
+                    max={1}
+                    color={color}
+                    dots={12}
+                    dotR={1.75}
+                    dotGap={4}
+                  />
                 )
               })()}
               <span

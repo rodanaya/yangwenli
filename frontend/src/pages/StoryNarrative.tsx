@@ -771,7 +771,7 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
       />
 
       {/* Two-column layout on desktop: prose + breakout pullquote */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6" style={{ isolation: 'isolate' }}>
         {/* Body column */}
         <div className="lg:col-span-7 lg:col-start-1">
           {chapter.prose.map((paragraph, i) => (

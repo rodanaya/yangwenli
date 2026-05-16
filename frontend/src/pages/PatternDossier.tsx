@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
-import { getRiskLevelFromScore, SECTOR_COLORS } from '@/lib/constants'
+import { getRiskLevelFromScore, SECTOR_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -240,6 +240,7 @@ export default function PatternDossier() {
 
   const codeUpper = code?.toUpperCase() ?? ''
   const caseType = CASE_TYPE_BY_PATTERN[codeUpper]
+  const patternColor = PATTERN_COLORS[codeUpper] ?? 'var(--color-risk-critical)'
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -257,7 +258,7 @@ export default function PatternDossier() {
         <div className="flex items-start gap-3">
           <span
             className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2.5 py-1 text-sm font-bold font-mono tracking-wider"
-            style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+            style={{ backgroundColor: `${patternColor}1f`, color: patternColor }}
             aria-label={`Pattern code ${code}`}
           >
             {codeUpper}
@@ -276,9 +277,9 @@ export default function PatternDossier() {
               to={`/aria?pattern=${codeUpper}`}
               className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
               style={{
-                backgroundColor: 'rgba(220,38,38,0.12)',
-                color: '#dc2626',
-                border: '1px solid rgba(220,38,38,0.25)',
+                backgroundColor: `${patternColor}1f`,
+                color: patternColor,
+                border: `1px solid ${patternColor}40`,
               }}
             >
               <span aria-hidden="true">→</span>

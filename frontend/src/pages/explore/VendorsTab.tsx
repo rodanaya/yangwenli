@@ -43,6 +43,7 @@ import { StatPill, MiniBar } from './shared'
 import { VendorBadge } from '@/components/ui/VendorBadge'
 import { EditorialScatterChart } from '@/components/charts/editorial'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // =============================================================================
 // Column and Preset Configuration
@@ -473,8 +474,8 @@ export default function VendorsTab() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full text-xs">
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <table className="w-full min-w-[640px] text-xs">
             <thead>
               <tr className="bg-background-elevated/50">
                 <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
@@ -844,23 +845,15 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
       <td className="px-3 py-2 text-right">
         {vendor.avg_risk_score != null ? (
           <div className="flex items-center justify-end gap-1.5">
-            {(() => {
-              const N = 10, DR = 1.5, DG = 4
-              const pct = Math.min(vendor.avg_risk_score, 1)
-              const filled = Math.max(1, Math.round(pct * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={vendor.avg_risk_score}
+              max={1}
+              color={riskColor ?? 'var(--color-risk-critical)'}
+              dots={10}
+              dotR={1.5}
+              dotGap={4}
+              thresholds={[0.25, 0.40, 0.60]}
+            />
             <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(vendor.avg_risk_score * 100).toFixed(0)}%
             </span>

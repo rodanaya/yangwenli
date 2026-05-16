@@ -11,6 +11,7 @@
  */
 
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { DotBar } from '@/components/ui/DotBar'
 import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
 import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
@@ -1078,23 +1079,16 @@ export default function Administrations() {
                     {ADMIN_DISPLAY_NAMES[a.name] ?? a.name}
                   </span>
                   <div className="flex-1 relative flex items-center">
-                    {(() => {
-                      const N = 40, DR = 3, DG = 8
-                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
-                      const color = isAmlo ? '#dc2626' : partyColor
-                      return (
-                        <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                          {Array.from({ length: N }).map((_, k) => (
-                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : 'var(--color-background-elevated)'}
-                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                              strokeWidth={k < filled ? 0 : 0.5}
-                              fillOpacity={k < filled ? 0.85 : 1}
-                            />
-                          ))}
-                        </svg>
-                      )
-                    })()}
+                    <DotBar
+                      value={barWidth}
+                      max={100}
+                      color={isAmlo ? '#dc2626' : partyColor}
+                      emptyColor="var(--color-background-elevated)"
+                      emptyStroke="var(--color-border-hover)"
+                      dots={40}
+                      dotR={3}
+                      dotGap={8}
+                    />
                     {isAmlo && (
                       <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse pl-2">
                         {t('evidenceSection.amloMultiplier')}
@@ -1724,43 +1718,27 @@ function TransitionMiniBar({
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{fromName}</span>
         <div className="flex-1">
-          {(() => {
-            const N = 20, DR = 2, DG = 5
-            const filled = Math.max(1, Math.round((fromPct / 100) * N))
-            return (
-              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                {Array.from({ length: N }).map((_, k) => (
-                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
-                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={k < filled ? 0 : 0.5}
-                    fillOpacity={k < filled ? 0.5 : 1}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={fromPct}
+            max={100}
+            color="var(--color-text-muted)"
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+          />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{toName}</span>
         <div className="flex-1">
-          {(() => {
-            const N = 20, DR = 2, DG = 5
-            const filled = Math.max(1, Math.round((toPct / 100) * N))
-            return (
-              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                {Array.from({ length: N }).map((_, k) => (
-                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? toBarColor : 'var(--color-background-elevated)'}
-                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={k < filled ? 0 : 0.5}
-                    fillOpacity={k < filled ? 0.85 : 1}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={toPct}
+            max={100}
+            color={toBarColor}
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+          />
         </div>
       </div>
     </div>

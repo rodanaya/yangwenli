@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { PresidentAvatar } from './PresidentAvatar'
 import { ProcurementGradeCard } from './ProcurementGradeCard'
@@ -387,22 +388,16 @@ export function AdminDossierPanel({
                             {formatNumber(sector.contracts)}
                           </span>
                         </div>
-                        {(() => {
-                          const N = 20, DR = 1.75, DG = 4.5
-                          const filled = Math.max(1, Math.round((pct / 100) * N))
-                          return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                              {Array.from({ length: N }).map((_, k) => (
-                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : 'var(--color-background-elevated)'}
-                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                  strokeWidth={k < filled ? 0 : 0.5}
-                                  fillOpacity={k < filled ? 0.7 : 1}
-                                />
-                              ))}
-                            </svg>
-                          )
-                        })()}
+                        <DotBar
+                          value={pct}
+                          max={100}
+                          color={sector.color}
+                          emptyColor="var(--color-background-elevated)"
+                          emptyStroke="var(--color-border-hover)"
+                          dots={20}
+                          dotR={1.75}
+                          dotGap={4.5}
+                        />
                       </div>
                     </div>
                   )

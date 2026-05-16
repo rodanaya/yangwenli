@@ -421,42 +421,19 @@ function RiskEvolution({
       {/* Visual tape: three stacked dot-matrix strips */}
       <div className="rounded-sm border border-border/30 bg-background-elevated/30 p-5 space-y-4">
         {(() => {
-          const N = 50, DR = 3, DG = 8
-          const oecdIdx = Math.round((oecdPct / 100) * N)
-          const renderStrip = (pct: number, color: string) => {
-            const filled = Math.max(0, Math.min(N, Math.round((pct / 100) * N)))
-            return (
-              <svg
-                viewBox={`0 0 ${N * DG} 10`}
-                width={N * DG}
-                height={10}
-                aria-hidden="true"
-              >
-                {Array.from({ length: N }).map((_, i) => (
-                  <circle
-                    key={i}
-                    cx={i * DG + DR}
-                    cy={5}
-                    r={DR}
-                    fill={i < filled ? color : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={i < filled ? 0 : 0.5}
-                    fillOpacity={i < filled ? 0.85 : 1}
-                  />
-                ))}
-                {/* OECD marker line */}
-                <line
-                  x1={oecdIdx * DG + DR}
-                  y1={0}
-                  x2={oecdIdx * DG + DR}
-                  y2={10}
-                  stroke="#22d3ee"
-                  strokeWidth={1}
-                  strokeOpacity={0.8}
-                />
-              </svg>
-            )
-          }
+          const renderStrip = (pct: number, color: string) => (
+            <DotBar
+              value={pct}
+              max={100}
+              color={color}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={50}
+              dotR={3}
+              dotGap={8}
+              thresholds={[{ value: oecdPct, color: '#22d3ee' }]}
+            />
+          )
           return (
             <>
               {/* This year */}
