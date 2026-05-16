@@ -86,6 +86,18 @@ const PATTERN_SECTORS: Record<string, keyof typeof SECTOR_COLORS> = {
   P7: 'hacienda',
 }
 
+// Primary captured institution per pattern — used when c.institution is blank
+// (spotlight-derived communities don't carry per-pattern institution info).
+const PATTERN_INSTITUTION: Record<string, string> = {
+  P1: 'Pemex / CFE',
+  P2: 'IMSS / SSA',
+  P3: 'SCT / PEMEX',
+  P4: 'SHCP / IMSS',
+  P5: 'CONAGUA / SCT',
+  P6: 'Dependencias Fed.',
+  P7: 'SAGARPA / SADER',
+}
+
 function buildCommunitiesFromSpotlight(
   spotlight: PatternSpotlightResponse | undefined,
   isEs: boolean,
@@ -1052,8 +1064,8 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
       .slice(0, 5)
     // Flow weight: use real MXN when available, otherwise use vendor count.
     const flowOf = (c: Community) => (hasRealValues ? c.value : c.vendors)
-    // Target label: use institution name when set, otherwise pattern name.
-    const targetOf = (c: Community) => c.institution || c.name
+    // Target label: use institution name when set, otherwise pattern-based editorial label.
+    const targetOf = (c: Community) => c.institution || PATTERN_INSTITUTION[c.id] || PATTERN_INSTITUTION[c.pattern] || c.name
     const sources: FlowNode[] = top5.map((c) => ({
       id: `s-${c.id}`,
       label: c.name,

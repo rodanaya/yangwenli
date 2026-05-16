@@ -52,7 +52,10 @@ const LEGAL_STATUS_STYLE: Record<
   acquitted: { dot: 'var(--color-text-muted)', label: 'ACQUITTED', text: 'var(--color-text-muted)' },
   dismissed: { dot: 'var(--color-text-muted)', label: 'DISMISSED', text: 'var(--color-text-muted)' },
   unresolved: { dot: 'var(--color-text-muted)', label: 'UNRESOLVED', text: 'var(--color-text-muted)' },
+  ongoing: { dot: '#f59e0b', label: 'ONGOING', text: '#fcd34d' },
+  settled: { dot: 'var(--color-text-muted)', label: 'SETTLED', text: 'var(--color-text-muted)' },
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Formatters
@@ -271,7 +274,7 @@ function CaseRow({
               <>
                 <span className="text-text-muted">·</span>
                 <span className="text-text-muted tracking-wider">
-                  {t(`severity.${cas.severity}`)} {lang === 'es' ? 'SEVERIDAD' : 'SEVERITY'}
+                  {t(`severity.${cas.severity}`)} {t('severity.label', { defaultValue: 'SEVERITY' })}
                 </span>
               </>
             )}

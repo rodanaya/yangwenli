@@ -31,7 +31,8 @@
     "1": "Low",
     "2": "Medium",
     "3": "High",
-    "4": "Critical"
+    "4": "Critical",
+    "label": "SEVERITY"
   },
   "legalStatuses": {
     "impunity": "Impunity",
@@ -40,7 +41,9 @@
     "convicted": "Convicted",
     "acquitted": "Acquitted",
     "dismissed": "Dismissed",
-    "unresolved": "Unresolved"
+    "unresolved": "Unresolved",
+    "ongoing": "Ongoing",
+    "settled": "Settled"
   },
   "loadError": "Failed to load cases.",
   "loadErrorDetail": "The server may be temporarily unavailable. Data will appear once the connection is restored.",

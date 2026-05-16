@@ -43,9 +43,10 @@ function formatInstitutionName(raw: string, max: number): string {
     .replace(/\s+/g, ' ')
     .trim()
   // Title-case if input is ALL CAPS
+  // NOTE: avoid \b\w regex — it misreads Unicode word boundaries (e.g. "Secretaría" → "SecretaríA")
   const isAllCaps = cleaned === cleaned.toUpperCase()
   const cased = isAllCaps
-    ? cleaned.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+    ? cleaned.toLowerCase().split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
     : cleaned
   if (cased.length <= max) return cased
   // Truncate at word boundary

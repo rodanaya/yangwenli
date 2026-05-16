@@ -127,24 +127,37 @@ export function getLedeForVendor(ctx: LedeContext): string {
   return parts.join(' · ') || 'Sin datos suficientes para sintetizar lede.'
 }
 
-export function getLedeForCategory(ctx: LedeContext): string {
-  const name = ctx.category_name || ctx.category_name_en || 'Categoría'
+export function getLedeForCategory(ctx: LedeContext, lang: 'en' | 'es' = 'es'): string {
+  const name = lang === 'en'
+    ? (ctx.category_name_en || ctx.category_name || 'Category')
+    : (ctx.category_name || ctx.category_name_en || 'Categoría')
+  const isEs = lang === 'es'
 
   // Opening: value + contract count
   let sentence = ''
   if (ctx.total_value_mxn && ctx.total_contracts) {
-    sentence += `${name} concentra ${formatCompactMXN(ctx.total_value_mxn)} en ${formatNumber(ctx.total_contracts)} contratos federales`
+    sentence += isEs
+      ? `${name} concentra ${formatCompactMXN(ctx.total_value_mxn)} en ${formatNumber(ctx.total_contracts)} contratos federales`
+      : `${name} accounts for ${formatCompactMXN(ctx.total_value_mxn)} across ${formatNumber(ctx.total_contracts)} federal contracts`
   } else {
     sentence += name
   }
 
   // Market structure
   if (ctx.hhi != null) {
-    const concentr = ctx.hhi > 0.25 ? 'oligopólico' : ctx.hhi > 0.10 ? 'concentrado' : 'competitivo'
-    const vendorNote = ctx.unique_vendors ? ` (${formatNumber(ctx.unique_vendors)} proveedores)` : ''
-    sentence += `, en un mercado ${concentr}${vendorNote}`
+    const concentr = isEs
+      ? (ctx.hhi > 0.25 ? 'oligopólico' : ctx.hhi > 0.10 ? 'concentrado' : 'competitivo')
+      : (ctx.hhi > 0.25 ? 'oligopolistic' : ctx.hhi > 0.10 ? 'concentrated' : 'competitive')
+    const vendorNote = ctx.unique_vendors
+      ? isEs ? ` (${formatNumber(ctx.unique_vendors)} proveedores)` : ` (${formatNumber(ctx.unique_vendors)} vendors)`
+      : ''
+    sentence += isEs
+      ? `, en un mercado ${concentr}${vendorNote}`
+      : ` in a ${concentr} market${vendorNote}`
   } else if (ctx.unique_vendors != null) {
-    sentence += ` distribuidos entre ${formatNumber(ctx.unique_vendors)} proveedores`
+    sentence += isEs
+      ? ` distribuidos entre ${formatNumber(ctx.unique_vendors)} proveedores`
+      : ` distributed across ${formatNumber(ctx.unique_vendors)} vendors`
   }
   sentence += '.'
 
@@ -155,14 +168,22 @@ export function getLedeForCategory(ctx: LedeContext): string {
     const daHigh = da > 60
     const riskHigh = ctx.avg_risk_score >= 0.40
     if (daHigh && riskHigh) {
-      sentences.push(`Con ${da.toFixed(0)}% de adjudicaciones directas y un indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)}, presenta señales de concentración relevantes para investigación.`)
+      sentences.push(isEs
+        ? `Con ${da.toFixed(0)}% de adjudicaciones directas y un indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)}, presenta señales de concentración relevantes para investigación.`
+        : `With ${da.toFixed(0)}% direct awards and an average risk indicator of ${ctx.avg_risk_score.toFixed(2)}, this category shows concentration signals worth investigating.`)
     } else if (daHigh) {
-      sentences.push(`El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal y merece seguimiento.`)
+      sentences.push(isEs
+        ? `El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal y merece seguimiento.`
+        : `The ${da.toFixed(0)}% direct-award rate exceeds the federal average and warrants monitoring.`)
     } else if (riskHigh) {
-      sentences.push(`El indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)} ubica esta categoría en alerta alta.`)
+      sentences.push(isEs
+        ? `El indicador de riesgo promedio de ${ctx.avg_risk_score.toFixed(2)} ubica esta categoría en alerta alta.`
+        : `The average risk indicator of ${ctx.avg_risk_score.toFixed(2)} places this category on high alert.`)
     }
   } else if (da != null && da > 60) {
-    sentences.push(`El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal.`)
+    sentences.push(isEs
+      ? `El ${da.toFixed(0)}% de adjudicaciones directas supera el promedio federal.`
+      : `The ${da.toFixed(0)}% direct-award rate exceeds the federal average.`)
   }
   return sentences.join(' ')
 }
