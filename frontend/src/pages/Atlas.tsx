@@ -1096,11 +1096,29 @@ export default function Atlas() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [mode, setMode] = useState<ConstellationMode>('patterns')
-  const [yearIndex, setYearIndex] = useState<number>(YEAR_SNAPSHOTS.length - 1) // default to most recent
+  // Read URL params synchronously so AtlasContextProvider.initialState is correct
+  // on first render. Without this, the left rail shows "Patterns" active even when
+  // ?lens=sectors is in the URL (context initializes before the mount useEffect fires).
+  const [mode, setMode] = useState<ConstellationMode>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const l = p.get('lens') as ConstellationMode | null
+    return (l && ['patterns', 'sectors', 'categories', 'sexenios'].includes(l)) ? l : 'patterns'
+  })
+  const [yearIndex, setYearIndex] = useState<number>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const year = p.get('year')
+    if (year) {
+      const yi = YEAR_SNAPSHOTS.findIndex((s) => String(s.year) === year)
+      if (yi >= 0) return yi
+    }
+    return YEAR_SNAPSHOTS.length - 1
+  })
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [selectedClusterCode, setSelectedClusterCode] = useState<string | null>(null)
-  const [pinnedCode, setPinnedCode] = useState<string | null>(null)
+  const [pinnedCode, setPinnedCode] = useState<string | null>(() => {
+    const p = new URLSearchParams(window.location.search)
+    return p.get('zoom') || p.get('pin') || null
+  })
   // Most recently picked vendor — shown as a "Found X" badge near the toolbar.
   const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
   // Personal notes per cluster — localStorage-backed
@@ -1120,7 +1138,11 @@ export default function Atlas() {
   // Risk-floor filter — when set, dots below the floor are dropped from the
   // population; remaining levels redistribute proportionally so the field
   // re-densifies around the focused band.
-  const [riskFloor, setRiskFloor] = useState<'all' | 'medium' | 'high' | 'critical'>('all')
+  const [riskFloor, setRiskFloor] = useState<'all' | 'medium' | 'high' | 'critical'>(() => {
+    const p = new URLSearchParams(window.location.search)
+    const f = p.get('floor')
+    return (f && ['all', 'medium', 'high', 'critical'].includes(f)) ? f as 'all' | 'medium' | 'high' | 'critical' : 'all'
+  })
   // Compare mode — when true, render a second constellation card with its own year
   const [compareMode, setCompareMode] = useState<boolean>(false)
   // Year B defaults to a contrasting year vs year A — Peña 2014 vs COVID 2020
