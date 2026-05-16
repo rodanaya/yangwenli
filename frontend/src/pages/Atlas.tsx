@@ -1620,11 +1620,11 @@ export default function Atlas() {
         >
           {lang === 'en' ? (
             <>
-              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine&#8202;trillion pesos</span> in federal procurement.
+              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine trillion pesos</span> in federal procurement.
             </>
           ) : (
             <>
-              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve&#8202;billones de pesos</span> en contratación federal.
+              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve billones de pesos</span> en contratación federal.
             </>
           )}
         </h1>
