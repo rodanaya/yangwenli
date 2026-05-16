@@ -155,7 +155,7 @@ function useTierByKey() {
 
 function TrendIcon({ direction }: { direction: string | null }) {
   const { t } = useTranslation('institutionleague')
-  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label={t('trend.improving')} />
+  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-text-secondary" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
@@ -178,7 +178,7 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
     >
       {pillars.map(({ key, value, max }) => {
         const pct = Math.min(100, Math.max(2, (value / max) * 100))
-        const bg = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? '#fbbf24' : '#f87171'
+        const bg = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
           <div key={key} className="flex flex-col items-center gap-[2px]">
             <div className="w-[18px] h-7 bg-background-elevated rounded-[2px] flex flex-col justify-end overflow-hidden">
@@ -696,7 +696,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           { label: t('pillarRadar.external'), value: item.pillar_external, max: 20 },
         ].map((p) => {
           const pct = (p.value / p.max) * 100
-          const barColor = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? '#fbbf24' : '#f87171'
+          const barColor = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>

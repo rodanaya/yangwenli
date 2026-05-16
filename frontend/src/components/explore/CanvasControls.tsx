@@ -143,7 +143,7 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
   const dispatch = useExploreDispatch()
   return (
     <div
-      className="absolute top-3 left-3 z-10 flex"
+      className="absolute top-14 left-3 z-10 flex"
       style={{
         background: 'var(--color-background-card, #fff)',
         border: '1px solid var(--color-border)',
