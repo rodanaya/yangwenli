@@ -473,7 +473,50 @@ def _build_summary(conn) -> dict:
 
 # Cache for capture leaders (longer TTL — data rarely changes)
 _capture_cache: dict = {"data": None, "expires": 0}
+_capture_lock = threading.Lock()  # Prevents per-worker stampede
 _CAPTURE_TTL = 3600  # 1 hour
+
+
+def _ensure_capture_table(conn) -> None:
+    """Create precomputed_capture_leaders table if it doesn't exist."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS precomputed_capture_leaders (
+            id         INTEGER PRIMARY KEY,
+            data_json  TEXT    NOT NULL,
+            computed_at REAL   NOT NULL
+        )
+    """)
+    conn.commit()
+
+
+def _get_capture_from_db() -> dict | None:
+    """Read cached capture-leaders from DB (shared across all workers). Returns None if stale/missing."""
+    try:
+        with get_db() as conn:
+            _ensure_capture_table(conn)
+            row = conn.execute(
+                "SELECT data_json, computed_at FROM precomputed_capture_leaders ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        if row and (time.time() - row["computed_at"]) < _CAPTURE_TTL:
+            return json.loads(row["data_json"])
+    except Exception as e:
+        logger.warning(f"DB capture cache read failed: {e}")
+    return None
+
+
+def _write_capture_to_db(data: dict) -> None:
+    """Persist capture-leaders result to DB so all workers share it."""
+    try:
+        with get_db() as conn:
+            _ensure_capture_table(conn)
+            conn.execute("DELETE FROM precomputed_capture_leaders")
+            conn.execute(
+                "INSERT INTO precomputed_capture_leaders (data_json, computed_at) VALUES (?, ?)",
+                (json.dumps(data), time.time()),
+            )
+            conn.commit()
+    except Exception as e:
+        logger.warning(f"DB capture cache write failed: {e}")
 
 
 def _short_label(name: str) -> str:
@@ -503,82 +546,97 @@ def get_capture_leaders():
 
     Each row: institution label, top-vendor peak share %, second-vendor share %, capture gap.
     Used by Executive Summary Finding 04 (P6 Cleveland pair chart).
-    Cached 1 hour.
+    Cached 1 hour (in-process per-worker + DB-backed shared across all workers).
     """
     now = time.time()
+    # Layer 1: in-process cache (fastest — same worker, no I/O)
     if _capture_cache["data"] and now < _capture_cache["expires"]:
         return _capture_cache["data"]
 
-    try:
-        with get_db() as conn:
-            cur = conn.cursor()
-            cur.execute("""
-                WITH capture_top5 AS (
-                    SELECT institution_id, vendor_id AS cap_vendor_id,
-                           institution_name, vendor_name AS cap_vendor_name,
-                           peak_year, peak_share_pct, score
-                    FROM capture_results
-                    ORDER BY score DESC LIMIT 5
-                ),
-                inst_peak_totals AS (
-                    SELECT c.institution_id,
-                           c.contract_year AS yr,
-                           SUM(c.amount_mxn) AS total
-                    FROM contracts c
-                    JOIN capture_top5 ct
-                         ON c.institution_id = ct.institution_id
-                        AND c.contract_year = ct.peak_year
-                    WHERE c.amount_mxn > 0
-                    GROUP BY c.institution_id, yr
-                ),
-                inst_vendor_shares AS (
-                    SELECT c.institution_id, c.vendor_id, v.name AS vendor_name,
-                           ROUND(SUM(c.amount_mxn) * 100.0 / ipt.total, 1) AS share_pct,
-                           ROW_NUMBER() OVER (
-                               PARTITION BY c.institution_id
-                               ORDER BY SUM(c.amount_mxn) DESC
-                           ) AS rn
-                    FROM contracts c
-                    JOIN vendors v ON c.vendor_id = v.id
-                    JOIN capture_top5 ct
-                         ON c.institution_id = ct.institution_id
-                        AND c.contract_year = ct.peak_year
-                    JOIN inst_peak_totals ipt ON c.institution_id = ipt.institution_id
-                    WHERE c.amount_mxn > 0
-                    GROUP BY c.institution_id, c.vendor_id, v.name, ipt.total
-                )
-                SELECT ct.institution_name,
-                       MAX(CASE WHEN ivs.rn = 1 THEN ivs.share_pct END) AS top_pct,
-                       MAX(CASE WHEN ivs.rn = 2 THEN ivs.share_pct END) AS second_pct,
-                       ct.peak_year,
-                       ct.score
-                FROM capture_top5 ct
-                JOIN inst_vendor_shares ivs
-                     ON ct.institution_id = ivs.institution_id AND ivs.rn <= 2
-                GROUP BY ct.institution_id, ct.institution_name, ct.peak_year, ct.score
-                ORDER BY ct.score DESC
-            """)
-            rows = cur.fetchall()
+    # Layer 2: DB-backed cache (shared across workers — survives restarts)
+    with _capture_lock:
+        # Re-check in-process after acquiring lock (another thread may have just populated it)
+        if _capture_cache["data"] and time.time() < _capture_cache["expires"]:
+            return _capture_cache["data"]
 
-        leaders = []
-        for row in rows:
-            top = round(row["top_pct"] or 0, 1)
-            second = round(row["second_pct"] or 0, 1)
-            leaders.append({
-                "label": _short_label(row["institution_name"]),
-                "institution_name": row["institution_name"],
-                "top": top,
-                "second": second,
-                "gap": round(top - second, 1),
-                "peak_year": row["peak_year"],
-                "captured": (top - second) >= 40,
-            })
+        db_cached = _get_capture_from_db()
+        if db_cached is not None:
+            _capture_cache["data"] = db_cached
+            _capture_cache["expires"] = time.time() + _CAPTURE_TTL
+            return db_cached
 
-        result = {"leaders": leaders}
-        _capture_cache["data"] = result
-        _capture_cache["expires"] = time.time() + _CAPTURE_TTL
-        return result
+        # Layer 3: expensive computation — runs at most once per TTL across all workers
+        try:
+            with get_db() as conn:
+                cur = conn.cursor()
+                cur.execute("""
+                    WITH capture_top5 AS (
+                        SELECT institution_id, vendor_id AS cap_vendor_id,
+                               institution_name, vendor_name AS cap_vendor_name,
+                               peak_year, peak_share_pct, score
+                        FROM capture_results
+                        ORDER BY score DESC LIMIT 5
+                    ),
+                    inst_peak_totals AS (
+                        SELECT c.institution_id,
+                               c.contract_year AS yr,
+                               SUM(c.amount_mxn) AS total
+                        FROM contracts c
+                        JOIN capture_top5 ct
+                             ON c.institution_id = ct.institution_id
+                            AND c.contract_year = ct.peak_year
+                        WHERE c.amount_mxn > 0
+                        GROUP BY c.institution_id, yr
+                    ),
+                    inst_vendor_shares AS (
+                        SELECT c.institution_id, c.vendor_id, v.name AS vendor_name,
+                               ROUND(SUM(c.amount_mxn) * 100.0 / ipt.total, 1) AS share_pct,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY c.institution_id
+                                   ORDER BY SUM(c.amount_mxn) DESC
+                               ) AS rn
+                        FROM contracts c
+                        JOIN vendors v ON c.vendor_id = v.id
+                        JOIN capture_top5 ct
+                             ON c.institution_id = ct.institution_id
+                            AND c.contract_year = ct.peak_year
+                        JOIN inst_peak_totals ipt ON c.institution_id = ipt.institution_id
+                        WHERE c.amount_mxn > 0
+                        GROUP BY c.institution_id, c.vendor_id, v.name, ipt.total
+                    )
+                    SELECT ct.institution_name,
+                           MAX(CASE WHEN ivs.rn = 1 THEN ivs.share_pct END) AS top_pct,
+                           MAX(CASE WHEN ivs.rn = 2 THEN ivs.share_pct END) AS second_pct,
+                           ct.peak_year,
+                           ct.score
+                    FROM capture_top5 ct
+                    JOIN inst_vendor_shares ivs
+                         ON ct.institution_id = ivs.institution_id AND ivs.rn <= 2
+                    GROUP BY ct.institution_id, ct.institution_name, ct.peak_year, ct.score
+                    ORDER BY ct.score DESC
+                """)
+                rows = cur.fetchall()
 
-    except Exception as e:
-        logger.error(f"Capture leaders error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch capture leaders")
+            leaders = []
+            for row in rows:
+                top = round(row["top_pct"] or 0, 1)
+                second = round(row["second_pct"] or 0, 1)
+                leaders.append({
+                    "label": _short_label(row["institution_name"]),
+                    "institution_name": row["institution_name"],
+                    "top": top,
+                    "second": second,
+                    "gap": round(top - second, 1),
+                    "peak_year": row["peak_year"],
+                    "captured": (top - second) >= 40,
+                })
+
+            result = {"leaders": leaders}
+            _capture_cache["data"] = result
+            _capture_cache["expires"] = time.time() + _CAPTURE_TTL
+            _write_capture_to_db(result)  # persist for other workers
+            return result
+
+        except Exception as e:
+            logger.error(f"Capture leaders error: {e}")
+            raise HTTPException(status_code=500, detail="Failed to fetch capture leaders")
