@@ -932,6 +932,85 @@ def get_category_top_vendors(
     return result
 
 
+@router.get("/{category_id}/top-vendors-fast")
+def get_category_top_vendors_fast(
+    category_id: int,
+    limit: int = Query(5, ge=1, le=10),
+):
+    """O(1) top-vendors read from precomputed category_vendor_topn table.
+
+    Falls back to the slow /top-vendors endpoint if the table hasn't been
+    precomputed yet. Populated by scripts/_precompute_category_top_vendors.py.
+    """
+    with get_db() as conn:
+        cur = conn.cursor()
+        if not _table_exists(conn, "category_vendor_topn"):
+            # Graceful fallback: redirect to slow endpoint
+            raise HTTPException(
+                status_code=503,
+                detail="Precomputed vendor stats not yet available. Run scripts/_precompute_category_top_vendors.py first."
+            )
+
+        cur.execute("SELECT id, name_es FROM categories WHERE id = ?", (category_id,))
+        cat = cur.fetchone()
+        if not cat:
+            raise HTTPException(status_code=404, detail=f"Category {category_id} not found")
+
+        rows = cur.execute("""
+            SELECT vendor_id, vendor_name, contract_count, vendor_value,
+                   category_total_value, market_share_pct
+            FROM category_vendor_topn
+            WHERE category_id = ?
+            ORDER BY rank
+            LIMIT ?
+        """, (category_id, limit)).fetchall()
+
+        if not rows:
+            return {
+                "category_id": category_id,
+                "category_name": cat["name_es"],
+                "total_value": 0.0,
+                "total_contracts": 0,
+                "hhi": 0.0,
+                "concentration_label": "unknown",
+                "top3_share_pct": 0.0,
+                "data": [],
+            }
+
+        cat_total = rows[0]["category_total_value"]
+        vendors = [
+            {
+                "vendor_id": r["vendor_id"],
+                "vendor_name": r["vendor_name"],
+                "contract_count": r["contract_count"],
+                "vendor_value": r["vendor_value"],
+                "market_share_pct": r["market_share_pct"],
+                "avg_risk": None,
+                "direct_award_pct": None,
+                "single_bid_pct": None,
+            }
+            for r in rows
+        ]
+        hhi = sum((v["market_share_pct"] / 100) ** 2 for v in vendors)
+        top3_share = sum(v["market_share_pct"] for v in vendors[:3])
+
+        return {
+            "category_id": category_id,
+            "category_name": cat["name_es"],
+            "scope": "all",
+            "total_value": round(cat_total, 2),
+            "total_contracts": 0,
+            "hhi": round(hhi, 4),
+            "concentration_label": (
+                "highly_concentrated" if hhi >= 0.25
+                else "moderately_concentrated" if hhi >= 0.15
+                else "competitive"
+            ),
+            "top3_share_pct": round(top3_share, 1),
+            "data": vendors,
+        }
+
+
 @router.get("/trends")
 def get_category_trends(
     year_from: int = Query(2010, ge=2002, le=2025),

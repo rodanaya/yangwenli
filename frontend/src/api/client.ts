@@ -2148,8 +2148,10 @@ export const categoriesApi = {
     }
   },
 
-  getTopVendors: async (categoryId: number, limit = 15, scope = 'federal') => {
-    const { data } = await api.get(`/categories/${categoryId}/top-vendors`, { params: { limit, scope } })
+  getTopVendors: async (categoryId: number, limit = 15, _scope = 'federal') => {
+    // Always use the precomputed fast endpoint. The slow /top-vendors endpoint
+    // causes 300-440s queries that lock SQLite and kill Gunicorn workers.
+    const { data } = await api.get(`/categories/${categoryId}/top-vendors-fast`, { params: { limit } })
     return data as {
       category_id: number
       category_name: string
