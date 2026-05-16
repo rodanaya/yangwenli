@@ -902,6 +902,10 @@ function Z1Layer({
   // the query transitioned from loading → ready).
   const exploreState = useExploreState()
   const riskFloor = exploreState.riskFloor
+  // Track which institution is hovered so we can show the full name at the
+  // bottom of the canvas — avoiding SVG overflow-clip that truncates chip labels
+  // near the edges, and providing a large readable label for small bubbles.
+  const [hoveredInstName, setHoveredInstName] = useState<string | null>(null)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
@@ -975,14 +979,18 @@ function Z1Layer({
       >
         {`Z1 · ${(lang === 'en' ? data.sector_name_en : data.sector_name_es).toUpperCase()} · ${filteredInstitutions.length}/${data.total} ${lang === 'en' ? 'INSTITUTIONS' : 'INSTITUCIONES'}`}
       </text>
+      {/* Bottom label: shows full institution name when hovering, hint otherwise */}
       <text
         x={PAD}
         y={SVG_H - PAD * 0.5}
-        fontSize={10}
+        fontSize={hoveredInstName ? 11 : 10}
         fontFamily="var(--font-family-mono, monospace)"
-        fill="var(--color-text-muted)"
+        fontWeight={hoveredInstName ? 700 : 400}
+        fill={hoveredInstName ? sectorAccent : 'var(--color-text-muted)'}
       >
-        {lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
+        {hoveredInstName
+          ? `▶ ${hoveredInstName}`
+          : lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
       </text>
 
       {filteredInstitutions.map((inst, i) => {
@@ -1009,12 +1017,13 @@ function Z1Layer({
                 }),
               )
             }
-            onHover={(hovering) =>
+            onHover={(hovering) => {
+              setHoveredInstName(hovering ? inst.name : null)
               dispatch({
                 type: 'set-hover',
                 hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
               })
-            }
+            }}
           />
         )
       })}
