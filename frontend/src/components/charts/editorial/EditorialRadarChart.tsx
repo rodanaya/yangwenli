@@ -34,6 +34,32 @@ export interface EditorialRadarChartProps {
 
 const CONSENSUS_KEY = '__consensus__'
 
+/** Word-wrap SVG tick for PolarAngleAxis — prevents truncation on small panels. */
+function PolarTick({ x, y, payload, textAnchor }: {
+  x?: number; y?: number
+  payload?: { value: string }
+  textAnchor?: string
+}) {
+  if (!payload) return null
+  const words = payload.value.split(' ')
+  const lineH = 10
+  const totalH = (words.length - 1) * lineH
+  return (
+    <text
+      x={x ?? 0}
+      y={(y ?? 0) - totalH / 2}
+      textAnchor={textAnchor ?? 'middle'}
+      fill={CHART_TOKENS.axis.tickFill}
+      fontSize={CHART_TOKENS.axis.tickFontSize}
+      fontFamily="var(--font-family-mono)"
+    >
+      {words.map((w, i) => (
+        <tspan key={i} x={x ?? 0} dy={i === 0 ? 0 : lineH}>{w}</tspan>
+      ))}
+    </text>
+  )
+}
+
 export function EditorialRadarChart({
   axes, series, valueDomain = [0, 1],
   height = CHART_TOKENS.dims.default,
@@ -57,15 +83,11 @@ export function EditorialRadarChart({
 
   return (
     <ResponsiveContainer width="100%" minWidth={0} height={height}>
-      <RadarChart data={data} outerRadius="75%">
+      <RadarChart data={data} outerRadius="65%">
         <PolarGrid stroke={CHART_TOKENS.grid.stroke} opacity={0.5} />
         <PolarAngleAxis
           dataKey="axis"
-          tick={{
-            fill: CHART_TOKENS.axis.tickFill,
-            fontSize: CHART_TOKENS.axis.tickFontSize,
-            fontFamily: 'var(--font-family-sans)',
-          }}
+          tick={<PolarTick />}
         />
         <PolarRadiusAxis
           angle={90}

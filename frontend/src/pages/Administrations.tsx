@@ -1348,15 +1348,15 @@ export default function Administrations() {
                       </text>
                     ))}
 
-                    {/* Legend */}
-                    {lines.map((ln, i) => (
-                      <g key={ln.key} transform={`translate(${ML + i * 102}, ${MT - 3})`}>
-                        <line x1={0} y1={5} x2={14} y2={5} stroke={ln.color} strokeWidth={1.8} />
-                        <circle cx={7} cy={5} r={2.2} fill={ln.color} />
-                        <text x={17} y={9} fill="var(--color-text-muted)" fontSize={10} fontFamily="monospace">{ln.label}</text>
-                      </g>
-                    ))}
                   </svg>
+                  <div className="flex flex-wrap gap-4 mt-1 px-1">
+                    {lines.map((ln) => (
+                      <div key={ln.key} className="flex items-center gap-1.5">
+                        <svg width={16} height={10}><line x1={0} y1={5} x2={16} y2={5} stroke={ln.color} strokeWidth={1.8} /><circle cx={8} cy={5} r={2.2} fill={ln.color} /></svg>
+                        <span className="text-[10px] font-mono text-text-muted">{ln.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 )
               })()
             ) : (

@@ -248,9 +248,9 @@
   "radar": {
     "title": "Todas las Administraciones: Huella de Compras",
     "subtitle": "Radar comparativo de 5 métricas clave de contratación en todas las presidencias (más alto = mejor desempeño)",
-    "axisRiskScore": "Indicador Riesgo",
-    "axisHighRisk": "% Alto Riesgo",
-    "axisDirectAward": "% Adj. Directa",
+    "axisRiskScore": "Riesgo",
+    "axisHighRisk": "Alto Riesgo",
+    "axisDirectAward": "Adj. Directa",
     "axisTotalValue": "Valor Total",
     "axisVolume": "Volumen",
     "miniHighRisk": "Alto Riesgo",
