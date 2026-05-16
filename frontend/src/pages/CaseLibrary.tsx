@@ -246,7 +246,7 @@ function CaseRow({
         borderLeft: `3px solid ${accent}`,
       }}
     >
-      <div className="flex items-start gap-4 px-5 py-4 hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+      <div className="flex items-start gap-4 px-5 py-3 hover:bg-[rgba(255,255,255,0.04)] transition-colors">
         {/* Left: name + metadata */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -397,19 +397,25 @@ function CaseRow({
         </div>
 
         {/* Middle: amount */}
-        <div className="flex-shrink-0 text-right min-w-[120px]">
+        <div className="flex-shrink-0 text-right min-w-[100px]">
           <div
-            className="text-[22px] text-text-primary leading-none tracking-tight tabular-nums"
-            style={{ fontFamily: 'var(--font-family-mono)', fontWeight: 600 }}
+            className="tabular-nums leading-none"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontStyle: 'italic',
+              fontWeight: 700,
+              fontSize: 'clamp(18px, 2.5vw, 24px)',
+              color: cas.amount_mxn_low ? accent : 'var(--color-text-muted)',
+            }}
           >
             {formatMXN(cas.amount_mxn_low)}
             {cas.amount_mxn_high &&
               cas.amount_mxn_high !== cas.amount_mxn_low && (
-                <span className="text-text-muted text-[14px]"> +</span>
+                <span className="text-text-muted text-[13px]"> +</span>
               )}
           </div>
           <div
-            className="text-[10px] uppercase tracking-[0.15em] text-text-muted mt-1"
+            className="text-[9px] uppercase tracking-[0.15em] text-text-muted mt-1"
             style={{ fontFamily: 'var(--font-family-mono)' }}
           >
             {lang === 'es' ? 'PÉRDIDA EST.' : 'EST. LOSS'}
@@ -847,7 +853,7 @@ export default function CaseLibrary() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="h-[112px] animate-pulse"
+                className="h-[88px] animate-pulse"
                 style={{
                   background: CARD_BG,
                   borderBottom: `1px solid ${BORDER}`,
