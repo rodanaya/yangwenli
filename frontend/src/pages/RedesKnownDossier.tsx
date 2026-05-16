@@ -98,6 +98,26 @@ const PATTERN_INSTITUTION: Record<string, string> = {
   P7: 'SAGARPA / SADER',
 }
 
+// Editorial verdicts per pattern — written once, grounded in real signal
+const PATTERN_VERDICTS_EN: Record<string, (p: { vendor_count: number; t1_count: number; avg_ips: number; avg_da_rate: number | null; avg_sb_rate: number | null }) => string> = {
+  P1: (p) => `${p.vendor_count} vendors hold monopoly positions at Pemex and CFE, each awarded without competitive tender. DA rate ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'} — market dominance maintained across administration changes.`,
+  P2: (p) => `${p.vendor_count.toLocaleString()} ghost companies: recently formed, single-purpose entities active for a single procurement cycle. DA rate ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'} — no competitive process ever ran for these vendors.`,
+  P3: (p) => `${p.vendor_count.toLocaleString()} intermediaries win single-bid open tenders then subcontract the actual work. Single-bid rate ${p.avg_sb_rate != null ? Math.round(p.avg_sb_rate * 100) + '%' : '—'} — competitors know not to bid when these rings are active.`,
+  P4: (p) => `${p.vendor_count} vendors coordinate bids across federal agencies. On paper it looks competitive; in practice only one vendor ever wins per procedure. ${p.t1_count} under active T1 investigation.`,
+  P5: (p) => `${p.vendor_count.toLocaleString()} vendors rotate contracts across government periods to maintain market share at inflated prices. Single-bid rate ${p.avg_sb_rate != null ? Math.round(p.avg_sb_rate * 100) + '%' : '—'} combined with price anomalies signals systematic overpricing.`,
+  P6: (p) => `${p.vendor_count.toLocaleString()} vendors are embedded within specific federal agencies across multiple administrations. DA rate ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'} reflects captured procurement offices, not emergency purchase needs.`,
+  P7: (p) => `${p.vendor_count} vendors absorb late-fiscal-year budget surpluses at inflated prices. High IPS scores (avg ${(p.avg_ips * 100).toFixed(0)}%) point to coordinated timing with complicit budget managers.`,
+}
+const PATTERN_VERDICTS_ES: Record<string, (p: { vendor_count: number; t1_count: number; avg_ips: number; avg_da_rate: number | null; avg_sb_rate: number | null }) => string> = {
+  P1: (p) => `${p.vendor_count} proveedores tienen posiciones monopólicas en Pemex y CFE, adjudicados sin licitación competitiva. Tasa de adjudicación directa ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'}.`,
+  P2: (p) => `${p.vendor_count.toLocaleString('es-MX')} empresas fantasma: entidades constituidas recientemente, de propósito único, activas en un solo ciclo de compras. DA ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'} — nunca hubo proceso competitivo.`,
+  P3: (p) => `${p.vendor_count.toLocaleString('es-MX')} intermediarios ganan licitaciones con propuesta única y luego subcontratan el trabajo. Tasa de propuesta única ${p.avg_sb_rate != null ? Math.round(p.avg_sb_rate * 100) + '%' : '—'}.`,
+  P4: (p) => `${p.vendor_count} proveedores coordinan propuestas en dependencias federales. En papel parece competitivo; en la práctica solo uno gana por procedimiento. ${p.t1_count} bajo investigación T1 activa.`,
+  P5: (p) => `${p.vendor_count.toLocaleString('es-MX')} proveedores rotan contratos entre administraciones para mantener cuotas de mercado a precios inflados. Propuesta única ${p.avg_sb_rate != null ? Math.round(p.avg_sb_rate * 100) + '%' : '—'}.`,
+  P6: (p) => `${p.vendor_count.toLocaleString('es-MX')} proveedores están incrustados en dependencias federales a lo largo de múltiples administraciones. DA ${p.avg_da_rate != null ? Math.round(p.avg_da_rate * 100) + '%' : '—'} refleja oficinas capturadas, no compras de emergencia legítimas.`,
+  P7: (p) => `${p.vendor_count} proveedores absorben excedentes presupuestales de fin de ejercicio a precios inflados. IPS promedio ${(p.avg_ips * 100).toFixed(0)}% señala coordinación con funcionarios cómplices.`,
+}
+
 function buildCommunitiesFromSpotlight(
   spotlight: PatternSpotlightResponse | undefined,
   isEs: boolean,
@@ -106,6 +126,12 @@ function buildCommunitiesFromSpotlight(
 
   return spotlight.patterns.map((p) => {
     const names = PATTERN_NAMES[p.code] ?? { en: p.code, es: p.code }
+    const verdictFn = isEs ? PATTERN_VERDICTS_ES[p.code] : PATTERN_VERDICTS_EN[p.code]
+    const verdict = verdictFn
+      ? verdictFn({ vendor_count: p.vendor_count, t1_count: p.t1_count, avg_ips: p.avg_ips, avg_da_rate: p.avg_da_rate, avg_sb_rate: p.avg_sb_rate })
+      : isEs
+        ? `${p.vendor_count.toLocaleString('es-MX')} proveedores · ${p.t1_count} en T1 · ${p.gt_case_count} casos`
+        : `${p.vendor_count.toLocaleString()} vendors · ${p.t1_count} in T1 · ${p.gt_case_count} cases`
     return {
       id: p.code,
       name: isEs ? names.es : names.en,
@@ -113,15 +139,13 @@ function buildCommunitiesFromSpotlight(
       pattern: p.code as PatternCode,
       vendors: p.vendor_count,
       value: p.total_value_mxn ?? 0,
-      institution: '',     // unknown at pattern aggregate level
+      institution: PATTERN_INSTITUTION[p.code] ?? '',
       avgRisk: p.avg_ips,
       confirmed: p.gt_case_count,
-      daRate: 0,           // unknown
-      sbRate: 0,           // unknown
-      paRate: 0,           // unknown
-      verdict: isEs
-        ? `${p.vendor_count.toLocaleString('es-MX')} proveedores con patrón ${p.code} · ${p.t1_count} en cola T1 · ${p.gt_case_count} casos documentados`
-        : `${p.vendor_count.toLocaleString()} vendors flagged ${p.code} · ${p.t1_count} in T1 queue · ${p.gt_case_count} documented cases`,
+      daRate: p.avg_da_rate ?? 0,
+      sbRate: p.avg_sb_rate ?? 0,
+      paRate: 0,
+      verdict,
     }
   })
 }

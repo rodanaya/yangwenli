@@ -38,7 +38,7 @@ const CONSENSUS_KEY = '__consensus__'
 function PolarTick({ x, y, payload, textAnchor }: {
   x?: number; y?: number
   payload?: { value: string }
-  textAnchor?: string
+  textAnchor?: 'inherit' | 'end' | 'start' | 'middle'
 }) {
   if (!payload) return null
   const words = payload.value.split(' ')
