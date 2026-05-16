@@ -1118,8 +1118,8 @@ export default function Administrations() {
       </div>
 
       {/* Inflation disclaimer */}
-      <div className="mb-4 flex items-start gap-2 rounded-sm border border-blue-500/20 bg-blue-500/8 px-3 py-2.5">
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-400/70" aria-hidden="true" />
+      <div className="mb-4 flex items-start gap-2 rounded-sm border border-border/60 bg-background-elevated/60 px-3 py-2.5">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-text-muted" aria-hidden="true" />
         <p className="text-[11px] text-text-muted leading-relaxed">
           {t('evidenceSection.inflationNote')}
         </p>
