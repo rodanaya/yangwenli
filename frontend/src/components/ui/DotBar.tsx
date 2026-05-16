@@ -10,6 +10,12 @@
  * regression. New code should accept the defaults — divergent geometry
  * across pages is exactly the inconsistency this primitive prevents.
  */
+interface ThresholdMark {
+  /** Value in the same scale as DotBar's value/max (e.g. 0.25 when max=1). */
+  value: number
+  color?: string
+}
+
 interface DotBarProps {
   /** Current value (0 ≤ value). */
   value: number
@@ -31,6 +37,13 @@ interface DotBarProps {
   ariaLabel?: string
   /** Optional className for the wrapper span. */
   className?: string
+  /**
+   * Optional threshold markers — thin vertical ticks drawn below the dot row.
+   * Accepts either plain numbers (`[0.25, 0.40, 0.60]`) for the common case
+   * where callers just want tier boundaries on the same scale as value/max,
+   * or `ThresholdMark` objects when a per-tick color is needed.
+   */
+  thresholds?: Array<ThresholdMark | number>
 }
 
 const DEFAULT_N = 22
@@ -48,11 +61,14 @@ export function DotBar({
   dotGap = DEFAULT_DG,
   ariaLabel,
   className,
+  thresholds,
 }: DotBarProps) {
   const N = dots
   const DR = dotR
   const DG = dotGap
-  const H = Math.max(DR * 2, 4)
+  const tickH = thresholds?.length ? 3 : 0
+  const H = Math.max(DR * 2, 4) + tickH
+  const dotCY = DR + (tickH > 0 ? tickH / 2 : 0)
   const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0
   const filled = value > 0 ? Math.max(1, Math.round((pct / 100) * N)) : 0
   const W = N * DG
@@ -71,7 +87,7 @@ export function DotBar({
         <circle
           key={k}
           cx={k * DG + DR}
-          cy={H / 2}
+          cy={dotCY}
           r={DR}
           fill={k < filled ? color : emptyColor}
           stroke={k < filled ? undefined : emptyStroke}
@@ -79,6 +95,24 @@ export function DotBar({
           fillOpacity={k < filled ? 0.88 : 1}
         />
       ))}
+      {thresholds?.map((raw) => {
+        const t: ThresholdMark = typeof raw === 'number' ? { value: raw } : raw
+        const tx = max > 0 ? (t.value / max) * W : 0
+        const tc = t.color ?? 'var(--color-text-muted)'
+        return (
+          <line
+            key={t.value}
+            x1={tx}
+            x2={tx}
+            y1={dotCY - DR - 1}
+            y2={H}
+            stroke={tc}
+            strokeWidth={1}
+            strokeDasharray="1 1"
+            opacity={0.7}
+          />
+        )
+      })}
     </svg>
   )
 }

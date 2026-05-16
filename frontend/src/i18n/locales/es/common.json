@@ -107,7 +107,7 @@
     "methodology": "Metodología",
     "methodologyP1": "Este análisis fue producido por la plataforma RUBLI, que procesa",
     "methodologyP2": "contratos federales registrados en COMPRANET entre 2002 y 2025.",
-    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v0.8.5 (AUC 0.785, split por proveedor), entrenado con 1,427 casos documentados de corrupción y 1,378 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
+    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v0.8.5 (AUC 0.785, split por proveedor), entrenado con 1,427 casos documentados de corrupción y 1,554 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
     "methodologyP4": "Todas las cifras provienen de datos públicos de COMPRANET. Los cálculos de adjudicación directa se basan en el campo procedure_type del registro oficial. Las clasificaciones sectoriales usan la taxonomía de 12 sectores de RUBLI basada en códigos de ramo presupuestal.",
     "nextSteps": "Próximos pasos para periodistas",
     "fullMethodology": "Metodología completa",

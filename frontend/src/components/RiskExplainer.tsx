@@ -42,7 +42,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory (Klitgaard 1988): Monopoly power is the primary enabling condition for procurement corruption — it eliminates price competition and reduces the ability to compare against market rates.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
     rubli_note:
-      "Strong predictor globally in v0.8.5 (+0.238). Expanded ground truth (1,427 cases, 1,378 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
+      "Strong predictor globally in v0.8.5 (+0.238). Expanded ground truth (1,427 cases, 1,554 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
   },
   price_volatility: {
     title: 'Price Volatility',

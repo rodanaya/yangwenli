@@ -85,7 +85,7 @@
   },
   "groundTruth": {
     "title": "Verdad Base",
-    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 1,427 casos con ~1,378 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos 1,427 casos con ~1,554 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {
     "title": "Período de Publicación",

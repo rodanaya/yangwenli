@@ -68,7 +68,7 @@
       "v52Title": "Capa Analítica (En Vivo)",
       "v52Desc": "Valores SHAP por proveedor (456K proveedores) + ensemble PyOD de validación cruzada (9.3M puntuaciones) + monitoreo de deriva KS. Ver Perfil de Proveedor → Pestaña Riesgo, Detalle de contrato → Confirmado por IA, Panel → Validación Cruzada.",
       "v85Title": "Modelo de Producción Recalibrado",
-      "v85Desc": "1,427 casos GT · 1,378 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (cumple OECD 2–15%). Corrida: CAL-v8-202605020212."
+      "v85Desc": "1,427 casos GT · 1,554 proveedores. ElasticNet (C=0.2243, l1_ratio=0.7545), 18 variables activas, c_pu=0.32. HR=11.01% (cumple OECD 2–15%). Corrida: CAL-v8-202605020212."
     }
   },
   "kpiBadges": {
@@ -137,7 +137,7 @@
     "validation": {
       "p1Start": "El modelo fue entrenado y validado contra ",
       "p1Strong": "1,427 casos documentados de corrupción mexicana",
-      "p1End": ", coincidiendo 1,378 proveedores con ~302K contratos en los 12 sectores de la base de datos COMPRANET.",
+      "p1End": ", coincidiendo 1,554 proveedores con ~302K contratos en los 12 sectores de la base de datos COMPRANET.",
       "tableAriaLabel": "Validación de casos de corrupción",
       "tableColCase": "Caso",
       "tableColType": "Tipo",
@@ -145,7 +145,7 @@
       "tableColDetected": "Detectados",
       "tableColHighPlus": "Alto+",
       "tableColAvgScore": "Puntaje Promedio",
-      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.8.5 expandió la verdad fundamental a 1,427 casos y 1,378 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
+      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.8.5 expandió la verdad fundamental a 1,427 casos y 1,554 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
       "metricTestAuc": "AUC-ROC de Prueba",
       "metricTrainAuc": "AUC-ROC de Entrenamiento",
       "metricOecdRate": "Tasa de alto riesgo (cumple OCDE)",
@@ -167,7 +167,7 @@
       "logisticNote": "AUC Entrenamiento: 0.797, AUC Prueba: 0.785. La mezcla ElasticNet lleva 6 características no informativas a cero preservando más señal que L1 puro.",
       "puTitle": "Corrección PU-Learning (Elkan y Noto 2008)",
       "puP1Start": "Como los contratos no etiquetados no son necesariamente limpios (algunos pueden ser corruptos pero no detectados), aplicamos una corrección de aprendizaje Positivo-No Etiquetado: ",
-      "puNote": "v0.8.5 estimó c = 0.32 mediante el método holdout de Elkan & Noto en 13 modelos (1 global + 12 por sector). Esto refleja la heterogeneidad del GT (1,378 proveedores con patrones diversos). Con c=0.32, las puntuaciones se reescalan ~3.1x y se limitan a 1.0. IMPORTANTE: El supuesto SCAR es estructuralmente violado — los casos conocidos son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción.",
+      "puNote": "v0.8.5 estimó c = 0.32 mediante el método holdout de Elkan & Noto en 13 modelos (1 global + 12 por sector). Esto refleja la heterogeneidad del GT (1,554 proveedores con patrones diversos). Con c=0.32, las puntuaciones se reescalan ~3.1x y se limitan a 1.0. IMPORTANTE: El supuesto SCAR es estructuralmente violado — los casos conocidos son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción.",
       "bootstrapTitle": "Intervalos de Confianza Bootstrap",
       "bootstrapP1": "Cada contrato recibe un intervalo de confianza del 95% de 500 remuestreos bootstrap de los datos de entrenamiento. Una puntuación de 0.35 [0.22, 0.48] significa: el indicador de riesgo es 0.35, pero dada la incertidumbre de los datos, podría ser tan bajo como 0.22 o tan alto como 0.48."
     },
@@ -202,7 +202,7 @@
     },
     "limitations": {
       "item1Title": "Concentración de verdad fundamental",
-      "item1Text": "v0.8.5 entrenó con 1,427 casos y 1,378 proveedores (~302K contratos) con un tope de 100 por proveedor. Los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
+      "item1Text": "v0.8.5 entrenó con 1,427 casos y 1,554 proveedores (~302K contratos) con un tope de 100 por proveedor. Los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
       "item2Title": "La detección de casos pequeños es más débil",
       "item2Text": "Los casos con pocos contratos (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografía: 2) tienen tasas de detección más bajas. El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "item3Title": "La calidad de datos varía por período",
@@ -279,7 +279,7 @@
     "highRiskLabel": "Tasa de alto riesgo",
     "highRiskSource": "Referencia OCDE: 2–15%",
     "gtCasesLabel": "Casos de verdad documentada",
-    "gtCasesSource": "1,378 proveedores · ~302K contratos"
+    "gtCasesSource": "1,554 proveedores · ~302K contratos"
   },
   "tiers": {
     "kicker": "CÓMO INTERPRETAR HALLAZGOS · NIVELES DE CONFIANZA",

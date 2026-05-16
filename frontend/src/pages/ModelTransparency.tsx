@@ -216,7 +216,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           <StatCard
             value={GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}
             label="Ground-truth cases"
-            sub="1,378 vendors · 288K scoped contracts."
+            sub="1,554 vendors · 288K scoped contracts."
           />
         </div>
       </section>
