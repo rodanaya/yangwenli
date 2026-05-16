@@ -339,7 +339,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              className="flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-muted hover:text-text-primary hover:bg-background-elevated border border-border hover:border-border-hover transition-colors"
             >
               {tc('header.signIn')}
             </button>

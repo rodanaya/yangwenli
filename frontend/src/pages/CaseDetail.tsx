@@ -1730,33 +1730,33 @@ function CaseBody({
                 a recurring source of "looks empty" complaints. */}
             {totalContracts > 0 && (
               <HeroStat
-                label="Contracts"
+                label={lang === 'es' ? 'Contratos' : 'Contracts'}
                 value={formatCompact(totalContracts)}
-                foot="linked in COMPRANET"
+                foot={lang === 'es' ? 'vinculados en COMPRANET' : 'linked in COMPRANET'}
               />
             )}
             <HeroStat
-              label="Total value"
+              label={lang === 'es' ? 'Valor total' : 'Total value'}
               value={data.amount_mxn_low ? formatMXN(data.amount_mxn_low) : '—'}
               unit="MXN"
               foot={
                 data.amount_mxn_high && data.amount_mxn_high !== data.amount_mxn_low
-                  ? `up to ${formatMXN(data.amount_mxn_high)}`
+                  ? `${lang === 'es' ? 'hasta' : 'up to'} ${formatMXN(data.amount_mxn_high)}`
                   : undefined
               }
             />
             <HeroStat
-              label="Vendors"
+              label={lang === 'es' ? 'Proveedores' : 'Vendors'}
               value={linkedVendors.length > 0 ? linkedVendors.length : '—'}
-              foot={linkedVendors.length > 0 ? 'matched' : 'identification pending'}
+              foot={linkedVendors.length > 0 ? (lang === 'es' ? 'vinculados' : 'matched') : (lang === 'es' ? 'identificación pendiente' : 'identification pending')}
             />
             <HeroStat
-              label="Institutions"
+              label={lang === 'es' ? 'Instituciones' : 'Institutions'}
               value={institutions.length > 0 ? institutions.length : '—'}
-              foot={institutions.length > 0 ? 'affected' : undefined}
+              foot={institutions.length > 0 ? (lang === 'es' ? 'afectadas' : 'affected') : undefined}
             />
             <HeroStat
-              label="Years active"
+              label={lang === 'es' ? 'Años activos' : 'Years active'}
               value={yearsActive ?? '—'}
               foot={yearSpan !== '—' ? yearSpan : undefined}
             />
@@ -1783,16 +1783,16 @@ function CaseBody({
         {/* VISUAL 1 — Contract timeline */}
         <Section
           index="01"
-          label="Timeline"
-          title="When the scheme operated"
+          label={lang === 'es' ? 'Cronología' : 'Timeline'}
+          title={lang === 'es' ? 'Cuándo operó el esquema' : 'When the scheme operated'}
           subtitle={
             yearStart && data.discovery_year
-              ? `Contracts ran from ${yearStart}${
-                  yearEnd && yearEnd !== yearStart ? `–${yearEnd}` : ''
-                }. The case was publicly disclosed in ${data.discovery_year}${
-                  yearStart ? ` — ${data.discovery_year - yearStart} year${data.discovery_year - yearStart === 1 ? '' : 's'} after contracts began` : ''
-                }.`
-              : 'Procurement timing against Mexico\'s full COMPRANET record (2002–2025).'
+              ? lang === 'es'
+                ? `Contratos del ${yearStart}${yearEnd && yearEnd !== yearStart ? `–${yearEnd}` : ''}. El caso fue divulgado públicamente en ${data.discovery_year}${yearStart ? ` — ${data.discovery_year - yearStart} año${data.discovery_year - yearStart === 1 ? '' : 's'} después del inicio` : ''}.`
+                : `Contracts ran from ${yearStart}${yearEnd && yearEnd !== yearStart ? `–${yearEnd}` : ''}. The case was publicly disclosed in ${data.discovery_year}${yearStart ? ` — ${data.discovery_year - yearStart} year${data.discovery_year - yearStart === 1 ? '' : 's'} after contracts began` : ''}.`
+              : lang === 'es'
+                ? 'Cronología de contratos vs. el registro COMPRANET completo de México (2002–2025).'
+                : 'Procurement timing against Mexico\'s full COMPRANET record (2002–2025).'
           }
         >
           <YearRangeBar
@@ -1843,10 +1843,10 @@ function CaseBody({
         */}
         <Section
           index="03"
-          label="Risk Signature"
+          label={lang === 'es' ? 'Firma de Riesgo' : 'Risk Signature'}
           title={
             riskDist.hasData
-              ? 'How the model sees this case'
+              ? (lang === 'es' ? 'Cómo el modelo ve este caso' : 'How the model sees this case')
               : (lang === 'es' ? 'Cómo el modelo caracteriza este patrón' : 'How the model characterizes this pattern')
           }
           subtitle={
@@ -1916,13 +1916,13 @@ function CaseBody({
         {/* VISUAL 3 — Vendor evidence cards */}
         <Section
           index="04"
-          label="Evidence"
+          label={lang === 'es' ? 'Evidencia' : 'Evidence'}
           title={
             linkedVendors.length > 0
-              ? 'Vendors on the record'
+              ? (lang === 'es' ? 'Proveedores en el expediente' : 'Vendors on the record')
               : fallbackVendorActors.length > 0
-              ? 'Vendors named in public reporting'
-              : 'Vendor identification in progress'
+              ? (lang === 'es' ? 'Proveedores nombrados en reportes públicos' : 'Vendors named in public reporting')
+              : (lang === 'es' ? 'Identificación de proveedores en proceso' : 'Vendor identification in progress')
           }
           subtitle={
             linkedVendors.length > 0
@@ -2428,9 +2428,9 @@ function CaseBody({
         {/* VISUAL 5 — Legal status */}
         <Section
           index="06"
-          label="Legal status"
-          title="Judicial disposition"
-          subtitle="The outcome — or absence of one — based on public court records."
+          label={lang === 'es' ? 'Estatus legal' : 'Legal status'}
+          title={lang === 'es' ? 'Disposición judicial' : 'Judicial disposition'}
+          subtitle={lang === 'es' ? 'El resultado — o su ausencia — basado en registros judiciales públicos.' : 'The outcome — or absence of one — based on public court records.'}
         >
           <div
             style={{

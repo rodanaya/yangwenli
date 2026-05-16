@@ -672,7 +672,7 @@ function HeroChapter({ chapter, story, accentColor }: ChapterRenderProps) {
             className="absolute -top-2 right-2 sm:right-8 select-none pointer-events-none font-extrabold leading-none"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 'clamp(180px, 28vw, 360px)',
+              fontSize: 'clamp(80px, 22vw, 360px)',
               color: accentColor,
               opacity: 0.07,
               letterSpacing: '-0.04em',
