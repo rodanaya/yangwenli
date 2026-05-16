@@ -243,15 +243,26 @@ export const Z1SectorMap = memo(function Z1SectorMap({
  *   "Comisión Federal de Electricidad"     → "CFE"
  *   "Petróleos Mexicanos"                  → "Petróleos…"
  */
+// Spanish prepositions/articles excluded from acronyms (IMSS not IMDSS)
+const STOP_WORDS = new Set(['DE', 'DEL', 'LA', 'LAS', 'LOS', 'EL', 'Y', 'E', 'EN', 'A'])
+
 function shortLabel(name: string): string {
   const trimmed = name.trim()
-  // Initials of multi-word ALL-CAPS names
-  const upperWords = trimmed
+  // Initials of multi-word ALL-CAPS names — skip Spanish stop-words
+  const sigWords = trimmed
     .replace(/[,]/g, ' ')
     .split(/\s+/)
-    .filter((w) => w.length >= 3 && w === w.toUpperCase())
-  if (upperWords.length >= 2 && upperWords.length <= 6) {
-    return upperWords.map((w) => w[0]).join('').slice(0, 6)
+    .filter((w) => w.length >= 2 && w === w.toUpperCase() && !STOP_WORDS.has(w))
+  if (sigWords.length >= 2 && sigWords.length <= 6) {
+    return sigWords.map((w) => w[0]).join('').slice(0, 5)
+  }
+  // Mixed-case names: take first capital letter of each significant word
+  const mixedWords = trimmed
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && /^[A-ZÁÉÍÓÚÑÜ]/.test(w) && !STOP_WORDS.has(w.toUpperCase()))
+  if (mixedWords.length >= 2) {
+    const initials = mixedWords.map((w) => w[0]).join('').slice(0, 5)
+    if (initials.length >= 2) return initials
   }
   return trimmed.length > 14 ? trimmed.slice(0, 13) + '…' : trimmed
 }
