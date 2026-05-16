@@ -424,7 +424,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 /** Determine if a nav item is active based on current pathname + search */
 function getIsActive(href: string, pathname: string, search = ''): boolean {
   if (href === '/dashboard') {
-    return pathname === '/' || pathname === '/dashboard'
+    return pathname === '/dashboard'
   }
   // /sectors?view=categories — match exactly (pathname + query)
   if (href === '/sectors?view=categories') {

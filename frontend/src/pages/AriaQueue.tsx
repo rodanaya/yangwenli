@@ -1480,7 +1480,7 @@ export default function AriaPage() {
                     {elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—'}
                   </div>
                   <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
-                    {isEs ? 'valor en proveedores T1+T2' : 'value in T1+T2 vendors'}
+                    {isEs ? 'contratos totales de los 1,789 proveedores T1+T2 — no estimación de fraude' : 'total contracts of 1,789 T1+T2 vendors — not a fraud estimate'}
                   </div>
                 </div>
                 {/* EFOS + SFP external flags */}
