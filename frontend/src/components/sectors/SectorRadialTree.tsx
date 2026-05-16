@@ -15,21 +15,58 @@ import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/const
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { SectorStatistics } from '@/api/types'
 
-// ── Sector symbols (from Beeswarm / backlog spec) ────────────────────────────
+// ── Sector shape helpers (mirrors ExploreCanvas Z0 geometry, backlog #10) ────
+// Each returns an SVG element centered at (cx,cy) with inscribed radius r.
+// Shapes encode sector identity: salud=cross, defensa=pentagon, etc.
 
-const SECTOR_SYMBOL: Record<string, string> = {
-  salud:           '✚',
-  educacion:       '◆',
-  infraestructura: '▲',
-  energia:         '⚡',
-  defensa:         '◉',
-  tecnologia:      '◈',
-  hacienda:        '⊕',
-  gobernacion:     '★',
-  agricultura:     '✿',
-  ambiente:        '❋',
-  trabajo:         '⚙',
-  otros:           '◻',
+import React from 'react'
+
+function polyPoints(cx: number, cy: number, r: number, sides: number, rotDeg = 0): string {
+  return Array.from({ length: sides }, (_, i) => {
+    const a = ((i * 360) / sides + rotDeg) * (Math.PI / 180)
+    return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`
+  }).join(' ')
+}
+function starPoints(cx: number, cy: number, R: number, ri: number, pts: number): string {
+  const out: string[] = []
+  for (let i = 0; i < pts * 2; i++) {
+    const rad = ((i * 180) / pts - 90) * (Math.PI / 180)
+    const d = i % 2 === 0 ? R : ri
+    out.push(`${(cx + d * Math.cos(rad)).toFixed(2)},${(cy + d * Math.sin(rad)).toFixed(2)}`)
+  }
+  return out.join(' ')
+}
+function getSectorShapeEl(
+  code: string, cx: number, cy: number, r: number,
+  fill: string, fillOpacity: number, stroke: string, strokeWidth: number,
+): React.ReactElement {
+  const p = { fill, fillOpacity, stroke, strokeWidth }
+  switch (code) {
+    case 'salud': {
+      const arm = r * 0.42, w = r * 0.35
+      const d = [`M ${cx-w} ${cy-arm}`,`L ${cx+w} ${cy-arm}`,`L ${cx+w} ${cy-w}`,`L ${cx+arm} ${cy-w}`,
+        `L ${cx+arm} ${cy+w}`,`L ${cx+w} ${cy+w}`,`L ${cx+w} ${cy+arm}`,`L ${cx-w} ${cy+arm}`,
+        `L ${cx-w} ${cy+w}`,`L ${cx-arm} ${cy+w}`,`L ${cx-arm} ${cy-w}`,`L ${cx-w} ${cy-w}`,'Z'].join(' ')
+      return <path d={d} {...p} />
+    }
+    case 'defensa':    return <polygon points={polyPoints(cx,cy,r,5,-90)} {...p} />
+    case 'tecnologia': return <polygon points={polyPoints(cx,cy,r,6,0)} {...p} />
+    case 'hacienda':   return <polygon points={polyPoints(cx,cy,r,4,-45)} {...p} />
+    case 'infraestructura': return <polygon points={polyPoints(cx,cy,r,3,-90)} {...p} />
+    case 'gobernacion': return <polygon points={starPoints(cx,cy,r,r*0.42,5)} {...p} />
+    case 'agricultura': return <polygon points={polyPoints(cx,cy,r,8,22.5)} {...p} />
+    case 'ambiente':   return <polygon points={starPoints(cx,cy,r,r*0.5,6)} {...p} />
+    case 'energia': {
+      const q = r
+      const d = [`M ${cx+q*0.15} ${cy-q}`,`L ${cx-q*0.1} ${cy-q*0.05}`,`L ${cx+q*0.25} ${cy-q*0.05}`,
+        `L ${cx-q*0.15} ${cy+q}`,`L ${cx+q*0.1} ${cy+q*0.1}`,`L ${cx-q*0.2} ${cy+q*0.1}`,
+        `L ${cx+q*0.15} ${cy-q}`,'Z'].join(' ')
+      return <path d={d} {...p} />
+    }
+    case 'trabajo':   return <polygon points={polyPoints(cx,cy,r,12,15)} {...p} />
+    case 'educacion': return <polygon points={polyPoints(cx,cy,r,4,0)} {...p} />
+    default:          return <circle cx={cx} cy={cy} r={r} {...p} />
+  }
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -240,7 +277,6 @@ export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
           const isHov    = hovered === s.sector_id
           const anyHov   = hovered !== null
           const opacity  = anyHov && !isHov ? 0.30 : 1
-          const symbol   = SECTOR_SYMBOL[s.sector_code] ?? '◻'
           const name     = getSectorName(s.sector_code, lang === 'es' ? 'es' : 'en')
           const isOECD   = (s.direct_award_pct ?? 0) > 25
 
@@ -257,25 +293,15 @@ export function SectorRadialTree({ sectors }: SectorRadialTreeProps) {
               onClick={() => navigate(`/sectors/${s.sector_id}`)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/sectors/${s.sector_id}`) } }}
             >
-              <circle
-                cx={x} cy={y} r={r}
-                fill={fill}
-                stroke={isOECD ? '#f59e0b' : color}
-                strokeWidth={isHov ? 2.5 : isOECD ? 1.5 : 1}
-                style={{ transition: 'stroke-width 0.12s' }}
-              />
-              <text
-                x={x} y={y - (r > 26 ? 5 : 2)}
-                textAnchor="middle" dominantBaseline="middle"
-                fontSize={r > 32 ? 15 : r > 22 ? 11 : 8}
-                fill="var(--color-text-primary)" opacity={0.9}
-                style={{ pointerEvents: 'none', userSelect: 'none' }}
-              >
-                {symbol}
-              </text>
+              {getSectorShapeEl(
+                s.sector_code, x, y, r,
+                fill, 1,
+                isOECD ? '#f59e0b' : color,
+                isHov ? 2.5 : isOECD ? 1.5 : 1,
+              )}
               {r > 22 && (
                 <text
-                  x={x} y={y + (r > 32 ? 10 : 7)}
+                  x={x} y={y + r + 10}
                   textAnchor="middle" dominantBaseline="middle"
                   fontSize={r > 36 ? 8.5 : 7.5}
                   fontFamily="var(--font-family-mono)" fontWeight={700}
