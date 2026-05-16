@@ -27,7 +27,7 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorName, SECTORS, RISK_COLORS } from '@/lib/constants'
-import { EditorialDistribution, DotStrip } from '@/components/charts/editorial'
+import { DotStrip } from '@/components/charts/editorial'
 import {
   Search,
   FileText,
@@ -779,32 +779,6 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
  *
  * Down-sampled to max 2,000 points total for SVG performance.
  */
-function synthesizeScoreData(counts: Record<number, number>): number[] {
-  const MAX_TOTAL = 2000
-  const total = Object.values(counts).reduce((s, v) => s + v, 0)
-  if (total === 0) return []
-
-  const TIER_PARAMS: Array<{ tier: number; center: number; spread: number }> = [
-    { tier: 1, center: 0.70, spread: 0.08 },
-    { tier: 2, center: 0.50, spread: 0.07 },
-    { tier: 3, center: 0.32, spread: 0.06 },
-    { tier: 4, center: 0.12, spread: 0.07 },
-  ]
-
-  const result: number[] = []
-  for (const { tier, center, spread } of TIER_PARAMS) {
-    const n = Math.round(((counts[tier] ?? 0) / total) * MAX_TOTAL)
-    // Simple Gaussian-ish values using CLT approximation (sum of uniforms)
-    for (let i = 0; i < n; i++) {
-      // Average 6 uniforms → roughly Gaussian, clamped to [0,1]
-      let v = 0
-      for (let j = 0; j < 6; j++) v += Math.random()
-      v = center + (v / 6 - 0.5) * spread * 4
-      result.push(Math.max(0, Math.min(1, v)))
-    }
-  }
-  return result
-}
 
 /**
  * TierEditorialStrip — 4 horizontal rows, one per tier.
@@ -1344,35 +1318,115 @@ export default function AriaPage() {
         </header>
 
         {/* ════════════════════════════════════════════════════════════════
-            EDITORIAL TIER STRIP + DISTRIBUTION
-            aria-P1: 4-row tier strip + approximate score distribution.
+            EDITORIAL TIER STRIP + INTELLIGENCE STATS
+            Left: 4-ring tier strip. Right: 4 real investigative metrics
+            (at-risk spend, EFOS/SFP external flags, new vendors, pipeline).
            ════════════════════════════════════════════════════════════════ */}
         <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_380px]">
           {/* Left: tier strip */}
           <TierEditorialStrip counts={tierCounts} isEs={isEs} statsLoading={statsLoading} />
 
-          {/* Right: risk score distribution */}
+          {/* Right: real investigative metrics — replaces synthesized distribution */}
           <div>
             <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
-              {isEs ? '§ DISTRIBUCIÓN DE PUNTAJE · v0.8.5' : '§ SCORE DISTRIBUTION · v0.8.5'}
+              {isEs ? '§ INTELIGENCIA DE COLA · ARIA v1.2' : '§ QUEUE INTELLIGENCE · ARIA v1.2'}
             </p>
-            <div className="rounded-sm border border-border/60 bg-background-card p-3">
-              {statsLoading ? (
-                <Skeleton className="h-[210px] w-full rounded-sm" />
-              ) : (
-                <EditorialDistribution
-                  data={synthesizeScoreData(tierCounts)}
-                  domain={[0, 1]}
-                  height={210}
-                  caption={
-                    isEs
-                      ? 'Distribución aproximada de puntajes · derivada de conteos por nivel · v0.8.5'
-                      : 'Approximate score distribution · derived from tier counts · v0.8.5'
-                  }
-                  i18n={{ highRiskLabel: isEs ? 'alto riesgo' : 'high risk' }}
-                />
-              )}
-            </div>
+            {statsLoading ? (
+              <div className="grid grid-cols-2 gap-2">
+                {[1,2,3,4].map(i => <Skeleton key={i} className="h-[96px] rounded-sm" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {/* Elevated value MXN */}
+                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
+                    {isEs ? 'Gasto en riesgo' : 'At-risk spend'}
+                  </div>
+                  <div
+                    className="tabular-nums leading-tight"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: '1.35rem',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: RISK_COLORS.critical,
+                    }}
+                  >
+                    {elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—'}
+                  </div>
+                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
+                    {isEs ? 'valor en proveedores T1+T2' : 'value in T1+T2 vendors'}
+                  </div>
+                </div>
+                {/* EFOS + SFP external flags */}
+                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
+                    {isEs ? 'Registros externos' : 'External flags'}
+                  </div>
+                  <div
+                    className="tabular-nums leading-tight"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: '1.35rem',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: RISK_COLORS.high,
+                    }}
+                  >
+                    {formatNumber((stats?.external_counts?.efos ?? 0) + (stats?.external_counts?.sfp ?? 0))}
+                  </div>
+                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
+                    EFOS {formatNumber(stats?.external_counts?.efos ?? 0)}
+                    <span className="mx-1 opacity-40">·</span>
+                    SFP {formatNumber(stats?.external_counts?.sfp ?? 0)}
+                  </div>
+                </div>
+                {/* New vendor signals */}
+                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
+                    {isEs ? 'Señal proveedor nuevo' : 'New vendor signal'}
+                  </div>
+                  <div
+                    className="tabular-nums leading-tight"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: '1.35rem',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: RISK_COLORS.high,
+                    }}
+                  >
+                    {formatNumber(stats?.new_vendor_count ?? 0)}
+                  </div>
+                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
+                    {isEs ? 'proveedores de reciente creación' : 'recently-formed vendors'}
+                  </div>
+                </div>
+                {/* Review pipeline */}
+                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
+                    {isEs ? 'En revisión activa' : 'Under review'}
+                  </div>
+                  <div
+                    className="tabular-nums leading-tight"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: '1.35rem',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {formatNumber((stats?.review_stats?.confirmed ?? 0) + (stats?.review_stats?.reviewing ?? 0))}
+                  </div>
+                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
+                    {formatNumber(stats?.review_stats?.confirmed ?? 0)} {isEs ? 'confirmados' : 'confirmed'}
+                    <span className="mx-1 opacity-40">·</span>
+                    {formatNumber(stats?.review_stats?.reviewing ?? 0)} {isEs ? 'activos' : 'active'}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
