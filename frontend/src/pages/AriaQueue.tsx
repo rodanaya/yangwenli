@@ -1030,9 +1030,9 @@ function PatternEditorialBars({
                 {name}
               </span>
 
-              {/* Proportion bar — compact on mobile, full on sm+ */}
-              <div className="flex items-center gap-1.5 sm:w-28 shrink-0">
-                <div className="hidden sm:block flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
+              {/* Proportion bar — visible on all breakpoints */}
+              <div className="flex items-center gap-1.5 w-20 sm:w-28 shrink-0">
+                <div className="block flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{ width: `${barFrac * 100}%`, background: meta.color, opacity: 0.85 }}
