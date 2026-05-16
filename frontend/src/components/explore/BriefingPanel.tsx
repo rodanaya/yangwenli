@@ -8,6 +8,7 @@
  */
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { ExternalLink } from 'lucide-react'
 import { atlasApi, contractApi, institutionApi, sectorApi, vendorApi } from '@/api/client'
 import {
   RISK_COLORS,
@@ -785,6 +786,7 @@ function ContractBriefing({
   lang: 'en' | 'es'
   contractId: number
 }) {
+  const navigate = useNavigate()
   const dispatch = useExploreDispatch()
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['explore', 'contract', contractId],
@@ -804,15 +806,15 @@ function ContractBriefing({
     },
   })
 
-  // Gap 7: BriefingShell normalizes the four states across all briefings.
-  // The eyebrow stays in the header slot so the user always sees what
-  // entity is being loaded, even on the loading/error paths.
-  const eyebrow = (
-    <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
-  )
-
+  // The loading/error/empty paths use the muted shell. The "ready" path
+  // (below) replaces "Contract · Z4" with an editorial verdict header —
+  // a journalist hitting a deep link should land on a finding, not on
+  // database nomenclature.
   if (isLoading || isError || !data) {
     const state: BriefingState = isLoading ? 'loading' : isError ? 'error' : 'empty'
+    const eyebrow = (
+      <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
+    )
     return (
       <BriefingShell
         state={state}
@@ -823,23 +825,50 @@ function ContractBriefing({
         emptyLabel={lang === 'en' ? 'No data for this contract.' : 'Sin datos para este contrato.'}
         onRetry={state === 'error' ? () => refetch() : undefined}
       >
-        {/* never rendered when state !== 'ready' */}
         {null}
       </BriefingShell>
     )
   }
 
+  // ── Derived data ──────────────────────────────────────────────────────
   const risk = Number(data.risk_score ?? 0)
+  const riskLevel = getRiskLevelFromScore(risk)
+  const riskColor = RISK_COLORS[riskLevel]
   const amount = Number(data.amount_mxn ?? 0)
   const date = data.contract_date || data.award_date || (data.contract_year ? String(data.contract_year) : '—')
-  const procedure = data.procedure_type_normalized || data.procedure_type || (data.is_direct_award ? (lang === 'en' ? 'Direct award' : 'Adjudicación directa') : '—')
-  const institutionName = data.institution_name ? toTitleCase(data.institution_name) : '—'
-  const sector = data.sector_name || '—'
+  const procedure = data.procedure_type_normalized || data.procedure_type || (data.is_direct_award ? (lang === 'en' ? 'Direct award' : 'Adj. directa') : '—')
   const title = data.title || data.description || (lang === 'en' ? `Contract ${data.id}` : `Contrato ${data.id}`)
   const risk_factors = data.risk_factors || []
-  // Translate the most common factor codes to a readable label without
-  // dragging in a full taxonomy here — anything unrecognized falls through
-  // as the raw code, which is honest.
+  const ciLo = data.risk_confidence_lower
+  const ciHi = data.risk_confidence_upper
+
+  // Sector accent: drives the verdict header tint + left rail.
+  const sectorCode = data.sector_id != null
+    ? SECTORS.find((s) => s.id === data.sector_id)?.code
+    : undefined
+  const sectorAccent = sectorCode ? (SECTOR_COLORS[sectorCode] ?? riskColor) : riskColor
+  const sectorLabel = sectorCode ? getSectorName(sectorCode, lang) : (data.sector_name || '—')
+
+  // Risk level → editorial label (verdict, not database enum).
+  const riskLabel: Record<string, { en: string; es: string }> = {
+    critical: { en: 'Critical risk', es: 'Riesgo crítico' },
+    high: { en: 'High risk', es: 'Alto riesgo' },
+    medium: { en: 'Medium risk', es: 'Riesgo medio' },
+    low: { en: 'Low risk', es: 'Riesgo bajo' },
+  }
+  const verdictLabel = riskLabel[riskLevel]?.[lang] ?? riskLevel
+
+  // Active boolean flags only — silence the false ones.
+  type Flag = { key: string; label: string }
+  const flags: Flag[] = []
+  if (data.is_direct_award) flags.push({ key: 'da', label: lang === 'en' ? 'DIRECT AWARD' : 'ADJ. DIRECTA' })
+  if (data.is_single_bid) flags.push({ key: 'sb', label: lang === 'en' ? 'SINGLE BID' : 'OFERTA ÚNICA' })
+  if (data.is_year_end) flags.push({ key: 'ye', label: lang === 'en' ? 'YEAR-END' : 'FIN DE AÑO' })
+  if (data.is_election_year) flags.push({ key: 'el', label: lang === 'en' ? 'ELECTION YEAR' : 'AÑO ELECTORAL' })
+  if (data.is_threshold_gaming) flags.push({ key: 'tg', label: lang === 'en' ? 'THRESHOLD GAME' : 'UMBRAL' })
+
+  // Risk-factor taxonomy (truncated dictionary — anything unrecognized
+  // falls through as the raw code, which is honest).
   const factorLabel = (code: string) => {
     const map: Record<string, { en: string; es: string }> = {
       direct_award: { en: 'Direct award', es: 'Adjudicación directa' },
@@ -848,80 +877,301 @@ function ContractBriefing({
       vendor_concentration: { en: 'Vendor concentration', es: 'Concentración de proveedor' },
       institution_diversity: { en: 'Low institution diversity', es: 'Baja diversidad institucional' },
       network_member: { en: 'Network member', es: 'Miembro de red' },
-      same_day: { en: 'Same-day awards', es: 'Adjudicaciones mismo día' },
-      ad_period: { en: 'Short ad period', es: 'Periodo corto de publicación' },
+      same_day: { en: 'Same-day awards', es: 'Adj. mismo día' },
+      ad_period: { en: 'Short ad period', es: 'Publicación corta' },
       threshold_gaming: { en: 'Threshold gaming', es: 'Manipulación de umbral' },
-      year_end: { en: 'Year-end award', es: 'Adjudicación fin de año' },
+      year_end: { en: 'Year-end award', es: 'Adj. fin de año' },
+      amendment: { en: 'Amendments', es: 'Modificaciones' },
+      cobid: { en: 'Co-bid concentration', es: 'Concentración co-licitantes' },
     }
     return map[code]?.[lang] || code.replace(/_/g, ' ')
   }
 
+  // Contract duration in days (only when both start + end exist).
+  let durationDays: number | null = null
+  if (data.start_date && data.end_date) {
+    const a = Date.parse(data.start_date)
+    const b = Date.parse(data.end_date)
+    if (!isNaN(a) && !isNaN(b) && b >= a) durationDays = Math.round((b - a) / 86400000)
+  }
+
+  // Narrative synthesis under the RiskPill — one sentence that names
+  // the top two factors and the total count. If there are none we fall
+  // back to a confidence-only line so the section never reads empty.
+  const renderRiskNarrative = () => {
+    if (risk_factors.length === 0) {
+      if (ciLo != null && ciHi != null) {
+        return lang === 'en'
+          ? `Indicator within 95% CI ${(ciLo * 100).toFixed(0)}–${(ciHi * 100).toFixed(0)}%.`
+          : `Indicador dentro del IC 95% ${(ciLo * 100).toFixed(0)}–${(ciHi * 100).toFixed(0)}%.`
+      }
+      return null
+    }
+    const lead = risk_factors.slice(0, 2).map(factorLabel)
+    const rest = risk_factors.length - lead.length
+    const joined = lead.length === 2
+      ? lang === 'en' ? `${lead[0]} and ${lead[1].toLowerCase()}` : `${lead[0]} y ${lead[1].toLowerCase()}`
+      : lead[0]
+    const total = risk_factors.length
+    if (rest > 0) {
+      return lang === 'en'
+        ? `Flagged for ${joined.toLowerCase()} among ${total} indicators.`
+        : `Marcado por ${joined.toLowerCase()} entre ${total} indicadores.`
+    }
+    return lang === 'en'
+      ? `Flagged for ${joined.toLowerCase()}.`
+      : `Marcado por ${joined.toLowerCase()}.`
+  }
+
+  const vendorId = data.vendor_id
+
   return (
     <div>
-      <Eyebrow color="var(--color-accent)">{lang === 'en' ? 'Contract · Z4' : 'Contrato · Z4'}</Eyebrow>
-      <h2 className="text-base font-bold mb-1 text-text-primary leading-tight line-clamp-3">
+      {/* ── 1. Editorial verdict header ─────────────────────────────────
+          Sector · risk level. The risk score is the verdict; the sector
+          places it on the map. Replaces "Contract · Z4". */}
+      <div
+        className="mb-3 pl-2 border-l-2"
+        style={{ borderColor: sectorAccent }}
+      >
+        <div className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] leading-tight">
+          <span style={{ color: sectorAccent }}>{sectorLabel}</span>
+          <span className="text-text-muted mx-1">·</span>
+          <span style={{ color: riskColor }}>{verdictLabel}</span>
+        </div>
+      </div>
+
+      {/* ── 2. Title as headline (Playfair Display) ────────────────────── */}
+      <h2
+        className="mb-1 text-text-primary leading-[1.15] line-clamp-4"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          fontSize: '1.0625rem',
+          fontWeight: 700,
+          letterSpacing: '-0.005em',
+        }}
+      >
         {toTitleCase(title)}
       </h2>
       {data.contract_number && (
-        <div className="text-[10px] font-mono text-text-muted mb-2 tracking-wide">
-          {data.contract_number}
+        <div className="text-[10px] font-mono text-text-muted mb-3 tracking-wide truncate">
+          № {data.contract_number}
         </div>
       )}
 
-      <Stat label={lang === 'en' ? 'Amount' : 'Monto'} value={formatCompactMXN(amount)} />
-      <Stat label={lang === 'en' ? 'Date' : 'Fecha'} value={String(date)} />
-      {/* Institution row — chip when we have an id, plain Stat as fallback. */}
-      {data.institution_id ? (
-        <div className="flex items-center justify-between py-1 border-b border-border/40 gap-2">
-          <span className="text-[10px] uppercase tracking-[0.12em] text-text-muted shrink-0">
-            {lang === 'en' ? 'Institution' : 'Institución'}
-          </span>
+      {/* ── 3. Flag row — boolean red flags, only when true ────────────── */}
+      {flags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-3">
+          {flags.map((f) => (
+            <span
+              key={f.key}
+              className="text-[8.5px] font-mono uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+              style={{
+                color: riskColor,
+                background: `${riskColor}14`,
+                border: `1px solid ${riskColor}40`,
+              }}
+            >
+              {f.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* ── 4. Anchor stat — Amount in Playfair Italic 800 ─────────────── */}
+      <div className="mb-3">
+        <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted mb-0.5">
+          {lang === 'en' ? 'Awarded amount' : 'Monto adjudicado'}
+        </div>
+        <div
+          className="leading-none tabular-nums"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontWeight: 800,
+            fontSize: '2rem',
+            color: riskColor,
+            letterSpacing: '-0.01em',
+          }}
+        >
+          {formatCompactMXN(amount)}
+        </div>
+        {data.is_high_value && (
+          <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mt-1">
+            {lang === 'en' ? 'High-value contract' : 'Contrato de alto valor'}
+          </div>
+        )}
+      </div>
+
+      {/* ── 5. Secondary stats — compact 2-col grid ────────────────────── */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 mb-3 pb-3 border-b border-border/40">
+        <MicroStat
+          label={lang === 'en' ? 'Date' : 'Fecha'}
+          value={String(date).slice(0, 10)}
+        />
+        <MicroStat
+          label={lang === 'en' ? 'Procedure' : 'Procedimiento'}
+          value={procedure}
+        />
+        {durationDays != null && (
+          <MicroStat
+            label={lang === 'en' ? 'Duration' : 'Duración'}
+            value={lang === 'en' ? `${durationDays}d` : `${durationDays}d`}
+          />
+        )}
+        {data.data_quality_grade && (
+          <MicroStat
+            label={lang === 'en' ? 'Data quality' : 'Calidad'}
+            value={`${data.data_quality_grade}${data.source_structure ? ` · ${data.source_structure}` : ''}`}
+          />
+        )}
+        {data.publication_delay_days != null && (
+          <MicroStat
+            label={lang === 'en' ? 'Ad period' : 'Publicación'}
+            value={`${data.publication_delay_days}d`}
+          />
+        )}
+        {data.contract_year != null && data.sexenio_year != null && (
+          <MicroStat
+            label={lang === 'en' ? 'Sexenio yr.' : 'Año sexenio'}
+            value={`Y${data.sexenio_year}`}
+          />
+        )}
+      </div>
+
+      {/* ── 6. Institution chip ───────────────────────────────────────── */}
+      {data.institution_id && (
+        <div className="mb-3">
+          <div className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted mb-1">
+            {lang === 'en' ? 'Contracting institution' : 'Institución contratante'}
+          </div>
           <EntityIdentityChip
             type="institution"
             id={data.institution_id}
             name={data.institution_name ?? '—'}
-            size="xs"
+            size="md"
           />
         </div>
-      ) : (
-        <Stat label={lang === 'en' ? 'Institution' : 'Institución'} value={institutionName} />
       )}
-      <Stat label={lang === 'en' ? 'Sector' : 'Sector'} value={sector} />
-      <Stat label={lang === 'en' ? 'Procedure' : 'Procedimiento'} value={procedure} />
 
-      <RiskPill score={risk} />
+      {/* ── 7. Risk verdict + narrative ────────────────────────────────── */}
+      <div className="mb-3 pb-3 border-b border-border/40">
+        <RiskPill score={risk} />
+        {(() => {
+          const narrative = renderRiskNarrative()
+          if (!narrative) return null
+          return (
+            <p className="mt-2 text-[11px] text-text-secondary leading-snug">
+              {narrative}
+              {risk_factors.length > 0 && ciLo != null && ciHi != null && (
+                <span className="text-[9px] font-mono text-text-muted ml-1">
+                  (CI {(ciLo * 100).toFixed(0)}–{(ciHi * 100).toFixed(0)}%)
+                </span>
+              )}
+            </p>
+          )
+        })()}
 
-      {risk_factors.length > 0 && (
-        <div className="mt-3">
-          <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
-            {lang === 'en' ? 'Risk factors' : 'Factores de riesgo'}
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {risk_factors.slice(0, 6).map((f) => (
-              <span
+        {/* ── 8. Risk factor mini-list — bullets, max 4 ─────────────── */}
+        {risk_factors.length > 0 && (
+          <ul className="mt-2 space-y-0.5">
+            {risk_factors.slice(0, 4).map((f) => (
+              <li
                 key={f}
-                className="text-[9px] font-mono uppercase tracking-[0.10em] px-1.5 py-0.5 rounded-sm"
-                style={{
-                  color: 'var(--color-risk-high)',
-                  background: 'var(--color-risk-high-bg, rgba(251,146,60,0.08))',
-                  border: '1px solid var(--color-risk-high-border, rgba(251,146,60,0.30))',
-                }}
+                className="text-[11px] leading-snug text-text-secondary flex items-start gap-1.5"
               >
-                {factorLabel(f)}
-              </span>
+                <span
+                  className="inline-block mt-[5px] shrink-0"
+                  style={{
+                    width: 6,
+                    height: 6,
+                    background: riskColor,
+                  }}
+                />
+                <span>{factorLabel(f)}</span>
+              </li>
             ))}
-          </div>
-        </div>
+            {risk_factors.length > 4 && (
+              <li className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted pl-3.5">
+                + {risk_factors.length - 4} {lang === 'en' ? 'more' : 'más'}
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+
+      {/* ── 9. COMPRANET source link ──────────────────────────────────── */}
+      {data.url && (
+        <a
+          href={data.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors mb-3"
+        >
+          <ExternalLink className="w-3 h-3" />
+          <span>{lang === 'en' ? 'View on COMPRANET' : 'Ver en COMPRANET'}</span>
+        </a>
       )}
 
+      {/* ── 10. CTAs — Red Thread (primary) + Dossier (secondary) ─────── */}
+      {vendorId != null && vendorId > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => navigate(`/thread/${vendorId}`)}
+            className="w-full py-2 px-3 text-[11px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
+            style={{
+              background: 'var(--color-accent)',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            {lang === 'en' ? '→ Open Red Thread' : '→ Abrir Hilo Rojo'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate(`/print/vendors/${vendorId}`)}
+            className="mt-2 w-full py-1.5 px-3 text-[10px] font-mono uppercase tracking-[0.14em] rounded-sm transition-colors"
+            style={{
+              background: 'transparent',
+              color: 'var(--color-text-secondary)',
+              border: '1px solid var(--color-border)',
+              cursor: 'pointer',
+            }}
+          >
+            {lang === 'en' ? '◆ Full dossier' : '◆ Dossier completo'}
+          </button>
+        </>
+      )}
+
+      {/* ── 11. De-emphasized back link ────────────────────────────────── */}
       <button
         type="button"
         onClick={() => dispatch({ type: 'pop-focus' })}
-        className="mt-4 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
+        className="mt-4 text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted/70 hover:text-text-secondary transition-colors"
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
         ← {lang === 'en' ? 'back to vendor (esc)' : 'volver al proveedor (esc)'}
       </button>
+    </div>
+  )
+}
+
+/**
+ * MicroStat — compact label-over-value atom for the secondary stats
+ * grid. Smaller than the row-based `Stat` so two fit comfortably in the
+ * 280px rail.
+ */
+function MicroStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted leading-tight mb-0.5">
+        {label}
+      </div>
+      <div className="text-[12px] font-mono tabular-nums text-text-primary truncate">
+        {value}
+      </div>
     </div>
   )
 }
