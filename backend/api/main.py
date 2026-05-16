@@ -126,11 +126,23 @@ def _warmup_caches():
     # Only warm the fastest endpoints — heavy queries (contracts/statistics)
     # are better left to first user request to avoid blocking the thread pool
     endpoints = [
+        # === Tier 0: Instant reads (pre-computed, < 1s) ===
         "/api/v1/stats/dashboard/fast",                # Dashboard (highest priority, pre-computed)
         "/api/v1/sectors",                             # Sectors list (small table)
         *[f"/api/v1/sectors/{i}" for i in range(1, 13)],  # All 12 sector detail pages (fast with bug fix)
+        "/api/v1/aria/stats",                          # ARIA queue stats (8s cold — 248K row scan)
+        # === Tier 1: Critical cold-start thundering-herd candidates ===
+        # These MUST be warmed before user requests arrive. Run early before
+        # the Tier 2 slow endpoints (exec/summary = 90s) block the thread.
+        "/api/v1/analysis/vendor-concentration?top_n=3",  # 73-82s cold on VPS! Must warm early
+        "/api/v1/executive/capture-leaders",              # 48-51s cold — thundering herd observed
+        "/api/v1/analysis/value-concentration",           # 48s cold
+        "/api/v1/analysis/flash-vendors",                 # 60s cold
+        "/api/v1/analysis/admin-breakdown",               # 38s cold
+        "/api/v1/analysis/political-cycle",               # 56s+ cold
+        # === Tier 2: Page-specific warm (moderately slow) ===
         "/api/v1/stats/data-quality",                  # Header quality badge (cached)
-        "/api/v1/executive/summary",                   # Executive section — warm EARLY, cold=90s on VPS
+        "/api/v1/executive/summary",                   # Executive section — 90s cold on VPS
         "/api/v1/analysis/patterns/counts",            # DetectivePatterns page (LIKE queries on 3.1M rows)
         "/api/v1/analysis/year-over-year",             # Shared by Trends, Patterns, Administrations
         "/api/v1/contracts/statistics",                # Explore page (3.8s cold)
@@ -139,15 +151,8 @@ def _warmup_caches():
         "/api/v1/analysis/money-flow",                 # Dashboard money flow panel
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
         "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
-        "/api/v1/analysis/vendor-concentration?top_n=3",  # Dashboard market concentration panel
         "/api/v1/intersection/summary?top_n_per_quadrant=50",  # Intersection page (9s cold — warm to avoid spinner)
         "/api/v1/network/communities",                     # Network communities (28s cold — warm to avoid UX lag)
-        "/api/v1/analysis/admin-breakdown",                # Administrations page (38s cold)
-        "/api/v1/analysis/political-cycle",                # Political cycle chart (56s+ cold)
-        "/api/v1/analysis/flash-vendors",                  # Flash vendors widget (60s cold)
-        "/api/v1/analysis/value-concentration",            # Value concentration widget (48s cold)
-        "/api/v1/aria/stats",                              # ARIA queue stats (8s cold — 248K row scan)
-        "/api/v1/executive/capture-leaders",               # Executive P6 pair chart (13s cold — strftime→contract_year fix)
         "/api/v1/analysis/leads",                          # Investigation leads (169s cold!)
         *[f"/api/v1/reports/sector/{i}" for i in range(1, 13)],  # Sector reports (346s cold each)
         # Categories capture-dumbbell — top categories by spend; the
@@ -201,10 +206,12 @@ def _warmup_caches():
                 timeout = 45  # heavy SHAP / case-link queries
             elif "executive" in ep:
                 timeout = 120
+            elif "vendor-concentration" in ep:
+                timeout = 120  # 73-82s cold on VPS — thundering herd observed
             elif "price-anomalies" in ep:
                 timeout = 15  # fast after JOIN-order fix (0.01s benchmark)
             elif "political-cycle" in ep or "flash-vendors" in ep or "value-concentration" in ep or "admin-breakdown" in ep:
-                timeout = 90  # 38-60s cold; give headroom
+                timeout = 120  # 38-80s cold; give headroom
             elif "intersection" in ep:
                 timeout = 20  # 9s cold; give headroom
             elif "communities" in ep:
