@@ -15,6 +15,7 @@ import type {
   ContractListItem,
   VendorDetailResponse,
   VendorInstitutionListResponse,
+  VendorPeerComparisonResponse,
 } from '@/api/types'
 import {
   EditorialAreaChart,
@@ -32,7 +33,8 @@ import {
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 
 interface LifecycleTimelineEntry {
   year: number
@@ -54,6 +56,7 @@ interface VendorActivityTabProps {
   onContractClick?: (contract: ContractListItem) => void
   lifecycle?: { timeline?: LifecycleTimelineEntry[] } | null
   institutions?: VendorInstitutionListResponse | null
+  peerComparison?: VendorPeerComparisonResponse | null
 }
 
 const CONTRACTS_PER_PAGE = 50
@@ -67,6 +70,7 @@ export function VendorActivityTab({
   onContractClick,
   lifecycle,
   institutions,
+  peerComparison,
 }: VendorActivityTabProps) {
   const { i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
@@ -193,6 +197,106 @@ export function VendorActivityTab({
           />
         </section>
       )}
+
+      {/* § 5 El Dinero — financial arc: DA rate, single bid, value percentile */}
+      {peerComparison && peerComparison.metrics.length > 0 && (() => {
+        const daMetric = peerComparison.metrics.find(m => m.metric === 'direct_award_pct')
+        const sbMetric = peerComparison.metrics.find(m => m.metric === 'single_bid_pct')
+        const valueMetric = peerComparison.metrics.find(m => m.metric === 'total_value_mxn')
+        const riskMetric = peerComparison.metrics.find(m => m.metric === 'avg_risk_score')
+        if (!daMetric && !sbMetric) return null
+
+        const daVal = (daMetric?.value ?? 0) * 100
+        const daMed = (daMetric?.peer_median ?? 0) * 100
+        const daPct = daMetric?.percentile ?? 0
+        const sbVal = (sbMetric?.value ?? 0) * 100
+        const sbMed = (sbMetric?.peer_median ?? 0) * 100
+        const valPct = valueMetric?.percentile ?? null
+        const riskPct = riskMetric?.percentile ?? null
+        const daColor = daPct >= 75
+          ? RISK_COLORS.critical
+          : daPct >= 50
+            ? RISK_COLORS.high
+            : 'var(--color-text-muted)'
+        const sbColor = (sbMetric?.percentile ?? 0) >= 75
+          ? RISK_COLORS.critical
+          : (sbMetric?.percentile ?? 0) >= 50
+            ? RISK_COLORS.high
+            : 'var(--color-text-muted)'
+
+        return (
+          <section
+            aria-labelledby="dinero-title"
+            className="pt-6 border-t border-border/40"
+          >
+            <SectionTitle id="dinero-title">
+              {isEs ? '§ 5 · El Dinero' : '§ 5 · The Money'}
+            </SectionTitle>
+            <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
+              {isEs
+                ? `Concentración financiera frente a la mediana del sector ${vendor.primary_sector_name ?? ''}.`
+                : `Financial concentration versus the ${vendor.primary_sector_name ?? 'sector'} median.`}
+            </p>
+            <div className="space-y-3">
+              {daMetric && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                      {isEs ? 'Adjudicación directa' : 'Direct award rate'}
+                    </span>
+                    <span className="text-[11px] font-mono tabular-nums" style={{ color: daColor }}>
+                      {daVal.toFixed(0)}% {isEs ? 'vs' : 'vs'} {daMed.toFixed(0)}% {isEs ? 'mediana' : 'median'}
+                    </span>
+                  </div>
+                  <DotBar value={daPct} max={100} color={daColor} />
+                  {daVal > 25 && (
+                    <p className="text-[10px] text-text-muted font-mono mt-1">
+                      {(daVal / 25).toFixed(1)}× {isEs ? 'el límite OCDE (25%)' : 'OECD limit (25%)'}
+                    </p>
+                  )}
+                </div>
+              )}
+              {sbMetric && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-mono text-text-muted uppercase tracking-[0.12em]">
+                      {isEs ? 'Licitación sin competencia' : 'Single-bid rate'}
+                    </span>
+                    <span className="text-[11px] font-mono tabular-nums" style={{ color: sbColor }}>
+                      {sbVal.toFixed(0)}% {isEs ? 'vs' : 'vs'} {sbMed.toFixed(0)}% {isEs ? 'mediana' : 'median'}
+                    </span>
+                  </div>
+                  <DotBar value={sbMetric?.percentile ?? 0} max={100} color={sbColor} />
+                </div>
+              )}
+            </div>
+            {/* Percentile rank callouts */}
+            <div className="mt-4 flex flex-wrap gap-3">
+              {valPct != null && (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono text-text-muted bg-background-elevated px-2.5 py-1.5 rounded-sm border border-border/40">
+                  {isEs
+                    ? `Top ${100 - valPct}% · valor total en ${vendor.primary_sector_name ?? 'sector'}`
+                    : `Top ${100 - valPct}% · total value in ${vendor.primary_sector_name ?? 'sector'}`}
+                </span>
+              )}
+              {riskPct != null && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-1.5 rounded-sm border"
+                  style={{
+                    color: riskPct >= 75 ? RISK_COLORS.critical : riskPct >= 50 ? RISK_COLORS.high : 'var(--color-text-muted)',
+                    backgroundColor: riskPct >= 75 ? `${RISK_COLORS.critical}10` : riskPct >= 50 ? `${RISK_COLORS.high}10` : 'var(--color-background-elevated)',
+                    borderColor: riskPct >= 75 ? `${RISK_COLORS.critical}30` : riskPct >= 50 ? `${RISK_COLORS.high}30` : 'var(--color-border)',
+                  }}
+                >
+                  {isEs
+                    ? `Percentil ${riskPct.toFixed(0)} · riesgo en ${vendor.primary_sector_name ?? 'sector'}`
+                    : `${riskPct.toFixed(0)}th percentile · risk in ${vendor.primary_sector_name ?? 'sector'}`}
+                </span>
+              )}
+            </div>
+          </section>
+        )
+      })()}
 
       {/* § 2 La Captura — top institutions list with capture pill */}
       {institutionRows.length > 0 && (

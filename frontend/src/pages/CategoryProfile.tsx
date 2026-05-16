@@ -547,7 +547,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <header className="border-b border-border pb-4">
         <Link
-          to="/sectors?view=categories"
+          to="/categories"
           className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-3"
         >
           <ArrowLeft className="h-3 w-3" />

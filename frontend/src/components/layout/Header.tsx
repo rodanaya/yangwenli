@@ -31,7 +31,6 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/model': 'model',
   '/methodology': 'methodology',
   '/settings': 'settings',
-  '/categories': 'categories',
   '/cases': 'caseLibrary',
   '/journalists': 'journalists',
   '/newsroom': 'newsroom',

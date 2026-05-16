@@ -29,10 +29,10 @@ import {
   ArrowLeft,
   BookOpen,
   Download,
+  ExternalLink,
   Loader2,
   Map as MapIcon,
 } from 'lucide-react'
-
 import { vendorApi } from '@/api/client'
 import type { ContractListItem, VendorLinkedScandalsResponse } from '@/api/types'
 
@@ -287,6 +287,7 @@ export function VendorProfile() {
           onContractClick={(c) => setSelectedContract(c)}
           lifecycle={data.lifecycle.data}
           institutions={data.institutions.data}
+          peerComparison={data.peerComparison.data}
         />
       </div>
 
@@ -308,6 +309,10 @@ export function VendorProfile() {
           onOpenNetworkGraph={() => setNetworkOpen(true)}
         />
       </div>
+
+      {/* § 10 Acciones + Procedencia — provenance footer */}
+      <ChapterDivider />
+      <ProvenanceFooter isEs={isEs} />
 
       {/* Contract detail drawer — lazy */}
       {selectedContract && (
@@ -422,6 +427,73 @@ function VendorProfileSkeleton() {
         ))}
       </div>
     </div>
+  )
+}
+
+// ─── § 10 Provenance footer ────────────────────────────────────────────────
+function ProvenanceFooter({ isEs }: { isEs: boolean }) {
+  const sources = [
+    {
+      label: isEs ? 'COMPRANET 2002–2025' : 'COMPRANET 2002–2025',
+      note: isEs ? '~3.1M contratos federales' : '~3.1M federal contracts',
+    },
+    {
+      label: isEs ? 'SAT EFOS' : 'SAT EFOS register',
+      note: isEs ? 'Lista de contribuyentes con operaciones simuladas' : 'Fictitious invoice company register',
+    },
+    {
+      label: isEs ? 'SFP Sanciones' : 'SFP Sanctions',
+      note: isEs ? 'Registro de personas inhabilitadas' : 'Federal debarment register',
+    },
+    {
+      label: isEs ? 'Casos de corrupción' : 'Corruption cases',
+      note: isEs ? `${1427} casos verificados manualmente` : `${1427} manually verified cases`,
+    },
+  ]
+
+  return (
+    <section
+      aria-labelledby="provenance-title"
+      className="py-8 border-t border-border/30"
+    >
+      <p
+        className="text-[9px] font-mono uppercase tracking-[0.18em] mb-4"
+        style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}
+      >
+        § 10 · {isEs ? 'Procedencia' : 'Provenance'}
+      </p>
+
+      {/* Data sources */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {sources.map((src) => (
+          <div
+            key={src.label}
+            className="px-3 py-2.5 rounded-sm border border-border/40 bg-background-card"
+          >
+            <p className="text-[10px] font-mono font-semibold text-text-primary uppercase tracking-[0.1em] mb-1">
+              {src.label}
+            </p>
+            <p className="text-[10px] text-text-muted leading-snug">{src.note}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Methodology + limitations */}
+      <div className="space-y-2.5 max-w-2xl">
+        <p className="text-[11px] text-text-muted leading-relaxed">
+          {isEs
+            ? `Modelo v0.8.5 · AUC 0.785 · entrenado sobre ${(1427).toLocaleString('es-MX')} casos confirmados. El indicador de riesgo es una señal estadística de similitud de patrones — no es una probabilidad de corrupción ni una conclusión legal.`
+            : `Model v0.8.5 · AUC 0.785 · trained on ${(1427).toLocaleString('en-US')} verified cases. The risk indicator is a statistical pattern-similarity signal — not a corruption probability or legal finding.`}
+        </p>
+        <a
+          href="/methodology"
+          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent/80 transition-colors"
+        >
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+          {isEs ? 'Metodología completa →' : 'Full methodology →'}
+        </a>
+      </div>
+    </section>
   )
 }
 
