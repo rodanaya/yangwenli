@@ -607,5 +607,11 @@
     "findingLabel": "FINDING",
     "findingBody": "PAN, PRI and MORENA — left, center and right — all governed under the same pattern: the direct-award rate rose with every administration. AMLO took it to the historic peak (80%), but the trend did not start with him. Bureaucratic inertia weighs more than the ruling party.",
     "footer": "Source: COMPRANET 2002–2025 · 3.05M contracts · OECD Public Procurement Report 2023"
+  },
+  "sectorTreemap": {
+    "kicker": "RUBLI · P2 Ghost Pattern · Sector Distribution",
+    "headline": "Ghost-pattern vendors cluster in Health and Infrastructure",
+    "subline": "Each tile is one sector — area proportional to total contract value from P2-flagged vendors",
+    "footer": "Source: COMPRANET 2002–2025 · RUBLI v0.8.5 P2 pattern · 6,118 vendors"
   }
 }

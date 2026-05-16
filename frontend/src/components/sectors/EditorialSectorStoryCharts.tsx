@@ -19,11 +19,13 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { sectorApi, categoriesApi } from '@/api/client'
 import { SectorTreemap } from './SectorTreemap'
 import { RiskSpendBeeswarm } from './RiskSpendBeeswarm'
 import { CategorySectorSwimlane } from './CategorySectorSwimlane'
 import { CategoryCaptureDumbbell } from './CategoryCaptureDumbbell'
+import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 
 // ---------------------------------------------------------------------------
 // Shared skeleton — matches the ChartCard border/bg rhythm from InlineCharts
@@ -60,13 +62,22 @@ function ChartLoadingShell() {
 // editorial-treemap → SectorTreemap
 // ---------------------------------------------------------------------------
 export function SectorTreemapStory() {
+  const { t } = useTranslation('storyCharts')
   const { data, isLoading } = useQuery({
     queryKey: ['sectors', 'list'],
     queryFn: () => sectorApi.getAll(),
     staleTime: 5 * 60 * 1000,
   })
-  if (isLoading || !data?.data?.length) return <ChartLoadingShell />
-  return <SectorTreemap sectors={data.data} />
+  return (
+    <EditorialChartFrame
+      kicker={t('sectorTreemap.kicker')}
+      headline={t('sectorTreemap.headline')}
+      subline={t('sectorTreemap.subline')}
+      footer={t('sectorTreemap.footer')}
+    >
+      {isLoading || !data?.data?.length ? <ChartLoadingShell /> : <SectorTreemap sectors={data.data} />}
+    </EditorialChartFrame>
+  )
 }
 
 // ---------------------------------------------------------------------------

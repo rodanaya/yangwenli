@@ -607,5 +607,11 @@
     "findingLabel": "HALLAZGO",
     "findingBody": "PAN, PRI y MORENA — izquierda, centro y derecha — todas gobernaron bajo el mismo patrón: la tasa de adjudicación directa subió con cada administración. AMLO la llevó al pico histórico (80%), pero la tendencia no comenzó con él. La inercia burocrática pesa más que el partido en el poder.",
     "footer": "Fuente: COMPRANET 2002–2025 · 3.05M contratos · OCDE Public Procurement Report 2023"
+  },
+  "sectorTreemap": {
+    "kicker": "RUBLI · Patrón Fantasma P2 · Distribución por Sector",
+    "headline": "Los proveedores con patrón fantasma se concentran en Salud e Infraestructura",
+    "subline": "Cada cuadro es un sector — área proporcional al valor total de contratos de proveedores marcados por P2",
+    "footer": "Fuente: COMPRANET 2002–2025 · RUBLI v0.8.5 patrón P2 · 6,118 proveedores"
   }
 }
