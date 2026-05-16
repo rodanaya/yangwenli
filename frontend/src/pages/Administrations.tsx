@@ -1250,6 +1250,7 @@ export default function Administrations() {
                   { key: 'hr', pct: (y) => y.high_risk_pct, color: RISK_COLORS.high, label: 'High Risk %' },
                 ]
                 return (
+                  <>
                   <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Yearly trends: contract volume and procurement risk indicators">
                     {/* Left axis ticks */}
                     {[0, 0.25, 0.5, 0.75, 1].map((f) => {
@@ -1357,6 +1358,7 @@ export default function Administrations() {
                       </div>
                     ))}
                   </div>
+                  </>
                 )
               })()
             ) : (
