@@ -15,10 +15,11 @@ TOP_N = 5
 
 def run():
     t0 = time.time()
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), timeout=600)  # 10-min wait for WAL lock
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA wal_autocheckpoint=0")  # don't auto-checkpoint while we're running
     cur = conn.cursor()
 
     print("Creating category_vendor_topn table...")
