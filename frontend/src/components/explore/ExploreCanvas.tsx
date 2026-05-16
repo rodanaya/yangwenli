@@ -86,7 +86,11 @@ function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
   const CY = 0.47
   const INNER_RX = 0.28
   const INNER_RY = 0.31
-  const OUTER_RX = 0.42
+  // OUTER_RX intentionally smaller than OUTER_RY — creates a horizontally
+  // compact outer ring so the rightmost sector (defensa at 90°) stays at
+  // fx ≈ 0.80, well clear of the right-edge briefing panel. Previously
+  // OUTER_RX=0.42 gave fx=0.92 which pushed defensa to the SVG edge.
+  const OUTER_RX = 0.30
   const OUTER_RY = 0.42
 
   const inner: Array<[string, number]> = [

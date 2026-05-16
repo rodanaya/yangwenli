@@ -657,7 +657,7 @@ export function Sectors() {
                             {topByRisk.name_es}
                           </span>
                           {' '}es la categoría de mayor riesgo:{' '}
-                          <span className="font-mono tabular-nums">{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          <span className="font-mono tabular-nums" style={{ letterSpacing: 0 }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
                           {' '}promedio.
                         </>
                       ) : (
@@ -666,7 +666,7 @@ export function Sectors() {
                             {topByRisk.name_en}
                           </span>
                           {' '}is the highest-risk category:{' '}
-                          <span className="font-mono tabular-nums">{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          <span className="font-mono tabular-nums" style={{ letterSpacing: 0 }}>{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
                           {' '}average.
                         </>
                       )}

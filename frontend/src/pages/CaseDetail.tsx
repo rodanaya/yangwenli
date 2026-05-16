@@ -82,7 +82,7 @@ const ADMIN_LABEL_EN: Record<string, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Legal status styling
 // ─────────────────────────────────────────────────────────────────────────────
-function legalStatusMeta(status: string): {
+function legalStatusMeta(status: string, lang: string): {
   accent: string
   bg: string
   border: string
@@ -90,70 +90,84 @@ function legalStatusMeta(status: string): {
   subline: string
   label: string
 } {
+  const es = lang === 'es'
   switch (status) {
     case 'convicted':
       return {
         accent: EMERALD,
         bg: 'rgba(16,185,129,0.08)',
         border: 'rgba(16,185,129,0.25)',
-        headline: 'Criminal conviction obtained',
-        subline: 'A court of law returned a guilty verdict against at least one actor tied to this case.',
-        label: 'Convicted',
+        headline: es ? 'Condena penal obtenida' : 'Criminal conviction obtained',
+        subline: es
+          ? 'Un tribunal emitió sentencia condenatoria contra al menos un actor vinculado a este caso.'
+          : 'A court of law returned a guilty verdict against at least one actor tied to this case.',
+        label: es ? 'Condenado' : 'Convicted',
       }
     case 'prosecuted':
       return {
         accent: '#fb923c',
         bg: 'rgba(251,146,60,0.08)',
         border: 'rgba(251,146,60,0.25)',
-        headline: 'Prosecution in progress',
-        subline: 'Formal charges have been filed; trial proceedings are under way.',
-        label: 'Prosecuted',
+        headline: es ? 'Proceso penal en curso' : 'Prosecution in progress',
+        subline: es
+          ? 'Se han presentado cargos formales; el proceso judicial está en marcha.'
+          : 'Formal charges have been filed; trial proceedings are under way.',
+        label: es ? 'Procesado' : 'Prosecuted',
       }
     case 'investigation':
       return {
         accent: AMBER,
         bg: 'rgba(245,158,11,0.08)',
         border: 'rgba(245,158,11,0.25)',
-        headline: 'Under active investigation',
-        subline: 'An administrative or criminal inquiry is open; no charges have been filed.',
-        label: 'Investigation',
+        headline: es ? 'Bajo investigación activa' : 'Under active investigation',
+        subline: es
+          ? 'Hay una investigación administrativa o penal abierta; no se han presentado cargos.'
+          : 'An administrative or criminal inquiry is open; no charges have been filed.',
+        label: es ? 'Investigación' : 'Investigation',
       }
     case 'acquitted':
       return {
         accent: '#60a5fa',
         bg: 'rgba(96,165,250,0.08)',
         border: 'rgba(96,165,250,0.25)',
-        headline: 'Defendants acquitted',
-        subline: 'The court returned a not-guilty verdict. The factual record remains in the public domain.',
-        label: 'Acquitted',
+        headline: es ? 'Imputados absueltos' : 'Defendants acquitted',
+        subline: es
+          ? 'El tribunal emitió veredicto de no culpabilidad. El expediente factual permanece en el dominio público.'
+          : 'The court returned a not-guilty verdict. The factual record remains in the public domain.',
+        label: es ? 'Absuelto' : 'Acquitted',
       }
     case 'dismissed':
       return {
         accent: TEXT_MUTED,
         bg: 'rgba(120,113,108,0.08)',
         border: 'rgba(120,113,108,0.25)',
-        headline: 'Case dismissed',
-        subline: 'Proceedings were dismissed without a conviction. See notes for jurisdictional context.',
-        label: 'Dismissed',
+        headline: es ? 'Caso desestimado' : 'Case dismissed',
+        subline: es
+          ? 'El proceso fue sobreseído sin condena. Ver notas para contexto jurisdiccional.'
+          : 'Proceedings were dismissed without a conviction. See notes for jurisdictional context.',
+        label: es ? 'Desestimado' : 'Dismissed',
       }
     case 'impunity':
       return {
         accent: CRIMSON_HI,
         bg: 'rgba(239,68,68,0.08)',
         border: 'rgba(239,68,68,0.28)',
-        headline: 'No convictions recorded in public court records',
-        subline:
-          'Despite documented evidence, no criminal sanctions have been obtained — a signature feature of Mexican procurement scandals.',
-        label: 'Impunity',
+        headline: es ? 'Sin condenas en registros judiciales públicos' : 'No convictions recorded in public court records',
+        subline: es
+          ? 'A pesar de la evidencia documentada, no se han obtenido sanciones penales — rasgo distintivo de los escándalos de contratación en México.'
+          : 'Despite documented evidence, no criminal sanctions have been obtained — a signature feature of Mexican procurement scandals.',
+        label: es ? 'Impunidad' : 'Impunity',
       }
     default:
       return {
         accent: TEXT_MUTED,
         bg: 'rgba(120,113,108,0.06)',
         border: 'rgba(120,113,108,0.25)',
-        headline: 'Legal outcome unresolved',
-        subline: 'Public records do not yet document a final judicial disposition.',
-        label: 'Unresolved',
+        headline: es ? 'Resultado judicial sin resolver' : 'Legal outcome unresolved',
+        subline: es
+          ? 'Los registros públicos aún no documentan una resolución judicial final.'
+          : 'Public records do not yet document a final judicial disposition.',
+        label: es ? 'Sin resolver' : 'Unresolved',
       }
   }
 }
@@ -1518,7 +1532,7 @@ function CaseBody({
   const fraudLabel = FRAUD_LABEL_EN[data.fraud_type] ?? titleCase(data.fraud_type)
   const adminLabel = ADMIN_LABEL_EN[data.administration] ?? titleCase(data.administration)
   const accent = FRAUD_ACCENT[data.fraud_type] ?? FRAUD_ACCENT.other
-  const legal = legalStatusMeta(data.legal_status)
+  const legal = legalStatusMeta(data.legal_status, lang)
 
   const linkedVendors: LinkedVendor[] = data.linked_vendors ?? []
   const totalContracts = linkedVendors.reduce((s, v) => s + (v.contract_count ?? 0), 0)

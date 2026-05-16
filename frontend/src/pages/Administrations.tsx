@@ -109,6 +109,15 @@ const ADMIN_COLORS: Record<string, string> = {
   Sheinbaum: '#14b8a6',
 }
 
+// Display names with correct diacritics. Keyed on the ASCII `name` identifier.
+const ADMIN_DISPLAY_NAMES: Record<string, string> = {
+  Fox: 'Fox',
+  Calderon: 'Calderón',
+  'Pena Nieto': 'Peña Nieto',
+  AMLO: 'AMLO',
+  Sheinbaum: 'Sheinbaum',
+}
+
 // AdminName imported above from components/administrations/types.
 // MATRIX_SECTORS imported from AdminSectorMatrix.
 
@@ -800,19 +809,19 @@ export default function Administrations() {
             kicker={t('lede.kicker', { direction, absDelta })}
             accent={accent}
             entityA={{
-              name: prev.name,
+              name: ADMIN_DISPLAY_NAMES[prev.name] ?? prev.name,
               subtitle: `${prev.directAwardPct.toFixed(1)}% DA · ${formatNumber(prev.contracts)} ${t('lede.contracts')}`,
               share: prev.directAwardPct,
             }}
             entityB={{
-              name: curr.name,
+              name: ADMIN_DISPLAY_NAMES[curr.name] ?? curr.name,
               subtitle: `${curr.directAwardPct.toFixed(1)}% DA · ${formatNumber(curr.contracts)} ${t('lede.contracts')}`,
               share: curr.directAwardPct,
             }}
             centerLabel={`${deltaValue > 0 ? '+' : ''}${deltaValue.toFixed(1)} pp`}
-            deck={t('lede.deck', { prevName: prev.name, currName: curr.name, direction, prevPct: prev.directAwardPct.toFixed(1), currPct: curr.directAwardPct.toFixed(1) })}
+            deck={t('lede.deck', { prevName: ADMIN_DISPLAY_NAMES[prev.name] ?? prev.name, currName: ADMIN_DISPLAY_NAMES[curr.name] ?? curr.name, direction, prevPct: prev.directAwardPct.toFixed(1), currPct: curr.directAwardPct.toFixed(1) })}
             action={{
-              label: t('lede.viewDossier', { name: curr.name }),
+              label: t('lede.viewDossier', { name: ADMIN_DISPLAY_NAMES[curr.name] ?? curr.name }),
               onClick: () => setSelectedAdmin(curr.name),
             }}
             tintColor={top.toColor}
@@ -1066,7 +1075,7 @@ export default function Administrations() {
                     'text-xs font-mono w-24 text-right',
                     a.name === selectedAdmin ? 'font-bold text-text-primary' : 'text-text-muted'
                   )}>
-                    {a.name}
+                    {ADMIN_DISPLAY_NAMES[a.name] ?? a.name}
                   </span>
                   <div className="flex-1 relative flex items-center">
                     {(() => {
@@ -1158,7 +1167,7 @@ export default function Administrations() {
                             className="inline-block w-2 h-2 rounded-full mr-1"
                             style={{ backgroundColor: adminColor }}
                           />
-                          {a.name}
+                          {ADMIN_DISPLAY_NAMES[a.name] ?? a.name}
                         </th>
                       )
                     })}
