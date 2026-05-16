@@ -1058,13 +1058,16 @@ function InstitutionBodyVisual({
   const lbl = shortLabel(inst.name)
 
   // Three-tier label strategy:
-  //   large  (r ≥ 20): white acronym inside the circle
-  //   medium (r ≥  7): pill chip below the circle (all acronym lengths shown)
-  //   small  (r <  7): no chip; full name surfaces in hover stat line
+  //   large  (r ≥ 16): acronym inside the circle (dark on amber, white on others)
+  //   medium (r ≥  5): pill chip below the circle (always dark text for contrast)
+  //   small  (r <  5): no chip; full name surfaces in hover stat line
   const insideLabel = r >= 16
-  const chipLabel   = !insideLabel && r >= 7
-  const chipW = Math.min(lbl.length * 5.8 + 10, 90)
-  const chipH = 14
+  const chipLabel   = !insideLabel && r >= 5
+  const chipW = Math.min(lbl.length * 5.8 + 10, 120)
+  const chipH = 15
+  // Inside-label text must be readable on the risk fill. High (amber #f59e0b) has
+  // only 1.7:1 contrast with white — use near-black instead. Same for low zinc.
+  const insideFill = (level === 'high' || level === 'low') ? '#1c1a15' : 'white'
 
   return (
     <motion.g
@@ -1081,7 +1084,7 @@ function InstitutionBodyVisual({
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
       <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={hovered ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={3} />
 
-      {/* Large: white acronym inside the bubble */}
+      {/* Large: acronym inside the bubble — contrast-aware text color */}
       {insideLabel && (
         <text
           x={cx}
@@ -1090,14 +1093,14 @@ function InstitutionBodyVisual({
           fontSize={Math.max(9, Math.min(13, Math.round(r * 0.32)))}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight={700}
-          fill="white"
+          fill={insideFill}
           style={{ pointerEvents: 'none' }}
         >
           {lbl}
         </text>
       )}
 
-      {/* Medium: pill chip below the bubble — opaque bg for readability */}
+      {/* Medium: pill chip below the bubble — border encodes risk, text is always dark */}
       {chipLabel && (
         <>
           <rect
@@ -1107,7 +1110,7 @@ function InstitutionBodyVisual({
             height={chipH}
             rx={chipH / 2}
             fill="var(--color-background-card)"
-            fillOpacity={0.96}
+            fillOpacity={0.97}
             stroke={fill}
             strokeWidth={1.5}
             strokeOpacity={1}
@@ -1120,7 +1123,7 @@ function InstitutionBodyVisual({
             fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={700}
-            fill={fill}
+            fill="var(--color-text-primary)"
             style={{ pointerEvents: 'none' }}
           >
             {lbl}
@@ -1128,20 +1131,19 @@ function InstitutionBodyVisual({
         </>
       )}
 
-      {/* Hover stat line for large bubbles */}
-      {hovered && (
+      {/* Hover line: always show full name near the bubble for small/medium;
+          large ones already have the name in the bottom status bar */}
+      {hovered && r < 16 && (
         <text
           x={cx}
           y={cy + rEffective + (chipLabel ? chipH + 12 : 14)}
           textAnchor="middle"
-          fontSize={r < 13 ? 9 : 9}
+          fontSize={9}
           fontFamily="var(--font-family-mono, monospace)"
           fill="var(--color-text-muted)"
           style={{ pointerEvents: 'none' }}
         >
-          {r < 13
-            ? inst.name.length > 32 ? inst.name.slice(0, 31) + '…' : inst.name
-            : `${formatNumber(inst.total_contracts)} · ${formatCompactMXN(inst.total_amount_mxn)}`}
+          {inst.name.length > 38 ? inst.name.slice(0, 37) + '…' : inst.name}
         </text>
       )}
     </motion.g>
