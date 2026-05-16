@@ -167,6 +167,7 @@ export function VendorProfile() {
         scorecard={data.scorecard.data}
         flags={flags}
         shap={data.shap.data}
+        ariaTier={data.aria.data?.ips_tier ?? null}
         actions={
           <>
             {/* Thread CTA — only for T1 ARIA vendors that have a full investigation narrative */}

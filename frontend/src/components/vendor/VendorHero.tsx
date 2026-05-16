@@ -50,6 +50,8 @@ interface VendorHeroProps {
   shap?: VendorSHAPResponse | null
   /** Right-aligned action buttons (watchlist, share, export, etc.) */
   actions?: ReactNode
+  /** ARIA investigation queue tier (1=critical, 4=low), per docs/VENDOR_DOSSIER_SCHEME.md § 0 */
+  ariaTier?: 1 | 2 | 3 | 4 | null
 }
 
 export function VendorHero({
@@ -58,6 +60,7 @@ export function VendorHero({
   flags,
   shap,
   actions,
+  ariaTier,
 }: VendorHeroProps) {
   const { t, i18n } = useTranslation(['vendors', 'common'])
   const [variantsOpen, setVariantsOpen] = useState(false)
@@ -252,6 +255,17 @@ export function VendorHero({
           className="inline-flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors border border-border/40 hover:border-border px-2.5 py-1 rounded-sm"
         >
           {isEs ? 'Cola ARIA' : 'ARIA Queue'}
+          {ariaTier != null && (
+            <span
+              className="ml-1 inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase"
+              style={{
+                background: ariaTier === 1 ? 'rgba(239,68,68,0.15)' : ariaTier === 2 ? 'rgba(245,158,11,0.15)' : ariaTier === 3 ? 'rgba(161,98,7,0.12)' : 'rgba(113,113,122,0.12)',
+                color: ariaTier === 1 ? 'var(--color-risk-critical)' : ariaTier === 2 ? 'var(--color-risk-high)' : ariaTier === 3 ? 'var(--color-risk-medium)' : 'var(--color-text-muted)',
+              }}
+            >
+              T{ariaTier}
+            </span>
+          )}
         </Link>
       </div>
 
