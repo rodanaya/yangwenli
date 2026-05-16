@@ -716,19 +716,26 @@ function TopVendorsPanel({
   spotlight,
   color,
   isEs,
+  maxVendors = 4,
 }: {
   spotlight: PatternSpotlight | undefined
   color: string
   isEs: boolean
+  maxVendors?: number
 }) {
   if (!spotlight || spotlight.top_vendors.length === 0) return null
   return (
     <div className="pt-3 mt-1 border-t border-border">
       <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2">
         {isEs ? `Principales investigados (${spotlight.code})` : `Top subjects (${spotlight.code})`}
+        {spotlight.top_vendors.length > maxVendors && (
+          <span className="ml-2 text-[9px] text-text-muted/40">
+            {isEs ? `mostrando ${maxVendors} de ${spotlight.top_vendors.length}` : `showing ${maxVendors} of ${spotlight.top_vendors.length}`}
+          </span>
+        )}
       </div>
       <div className="space-y-1">
-        {spotlight.top_vendors.slice(0, 4).map((v, i) => (
+        {spotlight.top_vendors.slice(0, maxVendors).map((v, i) => (
           <div
             key={v.vendor_id}
             className="flex items-center gap-2 rounded px-2 py-1 hover:bg-background-card transition-colors"
@@ -765,7 +772,9 @@ function CommunityDossier({
   c,
   communities,
   isActive,
+  isExpanded,
   onHover,
+  onToggleExpand,
   innerRef,
   isEs,
   patternSpotlight,
@@ -773,7 +782,9 @@ function CommunityDossier({
   c: Community
   communities: Community[]
   isActive: boolean
+  isExpanded: boolean
   onHover: (id: string | null) => void
+  onToggleExpand: (id: string) => void
   innerRef: (el: HTMLDivElement | null) => void
   isEs: boolean
   patternSpotlight: PatternSpotlight | undefined
@@ -795,8 +806,13 @@ function CommunityDossier({
       ref={innerRef}
       onMouseEnter={() => onHover(c.id)}
       onMouseLeave={() => onHover(null)}
+      onClick={() => onToggleExpand(c.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onToggleExpand(c.id)}
+      aria-expanded={isExpanded}
       className={cn(
-        'rounded-sm border overflow-hidden transition-all',
+        'rounded-sm border overflow-hidden transition-all cursor-pointer',
         'bg-surface-card border-border',
         isActive ? 'border-border ring-1 ring-border' : 'hover:border-border',
       )}
@@ -967,14 +983,27 @@ function CommunityDossier({
           </p>
         </div>
 
-        {/* Real ARIA top vendors for this pattern */}
-        <TopVendorsPanel spotlight={patternSpotlight} color={fill} isEs={isEs} />
+        {/* Real ARIA top vendors — expanded on active card */}
+        <TopVendorsPanel
+          spotlight={patternSpotlight}
+          color={fill}
+          isEs={isEs}
+          maxVendors={isExpanded ? 10 : 4}
+        />
       </div>
 
       {/* Investigation CTA footer */}
-      <div className="px-5 py-3 border-t border-border flex items-center justify-between gap-3 bg-background-elevated/40">
-        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
+      <div
+        className="px-5 py-3 border-t border-border flex items-center justify-between gap-3 bg-background-elevated/40"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex items-center gap-2">
           {c.vendors > 0 ? `${formatNumber(c.vendors)} ${isEs ? 'proveedores' : 'vendors'} · ${c.pattern}` : c.pattern}
+          {isExpanded ? (
+            <span className="text-[9px] text-text-muted/40">{isEs ? '▲ contraer' : '▲ collapse'}</span>
+          ) : (
+            <span className="text-[9px] text-text-muted/40">{isEs ? '▼ expandir' : '▼ expand'}</span>
+          )}
         </span>
         <div className="flex items-center gap-2">
           {/* Deep-link to top vendor's Red Thread if available */}
@@ -983,6 +1012,7 @@ function CommunityDossier({
               to={`/thread/${patternSpotlight.top_vendors[0].vendor_id}`}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-text-secondary transition-colors border border-border hover:border-border-hover"
               title={isEs ? `Abrir hilo rojo: ${patternSpotlight.top_vendors[0].vendor_name}` : `Open red thread: ${patternSpotlight.top_vendors[0].vendor_name}`}
+              onClick={(e) => e.stopPropagation()}
             >
               {isEs ? 'Hilo Rojo ↗' : 'Red Thread ↗'}
             </Link>
@@ -996,6 +1026,7 @@ function CommunityDossier({
                 color: fill,
                 border: `1px solid ${fill}40`,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               {isEs ? 'Cola ARIA' : 'ARIA Queue'}
               <ChevronRight className="h-3 w-3" />
@@ -1331,9 +1362,21 @@ export default function RedesKnownDossier() {
 
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [patternFilter, setPatternFilter] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<'vendors' | 'risk' | 'confirmed'>('vendors')
   const dossierRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const effectiveActive = hoverId ?? activeId
+
+  const filteredCommunities = useMemo(() => {
+    let list = patternFilter ? communities.filter((c) => c.pattern === patternFilter) : communities
+    return [...list].sort((a, b) =>
+      sortBy === 'risk' ? b.avgRisk - a.avgRisk
+        : sortBy === 'confirmed' ? b.confirmed - a.confirmed
+        : b.vendors - a.vendors,
+    )
+  }, [communities, patternFilter, sortBy])
 
   // When user clicks a community in the cluster, scroll its dossier card into view.
   useEffect(() => {
@@ -1589,15 +1632,78 @@ export default function RedesKnownDossier() {
         </p>
       </div>
 
+      {/* ACT II — Filter + sort controls */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Pattern filter pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50 mr-1">
+            {isEs ? 'Filtrar:' : 'Filter:'}
+          </span>
+          <button
+            onClick={() => setPatternFilter(null)}
+            className={cn(
+              'px-2.5 py-1 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border transition-colors',
+              patternFilter === null
+                ? 'bg-text-primary/10 border-text-primary/30 text-text-primary'
+                : 'border-border text-text-muted/60 hover:border-border-hover hover:text-text-secondary',
+            )}
+          >
+            {isEs ? 'Todos' : 'All'}
+          </button>
+          {(['P1','P2','P3','P4','P5','P6','P7'] as PatternCode[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPatternFilter(patternFilter === p ? null : p)}
+              className={cn(
+                'px-2.5 py-1 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider border transition-colors',
+                patternFilter === p
+                  ? 'border-transparent text-white'
+                  : 'border-border text-text-muted/60 hover:border-border-hover',
+              )}
+              style={patternFilter === p ? { background: PATTERN_HEX[p], borderColor: PATTERN_HEX[p] } : undefined}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        {/* Sort selector */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/50">
+            {isEs ? 'Ordenar:' : 'Sort:'}
+          </span>
+          {(['vendors', 'risk', 'confirmed'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSortBy(s)}
+              className={cn(
+                'px-2.5 py-1 rounded text-[9px] font-mono uppercase tracking-wider border transition-colors',
+                sortBy === s
+                  ? 'bg-text-primary/8 border-text-primary/20 text-text-primary'
+                  : 'border-border text-text-muted/50 hover:border-border-hover hover:text-text-secondary',
+              )}
+            >
+              {isEs
+                ? s === 'vendors' ? 'Proveedores' : s === 'risk' ? 'Riesgo' : 'Casos'
+                : s === 'vendors' ? 'Vendors' : s === 'risk' ? 'Risk' : 'Cases'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ACT II — Dossier grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {communities.map((c) => (
+        {filteredCommunities.map((c) => (
           <CommunityDossier
             key={c.id}
             c={c}
             communities={communities}
             isActive={effectiveActive === c.id}
+            isExpanded={expandedId === c.id}
             onHover={(id) => setHoverId(id)}
+            onToggleExpand={(id) => {
+              setActiveId(id === activeId ? null : id)
+              setExpandedId(id === expandedId ? null : id)
+            }}
             innerRef={(el) => {
               dossierRefs.current[c.id] = el
             }}
@@ -1605,6 +1711,11 @@ export default function RedesKnownDossier() {
             patternSpotlight={spotlightByCode[c.pattern]}
           />
         ))}
+        {filteredCommunities.length === 0 && (
+          <div className="col-span-2 text-center py-10 text-[12px] text-text-muted/50 font-mono">
+            {isEs ? 'Sin comunidades para este filtro' : 'No communities match this filter'}
+          </div>
+        )}
       </div>
 
       {/* ACT III — Flujo de Valor */}
