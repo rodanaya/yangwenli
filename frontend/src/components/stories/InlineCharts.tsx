@@ -48,6 +48,7 @@ function useEyebrow(): (en: string) => string {
       .replace(/^MULTI-SERIES · (\d+) VENDORS/, 'MULTI-SERIES · $1 PROVEEDORES')
       .replace(/^NETWORK · (\d+) NODES · (\d+) TIES/, 'RED · $1 NODOS · $2 LAZOS')
       .replace(/^SHARE · (\d+) ROWS/, 'PROPORCIÓN · $1 FILAS')
+      .replace(/^CLEVELAND · PAIR/, 'CLEVELAND · PARES')
       .replace(/^CHART · COMPRANET/, 'GRÁFICO · COMPRANET')
   }
 }
@@ -1965,9 +1966,9 @@ export function ClevelandPairChart({
       }
     : undefined
 
-  // Column header labels
-  const actualLabel = yLabelText ? yLabelText : 'ACTUAL'
-  const referenceLabel = 'REFERENCE'
+  // Column header labels (bilingual)
+  const actualLabel = yLabelText ? yLabelText : (lang === 'es' ? 'REAL' : 'ACTUAL')
+  const referenceLabel = lang === 'es' ? 'REFERENCIA' : 'REFERENCE'
 
   return (
     <ChartCard
