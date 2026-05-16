@@ -114,6 +114,18 @@ export const SECTORS = [
   { id: 12, code: 'otros', name: 'Otros', nameEN: 'Other', color: '#64748b' },
 ] as const
 
+// Per-pattern accent colors — P1–P7 investigation typologies.
+// Must match the PATTERN_COLORS in Patterns.tsx. Source of truth lives here.
+export const PATTERN_COLORS: Record<string, string> = {
+  P1: '#f59e0b',   // amber — concentrated monopoly
+  P2: '#ef4444',   // red — ghost companies
+  P3: '#fb923c',   // orange — intermediaries
+  P4: '#f43f5e',   // rose — kickbacks / bid rigging
+  P5: '#8b5cf6',   // violet — bid rotation / overpricing
+  P6: '#dc2626',   // deep red — institutional capture
+  P7: '#a06820',   // amber-dark — budget dump
+} as const
+
 // Risk colors — Phase 1 canonical palette (no green for "low")
 // Rationale: green overclaims safety on a corruption platform — use neutral zinc
 // for the noise floor. Critical=red-500, high=amber-500, medium=amber-800, low=zinc-500.
@@ -145,7 +157,7 @@ export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1426
 export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1377
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-16-spatial-label-fix'
+export const BUILD_ID = '2026-05-16-aria-pattern-colors'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)

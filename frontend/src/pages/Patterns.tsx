@@ -15,7 +15,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { networkApi } from '@/api/client'
 import type { PatternSpotlight } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -31,16 +31,6 @@ interface PatternMeta {
   hookEs: string
 }
 
-// Per-pattern accent colors — each typology has a distinct identity
-export const PATTERN_COLORS: Record<string, string> = {
-  P1: '#f59e0b',   // amber — concentrated market power
-  P2: '#ef4444',   // red — ghost companies (most acute)
-  P3: '#fb923c',   // orange — intermediaries
-  P4: '#f43f5e',   // rose — kickbacks
-  P5: '#8b5cf6',   // violet — bid rotation
-  P6: '#dc2626',   // deep red — institutional capture (systemic)
-  P7: '#a06820',   // amber-dark — budget dump / fiscal
-}
 
 const PATTERN_META: PatternMeta[] = [
   {
