@@ -27,7 +27,6 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorName, SECTORS, RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
-import { DotStrip } from '@/components/charts/editorial'
 import {
   Search,
   FileText,
@@ -944,52 +943,40 @@ function TierEditorialStrip({
   )
 }
 
+// 2026-05-16 (Audit F060/F169/F170): pattern names aligned to backend canon.
+//   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
+//   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
+//   P7 Conflict of Interest
+const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
+  P1: { es: 'Monopolio Concentrado',     en: 'Concentrated Monopoly',  color: PATTERN_COLORS.P1 ?? RISK_COLORS.critical },
+  P2: { es: 'Empresa Fantasma',          en: 'Ghost Company',           color: PATTERN_COLORS.P2 ?? RISK_COLORS.high },
+  P3: { es: 'Intermediario',             en: 'Intermediary',            color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
+  P4: { es: 'Manipulación de Licitación',en: 'Bid Rigging',             color: PATTERN_COLORS.P4 ?? RISK_COLORS.medium },
+  P5: { es: 'Sobreprecio',               en: 'Overpricing',             color: PATTERN_COLORS.P5 ?? RISK_COLORS.medium },
+  P6: { es: 'Captura Institucional',     en: 'Institutional Capture',   color: PATTERN_COLORS.P6 ?? RISK_COLORS.critical },
+  P7: { es: 'Conflicto de Interés',      en: 'Conflict of Interest',    color: PATTERN_COLORS.P7 ?? RISK_COLORS.high },
+}
+
 /**
- * PatternDotStrip — horizontal bar ranking of P1–P7 patterns by vendor count.
- * Replaces any donut/pie pattern composition chart.
+ * PatternEditorialBars — compact clickable bar chart for P1–P7 pattern breakdown.
+ * Each row is a tappable shortcut that sets the pattern filter.
+ * Replaces the DotStrip approach with a more editorial inline bar design.
  */
-function PatternDotStrip({
+function PatternEditorialBars({
   patternCounts,
   isEs,
   total,
+  onPatternClick,
 }: {
   patternCounts: Record<string, number>
   isEs: boolean
   total?: number
+  onPatternClick?: (key: string) => void
 }) {
   const entries = Object.entries(patternCounts).sort(([, a], [, b]) => b - a)
   if (entries.length === 0) return null
 
   const maxCount = entries[0][1]
-
-  // 2026-05-12 (Audit F060/F169/F170): pattern names had three different
-  // vocabularies across /aria, /aria filter row, and /patterns. Backend
-  // canon (backend/scripts/aria_pipeline.py) is the source of truth:
-  //   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
-  //   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
-  //   P7 Conflict of Interest
-  // Aligned to backend canon here so /aria, the aria filter row, and
-  // /patterns now agree.
-  const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
-    P1: { es: 'P1 · Monopolio', en: 'P1 · Monopoly', color: PATTERN_COLORS.P1 ?? RISK_COLORS.critical },
-    P2: { es: 'P2 · Fantasma', en: 'P2 · Ghost', color: PATTERN_COLORS.P2 ?? RISK_COLORS.high },
-    P3: { es: 'P3 · Intermediario', en: 'P3 · Intermediary', color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
-    P4: { es: 'P4 · Manipulación', en: 'P4 · Bid Rigging', color: PATTERN_COLORS.P4 ?? RISK_COLORS.medium },
-    P5: { es: 'P5 · Sobreprecio', en: 'P5 · Overpricing', color: PATTERN_COLORS.P5 ?? RISK_COLORS.medium },
-    P6: { es: 'P6 · Captura', en: 'P6 · Capture', color: PATTERN_COLORS.P6 ?? RISK_COLORS.critical },
-    P7: { es: 'P7 · Conflicto', en: 'P7 · Conflict of Interest', color: PATTERN_COLORS.P7 ?? RISK_COLORS.high },
-  }
-
-  const stripRows = entries.map(([key, count]) => {
-    const meta = PATTERN_LABELS[key]
-    return {
-      label: meta ? (isEs ? meta.es : meta.en) : key,
-      fraction: maxCount > 0 ? count / maxCount : 0,
-      colorRaw: meta?.color ?? RISK_COLORS.medium,
-      valueLabel: formatNumber(count),
-    }
-  })
-
   const totalVendors = Object.values(patternCounts).reduce((s, n) => s + n, 0)
 
   return (
@@ -998,16 +985,74 @@ function PatternDotStrip({
         <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
           {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
         </p>
-        {total != null && total > 0 && (
-          <p className="font-mono text-[10px] text-text-muted">
-            {totalVendors > total
-              ? (isEs ? `${formatNumber(totalVendors)} coincidencias / ${formatNumber(total)} proveedores` : `${formatNumber(totalVendors)} matches / ${formatNumber(total)} vendors`)
-              : (isEs ? `${formatNumber(total)} proveedores procesados` : `${formatNumber(total)} vendors processed`)}
-          </p>
-        )}
+        <p className="font-mono text-[10px] text-text-muted">
+          {formatNumber(totalVendors)}{' '}
+          {total != null && total > totalVendors
+            ? (isEs ? `coincidencias · ${formatNumber(total)} procesados` : `matches · ${formatNumber(total)} processed`)
+            : (isEs ? 'coincidencias' : 'matches')}
+        </p>
       </div>
-      <div className="rounded-sm border border-border/60 bg-background-card p-3">
-        <DotStrip rows={stripRows} N={22} labelWidth={100} />
+      <div className="rounded-sm border border-border/60 bg-background-card overflow-hidden">
+        {entries.map(([key, count], i) => {
+          const meta = PATTERN_LABELS[key]
+          if (!meta) return null
+          const barFrac = maxCount > 0 ? count / maxCount : 0
+          const pct = totalVendors > 0 ? ((count / totalVendors) * 100).toFixed(1) : '0.0'
+          const name = isEs ? meta.es : meta.en
+          const isClickable = !!onPatternClick
+          return (
+            <div
+              key={key}
+              role={isClickable ? 'button' : undefined}
+              tabIndex={isClickable ? 0 : undefined}
+              onClick={() => onPatternClick?.(key)}
+              onKeyDown={(e) => e.key === 'Enter' && onPatternClick?.(key)}
+              className={cn(
+                'flex items-center gap-2 sm:gap-3 px-3 py-2.5',
+                i > 0 && 'border-t border-border/40',
+                isClickable && 'cursor-pointer hover:bg-background-elevated/70 transition-colors',
+              )}
+            >
+              {/* Pattern code badge */}
+              <span
+                className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none tabular-nums"
+                style={{
+                  background: `${meta.color}18`,
+                  color: meta.color,
+                  border: `1px solid ${meta.color}50`,
+                }}
+              >
+                {key}
+              </span>
+
+              {/* Pattern name */}
+              <span className="min-w-0 flex-1 text-[11px] text-text-secondary truncate">
+                {name}
+              </span>
+
+              {/* Proportion bar — hidden on narrow mobile, shown sm+ */}
+              <div className="hidden sm:flex items-center gap-1.5 w-28 shrink-0">
+                <div className="flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${barFrac * 100}%`, background: meta.color, opacity: 0.85 }}
+                  />
+                </div>
+                <span className="font-mono text-[9px] text-text-muted w-8 text-right tabular-nums shrink-0">
+                  {pct}%
+                </span>
+              </div>
+
+              {/* Count */}
+              <span
+                className="font-mono text-[11px] font-bold tabular-nums shrink-0"
+                style={{ color: meta.color }}
+              >
+                {formatNumber(count)}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1337,19 +1382,37 @@ export default function AriaPage() {
             {!statsLoading && (
               <div className="flex items-baseline gap-5">
                 <div className="text-right">
-                  <div className="text-xl sm:text-2xl font-bold text-risk-critical tabular-nums leading-none">
+                  <div
+                    className="tabular-nums leading-none"
+                    style={{
+                      fontFamily: 'var(--font-family-serif)',
+                      fontSize: 'clamp(22px, 3vw, 32px)',
+                      fontWeight: 700,
+                      fontStyle: 'italic',
+                      color: 'var(--color-risk-critical)',
+                    }}
+                  >
                     {formatNumber(tierCounts[1])}
                   </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
                     {isEs ? 'T1 prioridad' : 'T1 priority'}
                   </div>
                 </div>
                 {elevatedValue > 0 && (
                   <div className="text-right">
-                    <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
+                    <div
+                      className="tabular-nums leading-none"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: 'clamp(22px, 3vw, 32px)',
+                        fontWeight: 700,
+                        fontStyle: 'italic',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    >
                       {formatCompactMXN(elevatedValue)}
                     </div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
+                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
                       {isEs ? 'en riesgo' : 'at risk'}
                     </div>
                   </div>
@@ -1364,7 +1427,7 @@ export default function AriaPage() {
             Left: 4-ring tier strip. Right: 4 real investigative metrics
             (at-risk spend, EFOS/SFP external flags, new vendors, pipeline).
            ════════════════════════════════════════════════════════════════ */}
-        <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_380px]">
+        <div className="mb-5 grid gap-4 md:gap-5 md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_380px]">
           {/* Left: tier strip */}
           <TierEditorialStrip counts={tierCounts} isEs={isEs} statsLoading={statsLoading} />
 
@@ -1380,7 +1443,7 @@ export default function AriaPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 {/* Elevated value MXN */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
                     {isEs ? 'Gasto en riesgo' : 'At-risk spend'}
                   </div>
@@ -1388,7 +1451,7 @@ export default function AriaPage() {
                     className="tabular-nums leading-tight"
                     style={{
                       fontFamily: 'var(--font-family-serif)',
-                      fontSize: '1.35rem',
+                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
                       fontWeight: 700,
                       fontStyle: 'italic',
                       color: RISK_COLORS.critical,
@@ -1401,7 +1464,7 @@ export default function AriaPage() {
                   </div>
                 </div>
                 {/* EFOS + SFP external flags */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
                     {isEs ? 'Registros externos' : 'External flags'}
                   </div>
@@ -1409,7 +1472,7 @@ export default function AriaPage() {
                     className="tabular-nums leading-tight"
                     style={{
                       fontFamily: 'var(--font-family-serif)',
-                      fontSize: '1.35rem',
+                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
                       fontWeight: 700,
                       fontStyle: 'italic',
                       color: RISK_COLORS.high,
@@ -1424,7 +1487,7 @@ export default function AriaPage() {
                   </div>
                 </div>
                 {/* New vendor signals */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
                     {isEs ? 'Señal proveedor nuevo' : 'New vendor signal'}
                   </div>
@@ -1432,7 +1495,7 @@ export default function AriaPage() {
                     className="tabular-nums leading-tight"
                     style={{
                       fontFamily: 'var(--font-family-serif)',
-                      fontSize: '1.35rem',
+                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
                       fontWeight: 700,
                       fontStyle: 'italic',
                       color: RISK_COLORS.high,
@@ -1445,7 +1508,7 @@ export default function AriaPage() {
                   </div>
                 </div>
                 {/* Review pipeline */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-4 py-3">
+                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
                     {isEs ? 'En revisión activa' : 'Under review'}
                   </div>
@@ -1453,7 +1516,7 @@ export default function AriaPage() {
                     className="tabular-nums leading-tight"
                     style={{
                       fontFamily: 'var(--font-family-serif)',
-                      fontSize: '1.35rem',
+                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
                       fontWeight: 700,
                       fontStyle: 'italic',
                       color: 'var(--color-text-primary)',
@@ -1472,9 +1535,18 @@ export default function AriaPage() {
           </div>
         </div>
 
-        {/* aria-P2: Pattern DotStrip (replaces donut/pie pattern composition) */}
+        {/* aria-P2: Pattern editorial bars (replaces donut/pie pattern composition) */}
         {Object.keys(patternCounts).length > 0 && (
-          <PatternDotStrip patternCounts={patternCounts} isEs={isEs} total={stats?.queue_total} />
+          <PatternEditorialBars
+            patternCounts={patternCounts}
+            isEs={isEs}
+            total={stats?.queue_total}
+            onPatternClick={(key) => {
+              setPatternFilter(key)
+              setTierFilter(null)
+              setPage(1)
+            }}
+          />
         )}
 
         {/* ════════════════════════════════════════════════════════════════
