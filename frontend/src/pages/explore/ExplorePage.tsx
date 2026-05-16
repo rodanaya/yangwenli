@@ -245,11 +245,16 @@ export function ExplorePage() {
         />
       </div>
 
-      {/* Entity type toggle + search + active chips */}
+      {/* Entity type toggle + search + active chips
+          Two-row layout fixes "everything pushed right" symptom:
+          Row 1: [toggle] [suggestion chips wrap inline]
+          Row 2: [search input full width] [active chips wrap below if any]
+          On mobile (sm:), toggle stacks above chips. */}
       <div className="space-y-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Entity type toggle */}
-          <div className="flex rounded-lg border border-border/30 overflow-hidden">
+        {/* Row 1: Entity toggle + suggestion chips (flush left) */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Entity type toggle — fixed width, never grows */}
+          <div className="flex rounded-lg border border-border/30 overflow-hidden self-start flex-shrink-0">
             <button
               onClick={() => { filters.setEntityType('vendor'); setPage(1) }}
               className={cn(
@@ -278,33 +283,37 @@ export function ExplorePage() {
             </button>
           </div>
 
-          {/* Suggestion chips */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Suggestion chips — wrap naturally beneath toggle on narrow widths,
+              alongside on wide. min-w-0 lets them shrink/wrap instead of
+              pushing siblings off-screen. */}
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             {SUGGESTION_PARAMS[filters.entityType as 'vendor' | 'institution']?.map(s => (
               <button
                 key={s.key}
                 onClick={() => applySuggestion(s.params)}
-                className="px-2 py-1 rounded-full border border-border/30 bg-background-elevated/20 text-xs text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
+                className="px-2 py-1 rounded-full border border-border/30 bg-background-elevated/20 text-xs text-text-muted hover:border-accent/40 hover:text-accent transition-colors whitespace-nowrap"
               >
                 {t(`page.suggestions.${s.key}`)}
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Text search */}
+        {/* Row 2: Search input (full width) + active chips wrap below if any */}
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             type="text"
             value={filters.searchText}
             onChange={handleSearchChange}
             placeholder={t('page.searchPlaceholder', { entityType: filters.entityType })}
-            className="flex-1 min-w-[180px] h-8 px-3 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 transition-all"
+            className="flex-1 min-w-[200px] h-9 px-3 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 transition-all"
           />
 
           {/* Active filter chips */}
           {activeChips.map(chip => (
             <span
               key={chip.label}
-              className="flex items-center gap-1 px-2 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent"
+              className="flex items-center gap-1 px-2 py-1 rounded-full border border-accent/30 bg-accent/10 text-xs text-accent whitespace-nowrap"
             >
               {chip.label}
               <button

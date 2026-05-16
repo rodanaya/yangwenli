@@ -860,6 +860,8 @@ export default function InstitutionLeague() {
 
   // Row expansion for pillar radar
   const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
+  // Act III "Methodology" collapsible — closed by default to keep the page lean
+  const [methodologyOpen, setMethodologyOpen] = useState(false)
   const items = listData?.data ?? []
   const total = listData?.total ?? 0
   const totalPages = listData?.total_pages ?? 1
@@ -1094,89 +1096,31 @@ export default function InstitutionLeague() {
 
       <div className="space-y-10"><Act number="I" label={t('acts.one')}>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
 
-        {/* Stats strip + tier distribution */}
-        {statsData && (
-          <div className="space-y-4">
-            <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-              role="region"
-              aria-label={t('statsAriaLabel')}
-            >
-              <StatCard label={t('stats.totalScored')} value={formatNumber(statsData.total_scored)} />
-              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub={t('stats.outOfHundred')} />
-              <StatCard
-                label={t('stats.topPerformer')}
-                value={statsData.top_institution_score?.toFixed(1) ?? '--'}
-                sub={statsData.top_institution_name ?? undefined}
-                onClick={statsData.top_institution_id ? () => navigate(`/institutions/${statsData.top_institution_id}`) : undefined}
-              />
-              <StatCard
-                label={t('stats.worstPerformer')}
-                value={statsData.worst_institution_score?.toFixed(1) ?? '--'}
-                sub={statsData.worst_institution_name ?? undefined}
-                accent="red"
-                onClick={statsData.worst_institution_id ? () => navigate(`/institutions/${statsData.worst_institution_id}`) : undefined}
-              />
-            </div>
-            {/* Tier distribution bar */}
-            {statsData.grade_distribution && (
-              <div className="bg-background border border-border rounded-sm px-5 py-4">
-                <TierDistributionBar distribution={statsData.grade_distribution} />
-              </div>
-            )}
-          </div>
-        )}
+        {/* ─── ACT I — THE VERDICT ──────────────────────────────────────────
+            Red Flags lead (dominant grid). Bright Spots is a quieter
+            counterweight that follows. Editorial logic: this is an
+            anti-corruption platform, the worst offenders are the lead.
+            Stats triptych moved to the page header (already there). The
+            distribution-bar / histogram are demoted to Act III. */}
 
-        {/* Champions — Top 5 (Honor Roll) */}
-        {!hasFilters && championItems.length >= 3 && (
-          <section aria-labelledby="champions-heading" className="space-y-3">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div>
-                <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted/80 mb-1 flex items-center gap-2">
-                  <Trophy className="h-3 w-3" aria-hidden="true" />
-                  {t('champions.kicker')}
-                </p>
-                <h2
-                  id="champions-heading"
-                  className="text-lg font-serif font-bold text-text-primary leading-tight"
-                >
-                  {t('champions.headline')}
-                </h2>
-                <p className="text-text-muted text-xs mt-1 italic max-w-2xl">
-                  {t('champions.sub')}
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {championItems.slice(0, 5).map((item, idx) => (
-                <ChampionCard
-                  key={item.institution_id}
-                  rank={idx + 1}
-                  item={item}
-                  onNavigate={(id) => navigate(`/institutions/${id}`)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Red Flags — Bottom 5 */}
+        {/* Red Flags — DOMINANT verdict cards */}
         {!hasFilters && redFlagItems.length >= 3 && (
-          <section aria-labelledby="redflags-heading" className="space-y-3">
-            <div>
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical/90 mb-1 flex items-center gap-2">
+          <section aria-labelledby="redflags-heading" className="space-y-4">
+            <div className="border-l-2 border-[color:var(--color-risk-critical)] pl-4">
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}
               </p>
               <h2
                 id="redflags-heading"
-                className="text-lg font-serif font-bold text-text-primary leading-tight"
+                className="text-2xl sm:text-3xl font-serif font-bold text-text-primary leading-tight"
+                style={{ fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 500 }}
               >
                 {t('redFlags.headline')}
               </h2>
-              <p className="text-text-muted text-xs mt-1 italic max-w-2xl">
+              <p className="text-text-secondary text-sm mt-2 italic max-w-2xl">
                 {t('redFlags.sub')}
               </p>
             </div>
@@ -1193,25 +1137,49 @@ export default function InstitutionLeague() {
           </section>
         )}
 
-        {/* Score Distribution Histogram */}
-        {!hasFilters && statsData?.grade_distribution && (
-          <ScoreHistogram
-            distribution={statsData.grade_distribution}
-            total={statsData.total_scored}
-            median={statsData.median_score}
-          />
+        {/* Bright Spots — quieter counterweight, demoted below Red Flags */}
+        {!hasFilters && championItems.length >= 3 && (
+          <section aria-labelledby="champions-heading" className="space-y-3 pt-2">
+            <div className="border-l border-border pl-4">
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1 flex items-center gap-2">
+                <Trophy className="h-3 w-3" aria-hidden="true" />
+                {t('champions.kicker')}
+              </p>
+              <h2
+                id="champions-heading"
+                className="text-lg font-serif font-bold text-text-secondary leading-tight"
+              >
+                {t('champions.headline')}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {championItems.slice(0, 5).map((item, idx) => (
+                <ChampionCard
+                  key={item.institution_id}
+                  rank={idx + 1}
+                  item={item}
+                  onNavigate={(id) => navigate(`/institutions/${id}`)}
+                />
+              ))}
+            </div>
+          </section>
         )}
 
         </div>
       </Act>
 
       <Act number="II" label={t('acts.two')}>
-      <div className="space-y-6">
+      <div className="space-y-5">
 
-        {/* Filters row */}
-        <div className="flex flex-wrap gap-3 items-center">
-          {/* Search */}
-          <div className="relative flex-1 min-w-48">
+        {/* ─── ACT II — THE LEAGUE ──────────────────────────────────────────
+            Editorial filter pills replace generic dropdowns. Tier pills
+            communicate the 5-tier system visually; sector pills surface
+            all 12 sector colors at a glance. Search input full-width
+            below. Result count anchors the table headline. */}
+
+        {/* Search input — full-width above the pill rows */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
             <label htmlFor="league-search" className="sr-only">{t('filters.search')}</label>
             <input
               id="league-search"
@@ -1219,61 +1187,108 @@ export default function InstitutionLeague() {
               value={search}
               onChange={(e) => updateParams({ q: e.target.value || undefined, page: '1' })}
               placeholder={t('filters.searchPlaceholder')}
-              className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border font-mono"
+              className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/50 font-mono"
             />
           </div>
-
-          {/* Sector filter */}
-          <div>
-            <label htmlFor="sector-filter" className="sr-only">{t('filters.sectorLabel')}</label>
-            <select
-              id="sector-filter"
-              value={sectorFilter}
-              onChange={(e) => updateParams({ sector: e.target.value || undefined, page: '1' })}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-border"
-            >
-              <option value="">{t('filters.allSectors')}</option>
-              {sectorOptions.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Tier filter (5-tier — sends first backend grade of the tier to API) */}
-          <div>
-            <label htmlFor="tier-filter" className="sr-only">{t('filters.tier')}</label>
-            <select
-              id="tier-filter"
-              value={activeTierName}
-              onChange={(e) => {
-                const tierName = e.target.value as TierKey | ''
-                // Send the first backend grade of the selected tier to the API
-                const grades = tierName ? TIER_GRADE_MAP[tierName] : undefined
-                const gradeVal = grades ? grades[0] : undefined
-                updateParams({ grade: gradeVal || undefined, page: '1' })
-              }}
-              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-border"
-            >
-              <option value="">{t('filters.allTiers')}</option>
-              {TIER_NAMES.map((tierName) => {
-                const tier = getTierByKey(tierName)
-                return (
-                  <option key={tierName} value={tierName}>{tier.label}</option>
-                )
-              })}
-            </select>
-          </div>
-
-          {/* Result count — federal-scope toggle now lives in the page
-              header (above Act I) so it visibly governs the Honor Roll
-              + Red Flags + triptych stats, not just the table. */}
-          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide ml-auto">
+          <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide flex-shrink-0">
             {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>
 
+        {/* Tier filter pills — horizontal scroll on narrow widths */}
+        <div className="space-y-1.5">
+          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+            {t('filters.tier')}
+          </p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+            <button
+              type="button"
+              onClick={() => updateParams({ grade: undefined, page: '1' })}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+                !activeTierName
+                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
+              }`}
+            >
+              {t('filters.allTiers')}
+            </button>
+            {TIER_NAMES.map((tierName) => {
+              const tier = getTierByKey(tierName)
+              const isActive = activeTierName === tierName
+              return (
+                <button
+                  key={tierName}
+                  type="button"
+                  onClick={() => {
+                    const grades = TIER_GRADE_MAP[tierName]
+                    const gradeVal = grades ? grades[0] : undefined
+                    updateParams({ grade: gradeVal || undefined, page: '1' })
+                  }}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  style={{
+                    borderColor: isActive ? tier.color : 'var(--color-border)',
+                    backgroundColor: isActive ? `${tier.color}1f` : 'transparent',
+                    color: isActive ? tier.color : 'var(--color-text-muted)',
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: tier.color }}
+                  />
+                  {tier.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Sector filter pills — all 12 sectors with their canonical colors */}
+        <div className="space-y-1.5">
+          <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+            {t('filters.sectorLabel')}
+          </p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
+            <button
+              type="button"
+              onClick={() => updateParams({ sector: undefined, page: '1' })}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-colors whitespace-nowrap ${
+                !sectorFilter
+                  ? 'bg-accent/15 border-accent/40 text-accent'
+                  : 'border-border bg-background text-text-muted hover:text-text-secondary hover:border-border-hover'
+              }`}
+            >
+              {t('filters.allSectors')}
+            </button>
+            {sectorOptions.map((s) => {
+              const isActive = sectorFilter === s.value
+              const color = SECTOR_COLORS[s.value] ?? SECTOR_COLORS.otros
+              return (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => updateParams({ sector: isActive ? undefined : s.value, page: '1' })}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full border text-[11px] font-mono uppercase tracking-[0.08em] transition-all whitespace-nowrap flex items-center gap-1.5"
+                  style={{
+                    borderColor: isActive ? color : 'var(--color-border)',
+                    backgroundColor: isActive ? `${color}1f` : 'transparent',
+                    color: isActive ? color : 'var(--color-text-muted)',
+                  }}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  {s.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         {/* Table */}
-        <section aria-labelledby="league-table-heading" className="space-y-3">
+        <section aria-labelledby="league-table-heading" className="space-y-3 pt-2">
           <div>
             <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
               {t('tableKicker')}
@@ -1590,10 +1605,61 @@ export default function InstitutionLeague() {
       </div>
       </Act>
 
-        {/* Source footnote */}
-        <p className="text-[10px] text-text-primary font-mono text-center py-6 border-t border-border mt-8">
-          {t('methodologyFootnote')}
-        </p>
+      {/* ─── ACT III — METHODOLOGY ────────────────────────────────────────
+          Collapsible (closed by default) — holds the distribution and
+          histogram, which used to break Act I's editorial rhythm. */}
+      <section
+        aria-labelledby="methodology-heading"
+        className="border-t border-border pt-6 mt-2"
+      >
+        <button
+          type="button"
+          onClick={() => setMethodologyOpen((v) => !v)}
+          aria-expanded={methodologyOpen}
+          className="w-full flex items-center justify-between gap-3 text-left group"
+        >
+          <div>
+            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
+              ACT III
+            </p>
+            <h2
+              id="methodology-heading"
+              className="text-lg font-serif font-bold text-text-primary leading-tight group-hover:text-accent transition-colors"
+            >
+              {t('histogram.kicker')}
+            </h2>
+          </div>
+          <ChevronDown
+            className={`h-5 w-5 text-text-muted flex-shrink-0 transition-transform ${methodologyOpen ? 'rotate-180' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+
+        {methodologyOpen && (
+          <div className="space-y-6 mt-5">
+            {/* Tier distribution dot strip */}
+            {statsData?.grade_distribution && (
+              <div className="bg-background border border-border rounded-sm px-5 py-4">
+                <TierDistributionBar distribution={statsData.grade_distribution} />
+              </div>
+            )}
+
+            {/* Score Distribution Histogram */}
+            {statsData?.grade_distribution && (
+              <ScoreHistogram
+                distribution={statsData.grade_distribution}
+                total={statsData.total_scored}
+                median={statsData.median_score}
+              />
+            )}
+
+            {/* Source footnote */}
+            <p className="text-[10px] text-text-muted font-mono pt-4 border-t border-border">
+              {t('methodologyFootnote')}
+            </p>
+          </div>
+        )}
+      </section>
       </div>
       </div>
     </div>
@@ -1632,39 +1698,3 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
   )
 }
 
-// ---------------------------------------------------------------------------
-// Stat card
-// ---------------------------------------------------------------------------
-
-function StatCard({
-  label,
-  value,
-  sub,
-  accent,
-  onClick,
-}: {
-  label: string
-  value: string
-  sub?: string
-  accent?: 'red'
-  onClick?: () => void
-}) {
-  const Wrapper = onClick ? 'button' : 'div'
-  return (
-    <Wrapper
-      onClick={onClick}
-      className={`
-        bg-background border border-border rounded-sm px-4 py-3 text-left
-        ${onClick ? 'hover:border-border cursor-pointer transition-colors' : ''}
-      `}
-    >
-      <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted">{label}</p>
-      <p className={`text-2xl font-bold font-mono tabular-nums mt-1 ${accent === 'red' ? 'text-risk-critical' : 'text-text-primary'}`}>
-        {value}
-      </p>
-      {sub && (
-        <p className="text-text-muted text-xs mt-0.5 truncate leading-snug">{sub}</p>
-      )}
-    </Wrapper>
-  )
-}
