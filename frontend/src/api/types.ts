@@ -2315,6 +2315,9 @@ export interface AriaQueueItem {
   /** S.3 memo provenance: 'llm_narrative' | 'template' | 'stub' | 'duplicate' */
   memo_provenance?: string | null
   first_contract_year?: number | null
+  /** S.7: GT-anchored overlay flag — true when vendor is in ground_truth_vendors.
+   *  Distinguishes "we already know this is corrupt" from "model discovered this". */
+  gt_overlay?: boolean | null
 }
 
 export interface AriaStats {

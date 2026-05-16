@@ -1419,8 +1419,8 @@ export default function Executive() {
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — From 3.1M COMPRANET records to 299 priority vendors; five filtering layers applied before human inspection.'
-              : 'Lámina — De 3.1M registros COMPRANET a 299 proveedores prioritarios; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
+              ? 'Plate — From 3.1M COMPRANET records to 299 GT-anchored T1 vendors; five filtering layers applied before human inspection.'
+              : 'Lámina — De 3.1M registros COMPRANET a 299 proveedores T1 anclados en GT; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
           >
             {(() => {
               const lensTiers = buildLensTiers(
@@ -1502,12 +1502,12 @@ export default function Executive() {
             <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6]">
               {lang === 'en' ? (
                 <>
-                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 investigative memos · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
+                  Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 vendor memos (440 LLM-narrative) · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
-                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
+                  Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos de proveedores (440 LLM-narrativos) · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
                   <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
@@ -1734,8 +1734,8 @@ export default function Executive() {
             </h3>
             <p className="text-sm text-text-secondary mb-6 max-w-[56ch] leading-[1.6]">
               {lang === 'en'
-                ? 'Search by RFC, company name, or browse ARIA Tier 1 — 299 vendors flagged for immediate review by three independent signals.'
-                : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores señalados para revisión inmediata por tres señales independientes.'}
+                ? 'Search by RFC, company name, or browse ARIA Tier 1 — 299 GT-anchored vendors at the top of the investigation queue.'
+                : 'Busca por RFC, nombre de empresa, o explora ARIA Nivel 1 — 299 proveedores anclados en GT al tope de la cola de investigación.'}
             </p>
             <div className="flex flex-wrap gap-3">
               <button

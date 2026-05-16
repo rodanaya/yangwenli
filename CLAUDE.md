@@ -285,8 +285,8 @@ StoryHero, StoryCard. Mexican media convention: never use English-loaned
 | Old claim | Honest version |
 |---|---|
 | "299 Tier-1 priority leads" | "299 GT-anchored T1 vendors · model-discovery uplift in calibration (S.7)" |
-| "1,843 vendor LLM memos" | "~440 LLM-narrative · 699 templated search prompts (visually demoted) · 618 analyst stubs" |
-| "1,380 documented corruption cases" | "739 cases with vendor links · 641 orphan placeholders pending mining (S.5)" |
+| "1,830 vendor investigative memos" | "~440 LLM-narrative · 699 templated search prompts (visually demoted) · 618 analyst stubs (PLANTILLA/STUB badges in UI)" |
+| "1,427 documented corruption cases" | "1,287 cases with vendor links · ~140 orphan placeholders pending mining (S.5)" |
 | "$2.84T MXN estimated fraud" | "$2.84T summed from estimated_fraud_mxn (41 cases NULL on this field)" |
 | "91-category auto-classification" | "72 active categories covering 99.73%. Education/Gobernación/Trabajo each have 1 — taxonomy expansion in S.10–S.12" |
 

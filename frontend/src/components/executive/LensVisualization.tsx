@@ -75,8 +75,8 @@ export function buildLensTiers(t1Count: number, gtCount: number, hcCount: number
     {
       count: t1Count,
       display: formatNumber(t1Count),
-      label: { en: 'T1 priority vendors', es: 'proveedores prioritarios T1' },
-      sublabel: { en: 'dossier-ready · highest priority', es: 'listo para dossier · máxima prioridad' },
+      label: { en: 'T1 vendors · GT-anchored', es: 'proveedores T1 · anclados en GT' },
+      sublabel: { en: 'highest IPS tier · model-discovery uplift in calibration', es: 'mayor IPS · uplift de descubrimiento en calibración' },
       ringR: 16,
       color: '#dc2626',
       ringWidth: 0,

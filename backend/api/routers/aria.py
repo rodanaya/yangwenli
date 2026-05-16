@@ -180,7 +180,7 @@ def get_aria_queue(
                q.top_institution, q.top_institution_ratio, q.value_per_contract,
                q.web_evidence_score, q.web_evidence_verdict, q.web_evidence_updated_at,
                vs.last_contract_year, vs.first_contract_year,
-               q.memo_provenance
+               q.memo_provenance, COALESCE(q.gt_overlay, q.in_ground_truth, 0) as gt_overlay
         FROM aria_queue q
         LEFT JOIN vendor_stats vs ON vs.vendor_id = q.vendor_id
         {where_sql}
@@ -196,7 +196,7 @@ def get_aria_queue(
         _bool_fields(
             d, "is_efos_definitivo", "is_sfp_sanctioned", "in_ground_truth",
             "new_vendor_risk", "fp_patent_exception", "fp_data_error",
-            "fp_structural_monopoly", "is_disappeared",
+            "fp_structural_monopoly", "is_disappeared", "gt_overlay",
         )
         d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))
         # Compute value_per_contract on the fly when not stored

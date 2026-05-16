@@ -689,9 +689,21 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               {item.in_ground_truth && (
                 <span
                   className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30"
-                  title={isEs ? 'En casos de referencia documentados' : 'In documented ground-truth cases'}
+                  title={isEs
+                    ? 'Anclado en corpus GT — ya documentado como corrupción. IPS elevado refleja el anclaje, no solo señal del modelo.'
+                    : 'GT-anchored — already documented corruption. High IPS reflects GT boost, not model-only signal.'}
                 >
                   GT
+                </span>
+              )}
+              {!item.in_ground_truth && item.ips_tier === 1 && (
+                <span
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                  title={isEs
+                    ? 'Descubrimiento del modelo — T1 sin anclaje GT. Señal pura del modelo de riesgo.'
+                    : 'Model discovery — T1 without GT anchor. Pure risk model signal.'}
+                >
+                  {isEs ? 'DESCUBRIMIENTO' : 'DISCOVERY'}
                 </span>
               )}
               {item.is_efos_definitivo && (
