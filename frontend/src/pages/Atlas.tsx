@@ -1898,6 +1898,46 @@ export default function Atlas() {
           amplified redesign (animated dot morphing between lens layouts)
           is queued for omega-C-P5. */}
 
+      {/* ── Mobile-only lens selector (left rail is hidden below lg) ─── */}
+      <div className="lg:hidden flex items-center gap-2 mb-3 flex-wrap">
+        <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
+          {lang === 'en' ? 'LENS' : 'LENTE'}
+        </span>
+        <div
+          className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden"
+          role="group"
+          aria-label={lang === 'en' ? 'Constellation lens' : 'Lente de constelación'}
+          style={{ border: '1px solid var(--color-border)' }}
+        >
+          {(
+            [
+              { id: 'patterns'   as ConstellationMode, en: 'Patterns',   es: 'Patrones'  },
+              { id: 'sectors'    as ConstellationMode, en: 'Sectors',    es: 'Sectores'  },
+              { id: 'categories' as ConstellationMode, en: 'Categories', es: 'Categorías'},
+              { id: 'sexenios'   as ConstellationMode, en: 'Terms',      es: 'Sexenios'  },
+            ]
+          ).map((lens, i, arr) => {
+            const isActive = mode === lens.id
+            return (
+              <button
+                key={lens.id}
+                onClick={() => setMode(lens.id)}
+                className="px-2.5 py-1 transition-colors"
+                style={{
+                  background: isActive ? '#a06820' : 'var(--color-background-card)',
+                  color: isActive ? 'white' : 'var(--color-text-muted)',
+                  borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
+                  fontWeight: isActive ? 700 : 400,
+                }}
+                aria-pressed={isActive}
+              >
+                {lang === 'en' ? lens.en : lens.es}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* ── Risk-floor filter row ─────────────────────────────────────── */}
       {/* Apr 2026: relabeled "X-RAY" → "RISK FLOOR / RIESGO MÍNIMO" — the
           original label was niche jargon; the new label reads as plain
