@@ -308,63 +308,48 @@ function ChampionCard({
   const { t } = useTranslation('institutionleague')
   const getTier = useTierInfo()
   const tier = getTier(item.grade)
-  const isLeader = rank === 1
+  const sectorColor = getSectorColorFromName(item.sector_name)
 
   return (
     <button
       onClick={() => onNavigate(item.institution_id)}
-      className={`relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
-        border ${isLeader
-          ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-background-elevated hover:border-yellow-400/70'
-          : 'border-border-hover bg-gradient-to-b from-background-elevated to-background-elevated hover:border-border-hover'
-        }`}
+      className="relative w-full text-left group transition-colors flex items-center gap-4 px-3 py-2.5 border-b border-border/40 last:border-b-0 hover:bg-background-elevated/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/40"
       aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
     >
-      {/* Top bar: rank + trophy for #1 */}
-      <div className="flex items-center justify-between">
-        <span className={`text-[10px] font-mono font-black tracking-[0.15em] uppercase ${isLeader ? 'text-yellow-400' : 'text-text-muted'}`}>
-          #{rank}
-        </span>
-        {isLeader ? (
-          <Trophy className="h-4 w-4 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" aria-hidden="true" />
-        ) : (
-          <TrendIcon direction={item.trend_direction} />
-        )}
-      </div>
+      {/* Rank — quiet mono caption */}
+      <span
+        className="text-[11px] font-mono font-bold tabular-nums w-6 flex-shrink-0 text-text-muted"
+      >
+        {rank}
+      </span>
 
-      {/* Editorial verdict (tier) — set in Playfair Italic so it reads as a
-          headline classification, not a UI chip. Score is demoted to a
-          mono caption below. */}
-      <div className="flex flex-col gap-0.5">
-        <span
-          className="leading-none"
-          style={{
-            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
-            fontWeight: 600,
-            fontSize: '26px',
-            color: tier.color,
-            letterSpacing: '-0.01em',
-          }}
-        >
-          {tier.label}
-        </span>
-        <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
-          {item.total_score.toFixed(1)}<span className="opacity-60"> / 100</span>
-        </span>
-      </div>
-
-      {/* Institution name — clipped */}
-      <p className="text-text-primary text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-text-primary transition-colors min-h-[2.5rem]">
+      {/* Institution name — single line, demoted weight */}
+      <span className="flex-1 min-w-0 truncate text-text-secondary text-[13px] group-hover:text-text-primary transition-colors">
         {item.institution_name}
-      </p>
+      </span>
 
-      {/* Sector chip */}
-      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
-        {item.sector_name && (
-          <span className="text-text-muted text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
-        )}
-      </div>
+      {/* Sector dot */}
+      {item.sector_name && (
+        <span
+          aria-hidden="true"
+          className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: sectorColor }}
+          title={item.sector_name}
+        />
+      )}
+
+      {/* Score — tabular mono */}
+      <span className="font-mono tabular-nums text-[11px] text-text-muted flex-shrink-0 w-12 text-right">
+        {item.total_score.toFixed(1)}
+      </span>
+
+      {/* Tier — caption mono in tier color (no big italic) */}
+      <span
+        className="text-[9px] font-mono font-bold uppercase tracking-[0.12em] flex-shrink-0 w-24 text-right"
+        style={{ color: tier.color }}
+      >
+        {tier.label}
+      </span>
     </button>
   )
 }
@@ -385,54 +370,105 @@ function RedFlagCard({
   const { t } = useTranslation('institutionleague')
   const getTier = useTierInfo()
   const tier = getTier(item.grade)
+  const sectorColor = getSectorColorFromName(item.sector_name)
 
   return (
     <button
       onClick={() => onNavigate(item.institution_id)}
-      className="relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
-        border border-red-900/40 bg-gradient-to-b from-red-950/30 to-background-elevated hover:border-red-700/60"
+      className="relative w-full text-left group transition-all
+        border border-border bg-background-elevated/40
+        hover:bg-[color:var(--color-risk-critical)]/8
+        hover:border-[color:var(--color-risk-critical)]/40
+        focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-risk-critical)]/50"
+      style={{
+        borderLeft: '4px solid var(--color-risk-critical)',
+        borderTopLeftRadius: 0,
+        borderBottomLeftRadius: 0,
+      }}
       aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
     >
-      {/* Top bar: rank + flag */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono font-black tracking-[0.15em] uppercase text-risk-critical">
-          #{rank}
-        </span>
-        <Flag className="h-4 w-4 text-risk-critical flex-shrink-0" aria-hidden="true" />
-      </div>
+      <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] items-center gap-4 sm:gap-6 px-4 sm:px-6 py-4">
 
-      {/* Editorial verdict (tier) — Playfair Italic so the verdict reads
-          as the headline. Score is demoted to caption. */}
-      <div className="flex flex-col gap-0.5">
-        <span
-          className="leading-none text-risk-critical"
-          style={{
-            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
-            fontWeight: 600,
-            fontSize: '26px',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          {tier.label}
-        </span>
-        <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
-          {item.total_score.toFixed(1)}<span className="opacity-60"> / 100</span>
-        </span>
-      </div>
+        {/* Rank — cinematic Playfair numeral, left-anchored */}
+        <div className="flex items-baseline gap-2 min-w-[58px]">
+          <span
+            className="leading-none tabular-nums"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontWeight: 700,
+              fontStyle: 'italic',
+              fontSize: '60px',
+              color: 'var(--color-risk-critical)',
+              letterSpacing: '-0.04em',
+            }}
+          >
+            {rank}
+          </span>
+        </div>
 
-      {/* Institution name */}
-      <p className="text-text-primary text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-text-primary transition-colors min-h-[2.5rem]">
-        {item.institution_name}
-      </p>
+        {/* Identity column — institution name in Garamond italic, sector chip below */}
+        <div className="min-w-0 flex flex-col gap-1.5">
+          <p
+            className="text-text-primary leading-snug line-clamp-2"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '18px',
+              letterSpacing: '-0.005em',
+            }}
+          >
+            {item.institution_name}
+          </p>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Tier verdict pill — inline */}
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.12em]"
+              style={{
+                backgroundColor: `color-mix(in srgb, ${tier.color} 12%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${tier.color} 35%, transparent)`,
+                color: tier.color,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className="h-1 w-1 rounded-full flex-shrink-0"
+                style={{ backgroundColor: tier.color }}
+              />
+              {tier.label}
+            </span>
+            <span className="text-text-muted text-[10px] font-mono tabular-nums tracking-wide">
+              {item.total_score.toFixed(1)}<span className="opacity-50"> / 100</span>
+            </span>
+            {item.sector_name && (
+              <span
+                className="text-[9px] font-mono uppercase tracking-[0.12em] truncate flex items-center gap-1.5"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-1 w-1 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: sectorColor }}
+                />
+                {item.sector_name}
+              </span>
+            )}
+            {item.top_risk_driver && (
+              <RiskDriverPill driver={item.top_risk_driver} />
+            )}
+          </div>
+        </div>
 
-      {/* Risk driver pill — the "why" behind the verdict */}
-      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
-        {item.top_risk_driver ? (
-          <RiskDriverPill driver={item.top_risk_driver} />
-        ) : item.sector_name && (
-          <span className="text-text-muted text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
-        )}
+        {/* Pillar sparks — inline right, only at >=sm */}
+        <div className="hidden sm:flex flex-shrink-0">
+          <PillarSparkBars item={item} />
+        </div>
+
+        {/* Trailing affordance — trend + chevron, sits at far right */}
+        <div className="flex items-center gap-2 flex-shrink-0 text-text-muted">
+          <TrendIcon direction={item.trend_direction} />
+          <ChevronRight className="h-4 w-4 opacity-60 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
+        </div>
       </div>
     </button>
   )
@@ -987,39 +1023,81 @@ export default function InstitutionLeague() {
                 <span style={{ color: 'var(--color-accent)' }}>{t('headline.accent')}</span>
               </h1>
             </div>
-            {!isLoading && (
-              <div className="flex items-baseline gap-5">
-                <div className="text-right">
-                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
-                    {formatNumber(totalInstitutions)}
-                  </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                    {t('stats.evaluated')}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xl sm:text-2xl font-bold text-risk-critical tabular-nums leading-none">
-                    {formatNumber(highRiskInstitutions)}
-                  </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                    {t('stats.critical')}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xl sm:text-2xl font-bold text-text-primary tabular-nums leading-none">
-                    {statsData?.median_score?.toFixed(1) ?? '—'}
-                  </div>
-                  <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                    {t('stats.median')}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           {totalInstitutions > 0 && (
             <p className="text-xs text-text-muted mt-2 max-w-2xl">
               {t('lede', { total: formatNumber(totalInstitutions) })}
             </p>
+          )}
+
+          {/* Triptych — three large editorial stats with Playfair Italic
+              numerals. Mirrors the ARIA queue / Dashboard rhythm: anchor
+              stat (total evaluated), accountability stat (high-risk, in
+              risk-critical color), reference stat (median). */}
+          {!isLoading && (
+            <div
+              className="mt-5 grid grid-cols-3 gap-6 sm:gap-10 border-t border-border/60 pt-5"
+              role="group"
+              aria-label={t('statsAriaLabel')}
+            >
+              <div className="flex flex-col">
+                <span
+                  className="leading-none tabular-nums"
+                  style={{
+                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(36px, 5vw, 48px)',
+                    color: 'var(--color-text-primary)',
+                    letterSpacing: '-0.015em',
+                  }}
+                >
+                  {formatNumber(totalInstitutions)}
+                </span>
+                <span className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                  {t('stats.evaluated')}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span
+                  className="leading-none tabular-nums"
+                  style={{
+                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(36px, 5vw, 48px)',
+                    color: 'var(--color-risk-critical)',
+                    letterSpacing: '-0.015em',
+                  }}
+                >
+                  {formatNumber(highRiskInstitutions)}
+                </span>
+                <span
+                  className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em]"
+                  style={{ color: 'var(--color-risk-critical)', opacity: 0.85 }}
+                >
+                  {t('stats.critical')}
+                </span>
+              </div>
+              <div className="flex flex-col">
+                <span
+                  className="leading-none tabular-nums"
+                  style={{
+                    fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(36px, 5vw, 48px)',
+                    color: 'var(--color-text-primary)',
+                    letterSpacing: '-0.015em',
+                  }}
+                >
+                  {statsData?.median_score?.toFixed(1) ?? '—'}
+                </span>
+                <span className="mt-2 text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                  {t('stats.median')}
+                </span>
+              </div>
+            </div>
           )}
 
           {/* Federal scope segmented control + disclaimer.
@@ -1074,23 +1152,42 @@ export default function InstitutionLeague() {
             </p>
           </div>
         </header>
-      {/* Editorial finding headline — bible §2 cream-mode callout: tint stays
-          subtle so the card doesn't read as alarm on a cream page. */}
+      {/* Editorial finding — clean left-bordered callout, no decorative icon.
+          The verdict is editorial, not ornamental. Border + kicker carry the
+          accountability tone; the sentence is the story. */}
       {editorialHeadline && (
-        <div className={`mb-6 pl-5 py-3 rounded-r-sm flex items-start gap-4 ${
-          failingCount > 0
-            ? 'border-l-4 border-[color:var(--color-risk-critical)] bg-[color:var(--color-risk-critical)]/8'
-            : 'border-l-4 border-[color:var(--color-accent)] bg-[color:var(--color-accent)]/8'
-        }`}>
-          <Crown className={`h-5 w-5 flex-shrink-0 mt-0.5 ${failingCount > 0 ? 'text-[color:var(--color-risk-critical)]' : 'text-[color:var(--color-accent)]'}`} aria-hidden="true" />
-          <div>
-            <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
-              failingCount > 0 ? 'text-[color:var(--color-risk-critical)]' : 'text-[color:var(--color-accent)]'
-            }`}>
-              {t('hallazgo')}
-            </p>
-            <p className="text-base text-text-primary leading-relaxed font-medium">{editorialHeadline}</p>
-          </div>
+        <div
+          className="mb-6 pl-5 py-1"
+          style={{
+            borderLeft: `3px solid ${
+              failingCount > 0
+                ? 'var(--color-risk-critical)'
+                : 'var(--color-accent)'
+            }`,
+          }}
+        >
+          <p
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1.5"
+            style={{
+              color: failingCount > 0
+                ? 'var(--color-risk-critical)'
+                : 'var(--color-accent)',
+            }}
+          >
+            {t('hallazgo')}
+          </p>
+          <p
+            className="text-text-primary leading-snug max-w-3xl"
+            style={{
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(17px, 1.6vw, 21px)',
+              letterSpacing: '-0.005em',
+            }}
+          >
+            {editorialHeadline}
+          </p>
         </div>
       )}
 
@@ -1124,7 +1221,7 @@ export default function InstitutionLeague() {
                 {t('redFlags.sub')}
               </p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="space-y-1">
               {redFlagItems.slice(0, 5).map((item, idx) => (
                 <RedFlagCard
                   key={item.institution_id}
@@ -1137,7 +1234,10 @@ export default function InstitutionLeague() {
           </section>
         )}
 
-        {/* Bright Spots — quieter counterweight, demoted below Red Flags */}
+        {/* Bright Spots — quieter counterweight, demoted below Red Flags.
+            Rendered as a flat list (one institution per row) rather than a
+            card grid: the Red Flags are the story, the champions are the
+            footnote. */}
         {!hasFilters && championItems.length >= 3 && (
           <section aria-labelledby="champions-heading" className="space-y-3 pt-2">
             <div className="border-l border-border pl-4">
@@ -1152,7 +1252,10 @@ export default function InstitutionLeague() {
                 {t('champions.headline')}
               </h2>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div
+              className="rounded-sm border border-border/60 bg-background-elevated/20 divide-y divide-border/40"
+              role="list"
+            >
               {championItems.slice(0, 5).map((item, idx) => (
                 <ChampionCard
                   key={item.institution_id}
