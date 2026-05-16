@@ -31,6 +31,17 @@ interface PatternMeta {
   hookEs: string
 }
 
+// Per-pattern accent colors — each typology has a distinct identity
+export const PATTERN_COLORS: Record<string, string> = {
+  P1: '#f59e0b',   // amber — concentrated market power
+  P2: '#ef4444',   // red — ghost companies (most acute)
+  P3: '#fb923c',   // orange — intermediaries
+  P4: '#f43f5e',   // rose — kickbacks
+  P5: '#8b5cf6',   // violet — bid rotation
+  P6: '#dc2626',   // deep red — institutional capture (systemic)
+  P7: '#a06820',   // amber-dark — budget dump / fiscal
+}
+
 const PATTERN_META: PatternMeta[] = [
   {
     code: 'P1',
@@ -98,11 +109,89 @@ const PATTERN_META: PatternMeta[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Cross-pattern ranked comparison strip (vendor count × T1 count)
+// ---------------------------------------------------------------------------
+function CrossPatternComparison({
+  patterns,
+  meta,
+  isEs,
+}: {
+  patterns: PatternSpotlight[]
+  meta: PatternMeta[]
+  isEs: boolean
+}) {
+  const sorted = [...patterns].sort((a, b) => (b.vendor_count ?? 0) - (a.vendor_count ?? 0))
+  const maxVendors = sorted[0]?.vendor_count ?? 1
+  const maxT1 = sorted.reduce((m, p) => Math.max(m, p.t1_count ?? 0), 0)
+
+  return (
+    <div className="space-y-1">
+      {sorted.map((p) => {
+        const m = meta.find((x) => x.code === p.code)
+        if (!m) return null
+        const color = PATTERN_COLORS[p.code] ?? '#64748b'
+        const vendorPct = (p.vendor_count / maxVendors) * 100
+        const t1Pct = maxT1 > 0 ? (p.t1_count / maxT1) * 100 : 0
+        const name = isEs ? m.nameEs : m.nameEn
+        return (
+          <div key={p.code} className="flex items-center gap-3">
+            <span
+              className="flex-shrink-0 w-6 text-[10px] font-bold font-mono text-right"
+              style={{ color }}
+            >
+              {p.code}
+            </span>
+            <span className="w-28 flex-shrink-0 text-[11px] text-text-secondary truncate hidden sm:block">
+              {name}
+            </span>
+            <div className="flex-1 min-w-0 relative h-4 flex items-center gap-1">
+              {/* Vendor bar */}
+              <div
+                className="h-2 rounded-full opacity-40 transition-all"
+                style={{ width: `${vendorPct}%`, backgroundColor: color, minWidth: 4 }}
+              />
+              {/* T1 bar overlaid */}
+              <div
+                className="h-3 rounded-full absolute left-0 transition-all"
+                style={{ width: `${t1Pct}%`, backgroundColor: color, minWidth: t1Pct > 0 ? 2 : 0, opacity: 0.85 }}
+              />
+            </div>
+            <span className="flex-shrink-0 text-[11px] font-mono tabular-nums text-text-muted w-20 text-right">
+              {p.vendor_count.toLocaleString()}
+              {p.t1_count > 0 && (
+                <span className="text-[9px] ml-1" style={{ color }}>
+                  +{p.t1_count}T1
+                </span>
+              )}
+            </span>
+          </div>
+        )
+      })}
+      <div className="flex items-center gap-3 pt-1">
+        <span className="w-6 flex-shrink-0" />
+        <span className="w-28 flex-shrink-0 hidden sm:block" />
+        <div className="flex-1 flex items-center gap-4 text-[9px] font-mono text-text-muted/60 uppercase tracking-wider">
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-4 h-1.5 rounded-full bg-current opacity-40" />
+            {isEs ? 'Proveedores' : 'Vendors'}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-4 h-2.5 rounded-full bg-current" style={{ opacity: 0.85 }} />
+            T1 · Critical
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Severity dot-bar — visual rank of t1_count / maxT1
 // ---------------------------------------------------------------------------
-function SeverityDotBar({ value, max }: { value: number; max: number }) {
+function SeverityDotBar({ value, max, color }: { value: number; max: number; color?: string }) {
   const N = 14
   const filled = max > 0 ? Math.max(1, Math.round((value / max) * N)) : 0
+  const activeColor = color ?? RISK_COLORS.critical
   return (
     <svg
       width={N * 7 - 3}
@@ -117,7 +206,7 @@ function SeverityDotBar({ value, max }: { value: number; max: number }) {
           cx={i * 7 + 3}
           cy={3}
           r={2.4}
-          fill={i < filled ? RISK_COLORS.critical : 'currentColor'}
+          fill={i < filled ? activeColor : 'currentColor'}
           opacity={i < filled ? 1 : 0.18}
         />
       ))}
@@ -161,12 +250,14 @@ function PatternCard({
     : t1 > 0
       ? 'T1 · Critical'
       : (isEs ? 'Proveedores' : 'Vendors')
-  const heroColor = heroIsSpend ? '#a06820' : RISK_COLORS.critical
+  const heroColor = heroIsSpend ? '#a06820' : patternColor
+
+  const patternColor = PATTERN_COLORS[meta.code] ?? RISK_COLORS.critical
 
   return (
     <div
       className="rounded-sm border border-border/60 bg-background-card overflow-hidden"
-      style={{ borderLeft: `3px solid ${RISK_COLORS.critical}` }}
+      style={{ borderLeft: `3px solid ${patternColor}` }}
     >
       <button
         type="button"
@@ -179,7 +270,7 @@ function PatternCard({
           <div className="flex items-center gap-2 min-w-0">
             <span
               className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2 py-0.5 text-[11px] font-bold font-mono tracking-wider"
-              style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: RISK_COLORS.critical }}
+              style={{ backgroundColor: `${patternColor}1a`, color: patternColor }}
             >
               {meta.code}
             </span>
@@ -195,7 +286,7 @@ function PatternCard({
               <span className="hidden sm:block text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted">
                 {isEs ? 'Severidad' : 'Severity'}
               </span>
-              <SeverityDotBar value={t1} max={maxT1} />
+              <SeverityDotBar value={t1} max={maxT1} color={patternColor} />
             </div>
           )}
         </div>
@@ -289,13 +380,24 @@ function PatternCard({
         {/* Description */}
         <p className="text-sm text-text-secondary leading-relaxed">{desc}</p>
 
-        {/* Investigative hook */}
-        <p
-          className="text-[12px] italic text-text-muted leading-relaxed mt-2 pt-2 border-t border-border/40"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
+        {/* Investigative hook — styled callout */}
+        <div
+          className="mt-3 rounded-sm px-3 py-2.5"
+          style={{ backgroundColor: `${patternColor}0d`, borderLeft: `2px solid ${patternColor}60` }}
         >
-          ↳ {hook}
-        </p>
+          <div
+            className="text-[9px] font-bold font-mono uppercase tracking-[0.14em] mb-1"
+            style={{ color: patternColor }}
+          >
+            {isEs ? '↳ Cómo investigar' : '↳ How to investigate'}
+          </div>
+          <p
+            className="text-[12px] italic text-text-secondary leading-relaxed"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {hook}
+          </p>
+        </div>
 
         {/* No data fallback */}
         {!spotlight && (
@@ -308,7 +410,10 @@ function PatternCard({
       {/* Top vendors + ARIA pathway — outside button to avoid nested interactive elements */}
       {spotlight && spotlight.top_vendors.length > 0 && (
         <div className="px-5 pb-4 border-t border-border/40">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] text-text-muted mt-3 mb-2">
+          <div
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.14em] mt-3 mb-2"
+            style={{ color: patternColor }}
+          >
             {isEs ? 'Principales sospechosos' : 'Top suspects'}
           </div>
           <div className="flex flex-wrap gap-1.5 mb-3">
@@ -469,6 +574,14 @@ export default function Patterns() {
               ? 'Conteos brutos sobre los 7 patrones. Un proveedor puede aparecer en varios.'
               : 'Raw counts across all 7 patterns. A vendor can appear in more than one.'}
           </p>
+
+          {/* Cross-pattern ranked comparison */}
+          <div className="mt-5 pt-4 border-t border-border/40">
+            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
+              {isEs ? 'Alcance por patrón' : 'Scope by pattern'}
+            </div>
+            <CrossPatternComparison patterns={patterns} meta={PATTERN_META} isEs={isEs} />
+          </div>
         </section>
       )}
 
