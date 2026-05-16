@@ -1537,7 +1537,7 @@ export default function CategoryProfile() {
 
                 {/* Procedure breakdown bar */}
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Desglose por procedimiento' : 'Procedure breakdown'}
                   </div>
                   <div className="h-5 rounded-sm overflow-hidden flex w-full">
@@ -1587,7 +1587,7 @@ export default function CategoryProfile() {
                   const lastYear = yearly_trend[yearly_trend.length - 1].year
                   return (
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
                       </div>
                       <div className="relative">
@@ -1703,7 +1703,7 @@ export default function CategoryProfile() {
 
                 {/* Monthly bar chart */}
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Gasto por mes (% del total)' : 'Spend by month (% of total)'}
                   </div>
                   <div className="flex items-end gap-1 h-16">
@@ -1750,7 +1750,7 @@ export default function CategoryProfile() {
                   }).join(' ')
                   return (
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
                       </div>
                       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}>

@@ -468,7 +468,7 @@ function TooltipPanel({ cat, svgX, svgY, svgWidth, lang, onNavigate }: TooltipPa
     >
       <div className="px-3 py-2.5 space-y-2">
         {/* Category name */}
-        <div className="text-[11px] font-semibold text-text-primary leading-tight">
+        <div className="text-[11px] font-medium text-text-primary leading-tight">
           {lang === 'es' ? cat.name_es : cat.name_en}
         </div>
 

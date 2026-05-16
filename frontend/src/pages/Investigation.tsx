@@ -657,6 +657,7 @@ export function Investigation() {
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" />
             <input
               type="text"
+              aria-label={isEs ? 'Buscar casos de investigación' : 'Search investigation cases'}
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

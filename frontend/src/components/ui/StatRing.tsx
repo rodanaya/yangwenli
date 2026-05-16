@@ -37,7 +37,7 @@ export function StatRing({ value, label, sublabel, color = 'var(--color-accent)'
         </div>
       </div>
       <div className="text-center">
-        <p className="text-[11px] font-semibold text-text-secondary">{label}</p>
+        <p className="text-[11px] font-medium text-text-secondary">{label}</p>
         {sublabel && <p className="text-[10px] text-text-muted">{sublabel}</p>}
       </div>
     </div>

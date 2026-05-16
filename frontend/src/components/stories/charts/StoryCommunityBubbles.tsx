@@ -150,7 +150,7 @@ export function StoryCommunityBubbles() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="var(--color-text-muted)" strokeWidth={2} />
+            <circle cx={CX} cy={CY} r={38} fill="var(--color-background-elevated)" stroke="var(--color-text-muted)" strokeWidth={2} />
             <text x={CX} y={CY - 4} textAnchor="middle" fill="var(--color-background-elevated)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono)">
               {t('communityBubbles.centerLabel')}
             </text>

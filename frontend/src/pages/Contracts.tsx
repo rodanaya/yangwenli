@@ -1098,7 +1098,7 @@ export function Contracts() {
                       <th
                         key={col.key}
                         className={cn(
-                          'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] select-none',
+                          'px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',

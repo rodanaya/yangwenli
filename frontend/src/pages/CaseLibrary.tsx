@@ -738,6 +738,7 @@ export default function CaseLibrary() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <input
                 type="text"
+                aria-label={t('filters.searchAriaLabel', 'Search corruption cases and vendors')}
                 value={search ?? ''}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('filters.search')}

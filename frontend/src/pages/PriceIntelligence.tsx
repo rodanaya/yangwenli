@@ -911,7 +911,7 @@ function SectorDistributionCurves({
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: sector.color }}
                 />
-                <span className="text-[11px] font-semibold text-text-secondary">{sector.name}</span>
+                <span className="text-[11px] font-medium text-text-secondary">{sector.name}</span>
               </div>
               <span className="text-[9px] font-mono text-text-muted tabular-nums">
                 {formatNumber(sector.count)} anomalías
@@ -1830,7 +1830,7 @@ export default function PriceIntelligence() {
           <div className="flex items-center justify-between mb-1">
             <label
               htmlFor="z-threshold-slider"
-              className="text-xs font-semibold uppercase tracking-widest text-text-muted"
+              className="text-xs font-medium uppercase tracking-widest text-text-muted"
             >
               Min Z-Score:{' '}
               <span className="text-risk-high font-bold">{zThreshold.toFixed(1)}&sigma;</span>

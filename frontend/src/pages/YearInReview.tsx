@@ -1378,7 +1378,7 @@ export default function YearInReview() {
 
             {/* Full sector distribution (ALL 12) */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorAll.sectionLabel')}
               </p>
               <p
@@ -1408,7 +1408,7 @@ export default function YearInReview() {
 
             {/* Sector growth — diverging chart */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorGrowthFull.sectionLabel')}
               </p>
               <p
@@ -1441,7 +1441,7 @@ export default function YearInReview() {
           {/* Risk Evolution */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('riskEvolution.sectionLabel')}
               </p>
               <p
@@ -1461,7 +1461,7 @@ export default function YearInReview() {
           {/* Procedure Type */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('procedureType.sectionLabel')}
               </p>
               <p
@@ -1482,7 +1482,7 @@ export default function YearInReview() {
 
           {/* Monthly spending */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('monthly.sectionLabel')}
             </p>
             <p
@@ -1511,7 +1511,7 @@ export default function YearInReview() {
           {/* Spotlight — top vendor */}
           {topVendor && !vendorsLoading && (
             <motion.div variants={fadeIn} initial="initial" animate="animate">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-3">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-3">
                 {t('spotlight.label')}
               </p>
               <div
@@ -1566,7 +1566,7 @@ export default function YearInReview() {
 
           {/* Top 20 Vendors */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('topVendorsFull.sectionLabel')}
             </p>
             <p
@@ -1597,7 +1597,7 @@ export default function YearInReview() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" aria-hidden="true" />
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 {t('notableRisks.sectionLabel')}
               </p>
             </div>

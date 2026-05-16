@@ -1935,7 +1935,7 @@ export default function StoryNarrative() {
 
       {/* ── ACT I: THE INVESTIGATION ── */}
       {/* Wider container so hero/feature/data-spotlight variants can breakout */}
-      <main className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-6">
+      <main id="main-content" className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-6">
         <Act number="I" label={t('story.actInvestigation', 'THE INVESTIGATION')} className="space-y-0">
           {story.chapters.map((chapter, idx) => {
             const variant = pickChapterVariant(chapter, idx, story.chapters.length)

@@ -1779,7 +1779,7 @@ function CaseBody({
       </motion.header>
 
       {/* BODY */}
-      <main style={{ maxWidth: 1140, margin: '0 auto', padding: '0 32px 80px' }}>
+      <main id="main-content" style={{ maxWidth: 1140, margin: '0 auto', padding: '0 32px 80px' }}>
         {/* VISUAL 1 — Contract timeline */}
         <Section
           index="01"
