@@ -86,6 +86,10 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   const color = SECTOR_COLORS[sector.sector_code] ?? '#64748b'
   const riskLevel = getRiskLevelFromScore(sector.avg_risk_score)
   const highPlusCritical = (sector.high_risk_count ?? 0) + (sector.critical_risk_count ?? 0)
+  // If avg score is "low" but ≥5% of contracts are high+critical, show at least medium
+  // so the badge doesn't mislead readers skimming sector cards.
+  const total = sector.total_contracts || 1
+  const effectiveLevel = (riskLevel === 'low' && highPlusCritical / total >= 0.05) ? 'medium' as const : riskLevel
   const daPct = sector.direct_award_pct ?? 0
   const exceedsOECD = daPct > 25
   const sbPct = sector.single_bid_pct ?? 0
@@ -124,7 +128,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
               OCDE {exceedsOECD ? '\u2717' : '\u2713'}
             </span>
-            <RiskLevelPill level={riskLevel} score={sector.avg_risk_score} />
+            <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
           </div>
         </div>
 

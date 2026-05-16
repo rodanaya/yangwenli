@@ -802,9 +802,9 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
         )}
       </div>
 
-      {/* Chart spans full editorial width below */}
+      {/* Chart spans full editorial width below — relative z-10 keeps it above the sticky aside */}
       {chapter.chartConfig && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 mt-8 relative z-10">
           {renderChartBlock(chapter, '', lang)}
         </div>
       )}

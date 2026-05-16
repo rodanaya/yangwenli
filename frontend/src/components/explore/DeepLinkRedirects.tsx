@@ -113,11 +113,16 @@ export function VendorDeepLinkRedirect() {
   if (sector && topInst?.institution_id) params.set('i', String(topInst.institution_id))
   if (sector && topInst?.institution_id) params.set('v', String(vendorId))
 
-  // If we couldn't resolve sector + institution at all, send to the
-  // printable dossier — Z0 with no context is a worse UX than the
-  // legacy page.
-  if (!sector || !topInst?.institution_id) {
+  // No sector at all (Structure A 2002–2010 unclassifiable) — print is better than Z0.
+  if (!sector) {
     return <Navigate to={`/print/vendors/${vendorId}`} replace />
+  }
+
+  // Has sector but no institution (partially classified vendor) — send to explore
+  // at Z1 with just s+v so the user sees the spatial view, not a blank legacy page.
+  if (!topInst?.institution_id) {
+    params.set('v', String(vendorId))
+    // fall through to Navigate below
   }
 
   // 2026-05-12 (Audit V001 P1): pass entity names through React Router
