@@ -482,7 +482,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         className="w-full h-full"
         preserveAspectRatio="xMidYMid slice"
-        overflow="hidden"
+        overflow="visible"
       >
         <g
           transform={effectiveTransform}
@@ -958,7 +958,7 @@ function InstitutionBodyVisual({
   //   large  (r ≥ 20): white acronym inside the circle
   //   medium (r ≥  7): pill chip below the circle (all acronym lengths shown)
   //   small  (r <  7): no chip; full name surfaces in hover stat line
-  const insideLabel = r >= 20
+  const insideLabel = r >= 16
   const chipLabel   = !insideLabel && r >= 7
   const chipW = Math.min(lbl.length * 5.8 + 10, 90)
   const chipH = 14
@@ -1003,10 +1003,11 @@ function InstitutionBodyVisual({
             width={chipW}
             height={chipH}
             rx={chipH / 2}
-            fill="var(--color-background)"
+            fill="var(--color-background-card)"
+            fillOpacity={0.96}
             stroke={fill}
-            strokeWidth={1}
-            strokeOpacity={0.9}
+            strokeWidth={1.5}
+            strokeOpacity={1}
             style={{ pointerEvents: 'none' }}
           />
           <text
@@ -1599,5 +1600,5 @@ function shortLabel(name: string): string {
   if (contentWords.length >= 2) {
     return contentWords.map((w) => w[0].toUpperCase()).join('').slice(0, 5)
   }
-  return trimmed.length > 18 ? trimmed.slice(0, 17) + '…' : trimmed
+  return trimmed.length > 10 ? trimmed.slice(0, 9) + '…' : trimmed
 }
