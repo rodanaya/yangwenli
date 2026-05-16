@@ -751,26 +751,51 @@ const OBSERVATORY_FEATURES = [
   },
 ] as const
 
-function ObservatoryFeatureCallout() {
+function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
   return (
     <section
-      className="my-14 sm:my-16 rounded-sm overflow-hidden"
-      style={{ border: '1px solid var(--color-border)' }}
+      className="my-14 sm:my-16 rounded-sm overflow-hidden relative"
+      style={{ border: '1px solid var(--color-accent)', borderLeftWidth: 3 }}
     >
       {/* Header strip */}
       <div
-        className="flex items-center gap-4 px-6 sm:px-8 py-5 border-b"
+        className="relative flex items-center gap-4 px-6 sm:px-8 py-5 border-b overflow-hidden"
         style={{
           borderColor: 'var(--color-border)',
-          background: 'var(--color-background-elevated)',
+          background: 'linear-gradient(135deg, rgba(160,104,32,0.08) 0%, var(--color-background-elevated) 60%)',
         }}
       >
+        {/* Mini constellation preview */}
+        <div className="hidden md:block flex-shrink-0 w-[120px] h-[80px] opacity-70" aria-hidden="true">
+          <svg viewBox="0 0 120 80" className="w-full h-full">
+            {/* Background dots grid */}
+            {Array.from({ length: 24 }).map((_, i) => (
+              <circle key={i} cx={10 + (i % 6) * 20} cy={10 + Math.floor(i / 6) * 20} r={1} fill="var(--color-accent)" opacity={0.2} />
+            ))}
+            {/* Cluster edges */}
+            {[[55,30,70,22],[70,22,78,35],[78,35,68,45],[68,45,55,40],[55,40,55,30],[70,22,82,28],[82,28,78,35]].map(([x1,y1,x2,y2],i) => (
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-accent)" strokeWidth={0.8} opacity={0.55} />
+            ))}
+            {/* Bright cluster dots */}
+            {[[55,30,2.5],[70,22,3],[78,35,2],[68,45,2],[55,40,2],[82,28,1.8]].map(([x,y,r],i) => (
+              <circle key={`d${i}`} cx={x} cy={y} r={r} fill="var(--color-accent)" opacity={i === 1 ? 1 : 0.75} />
+            ))}
+            {/* Pulsing ring on lead dot */}
+            <circle cx={70} cy={22} r={6} fill="none" stroke="var(--color-accent)" strokeWidth={0.8} opacity={0.35} />
+            {/* Outlier dots */}
+            {[[20,55,1.5],[100,20,1.5],[105,60,1.2],[15,20,1.2]].map(([x,y,r],i) => (
+              <circle key={`o${i}`} cx={x} cy={y} r={r} fill="var(--color-accent)" opacity={0.4} />
+            ))}
+          </svg>
+        </div>
+
         <div className="flex-1">
           <p
             className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] mb-1.5"
             style={{ color: 'var(--color-accent)' }}
           >
-            ◆ EL OBSERVATORIO
+            ◆ {isEs ? 'EL OBSERVATORIO — NO ES UN MAPA' : 'EL OBSERVATORIO — NOT A MAP'}
           </p>
           <h2
             className="text-text-primary"
@@ -778,40 +803,44 @@ function ObservatoryFeatureCallout() {
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontSize: 'clamp(1.25rem, 2vw, 1.65rem)',
               fontWeight: 700,
+              fontStyle: 'italic',
               letterSpacing: '-0.02em',
             }}
           >
-            Not a map. A constellation.
+            {isEs ? 'Una constelación, no un mapa.' : 'A constellation, not a map.'}
           </h2>
+          <p className="text-[11px] text-text-muted mt-1.5 max-w-lg leading-[1.5]" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}>
+            {isEs
+              ? 'El Mapa Espacial muestra adónde fue el dinero geográficamente. El Observatorio muestra quién lo capturó — y cómo los patrones evolucionaron entre administraciones.'
+              : 'The Spatial Map shows where money went geographically. El Observatorio shows who captured it — and how patterns evolved across administrations.'}
+          </p>
         </div>
         <Link
           to="/atlas"
           className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
-          style={{ borderColor: 'var(--color-border-hover)', color: 'var(--color-text-secondary)' }}
+          style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', background: 'rgba(160,104,32,0.06)' }}
         >
-          Enter Observatory →
+          {isEs ? 'Entrar al Observatorio →' : 'Enter Observatory →'}
         </Link>
       </div>
 
       {/* Feature grid */}
-      <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+      <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
         {OBSERVATORY_FEATURES.map((f, i) => (
           <div key={i} className="flex gap-3">
             <span
-              className="text-lg leading-none flex-shrink-0 mt-0.5"
+              className="text-base leading-none flex-shrink-0 mt-0.5"
               style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-family-mono)' }}
               aria-hidden="true"
             >
               {f.icon}
             </span>
             <div>
-              <p
-                className="text-[12px] font-mono font-bold tracking-[0.05em] text-text-primary mb-1"
-              >
-                {f.titleEn}
+              <p className="text-[12px] font-mono font-bold tracking-[0.05em] text-text-primary mb-0.5">
+                {isEs ? f.titleEs : f.titleEn}
               </p>
-              <p className="text-[11px] leading-[1.55] text-text-muted">
-                {f.descEn}
+              <p className="text-[11px] leading-[1.5] text-text-muted">
+                {isEs ? f.descEs : f.descEn}
               </p>
             </div>
           </div>
@@ -820,21 +849,20 @@ function ObservatoryFeatureCallout() {
 
       {/* Footer CTA */}
       <div
-        className="flex items-center justify-between gap-4 px-6 sm:px-8 py-4 border-t"
+        className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3 border-t"
         style={{ borderColor: 'var(--color-border)', background: 'var(--color-background-card)' }}
       >
-        <p
-          className="text-[11px] leading-[1.5] text-text-muted max-w-lg"
-          style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}
-        >
-          The Spatial Map shows where money went geographically. El Observatorio shows <em>who</em> captured it — and how patterns evolved across administrations.
+        <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
+          {isEs
+            ? '1,200 puntos · 4 lentes · scrubber 2008–2025 · filtro X-ray · búsqueda de proveedor'
+            : '1,200 dots · 4 lenses · year scrubber 2008–2025 · X-ray filter · vendor search'}
         </p>
         <Link
           to="/atlas"
           className="sm:hidden inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] transition-colors"
           style={{ color: 'var(--color-accent)', whiteSpace: 'nowrap' }}
         >
-          Enter →
+          {isEs ? 'Entrar →' : 'Enter →'}
         </Link>
       </div>
     </section>
@@ -1273,7 +1301,7 @@ function AriaLiveTicker() {
 // ---------------------------------------------------------------------------
 
 export default function Journalists() {
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
   const [active, setActive] = useState<FilterKey>('all')
   const [searchParams, setSearchParams] = useSearchParams()
   // Cross-surface lens filter — when readers arrive from /atlas with a
@@ -1494,6 +1522,11 @@ export default function Journalists() {
         </section>
 
         {/* =================================================================
+            OBSERVATORY FEATURE CALLOUT — moved above picks for prominence
+            ================================================================= */}
+        <ObservatoryFeatureCallout lang={i18n.language.startsWith('es') ? 'es' : 'en'} />
+
+        {/* =================================================================
             TIER 2 — EDITOR'S PICKS (2 stories side-by-side)
             ================================================================= */}
         {editorsPicks.length === 2 && (
@@ -1535,11 +1568,6 @@ export default function Journalists() {
             </section>
           </>
         )}
-
-        {/* =================================================================
-            OBSERVATORY FEATURE CALLOUT — differentiates from Spatial Map
-            ================================================================= */}
-        <ObservatoryFeatureCallout />
 
         {/* =================================================================
             TIER 3 — THE FULL DOSSIER (filterable grid)
