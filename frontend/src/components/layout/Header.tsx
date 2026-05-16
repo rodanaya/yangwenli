@@ -44,6 +44,7 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/institutions': 'institutions',
   '/relationships': 'capture',
   '/captura': 'capture',
+  '/categories': 'categories',
   '/patterns': 'patterns',
   '/spatial': 'explore',
 }

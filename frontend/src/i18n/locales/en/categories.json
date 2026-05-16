@@ -1,4 +1,27 @@
 {
+  "index": {
+    "kicker": "72 SPENDING CATEGORIES · COMPRANET 2002–2025",
+    "headline": "What Was Bought",
+    "lede": "72 active categories classify every federal contract in the COMPRANET dataset — from pharmaceuticals to highway construction — revealing where public money flows and where risk concentrates.",
+    "statContracts": "Total Contracts",
+    "statSpend": "Total Spend",
+    "statCategories": "Active Categories",
+    "sortBy": "Sort:",
+    "sortSpend": "Spend",
+    "sortRisk": "Risk",
+    "sortContracts": "Contracts",
+    "sortDirectAward": "Direct Award",
+    "sortAriaLabel": "Sort categories by",
+    "allSectors": "All",
+    "sectorFilterAriaLabel": "Filter by sector",
+    "gridAriaLabel": "Categories grid",
+    "riskLabel": "Risk Indicator",
+    "contracts": "contracts",
+    "topVendor": "Top Vendor",
+    "directAwardBadge": "{{pct}}% DA",
+    "errorMessage": "Unable to load categories. Please try again.",
+    "noResults": "No categories match the selected filter."
+  },
   "dumbbell": {
     "kicker": "THE GAP · #1 VS #2",
     "headline": "Where one vendor swallows the market",

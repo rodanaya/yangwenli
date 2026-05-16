@@ -1,4 +1,27 @@
 {
+  "index": {
+    "kicker": "72 CATEGORÍAS DE GASTO · COMPRANET 2002–2025",
+    "headline": "El Qué",
+    "lede": "72 categorías activas clasifican cada contrato federal del dataset COMPRANET — desde medicamentos hasta construcción de carreteras — revelando adónde fluye el gasto público y dónde se concentra el riesgo.",
+    "statContracts": "Contratos Totales",
+    "statSpend": "Gasto Total",
+    "statCategories": "Categorías Activas",
+    "sortBy": "Ordenar:",
+    "sortSpend": "Gasto",
+    "sortRisk": "Riesgo",
+    "sortContracts": "Contratos",
+    "sortDirectAward": "Adjudicación Directa",
+    "sortAriaLabel": "Ordenar categorías por",
+    "allSectors": "Todos",
+    "sectorFilterAriaLabel": "Filtrar por sector",
+    "gridAriaLabel": "Cuadrícula de categorías",
+    "riskLabel": "Indicador de Riesgo",
+    "contracts": "contratos",
+    "topVendor": "Principal Proveedor",
+    "directAwardBadge": "{{pct}}% AD",
+    "errorMessage": "No se pudieron cargar las categorías. Intente de nuevo.",
+    "noResults": "Ninguna categoría coincide con el filtro seleccionado."
+  },
   "dumbbell": {
     "kicker": "LA BRECHA · #1 VS #2",
     "headline": "Donde un proveedor se traga el mercado",

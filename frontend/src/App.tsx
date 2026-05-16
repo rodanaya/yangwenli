@@ -71,7 +71,7 @@ const Administrations = lazy(() => import('@/pages/Administrations'))
 //   ProcurementCalendar      → /
 const Executive = lazy(() => import('@/pages/Executive'))
 const Atlas = lazy(() => import('@/pages/Atlas'))
-// SpendingCategories removed; /categories now redirects to /sectors?view=categories
+const CategoriesIndex = lazy(() => import('@/pages/CategoriesIndex'))
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
@@ -213,8 +213,15 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              {/* Retired: /categories merged into /sectors as the WHAT axis */}
-              <Route path="categories" element={<Navigate to="/sectors?view=categories" replace />} />
+              {/* /categories — standalone landmark index page (SITE_IA.md) */}
+              <Route
+                path="categories"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CategoriesIndex />
+                  </SuspenseBoundary>
+                }
+              />
               <Route
                 path="categories/:id"
                 element={

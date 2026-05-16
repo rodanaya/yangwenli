@@ -90,7 +90,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.explore',
     items: [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'categories', href: '/sectors?view=categories', icon: Tag },
+      { i18nKey: 'categories', href: '/categories', icon: Tag },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'patterns', href: '/patterns', icon: Layers },
