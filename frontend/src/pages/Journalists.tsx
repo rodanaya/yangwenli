@@ -700,6 +700,148 @@ export function DataLeadsList({ items }: { items: Investigation[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Observatory Feature Callout — what El Observatorio does that the
+// Spatial Map doesn't: narrative tours, constellation drill-downs, year
+// scrubber, X-ray filter, vendor search. Differentiates the two surfaces
+// so readers don't confuse "map" with "constellation intelligence."
+// ---------------------------------------------------------------------------
+
+const OBSERVATORY_FEATURES = [
+  {
+    icon: '◆',
+    titleEn: '3 Multi-Chapter Narratives',
+    titleEs: '3 Narrativas de Múltiples Capítulos',
+    descEn: 'Each story arc has 5–6 chapters with dwell time — the Cartel, La Estafa Maestra, The COVID Year.',
+    descEs: 'Cada arco tiene 5–6 capítulos con tiempo de pausa — El Cártel, La Estafa Maestra, El Año COVID.',
+  },
+  {
+    icon: '⬡',
+    titleEn: '4 Investigation Lenses',
+    titleEs: '4 Lentes de Investigación',
+    descEn: 'Switch instantly between Patterns (P1–P7), Sectors, Categories, and Contract Terms. Each lens reconfigures the constellation.',
+    descEs: 'Cambia entre Patrones (P1–P7), Sectores, Categorías y Términos contractuales. Cada lente reconfigura la constelación.',
+  },
+  {
+    icon: '◉',
+    titleEn: 'Year Scrubber 2008–2025',
+    titleEs: 'Control de Año 2008–2025',
+    descEn: 'Watch the risk constellation evolve across 17 years. Pin a cluster, then drag the year — the dot moves, the ring stays.',
+    descEs: 'Observa la constelación de riesgo evolucionar en 17 años. Fija un cluster, arrastra el año — el punto se mueve, el anillo permanece.',
+  },
+  {
+    icon: '◐',
+    titleEn: 'X-Ray Filter',
+    titleEs: 'Filtro de Rayos X',
+    descEn: 'Strip away the noise floor — show only medium+, high+, or critical-only risk contracts. The Spatial Map has no equivalent.',
+    descEs: 'Elimina el ruido — muestra solo contratos de riesgo medio+, alto+ o crítico. El Mapa Espacial no tiene equivalente.',
+  },
+  {
+    icon: '↔',
+    titleEn: 'Compare Two Years',
+    titleEs: 'Comparar Dos Años',
+    descEn: 'Dual-canvas side-by-side with shared lens and pinned cluster. See how capture patterns evolved between administrations.',
+    descEs: 'Doble lienzo con lente compartido y cluster fijado. Observa cómo evolucionaron los patrones entre administraciones.',
+  },
+  {
+    icon: '⌖',
+    titleEn: 'Vendor Search + Pin',
+    titleEs: 'Búsqueda de Proveedor + Fijación',
+    descEn: '21 curated vendors — type "BAXTER" or "HEMOSER" and the constellation auto-centers with a pulsing ring on their cluster.',
+    descEs: '21 proveedores seleccionados — escribe "BAXTER" o "HEMOSER" y la constelación se centra con un anillo pulsante.',
+  },
+] as const
+
+function ObservatoryFeatureCallout() {
+  return (
+    <section
+      className="my-14 sm:my-16 rounded-sm overflow-hidden"
+      style={{ border: '1px solid var(--color-border)' }}
+    >
+      {/* Header strip */}
+      <div
+        className="flex items-center gap-4 px-6 sm:px-8 py-5 border-b"
+        style={{
+          borderColor: 'var(--color-border)',
+          background: 'var(--color-background-elevated)',
+        }}
+      >
+        <div className="flex-1">
+          <p
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] mb-1.5"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            ◆ EL OBSERVATORIO
+          </p>
+          <h2
+            className="text-text-primary"
+            style={{
+              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+              fontSize: 'clamp(1.25rem, 2vw, 1.65rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Not a map. A constellation.
+          </h2>
+        </div>
+        <Link
+          to="/atlas"
+          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          style={{ borderColor: 'var(--color-border-hover)', color: 'var(--color-text-secondary)' }}
+        >
+          Enter Observatory →
+        </Link>
+      </div>
+
+      {/* Feature grid */}
+      <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+        {OBSERVATORY_FEATURES.map((f, i) => (
+          <div key={i} className="flex gap-3">
+            <span
+              className="text-lg leading-none flex-shrink-0 mt-0.5"
+              style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-family-mono)' }}
+              aria-hidden="true"
+            >
+              {f.icon}
+            </span>
+            <div>
+              <p
+                className="text-[12px] font-mono font-bold tracking-[0.05em] text-text-primary mb-1"
+              >
+                {f.titleEn}
+              </p>
+              <p className="text-[11px] leading-[1.55] text-text-muted">
+                {f.descEn}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer CTA */}
+      <div
+        className="flex items-center justify-between gap-4 px-6 sm:px-8 py-4 border-t"
+        style={{ borderColor: 'var(--color-border)', background: 'var(--color-background-card)' }}
+      >
+        <p
+          className="text-[11px] leading-[1.5] text-text-muted max-w-lg"
+          style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}
+        >
+          The Spatial Map shows where money went geographically. El Observatorio shows <em>who</em> captured it — and how patterns evolved across administrations.
+        </p>
+        <Link
+          to="/atlas"
+          className="sm:hidden inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] transition-colors"
+          style={{ color: 'var(--color-accent)', whiteSpace: 'nowrap' }}
+        >
+          Enter →
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Section break — decorative divider with accent dot
 // ---------------------------------------------------------------------------
 
@@ -1393,6 +1535,11 @@ export default function Journalists() {
             </section>
           </>
         )}
+
+        {/* =================================================================
+            OBSERVATORY FEATURE CALLOUT — differentiates from Spatial Map
+            ================================================================= */}
+        <ObservatoryFeatureCallout />
 
         {/* =================================================================
             TIER 3 — THE FULL DOSSIER (filterable grid)
