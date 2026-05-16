@@ -856,11 +856,14 @@ function CommunityDossier({
               />
               {c.institution}
             </div>
-            <ChevronDown
-              className="h-3.5 w-3.5 text-text-muted/50 transition-transform"
-              style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              aria-hidden="true"
-            />
+            <div className="flex items-center gap-1 text-[9px] font-mono text-text-muted/50 uppercase tracking-wider">
+              <span className="hidden sm:block">{isExpanded ? (isEs ? 'Cerrar' : 'Collapse') : (isEs ? 'Expandir' : 'Expand')}</span>
+              <ChevronDown
+                className="h-3.5 w-3.5 transition-transform"
+                style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                aria-hidden="true"
+              />
+            </div>
           </div>
         </div>
 
@@ -872,32 +875,37 @@ function CommunityDossier({
           {c.name}
         </h3>
 
-        {/* Value captured — hero number (only shown when real; 0 = unknown) */}
+        {/* Hero anchor stat: value when known, vendor count when not */}
         <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: fill }}>
-          <div
-            className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5"
-          >
-            {isEs ? 'Valor capturado' : 'Value captured'}
-          </div>
           {c.value > 0 ? (
-            <div
-              className="text-3xl tabular-nums leading-none"
-              style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
-            >
-              {formatCompactMXN(c.value)}
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-2">
-              <span
-                className="text-3xl tabular-nums leading-none text-text-muted/40"
-                style={{ fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
+            <>
+              <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                {isEs ? 'Valor capturado' : 'Value captured'}
+              </div>
+              <div
+                className="text-3xl tabular-nums leading-none"
+                style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
               >
-                —
-              </span>
-              <span className="text-[10px] text-text-muted/50 font-mono">
-                {isEs ? 'pendiente análisis de comunidades' : 'pending community analysis'}
-              </span>
-            </div>
+                {formatCompactMXN(c.value)}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                {isEs ? 'Proveedores señalados' : 'Vendors flagged'}
+              </div>
+              <div
+                className="text-3xl tabular-nums leading-none"
+                style={{ color: fill, fontFamily: FONT_SERIF, fontWeight: 800, fontStyle: 'italic' }}
+              >
+                {formatNumber(c.vendors)}
+              </div>
+              {c.confirmed > 0 && (
+                <div className="text-[10px] text-text-muted/60 font-mono mt-0.5">
+                  {isEs ? `${c.confirmed} casos GT documentados` : `${c.confirmed} documented GT cases`}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -1305,8 +1313,14 @@ function HeaderStat({
         {label}
       </div>
       <div
-        className="text-2xl font-mono font-black tabular-nums leading-none"
-        style={{ color: accent ?? 'var(--color-text-primary)' }}
+        className="tabular-nums leading-none"
+        style={{
+          fontFamily: FONT_SERIF,
+          fontStyle: 'italic',
+          fontWeight: 700,
+          fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+          color: accent ?? 'var(--color-text-primary)',
+        }}
       >
         {value}
       </div>
