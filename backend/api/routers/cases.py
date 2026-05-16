@@ -267,7 +267,7 @@ def cases_by_sector(sector_id: int):
                    sector_id, sector_ids_json, contract_year_start, contract_year_end,
                    discovery_year, amount_mxn_low, amount_mxn_high,
                    severity, legal_status, compranet_visibility,
-                   summary_en, is_verified, ground_truth_case_id
+                   summary_en, summary_es, is_verified, ground_truth_case_id
             FROM procurement_scandals
             WHERE is_verified=1
               AND (sector_id = ?
