@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -270,14 +270,43 @@ function CaseRow({
             </span>
             <span className="text-text-muted">·</span>
             <span className="text-text-muted tabular-nums">{yearLabel}</span>
-            {cas.severity >= 3 && (
-              <>
-                <span className="text-text-muted">·</span>
+            <span className="text-text-muted">·</span>
+            {/* 5-dot severity indicator — always rendered. Filled dots equal
+                severity level (1–5); empty dots fill the remainder. Color
+                escalates: severity ≥4 red, =3 amber, <3 muted. Text label
+                still shown alongside dots for severity ≥3 (kept from prior). */}
+            <span className="inline-flex items-center gap-1.5">
+              <svg
+                width={5 * 6 + 4 * 3}
+                height={6}
+                viewBox={`0 0 ${5 * 6 + 4 * 3} 6`}
+                role="img"
+                aria-label={`severity ${cas.severity} of 5`}
+                style={{ display: 'block' }}
+              >
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const filled = i < cas.severity
+                  const fillColor =
+                    cas.severity >= 4 ? '#ef4444' : cas.severity === 3 ? '#f59e0b' : '#71717a'
+                  return (
+                    <circle
+                      key={i}
+                      cx={i * 9 + 3}
+                      cy={3}
+                      r={2.5}
+                      fill={filled ? fillColor : 'transparent'}
+                      stroke={filled ? fillColor : '#71717a'}
+                      strokeWidth={1}
+                    />
+                  )
+                })}
+              </svg>
+              {cas.severity >= 3 && (
                 <span className="text-text-muted tracking-wider">
                   {t(`severity.${cas.severity}`)} {t('severity.label', { defaultValue: 'SEVERITY' })}
                 </span>
-              </>
-            )}
+              )}
+            </span>
           </div>
         </div>
 
@@ -390,18 +419,52 @@ export default function CaseLibrary() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Default sort: amount DESC, severity DESC
+  // Sort control — local state; URL-sync deliberately omitted (transient view
+  // preference, not a shareable filter). Default 'loss' preserves prior order.
+  type SortKey = 'loss' | 'severity' | 'year' | 'gt'
+  const [sortBy, setSortBy] = useState<SortKey>('loss')
+
   const data = useMemo(() => {
     if (!rawData) return rawData
-    return [...rawData].sort((a, b) => {
-      const ad = (b.amount_mxn_low ?? 0) - (a.amount_mxn_low ?? 0)
-      if (ad !== 0) return ad
-      if (b.severity !== a.severity) return b.severity - a.severity
-      const al = a.ground_truth_case_id != null ? 1 : 0
-      const bl = b.ground_truth_case_id != null ? 1 : 0
-      return bl - al
-    })
-  }, [rawData])
+    const arr = [...rawData]
+    const byAmount = (a: ScandalListItem, b: ScandalListItem) =>
+      (b.amount_mxn_low ?? 0) - (a.amount_mxn_low ?? 0)
+    switch (sortBy) {
+      case 'severity':
+        arr.sort((a, b) => {
+          if (b.severity !== a.severity) return b.severity - a.severity
+          return byAmount(a, b)
+        })
+        break
+      case 'year':
+        arr.sort((a, b) => {
+          const ay = a.contract_year_start ?? -Infinity
+          const by = b.contract_year_start ?? -Infinity
+          if (by !== ay) return by - ay
+          return byAmount(a, b)
+        })
+        break
+      case 'gt':
+        arr.sort((a, b) => {
+          const al = a.ground_truth_case_id != null ? 1 : 0
+          const bl = b.ground_truth_case_id != null ? 1 : 0
+          if (bl !== al) return bl - al
+          return byAmount(a, b)
+        })
+        break
+      case 'loss':
+      default:
+        arr.sort((a, b) => {
+          const ad = byAmount(a, b)
+          if (ad !== 0) return ad
+          if (b.severity !== a.severity) return b.severity - a.severity
+          const al = a.ground_truth_case_id != null ? 1 : 0
+          const bl = b.ground_truth_case_id != null ? 1 : 0
+          return bl - al
+        })
+    }
+    return arr
+  }, [rawData, sortBy])
 
   const hasFilters =
     !!search ||
@@ -732,9 +795,11 @@ export default function CaseLibrary() {
 
         {!isLoading && !error && data && (
           <>
-            {/* Result count */}
+            {/* Result count + interactive sort controls. The sort buttons
+                mirror FilterPill but at micro scale (10px / px-2) — same amber
+                accent for the active state so the relationship reads. */}
             <div
-              className="flex items-center justify-between mb-3 text-[10px] tracking-wider uppercase"
+              className="flex items-center justify-between mb-3 text-[10px] tracking-wider uppercase gap-3 flex-wrap"
               style={{ fontFamily: 'var(--font-family-mono)', color: '#6a6a66' }}
             >
               <span>
@@ -745,9 +810,35 @@ export default function CaseLibrary() {
                   </span>
                 )}
               </span>
-              <span className="text-text-muted">
-                {i18n.language === 'es' ? 'ORDENADO POR PÉRDIDA · DESC' : 'SORTED BY LOSS · DESC'}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-text-muted">
+                  {i18n.language === 'es' ? 'ORDENAR' : 'SORT'}
+                </span>
+                {([
+                  { key: 'loss', label: i18n.language === 'es' ? 'PÉRDIDA ↓' : 'LOSS ↓' },
+                  { key: 'severity', label: i18n.language === 'es' ? 'GRAVEDAD ↓' : 'SEVERITY ↓' },
+                  { key: 'year', label: i18n.language === 'es' ? 'AÑO ↓' : 'YEAR ↓' },
+                  { key: 'gt', label: i18n.language === 'es' ? 'GT PRIMERO' : 'GT FIRST' },
+                ] as { key: SortKey; label: string }[]).map((s) => {
+                  const active = sortBy === s.key
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => setSortBy(s.key)}
+                      className="px-2 py-0.5 text-[10px] font-medium tracking-wide transition-colors"
+                      style={{
+                        fontFamily: 'var(--font-family-mono)',
+                        background: active ? 'var(--color-accent)' : 'transparent',
+                        color: active ? '#ffffff' : 'var(--color-text-muted)',
+                        border: `1px solid ${active ? 'var(--color-accent)' : BORDER}`,
+                      }}
+                    >
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {data.length === 0 ? (
