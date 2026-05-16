@@ -202,7 +202,7 @@ NON_FEDERAL_INSTITUTION_TYPES = (
 def get_category_vendor_institution(
     category_id: int,
     limit: int = Query(25, ge=1, le=50),
-    scope: str = Query("federal", regex="^(federal|all)$"),
+    scope: str = Query("federal", pattern="^(federal|all)$"),
 ):
     """Return top vendor-institution pairs for a category by total value.
 
@@ -827,7 +827,7 @@ def get_category_price_distribution(category_id: int):
 def get_category_top_vendors(
     category_id: int,
     limit: int = Query(15, ge=1, le=30),
-    scope: str = Query("federal", regex="^(federal|all)$"),
+    scope: str = Query("federal", pattern="^(federal|all)$"),
 ):
     """Return top vendors in a category with market share and HHI concentration.
 
