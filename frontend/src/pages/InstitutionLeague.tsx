@@ -1782,7 +1782,7 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
             onClick={() => setTab(tab.id)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
-                ? 'border-yellow-400 text-yellow-400'
+                ? 'border-accent text-accent'
                 : 'border-transparent text-text-secondary hover:text-text-secondary'
             }`}
           >

@@ -216,7 +216,7 @@ export function ExplorePage() {
               </div>
               <div>
                 <span className="text-text-muted">{t('page.sectorIntel.highPlusRisk')}</span>
-                <span className="ml-1.5 font-mono font-semibold text-orange-400">
+                <span className="ml-1.5 font-mono font-semibold text-risk-high">
                   {riskRate.toFixed(1)}%
                 </span>
               </div>

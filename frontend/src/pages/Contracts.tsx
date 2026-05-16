@@ -698,7 +698,7 @@ export function Contracts() {
               className={cn(
                 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition-colors',
                 isActive
-                  ? 'bg-amber-500/20 text-risk-high border-amber-500/40 font-medium'
+                  ? 'bg-risk-high/20 text-risk-high border-risk-high/40 font-medium'
                   : 'bg-background-elevated text-text-secondary hover:bg-background-elevated border-border'
               )}
             >
@@ -829,8 +829,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_direct_award
-              ? 'border-amber-500 text-risk-high bg-risk-high/10 font-semibold'
-              : 'border-border text-text-muted hover:border-amber-500/50 hover:text-risk-high'
+              ? 'border-risk-high text-risk-high bg-risk-high/10 font-semibold'
+              : 'border-border text-text-muted hover:border-risk-high/50 hover:text-risk-high'
           )}
           aria-pressed={!!filters.is_direct_award}
         >
@@ -843,8 +843,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_single_bid
-              ? 'border-red-500 text-risk-critical bg-risk-critical/10 font-semibold'
-              : 'border-border text-text-muted hover:border-red-500/50 hover:text-risk-critical'
+              ? 'border-risk-critical text-risk-critical bg-risk-critical/10 font-semibold'
+              : 'border-border text-text-muted hover:border-risk-critical/50 hover:text-risk-critical'
           )}
           aria-pressed={!!filters.is_single_bid}
         >
@@ -857,8 +857,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             showAnomalyScore
-              ? 'border-purple-500 text-purple-400 bg-purple-500/10 font-semibold'
-              : 'border-border text-text-muted hover:border-purple-500/50 hover:text-purple-400'
+              ? 'border-accent-data text-accent-data bg-accent-data/10 font-semibold'
+              : 'border-border text-text-muted hover:border-accent-data/50 hover:text-accent-data'
           )}
           aria-pressed={showAnomalyScore}
           title="Toggle PyOD ensemble anomaly score column"
@@ -1008,7 +1008,7 @@ export function Contracts() {
               <button
                 key={tag.key}
                 onClick={() => removeFilterTag(tag.key)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/20 text-risk-high border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-risk-high/20 text-risk-high border border-risk-high/40 hover:bg-risk-high/30 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
                 {tag.label}
@@ -1126,7 +1126,7 @@ export function Contracts() {
                     {/* #9 — optional ensemble anomaly score column header */}
                     {showAnomalyScore && (
                       <th
-                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-purple-400 select-none whitespace-nowrap"
+                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-data select-none whitespace-nowrap"
                         title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
                       >
                         PyOD
@@ -1387,7 +1387,7 @@ function ContractRow({
           <div className="flex items-center gap-1 min-w-0">
             {contract.vendor_is_individual && (
               <span
-                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-amber-500/40 bg-risk-high/10 text-risk-high leading-none"
+                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-risk-high/40 bg-risk-high/10 text-risk-high leading-none"
                 title="Natural person (individual) — not a company"
               >
                 PERSON

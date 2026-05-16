@@ -110,7 +110,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                       {t('cronologia.risk')}: {(d.avgRiskScore * 100).toFixed(0)}%
                     </p>
                     {d.hasAnomaly && d.anomalyNote && (
-                      <p className="text-[10px] text-orange-400 mt-0.5">
+                      <p className="text-[10px] text-risk-high mt-0.5">
                         {d.anomalyNote}
                       </p>
                     )}

@@ -44,13 +44,13 @@ export function StoryRiskCalendar() {
 
       {/* Year annotations */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical/5 p-3">
           <div className="text-[10px] font-mono text-risk-critical uppercase tracking-wide">{t('riskCalendar.covidLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
             {t('riskCalendar.covidBody')}
           </p>
         </div>
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+        <div className="rounded-lg border border-risk-high/20 bg-risk-high/5 p-3">
           <div className="text-[10px] font-mono text-risk-high uppercase tracking-wide">{t('riskCalendar.decemberLabel')}</div>
           <p className="text-xs text-text-secondary mt-1">
             {t('riskCalendar.decemberBody')}

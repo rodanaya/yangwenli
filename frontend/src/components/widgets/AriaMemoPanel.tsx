@@ -249,7 +249,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background-elevated/50">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-purple-400" />
+          <Sparkles className="h-4 w-4 text-accent-data" />
           <span className="text-sm font-semibold text-text-primary">
             Análisis de Investigación
           </span>
@@ -257,7 +257,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
           {effectiveTier != null && <TierBadge tier={effectiveTier} />}
           {/* S.3 provenance badge */}
           {memoType === 'llm_narrative' && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20">
               LLM
             </span>
           )}

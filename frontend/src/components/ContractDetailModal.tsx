@@ -165,7 +165,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
                 {/* Disclaimer for high/critical risk */}
                 {(contract.risk_level === 'high' || contract.risk_level === 'critical') && (
-                  <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-risk-high/5 border border-risk-high/20">
                     <span className="text-risk-high/80 mt-0.5 flex-shrink-0 text-sm">⚠️</span>
                     <p className="text-[10px] text-text-muted leading-relaxed">
                       {t('riskScoreTooltipBody')}
@@ -208,7 +208,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     <Badge variant="outline" className="text-xs">{tCommon('contractDetail.flagHighValue')}</Badge>
                   )}
                   {contract.is_threshold_gaming && (
-                    <Badge className="text-xs bg-risk-high/10/30 text-risk-high border border-amber-500/30" title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}>
+                    <Badge className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30" title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}>
                       {tCommon('contractDetail.flagThresholdGaming')}
                     </Badge>
                   )}
@@ -355,7 +355,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
       )}
       {isElection && (
         <span
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10/40 text-risk-high border border-amber-600/30"
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30"
           title="Contract awarded during a federal election year"
         >
           <Zap className="h-2.5 w-2.5" aria-hidden="true" />

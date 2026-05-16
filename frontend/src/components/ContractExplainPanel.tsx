@@ -61,7 +61,7 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
         <div className="px-4 py-3 bg-background-elevated/60">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-text-muted">
-              <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent-data)', borderTopColor: 'transparent' }} />
               {t('contractExplain.generating')}
             </div>
           )}

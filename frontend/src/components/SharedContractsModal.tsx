@@ -20,10 +20,10 @@ interface SharedContractsModalProps {
 }
 
 const RISK_BADGE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  critical: { bg: 'bg-risk-critical/15', text: 'text-risk-critical', border: 'border-red-500/25' },
-  high:     { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/25' },
-  medium:   { bg: 'bg-risk-high/15', text: 'text-risk-high', border: 'border-amber-500/25' },
-  low:      { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/25' },
+  critical: { bg: 'bg-risk-critical/15', text: 'text-risk-critical', border: 'border-risk-critical/25' },
+  high:     { bg: 'bg-risk-high/15', text: 'text-risk-high', border: 'border-risk-high/25' },
+  medium:   { bg: 'bg-risk-medium/15', text: 'text-risk-medium', border: 'border-risk-medium/25' },
+  low:      { bg: 'bg-background-elevated', text: 'text-text-muted', border: 'border-border' },
 }
 
 const RISK_BADGE_LABELS: Record<string, { es: string; en: string }> = {
@@ -151,11 +151,11 @@ export function SharedContractsModal({
 
         {/* Summary strip */}
         {summary && (
-          <div className="flex items-center gap-6 px-5 py-3 bg-amber-500/8 border-b border-amber-500/15 shrink-0">
+          <div className="flex items-center gap-6 px-5 py-3 bg-risk-high/5 border-b border-risk-high/15 shrink-0">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-high shrink-0" aria-hidden="true" />
               <span className="text-xs font-mono text-accent">
-                <span className="font-bold text-amber-200">{formatNumber(summary.shared_procedure_count)}</span>
+                <span className="font-bold text-risk-high">{formatNumber(summary.shared_procedure_count)}</span>
                 {' '}{lang === 'en' ? 'shared procedures' : 'procedimientos compartidos'}
               </span>
             </div>
@@ -251,12 +251,12 @@ export function SharedContractsModal({
                         {(c.is_single_bid || c.is_direct_award) && (
                           <div className="flex gap-1 mt-0.5">
                             {c.is_direct_award && (
-                              <span className="text-[9px] font-mono uppercase bg-orange-500/10 border border-orange-500/20 text-orange-400 px-1 rounded">
+                              <span className="text-[9px] font-mono uppercase bg-risk-high/10 border border-risk-high/20 text-risk-high px-1 rounded">
                                 AD
                               </span>
                             )}
                             {c.is_single_bid && (
-                              <span className="text-[9px] font-mono uppercase bg-risk-critical/10 border border-red-500/20 text-risk-critical px-1 rounded">
+                              <span className="text-[9px] font-mono uppercase bg-risk-critical/10 border border-risk-critical/20 text-risk-critical px-1 rounded">
                                 {lang === 'en' ? '1 bid' : '1 oferta'}
                               </span>
                             )}

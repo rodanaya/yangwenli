@@ -741,7 +741,7 @@ export default function CaseLibrary() {
                 value={search ?? ''}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('filters.search')}
-                className="w-full pl-9 pr-8 py-2 text-[12px] bg-transparent focus:outline-none focus:border-amber-500/40 transition-colors"
+                className="w-full pl-9 pr-8 py-2 text-[12px] bg-transparent focus:outline-none focus:border-risk-high/40 transition-colors"
                 style={{
                   fontFamily: 'var(--font-family-mono)',
                   color: '#e5e5e3',

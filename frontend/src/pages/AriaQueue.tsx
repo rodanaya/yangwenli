@@ -268,7 +268,7 @@ function ReviewPopover({
         <button
           onClick={() => promoteMutation.mutate()}
           disabled={promoteMutation.isPending || promoteMutation.isSuccess}
-          className="w-full py-1.5 rounded text-xs font-medium border border-amber-500/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
+          className="w-full py-1.5 rounded text-xs font-medium border border-risk-high/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
         >
           {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
         </button>
@@ -699,7 +699,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               )}
               {!item.in_ground_truth && item.ips_tier === 1 && (
                 <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
                   title={isEs
                     ? 'Descubrimiento del modelo — T1 sin anclaje GT. Señal pura del modelo de riesgo.'
                     : 'Model discovery — T1 without GT anchor. Pure risk model signal.'}
@@ -729,7 +729,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Memo quality glyph — LLM narrative available */}
           {item.memo_provenance === 'llm_narrative' && (
             <span
-              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
               title={isEs ? 'Memo investigativo LLM disponible' : 'LLM investigation memo available'}
             >
               LLM
@@ -1979,7 +1979,7 @@ export default function AriaPage() {
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
                     llmMemoOnly
-                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                      ? 'bg-accent-data/10 text-accent-data border-accent-data/30'
                       : 'bg-background-card text-text-secondary border-border hover:border-border'
                   )}
                   title={isEs ? 'Solo proveedores con memo investigativo LLM completo' : 'Only vendors with full LLM investigation memo'}

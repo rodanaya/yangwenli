@@ -8,10 +8,10 @@ interface PercentileBadgeProps {
 }
 
 function getPercentileColor(p: number): string {
-  if (p <= 25) return 'bg-green-500/20 text-green-400 border-green-500/30'
-  if (p <= 50) return 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-yellow-500/20 dark:text-yellow-400 dark:border-yellow-500/30'
-  if (p <= 75) return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-  return 'bg-red-500/20 text-risk-critical border-red-500/30'
+  if (p <= 25) return 'bg-background-elevated text-text-muted border-border'
+  if (p <= 50) return 'bg-risk-high/10 text-risk-high border-risk-high/30'
+  if (p <= 75) return 'bg-risk-high/15 text-risk-high border-risk-high/30'
+  return 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
 }
 
 export function PercentileBadge({

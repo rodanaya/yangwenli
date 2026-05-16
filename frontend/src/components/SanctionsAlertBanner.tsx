@@ -28,9 +28,9 @@ const EFOS_TOOLTIP =
 
 function getSanctionChipClass(listType: string) {
   if (listType === 'efos_presunto') {
-    return 'bg-amber-500/20 text-accent border-amber-500/30'
+    return 'bg-risk-high/20 text-risk-high border-risk-high/30'
   }
-  return 'bg-red-500/20 text-risk-critical border-red-500/30'
+  return 'bg-risk-critical/20 text-risk-critical border-risk-critical/30'
 }
 
 export function SanctionsAlertBanner({
@@ -51,8 +51,8 @@ export function SanctionsAlertBanner({
       className={cn(
         'rounded-md border p-3',
         allPresunto
-          ? 'border-amber-500/40 bg-risk-high/10'
-          : 'border-red-500/40 bg-risk-critical/10',
+          ? 'border-risk-high/40 bg-risk-high/10'
+          : 'border-risk-critical/40 bg-risk-critical/10',
         className
       )}
       role="alert"
@@ -64,7 +64,7 @@ export function SanctionsAlertBanner({
         <div className="flex-1 min-w-0">
           <p className={cn('text-sm font-medium', allPresunto ? 'text-accent' : 'text-risk-critical')}>
             On {sanctions.length} sanctions list{sanctions.length > 1 ? 's' : ''}:{' '}
-            <span className={allPresunto ? 'text-amber-200' : 'text-red-200'}>{listTypes.join(' | ')}</span>
+            <span className={allPresunto ? 'text-risk-high' : 'text-risk-critical'}>{listTypes.join(' | ')}</span>
           </p>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {sanctions.map((s, i) => (
@@ -87,8 +87,8 @@ export function SanctionsAlertBanner({
           className={cn(
             'shrink-0 rounded p-1',
             allPresunto
-              ? 'hover:bg-amber-500/20 text-risk-high'
-              : 'hover:bg-red-500/20 text-risk-critical'
+              ? 'hover:bg-risk-high/20 text-risk-high'
+              : 'hover:bg-risk-critical/20 text-risk-critical'
           )}
           aria-label={expanded ? 'Collapse details' : 'Expand details'}
         >
@@ -104,7 +104,7 @@ export function SanctionsAlertBanner({
         <div
           className={cn(
             'mt-3 border-t pt-2 space-y-1.5',
-            allPresunto ? 'border-amber-500/20' : 'border-red-500/20'
+            allPresunto ? 'border-risk-high/20' : 'border-risk-critical/20'
           )}
         >
           <p className="text-xs text-text-muted">

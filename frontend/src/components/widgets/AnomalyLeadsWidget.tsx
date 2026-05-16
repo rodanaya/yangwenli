@@ -59,7 +59,7 @@ function PatternBadge({ pattern }: { pattern: string | null }) {
     ? tAria(`patterns.${pattern}`, { defaultValue: PATTERN_LABELS[pattern] })
     : pattern
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-600/30">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent-data/10 text-accent-data border border-accent-data/30">
       {pattern} · {label}
     </span>
   )

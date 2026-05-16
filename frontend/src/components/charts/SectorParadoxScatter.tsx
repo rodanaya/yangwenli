@@ -127,7 +127,7 @@ export function SectorParadoxScatter() {
       </div>
 
       {/* Callout — editorial finding box */}
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
           HALLAZGO
         </p>

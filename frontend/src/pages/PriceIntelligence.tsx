@@ -244,7 +244,7 @@ function ExtremeCaseCard({
 
   return (
     <article
-      className="border border-border rounded-sm bg-background/40 p-4 hover:border-orange-500/40 transition-colors"
+      className="border border-border rounded-sm bg-background/40 p-4 hover:border-risk-high/40 transition-colors"
       role="article"
       aria-label={t('cardAriaLabel', { vendorName: contract.vendor_name })}
     >
@@ -259,7 +259,7 @@ function ExtremeCaseCard({
       {/* Overpricing factor -- hero number */}
       <div className="flex items-baseline gap-2 mb-2">
         <span
-          className="text-3xl font-bold text-orange-400 font-mono tabular-nums"
+          className="text-3xl font-bold text-risk-high font-mono tabular-nums"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {overpricingFactor}x
@@ -426,7 +426,7 @@ function ReincidentesSection({
                       {v.yearsList.map((yr) => {
                         const cls =
                           yr >= 2023
-                            ? 'text-orange-300 bg-orange-500/15 border-orange-500/30'
+                            ? 'text-risk-high bg-risk-high/15 border-risk-high/30'
                             : yr >= 2020
                               ? 'text-risk-high bg-risk-high/10 border-risk-high/30'
                               : 'text-text-secondary bg-background-elevated border-border'
@@ -459,7 +459,7 @@ function ReincidentesSection({
                       {getSectorName(v.sector_id)}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-orange-400 text-xs font-mono">
+                  <td className="py-2 px-3 text-right tabular-nums text-risk-high text-xs font-mono">
                     +{v.avg_z.toFixed(1)}&sigma;
                   </td>
                 </tr>
@@ -623,7 +623,7 @@ function MostExtremeCallout({
   const factor = (contract.z_price_ratio ?? 0).toFixed(1)
   return (
     <aside
-      className="relative overflow-hidden rounded-sm border border-red-500/30 bg-gradient-to-br from-red-950/40 via-background-elevated to-background-elevated p-5 md:p-6"
+      className="relative overflow-hidden rounded-sm border border-risk-critical/30 bg-gradient-to-br from-risk-critical/5 via-background-elevated to-background-elevated p-5 md:p-6"
       role="complementary"
       aria-label={lang === 'en' ? 'The most extreme contract' : 'El contrato más extremo'}
     >
@@ -686,7 +686,7 @@ function MostExtremeCallout({
         </div>
 
         {/* Hero factor */}
-        <div className="border-l-2 border-red-500 pl-4 md:pl-5 md:text-right">
+        <div className="border-l-2 border-risk-critical pl-4 md:pl-5 md:text-right">
           <div
             className="font-bold text-risk-critical font-mono tabular-nums leading-none"
             style={{
@@ -1119,15 +1119,15 @@ function OverpricingTimelineSection({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2 max-w-2xl">
-        <div className="border-l-2 border-orange-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-orange-400 tabular-nums">
+        <div className="border-l-2 border-risk-high pl-3 py-0.5">
+          <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {peakYear.year}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             año con más anomalías · {formatNumber(peakYear.count)}
           </div>
         </div>
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
+        <div className="border-l-2 border-risk-critical pl-3 py-0.5">
           <div className="text-lg font-mono font-bold text-risk-critical tabular-nums">
             {peakValueYear.year}
           </div>
@@ -1135,7 +1135,7 @@ function OverpricingTimelineSection({
             pico de valor · {formatCompactMXN(peakValueYear.total_value)}
           </div>
         </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+        <div className="border-l-2 border-risk-high pl-3 py-0.5">
           <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {yearData.length}
           </div>
@@ -1375,7 +1375,7 @@ function RiskLevelPriceGap({
           El precio que paga el Estado por procurement sospechoso
         </h2>
         <p className="text-xs text-text-muted mt-0.5 max-w-2xl">
-          Contratos con <strong className="text-orange-400">múltiples banderas de riesgo</strong>{' '}
+          Contratos con <strong className="text-risk-high">múltiples banderas de riesgo</strong>{' '}
           (crítico + alto) vs contratos con riesgo medio o bajo. La diferencia en precio promedio
           revela la prima que introducen los patrones de corrupción.
         </p>
@@ -1730,7 +1730,7 @@ export default function PriceIntelligence() {
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                   dangerouslySetInnerHTML={{
                     __html: t('kpiLede', {
-                      n: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
+                      n: `<strong class="text-risk-high">${formatNumber(summary.total_outliers)}</strong>`,
                       value: `<strong class="text-risk-critical">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
                       z: `<strong class="text-risk-high">${avgZ.toFixed(1)}</strong>`,
                       interpolation: { escapeValue: false },
@@ -1741,8 +1741,8 @@ export default function PriceIntelligence() {
                 {/* 5-KPI strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {/* 1. Total contracts */}
-                  <div className="border-l-2 border-orange-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">
+                  <div className="border-l-2 border-risk-high pl-3 py-0.5">
+                    <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       {formatNumber(summary.total_outliers)}
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1751,7 +1751,7 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 2. Value at risk */}
-                  <div className="border-l-2 border-red-500 pl-3 py-0.5">
+                  <div className="border-l-2 border-risk-critical pl-3 py-0.5">
                     <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
                       {formatCompactMXN(summary.total_value_mxn)}
                     </div>
@@ -1761,7 +1761,7 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 3. Average z-score */}
-                  <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+                  <div className="border-l-2 border-risk-high pl-3 py-0.5">
                     <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       +{avgZ.toFixed(1)}&sigma;
                     </div>
@@ -1771,8 +1771,8 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 4. Estimated overpricing */}
-                  <div className="border-l-2 border-purple-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-purple-400 tabular-nums">
+                  <div className="border-l-2 border-accent-data pl-3 py-0.5">
+                    <div className="text-xl font-mono font-bold text-accent-data tabular-nums">
                       {formatCompactMXN(estimatedSavings)}
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1833,7 +1833,7 @@ export default function PriceIntelligence() {
               className="text-xs font-semibold uppercase tracking-widest text-text-muted"
             >
               Min Z-Score:{' '}
-              <span className="text-orange-400 font-bold">{zThreshold.toFixed(1)}&sigma;</span>
+              <span className="text-risk-high font-bold">{zThreshold.toFixed(1)}&sigma;</span>
             </label>
             <span className="text-xs text-text-muted">{t('zThresholdHint')}</span>
           </div>
@@ -1869,7 +1869,7 @@ export default function PriceIntelligence() {
               className={[
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
                 activeSectorId === null
-                  ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
+                  ? 'bg-risk-high/20 border-risk-high/60 text-risk-high'
                   : 'border-border text-text-muted hover:border-border hover:text-text-secondary',
               ].join(' ')}
               aria-pressed={activeSectorId === null}
@@ -2002,7 +2002,7 @@ export default function PriceIntelligence() {
                       <td className="py-2 px-3 text-right font-mono tabular-nums text-text-secondary hidden sm:table-cell">
                         {formatCompactMXN(s.totalValue)}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono tabular-nums text-orange-400">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums text-risk-high">
                         +{(s.avgZ ?? 0).toFixed(1)}&sigma;
                       </td>
                     </tr>

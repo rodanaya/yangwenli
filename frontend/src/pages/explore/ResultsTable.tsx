@@ -171,7 +171,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           <div className="flex items-center gap-3 text-[11px] text-text-muted">
             <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(pageAvgRisk * 100).toFixed(0)}%</span></span>
             <span className="text-border/60">·</span>
-            <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
+            <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
           </div>
         </div>
         {/* AI Confirmed filter chip */}
@@ -238,7 +238,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <div className="flex items-center gap-3 text-[11px] text-text-muted">
           <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(instPageAvgRisk * 100).toFixed(0)}%</span></span>
           <span className="text-border/60">·</span>
-          <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
+          <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
         </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">

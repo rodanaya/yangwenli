@@ -72,9 +72,9 @@ export default function ContractDetail() {
   // Risk palette — derived from score
   const riskPalette = useMemo(() => {
     const score = contract?.risk_score ?? 0
-    if (score >= 0.6) return { color: '#dc2626', label: 'CRITICAL', bg: 'bg-red-600/10', border: 'border-red-600/30' }
-    if (score >= 0.4) return { color: '#ea580c', label: 'HIGH', bg: 'bg-orange-600/10', border: 'border-orange-600/30' }
-    if (score >= 0.25) return { color: '#eab308', label: 'MEDIUM', bg: 'bg-amber-600/10', border: 'border-amber-600/30' }
+    if (score >= 0.6) return { color: 'var(--color-risk-critical)', label: 'CRITICAL', bg: 'bg-risk-critical/10', border: 'border-risk-critical/30' }
+    if (score >= 0.4) return { color: 'var(--color-risk-high)', label: 'HIGH', bg: 'bg-risk-high/10', border: 'border-risk-high/30' }
+    if (score >= 0.25) return { color: 'var(--color-risk-medium)', label: 'MEDIUM', bg: 'bg-risk-medium/10', border: 'border-risk-medium/30' }
     return { color: 'var(--color-text-muted)', label: 'LOW', bg: 'bg-background-elevated', border: 'border-border' }
   }, [contract?.risk_score])
 
@@ -176,7 +176,7 @@ export default function ContractDetail() {
             </span>
           )}
           {contract.is_election_year && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10/40 text-risk-high border border-amber-600/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30">
               <Zap className="h-2.5 w-2.5" aria-hidden="true" />
               ELECTION YEAR
             </span>
@@ -337,7 +337,7 @@ export default function ContractDetail() {
 
                 {/* Disclaimer for high-risk */}
                 {isHighRisk && (
-                  <div className="mt-4 flex items-start gap-2 rounded-sm bg-amber-500/5 border border-amber-500/20 px-3 py-2">
+                  <div className="mt-4 flex items-start gap-2 rounded-sm bg-risk-high/5 border border-risk-high/20 px-3 py-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" />
                     <p className="text-[11px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
@@ -359,12 +359,12 @@ export default function ContractDetail() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {contract.is_direct_award && (
-                      <Badge className="text-xs bg-orange-600/15 text-orange-400 border border-orange-600/30">
+                      <Badge className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30">
                         Direct award
                       </Badge>
                     )}
                     {contract.is_single_bid && (
-                      <Badge className="text-xs bg-red-600/15 text-risk-critical border border-red-600/30">
+                      <Badge className="text-xs bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
                         Single bid
                       </Badge>
                     )}
@@ -380,7 +380,7 @@ export default function ContractDetail() {
                     )}
                     {contract.is_threshold_gaming && (
                       <Badge
-                        className="text-xs bg-risk-high/10/30 text-risk-high border border-amber-500/30"
+                        className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30"
                         title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}
                       >
                         Threshold gaming
@@ -682,7 +682,7 @@ function Section({
 }) {
   return (
     <section>
-      <div className="mb-5 border-l-[3px] border-red-600 pl-5">
+      <div className="mb-5 border-l-[3px] border-risk-critical pl-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
           {overline}
         </p>
@@ -749,7 +749,7 @@ function AnomalyScoreCard({
               {(score * 100).toFixed(0)}%
             </span>
             {isAiConfirmed && (
-              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-red-600/20 text-risk-critical border border-red-600/30">
+              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
                 <svg
                   className="h-2.5 w-2.5"
                   viewBox="0 0 24 24"
@@ -819,7 +819,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
       : delay < 5
       ? 'text-risk-critical'
       : delay < 15
-      ? 'text-orange-500'
+      ? 'text-risk-high'
       : 'text-text-secondary'
 
   const delayNote =

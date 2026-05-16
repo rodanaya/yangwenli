@@ -187,7 +187,7 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
         </div>
         <div className="flex justify-between gap-4 text-text-secondary">
           <span>{t('tooltip.highRisk')}</span>
-          <span className="text-orange-300 font-mono">{formatNumber(day.high_risk_contracts)}</span>
+          <span className="text-risk-high font-mono">{formatNumber(day.high_risk_contracts)}</span>
         </div>
         <div className="flex justify-between gap-4 text-text-secondary">
           <span>{t('tooltip.riskRate')}</span>
@@ -195,15 +195,15 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
             className={cn(
               'font-mono',
               day.risk_rate > 0.30 ? 'text-risk-critical' :
-              day.risk_rate > 0.20 ? 'text-orange-400' :
-              day.risk_rate > 0.10 ? 'text-blue-400' : 'text-text-secondary'
+              day.risk_rate > 0.20 ? 'text-risk-high' :
+              day.risk_rate > 0.10 ? 'text-accent-data' : 'text-text-secondary'
             )}
           >
             {riskPct}%
           </span>
         </div>
         {isDecember && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-orange-400/80 text-[10px]">
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[10px]">
             {t('events.budgetClose')}
           </div>
         )}
@@ -457,8 +457,8 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
   const avgRiskBarWidth = Math.min(100, stats.highRiskRate * 200)
 
   return (
-    <div className="rounded-sm border border-orange-800/30 bg-orange-950/10 p-5 space-y-4">
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-500 mb-1">
+    <div className="rounded-sm border border-risk-high/30 bg-risk-high/5 p-5 space-y-4">
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
         {t('decemberSection.title')}
       </p>
       <p className="text-sm text-text-secondary leading-relaxed">
@@ -793,11 +793,11 @@ export default function ProcurementCalendar() {
 
             {/* December vs rest */}
             {stats.hasDecemberData && (
-              <div className="border border-orange-900/40 bg-orange-950/10 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-600 mb-1">
+              <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm p-3">
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
                   {t('insights.decemberRisk')}
                 </div>
-                <div className="text-lg font-bold font-mono text-orange-400">
+                <div className="text-lg font-bold font-mono text-risk-high">
                   {(stats.decemberRiskRate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-text-muted">
@@ -848,10 +848,10 @@ export default function ProcurementCalendar() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* December spike annotation */}
               {decemberSpikeRatio !== null && decemberSpikeRatio > 1.2 && (
-                <div className="border border-orange-800/50 bg-orange-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <TrendingUp className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
+                <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm px-4 py-3 flex gap-3 items-start">
+                  <TrendingUp className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
                   <div>
-                    <div className="text-sm font-semibold text-orange-300">
+                    <div className="text-sm font-semibold text-risk-high">
                       {t('patterns.decemberSpike', { year, num: formatNumber(stats.decemberContracts) })}
                     </div>
                     <div className="text-xs text-text-secondary mt-0.5">

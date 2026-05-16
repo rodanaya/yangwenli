@@ -512,7 +512,6 @@ export function PulseRing({
 interface ProgressRevealProps {
   value: number
   color?: string
-  height?: number
   label?: string
   showValue?: boolean
   className?: string
@@ -521,7 +520,6 @@ interface ProgressRevealProps {
 export function ProgressReveal({
   value,
   color = '#dc2626',
-  height = 6,
   label,
   showValue = false,
   className,

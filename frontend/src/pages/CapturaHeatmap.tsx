@@ -148,7 +148,7 @@ function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) 
 function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-amber-500/20 bg-amber-500/5 rounded-sm p-4 mb-4">
+    <div className="border border-risk-high/20 bg-risk-high/5 rounded-sm p-4 mb-4">
       <button
         className="flex items-center gap-2 w-full text-left"
         onClick={() => setOpen((v) => !v)}
@@ -262,14 +262,14 @@ function TopCapturedList({
 function HhiBadge({ hhi, t }: { hhi: number; t: ReturnType<typeof useTranslation>['t'] }) {
   if (hhi > 0.25) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-red-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
         {t('hhi.highCapture')}
       </span>
     )
   }
   if (hhi > 0.15) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10 text-risk-high border border-risk-high/30">
         {t('hhi.moderate')}
       </span>
     )
@@ -291,7 +291,7 @@ function HeroCaptureCallout({
 }) {
   return (
     <div
-      className="border border-red-500/30 bg-red-500/5 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+      className="border border-risk-critical/30 bg-risk-critical/5 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
       role="region"
       aria-label={t('hero.worstCapture')}
     >
@@ -685,7 +685,7 @@ export default function CapturaHeatmap() {
       </div>
 
       {/* ===== Editorial lede: WHY this matters ===== */}
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mb-6">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-2">
           {t('editorialLede.overline')}
         </p>
@@ -705,7 +705,7 @@ export default function CapturaHeatmap() {
       {!isLoading && !error && topCaptured.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Stat 1: severe capture count */}
-          <div className="border-l-2 border-red-500 pl-4 py-1">
+          <div className="border-l-2 border-risk-critical pl-4 py-1">
             <div className="text-2xl font-mono font-bold text-risk-critical">
               {topCaptured.filter(r => r.pct >= 0.5).length}
             </div>
@@ -714,8 +714,8 @@ export default function CapturaHeatmap() {
             </div>
           </div>
           {/* Stat 2: value at risk */}
-          <div className="border-l-2 border-orange-500 pl-4 py-1">
-            <div className="text-2xl font-mono font-bold text-orange-400">
+          <div className="border-l-2 border-risk-high pl-4 py-1">
+            <div className="text-2xl font-mono font-bold text-risk-high">
               {formatCompactMXN(topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0))}
             </div>
             <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5">
@@ -724,7 +724,7 @@ export default function CapturaHeatmap() {
           </div>
           {/* Stat 3: highest concentration */}
           {topCaptured[0] && (
-            <div className="border-l-2 border-amber-500 pl-4 py-1">
+            <div className="border-l-2 border-risk-high pl-4 py-1">
               <div className="text-2xl font-mono font-bold text-risk-high">
                 {(topCaptured[0].pct * 100).toFixed(1)}%
               </div>
@@ -789,7 +789,7 @@ export default function CapturaHeatmap() {
                 setYearRange('all')
                 setMinCapture(0)
               }}
-              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
+              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
             >
               ↺ {t('filters.resetAll')}
             </button>
@@ -885,7 +885,7 @@ export default function CapturaHeatmap() {
 
       {/* ===== Error ===== */}
       {error && !isLoading && (
-        <div className="bg-surface-card border border-red-500/20 rounded-sm p-6">
+        <div className="bg-surface-card border border-risk-critical/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-sm bg-risk-critical/10 flex items-center justify-center flex-shrink-0">
               <Info className="h-5 w-5 text-risk-critical" />
@@ -904,7 +904,7 @@ export default function CapturaHeatmap() {
       {/* ===== Empty state — clean, user-facing ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="space-y-5">
-          <div className="bg-surface-card border border-amber-500/20 rounded-sm p-6">
+          <div className="bg-surface-card border border-risk-high/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-sm bg-risk-high/10 flex items-center justify-center flex-shrink-0">
                 <Info className="h-5 w-5 text-risk-high" />
@@ -925,7 +925,7 @@ export default function CapturaHeatmap() {
                     setYearRange('all')
                     setMinCapture(0)
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-3 py-1.5 rounded-sm hover:bg-risk-high/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-3 py-1.5 rounded-sm hover:bg-risk-high/10 transition-colors"
                 >
                   ↺ {t('emptyState.resetButton')}
                 </button>
