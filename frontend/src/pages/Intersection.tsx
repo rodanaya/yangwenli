@@ -24,7 +24,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { intersectionApi, type IntersectionVendor, type IntersectionSummary } from '@/api/client'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { formatNumber, formatCompactMXN, cn } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK, getSectorName } from '@/lib/constants'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -139,6 +139,7 @@ function QuadrantCard({
   lang,
   ctaLabel,
   ctaTo,
+  compact = false,
 }: {
   eyebrow: string
   title: React.ReactNode
@@ -150,13 +151,14 @@ function QuadrantCard({
   lang: string
   ctaLabel: string
   ctaTo: string
+  compact?: boolean
 }) {
   return (
     <section
       className="rounded-sm border border-border bg-background-card overflow-hidden"
       style={{ borderLeft: `4px solid ${accent}` }}
     >
-      <header className="px-5 py-4 border-b border-border">
+      <header className={cn('border-b border-border', compact ? 'px-4 py-3' : 'px-5 py-4')}>
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <p
             className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]"
@@ -164,24 +166,42 @@ function QuadrantCard({
           >
             {eyebrow}
           </p>
-          <p className="font-mono tabular-nums text-[11px] text-text-muted">
-            {formatNumber(count)} {lang === 'es' ? 'proveedores' : 'vendors'}
+          <p
+            className="tabular-nums leading-none"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontStyle: 'italic',
+              fontWeight: 700,
+              fontSize: compact ? '1.5rem' : '2rem',
+              color: accent,
+            }}
+          >
+            {formatNumber(count)}
           </p>
         </div>
-        <h2
-          className="mt-1 text-text-primary leading-tight"
-          style={{
-            fontFamily: 'var(--font-family-serif)',
-            fontSize: 'clamp(1.125rem, 1.6vw, 1.5rem)',
-            fontWeight: 700,
-            letterSpacing: '-0.015em',
-          }}
-        >
-          {title}
-        </h2>
-        <p className="mt-2 text-[13px] text-text-secondary leading-[1.55] max-w-prose">
-          {deck}
-        </p>
+        {!compact && (
+          <>
+            <h2
+              className="mt-1 text-text-primary leading-tight"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(1.125rem, 1.6vw, 1.5rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.015em',
+              }}
+            >
+              {title}
+            </h2>
+            <p className="mt-2 text-[13px] text-text-secondary leading-[1.55] max-w-prose">
+              {deck}
+            </p>
+          </>
+        )}
+        {compact && (
+          <p className="text-[11px] text-text-secondary leading-[1.4] mt-1">
+            {title}
+          </p>
+        )}
       </header>
       {rows.length > 0 ? (
         <div>
@@ -647,11 +667,12 @@ export default function Intersection() {
               })}
             </div>
 
-            {/* Quadrant cards — three editorial sections, NOT inside the
-                PlateFrame anymore. Removing PlateFrame + paper-grain is what
-                visually divorces this page from Relationships. */}
-            <div className="space-y-6">
-              {/* NOVELTY — the pitch quadrant */}
+            {/* Quadrant cards — Novelty dominates (full width, 15 rows).
+                Confirmed + Blind Spot share a compact 2-column grid below.
+                This hierarchy mirrors the actual editorial weight: Novelty is
+                the platform's pitch; the other two are context + humility. */}
+            <div className="space-y-5">
+              {/* NOVELTY — dominant, full width */}
               <QuadrantCard
                 eyebrow={lang === 'es' ? 'Cuadrante I · Novedad' : 'Quadrant I · Novelty'}
                 accent="var(--color-risk-critical)"
@@ -666,56 +687,61 @@ export default function Intersection() {
                     ? <>Esta es la razón de ser del modelo: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> proveedores con score alto (≥ 40/100) cuyos RFC no aparecen en SAT EFOS, ni tienen sanción SFP, ni están en el corpus de casos documentados. Ordenados por IPS — prioridad integrada.</>
                     : <>This is the model's reason to exist: <strong className="text-text-primary">{formatNumber(data.counts.novelty)}</strong> vendors with high pattern-match (≥ 40/100) whose RFCs do not appear on SAT EFOS, carry no SFP sanction, and are absent from the documented-case corpus. Ranked by IPS (integrated priority score).</>
                 }
-                rows={selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty}
+                rows={(selectedSector ? data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.novelty).slice(0, 15)}
                 showSecondaryMetric="ips"
                 lang={lang}
                 ctaLabel={lang === 'es' ? 'Ver todos los proveedores de novedad' : 'View all novelty vendors'}
                 ctaTo="/aria"
               />
 
-              {/* CONFIRMED — triangulation */}
-              <QuadrantCard
-                eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
-                accent="var(--color-accent)"
-                count={data.counts.confirmed}
-                title={
-                  lang === 'es'
-                    ? <>Ambas señales coinciden — modelo y reguladores de acuerdo.</>
-                    : <>Both signals agree — model and regulators converge.</>
-                }
-                deck={
-                  lang === 'es'
-                    ? <>Triangulación: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> proveedores con score alto que además aparecen en al menos un registro externo. Cuando métodos independientes convergen, la confianza en cada uno crece.</>
-                    : <>Triangulation: <strong className="text-text-primary">{formatNumber(data.counts.confirmed)}</strong> vendors with high pattern-match that also appear on at least one external registry. When independent methods converge, confidence in each grows.</>
-                }
-                rows={selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed}
-                showSecondaryMetric="risk"
-                lang={lang}
-                ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
-                ctaTo="/aria"
-              />
+              {/* CONFIRMED + BLIND SPOT — compact, side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* CONFIRMED — triangulation */}
+                <QuadrantCard
+                  compact
+                  eyebrow={lang === 'es' ? 'Cuadrante II · Confirmado' : 'Quadrant II · Confirmed'}
+                  accent="var(--color-accent)"
+                  count={data.counts.confirmed}
+                  title={
+                    lang === 'es'
+                      ? <>Ambas señales coinciden — modelo y reguladores de acuerdo.</>
+                      : <>Both signals agree — model and regulators converge.</>
+                  }
+                  deck={
+                    lang === 'es'
+                      ? <>Triangulación: {formatNumber(data.counts.confirmed)} proveedores con score alto que además aparecen en al menos un registro externo.</>
+                      : <>Triangulation: {formatNumber(data.counts.confirmed)} vendors with high pattern-match that also appear on at least one external registry.</>
+                  }
+                  rows={(selectedSector ? data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.confirmed).slice(0, 5)}
+                  showSecondaryMetric="risk"
+                  lang={lang}
+                  ctaLabel={lang === 'es' ? 'Ver todos los confirmados' : 'View all confirmed'}
+                  ctaTo="/aria"
+                />
 
-              {/* BLIND SPOT — humility */}
-              <QuadrantCard
-                eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
-                accent="var(--color-text-muted)"
-                count={data.counts.blindspot}
-                title={
-                  lang === 'es'
-                    ? <>Lo que los reguladores vieron y el modelo no.</>
-                    : <>What regulators saw and the model didn't.</>
-                }
-                deck={
-                  lang === 'es'
-                    ? <>Honestidad metodológica: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> proveedores con bajo score RUBLI (&lt; 25/100) que sí aparecen en un registro externo. Ordenados por valor total de contratos — los puntos ciegos más grandes primero.</>
-                    : <>Methodological honesty: <strong className="text-text-primary">{formatNumber(data.counts.blindspot)}</strong> vendors with low RUBLI score (&lt; 25/100) that do appear on an external registry. Sorted by total contract value — largest blind spots first.</>
-                }
-                rows={selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot}
-                showSecondaryMetric="value"
-                lang={lang}
-                ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
-                ctaTo="/aria"
-              />
+                {/* BLIND SPOT — humility */}
+                <QuadrantCard
+                  compact
+                  eyebrow={lang === 'es' ? 'Cuadrante III · Punto ciego' : 'Quadrant III · Blind spot'}
+                  accent="var(--color-text-muted)"
+                  count={data.counts.blindspot}
+                  title={
+                    lang === 'es'
+                      ? <>Lo que los reguladores vieron y el modelo no.</>
+                      : <>What regulators saw and the model didn't.</>
+                  }
+                  deck={
+                    lang === 'es'
+                      ? <>Honestidad metodológica: {formatNumber(data.counts.blindspot)} proveedores con bajo score RUBLI que sí aparecen en un registro externo.</>
+                      : <>Methodological honesty: {formatNumber(data.counts.blindspot)} vendors with low RUBLI score that do appear on an external registry.</>
+                  }
+                  rows={(selectedSector ? data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === selectedSector) : data.rankings.blindspot).slice(0, 5)}
+                  showSecondaryMetric="value"
+                  lang={lang}
+                  ctaLabel={lang === 'es' ? 'Ver todos los puntos ciegos' : 'View all blind spots'}
+                  ctaTo="/aria"
+                />
+              </div>
             </div>
 
             {/* Methodology footer */}
