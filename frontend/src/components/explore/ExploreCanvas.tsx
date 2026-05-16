@@ -218,16 +218,17 @@ function getSectorShapeElement(
       // 6-pointed star (snowflake / tree ring)
       return <polygon points={starPoints(cx, cy, r, r * 0.5, 6)} {...props} />
     case 'energia': {
-      // Lightning bolt — irregular 7-point polygon
+      // Fat lightning bolt — wide enough to read at all sizes (~0.85r wide × 2r tall).
+      // Previous version was only 0.4r wide and nearly invisible against the background.
       const p = r
       const d = [
-        `M ${cx + p * 0.15} ${cy - p}`,
-        `L ${cx - p * 0.1} ${cy - p * 0.05}`,
-        `L ${cx + p * 0.25} ${cy - p * 0.05}`,
-        `L ${cx - p * 0.15} ${cy + p}`,
-        `L ${cx + p * 0.1} ${cy + p * 0.1}`,
-        `L ${cx - p * 0.2} ${cy + p * 0.1}`,
-        `L ${cx + p * 0.15} ${cy - p}`, 'Z',
+        `M ${cx + p * 0.20} ${cy - p}`,           // 1 top right tip
+        `L ${cx + p * 0.45} ${cy - p * 0.05}`,    // 2 upper right bar
+        `L ${cx + p * 0.10} ${cy - p * 0.05}`,    // 3 upper left bar
+        `L ${cx - p * 0.15} ${cy + p}`,            // 4 bottom left tip
+        `L ${cx - p * 0.40} ${cy + p * 0.10}`,    // 5 lower left bar
+        `L ${cx - p * 0.05} ${cy + p * 0.10}`,    // 6 lower right bar
+        'Z',
       ].join(' ')
       return <path d={d} {...props} />
     }
