@@ -154,10 +154,10 @@ export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1427
 // on each retraining and is referenced by methodology/intersection
 // editorial copy. Live source: `/api/v1/executive/summary` →
 // `ground_truth.vendors`.
-export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1399
+export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1432
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-16-gt-vendor-count-1399'
+export const BUILD_ID = '2026-05-16-gt-batch-m-vendor-1432'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
