@@ -162,7 +162,7 @@
     "registryTitle": "The Record — High-Risk Rate by Administration",
     "registryNote": "Note: greater RFC coverage in post-2018 data may contribute to higher risk detection rates in recent administrations.",
     "inflationNote": "All amounts in nominal MXN. Cumulative inflation 2002–2025 exceeds 150%. Cross-administration spending comparisons should account for purchasing power changes.",
-    "amloMultiplier": "4x vs EPN"
+    "amloMultiplier": "+1.7 pts vs EPN"
   },
   "matrixLegend": {
     "low": "Low",
@@ -242,7 +242,8 @@
     "signalBetter": "Better"
   },
   "grade": {
-    "title": "PROCUREMENT GRADE"
+    "title": "PROCUREMENT GRADE",
+    "procurement": "Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate."
   },
   "radar": {
     "title": "All Administrations: Procurement Fingerprint",

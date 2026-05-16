@@ -24,11 +24,11 @@ interface Administration {
 }
 
 const ADMINS: Administration[] = [
-  { name: 'Fox',         fullName: 'Vicente Fox',         start: 2000, end: 2006, dataStart: 2002, party: 'PAN' },
-  { name: 'Calderon',    fullName: 'Felipe Calderon',     start: 2006, end: 2012, dataStart: 2006, party: 'PAN' },
-  { name: 'Pena Nieto',  fullName: 'Enrique Pena Nieto',  start: 2012, end: 2018, dataStart: 2012, party: 'PRI' },
-  { name: 'AMLO',        fullName: 'A.M. Lopez Obrador',  start: 2018, end: 2024, dataStart: 2018, party: 'MORENA' },
-  { name: 'Sheinbaum',   fullName: 'Claudia Sheinbaum',   start: 2024, end: 2030, dataStart: 2024, party: 'MORENA' },
+  { name: 'Fox',         fullName: 'Vicente Fox Quesada',            start: 2000, end: 2006, dataStart: 2002, party: 'PAN' },
+  { name: 'Calderon',    fullName: 'Felipe Calderón Hinojosa',       start: 2006, end: 2012, dataStart: 2006, party: 'PAN' },
+  { name: 'Pena Nieto',  fullName: 'Enrique Peña Nieto',             start: 2012, end: 2018, dataStart: 2012, party: 'PRI' },
+  { name: 'AMLO',        fullName: 'Andrés Manuel López Obrador',    start: 2018, end: 2024, dataStart: 2018, party: 'MORENA' },
+  { name: 'Sheinbaum',   fullName: 'Claudia Sheinbaum Pardo',        start: 2024, end: 2030, dataStart: 2024, party: 'MORENA' },
 ]
 
 interface HeatmapCell {

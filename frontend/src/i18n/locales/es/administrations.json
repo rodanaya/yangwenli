@@ -57,9 +57,9 @@
   "groundTruthNote": "Los casos de corrupción documentados en este período se registran en la sección de Casos Verificados, incluyendo coincidencias de proveedores, conteos de contratos y tasas de detección por caso.",
   "yearlyTrends": "Tendencias Anuales — {{admin}} ({{start}}–{{end}})",
   "sectorProfile": "Perfil de Riesgo Sectorial — {{admin}}",
-  "transitionImpact": "Impacto de Transicion",
+  "transitionImpact": "Impacto de Transición",
   "keyEvents": "Eventos Clave — {{admin}} ({{start}}–{{end}})",
-  "documentedCases": "Casos de Corrupcion Documentados",
+  "documentedCases": "Casos de Corrupción Documentados",
   "documentedCasesNote": "Verificados manualmente desde registros públicos e investigaciones de la ASF — no detectados por ML",
   "noData": "Sin datos anuales disponibles para esta administración",
   "insufficientData": "Datos insuficientes para el análisis de transición",
@@ -162,7 +162,7 @@
     "registryTitle": "El Registro — Tasa de Alto Riesgo por Sexenio",
     "registryNote": "Nota: la mayor cobertura de RFC en datos 2018+ puede contribuir a tasas de detección de riesgo más altas en administraciones recientes.",
     "inflationNote": "Montos en pesos mexicanos nominales. La inflación acumulada 2002–2025 supera el 150%. Las comparaciones de gasto entre administraciones deben considerar los cambios en el poder adquisitivo.",
-    "amloMultiplier": "4x vs EPN"
+    "amloMultiplier": "+1.7 pts vs EPN"
   },
   "matrixLegend": {
     "low": "Bajo",
@@ -242,7 +242,8 @@
     "signalBetter": "Mejor"
   },
   "grade": {
-    "title": "CALIFICACIÓN DE COMPRAS"
+    "title": "CALIFICACIÓN DE COMPRAS",
+    "procurement": "Basado en referencias OCDE: tasa de adjudicación directa, tasa de alto riesgo y tasa de licitación única."
   },
   "radar": {
     "title": "Todas las Administraciones: Huella de Compras",
