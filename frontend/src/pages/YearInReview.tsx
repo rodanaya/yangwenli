@@ -1147,7 +1147,7 @@ export default function YearInReview() {
                   className={cn(
                     'px-3.5 py-1.5 text-sm font-bold transition-all rounded-sm border',
                     y === validYear
-                      ? 'bg-risk-high/10 text-risk-high border-amber-500/60 shadow-sm'
+                      ? 'bg-risk-high/10 text-risk-high border-risk-high/60 shadow-sm'
                       : 'text-text-muted hover:text-text-primary border-border/40 hover:border-border',
                   )}
                   style={{ fontFamily: 'var(--font-family-serif)' }}
