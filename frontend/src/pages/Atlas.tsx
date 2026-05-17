@@ -2468,8 +2468,8 @@ export default function Atlas() {
             : (lang === 'en' ? 'illustrative snapshot' : 'instantánea ilustrativa')}
         </span>
         {lang === 'en'
-          ? <>Categories lens shows 32 of 72 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
-          : <>La lente de categorías muestra 32 de 72 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
+          ? <>Categories lens shows 32 of 72 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.</>
+          : <>La lente de categorías muestra 32 de 72 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.</>
         }
       </div>
 

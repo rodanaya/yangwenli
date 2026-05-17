@@ -207,7 +207,7 @@ export function SeasonalityCalendar() {
           {t('seasonality.legend_adjMonths')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#3b82f6]" />
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-sector-educacion" />
           {t('seasonality.legend_other')}
         </span>
       </div>

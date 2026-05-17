@@ -341,7 +341,7 @@ export function NetworkGraphModal({
                 </p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" aria-hidden="true" />
+                    <span className="inline-block w-3 h-3 rounded-full bg-sector-educacion" aria-hidden="true" />
                     {lang === 'en' ? 'Institution' : 'Institución'}
                   </span>
                   {(['critical', 'high', 'medium', 'low'] as const).map((level) => (

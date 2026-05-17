@@ -327,7 +327,7 @@ export default function Executive() {
             </div>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-[#a06820] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent transition-colors"
               aria-label={lang === 'en' ? 'Print this page' : 'Imprimir esta página'}
             >
               <Printer className="h-3.5 w-3.5" />
@@ -581,7 +581,7 @@ export default function Executive() {
             {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
                 Click anchors to el-gran-precio (the big-contract risk story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -628,7 +628,7 @@ export default function Executive() {
             {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip
                 Click anchors to marea-de-adjudicaciones (canonical DA story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#dc2626] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-critical focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -682,7 +682,7 @@ export default function Executive() {
             {/* Tile 3 — High+Critical with risk distribution bar
                 Click anchors to el-sexenio-del-riesgo (the riskiest era). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#f59e0b] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-high focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -804,7 +804,7 @@ export default function Executive() {
 
             {/* Finding 01 — Ghost Economy: compare-gap animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -910,7 +910,7 @@ export default function Executive() {
 
             {/* Finding 02 — Audit Blindspot: fill animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1013,7 +1013,7 @@ export default function Executive() {
 
             {/* Finding 03 — Threshold Gaming: two-bar comparison */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#8b5cf6' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1193,7 +1193,7 @@ export default function Executive() {
 
             {/* Finding 04 — Institutional Capture: dot-field animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1389,7 +1389,7 @@ export default function Executive() {
             </div>
             <button
               onClick={() => navigate('/sectors?view=categories')}
-              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
             >
               {lang === 'en' ? 'All categories' : 'Todas'}
               <ArrowUpRight className="h-3 w-3" />
@@ -1512,12 +1512,12 @@ export default function Executive() {
               {lang === 'en' ? (
                 <>
                   Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 vendor memos (440 LLM-narrative) · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
-                  <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
+                  <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
                   Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos de proveedores (440 LLM-narrativos) · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
-                  <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
+                  <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
             </div>
@@ -1625,12 +1625,12 @@ export default function Executive() {
             {audiences.map((a, idx) => (
               <motion.div
                 key={a.key}
-                className="surface-card rounded-sm p-5 border-l-2 border-[#a06820]/40"
+                className="surface-card rounded-sm p-5 border-l-2 border-accent/40"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + idx * 0.08 }}
               >
-                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-3">
+                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-3">
                   {t(`recommendations.${a.key}.audience`)}
                 </div>
                 <ul className="space-y-3">
@@ -1653,12 +1653,12 @@ export default function Executive() {
           <section className="mb-12">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#dc2626] animate-pulse" aria-hidden />
+                <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden />
                 {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
               </div>
               <button
                 onClick={() => navigate('/contracts?risk_level=critical')}
-                className="text-[11px] font-mono uppercase tracking-[0.12em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1"
+                className="text-[11px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1"
               >
                 {lang === 'en' ? 'View all' : 'Ver todas'}
                 <ArrowUpRight className="h-3 w-3" />
@@ -1729,10 +1729,10 @@ export default function Executive() {
         {/* ─── CTA ─── */}
         <section className="mb-12 print-hide">
           <div
-            className="rounded-sm p-8 border border-[#a06820]/30"
+            className="rounded-sm p-8 border border-accent/30"
             style={{ background: 'linear-gradient(135deg, rgba(160,104,32,0.06), rgba(160,104,32,0.02))' }}
           >
-            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-2">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-2">
               {lang === 'en' ? 'Start Here' : 'Comienza aquí'}
             </div>
             <h3
@@ -1756,7 +1756,7 @@ export default function Executive() {
               </button>
               <button
                 onClick={() => navigate('/explore?entity=vendor')}
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-[#a06820]/5 text-[#a06820] border border-[#a06820]/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-[#a06820]/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
               >
                 {lang === 'en' ? 'Search a vendor' : 'Buscar un proveedor'}
               </button>

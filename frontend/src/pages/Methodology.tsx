@@ -1034,11 +1034,11 @@ export function Methodology() {
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#52525b]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-text-secondary" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendDecreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#64748b]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-text-muted" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendNoSignal')}</span>
                 </div>
               </div>
