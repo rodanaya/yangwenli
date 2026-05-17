@@ -79,6 +79,8 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
           'flex h-10 w-full items-center justify-between rounded-sm border border-border bg-background-card px-3 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
+        aria-expanded={open}
+        aria-haspopup="listbox"
         onClick={() => setOpen(!open)}
         {...props}
       >
@@ -107,7 +109,7 @@ const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   const { open } = React.useContext(SelectContext)
   if (!open) return null
   return (
-    <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-sm border border-border bg-background-card text-text-primary shadow-md max-h-60 overflow-auto">
+    <div role="listbox" className="absolute top-full left-0 z-50 mt-1 w-full rounded-sm border border-border bg-background-card text-text-primary shadow-md max-h-60 overflow-auto">
       <div className="p-1">{children}</div>
     </div>
   )
@@ -122,6 +124,8 @@ const SelectItem: React.FC<SelectItemProps> = ({ value, children, className, ...
   const { value: selectedValue, onValueChange, setOpen } = React.useContext(SelectContext)
   return (
     <div
+      role="option"
+      aria-selected={selectedValue === value}
       className={cn(
         'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-background-elevated hover:text-text-primary',
         selectedValue === value && 'bg-accent/20 text-accent',

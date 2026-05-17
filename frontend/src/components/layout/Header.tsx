@@ -308,6 +308,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label={tc('header.userMenu')}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
               >
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-glow text-accent text-[9px] font-bold">
                   {user.name.charAt(0).toUpperCase()}
@@ -315,23 +317,25 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-border bg-background-card shadow-xl z-50 py-1">
+                <div role="menu" aria-label={tc('header.userMenu')} className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-border bg-background-card shadow-xl z-50 py-1">
                   <div className="px-3 py-2 border-b border-border">
                     <p className="text-xs font-semibold text-text-primary truncate">{user.name}</p>
                     <p className="text-[10px] text-text-muted truncate font-mono">{user.email}</p>
                   </div>
                   <button
+                    role="menuitem"
                     onClick={() => { setUserMenuOpen(false); navigate('/workspace') }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                   >
-                    <Briefcase className="h-3.5 w-3.5" />
+                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                     {tc('header.myInvestigations')}
                   </button>
                   <button
+                    role="menuitem"
                     onClick={() => { setUserMenuOpen(false); logout() }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-risk-critical hover:bg-background-elevated transition-colors"
                   >
-                    <LogOut className="h-3.5 w-3.5" />
+                    <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                     {tc('header.signOut')}
                   </button>
                 </div>
