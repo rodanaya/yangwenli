@@ -27,7 +27,7 @@ import {
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
-import { YearScrubber, RiskFloorToggle, ShareViewButton, LensToggle, MapLegend } from '@/components/explore/CanvasControls'
+import { YearScrubber, ShareViewButton, LensToggle } from '@/components/explore/CanvasControls'
 import { SearchOverlay } from '@/components/explore/SearchOverlay'
 
 const FIRST_VISIT_KEY = 'rubli_explore_visited_v1'
@@ -87,9 +87,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
         <ExploreCanvas lang={lang} />
         <SearchOverlay lang={lang} />
         <LensToggle lang={lang} />
-        <RiskFloorToggle lang={lang} />
         <ShareViewButton lang={lang} />
-        <MapLegend lang={lang} />
         <YearScrubber lang={lang} />
         {showHint && (
           <button

@@ -21,34 +21,17 @@ export function YearScrubber({ lang }: { lang: 'en' | 'es' }) {
 
   return (
     <div
-      className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10"
+      className="absolute bottom-0 left-0 right-0 z-10 flex items-center gap-2 px-3"
       style={{
+        height: 28,
         background: 'var(--color-background-card, #fff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 4,
-        padding: '8px 14px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        minWidth: 360,
+        borderTop: '1px solid var(--color-border)',
+        opacity: 0.92,
       }}
     >
-      <div className="flex items-center gap-3 mb-1">
-        <span className="text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted">
-          {lang === 'en' ? 'Year' : 'Año'}
-        </span>
-        <span className="text-base font-mono font-bold tabular-nums text-text-primary">
-          {isAll ? (lang === 'en' ? 'All' : 'Todos') : year}
-        </span>
-        {!isAll && (
-          <button
-            type="button"
-            onClick={() => dispatch({ type: 'set-year', year: null })}
-            className="ml-auto text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors"
-            style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            {lang === 'en' ? 'reset' : 'reiniciar'}
-          </button>
-        )}
-      </div>
+      <span className="text-[8px] font-mono uppercase tracking-[0.16em] text-text-muted shrink-0 tabular-nums">
+        {isAll ? (lang === 'en' ? 'All years' : 'Todos') : year}
+      </span>
       <input
         type="range"
         min={YEAR_MIN}
@@ -56,17 +39,21 @@ export function YearScrubber({ lang }: { lang: 'en' | 'es' }) {
         step={1}
         value={year ?? YEAR_MAX}
         onChange={(e) => dispatch({ type: 'set-year', year: Number(e.target.value) })}
-        className="w-full h-1 cursor-pointer appearance-none"
-        style={{
-          background: 'var(--color-border)',
-          accentColor: 'var(--color-accent)',
-        }}
+        className="flex-1 cursor-pointer appearance-none"
+        style={{ height: 2, accentColor: 'var(--color-accent)' }}
         aria-label={lang === 'en' ? 'Year filter' : 'Filtro de año'}
       />
-      <div className="flex justify-between text-[8px] font-mono tabular-nums text-text-muted opacity-70 mt-0.5">
-        <span>{YEAR_MIN}</span>
-        <span>{YEAR_MAX}</span>
-      </div>
+      {!isAll && (
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'set-year', year: null })}
+          className="text-[8px] font-mono text-text-muted hover:text-text-primary transition-colors shrink-0"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          aria-label={lang === 'en' ? 'Reset year' : 'Reiniciar año'}
+        >
+          ✕
+        </button>
+      )}
     </div>
   )
 }
@@ -82,44 +69,8 @@ const RISK_FLOORS: Array<{
   { value: 'critical', labelEn: 'Crit', labelEs: 'Crít' },
 ]
 
-export function RiskFloorToggle({ lang }: { lang: 'en' | 'es' }) {
-  const state = useExploreState()
-  const dispatch = useExploreDispatch()
-  return (
-    <div
-      className="absolute bottom-16 left-3 z-10 flex"
-      style={{
-        background: 'var(--color-background-card, #fff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 4,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        overflow: 'hidden',
-      }}
-    >
-      {RISK_FLOORS.map((f, i) => {
-        const active = state.riskFloor === f.value
-        return (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => dispatch({ type: 'set-risk-floor', floor: f.value })}
-            className="text-[10px] font-mono uppercase tracking-[0.12em] py-1.5 px-3 transition-colors"
-            style={{
-              background: active ? 'var(--color-accent)' : 'transparent',
-              color: active ? '#fff' : 'var(--color-text-secondary)',
-              border: 'none',
-              borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
-              cursor: 'pointer',
-            }}
-            aria-pressed={active}
-          >
-            {lang === 'en' ? f.labelEn : f.labelEs}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
+// RiskFloorToggle merged into LensToggle — rendered there as second button group.
+export function RiskFloorToggle(_props: { lang: 'en' | 'es' }) { return null }
 
 /**
  * LensToggle — Gap 6. Two lenses for v1.0:
@@ -152,8 +103,9 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
         overflow: 'hidden',
       }}
       role="group"
-      aria-label={lang === 'en' ? 'Lens — what to highlight on the map' : 'Lente — qué resaltar en el mapa'}
+      aria-label={lang === 'en' ? 'Map controls — lens and risk filter' : 'Controles del mapa — lente y filtro de riesgo'}
     >
+      {/* Lens group */}
       <span
         className="px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-[0.16em] flex items-center"
         style={{ color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' }}
@@ -181,69 +133,44 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
           </button>
         )
       })}
+      {/* Risk floor group — separator then filter buttons */}
+      <span
+        aria-hidden="true"
+        style={{
+          display: 'inline-block',
+          width: 1,
+          alignSelf: 'stretch',
+          background: 'var(--color-border)',
+          margin: '4px 0',
+        }}
+      />
+      {RISK_FLOORS.map((f) => {
+        const active = state.riskFloor === f.value
+        return (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => dispatch({ type: 'set-risk-floor', floor: f.value })}
+            className="text-[10px] font-mono uppercase tracking-[0.12em] py-1.5 px-2.5 transition-colors"
+            style={{
+              background: active ? 'var(--color-accent)' : 'transparent',
+              color: active ? '#fff' : 'var(--color-text-secondary)',
+              border: 'none',
+              borderLeft: '1px solid var(--color-border)',
+              cursor: 'pointer',
+            }}
+            aria-pressed={active}
+          >
+            {lang === 'en' ? f.labelEn : f.labelEs}
+          </button>
+        )
+      })}
     </div>
   )
 }
 
-// Sector palette — 6 most prominent sectors for the legend key
-const LEGEND_SECTORS = [
-  { color: '#dc2626', labelEn: 'Health',         labelEs: 'Salud' },
-  { color: '#ea580c', labelEn: 'Infrastructure',  labelEs: 'Infraestructura' },
-  { color: '#eab308', labelEn: 'Energy',          labelEs: 'Energía' },
-  { color: '#3b82f6', labelEn: 'Education',       labelEs: 'Educación' },
-  { color: '#16a34a', labelEn: 'Treasury',        labelEs: 'Hacienda' },
-  { color: '#64748b', labelEn: 'Other',           labelEs: 'Otros' },
-]
-
-const LEGEND_RISK = [
-  { color: '#ef4444', labelEn: 'Critical ≥0.60', labelEs: 'Crítico ≥0.60' },
-  { color: '#f59e0b', labelEn: 'High ≥0.40',     labelEs: 'Alto ≥0.40' },
-  { color: '#a16207', labelEn: 'Medium ≥0.25',   labelEs: 'Medio ≥0.25' },
-  { color: '#71717a', labelEn: 'Low <0.25',       labelEs: 'Bajo <0.25' },
-]
-
-/**
- * MapLegend — floating key chip at bottom-right of the canvas.
- * Shows size/color meaning for the active lens.
- */
-export function MapLegend({ lang }: { lang: 'en' | 'es' }) {
-  const state = useExploreState()
-  const isRisk = state.lens === 'risk'
-  const rows = isRisk ? LEGEND_RISK : LEGEND_SECTORS
-  const sizeKey = isRisk
-    ? (lang === 'en' ? 'size = risk score' : 'tamaño = riesgo')
-    : (lang === 'en' ? 'size = total spend' : 'tamaño = gasto total')
-
-  return (
-    <div
-      className="absolute bottom-16 right-3 z-10 pointer-events-none"
-      style={{
-        background: 'var(--color-background-card, #fff)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 4,
-        padding: '8px 10px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        minWidth: 140,
-      }}
-    >
-      <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
-        {lang === 'en' ? 'Legend' : 'Leyenda'}
-      </p>
-      <p className="text-[9px] font-mono text-text-muted mb-2 italic">{sizeKey}</p>
-      {rows.map((r) => (
-        <div key={r.color} className="flex items-center gap-1.5 mb-1">
-          <span
-            className="h-2 w-2 rounded-full flex-shrink-0"
-            style={{ backgroundColor: r.color }}
-          />
-          <span className="text-[9px] font-mono text-text-secondary">
-            {lang === 'en' ? r.labelEn : r.labelEs}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
+// MapLegend removed — legend context is provided by the LensToggle label and BriefingPanel.
+export function MapLegend(_props: { lang: 'en' | 'es' }) { return null }
 
 /**
  * ShareViewButton — copies the current /explore URL (with focus stack
