@@ -1681,7 +1681,7 @@ export default function Executive() {
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate(`/contracts/${c.id}`)}
                     role="link"
                     tabIndex={0}
-                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus:bg-background-elevated"
+                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50 focus:bg-background-elevated"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"

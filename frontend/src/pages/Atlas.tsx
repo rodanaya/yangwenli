@@ -467,7 +467,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
                   ? 'What did you find when you investigated this cluster? Notes save automatically to your browser.'
                   : '¿Qué encontraste al investigar este cúmulo? Las notas se guardan automáticamente en tu navegador.'
                 }
-                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none transition-colors"
+                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 transition-colors"
                 style={{
                   background: 'var(--color-background)',
                   border: '1px solid var(--color-border)',
@@ -783,7 +783,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
           onBlur={() => setTimeout(() => setOpen(false), 180)}
           onKeyDown={handleKeyDown}
           placeholder={lang === 'en' ? 'Find a vendor (Toka, Edenred, IMSS…)' : 'Buscar proveedor (Toka, Edenred…)'}
-          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none"
+          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
           style={{
             background: 'var(--color-background-elevated, var(--color-border))',
             border: '1px solid var(--color-border)',

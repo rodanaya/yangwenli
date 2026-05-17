@@ -1143,7 +1143,7 @@ export function SectorProfile() {
       >
         <Link
           to="/sectors"
-          className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
+          className="inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           {t('profile.backToSectors')}

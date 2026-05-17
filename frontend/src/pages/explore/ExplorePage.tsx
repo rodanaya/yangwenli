@@ -303,6 +303,7 @@ export function ExplorePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <input
             type="text"
+            aria-label={t('page.searchAriaLabel', { defaultValue: 'Search vendors, institutions, or categories' })}
             value={filters.searchText}
             onChange={handleSearchChange}
             placeholder={t('page.searchPlaceholder', { entityType: filters.entityType })}

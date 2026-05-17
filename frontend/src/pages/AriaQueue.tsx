@@ -1815,6 +1815,7 @@ export default function AriaPage() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
               <input
                 type="text"
+                aria-label={isEs ? 'Buscar en la cola ARIA' : 'Search ARIA queue'}
                 placeholder={t('leads.searchPlaceholder')}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1) }}

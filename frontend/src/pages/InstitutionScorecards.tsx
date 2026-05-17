@@ -375,7 +375,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
       {/* Footer CTA */}
       <button
-        className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none"
+        className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         style={{ borderColor: tier.border, color: tier.color }}
         onClick={(e) => { e.stopPropagation(); onNavigate(item.institution_id) }}
         aria-label={t('aria.profileLink', { name: item.institution_name })}

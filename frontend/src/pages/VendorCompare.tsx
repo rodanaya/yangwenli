@@ -770,7 +770,7 @@ export default function VendorCompare() {
 
   // ---- Comparison view ----
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div id="main-content" className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Header */}
       <div className="mb-4">
         <Link

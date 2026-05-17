@@ -418,7 +418,7 @@ export function AtlasLeftRail({
                 }
               }}
               placeholder={lang === 'en' ? 'Toka, Edenred, IMSS…' : 'Toka, Edenred, IMSS…'}
-              className="w-full pl-7 pr-2.5 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none"
+              className="w-full pl-7 pr-2.5 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
               style={{
                 background: 'var(--color-background-elevated, var(--color-border))',
                 border: '1px solid var(--color-border)',
