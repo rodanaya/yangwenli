@@ -494,9 +494,11 @@ export function VendorFingerprintMini({
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      role="img"
+      role={onClick ? 'button' : 'img'}
+      tabIndex={onClick ? 0 : undefined}
       aria-label={`Risk fingerprint: ${(riskScore * 100).toFixed(0)}%`}
       onClick={onClick}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
       className={onClick ? 'cursor-pointer hover:opacity-80 transition-opacity' : undefined}
     >
       <rect width={size} height={size} fill="var(--color-background-elevated)" rx="2" />

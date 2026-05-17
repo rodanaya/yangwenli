@@ -279,12 +279,15 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
   return (
     <article
-      className="group flex flex-col rounded-sm border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-white/20"
+      className="group flex flex-col rounded-sm border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-accent/60"
       style={{
         borderColor: tier.border,
         backgroundColor: 'rgba(24,24,27,0.70)',
       }}
+      role="button"
+      tabIndex={0}
       onClick={() => onNavigate(item.institution_id)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(item.institution_id) } }}
     >
       {/* Top accent strip */}
       <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: tier.color }} aria-hidden="true" />
