@@ -813,7 +813,7 @@ export default function RedThread() {
             {t('errors.vendorNotFoundHint', { defaultValue: 'Vendor #' + id + ' is not in the procurement database. It may have been deduplicated, or the ID is wrong.' })}
           </p>
         </div>
-        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
@@ -840,7 +840,7 @@ export default function RedThread() {
           >
             {t('errors.retry', { defaultValue: 'Retry' })}
           </button>
-          <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+          <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
             {t('errors.goBack')}
           </button>
         </div>
@@ -854,7 +854,7 @@ export default function RedThread() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
         <p className="text-text-muted">{t('errors.vendorNotFound')}</p>
-        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>

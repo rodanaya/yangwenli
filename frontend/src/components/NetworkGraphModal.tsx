@@ -361,11 +361,11 @@ export function NetworkGraphModal({
                 {/* Edge / size legend */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-muted/60 mt-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block h-px w-6 bg-[#f87171]/60 border-t-2 border-[#f87171]/60" aria-hidden="true" />
+                    <span className="inline-block h-px w-6 bg-risk-critical/60 border-t-2 border-risk-critical/60" aria-hidden="true" />
                     {lang === 'en' ? 'High-risk connection' : 'Conexión de alto riesgo'}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block h-px w-6 bg-[#475569]/60 border-t-2 border-[#475569]/60" aria-hidden="true" />
+                    <span className="inline-block h-px w-6 bg-text-muted/60 border-t-2 border-text-muted/60" aria-hidden="true" />
                     {lang === 'en' ? 'Normal connection' : 'Conexión normal'}
                   </span>
                   <span className="text-text-muted/40">

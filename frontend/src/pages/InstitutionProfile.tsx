@@ -997,7 +997,7 @@ export function InstitutionProfile() {
                     <div className={cn(
                       'flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full',
                       timelineTrend.direction === 'up' ? 'bg-risk-critical/10 text-risk-critical' :
-                      timelineTrend.direction === 'down' ? 'bg-green-500/10 text-green-500' :
+                      timelineTrend.direction === 'down' ? 'bg-text-muted/10 text-text-secondary' :
                       'bg-text-muted/10 text-text-muted'
                     )}>
                       {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :

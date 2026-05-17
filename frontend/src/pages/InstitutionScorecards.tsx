@@ -257,7 +257,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
 // ---------------------------------------------------------------------------
 
 function TrendIcon({ direction, t }: { direction: string | null; t: (key: string) => string }) {
-  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label={t('trend.improving')} />
+  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-text-secondary" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3 w-3 text-text-muted" aria-label={t('trend.stable')} />
 }

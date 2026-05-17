@@ -127,8 +127,8 @@ export function DataInfographics() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-[#dc2626]/10 border border-[#dc2626]/20">
-            <BarChart2 className="h-5 w-5 text-[#dc2626]" />
+          <div className="p-2 rounded-lg bg-risk-critical/10 border border-risk-critical/20">
+            <BarChart2 className="h-5 w-5 text-risk-critical" />
           </div>
           <div>
             <h2

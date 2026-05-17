@@ -708,7 +708,7 @@ export default function ProcurementCalendar() {
 
         {/* Election year banner */}
         {isElectionYear && (
-          <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-risk-high/10/20 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-sm border border-risk-high/40 bg-risk-high/10 px-4 py-3">
             <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
             <p className="text-xs text-accent leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}

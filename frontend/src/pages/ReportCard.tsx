@@ -758,7 +758,7 @@ function WhatThisMeans({
           {bullets.map((bullet, i) => (
             <li key={i} className="flex gap-3 text-sm leading-relaxed text-text-secondary">
               <span
-                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-amber-500/20"
+                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-risk-high/20"
                 aria-hidden="true"
               >
                 {i + 1}

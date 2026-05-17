@@ -244,7 +244,7 @@ function TopCapturedList({
             <div className="text-right shrink-0">
               <div
                 className="text-lg font-bold font-mono tabular-nums leading-tight"
-                style={{ color: row.pct >= 0.5 ? '#f87171' : row.pct >= 0.3 ? '#fb923c' : row.pct >= 0.15 ? '#fbbf24' : '#94a3b8' }}
+                style={{ color: row.pct >= 0.5 ? 'var(--color-risk-critical)' : row.pct >= 0.3 ? 'var(--color-risk-high)' : row.pct >= 0.15 ? 'var(--color-risk-medium)' : 'var(--color-text-muted)' }}
               >
                 {formatPercent(row.pct, 1)}
               </div>
@@ -638,7 +638,7 @@ export default function CapturaHeatmap() {
           {!isLoading && (
             <div className="flex items-baseline gap-5">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {topCaptured.length > 0 ? severeCount : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -646,7 +646,7 @@ export default function CapturaHeatmap() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-high)' }}>
                   {valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">

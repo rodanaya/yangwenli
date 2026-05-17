@@ -127,7 +127,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           <div className="flex flex-col items-end gap-0.5">
             <div className="flex items-center gap-1.5">
               {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
-              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
+              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-risk-critical/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
                 OCDE {exceedsOECD ? '✗' : '✓'}
               </span>
               <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
@@ -1275,7 +1275,7 @@ export function Sectors() {
         {error && (
           <div
             role="alert"
-            className="rounded-sm border border-red-500/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
+            className="rounded-sm border border-risk-critical/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
           >
             {t('page.failedToLoad')}
             <button
