@@ -177,19 +177,19 @@ export function StorySixSigmaHacienda() {
 
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-text-muted mt-3 pt-2 border-t border-border">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-600"></div>
+              <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
               <span>{t('sixSigma.legendCritical')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
+              <div className="w-3 h-3 rounded-full bg-risk-high"></div>
               <span>{t('sixSigma.legendHigh')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-risk-medium"></div>
               <span>{t('sixSigma.legendMedium')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-green-600"></div>
+              <div className="w-3 h-3 rounded-full bg-text-muted"></div>
               <span>{t('sixSigma.legendLow')}</span>
             </div>
           </div>

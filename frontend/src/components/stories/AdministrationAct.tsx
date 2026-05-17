@@ -42,7 +42,7 @@ const PARTY_COLORS: Record<PartyKey, { border: string; badge: string; badgeText:
   },
   MORENA: {
     border: 'var(--color-sector-salud)',
-    badge: 'bg-red-700',
+    badge: 'bg-risk-critical',
     badgeText: 'text-text-primary',
     accent: 'var(--color-sector-salud)',
   },

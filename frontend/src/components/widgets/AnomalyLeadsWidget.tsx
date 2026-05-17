@@ -149,7 +149,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
               key={t}
               onClick={() => setTier(t)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                tier === t ? 'bg-red-600 text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                tier === t ? 'bg-risk-critical text-white' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               T{t}
