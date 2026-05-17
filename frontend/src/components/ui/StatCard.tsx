@@ -26,7 +26,7 @@ export function StatCard({
   return (
     <motion.div
       className={cn(
-        'rounded-sm border border-border/30 bg-card p-4 transition-all duration-200',
+        'rounded-sm border border-border/30 bg-background-card p-4 transition-all duration-200',
         onClick && 'cursor-pointer hover:border-border/60 hover:bg-background-elevated/10',
         className
       )}

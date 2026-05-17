@@ -169,7 +169,7 @@ function SectorDistributionFull({
               disabled={!hasData}
               className={cn(
                 'w-full group flex items-center gap-3 py-1.5 px-1 rounded transition-colors text-left',
-                hasData ? 'hover:bg-card-hover/40 cursor-pointer' : 'opacity-40 cursor-not-allowed',
+                hasData ? 'hover:bg-background-card-hover/40 cursor-pointer' : 'opacity-40 cursor-not-allowed',
               )}
               aria-label={`${s.name}: ${formatCompactMXN(s.value)}`}
             >
@@ -682,7 +682,7 @@ function TopVendorsTable({
               onClick={() => onVendorClick(v.vendor_id)}
               className={cn(
                 'w-full grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 items-center px-3 py-3 text-left transition-colors rounded cursor-pointer',
-                'hover:bg-card-hover/40',
+                'hover:bg-background-card-hover/40',
                 rank === 1 && 'bg-red-500/5',
               )}
             >
@@ -781,7 +781,7 @@ function NotableRiskContracts({
           <motion.button
             key={c.id ?? i}
             onClick={() => c.id && onContractClick(c.id)}
-            className="w-full text-left rounded-r-lg bg-card/40 hover:bg-card-hover/40 transition-all p-4"
+            className="w-full text-left rounded-r-lg bg-background-card/40 hover:bg-background-card-hover/40 transition-all p-4"
             style={{ borderLeft: `3px solid ${color}` }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1126,7 +1126,7 @@ export default function YearInReview() {
       </header>
 
       {isLoading && (
-        <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+        <div className="h-32 rounded border border-border bg-background animate-pulse" />
       )}
 
       <div className="space-y-8">
@@ -1515,7 +1515,7 @@ export default function YearInReview() {
                 {t('spotlight.label')}
               </p>
               <div
-                className="rounded-sm border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
+                className="rounded-sm border border-border/40 bg-background-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
                 onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
                 role="button"
                 tabIndex={0}
@@ -1640,7 +1640,7 @@ export default function YearInReview() {
                     'px-2.5 py-1 rounded-sm text-xs font-mono transition-colors',
                     y === validYear
                       ? 'bg-text-primary text-background font-bold'
-                      : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent',
+                      : 'text-text-muted hover:text-text-primary hover:bg-background-card-hover border border-transparent',
                   )}
                   aria-current={y === validYear ? 'page' : undefined}
                 >

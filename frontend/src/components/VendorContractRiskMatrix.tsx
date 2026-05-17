@@ -105,7 +105,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const color = getRiskColor(d.risk_level)
 
   return (
-    <div className="bg-surface-primary border border-border-subtle rounded-lg p-3 shadow-xl max-w-xs text-xs">
+    <div className="bg-background-primary border border-border-subtle rounded-lg p-3 shadow-xl max-w-xs text-xs">
       <p className="font-semibold text-text-primary mb-1 leading-snug">
         {truncate(d.title || 'Untitled Contract', 40)}
       </p>
@@ -223,7 +223,7 @@ export function VendorContractRiskMatrix({
     return (
       <div
         className={cn(
-          'bg-surface-secondary rounded-lg p-4 flex flex-col items-center justify-center',
+          'bg-background-elevated rounded-lg p-4 flex flex-col items-center justify-center',
           'min-h-[200px]',
           className
         )}
@@ -239,7 +239,7 @@ export function VendorContractRiskMatrix({
   const displayName = vendorName || 'Vendor'
 
   return (
-    <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
+    <div className={cn('bg-background-elevated rounded-lg p-4', className)}>
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">

@@ -41,7 +41,7 @@
  * migrate it.
  *
  * Editorial token reuse: any caller can pass `tone="card"` (default)
- * for the rounded-bg-card body or `tone="bare"` for inline use inside
+ * for the rounded-bg-background-card body or `tone="bare"` for inline use inside
  * a parent with its own chrome.
  */
 import { motion } from 'framer-motion'

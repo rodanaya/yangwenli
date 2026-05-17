@@ -73,7 +73,7 @@ export function BottomSheet({ open, onClose, children, className, 'aria-label': 
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
+          className="absolute top-3 right-3 p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-background-raised transition-colors"
           aria-label="Close panel"
         >
           <X className="h-4 w-4" />

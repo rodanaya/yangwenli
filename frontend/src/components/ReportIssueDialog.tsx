@@ -84,7 +84,7 @@ export function ReportIssueDialog({
       label: t('reportIssue.categories.other'),
       description: t('reportIssue.categories.otherDesc'),
       Icon: HelpCircle,
-      color: 'text-text-muted border-border/40 bg-surface/30',
+      color: 'text-text-muted border-border/40 bg-background/30',
     },
   ]
 

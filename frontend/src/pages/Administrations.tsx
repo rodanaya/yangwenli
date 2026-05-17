@@ -1519,7 +1519,7 @@ export default function Administrations() {
                     'rounded-sm border p-3 transition-all',
                     isRelevant
                       ? 'border-accent/30 bg-accent/5'
-                      : 'border-border/20 bg-card opacity-60'
+                      : 'border-border/20 bg-background-card opacity-60'
                   )}
                 >
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/20">
@@ -1630,7 +1630,7 @@ export default function Administrations() {
               <p className="text-xs text-text-muted/70 italic mb-3">
                 {t('documentedCasesNote')}
               </p>
-              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-card-hover/20 p-3">
+              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-background-card-hover/20 p-3">
                 <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-text-secondary leading-relaxed">
                   {t('groundTruthNote')}

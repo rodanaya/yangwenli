@@ -815,7 +815,7 @@ function CommunityDossier({
       aria-expanded={isExpanded}
       className={cn(
         'rounded-sm border overflow-hidden transition-all cursor-pointer',
-        'bg-surface-card border-border',
+        'bg-background-card border-border',
         isActive ? 'border-border ring-1 ring-border' : 'hover:border-border',
       )}
       style={{
@@ -1426,7 +1426,7 @@ export default function RedesKnownDossier() {
   if (dataError) {
     return (
       <div className="max-w-6xl mx-auto pb-12">
-        <div className="mt-8 rounded border border-border/60 bg-surface px-6 py-8 text-center">
+        <div className="mt-8 rounded border border-border/60 bg-background px-6 py-8 text-center">
           <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" />
           <p
             className="text-text-primary mb-1"

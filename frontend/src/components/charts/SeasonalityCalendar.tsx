@@ -97,7 +97,7 @@ export function SeasonalityCalendar() {
             'px-3 py-1 rounded-md text-xs font-mono border transition-colors',
             metric === 'risk'
               ? 'bg-accent/20 text-accent border-accent/40'
-              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-card-hover'
+              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-background-card-hover'
           )}
           aria-pressed={metric === 'risk'}
         >
@@ -109,7 +109,7 @@ export function SeasonalityCalendar() {
             'px-3 py-1 rounded-md text-xs font-mono border transition-colors',
             metric === 'amount'
               ? 'bg-accent/20 text-accent border-accent/40'
-              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-card-hover'
+              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-background-card-hover'
           )}
           aria-pressed={metric === 'amount'}
         >

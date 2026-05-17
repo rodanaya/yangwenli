@@ -89,7 +89,7 @@ export const GlowCard = forwardRef<HTMLDivElement, GlowCardProps>(
           }}
         />
         {/* Inner content container */}
-        <div className="relative z-10 rounded-[11px] bg-surface/95 backdrop-blur-sm">
+        <div className="relative z-10 rounded-[11px] bg-background/95 backdrop-blur-sm">
           {children}
         </div>
       </motion.div>

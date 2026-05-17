@@ -43,11 +43,11 @@ CardFooter.displayName = 'CardFooter'
 
 /**
  * SurfaceCard — Phase 1 canonical card surface.
- * Uses dark-first --color-bg-card / --color-bg-elevated tokens via .surface-card classes.
+ * Uses dark-first --color-bg-background-card / --color-bg-elevated tokens via .surface-card classes.
  * Prefer this over Card for new pages migrating to the unified design system.
  *
  * Variants:
- *  - default: bg-card + subtle border
+ *  - default: bg-background-card + subtle border
  *  - elevated: bg-elevated + stronger border
  *  - glass: translucent surface with backdrop-blur (for headers/overlays)
  */

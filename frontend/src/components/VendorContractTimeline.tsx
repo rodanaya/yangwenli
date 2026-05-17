@@ -199,7 +199,7 @@ export default function VendorContractTimeline({
     return (
       <div
         className={cn(
-          'bg-surface-secondary rounded-lg p-4 flex items-center justify-center',
+          'bg-background-elevated rounded-lg p-4 flex items-center justify-center',
           'border-2 border-dashed border-border',
           'min-h-[220px]',
           className,
@@ -216,7 +216,7 @@ export default function VendorContractTimeline({
 
   return (
     <div
-      className={cn('bg-surface-secondary rounded-lg p-4 space-y-3', className)}
+      className={cn('bg-background-elevated rounded-lg p-4 space-y-3', className)}
       role="region"
       aria-label={`Contract timeline for ${vendorName}`}
     >
