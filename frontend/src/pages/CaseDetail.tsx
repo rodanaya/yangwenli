@@ -1582,7 +1582,7 @@ function CaseBody({
   return (
     <div style={{ background: BG, minHeight: '100vh', color: TEXT_PRIMARY }}>
       {/* BACK NAV */}
-      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '28px 32px 0' }}>
+      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '12px 24px 0' }}>
         <button
           onClick={() => navigate('/cases')}
           style={{
@@ -1615,8 +1615,8 @@ function CaseBody({
           borderTop: `1px solid ${BORDER}`,
           borderBottom: `1px solid ${BORDER}`,
           background: PANEL,
-          padding: '36px 32px 0',
-          marginTop: 24,
+          padding: '20px 24px 0',
+          marginTop: 12,
         }}
       >
         <div style={{ maxWidth: 1140, margin: '0 auto' }}>
@@ -1721,7 +1721,7 @@ function CaseBody({
               gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
               borderTop: `1px solid ${BORDER}`,
               borderBottom: `1px solid ${BORDER}`,
-              marginBottom: 28,
+              marginBottom: 14,
             }}
           >
             {/* Contracts cell — hidden when 0 to avoid an empty "—"
@@ -1765,11 +1765,11 @@ function CaseBody({
           {/* LEDE — editorial opening paragraph */}
           <p
             style={{
-              fontSize: 17,
-              lineHeight: 1.7,
+              fontSize: 15,
+              lineHeight: 1.6,
               color: TEXT_SECONDARY,
               maxWidth: 780,
-              marginBottom: 36,
+              marginBottom: 18,
               fontFamily: 'var(--font-family-serif, Georgia, serif)',
             }}
           >
@@ -1779,7 +1779,7 @@ function CaseBody({
       </motion.header>
 
       {/* BODY */}
-      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 24px 48px' }}>
+      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 16px 24px' }}>
         {/* SECTION 01 — Model Provenance: how this case trained the risk model.
             First section so readers immediately understand the analytical
             grounding before diving into historical narrative. */}

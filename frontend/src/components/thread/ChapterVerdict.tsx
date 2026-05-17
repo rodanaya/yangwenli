@@ -262,7 +262,10 @@ export function ChapterVerdict({
               onClick={() => setMemoExpanded((v) => !v)}
               className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
             >
-              {memoExpanded ? '— Collapse' : '+ Read full memo'}
+              {memoExpanded
+                ? (lang === 'en' ? '— Collapse' : '— Contraer')
+                : (lang === 'en' ? '+ Read full memo' : '+ Leer memo completo')
+              }
             </button>
           </div>
           <div className="border-l-2 border-[var(--color-accent)] pl-3">

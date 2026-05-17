@@ -7,7 +7,6 @@ import { useUrlSearch } from '@/hooks'
 import { caseLibraryApi } from '@/api/client'
 import type {
   ScandalListItem,
-  ScandalStats,
   FraudType,
   Administration,
   LegalStatus,
@@ -123,89 +122,6 @@ function FilterPill({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Justice State Bar — proportional horizontal bar showing accountability
-// ─────────────────────────────────────────────────────────────────────────────
-
-const JUSTICE_GROUPS = [
-  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: 'var(--color-risk-critical)', labelEs: 'Impunidad', labelEn: 'Impunity' },
-  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: 'var(--color-risk-high)', labelEs: 'Investigación', labelEn: 'Investigation' },
-  { key: 'prosecuted', statuses: ['prosecuted'], color: '#3b82f6', labelEs: 'Procesados', labelEn: 'Prosecuted' },
-  { key: 'convicted', statuses: ['convicted'], color: '#22d3ee', labelEs: 'Condenados', labelEn: 'Convicted' },
-  { key: 'other', statuses: ['acquitted', 'dismissed', 'settled'], color: '#71717a', labelEs: 'Otros', labelEn: 'Other' },
-] as const
-
-function JusticeStateBar({ stats, lang }: { stats: ScandalStats; lang: string }) {
-  const total = stats.total_cases
-  if (!total) return null
-
-  const groups = JUSTICE_GROUPS.map((g) => ({
-    ...g,
-    count: g.statuses.reduce(
-      (sum, s) => sum + (stats.cases_by_legal_status.find((b) => b.legal_status === s)?.count ?? 0),
-      0
-    ),
-  })).filter((g) => g.count > 0)
-
-  const isEs = lang === 'es'
-
-  return (
-    <div className="mb-5">
-      <div
-        className="flex items-center gap-2 mb-2"
-        style={{ fontFamily: 'var(--font-family-mono)' }}
-      >
-        <span
-          className="text-[9px] tracking-[0.2em] uppercase font-bold"
-          style={{ color: 'var(--color-text-muted)' }}
-        >
-          {isEs ? 'Estado de Justicia' : 'State of Justice'}
-        </span>
-        <span className="h-px flex-1" style={{ background: 'var(--color-border)' }} />
-        <span className="text-[9px] tracking-wider text-text-muted tabular-nums">
-          {total} {isEs ? 'casos' : 'cases'}
-        </span>
-      </div>
-
-      {/* Proportional segmented bar */}
-      <div
-        className="flex w-full overflow-hidden mb-2"
-        style={{ height: 10, gap: 2, borderRadius: 2 }}
-      >
-        {groups.map((g) => (
-          <div
-            key={g.key}
-            title={`${isEs ? g.labelEs : g.labelEn}: ${g.count}`}
-            style={{
-              flex: g.count,
-              background: g.color,
-              opacity: 0.85,
-              borderRadius: 2,
-              minWidth: g.count > 0 ? 4 : 0,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="flex gap-4 flex-wrap" style={{ fontFamily: 'var(--font-family-mono)' }}>
-        {groups.map((g) => (
-          <span key={g.key} className="inline-flex items-center gap-1.5">
-            <span
-              className="inline-block h-1.5 w-2.5"
-              style={{ background: g.color, borderRadius: 1 }}
-            />
-            <span className="text-[9px] tracking-wide text-text-muted">
-              {isEs ? g.labelEs : g.labelEn}
-            </span>
-            <span className="text-[9px] tabular-nums" style={{ color: g.color }}>
-              {g.count}
-            </span>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Case row — editorial table style
@@ -582,31 +498,8 @@ export default function CaseLibrary() {
         color: '#e5e5e3',
       }}
     >
-      <div className="max-w-[1100px] mx-auto px-6 py-10">
-        {/* Utility header — same pattern as /aria + /workspace. The
-            archive is a working surface (filter, search, export, scan)
-            not a magazine cover; the impact-statement that lived in the
-            42px serif headline is now compressed into the dateline so it
-            still reads but doesn't crowd the data. */}
-        <header className="mb-3 pb-5 border-b" style={{ borderColor: BORDER_STRONG }}>
-          {/* folio-v1-P5: archival eyebrow */}
-          <div
-            className="mb-3 flex items-center gap-3"
-            style={{
-              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-muted)',
-              fontWeight: 400,
-            }}
-          >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·CA</span>
-            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              {i18n.language === 'es' ? 'Casos documentados · biblioteca' : 'Documented cases · library'}
-            </span>
-          </div>
+      <div className="max-w-[1100px] mx-auto px-6 py-3">
+        <header className="mb-3 pb-3 border-b" style={{ borderColor: BORDER_STRONG }}>
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1
@@ -615,15 +508,14 @@ export default function CaseLibrary() {
                   fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                   fontStyle: 'italic',
                   fontWeight: 500,
-                  fontSize: 'clamp(28px, 4vw, 38px)',
-                  lineHeight: 0.98,
+                  fontSize: 'clamp(20px, 3vw, 26px)',
+                  lineHeight: 1.05,
                   letterSpacing: '-0.012em',
                 }}
               >
                 {i18n.language === 'es' ? 'Registro Documentado' : 'Documented Record'}
               </h1>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
-                {/* ES: formatMXNHero already returns "X MDP" / "X billones" — don't double-tag with MXN */}
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
                 {!stats
                   ? <span className="opacity-40">{yearSpan} · {i18n.language === 'es' ? 'cargando…' : 'loading…'}</span>
                   : i18n.language === 'es'
@@ -635,29 +527,8 @@ export default function CaseLibrary() {
           </div>
         </header>
 
-        {/* Editorial framing — what this page is, and what it isn't.
-            These cases were documented by Mexican investigative
-            journalism, federal audits, and court records — not by
-            RUBLI. The platform aggregates them as the training
-            corpus for the v0.8.5 risk model. Putting that on the
-            tin avoids the misimpression that "Cases" = our work. */}
-        <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
-          <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-accent mr-2">
-              {i18n.language === 'es' ? 'Corpus de entrenamiento' : 'Training corpus'}
-            </span>
-            {i18n.language === 'es'
-              ? <>Estos casos no son nuestras investigaciones. Son escándalos documentados por <span className="text-text-primary font-medium">periodismo de investigación mexicano</span>, <span className="text-text-primary font-medium">auditorías federales</span> y <span className="text-text-primary font-medium">expedientes judiciales</span> — el conjunto de verdad fundamental que entrena el modelo de riesgo de RUBLI. Cuando ARIA marca a un proveedor, el modelo pregunta: ¿se parece este patrón a uno de estos casos?</>
-              : <>These cases are not our investigations. They are scandals documented by <span className="text-text-primary font-medium">Mexican investigative journalism</span>, <span className="text-text-primary font-medium">federal audits</span>, and <span className="text-text-primary font-medium">court records</span> — the ground-truth corpus that trains RUBLI's risk model. When ARIA flags a vendor, the model is asking: does this pattern resemble one of these cases?</>
-            }
-          </p>
-        </div>
-
-        {/* Justice State Bar — shows accountability landscape before filters */}
-        {stats && <JusticeStateBar stats={stats} lang={i18n.language} />}
-
         {/* ─────────── Filter strip ─────────── */}
-        <section className="mb-6 space-y-3">
+        <section className="mb-3 space-y-2">
           {/* Search */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-md">
