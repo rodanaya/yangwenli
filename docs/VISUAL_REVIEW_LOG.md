@@ -882,3 +882,48 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions 
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy (environment constraint, not site failure) — consistent with all prior automated runs. No new bilingual gaps. Recommend running from VPS (37.60.232.109) or whitelisted host for accurate HTTP/API validation.
+
+---
+## Visual Review — 2026-05-17T18:09:34Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | ⚠ |
+| https://rubli.xyz/atlas | 403 | ⚠ |
+| https://rubli.xyz/aria | 403 | ⚠ |
+| https://rubli.xyz/sectors | 403 | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 | ⚠ |
+| https://rubli.xyz/cases | 403 | ⚠ |
+| https://rubli.xyz/methodology | 403 | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | ⚠ |
+
+> **Note:** TLS handshake completes successfully to 37.60.232.109; 403s are WAF/IP-based egress restriction from this managed cloud environment — not a site outage. Consistent with all prior automated runs from this host.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?limit=5 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/sectors | blocked (egress proxy, empty body) | ⚠ |
+
+> All API checks blocked by same egress restriction. Run from VPS (37.60.232.109) or whitelisted host for accurate validation.
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions detected:
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 16 hits — all confirmed false positives (unchanged from prior run):
+- `AriaQueue.tsx:965–971`: bilingual `{es:…, en:…}` label maps — legitimate data, not UI key leaks
+- `Executive.tsx:65,84,103`: company proper nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — not i18n keys
+- `InstitutionScorecards.tsx:441`: `TIER_STYLES[tierName as TierKey]` — JS object lookup, not a UI string
+- `Methodology.tsx:118`: academic citation `Mahalanobis, P.C.` — not rendered as a key
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story chart data
+- `CaseLibrary.tsx:304`: inside a code comment, never rendered
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy (environment constraint, not site failure). No new bilingual gaps found. Recommend running checks from VPS (37.60.232.109) or a whitelisted IP for accurate HTTP/API validation.
