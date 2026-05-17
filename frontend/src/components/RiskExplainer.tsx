@@ -414,7 +414,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
 
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="w-full text-xs border-collapse">
+      <table className="w-full text-xs border-collapse" aria-label="Risk factor coefficients">
         <thead>
           <tr className="border-b border-border text-text-muted">
             <th className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Factor</th>

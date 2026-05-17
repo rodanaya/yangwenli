@@ -169,7 +169,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label={t('ariaWidget.tableAriaLabel', { defaultValue: 'ARIA investigation leads' })}>
             <thead>
               <tr className="text-left text-[11px] text-text-muted uppercase tracking-wider border-b border-border">
                 <th className="pb-2 pr-2">#</th>

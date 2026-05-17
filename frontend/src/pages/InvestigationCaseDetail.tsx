@@ -1299,6 +1299,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder="Article / document title"
+                  aria-label="Article or document title"
                   value={evidenceTitle}
                   onChange={(e) => setEvidenceTitle(e.target.value)}
                 />
@@ -1317,6 +1318,7 @@ export function InvestigationCaseDetail() {
                   }}
                   rows={3}
                   placeholder="Summary / relevance to this case"
+                  aria-label="Evidence summary and relevance to case"
                   value={evidenceSummary}
                   onChange={(e) => setEvidenceSummary(e.target.value)}
                 />
@@ -1600,6 +1602,7 @@ export function InvestigationCaseDetail() {
                   }}
                   rows={3}
                   placeholder="Review notes (optional)"
+                  aria-label="Review notes"
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
                 />
@@ -1615,6 +1618,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder="Reviewer name"
+                  aria-label="Reviewer name"
                   value={reviewerName}
                   onChange={(e) => setReviewerName(e.target.value)}
                 />

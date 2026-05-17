@@ -145,7 +145,7 @@ export function ContractCompareModal({
 
         {/* Content */}
         <div className="p-0 overflow-x-auto">
-          <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }} aria-label="Contract comparison">
             <colgroup>
               <col style={{ width: '7rem' }} />
               {contracts.map((_, i) => (
