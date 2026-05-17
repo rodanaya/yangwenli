@@ -49,6 +49,9 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
   // and is shareable. /explore?s=salud&i=251&v=29277 deep-links into
   // vendor 29277 inside IMSS inside Salud.
   useExploreUrlSync()
+  const exploreState = useExploreState()
+  const exploreFocus = useCurrentFocus(exploreState)
+  const isPanelOpen = exploreFocus.level > 0
 
   // First-visit hint — one-time educational chip pointing at the canvas.
   // Auto-dismisses after 8s or on user click. Persisted via localStorage
@@ -86,7 +89,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
         <SearchOverlay lang={lang} />
-        <LensToggle lang={lang} />
+        {!isPanelOpen && <LensToggle lang={lang} />}
         <ShareViewButton lang={lang} />
         <YearScrubber lang={lang} />
         {showHint && (
