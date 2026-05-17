@@ -793,170 +793,6 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
  * Down-sampled to max 2,000 points total for SVG performance.
  */
 
-/**
- * TierEditorialStrip — 4 horizontal rows, one per tier.
- * § LOS CUATRO ANILLOS (The Four Rings) — editorial naming for T1–T4.
- */
-function TierEditorialStrip({
-  counts,
-  isEs,
-  statsLoading,
-}: {
-  counts: Record<number, number>
-  isEs: boolean
-  statsLoading: boolean
-}) {
-  const total = Object.values(counts).reduce((s, v) => s + v, 0)
-
-  const rows = [
-    {
-      tier: 1,
-      label: isEs ? 'T1 · Crítico' : 'T1 · Critical',
-      sublabel: isEs ? 'Prioridad máxima de investigación' : 'Maximum investigation priority',
-      color: RISK_COLORS.critical,
-    },
-    {
-      tier: 2,
-      label: isEs ? 'T2 · Alto' : 'T2 · High',
-      sublabel: isEs ? 'Revisión urgente' : 'Urgent review',
-      color: RISK_COLORS.high,
-    },
-    {
-      tier: 3,
-      label: isEs ? 'T3 · Medio' : 'T3 · Medium',
-      sublabel: isEs ? 'Señales emergentes' : 'Emerging signals',
-      color: RISK_COLORS.medium,
-    },
-    {
-      tier: 4,
-      label: isEs ? 'T4 · Bajo' : 'T4 · Low',
-      sublabel: isEs ? 'Ruido de fondo' : 'Background noise',
-      color: RISK_COLORS.low,
-    },
-  ]
-
-  return (
-    <div className="mb-5">
-      {/* § kicker */}
-      <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
-        {isEs
-          ? '§ LOS CUATRO ANILLOS · COLA DE INVESTIGACIÓN'
-          : '§ FOUR RINGS · INVESTIGATION QUEUE'}
-      </p>
-
-      {/* Stacked proportion bar — shows T1:T2:T3:T4 at a glance.
-          Segments are labeled to surface the editorial insight: T1+T2
-          are a small fraction but represent the highest-priority leads. */}
-      {!statsLoading && total > 0 && (
-        <div className="mb-3">
-          <div className="h-5 w-full overflow-hidden flex mb-1.5 rounded-sm">
-            {rows.map(({ tier, color }) => {
-              const count = counts[tier] ?? 0
-              const pct = (count / total) * 100
-              if (pct < 0.05) return null
-              return (
-                <div
-                  key={tier}
-                  title={`T${tier}: ${formatNumber(count)} (${pct.toFixed(1)}%)`}
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: color,
-                    opacity: tier === 4 ? 0.25 : tier === 3 ? 0.55 : 1,
-                    minWidth: tier <= 2 ? 6 : undefined,
-                  }}
-                />
-              )
-            })}
-          </div>
-          {/* Proportion legend — T1+T2 elevated percentage callout */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {rows.slice(0, 2).map(({ tier, color }) => {
-              const count = counts[tier] ?? 0
-              const pct = ((count / total) * 100).toFixed(2)
-              return (
-                <span key={tier} className="inline-flex items-center gap-1 text-[9px] font-mono tabular-nums">
-                  <span className="h-1.5 w-3 rounded-sm inline-block" style={{ background: color }} />
-                  <span style={{ color }}>T{tier}</span>
-                  <span className="text-text-muted">{formatNumber(count)} ({pct}%)</span>
-                </span>
-              )
-            })}
-            <span className="text-text-muted text-[9px] font-mono">· T3 {formatNumber(counts[3] ?? 0)} · T4 {formatNumber(counts[4] ?? 0)}</span>
-          </div>
-        </div>
-      )}
-
-      {statsLoading ? (
-        <div className="space-y-1.5">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-14 rounded-sm" />)}
-        </div>
-      ) : (
-        <div className="space-y-1.5">
-          {rows.map(({ tier, label, sublabel, color }) => {
-            const count = counts[tier] ?? 0
-            const fraction = total > 0 ? count / total : 0
-            const pct = (fraction * 100).toFixed(1)
-            const isCritical = tier === 1
-
-            return (
-              <div
-                key={tier}
-                className="px-3 py-2.5 rounded-sm border border-border/60"
-                style={{
-                  borderLeft: `3px solid ${color}`,
-                  background: isCritical
-                    ? `linear-gradient(90deg, ${color}08 0%, transparent 60%)`
-                    : 'var(--color-background-card)',
-                }}
-              >
-                <div className="flex items-start justify-between gap-3 mb-1.5">
-                  {/* Label + sublabel */}
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.1em]" style={{ color }}>
-                      {label}
-                    </span>
-                    <p className="text-[9px] text-text-muted leading-none mt-0.5">{sublabel}</p>
-                  </div>
-
-                  {/* Count + pct — big number hero */}
-                  <div className="flex items-baseline gap-1.5 whitespace-nowrap shrink-0">
-                    <span
-                      className="tabular-nums leading-none"
-                      style={{
-                        fontFamily: 'var(--font-family-serif)',
-                        fontSize: isCritical ? '1.5rem' : '1.25rem',
-                        fontWeight: 700,
-                        fontStyle: 'italic',
-                        color: isCritical ? color : 'var(--color-text-primary)',
-                      }}
-                    >
-                      {formatNumber(count)}
-                    </span>
-                    <span className="font-mono text-[10px] text-text-muted/70 self-center">
-                      {pct}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Progress track — shows tier's share of full 248K queue */}
-                <div className="relative h-1.5 rounded-full bg-background-elevated overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full transition-[width]"
-                    style={{
-                      width: `${Math.max(fraction * 100, fraction > 0 ? 0.4 : 0)}%`,
-                      background: `linear-gradient(90deg, ${color}cc 0%, ${color}44 100%)`,
-                    }}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // 2026-05-16 (Audit F060/F169/F170): pattern names aligned to backend canon.
 //   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
 //   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
@@ -1333,7 +1169,7 @@ export default function AriaPage() {
 
   return (
     <div className="bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         {/* ════════════════════════════════════════════════════════════════
             UTILITY HEADER — replaces EditorialPageShell.
             The page is a working surface for investigators, not a
@@ -1461,9 +1297,28 @@ export default function AriaPage() {
             Left: 4-ring tier strip. Right: 4 real investigative metrics
             (at-risk spend, EFOS/SFP external flags, new vendors, pipeline).
            ════════════════════════════════════════════════════════════════ */}
+        {/* Tier chip row — replaces TierEditorialStrip fat bars */}
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+            {isEs ? 'Niveles' : 'Tiers'}
+          </span>
+          {TIER_CONFIG.map((tc) => {
+            const count = tierCounts[tc.tier] ?? 0
+            return (
+              <span
+                key={tc.tier}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-mono"
+                style={{ borderColor: 'var(--color-border)', background: 'var(--color-background-card)', color: 'var(--color-text-muted)' }}
+              >
+                <span className={tc.textColor + ' font-bold'}>T{tc.tier}</span>
+                <span className="tabular-nums">{statsLoading ? '…' : formatNumber(count)}</span>
+              </span>
+            )
+          })}
+        </div>
+
         <div className="mb-5 grid gap-4 md:gap-5 md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_380px]">
-          {/* Left: tier strip */}
-          <TierEditorialStrip counts={tierCounts} isEs={isEs} statsLoading={statsLoading} />
+          <div />
 
           {/* Right: real investigative metrics — replaces synthesized distribution */}
           <div>
@@ -1476,27 +1331,6 @@ export default function AriaPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
-                {/* Elevated value MXN */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
-                    {isEs ? 'Gasto en riesgo' : 'At-risk spend'}
-                  </div>
-                  <div
-                    className="tabular-nums leading-tight"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: RISK_COLORS.critical,
-                    }}
-                  >
-                    {elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—'}
-                  </div>
-                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
-                    {isEs ? 'contratos totales de los 1,789 proveedores T1+T2 — no estimación de fraude' : 'total contracts of 1,789 T1+T2 vendors — not a fraud estimate'}
-                  </div>
-                </div>
                 {/* EFOS + SFP external flags */}
                 <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
@@ -2123,22 +1957,31 @@ export default function AriaPage() {
             <span className="text-[11px] text-text-muted font-mono tabular-nums">
               {totalLeads > 0 ? `${formatNumber(totalLeads)} ${t('leads.vendorCount')}` : ''}
             </span>
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
-                {isEs ? 'Ordenar' : 'Sort'}
+            <div className="ml-auto flex items-center gap-1 flex-wrap">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted mr-1">
+                {isEs ? 'Orden' : 'Sort'}
               </span>
-              <select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value as typeof sortKey)}
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-background-card text-text-secondary border border-border hover:border-border cursor-pointer focus-visible:outline-none focus-visible:border-accent"
-                aria-label={isEs ? 'Ordenar por' : 'Sort by'}
-              >
-                <option value="ips">{isEs ? 'Riesgo (IPS)' : 'Risk (IPS)'}</option>
-                <option value="value">{isEs ? 'Valor total' : 'Total value'}</option>
-                <option value="recency">{isEs ? 'Última actividad' : 'Last activity'}</option>
-                <option value="tenure">{isEs ? 'Años activo' : 'Years active'}</option>
-                <option value="pattern">{isEs ? 'Patrón' : 'Pattern'}</option>
-              </select>
+              {(
+                [
+                  { key: 'ips',     labelEs: 'Riesgo ↕',    labelEn: 'Risk ↕' },
+                  { key: 'value',   labelEs: 'MXN ↕',       labelEn: 'MXN ↕' },
+                  { key: 'recency', labelEs: 'T1 Reciente ↕',labelEn: 'T1 Count ↕' },
+                  { key: 'pattern', labelEs: 'Patrón ↕',    labelEn: 'Pattern ↕' },
+                ] as const
+              ).map(({ key, labelEs, labelEn }) => (
+                <button
+                  key={key}
+                  onClick={() => setSortKey(key)}
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium border transition-colors"
+                  style={{
+                    background: sortKey === key ? 'var(--color-accent)' : 'var(--color-background-card)',
+                    color: sortKey === key ? '#ffffff' : 'var(--color-text-secondary)',
+                    borderColor: sortKey === key ? 'var(--color-accent)' : 'var(--color-border)',
+                  }}
+                >
+                  {isEs ? labelEs : labelEn}
+                </button>
+              ))}
               <span className="mx-1 h-3 w-px bg-border" aria-hidden />
               <TableExportButton
                 data={leadsItems as unknown as Record<string, unknown>[]}

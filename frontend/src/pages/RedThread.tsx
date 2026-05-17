@@ -39,7 +39,6 @@ import { ChapterSubject } from '@/components/thread/ChapterSubject'
 import { TimelineHourglass } from '@/components/thread/TimelineHourglass'
 import { PatternDiagnostic } from '@/components/thread/PatternDiagnostic'
 import { ConcentricConstellation, classifyRole } from '@/components/thread/ConcentricConstellation'
-import { InstitutionalRibbon } from '@/components/thread/InstitutionalRibbon'
 import { MoneyStaircase } from '@/components/thread/MoneyStaircase'
 import { ChapterVerdict } from '@/components/thread/ChapterVerdict'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -188,9 +187,9 @@ function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
     .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
     .slice(0, 10)
 
-  // Cap diagnostic panel at 6 rows. Below 6 the contributions are <0.05
-  // and add visual noise without explaining the pattern.
-  const sortedSix = sorted.slice(0, 6)
+  // Cap diagnostic panel at 3 rows: direct award, high-risk rate, avg contract value are
+  // the most interpretable signals; beyond 3 the contributions are <0.05 and add noise.
+  const sortedSix = sorted.slice(0, 3)
 
   return (
     <ChapterShell id="chapter-pattern">
@@ -275,6 +274,107 @@ function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
  * it inherits credibility from medicine. The same metaphor works
  * here: this is a *diagnosis*, not an opinion.
  */
+
+// ─── Institutional Footprint Table ─────────────────────────────────────────
+
+type InstitutionRow = {
+  institution_id: number
+  institution_name: string
+  institution_type?: string
+  contract_count: number
+  total_value_mxn: number
+  avg_risk_score?: number
+  first_year?: number
+  last_year?: number
+}
+
+type InstSortKey = 'name' | 'value' | 'contracts' | 'years'
+
+function InstitutionalFootprintTable({ institutions, isEs }: { institutions: InstitutionRow[]; isEs: boolean }) {
+  const [instSortKey, setInstSortKey] = useState<InstSortKey>('value')
+  const [instSortDir, setInstSortDir] = useState<'asc' | 'desc'>('desc')
+
+  const sorted = [...institutions].sort((a, b) => {
+    let cmp = 0
+    if (instSortKey === 'name') cmp = a.institution_name.localeCompare(b.institution_name)
+    else if (instSortKey === 'value') cmp = a.total_value_mxn - b.total_value_mxn
+    else if (instSortKey === 'contracts') cmp = a.contract_count - b.contract_count
+    else {
+      const aSpan = (a.last_year ?? 0) - (a.first_year ?? 0)
+      const bSpan = (b.last_year ?? 0) - (b.first_year ?? 0)
+      cmp = aSpan - bSpan
+    }
+    return instSortDir === 'desc' ? -cmp : cmp
+  })
+
+  const toggleSort = (key: InstSortKey) => {
+    if (instSortKey === key) setInstSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
+    else { setInstSortKey(key); setInstSortDir('desc') }
+  }
+
+  const arrow = (key: InstSortKey) =>
+    instSortKey === key ? (instSortDir === 'desc' ? ' ↓' : ' ↑') : ' ↕'
+
+  return (
+    <div className="mt-5 pt-4 border-t border-border">
+      <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
+        {isEs ? '§ HUELLA INSTITUCIONAL' : '§ INSTITUTIONAL FOOTPRINT'}
+      </p>
+      <div className="overflow-x-auto rounded-sm border border-border/60 bg-background-card">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="border-b border-border/60">
+              {(
+                [
+                  { key: 'name' as InstSortKey, labelEs: 'Institución', labelEn: 'Institution', align: 'left' },
+                  { key: 'value' as InstSortKey, labelEs: 'MXN Total', labelEn: 'Total MXN', align: 'right' },
+                  { key: 'contracts' as InstSortKey, labelEs: '# Contratos', labelEn: '# Contracts', align: 'right' },
+                  { key: 'years' as InstSortKey, labelEs: 'Período', labelEn: 'Year Range', align: 'right' },
+                ]
+              ).map(({ key, labelEs, labelEn, align }) => (
+                <th
+                  key={key}
+                  className="px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted cursor-pointer hover:text-text-primary transition-colors select-none whitespace-nowrap"
+                  style={{ textAlign: align as 'left' | 'right' }}
+                  onClick={() => toggleSort(key)}
+                  aria-sort={instSortKey === key ? (instSortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
+                >
+                  {(isEs ? labelEs : labelEn) + arrow(key)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.slice(0, 12).map((inst, i) => {
+              const yearRange = inst.first_year && inst.last_year
+                ? inst.first_year === inst.last_year ? String(inst.first_year) : `${inst.first_year}–${inst.last_year}`
+                : '—'
+              return (
+                <tr key={inst.institution_id} className={i > 0 ? 'border-t border-border/40' : ''}>
+                  <td className="px-3 py-1.5 min-w-0 max-w-[220px]">
+                    <span className="truncate block" title={inst.institution_name} style={{ color: 'var(--color-text-primary)' }}>
+                      {inst.institution_name}
+                    </span>
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-primary whitespace-nowrap">
+                    {formatCompactMXN(inst.total_value_mxn)}
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-secondary whitespace-nowrap">
+                    {formatNumber(inst.contract_count)}
+                  </td>
+                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-muted whitespace-nowrap">
+                    {yearRange}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null; first_contract_year?: number; last_contract_year?: number }
@@ -374,33 +474,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
         </p>
       )}
 
-      {/* Second graph — InstitutionalRibbon. Each institution is one
-          horizontal lane spanning their first→last contract year, with
-          ribbon thickness encoding value and color encoding avg risk.
-          Top concentration is auto-annotated. */}
+      {/* Institutional footprint — sortable compact table */}
       {institutions && institutions.length > 0 && (
-        <div className="mt-5 pt-4 border-t border-border">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1.5">
-            {t('network.institutionalRibbonLabel')}
-          </p>
-          <h3 className="font-serif text-base font-bold text-text-primary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
-            {t('network.institutionalRibbonHeading')}
-          </h3>
-          <p className="text-text-secondary mb-4 max-w-2xl text-xs leading-relaxed">
-            {t('network.institutionalRibbonDescription')}
-          </p>
-          <div className="bg-background-card border border-border/60 rounded-sm p-3">
-            <InstitutionalRibbon
-              institutions={institutions}
-              vendorFirstYear={vendor.first_contract_year ?? 2008}
-              vendorLastYear={vendor.last_contract_year ?? 2025}
-              i18n={i18n}
-            />
-          </div>
-          <p className="mt-2 text-[10px] font-mono text-text-muted/60 tracking-[0.08em]">
-            {t('network.ribbonSourceFooter')}
-          </p>
-        </div>
+        <InstitutionalFootprintTable institutions={institutions} isEs={i18n.language.startsWith('es')} />
       )}
 
       {/* CTA */}

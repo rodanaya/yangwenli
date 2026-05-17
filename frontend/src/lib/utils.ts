@@ -440,6 +440,47 @@ export function getAnomalyInfo(mahalanobisDistance: number | undefined | null): 
   return null
 }
 
+const CONTRACT_STRIP_PREFIXES = [
+  'CONTRATO DE SERVICIOS DE ',
+  'CONTRATO DE PRESTACIÓN DE SERVICIOS DE ',
+  'ADJUDICACIÓN DIRECTA PARA LA ',
+  'ADJUDICACIÓN DIRECTA PARA ',
+  'LICITACIÓN PÚBLICA NACIONAL PARA ',
+  'LICITACIÓN PÚBLICA INTERNACIONAL PARA ',
+  'SERVICIO DE ',
+  'ADQUISICIÓN DE ',
+  'PROYECTO INTEGRAL DE ',
+  'ELABORACIÓN DEL PROYECTO EJECUTIVO, SUMINISTRO DE MATERIALES, ',
+  'ELABORACIÓN DE PROYECTO EJECUTIVO, SUMINISTRO DE MATERIALES, ',
+  'TRABAJOS DE CONSTRUCCIÓN Y OBRAS COMPLEMENTARIAS DEL ',
+]
+
+const INSTITUTION_ABBREVS: Record<string, string> = {
+  'INSTITUTO MEXICANO DEL SEGURO SOCIAL': 'IMSS',
+  'PETRÓLEOS MEXICANOS': 'PEMEX',
+  'COMISIÓN FEDERAL DE ELECTRICIDAD': 'CFE',
+  'SECRETARÍA DE SALUD': 'SS',
+  'SECRETARÍA DE EDUCACIÓN PÚBLICA': 'SEP',
+  'SECRETARÍA DE HACIENDA Y CRÉDITO PÚBLICO': 'SHCP',
+  'SECRETARÍA DE INFRAESTRUCTURA, COMUNICACIONES Y TRANSPORTES': 'SICT',
+  'COMISIÓN NACIONAL DEL AGUA': 'CONAGUA',
+  'INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRABAJADORES DEL ESTADO': 'ISSSTE',
+  'BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS': 'BANOBRAS',
+}
+
+export function shortenContractName(name: string, maxChars = 80): string {
+  if (!name) return ''
+  let s = name.toUpperCase()
+  for (const prefix of CONTRACT_STRIP_PREFIXES) {
+    if (s.startsWith(prefix)) { s = s.slice(prefix.length); break }
+  }
+  for (const [full, abbrev] of Object.entries(INSTITUTION_ABBREVS)) {
+    s = s.replace(full, abbrev)
+  }
+  s = s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+  return s.length > maxChars ? s.slice(0, maxChars) + '…' : s
+}
+
 /**
  * Clamp a page number to valid range
  */

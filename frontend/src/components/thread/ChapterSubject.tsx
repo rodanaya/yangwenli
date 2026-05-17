@@ -225,7 +225,7 @@ export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
             <span className="text-text-muted text-[10px] font-mono">vs ~48% nat'l</span>
           </div>
 
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2" title="OECD reference band: 2–15% high-risk">
             <span
               className="font-bold tabular-nums text-base"
               style={{ color: vendor.high_risk_pct > 15 ? 'var(--color-risk-high)' : 'var(--color-text-primary)' }}
@@ -240,7 +240,6 @@ export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
               referenceMin={0.02}
               referenceMax={0.15}
             />
-            <span className="text-text-muted text-[10px] font-mono">OECD 2–15%</span>
           </div>
         </div>
       </motion.div>

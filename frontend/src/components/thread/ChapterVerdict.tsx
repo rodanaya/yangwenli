@@ -35,59 +35,6 @@ function getPatternMeta(t: (key: string) => string): Record<string, { label: str
   }
 }
 
-// ─── VerdictGauge ────────────────────────────────────────────────────────────
-
-function VerdictGauge({ score, color }: { score: number; color: string }) {
-  const W = 160
-  const H = 92
-  const cx = W / 2
-  const cy = H - 6
-  const R = 64
-  const angleRad = ((score / 100) * 180 - 180) * (Math.PI / 180)
-  const needleLen = R - 6
-  const nx = cx + Math.cos(angleRad) * needleLen
-  const ny = cy + Math.sin(angleRad) * needleLen
-
-  const segments = [
-    { from: 0,  to: 25,  color: 'var(--color-text-muted)' },
-    { from: 25, to: 40,  color: 'var(--color-risk-medium)' },
-    { from: 40, to: 60,  color: 'var(--color-risk-high)' },
-    { from: 60, to: 100, color: 'var(--color-risk-critical)' },
-  ]
-
-  const arcPoint = (pct: number) => {
-    const a = (pct / 100) * 180 - 180
-    const r = a * (Math.PI / 180)
-    return { x: cx + Math.cos(r) * R, y: cy + Math.sin(r) * R }
-  }
-
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-[160px] h-auto" role="img" aria-label={`Risk score gauge: ${score.toFixed(0)} out of 100`}>
-      {segments.map((s) => {
-        const p1 = arcPoint(s.from)
-        const p2 = arcPoint(s.to)
-        const largeArc = s.to - s.from > 50 ? 1 : 0
-        return (
-          <path
-            key={`seg-${s.from}`}
-            d={`M ${p1.x} ${p1.y} A ${R} ${R} 0 ${largeArc} 1 ${p2.x} ${p2.y}`}
-            stroke={s.color}
-            strokeWidth={6}
-            fill="none"
-            opacity={0.85}
-            strokeLinecap="butt"
-          />
-        )
-      })}
-      <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth={2.4} strokeLinecap="round" />
-      <circle cx={cx} cy={cy} r={5} fill="var(--color-background-card)" stroke={color} strokeWidth={2} />
-      <text x={cx} y={cy - R - 8} textAnchor="middle" fontSize={20} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} fill={color}>
-        {score.toFixed(0)}
-      </text>
-    </svg>
-  )
-}
-
 // ─── ChapterShell ────────────────────────────────────────────────────────────
 
 function ChapterShell({ id, children }: { id: string; children: React.ReactNode }) {
@@ -147,7 +94,8 @@ export function ChapterVerdict({
   coBidderCount,
   aria,
 }: ChapterVerdictProps) {
-  const { t } = useTranslation('redThread')
+  const { t, i18n } = useTranslation('redThread')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const navigate = useNavigate()
 
   const { data: webEvidence } = useQuery({
@@ -209,16 +157,20 @@ export function ChapterVerdict({
     const webVerdict = aria.web_evidence_verdict
     if (webVerdict && webVerdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
       const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
-      const webLabel = webVerdict === 'SANCTION' ? 'Sanción documentada' : webVerdict === 'CORRUPTION_MENTION' ? 'Mención en noticias' : 'Cobertura periodística'
+      const webLabel = webVerdict === 'SANCTION'
+        ? (lang === 'en' ? 'Documented sanction' : 'Sanción documentada')
+        : webVerdict === 'CORRUPTION_MENTION'
+        ? (lang === 'en' ? 'News mention' : 'Mención en noticias')
+        : (lang === 'en' ? 'Press coverage' : 'Cobertura periodística')
       evidence.push({
-        label: 'Evidencia web (CENTINELA)',
+        label: lang === 'en' ? 'Web evidence' : 'Evidencia web',
         value: <span style={{ color: webColor }}>{webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%</span>,
         weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
       })
     } else {
       evidence.push({
-        label: 'Búsqueda web (CENTINELA)',
-        value: <span className="text-text-muted">Sin cobertura encontrada</span>,
+        label: lang === 'en' ? 'Web evidence' : 'Evidencia web',
+        value: <span className="text-text-muted">{lang === 'en' ? 'No coverage found' : 'Sin cobertura encontrada'}</span>,
         weight: 'low',
       })
     }
@@ -233,9 +185,9 @@ export function ChapterVerdict({
     <ChapterShell id="chapter-verdict">
       <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
 
-      {/* Verdict header */}
-      <div className="flex items-start justify-between gap-4 mb-5 flex-wrap">
-        <div className="flex-1 min-w-[280px]">
+      {/* Verdict header — 3 stat items replace the gauge */}
+      <div className="flex items-start gap-4 mb-5 flex-wrap">
+        <div className="flex-1 min-w-[240px]">
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
             {t('verdict.theQuestion', { defaultValue: 'The Question' })}
           </p>
@@ -245,8 +197,36 @@ export function ChapterVerdict({
             })}
           </p>
         </div>
-        <div className="flex-shrink-0">
-          <VerdictGauge score={score100} color={riskColor} />
+        <div className="flex items-start gap-4 flex-wrap">
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
+              {t('verdict.riskIndicatorLabel', { defaultValue: 'Risk indicator' })}
+            </p>
+            <span
+              className="text-sm font-mono font-bold tabular-nums"
+              style={{ color: riskColor }}
+            >
+              {score100.toFixed(0)}
+              <span className="text-[10px] font-normal text-text-muted">/100</span>
+            </span>
+          </div>
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
+              {t('verdict.riskLevelLabel', { defaultValue: 'Risk level' })}
+            </p>
+            <span
+              className="text-xs font-mono font-bold uppercase tracking-[0.08em]"
+              style={{ color: riskLevel === 'low' ? 'var(--color-text-muted)' : riskColor }}
+            >
+              {riskLevel}
+            </span>
+          </div>
+          <div className="max-w-[220px]">
+            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
+              {t('verdict.assessmentLabel', { defaultValue: 'Assessment' })}
+            </p>
+            <p className="text-xs text-text-secondary leading-snug">{finding}</p>
+          </div>
         </div>
       </div>
 
@@ -269,25 +249,6 @@ export function ChapterVerdict({
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* The Finding */}
-      <div className="mb-5">
-        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-          {t('verdict.theFinding', { defaultValue: 'The Finding' })}
-        </p>
-        <p
-          className="text-text-primary leading-snug max-w-2xl"
-          style={{
-            fontFamily: 'var(--font-family-serif)',
-            fontStyle: 'italic',
-            fontSize: 'clamp(1.1rem, 1.8vw, 1.35rem)',
-            borderLeft: `2px solid ${riskColor}`,
-            paddingLeft: '0.85rem',
-          }}
-        >
-          {finding}
-        </p>
       </div>
 
       {/* ARIA memo */}
@@ -346,7 +307,7 @@ export function ChapterVerdict({
       {webEvidence && webEvidence.articles.length > 0 && (
         <div className="mb-5">
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-            Evidencia Web · CENTINELA
+            {lang === 'en' ? 'Web Evidence · CENTINELA' : 'Evidencia Web · CENTINELA'}
           </p>
           <div className="flex flex-col gap-1.5">
             {webEvidence.articles.slice(0, 5).map((art, i) => {

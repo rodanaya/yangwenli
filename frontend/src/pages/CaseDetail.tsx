@@ -313,23 +313,23 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section style={{ borderTop: `1px solid ${BORDER}`, padding: '28px 0 8px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 10, flexWrap: 'wrap' }}>
+    <section style={{ borderTop: `1px solid ${BORDER}`, padding: '16px 0 6px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 6, flexWrap: 'wrap' }}>
         <span style={{ ...OVERLINE, color: CRIMSON_HI }}>
           {index} · {label}
         </span>
       </div>
-      <h2 style={{ ...SERIF_HEAD, fontSize: 'clamp(1.4rem, 2.4vw, 1.85rem)', margin: '0 0 10px', lineHeight: 1.15 }}>
+      <h2 style={{ ...SERIF_HEAD, fontSize: 'clamp(1.25rem, 2.2vw, 1.65rem)', margin: '0 0 6px', lineHeight: 1.15 }}>
         {title}
       </h2>
       {subtitle && (
         <p
           style={{
             color: TEXT_SECONDARY,
-            fontSize: 13,
+            fontSize: 12,
             maxWidth: 680,
-            marginBottom: 24,
-            lineHeight: 1.6,
+            marginBottom: 16,
+            lineHeight: 1.55,
           }}
         >
           {subtitle}
@@ -1779,10 +1779,31 @@ function CaseBody({
       </motion.header>
 
       {/* BODY */}
-      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 32px 80px' }}>
-        {/* VISUAL 1 — Contract timeline */}
+      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 24px 48px' }}>
+        {/* SECTION 01 — Model Provenance: how this case trained the risk model.
+            First section so readers immediately understand the analytical
+            grounding before diving into historical narrative. */}
         <Section
           index="01"
+          label={lang === 'es' ? 'Procedencia del modelo' : 'Model Provenance'}
+          title={lang === 'es' ? 'Cómo este caso entrenó al modelo' : 'How this case trained the model'}
+          subtitle={
+            lang === 'es'
+              ? 'La cadena explícita de datos: proveedores documentados → contratos en COMPRANET → etiquetas positivas en el entrenamiento del modelo de riesgo v0.8.5.'
+              : 'The explicit data chain: documented vendors → matched COMPRANET contracts → positive labels in v0.8.5 risk-model training.'
+          }
+        >
+          <ModelProvenancePanel
+            data={data}
+            linkedVendors={linkedVendors}
+            totalContracts={totalContracts}
+            lang={lang}
+          />
+        </Section>
+
+        {/* SECTION 02 — Contract timeline */}
+        <Section
+          index="02"
           label={lang === 'es' ? 'Cronología' : 'Timeline'}
           title={lang === 'es' ? 'Cuándo operó el esquema' : 'When the scheme operated'}
           subtitle={
@@ -1799,36 +1820,8 @@ function CaseBody({
             yearStart={yearStart}
             yearEnd={yearEnd}
             discoveryYear={data.discovery_year}
-            // Smart zoom — show a 4-year buffer before/after the fraud
-            // window. The default 2002-2025 axis was 95% empty for short
-            // cases like Segalmex (2020-2022). Discovery year is also
-            // bracketed when it falls outside the fraud window.
             axisStart={Math.max(2002, Math.min(yearStart ?? 2002, data.discovery_year ?? 2025) - 4)}
             axisEnd={Math.min(2025, Math.max(yearEnd ?? 2025, data.discovery_year ?? 2002) + 4)}
-          />
-        </Section>
-
-        {/* NEW — Model Provenance: explicit transparency about how this
-            case actually fed into the v0.8.5 model. Shows the data flow
-            from documented vendors → matched COMPRANET contracts →
-            positive training labels. The user called out the prior
-            "Training Corpus" framing as rhetoric without evidence — this
-            section is the evidence. */}
-        <Section
-          index="02"
-          label={lang === 'es' ? 'Procedencia del modelo' : 'Model Provenance'}
-          title={lang === 'es' ? 'Cómo este caso entrenó al modelo' : 'How this case trained the model'}
-          subtitle={
-            lang === 'es'
-              ? 'La cadena explícita de datos: proveedores documentados → contratos en COMPRANET → etiquetas positivas en el entrenamiento del modelo de riesgo v0.8.5.'
-              : 'The explicit data chain: documented vendors → matched COMPRANET contracts → positive labels in v0.8.5 risk-model training.'
-          }
-        >
-          <ModelProvenancePanel
-            data={data}
-            linkedVendors={linkedVendors}
-            totalContracts={totalContracts}
-            lang={lang}
           />
         </Section>
 

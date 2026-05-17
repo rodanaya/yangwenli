@@ -13,7 +13,6 @@ import type {
   LegalStatus,
   CaseLibraryParams,
 } from '@/api/types'
-import { TableExportButton } from '@/components/TableExportButton'
 import { formatCompactMXN } from '@/lib/utils'
 import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
@@ -632,79 +631,6 @@ export default function CaseLibrary() {
                   : <><span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} of {totalCases}</span> scandals unprosecuted · {yearSpan} · {formatMXNHero(totalLoss, 'en')} MXN documented</>
                 }
               </p>
-            </div>
-            <div className="flex items-baseline gap-5">
-              <div className="text-right">
-                <div
-                  className="tabular-nums leading-none"
-                  style={{
-                    fontFamily: 'var(--font-family-serif)',
-                    fontStyle: 'italic',
-                    fontWeight: 700,
-                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                    color: 'var(--color-text-primary)',
-                  }}
-                >
-                  {totalCases}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {i18n.language === 'es' ? 'Casos' : 'Cases'}
-                </div>
-              </div>
-              <div className="text-right">
-                <div
-                  className="tabular-nums leading-none"
-                  style={{
-                    fontFamily: 'var(--font-family-serif)',
-                    fontStyle: 'italic',
-                    fontWeight: 700,
-                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                    color: '#a06820',
-                  }}
-                >
-                  {totalLoss > 0 ? formatMXNHero(totalLoss, i18n.language === 'es' ? 'es' : 'en') : '—'}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {i18n.language === 'es' ? 'Pérdidas MXN' : 'Losses MXN'}
-                </div>
-              </div>
-              <div className="text-right">
-                <div
-                  className="tabular-nums leading-none"
-                  style={{
-                    fontFamily: 'var(--font-family-serif)',
-                    fontStyle: 'italic',
-                    fontWeight: 700,
-                    fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                    color: 'var(--color-oecd)',
-                  }}
-                >
-                  {prosecutedCount}
-                </div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
-                  {i18n.language === 'es' ? 'Procesados' : 'Prosecuted'}
-                </div>
-              </div>
-              {data && data.length > 0 && (
-                <div className="self-center">
-                  <TableExportButton
-                    data={data.map((c) => ({
-                      case_name_en: c.name_en,
-                      case_name_es: c.name_es,
-                      fraud_type: c.fraud_type,
-                      administration: c.administration,
-                      year_start: c.contract_year_start ?? '',
-                      year_end: c.contract_year_end ?? '',
-                      amount_mxn_low: c.amount_mxn_low ?? '',
-                      amount_mxn_high: c.amount_mxn_high ?? '',
-                      severity: c.severity,
-                      legal_status: c.legal_status,
-                      ground_truth_case_id: c.ground_truth_case_id ?? '',
-                    }))}
-                    filename="rubli-case-archive"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </header>
