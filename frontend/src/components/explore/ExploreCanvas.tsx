@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
+import type { ContractListItem } from '@/api/types'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
@@ -138,13 +139,6 @@ function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
 // plain circle with a shape that visually encodes the sector identity.
 // All shapes are convex polygons except salud (cross) and energia (bolt).
 // ────────────────────────────────────────────────────────────────────────────
-
-function polyPoints(cx: number, cy: number, r: number, sides: number, rotationDeg = 0): string {
-  return Array.from({ length: sides }, (_, i) => {
-    const angle = ((i * 360) / sides + rotationDeg) * (Math.PI / 180)
-    return `${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`
-  }).join(' ')
-}
 
 // 6-tooth gear polygon — tecnologia
 function gearPoints(cx: number, cy: number, outerR: number, innerR: number, teeth: number): string {
@@ -760,6 +754,35 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
           </AnimatePresence>
         </g>
       </svg>
+
+      {/* Z2 HTML overlay — vendor ranked list replaces SVG bubble scatter */}
+      {focus.kind === 'institution' && (
+        <Z2Panel
+          key={`z2panel-${focus.institutionId}`}
+          institutionId={focus.institutionId}
+          institutionName={focus.institutionName}
+          lang={lang}
+          dispatch={dispatch}
+        />
+      )}
+
+      {/* Z3 HTML overlay — contract list replaces SVG scatter */}
+      {(focus.kind === 'vendor' || focus.kind === 'contract') && (() => {
+        const parentVendor = focus.kind === 'vendor'
+          ? focus
+          : [...state.stack].reverse().find((f): f is Extract<Focus, { kind: 'vendor' }> => f.kind === 'vendor')
+        if (!parentVendor) return null
+        return (
+          <Z3Panel
+            key={`z3panel-${parentVendor.vendorId}`}
+            vendorId={parentVendor.vendorId}
+            vendorName={parentVendor.vendorName}
+            lang={lang}
+            dispatch={dispatch}
+            highlightContractId={focus.kind === 'contract' ? focus.contractId : null}
+          />
+        )
+      })()}
     </div>
   )
 }
@@ -1299,16 +1322,15 @@ function InstitutionBodyVisual({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z2 — institution view (vendors of an institution)
+// Z2 — institution view: just backdrop gradient (list in Z2Panel HTML overlay)
 // ────────────────────────────────────────────────────────────────────────────
 
 function Z2Layer({
-  institutionId,
-  institutionName,
-  lang,
-  dispatch,
-  triggerDrill,
-  pinAnnotation,
+  institutionName: _institutionName,
+  lang: _lang,
+  dispatch: _dispatch,
+  triggerDrill: _triggerDrill,
+  pinAnnotation: _pinAnnotation,
 }: {
   institutionId: number
   institutionName: string
@@ -1317,61 +1339,19 @@ function Z2Layer({
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
   pinAnnotation: Focus | null
 }) {
-  // Pull the parent sector from the focus stack so the canvas keeps its
-  // sector-tinted backdrop one level deeper (Salud→IMSS still glows red).
-  // Hooks must run unconditionally — same rules-of-hooks fix as Z1.
   const exploreState = useExploreState()
   const parentSector = exploreState.stack.find((f) => f.kind === 'sector') as
     | { kind: 'sector'; sectorCode: string }
     | undefined
   const sectorAccent = parentSector ? SECTOR_COLORS[parentSector.sectorCode] : null
-
-  // Reuse existing endpoint — institutionApi.getVendors
-  // Falls back gracefully on 404.
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['explore', 'z2', institutionId],
-    queryFn: async () => {
-      const { institutionApi } = await import('@/api/client')
-      return institutionApi.getVendors(institutionId, 30)
-    },
-    enabled: institutionId > 0,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  if (isLoading) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'Loading institution…' : 'Cargando institución…'}
-      </text>
-    )
-  }
-  if (isError || !data || !data.data || data.data.length === 0) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'No vendor data.' : 'Sin datos de proveedores.'}
-      </text>
-    )
-  }
-
-  // Layout: place vendors radially around the centre, sized by total_value_mxn.
-  const vendors = data.data.slice(0, 30)
-  const max = Math.max(...vendors.map((v) => v.total_value_mxn || 0), 1)
-  const cxC = SVG_W / 2
-  const cyC = SVG_H / 2
-
-  // Golden-ratio angle for sunflower spiral layout — gives organic, non-repeating
-  // placement that avoids the "concentric rings of orbs" appearance.
-  const goldenAngle = 2 * Math.PI / ((1 + Math.sqrt(5)) / 2)
-
-  // Sector-tinted backdrop (lighter than Z1, since this is a child surface).
   const z2GradId = parentSector ? `z2-bg-${parentSector.sectorCode}` : null
 
   return (
     <motion.g
-      initial={{ opacity: 0, scale: 0.88 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.10 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       {sectorAccent && z2GradId && (
         <>
@@ -1385,174 +1365,242 @@ function Z2Layer({
           <rect x={0} y={0} width={SVG_W} height={SVG_H} fill={`url(#${z2GradId})`} pointerEvents="none" />
         </>
       )}
-      <text
-        x={PAD}
-        y={PAD}
-        fontSize={11}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight={700}
-        letterSpacing={1.4}
-        fill={sectorAccent ?? 'var(--color-accent)'}
-      >
-        {`Z2 · ${shortLabel(institutionName).toUpperCase()} · ${vendors.length} ${lang === 'en' ? 'VENDORS' : 'PROVEEDORES'}`}
-      </text>
-      <text
-        x={PAD}
-        y={SVG_H - PAD * 0.5}
-        fontSize={10}
-        fontFamily="var(--font-family-mono, monospace)"
-        fill="var(--color-text-muted)"
-      >
-        {lang === 'en' ? 'click a vendor → opens Red Thread · esc to zoom out' : 'clic en proveedor → abre Hilo · esc para alejar'}
-      </text>
-
-      {/* Centre marker — represents the institution itself, with a soft
-          pulse so the user reads the radial composition as "vendors orbit
-          this institution" rather than "random circles in space".
-          2026-05-11 (Audit F033): was a framer-motion <motion.circle>
-          which threw `<circle> attribute r: Expected length, "undefined"`
-          on every Z2 mount — framer-motion needs an explicit initial
-          when keyframe-animating r, otherwise the first frame is
-          undefined. Switched to pure SVG <animate> like PinRing —
-          GPU-driven, no warnings, no React state churn. */}
-      <g style={{ pointerEvents: 'none' }}>
-        <circle
-          cx={cxC}
-          cy={cyC}
-          r={14}
-          fill="none"
-          stroke="var(--color-text-muted)"
-          strokeWidth={1}
-          strokeDasharray="2 3"
-          opacity={0.5}
-        >
-          <animate attributeName="r" values="14;22;14" dur="3.5s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.5;0.15;0.5" dur="3.5s" repeatCount="indefinite" />
-        </circle>
-        <circle cx={cxC} cy={cyC} r={4} fill="var(--color-text-muted)" opacity={0.7} />
-      </g>
-
-      {vendors.map((v, i) => {
-        // Sunflower phyllotaxis: golden-angle spiral gives organic, non-repeating
-        // placement with no concentric-ring artefacts (audit: "orbs lined up").
-        const angle = i * goldenAngle
-        const radius = 70 + Math.sqrt(i + 1) * 50
-        const cx = cxC + Math.cos(angle) * radius
-        const cy = cyC + Math.sin(angle) * radius
-        const sizeRatio = (v.total_value_mxn ?? 0) / max
-        const r = 8 + Math.sqrt(sizeRatio) * 30
-        const risk = v.avg_risk_score ?? 0
-        const level = getRiskLevelFromScore(risk)
-        const fill = RISK_COLORS[level]
-        const tooltip = `${v.vendor_name}\n${formatNumber(v.contract_count)} contracts · ${formatCompactMXN(v.total_value_mxn ?? 0)}\n${level.toUpperCase()} · ${(risk * 100).toFixed(1)}%`
-        return (
-          <VendorBodyVisual
-            key={v.vendor_id}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill={fill}
-            tooltip={tooltip}
-            label={sizeRatio > 0.18 ? shortLabel(v.vendor_name) : null}
-            isPinned={pinAnnotation?.kind === 'vendor' && pinAnnotation.vendorId === v.vendor_id}
-            onClick={() =>
-              triggerDrill(cx, cy, () =>
-                dispatch({
-                  type: 'drill-into-vendor',
-                  vendorId: v.vendor_id,
-                  vendorName: v.vendor_name,
-                }),
-              )
-            }
-            onHover={(hovering) =>
-              dispatch({
-                type: 'set-hover',
-                hover: hovering ? { kind: 'vendor', id: v.vendor_id } : null,
-              })
-            }
-          />
-        )
-      })}
     </motion.g>
   )
 }
 
-function VendorBodyVisual({
-  cx,
-  cy,
-  r,
-  fill,
-  label,
-  tooltip,
-  onClick,
-  onHover,
-  isPinned = false,
-}: {
-  cx: number
-  cy: number
-  r: number
-  fill: string
-  label: string | null
-  tooltip?: string
-  onClick: () => void
-  onHover: (hovering: boolean) => void
-  isPinned?: boolean
-}) {
-  const [hovered, setHovered] = useState(false)
-  const rEffective = hovered ? r * 1.18 : r
-  return (
-    <g
-      style={{ cursor: 'pointer' }}
-      onClick={onClick}
-      onMouseEnter={() => { setHovered(true); onHover(true) }}
-      onMouseLeave={() => { setHovered(false); onHover(false) }}
-    >
-      {tooltip && <title>{tooltip}</title>}
-      {hovered && <circle cx={cx} cy={cy} r={rEffective + 5} fill={fill} fillOpacity={0.18} />}
-      {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 1} color={fill} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={0.92} stroke="var(--color-background)" strokeWidth={1.2} />
-      {label && (
-        <text
-          x={cx}
-          y={cy - rEffective - 4}
-          textAnchor="middle"
-          fontSize={9}
-          fontFamily="var(--font-family-mono, monospace)"
-          fontWeight={700}
-          fill="var(--color-text-primary)"
-          style={{ pointerEvents: 'none' }}
-        >
-          {label}
-        </text>
-      )}
-    </g>
-  )
-}
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z3 — vendor view (contracts plotted by year × amount)
+// Z3 — vendor view: just backdrop (list in Z3Panel HTML overlay)
 // ────────────────────────────────────────────────────────────────────────────
 
 function Z3Layer({
-  vendorId,
-  vendorName,
-  lang,
-  highlightContractId,
-  pinAnnotation,
+  vendorId: _vendorId,
+  vendorName: _vendorName,
+  lang: _lang,
+  highlightContractId: _highlightContractId,
+  pinAnnotation: _pinAnnotation,
 }: {
   vendorId: number
   vendorName: string
   lang: 'en' | 'es'
-  /** If set, render a pulsing ring on the matching contract dot — used when
-   *  focus.kind === 'contract' (Z4 focus inside the same Z3 visual). */
   highlightContractId?: number | null
-  /** Contract-level pin annotation (when pinnedPath ends at a contract). */
   pinAnnotation?: Focus | null
 }) {
-  // Hooks first (rules of hooks).
-  const dispatch = useExploreDispatch()
   const exploreState = useExploreState()
-  const yearFilter = exploreState.year
+  const parentSector = exploreState.stack.find((f) => f.kind === 'sector') as
+    | { kind: 'sector'; sectorCode: string }
+    | undefined
+  const sectorAccent = parentSector ? SECTOR_COLORS[parentSector.sectorCode] : null
+  const z3GradId = parentSector ? `z3-bg-${parentSector.sectorCode}` : null
+
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {sectorAccent && z3GradId && (
+        <>
+          <defs>
+            <radialGradient id={z3GradId} cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stopColor={sectorAccent} stopOpacity={0.05} />
+              <stop offset="100%" stopColor={sectorAccent} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          <rect x={0} y={0} width={SVG_W} height={SVG_H} fill={`url(#${z3GradId})`} pointerEvents="none" />
+        </>
+      )}
+    </motion.g>
+  )
+}
+
+// Surface compatibility — sectorApi import is only kept so the module doesn't
+// die from tree-shaking in a future refactor that prunes it; remove later
+// when an explore-specific sector endpoint exists.
+void sectorApi
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z2Panel — HTML overlay: vendor ranked list for an institution
+// ────────────────────────────────────────────────────────────────────────────
+
+function Z2Panel({
+  institutionId,
+  institutionName,
+  lang,
+  dispatch,
+}: {
+  institutionId: number
+  institutionName: string
+  lang: 'en' | 'es'
+  dispatch: ReturnType<typeof useExploreDispatch>
+}) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['explore', 'z2', institutionId],
+    queryFn: async () => {
+      const { institutionApi } = await import('@/api/client')
+      return institutionApi.getVendors(institutionId, 30)
+    },
+    enabled: institutionId > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const vendors = data?.data ?? []
+  const totalVendors = (data as { total_vendors?: number } | undefined)?.total_vendors ?? vendors.length
+  const max = Math.max(...vendors.map((v) => v.total_value_mxn || 0), 1)
+
+  return (
+    <div
+      className="absolute inset-0 z-[5] overflow-y-auto"
+      style={{ background: 'var(--color-background)', top: '48px' }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div
+        className="px-4 py-3 sticky top-0 border-b"
+        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
+      >
+        <div
+          className="font-mono text-[10px] tracking-widest uppercase"
+          style={{ color: 'var(--color-accent)' }}
+        >
+          {lang === 'en' ? 'Z2 · VENDORS' : 'Z2 · PROVEEDORES'}
+        </div>
+        <div
+          className="text-sm font-semibold mt-0.5 truncate"
+          style={{ color: 'var(--color-text-primary)' }}
+        >
+          {institutionName}
+        </div>
+        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+          {isLoading
+            ? '…'
+            : `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · showing top' : 'proveedores · top'} ${vendors.length}`}
+        </div>
+      </div>
+
+      {/* Column headers */}
+      {!isLoading && !isError && vendors.length > 0 && (
+        <div
+          className="px-4 py-1.5 flex items-center gap-2 border-b font-mono text-[9px] uppercase tracking-widest"
+          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+        >
+          <span className="w-4 flex-shrink-0" />
+          <span className="w-3 flex-shrink-0" />
+          <span className="flex-1">{lang === 'en' ? 'VENDOR' : 'PROVEEDOR'}</span>
+          <span className="w-28 flex-shrink-0 hidden sm:block" />
+          <span className="w-20 text-right flex-shrink-0">{lang === 'en' ? 'SPEND' : 'MONTO'}</span>
+          <span className="w-10 text-right flex-shrink-0 hidden sm:block">{lang === 'en' ? 'CTRS' : 'CTRS'}</span>
+        </div>
+      )}
+
+      {/* Vendor rows */}
+      <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+        {isLoading && (
+          <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'Loading…' : 'Cargando…'}
+          </div>
+        )}
+        {isError && (
+          <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'No vendor data available.' : 'Sin datos de proveedores.'}
+          </div>
+        )}
+        {vendors.map((v, i) => {
+          const level = getRiskLevelFromScore(v.avg_risk_score ?? 0)
+          const fill = RISK_COLORS[level]
+          const barPct = ((v.total_value_mxn || 0) / max) * 100
+          return (
+            <div
+              key={v.vendor_id}
+              className="flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors"
+              style={{ '--hover-bg': 'var(--color-background-card)' } as React.CSSProperties}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+              onClick={() =>
+                dispatch({
+                  type: 'drill-into-vendor',
+                  vendorId: v.vendor_id,
+                  vendorName: v.vendor_name,
+                })
+              }
+            >
+              {/* Risk stripe */}
+              <div
+                className="w-1 h-5 rounded-full flex-shrink-0"
+                style={{ background: fill }}
+              />
+              {/* Rank */}
+              <span
+                className="font-mono text-[9px] w-3 text-right flex-shrink-0 tabular-nums"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {i + 1}
+              </span>
+              {/* Vendor name */}
+              <span
+                className="flex-1 font-mono text-[10px] truncate"
+                style={{ color: 'var(--color-text-primary)' }}
+                title={v.vendor_name}
+              >
+                {v.vendor_name}
+              </span>
+              {/* Spend bar */}
+              <div className="w-28 h-1.5 rounded-full flex-shrink-0 hidden sm:block" style={{ background: 'var(--color-border)' }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${barPct}%`, background: fill, opacity: 0.65 }}
+                />
+              </div>
+              {/* Amount */}
+              <span
+                className="font-mono text-[10px] font-bold w-20 text-right flex-shrink-0 tabular-nums"
+                style={{ color: fill }}
+              >
+                {formatCompactMXN(v.total_value_mxn ?? 0)}
+              </span>
+              {/* Contract count */}
+              <span
+                className="font-mono text-[9px] w-10 text-right flex-shrink-0 tabular-nums hidden sm:block"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {formatNumber(v.contract_count)}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      {vendors.length > 0 && (
+        <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en'
+            ? 'tap → Red Thread · full investigation profile'
+            : 'toca → Hilo Rojo · perfil completo de investigación'}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z3Panel — HTML overlay: contract list for a vendor
+// ────────────────────────────────────────────────────────────────────────────
+
+function Z3Panel({
+  vendorId,
+  vendorName,
+  lang,
+  dispatch,
+  highlightContractId,
+}: {
+  vendorId: number
+  vendorName: string
+  lang: 'en' | 'es'
+  dispatch: ReturnType<typeof useExploreDispatch>
+  highlightContractId?: number | null
+}) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z3', vendorId],
     queryFn: async () => {
@@ -1563,185 +1611,168 @@ function Z3Layer({
     staleTime: 5 * 60 * 1000,
   })
 
-  if (isLoading) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'Loading vendor contracts…' : 'Cargando contratos…'}
-      </text>
-    )
-  }
-  if (isError || !data || !data.data || data.data.length === 0) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'No contracts available.' : 'Sin contratos disponibles.'}
-      </text>
-    )
-  }
+  const contracts = data?.data ?? []
 
-  // Layout: x = year (linear), y = log(amount).
-  const contracts = data.data.slice(0, 100)
-  const years = contracts.map((c) => Number(c.contract_year ?? 0)).filter((y) => y > 1990)
-  const minYear = Math.min(...years, 2002)
-  const maxYear = Math.max(...years, 2025)
-  const ySpan = Math.max(maxYear - minYear, 1)
-  const amounts = contracts.map((c) => Math.max(1, Number(c.amount_mxn ?? 0)))
-  const maxLogAmt = Math.log10(Math.max(...amounts))
-  const minLogAmt = Math.log10(Math.min(...amounts))
-  const ampSpan = Math.max(maxLogAmt - minLogAmt, 0.5)
+  // Group by year for the distribution bar
+  const byYear = new Map<number, { count: number; amount: number }>()
+  contracts.forEach((c) => {
+    const yr = Number(c.contract_year ?? 0)
+    const amt = Number(c.amount_mxn ?? 0)
+    if (yr > 1990) {
+      const ex = byYear.get(yr) ?? { count: 0, amount: 0 }
+      byYear.set(yr, { count: ex.count + 1, amount: ex.amount + amt })
+    }
+  })
+  const yearEntries = Array.from(byYear.entries()).sort(([a], [b]) => a - b)
+  const maxYearAmt = Math.max(...yearEntries.map(([, v]) => v.amount), 1)
 
-  const xOf = (year: number) => PAD + ((year - minYear) / ySpan) * (SVG_W - PAD * 2)
-  const yOf = (amt: number) => SVG_H - PAD - ((Math.log10(amt) - minLogAmt) / ampSpan) * (SVG_H - PAD * 3)
-  const rOf = (amt: number) => 4 + ((Math.log10(amt) - minLogAmt) / ampSpan) * 18
-
-  // Year-filtered count for the eyebrow subtitle.
-  const visibleCount = yearFilter != null
-    ? contracts.filter((c) => Number(c.contract_year ?? 0) === yearFilter).length
-    : contracts.length
+  // Top contracts by amount
+  const topContracts = [...contracts]
+    .sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
+    .slice(0, 20)
 
   return (
-    <motion.g
-      initial={{ opacity: 0, scale: 0.85 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.10 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    <div
+      className="absolute inset-0 z-[5] overflow-y-auto"
+      style={{ background: 'var(--color-background)', top: '48px' }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
-      <text
-        x={PAD}
-        y={PAD}
-        fontSize={11}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight={700}
-        letterSpacing={1.4}
-        fill="var(--color-accent)"
+      {/* Header */}
+      <div
+        className="px-4 py-3 sticky top-0 border-b"
+        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
       >
-        {yearFilter != null
-          ? `Z3 · ${shortLabel(vendorName).toUpperCase()} · ${visibleCount}/${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'} · ${yearFilter}`
-          : `Z3 · ${shortLabel(vendorName).toUpperCase()} · ${contracts.length} ${lang === 'en' ? 'CONTRACTS' : 'CONTRATOS'}`}
-      </text>
-      <text
-        x={PAD}
-        y={SVG_H - PAD * 0.5}
-        fontSize={10}
-        fontFamily="var(--font-family-mono, monospace)"
-        fill="var(--color-text-muted)"
-      >
-        {lang === 'en' ? 'x = year · y = log(amount) · click → contract detail · esc to zoom out' : 'x = año · y = log(monto) · clic → detalle · esc para alejar'}
-      </text>
+        <div
+          className="font-mono text-[10px] tracking-widest uppercase"
+          style={{ color: 'var(--color-accent)' }}
+        >
+          {lang === 'en' ? 'Z3 · CONTRACTS' : 'Z3 · CONTRATOS'}
+        </div>
+        <div
+          className="text-sm font-semibold mt-0.5 truncate"
+          style={{ color: 'var(--color-text-primary)' }}
+        >
+          {vendorName}
+        </div>
+        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+          {isLoading ? '…' : `${contracts.length} ${lang === 'en' ? 'contracts' : 'contratos'}`}
+        </div>
+      </div>
 
-      {/* Year axis ticks */}
-      {[minYear, Math.round((minYear + maxYear) / 2), maxYear].map((y) => (
-        <g key={y}>
-          <line x1={xOf(y)} x2={xOf(y)} y1={SVG_H - PAD - 4} y2={SVG_H - PAD} stroke="var(--color-border)" strokeWidth={1} />
-          <text x={xOf(y)} y={SVG_H - PAD + 12} textAnchor="middle" fontSize={9} fontFamily="var(--font-family-mono, monospace)" fill="var(--color-text-muted)">
-            {y}
-          </text>
-        </g>
-      ))}
-
-      {/* Year-filter veil — when a single year is selected, contracts
-          outside that year render with a fade so the user keeps spatial
-          context but can read the active year as the highlighted set.
-          Pure visual; clicking still navigates to the contract. */}
-      {yearFilter != null && (
-        <line
-          x1={xOf(yearFilter)}
-          x2={xOf(yearFilter)}
-          y1={PAD * 1.5}
-          y2={SVG_H - PAD - 4}
-          stroke="var(--color-accent)"
-          strokeWidth={1}
-          strokeDasharray="4 4"
-          opacity={0.55}
-          pointerEvents="none"
-        />
+      {isLoading && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'Loading…' : 'Cargando…'}
+        </div>
+      )}
+      {isError && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No contracts found.' : 'Sin contratos disponibles.'}
+        </div>
       )}
 
-      {contracts.map((c) => {
-        const yr = Number(c.contract_year ?? minYear) || minYear
-        const amt = Math.max(1, Number(c.amount_mxn ?? 0))
-        const cx = xOf(yr)
-        const cy = yOf(amt)
-        const r = rOf(amt)
-        const risk = Number(c.risk_score ?? 0)
-        const level = getRiskLevelFromScore(risk)
-        const fill = RISK_COLORS[level]
-        const dim = yearFilter != null && yr !== yearFilter
-        const isHighlighted = highlightContractId != null && c.id === highlightContractId
-        const isPinnedContract =
-          pinAnnotation?.kind === 'contract' && pinAnnotation.contractId === c.id
-        // Tooltip body — read by the browser via SVG <title>. Keeps a
-        // hover preview without React state churn on a 100-circle scatter.
-        const tooltipLines = [
-          `${yr} · ${formatCompactMXN(amt)}`,
-          `${level.toUpperCase()} · ${(risk * 100).toFixed(1)}%`,
-        ]
-        return (
-          <g
-            key={c.id}
-            style={{ cursor: 'pointer' }}
-            // Spatial rule: clicks stay in the canvas. Drill into the
-            // contract focus, the briefing panel renders ContractBriefing,
-            // the visual layer stays at Z3 with this contract highlighted.
-            // Esc pops back to vendor focus.
-            onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+      {/* Year distribution */}
+      {yearEntries.length > 0 && (
+        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+          <div
+            className="font-mono text-[9px] tracking-widest uppercase mb-2"
+            style={{ color: 'var(--color-text-muted)' }}
           >
-            <title>{tooltipLines.join('\n')}</title>
-            {/* Pin ring — Gap 4.2. Same SMIL primitive as sectors /
-                institutions / vendors. Distinct from the Z4-focus ring
-                so a pinned-but-not-focused contract still pulses. */}
-            {isPinnedContract && !isHighlighted && (
-              <PinRing cx={cx} cy={cy} r={r + 2} color={fill} />
-            )}
-            {/* Pulsing focus ring — only renders when this contract is the
-                active Z4 focus. Two concentric circles animated via SMIL so
-                the effect doesn't add React state churn. */}
-            {isHighlighted && (
-              <>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={r + 6}
-                  fill="none"
-                  stroke={fill}
-                  strokeWidth={1.5}
-                  opacity={0.9}
-                  pointerEvents="none"
+            {lang === 'en' ? 'BY YEAR' : 'POR AÑO'}
+          </div>
+          <div className="space-y-1">
+            {yearEntries.map(([yr, { count, amount }]) => (
+              <div key={yr} className="flex items-center gap-2">
+                <span
+                  className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums"
+                  style={{ color: 'var(--color-text-muted)' }}
                 >
-                  <animate attributeName="r" values={`${r + 6};${r + 14};${r + 6}`} dur="1.8s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.8s" repeatCount="indefinite" />
-                </circle>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={r + 2}
-                  fill="none"
-                  stroke={fill}
-                  strokeWidth={2}
-                  opacity={1}
-                  pointerEvents="none"
-                />
-              </>
-            )}
-            <circle
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill={fill}
-              fillOpacity={dim ? 0.18 : isHighlighted ? 1 : 0.85}
-              stroke="var(--color-background)"
-              strokeWidth={isHighlighted ? 2 : 1}
-            />
-          </g>
-        )
-      })}
-    </motion.g>
+                  {yr}
+                </span>
+                <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--color-border)' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${(amount / maxYearAmt) * 100}%`,
+                      background: 'var(--color-accent)',
+                      opacity: 0.55,
+                    }}
+                  />
+                </div>
+                <span
+                  className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {formatCompactMXN(amount)}
+                </span>
+                <span
+                  className="font-mono text-[9px] w-6 text-right flex-shrink-0 tabular-nums"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Top contracts by amount */}
+      {topContracts.length > 0 && (
+        <div className="px-4 py-3">
+          <div
+            className="font-mono text-[9px] tracking-widest uppercase mb-2"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {lang === 'en' ? 'TOP CONTRACTS BY AMOUNT' : 'CONTRATOS POR MONTO'}
+          </div>
+          <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+            {topContracts.map((c) => {
+              const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
+              const fill = RISK_COLORS[level]
+              const isHighlighted = c.id === highlightContractId
+              const label = (c as ContractListItem & { title?: string }).title
+                ?? (c as ContractListItem & { procedure_type?: string }).procedure_type
+                ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
+              return (
+                <div
+                  key={c.id}
+                  className="flex items-start gap-2 py-2 cursor-pointer transition-colors"
+                  style={isHighlighted ? { background: `${fill}18` } : {}}
+                  onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                  onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
+                  onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+                >
+                  <div
+                    className="w-1 h-4 rounded-full flex-shrink-0 mt-0.5"
+                    style={{ background: fill }}
+                  />
+                  <span
+                    className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums pt-0.5"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    {c.contract_year}
+                  </span>
+                  <span
+                    className="font-mono text-[10px] font-bold w-20 flex-shrink-0 tabular-nums"
+                    style={{ color: fill }}
+                  >
+                    {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+                  </span>
+                  <span
+                    className="flex-1 font-mono text-[9px] line-clamp-2"
+                    style={{ color: 'var(--color-text-secondary)' }}
+                  >
+                    {label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
-
-// Surface compatibility — sectorApi import is only kept so the module doesn't
-// die from tree-shaking in a future refactor that prunes it; remove later
-// when an explore-specific sector endpoint exists.
-void sectorApi
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers

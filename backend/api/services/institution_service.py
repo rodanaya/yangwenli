@@ -232,6 +232,8 @@ class InstitutionService(BaseService):
         Get vendors connected to an institution, ranked by contract value.
 
         Returns vendor list with concentration (HHI) analysis.
+        Fast-path: uses institution_top_vendors + institution_stats precomputed tables
+        when no year filter is applied (avoids full-table GROUP BY on 662K+ row institutions).
         """
         # Verify institution exists
         inst_row = self._execute_one(
@@ -242,6 +244,70 @@ class InstitutionService(BaseService):
         if inst_row is None:
             return None
 
+        # Fast-path: no year filter → use precomputed tables
+        if year is None:
+            precomputed = self._execute_many(
+                conn,
+                """
+                SELECT vendor_id, vendor_name, contract_count,
+                       total_value_mxn as total_value, avg_risk_score,
+                       first_year, last_year
+                FROM institution_top_vendors
+                WHERE institution_id = ?
+                ORDER BY total_value_mxn DESC
+                LIMIT ? OFFSET ?
+                """,
+                (institution_id, limit, offset),
+            )
+
+            if precomputed:
+                stats_row = self._execute_one(
+                    conn,
+                    "SELECT vendor_count, total_contracts FROM institution_stats WHERE institution_id = ?",
+                    (institution_id,),
+                )
+                true_total_vendors = stats_row["vendor_count"] if stats_row else len(precomputed)
+
+                vendors = []
+                total_value = 0.0
+                total_contracts = 0
+                for row in precomputed:
+                    value = row["total_value"] or 0
+                    contracts = row["contract_count"]
+                    vendors.append({
+                        "vendor_id": row["vendor_id"],
+                        "vendor_name": row["vendor_name"],
+                        "contract_count": contracts,
+                        "total_value": value,
+                        "avg_risk_score": round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
+                        "direct_award_count": None,
+                        "direct_award_pct": None,
+                        "first_year": row["first_year"],
+                        "last_year": row["last_year"],
+                    })
+                    total_value += value
+                    total_contracts += contracts
+
+                concentration_index = 0.0
+                if total_value > 0:
+                    for v in vendors:
+                        share = v["total_value"] / total_value
+                        concentration_index += share ** 2
+                    concentration_index = round(concentration_index, 4)
+
+                return {
+                    "institution_id": inst_row["id"],
+                    "institution_name": inst_row["name"],
+                    "institution_type": inst_row["institution_type"],
+                    "vendors": vendors,
+                    "total_vendors": true_total_vendors,
+                    "total_contracts": total_contracts,
+                    "total_value": total_value,
+                    "concentration_index": concentration_index,
+                    "precomputed": True,
+                }
+
+        # Live-query fallback: year filter or no precomputed data
         conditions = ["c.institution_id = ?", "COALESCE(c.amount_mxn, 0) <= 100000000000"]
         params: list[Any] = [institution_id]
 
@@ -251,7 +317,6 @@ class InstitutionService(BaseService):
 
         where_clause = " AND ".join(conditions)
 
-        # Get true total vendor count first
         count_row = self._execute_one(
             conn,
             f"""
@@ -308,7 +373,6 @@ class InstitutionService(BaseService):
             total_value += value
             total_contracts += contracts
 
-        # HHI concentration index
         concentration_index = 0.0
         if total_value > 0:
             for v in vendors:
