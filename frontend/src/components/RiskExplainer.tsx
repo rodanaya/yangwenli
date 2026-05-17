@@ -325,7 +325,7 @@ export function RiskFactorCard({ factor, trigger, className }: RiskFactorCardPro
         onClick={() => setOpen(!open)}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen(!open)}
         aria-expanded={open}
-        aria-haspopup="true"
+        aria-haspopup="dialog"
         className="cursor-pointer"
       >
         {trigger ?? (
