@@ -1298,7 +1298,7 @@ export function SectorProfile() {
                   id="phi-grade-heading"
                   className="text-sm font-bold text-text-secondary uppercase tracking-[0.15em]"
                 >
-                  {t('phiHeading')}
+                  {t('profile.phiHeading')}
                 </h2>
               </div>
               <PhiGradePanel data={phiDetail} />
@@ -1351,10 +1351,10 @@ export function SectorProfile() {
                     id="risk-trend-heading"
                     className="text-base font-bold text-text-primary"
                   >
-                    Risk Profile Over Time
+                    {t('profile.riskTrendOverTime')}
                   </h2>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Average risk score and high-risk contract share per year
+                    {t('profile.riskTrendOverTimeSubtitle')}
                   </p>
                 </div>
               </div>
@@ -1365,9 +1365,9 @@ export function SectorProfile() {
                     component itself owns its right-edge series labels; this
                     block describes the dual-line encoding once. */}
                 <p className="text-[10px] font-mono text-text-muted mt-2 ml-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-high align-middle mr-1" aria-hidden /> avg risk × 100
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-high align-middle mr-1" aria-hidden /> {t('profile.avgRiskLegend')}
                   <span className="mx-2 text-text-muted/40">·</span>
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-critical align-middle mr-1" aria-hidden /> high-risk %
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-critical align-middle mr-1" aria-hidden /> {t('profile.highRiskLegend')}
                 </p>
               </div>
             </section>
