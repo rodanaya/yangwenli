@@ -1389,6 +1389,7 @@ export default function CategoryProfile() {
                       viewBox={`0 0 ${svgW} ${svgH}`}
                       width={svgW}
                       height={svgH}
+                      role="img"
                       aria-label={isEs ? 'Valor medio por año' : 'Average value by year'}
                       className="overflow-visible"
                     >
@@ -1591,7 +1592,9 @@ export default function CategoryProfile() {
                         {isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
                       </div>
                       <div className="relative">
-                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 48 }}>
+                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 48 }}
+                          role="img" aria-label={isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
+                        >
                           {/* Sector avg reference line */}
                           {sector_da_avg != null && (
                             <line
@@ -1753,7 +1756,9 @@ export default function CategoryProfile() {
                       <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
                       </div>
-                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}>
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}
+                        role="img" aria-label={isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
+                      >
                         {/* 8.33% reference */}
                         <line x1="0" y1={H - (8.33 / 40) * H} x2={W} y2={H - (8.33 / 40) * H}
                           stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
