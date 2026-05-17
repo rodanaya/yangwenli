@@ -718,7 +718,7 @@ export default function Executive() {
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
                 <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-                <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
                 <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
               </div>
             </motion.div>
@@ -926,7 +926,7 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" />
                 </span>
@@ -960,7 +960,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#f59e0b' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-high)' }}>
                       19×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -986,13 +986,13 @@ export default function Executive() {
                     >
                       <span
                         className="font-mono font-bold text-[36px] leading-none tabular-nums"
-                        style={{ color: '#f59e0b' }}
+                        style={{ color: 'var(--color-risk-high)' }}
                       >
                         {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 bln'}
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
-                        style={{ color: '#f59e0b', opacity: 0.7 }}
+                        style={{ color: 'var(--color-risk-high)', opacity: 0.7 }}
                       >
                         {lang === 'en' ? '95% never audited' : '95% sin auditar · billones'}
                       </span>

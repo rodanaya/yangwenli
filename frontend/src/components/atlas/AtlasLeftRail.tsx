@@ -60,7 +60,7 @@ const RISK_FLOORS: Array<{
 }> = [
   { id: 'all',      en: 'All',    es: 'Todo',  color: 'var(--color-text-muted)' },
   { id: 'medium',   en: 'Med+',   es: 'Med+',  color: '#a06820' },
-  { id: 'high',     en: 'High+',  es: 'Alto+', color: '#f59e0b' },
+  { id: 'high',     en: 'High+',  es: 'Alto+', color: 'var(--color-risk-high)' },
   { id: 'critical', en: 'Crit',   es: 'Crít',  color: '#dc2626' },
 ]
 

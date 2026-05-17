@@ -125,14 +125,14 @@ function gradeToMexican(grade: string, _score?: number): MexicanGrade {
     case 'C+':
     case 'C':
       // Regular -- amber
-      return { label: 'Regular', labelEN: 'Fair', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
+      return { label: 'Regular', labelEN: 'Fair', color: 'var(--color-risk-high)', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
     case 'D':
     case 'D-':
       // Deficiente -- darker amber
       return { label: 'Deficiente', labelEN: 'Deficient', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'rojo', tier: 'bad' }
     default:
       // Critico -- red
-      return { label: 'Critico', labelEN: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
+      return { label: 'Critico', labelEN: 'Critical', color: 'var(--color-risk-critical)', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
   }
 }
 
@@ -142,8 +142,8 @@ function gradeToMexican(grade: string, _score?: number): MexicanGrade {
 function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }) {
   const lights: Array<{ key: 'verde' | 'amarillo' | 'rojo'; color: string }> = [
     { key: 'verde', color: '#a1a1aa' },
-    { key: 'amarillo', color: '#f59e0b' },
-    { key: 'rojo', color: '#ef4444' },
+    { key: 'amarillo', color: 'var(--color-risk-high)' },
+    { key: 'rojo', color: 'var(--color-risk-critical)' },
   ]
   return (
     <div
@@ -962,8 +962,8 @@ function TrendSection() {
 
   const trendConfig = {
     improving: { icon: '\u2191', color: '#a1a1aa', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
-    stable:    { icon: '\u2192', color: '#6b7280', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
-    worsening: { icon: '\u2193', color: '#ef4444', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
+    stable:    { icon: '\u2192', color: 'var(--color-text-muted)', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
+    worsening: { icon: '\u2193', color: 'var(--color-risk-critical)', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
   }[trendDirection]
 
   const earliestYear = years.length > 0 ? years[0].year : 2010

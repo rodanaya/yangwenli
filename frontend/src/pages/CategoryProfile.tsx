@@ -1230,7 +1230,7 @@ export default function CategoryProfile() {
                     {heavySkew && (
                       <span
                         className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                        style={{ color: '#f59e0b', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
+                        style={{ color: 'var(--color-risk-high)', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
                       >
                         {isEs ? 'Distribución asimétrica' : 'Heavy skew'}
                       </span>
@@ -1545,7 +1545,7 @@ export default function CategoryProfile() {
                     {procedure_breakdown
                       .filter(p => p.pct_contracts > 0.5)
                       .map(p => {
-                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: 'var(--color-text-muted)' }
                         return (
                           <div
                             key={p.type}
@@ -1560,7 +1560,7 @@ export default function CategoryProfile() {
                     {procedure_breakdown
                       .filter(p => p.pct_contracts > 0.5)
                       .map(p => {
-                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: 'var(--color-text-muted)' }
                         return (
                           <div key={p.type} className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />

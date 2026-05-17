@@ -22,7 +22,7 @@ export function classifyRole(
   if (winRate < 0.15) return { label: t('roles.possibleDecoy'),     color: 'var(--color-risk-critical)', bg: 'rgba(239,68,68,0.12)' }
   if (winRate >= 0.3 && winRate <= 0.7) return { label: t('roles.rotationPattern'),  color: 'var(--color-risk-high)', bg: 'rgba(245,158,11,0.12)' }
   if (winRate > 0.6)  return { label: t('roles.possibleAccomplice'), color: 'var(--color-risk-medium)', bg: 'rgba(161,98,7,0.12)' }
-  return { label: t('roles.coBidder'), color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
+  return { label: t('roles.coBidder'), color: 'var(--color-text-muted)', bg: 'rgba(148,163,184,0.10)' }
 }
 
 // ─── Props ───────────────────────────────────────────────────────────────────

@@ -228,8 +228,8 @@ function buildGtTypes(isEs: boolean) {
   return [
     { type: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud', count: 432, color: 'var(--color-risk-critical)' },
     { type: isEs ? 'Captura institucional' : 'Institutional capture',   count: 317, color: 'var(--color-risk-critical)' },
-    { type: isEs ? 'Captura licitación única' : 'Single-bid capture', count: 216, color: '#f59e0b' },
-    { type: isEs ? 'Empresa fantasma' : 'Ghost company',        count: 144, color: '#f59e0b' },
+    { type: isEs ? 'Captura licitación única' : 'Single-bid capture', count: 216, color: 'var(--color-risk-high)' },
+    { type: isEs ? 'Empresa fantasma' : 'Ghost company',        count: 144, color: 'var(--color-risk-high)' },
     { type: isEs ? 'Monopolio' : 'Monopoly',               count: 71,  color: '#78716c' },
     { type: isEs ? 'Sobreprecio' : 'Overpricing',             count: 70,  color: '#78716c' },
     { type: isEs ? 'Otros' : 'Other',                   count: 93,  color: '#57534e' },

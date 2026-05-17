@@ -128,8 +128,8 @@ function FilterPill({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const JUSTICE_GROUPS = [
-  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: '#ef4444', labelEs: 'Impunidad', labelEn: 'Impunity' },
-  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: '#f59e0b', labelEs: 'Investigación', labelEn: 'Investigation' },
+  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: 'var(--color-risk-critical)', labelEs: 'Impunidad', labelEn: 'Impunity' },
+  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: 'var(--color-risk-high)', labelEs: 'Investigación', labelEn: 'Investigation' },
   { key: 'prosecuted', statuses: ['prosecuted'], color: '#3b82f6', labelEs: 'Procesados', labelEn: 'Prosecuted' },
   { key: 'convicted', statuses: ['convicted'], color: '#22d3ee', labelEs: 'Condenados', labelEn: 'Convicted' },
   { key: 'other', statuses: ['acquitted', 'dismissed', 'settled'], color: '#71717a', labelEs: 'Otros', labelEn: 'Other' },
