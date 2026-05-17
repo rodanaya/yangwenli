@@ -1,664 +1,573 @@
 ---
 name: mcloud
 description: |
-  Full-scale redesign orchestrator for the RUBLI Lylat mission set.
-  Eight roles execute a design→implement→QA→deploy pipeline per mission.
-  DESIGNUS (Opus) invents design specs. User approves inline. FALCO/PEPPY/SLIPPY
-  implement autonomously in an isolated worktree. PATROL verifies. DEPLOYER ships.
-  State tracked in SQLite. Nightly quality gate via CronCreate.
+  Design-invention phase for Lylat redesign missions. DESIGNUS (Opus+ultrathink)
+  reads the Lylat brief + live screenshots → sequential thinking → design spec →
+  user approves inline → hands off to /starfox for implementation.
 
-  Trigger when user says: "/mcloud", "mcloud", "run mcloud", "execute mission",
-  "start lylat", "next mission", "/mcloud M1", "/mcloud M7", etc.
+  Use for: M3, M4, M5, M6, M7 (full redesigns requiring design invention)
+  Skip for: L0, M1, M1b, M2 (quick wins — invoke /starfox directly)
 
-  This skill exists because /starfox targets known fixes. /mcloud invents solutions
-  for pages that need full redesign — then executes them without supervision.
+  Trigger phrases: "/mcloud", "run mcloud", "/mcloud M7", "design phase",
+  "designus", "start lylat", "next mission", "execute mission"
+
+  What /mcloud does NOT do: implement code, run gates, QA, deploy.
+  Those belong to /starfox and /paw-patrol.
 ---
 
-# MCLOUD — Lylat Mission Orchestrator
+# MCLOUD — DESIGNUS Design Phase
 
-Eight roles. One pipeline. Executes the RUBLI Lylat audit missions from design
-through deployment without requiring the user to supervise implementation.
+DESIGNUS invents. /starfox implements. State lives in lylat.md and ACTIVE_WORK.md.
 
----
-
-## CONFIGURATION (locked — do not change without user consent)
-
-```
-Design review:       Inline in conversation — user approves here, not in a file
-Worktree mode:       Per-mission from main repo D:\Python\yangwenli\
-Nightly cron:        Yes — after first successful deploy
-State storage:       SQLite D:\Python\yangwenli\.claude\mcloud.db
-Implementation:      Fire-and-forget after approval (PushNotification on complete)
-M4 cartography:      DESIGNUS proposes 3 concepts — user picks one
-M6 Networks:         Audit first, then present merge-or-drop recommendation
-```
+One pipeline per mission:
+**DESIGNUS → user approval → /starfox (FOX + FALCO + PEPPY + SLIPPY) → verify + commit**
 
 ---
 
-## PATHS (absolute — always use these)
+## WHEN TO USE / MISSION ROUTING
+
+If no mission ID is given, read `D:\Python\yangwenli\.claude\lylat.md` and find
+the first pending mission in EXECUTION ORDER (the table at the bottom of lylat.md).
+Report: current status, which mission is next, why.
+
+| Mission | DESIGNUS needed | Model |
+|---------|----------------|-------|
+| L0 infrastructure | No — invoke /starfox directly | sonnet |
+| M1 Risk Queue | No — invoke /starfox directly | sonnet |
+| M1b Red Thread | No — invoke /starfox directly | sonnet |
+| M2 Cases | No — invoke /starfox directly | sonnet |
+| M3 Sectors | **Yes — full redesign** | opus + ultrathink |
+| M4 Spending Categories | **Yes — cartography concept required** | opus + ultrathink |
+| M5 Institutions | **Yes — architecture unification** | opus |
+| M6 Networks | **Yes — merge-or-drop decision** | opus |
+| M7 Administrations | **Yes — PIVOTAL** | opus + ultrathink |
+
+---
+
+## PATHS
 
 ```
-Main repo:           D:\Python\yangwenli\
-Worktrees base:      D:\Python\yangwenli\.claude\worktrees\
 Lylat missions:      D:\Python\yangwenli\.claude\lylat.md
-SQLite state DB:     D:\Python\yangwenli\.claude\mcloud.db
-Design specs:        D:\Python\yangwenli\.claude\designs\
-Before screenshots:  D:\Python\yangwenli\.claude\designs\{mission}-before\
-After screenshots:   D:\Python\yangwenli\frontend\starfox\
-Hooks:               D:\Python\yangwenli\.claude\hooks\
+Design specs:        D:\Python\yangwenli\.claude\designs\{mission-id}-spec.md
+Before screenshots:  D:\Python\yangwenli\.claude\designs\{mission-id}-before\{n}.png
+Screenshots source:  C:\Users\ranay\Pictures\Screenshots\
 Frontend:            D:\Python\yangwenli\frontend\
-VPS deploy:          bash /opt/rubli/deploy.sh   (run ON VPS, not local)
+Dev server:          http://localhost:3009
+Dashboard (ref):     D:\Python\yangwenli\frontend\src\pages\Dashboard.tsx
 ```
 
 ---
 
-## ROLES
+## DESIGNUS PROTOCOL
 
-| Role | Model | Responsibility |
-|------|-------|----------------|
-| SEQUENCER | sonnet | Reads SQLite, routes to correct phase, enforces file locks |
-| DESIGNUS | **opus + ultrathink** | Invents design specs. Uses sequential-thinking + WebSearch. |
-| FOX | sonnet | Reads approved spec → finds exact files → writes pilot briefs |
-| FALCO | sonnet | Visual/typography — Playfair, color tokens, editorial hierarchy |
-| PEPPY | sonnet | Layout/i18n — component patterns, EN/ES completeness |
-| SLIPPY | sonnet | TS gates + responsive + build — zero errors required |
-| PATROL | sonnet | Playwright before/after visual verification + regression scan |
-| DEPLOYER | sonnet | Commit + push + VPS deploy + SQLite state update |
+DESIGNUS reads, thinks, and proposes. DESIGNUS does NOT write TSX code.
 
-**Domain assignments (FALCO/PEPPY/SLIPPY — same as StarFox):**
-- FALCO: fontFamily, fontWeight, color tokens, Playfair, hex via style={{}}
-- PEPPY: flex/grid layout, component imports, EN/ES strings, aria-labels
-- SLIPPY: breakpoints, TypeScript types, lint:tokens, build gate
+### Step D1 — Read the Lylat brief
 
----
+Open `lylat.md`. Locate the mission section. Extract and record:
+- **Verbatim user quotes** — these are non-negotiable design requirements
+- **Screenshot filepaths** — you will read every one in D2
+- **"What's wrong" analysis** — your sequential thinking input
+- **Action items** — the implementation checklist your spec must address
 
-## SQLITE SCHEMA
+Do not proceed until you have read the full mission section of lylat.md.
 
-On first run, SEQUENCER initializes `mcloud.db` with this schema:
+### Step D2 — Read all mission screenshots
 
-```sql
-CREATE TABLE IF NOT EXISTS missions (
-  id TEXT PRIMARY KEY,           -- M1, M1b, M2, M3, M4, M5, M6, M7
-  name TEXT NOT NULL,
-  wave INTEGER,
-  status TEXT DEFAULT 'pending', -- pending|infra_check|designing|review|approved|implementing|patrol|deploying|deployed|blocked
-  model TEXT,                    -- sonnet|opus
-  needs_design_proposal INTEGER DEFAULT 1,  -- 0 for quick wins
-  priority INTEGER DEFAULT 5,
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
-);
+Use `Read` tool on every screenshot filepath from D1. Do not skip any.
 
-CREATE TABLE IF NOT EXISTS screenshots (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id TEXT,
-  filepath TEXT NOT NULL,
-  description TEXT,
-  read_by_designus INTEGER DEFAULT 0,
-  FOREIGN KEY (mission_id) REFERENCES missions(id)
-);
+For each screenshot, record:
+- Which section/component is visible
+- The specific visual failure occurring
+- Which user quote corresponds to it
 
-CREATE TABLE IF NOT EXISTS designs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id TEXT UNIQUE,
-  spec_path TEXT,
-  approval_status TEXT DEFAULT 'draft',  -- draft|approved|rejected|revision_requested
-  approved_at TEXT,
-  revision_notes TEXT,
-  FOREIGN KEY (mission_id) REFERENCES missions(id)
-);
+This creates a structured failure map. Your spec will address each item in this map.
 
-CREATE TABLE IF NOT EXISTS implementations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id TEXT,
-  worktree_path TEXT,
-  branch_name TEXT,
-  files_modified TEXT,           -- JSON array
-  ts_gate INTEGER DEFAULT 0,     -- 0=not run, 1=pass, -1=fail
-  lint_gate INTEGER DEFAULT 0,
-  build_gate INTEGER DEFAULT 0,
-  commit_hash TEXT,
-  FOREIGN KEY (mission_id) REFERENCES missions(id)
-);
+### Step D3 — Live Playwright audit
 
-CREATE TABLE IF NOT EXISTS file_locks (
-  filepath TEXT PRIMARY KEY,
-  mission_id TEXT,
-  locked_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (mission_id) REFERENCES missions(id)
-);
+Navigate to `http://localhost:3009/{page}`.
+Apply animation-freeze protocol (Rules 2–3 in PLAYWRIGHT section below).
+Take before-screenshots: `designs/{mission-id}-before/{n}.png`
 
-CREATE TABLE IF NOT EXISTS deployments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id TEXT,
-  commit_hash TEXT,
-  deployed_at TEXT,
-  vps_status TEXT,               -- success|failed
-  FOREIGN KEY (mission_id) REFERENCES missions(id)
-);
+Compare live state to user screenshots. If something has been fixed since the
+screenshots were taken, note it and reduce scope. The LIVE state is what gets redesigned.
 
-CREATE TABLE IF NOT EXISTS insights (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id TEXT,
-  note TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
-);
-```
+### Step D4 — Sequential thinking (mcp__sequential-thinking)
 
-**Key queries SEQUENCER uses:**
-```sql
--- What needs to be done next?
-SELECT id, name, status FROM missions WHERE status != 'deployed' ORDER BY wave, priority;
+Use `sequentialthinking` with these exact steps. Each step must PRODUCE an output
+that feeds the next step. Do not label free-form brainstorming as sequential thinking.
 
--- Is this file already claimed by another active mission?
-SELECT mission_id FROM file_locks WHERE filepath = ? AND mission_id != ?;
+**Step 1 — Inventory**: List every visible section/component on the page.
+  → Produces: a bulleted section list
 
--- Did all gates pass for this mission?
-SELECT ts_gate, lint_gate, build_gate FROM implementations WHERE mission_id = ?;
+**Step 2 — Verdict table**: For each section: keep as-is / fix / replace / delete.
+  → Produces: a table with three columns: Section | Verdict | One-line reason
 
--- Log a design decision
-INSERT INTO insights (mission_id, note) VALUES (?, ?);
-```
+**Step 3 — Root cause analysis**: For every non-keep verdict: WHY does it fail?
+  Specific failure, not "it looks bad." Examples:
+  - Wrong: "The chart is ugly."
+  - Right: "The 12-sector OECD line chart fails because it overlays 12 colored lines
+    with no annotation — the eye cannot track individual sectors, so the chart encodes
+    nothing actionable. It should either be small multiples or a ranked comparison bar."
+  → Produces: one root cause paragraph per failed element
 
----
+**Step 4 — Design options**: For each failed element, generate 2–3 concrete alternatives.
+  For each option, state: component type, layout, data shown, visual treatment, trade-off.
+  → Produces: option set per element
 
-## MISSION REGISTRY
+**Step 5 — Evaluate against constraints**: Pick the best option per element.
+  Cite: CLAUDE.md rule, available API data, existing canonical components,
+  or user verbatim quote. Do not pick "the most creative" — pick the one that
+  serves the user's question best.
+  → Produces: one selected option per element with justification
 
-Seed data for `mcloud.db` — SEQUENCER inserts these if they don't exist:
+**Step 6 — Compose**: Assemble selected options into a coherent page redesign.
+  What is the new section order? What goes above the fold? What's in tabs vs. inline?
+  → Produces: proposed page structure
 
-```sql
-INSERT OR IGNORE INTO missions VALUES ('L0', 'Infrastructure Build', 0, 'pending', 'sonnet', 0, 1, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M1', 'Risk Queue Compression + Sort', 1, 'pending', 'sonnet', 0, 2, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M1b', 'Red Thread Readability', 1, 'pending', 'sonnet', 0, 2, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M2', 'Cases Redesign', 1, 'pending', 'sonnet', 0, 3, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M3', 'Sectors Full Redesign', 3, 'pending', 'opus', 1, 4, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M4', 'Spending Categories Cartography', 4, 'pending', 'opus', 1, 4, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M5', 'Institutions Unification', 5, 'pending', 'opus', 1, 4, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M6', 'Networks Merge-or-Drop', 6, 'pending', 'opus', 1, 5, datetime('now'), datetime('now'));
-INSERT OR IGNORE INTO missions VALUES ('M7', 'Administrations Full Redesign', 7, 'pending', 'opus', 1, 5, datetime('now'), datetime('now'));
-```
+**Step 7 — Sanity check against Dashboard.tsx**: Open `Dashboard.tsx`. Compare its
+  information density to your proposed design. Is your design as dense? If not, why not?
+  Can you compress any element to match Dashboard's stat-row density?
+  → Produces: density assessment and any adjustments
 
----
+### Step D5 — WebSearch (required for novel visual challenges)
 
-## PHASE 0 — STARTUP SEQUENCE
+For chart types being introduced or redesigned, search BEFORE inventing:
 
-Every `/mcloud` invocation begins here, without exception.
+| Problem | Search query |
+|---------|-------------|
+| Risk Matrix redesign | `"heatmap" risk matrix editorial data journalism NYT design` |
+| Spending cartography hero | `government spending treemap bubble visualization FT Economist` |
+| Political cycle chart | `presidential term budget cycle visualization small multiples` |
+| Spaghetti chart fix | `multiple time series editorial small multiples Economist NYT` |
+| Administration comparison | `cross-administration comparison data journalism NYT` |
 
-### Step S1 — Initialize SQLite
-```bash
-# Check if mcloud.db exists
-ls "D:\Python\yangwenli\.claude\mcloud.db"
-# If not: run schema creation via mcp__sqlite (see schema above)
-# Then seed mission registry
-```
+Use results as evidence of what works. Do NOT copy. Use to validate or reject your options from D4.
 
-### Step S2 — Infrastructure check (L0)
-Query: `SELECT status FROM missions WHERE id = 'L0'`
+### Step D6 — Write design spec
 
-If L0 is not `deployed`:
-- Check `frontend/src/lib/utils.ts` for `shortenContractName` → if missing, add to L0 work queue
-- Check `frontend/src/components/shared/TruncatedName.tsx` → if missing, add to L0 work queue
-- Run L0 before any page mission
-
-### Step S3 — Find active mission
-Query: `SELECT * FROM missions WHERE status NOT IN ('pending','deployed') ORDER BY wave LIMIT 1`
-
-If a mission is in-progress, resume it at the correct phase.
-If none in-progress: `SELECT * FROM missions WHERE status = 'pending' ORDER BY wave, priority LIMIT 1`
-
-### Step S4 — Report state to user
-Always show a brief status line before starting work:
-```
-MCLOUD — Mission {id}: {name}
-Status: {status} → proceeding to {next phase}
-{N} missions deployed · {M} remaining
-```
-
----
-
-## PHASE 1 — DESIGNUS (Opus + ultrathink)
-
-**Only runs for missions where `needs_design_proposal = 1` (M3/M4/M5/M6/M7)**
-Quick wins (L0/M1/M1b/M2) skip directly to Phase 3.
-
-### Step D1 — Read all mission screenshots
-Use `Read` tool on every screenshot filepath listed for this mission in `lylat.md`.
-Do NOT skip any. Record which ones were read: `UPDATE screenshots SET read_by_designus = 1`.
-
-### Step D2 — Live Playwright audit
-Navigate to the mission's page on `http://localhost:3009`.
-Apply animation-freeze protocol (inherited from StarFox Rule 2+3).
-Take before-screenshots: `D:\Python\yangwenli\.claude\designs\{mission}-before\{n}.png`
-These become the PATROL baseline.
-
-### Step D3 — Sequential thinking (mcp__sequential-thinking)
-Use `sequentialthinking` to reason through the design in explicit steps:
-1. What does the page currently do? (catalog every section)
-2. What works and should be kept?
-3. What fails and must be replaced?
-4. What should be deleted entirely?
-5. For each failed element: generate 2-3 design options
-6. Evaluate each option against CLAUDE.md constraints
-7. Choose the best option for each element
-8. Compose the final design spec
-
-Each step must be completed before moving to the next.
-
-### Step D4 — WebSearch for design inspiration (where needed)
-For novel UI elements (M4 cartography, M7 Risk Matrix, M3 editorial charts):
-Search for: `{chart type} NYT FT Economist editorial design`
-Search for: `{component pattern} investigative journalism data visualization`
-Use patterns and principles as inspiration — do NOT copy existing designs.
-Record search results in SQLite insights.
-
-### Step D5 — Write design spec
 Save to `D:\Python\yangwenli\.claude\designs\{mission-id}-spec.md`
 
-Spec format:
+**Spec format:**
 ```markdown
-# {Mission} Design Specification
-**Mission:** {id} — {name}
-**Status:** DRAFT — awaiting approval
+# {Mission} Design Spec
 **DESIGNUS session:** {timestamp}
+**Status:** DRAFT — awaiting approval
 
 ## What stays (keep unchanged)
-- {component}: {reason it works}
+- {component at file:line}: {reason it works — cite screenshot or user quote}
 
-## What gets replaced (with replacement spec)
+## What gets replaced
 ### {Component name}
-**Problem:** {specific problem}
-**Solution:** {exact description of what replaces it}
-**Layout:** {grid/flex spec, dimensions, responsive behavior}
-**Data shown:** {exactly what data fields are displayed}
-**Visual treatment:** {typography, colors from CLAUDE.md, animation if any}
+**Problem:** {specific failure from D3 root cause — cite screenshot filename}
+**Replacement:** {exact description — component type, data fields, visual treatment}
+**Layout:** {flex/grid spec, dimensions, responsive behavior at 1280/768/375}
+**Data shown:** {exact field names — verify these exist in the API before writing}
+**Visual treatment:** {Tailwind classes, color tokens from CLAUDE.md, animation if any}
+**Pilot:** {FALCO | PEPPY | SLIPPY — who owns this change}
 
 ## What gets deleted
-- {component}: {reason for deletion}
+- {component}: {reason — null finding / redundant / no editorial value}
 
-## New sections being added
-### {Section name}
-{full spec}
+## What gets added
+### {New section name}
+{Full spec in same format as "What gets replaced"}
 
 ## Information architecture changes
-{if tabs/sections are being reorganized, describe the before and after}
+{Before: current tab/section structure}
+{After: proposed tab/section structure}
+{Reason for each change}
 
-## Implementation notes for FOX
-{file-specific callouts that will help FOX write briefs faster}
+## For FOX — file callouts
+{file path + approximate line range for each element to touch}
+{verified via Grep — do NOT guess file paths}
+
+## Data dependency flags
+⚠️ {field name} — verify `/api/v1/{endpoint}` returns this before implementing
 ```
 
-**Special rule for M4:** DESIGNUS presents 3 cartography concepts with ASCII mockups
-before writing the full spec. User picks one, THEN full spec is written.
+**Pre-spec checklist — DESIGNUS runs this before saving:**
+- [ ] Every replaced/added component has: type, dimensions, data fields, visual treatment, responsive behavior
+- [ ] Every color references a token from CLAUDE.md (no hex in className, no `text-red-400`, no `bg-emerald-*`)
+- [ ] Every vendor/institution name goes through `formatVendorName()` or `formatEntityName()`
+- [ ] Every contract name display references `shortenContractName()` — and L0 is verified done
+- [ ] Every pilot domain is identified (FALCO / PEPPY / SLIPPY) per change
+- [ ] Density check: is this as dense as `Dashboard.tsx`? If not, compress.
 
-**Special rule for M6:** DESIGNUS audits `/networks` live, compares element-by-element
-with `/atlas`. Writes a comparison table: what's in Networks that isn't in Observatory.
-Presents recommendation (merge or drop) with evidence. User decides.
+### Step D7 — Present inline for approval
 
-### Step D6 — Present inline for approval
-
-Show the spec in conversation. Format:
 ```
-━━━ DESIGNUS: {Mission} Design Spec ━━━
+━━━ DESIGNUS: {Mission} ━━━
 
-[summary of what's changing — 5-10 bullet points]
+**What's changing**
+• {5–10 bullet summary — what dies, what lives, what's new}
 
-[ASCII mockup of key new elements if helpful]
+**Key design decision: {biggest single choice}**
+[ASCII mockup of the novel element if helpful]
 
-[Full spec content]
+**Full spec**
+[spec content inline]
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Approve? Type: yes / change [what] / reject
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Approve? → yes / change [what] / reject
 ```
 
-Wait for user response. Do NOT proceed to Phase 2 until approved.
-On approval: `UPDATE designs SET approval_status='approved', approved_at=datetime('now')`.
-On revision: incorporate changes, re-present. Log revision notes in SQLite.
+Wait for user response. Do NOT invoke /starfox until approved.
+On approval: update `ACTIVE_WORK.md` with mission ID and spec path.
+On revision: incorporate changes, re-present. Note what changed.
+
+### Step D8 — Hand off to /starfox
+
+After approval:
+```
+Spec approved. Invoking /starfox.
+Approved spec: D:\Python\yangwenli\.claude\designs\{mission-id}-spec.md
+Lylat brief: D:\Python\yangwenli\.claude\lylat.md (section: {mission ID})
+
+FOX instructions:
+  - The approved spec is primary source of truth for target state
+  - Read spec + Lylat brief together
+  - Do NOT reinvent or override spec decisions
+  - FOX's job: translate spec → pilot briefs with exact file:line references
+  - Grep every file path before writing a brief (FM-2)
+  - Screenshot analysis phase (F1-F3) is already done by DESIGNUS — skip to F4
+```
+
+Then invoke /starfox.
 
 ---
 
-## PHASE 2 — WORKTREE SETUP
+## MISSION CONTEXT
 
-After design spec approved (or for quick wins, immediately after Phase 0):
-
-```bash
-# From main repo
-cd D:\Python\yangwenli
-
-# Create mission branch and worktree
-git worktree add ".claude/worktrees/{mission-id}-{slug}" -b "lylat/{mission-id}-{slug}"
-```
-
-Update SQLite:
-```sql
-UPDATE implementations SET worktree_path = ?, branch_name = ? WHERE mission_id = ?;
-```
-
-All subsequent pilot work happens INSIDE the worktree directory.
-NEVER edit files in the main repo while a mission worktree is active.
+Distilled from the 2-hour user audit in lylat.md. DESIGNUS reads this section
+for the active mission before beginning D4. This is pre-reasoned context — use it.
 
 ---
 
-## PHASE 3 — FOX ANALYSIS AND BRIEFING
+### M3 · Sectors
+**Page purpose:** "Which sectors of the Mexican economy were most exposed to
+procurement corruption, and how does that vary by administration and institution?"
 
-FOX operates from the worktree. Same protocol as StarFox FOX, with one addition:
-**FOX reads the approved design spec** (`designs/{mission}-spec.md`) as the primary source
-of truth for "target state." FOX does NOT reinvent the design — it translates the spec
-into file-specific briefs.
+**What works — keep:**
+- 12-sector card grid (concept right, fix density — target: Dashboard row height)
+- "Where risk becomes expensive" scatter concept (MXN vs risk score is the right question — fix execution: too small, no annotations, no administration filter)
+- By Administration tab concept (valuable comparison — fix: color-code by administration, add interaction)
+- Top Risk Factors list (data is good — add editorial weight: size factors by importance)
 
-### FOX brief format (same as StarFox):
-```
-PILOT: {FALCO|PEPPY|SLIPPY}
-FILE: {exact path from repo root}
-LINE: ~{approximate line or range}
-CURRENT: {current code or class string}
-TARGET: {what it should be per the approved design spec}
-REASON: {spec section reference + CLAUDE.md section if applicable}
-VERIFY: {what Playwright should show to confirm the fix is correct}
-```
+**What fails — root causes:**
+- **OECD multi-line chart** (165319.png): 12 overlaid sector lines in different colors = unreadable. Root cause: wrong chart type for N-line comparison. Replace with small multiples (one 120×60px panel per sector, single line vs national average) or ranked bar comparing each sector vs OECD ceiling.
+- **78.3% standalone block** (165556.png): one stat eating the entire above-fold viewport. Root cause: emphasis without proportion. Demote to compact inline stat in page header. The number is powerful; it doesn't need a room to itself.
+- **Institution/case section margins** (165826.png): "like a warehouse with a chair." Root cause: excessive padding, single item per visual row. Fix: cut all margins by 60%, use Dashboard-density rows.
+- **Risk distribution scatter** (170620.png): empty center, sparse data. Root cause: scatter is wrong chart type for ranked comparison. Replace with scoreboard/ranking layout: Institution Name · MXN · risk badge · year range.
+- **SpatialMap Z1 duplicated panel** (173444.png): exact same component as Atlas sector panel. Root cause: component was reused instead of designed for context. Delete it — users already see it in Atlas.
+- **Static relationship network**: no interaction, no data depth. Either make interactive (D3 force graph wired to real data) or move to Networks and delete from Sectors.
 
-**File lock protocol:** Before writing any brief, FOX checks:
-```sql
-SELECT mission_id FROM file_locks WHERE filepath = ? AND mission_id != ?
-```
-If locked by another mission: flag conflict to user. Do NOT assign conflicting files to pilots.
+**Design questions Opus must answer:**
+1. What is the new hero? Options: (a) editorial stat header + interactive scatter, (b) ranked sector cards with sparklines, (c) animated sector comparison on load. Pick one and spec it.
+2. What replaces the OECD multi-line chart? Evaluate small multiples vs ranked bar — which conveys the sector-vs-OECD gap more clearly?
+3. What is the new section order? The most impactful data (direct award rate, risk exposure by MXN) must be above the fold. Methodology-flavored charts go at the bottom.
+4. Top Institutions: what columns for the scoreboard? Likely: Institution Name · Total MXN · # Contracts · Risk Grade · Year Range. Confirm data fields exist in API.
 
-When briefs are finalized, FOX writes file locks:
-```sql
-INSERT OR REPLACE INTO file_locks VALUES (filepath, mission_id, datetime('now'))
-```
+**Constraints:**
+- Sector colors: `SECTOR_COLORS` from `@/lib/constants` — do not invent new colors
+- Administration colors: must match what `Administrations.tsx` uses
+- Do not duplicate any SpatialMap component
 
----
-
-## PHASE 4 — PARALLEL IMPLEMENTATION
-
-FOX launches FALCO + PEPPY + SLIPPY in a single message (3 simultaneous Agent calls).
-
-### Implementation rules (inherited from StarFox, enforced here):
-- Only implement what is in the brief. No "while I'm here" changes.
-- Unrelated issues go in OBSERVATIONS section, not implementation.
-- PEPPY audits i18n on ALL files touched by ANY pilot, not just Peppy's own files.
-- Every hex color goes in `style={{}}`, never in a className string.
-- Every risk color from `RISK_COLORS` in `@/lib/constants`.
-- Every sector color from `SECTOR_COLORS` in `@/lib/constants`.
-- `formatVendorName()` or `formatEntityName()` for all vendor/institution names.
-- `shortenContractName()` (L0 utility) for all contract name displays.
-
-### SLIPPY gate sequence (after FALCO + PEPPY report complete):
-```bash
-# From worktree/frontend/
-npx tsc --noEmit           # MUST pass: 0 errors
-npm run lint:tokens        # MUST pass: 0 violations
-npm run build              # MUST pass: 0 errors
-```
-
-Use Monitor for build — don't block synchronously.
-
-Update SQLite on each gate:
-```sql
-UPDATE implementations SET ts_gate=1 WHERE mission_id=?;    -- on pass
-UPDATE implementations SET ts_gate=-1 WHERE mission_id=?;   -- on fail
-```
-
-**If any gate fails:** SLIPPY fixes the specific error. Re-run gates. Do NOT commit until all three pass.
+**Reference pattern:** AMLO dossier in `184325.png` for density. Administration comparison table in `184919.png` for cross-sector table format.
 
 ---
 
-## PHASE 5 — PATROL (QA Verification)
+### M4 · Spending Categories
+**Page purpose:** "What categories of goods and services did the federal government buy,
+at what scale, and where is risk concentrated?"
 
-After all three gates pass, PATROL runs from the worktree.
+**What works — keep:**
+- Top federal institutions table (`173848.png`): dense rows, risk badges, MXN right-aligned. THIS IS THE GOOD PATTERN. Keep the format.
+- Annual spending + risk trend two-line chart (concept right, needs EditorialChartFrame wrap)
+- Category card structure (keep concept, fix empty space: compress padding by 60%)
 
-### PATROL protocol:
-1. Start dev server if not running: `npm run dev` (Monitor for "ready" message)
-2. Navigate to the mission's primary page
-3. Apply animation-freeze protocol (StarFox Rule 2+3)
-4. Take viewport screenshots: `slippy-desktop-001.png`, `slippy-tablet-001.png`, `slippy-mobile-001.png`
-5. Compare against before-screenshots from Phase 1 (DESIGNUS)
-6. Navigate to adjacent pages that share components — check for regressions
-7. Check all user-visible text for untranslated Spanish in English mode (SYS-2)
-8. Check all vendor/institution names — confirm no ellipsis truncation without tooltip (SYS-1)
+**What fails — root causes:**
+- **Hero is a list of cards** (171132.png): no visual impact evoking the scale of 9.97T MXN across 72 categories. Root cause: no visual encoding of relative magnitude. The hero should make you feel the scale before you read a number.
+- **Secondary chart wrong proportions** (171401.png): evolution-by-administration chart with sparse data points and too much whitespace. Root cause: chart rendered at full width but contains only 5 data points. Either compress width or replace with a table.
+- **Contract names truncated mid-word** (173930.png): Root cause: `shortenContractName()` does not exist yet (L0 task). DESIGNUS spec must reference L0 utility and note it must be built first.
 
-**PATROL pass criteria:**
-- [ ] Primary page renders correctly at 1280px, 768px, 375px
-- [ ] No content visible before fold is missing
-- [ ] No Spanish strings in English mode
-- [ ] No name truncation without tooltip
-- [ ] Adjacent pages show no regressions
-- [ ] TypeScript: 0 errors (already confirmed)
-- [ ] BUILD_ID updated in constants.ts
+**Design questions Opus must answer — 3 CARTOGRAPHY CONCEPTS REQUIRED:**
+Present all three with ASCII mockups before writing full spec. User picks one.
 
-If PATROL finds issues: return to FALCO/PEPPY with specific fixes. Do NOT deploy with known issues.
+Concept A — **Treemap**: Each category = a tile, size proportional to total MXN spend, color = risk concentration (from `text-text-muted` low to `RISK_COLORS.critical` high). Interactive: click to zoom into subcategory tiles. Subcategory tiles show top vendor chip on hover.
+- Trade-off: standard and legible; loses temporal dimension; treemap nesting can be confusing.
 
----
+Concept B — **Bubble timeline**: Categories as sized bubbles on a scatter (x = year-of-peak-spend, y = risk concentration, size = total MXN, color = sector). Hover = category detail. Administration spans marked as background bands.
+- Trade-off: shows temporal + risk together; harder to read exact values; bubble occlusion.
 
-## PHASE 6 — DEPLOYER
+Concept C — **Ranked territory map**: A custom horizontal bar "landscape" where each category is a horizontal territory. Width = MXN spend. Height = risk concentration (making high-risk categories literally taller). Sorted by MXN. Click to expand category detail inline below.
+- Trade-off: novel, directionally legible, no standard component exists; must build from scratch.
 
-After PATROL signs off:
+Each concept description in the spec should be specific enough that a pilot could build it.
+The user picks ONE. Then write the full spec for that concept only.
 
-### Step DEP1 — Stage and commit
-```bash
-# From worktree root
-git add {specific files modified by mission — never git add .}
-git commit -m "$(cat <<'EOF'
-fix(lylat/{mission-id}): {brief description}
+**Constraints:**
+- Old orb/bubble chart was removed because orbs went outside margins — do NOT restore
+- `shortenContractName()` (L0 utility) must exist before pilots implement any contract name display. Verify L0 done, or flag as prerequisite.
+- USD equivalent column: verify `/api/v1/categories/:id` returns a USD field before speccing it. If not present, do not spec it.
 
-FALCO: {summary}
-PEPPY: {summary}
-SLIPPY: gates passed — tsc/lint:tokens/build all clean
-
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-EOF
-)"
-```
-
-### Step DEP2 — Merge to main + push
-```bash
-# Merge worktree branch to main
-git checkout main
-git merge lylat/{mission-id}-{slug} --no-ff -m "merge(lylat/{mission-id}): {name}"
-git push origin main
-```
-
-### Step DEP3 — VPS deploy
-```bash
-# SSH to VPS and run deploy script
-ssh root@37.60.232.109 "bash /opt/rubli/deploy.sh"
-```
-
-### Step DEP4 — State update
-```sql
-INSERT INTO deployments VALUES (NULL, mission_id, commit_hash, datetime('now'), 'success');
-UPDATE missions SET status='deployed', updated_at=datetime('now') WHERE id=mission_id;
-DELETE FROM file_locks WHERE mission_id=mission_id;
-```
-
-Update lylat.md: mark all action items for this mission as ✅.
-
-### Step DEP5 — Cleanup worktree
-```bash
-git worktree remove ".claude/worktrees/{mission-id}-{slug}"
-git branch -d "lylat/{mission-id}-{slug}"
-```
-
-### Step DEP6 — Nightly cron (first deploy only)
-If this is the first mission to deploy, create the nightly quality gate:
-- Schedule: daily at 02:00 local time
-- Command: `cd D:\Python\yangwenli\frontend && npx tsc --noEmit && npm run lint:tokens`
-- On failure: PushNotification to user — "MCLOUD nightly gate failed — {error summary}"
-
-### Step DEP7 — PushNotification
-```
-Mission {mission-id} deployed successfully.
-{brief summary of what changed}
-Next: {next pending mission name}
-```
+**Reference pattern:** Stories charts in `frontend/src/components/stories/charts/` for EditorialChartFrame usage. Top vendors list in `190824.png` for dense list treatment.
 
 ---
 
-## PHASE 7 — SEQUENCER ROUTES TO NEXT MISSION
+### M5 · Institutions
+**Page purpose:** "Which federal institutions have the highest procurement risk exposure,
+and what is the full risk + vendor + historical profile of a specific institution?"
 
-```sql
-SELECT id, name FROM missions WHERE status='pending' ORDER BY wave, priority LIMIT 1;
-```
+**What works — keep:**
+- Institution ranking editorial header ("Five agencies account for 1.25T pesos in high-risk awards") — strong editorial framing
+- Institution risk grade badge concept
+- Filter tabs from SpatialMap Z2 (UNAM panel in `181832.png`) — valuable pattern; build institution-native equivalent, do NOT copy the SpatialMap component
 
-Show the user what's coming next. If they want to continue immediately, proceed.
-If they want to stop, /mcloud will resume at the correct state on next invocation.
+**What fails — root causes:**
+- **3 redundant profile surfaces**: ARIA profile, general institutional profile, ranking profile. Root cause: features were added incrementally without IA review. Result: users don't know which page has the information they want.
+- **Empty landing section on detail pages**: Root cause: detail page renders a skeleton while loading, but the above-fold section shows nothing useful even before loading completes. Fix: first visible content = institution name + risk grade + 3 key stats, visible immediately.
 
----
+**Architecture options Opus must evaluate:**
+A. **Single unified page**: Overview (risk grade + stats) → Vendor Network → Historical Spend → Cases. No tabs.
+   Pros: everything in one scroll. Cons: may be too long.
+B. **Tabbed**: Overview | Risk Analysis | Vendor Network | History.
+   Pros: organized. Cons: users miss content hidden in tabs.
+C. **Progressive disclosure**: dense above-fold summary, expandable sections below.
+   Pros: fast to scan, deep on demand. Cons: interaction complexity.
 
-## LAYER 0 — INFRASTRUCTURE BUILD (L0)
+Opus evaluates against the `184325.png` AMLO dossier density as the target. Which architecture best matches that density while adding institution-specific data?
 
-L0 runs before any page mission if either shared primitive is missing.
-L0 is a quick-win (no DESIGNUS needed). FOX writes briefs directly from lylat.md.
+**Design questions Opus must answer:**
+1. Which architecture (A/B/C)? Justify with reference to `184325.png`.
+2. What are the above-fold stats on an institution detail page? Likely: risk grade badge, total MXN, high-risk contract count, top risk factor, active vendor count. Confirm each field exists in the institution API endpoint.
+3. What does the vendor network section show? (The Z2 panel shows SPEND/RISK/ALL/MED+/HIGH+/CRIT filter tabs + vendor list — replicate this pattern.)
 
-### L0-1: `shortenContractName(name: string): string`
-Add to `frontend/src/lib/utils.ts`:
-
-```typescript
-const CONTRACT_STRIP_PREFIXES = [
-  'CONTRATO DE SERVICIOS DE ',
-  'CONTRATO DE PRESTACIÓN DE SERVICIOS DE ',
-  'ADJUDICACIÓN DIRECTA PARA LA ',
-  'ADJUDICACIÓN DIRECTA PARA ',
-  'LICITACIÓN PÚBLICA NACIONAL PARA ',
-  'LICITACIÓN PÚBLICA INTERNACIONAL PARA ',
-  'SERVICIO DE ',
-  'ADQUISICIÓN DE ',
-  'PROYECTO INTEGRAL DE ',
-  'ELABORACIÓN DEL PROYECTO EJECUTIVO, SUMINISTRO DE MATERIALES, ',
-  'ELABORACIÓN DE PROYECTO EJECUTIVO, SUMINISTRO DE MATERIALES, ',
-  'TRABAJOS DE CONSTRUCCIÓN Y OBRAS COMPLEMENTARIAS DEL ',
-]
-
-const INSTITUTION_ABBREVS: Record<string, string> = {
-  'INSTITUTO MEXICANO DEL SEGURO SOCIAL': 'IMSS',
-  'PETRÓLEOS MEXICANOS': 'PEMEX',
-  'COMISIÓN FEDERAL DE ELECTRICIDAD': 'CFE',
-  'SECRETARÍA DE SALUD': 'SS',
-  'SECRETARÍA DE EDUCACIÓN PÚBLICA': 'SEP',
-  'SECRETARÍA DE HACIENDA Y CRÉDITO PÚBLICO': 'SHCP',
-  'SECRETARÍA DE INFRAESTRUCTURA, COMUNICACIONES Y TRANSPORTES': 'SICT',
-  'COMISIÓN NACIONAL DEL AGUA': 'CONAGUA',
-  'INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRABAJADORES DEL ESTADO': 'ISSSTE',
-  'BANCO NACIONAL DE OBRAS Y SERVICIOS PÚBLICOS': 'BANOBRAS',
-}
-
-export function shortenContractName(name: string, maxChars = 80): string {
-  if (!name) return ''
-  let s = name.toUpperCase()
-  for (const prefix of CONTRACT_STRIP_PREFIXES) {
-    if (s.startsWith(prefix)) { s = s.slice(prefix.length); break }
-  }
-  for (const [full, abbrev] of Object.entries(INSTITUTION_ABBREVS)) {
-    s = s.replace(full, abbrev)
-  }
-  s = s.charAt(0) + s.slice(1).toLowerCase()
-  return s.length > maxChars ? s.slice(0, maxChars) + '…' : s
-}
-```
-
-### L0-2: `<TruncatedName>` shared component
-Create `frontend/src/components/shared/TruncatedName.tsx`:
-
-```tsx
-interface TruncatedNameProps {
-  name: string
-  maxChars?: number
-  className?: string
-  isContract?: boolean
-}
-
-export function TruncatedName({ name, maxChars = 60, className, isContract }: TruncatedNameProps) {
-  const display = isContract ? shortenContractName(name, maxChars) : name
-  const isTruncated = display.length < name.length || display.endsWith('…')
-  if (!isTruncated) return <span className={className}>{display}</span>
-  return (
-    <span className={className} title={name} style={{ cursor: 'help' }}>
-      {display}
-    </span>
-  )
-}
-```
+**Constraints:**
+- Do NOT copy the SpatialMap Z2 institution component — build institution-native equivalent
+- Institution names: `formatEntityName(type, name, size)` — never raw
 
 ---
 
-## PLAYWRIGHT PROTOCOL (inherited — apply in every Playwright session)
+### M6 · Networks — Decision First, Design Second
+**Page purpose:** Unclear — that is the problem DESIGNUS must resolve.
 
-Rules inherited from StarFox and paw-patrol. Never violate these.
+**Opus must produce a comparison audit, not a design spec:**
 
-**Rule 1** — Never `window.scrollTo()`. Use `browser_press_key` with `"PageDown"`, 600ms between presses.
-**Rule 2** — Disable animations immediately after navigation (inject CSS freeze via `browser_evaluate`).
-**Rule 3** — Pre-warm before screenshotting: press `End`, wait 800ms, press `Home`, wait 300ms.
-**Rule 4** — Screenshot naming: before = `designs/{mission}-before/{n}.png` · after = `starfox/{agent}-after-{n}.png`
-**Rule 5** — Collect `url` and `scrollY` with every screenshot.
-**Rule 6** — Atlas localStorage flag before visiting `/atlas`: `localStorage.setItem('rubli_atlas_visited_v1', '1')`
-**Rule 7** — Viewport screenshots only, not `fullPage: true`.
+1. Navigate live to `/networks`. Catalog every element with its data source.
+2. Navigate to `/atlas`. Catalog every element.
+3. Build this comparison table:
+   ```
+   Element | Present in Networks | Present in Atlas | Unique to Networks
+   ```
+4. Answer: Is what's "Unique to Networks" substantial enough to justify the page?
+5. Verdict: **Merge** or **Drop** — with evidence from the comparison table.
+
+**Context for the audit:**
+- Atlas (El Observatorio) is a sophisticated spatial + cluster map of vendor networks with lens modes (Risk/Patterns/Sectors/Categories)
+- `/intersection` (adjacent) shows the regulatory gap: 1,808 RUBLI-flagged vendors not on any official watchlist — the most impactful number on the platform
+- `/patterns` shows P1–P7 corruption pattern categories
+- The question: does `/networks` add anything not already in Atlas + Intersection + Patterns?
+
+**If merge decision:** Where specifically in Atlas does the Networks content live? Propose as a new lens mode or new panel.
+
+**If drop decision:** Redirect target (likely `/atlas`). List all nav links to `/networks` that need updating. Verify no dead links via grep.
+
+After user approves the merge-or-drop decision, THEN write a spec for the implementation.
 
 ---
 
-## DESIGN CONSTANTS (from CLAUDE.md — do not re-read CLAUDE.md for these)
+### M7 · Administrations — PIVOTAL
+**Page purpose:** "How did procurement behavior, risk concentration, and corruption
+patterns differ across Mexico's five administrations, and what are the systemic patterns
+that transcend any single administration?"
 
+**User's instruction:** "In this particular last mission we have to be very thorough
+and use opus ultrathink to assess the situation of what we can do with administrations.
+It is pivotal that we do."
+
+**What's genuinely good — keep and build on:**
+- **Dense dossier layout** (`184325.png`): political context + radar chart + documented cases + top vendors. THIS IS THE TEMPLATE FOR M7. Replicate its density in every tab.
+- **Top Vendors dot-bar rows** (`190824.png`): the best component on the entire page. Full vendor names (no truncation), MXN right-aligned, contract count + avg risk below name, dot-bar risk indicator. User: "We need more of these lists within the administration profile page." Replicate to: Overview tab, individual admin profiles, any section with administration-level vendor data.
+- **Administration Comparison table** (`184919.png`): all 5 admins × 7 metrics in a dense table. Keep.
+- **Calderón→EPN transition annotation** in hero: good editorial call-out. Keep.
+- **Three stat cards in Systemic Patterns** (65.3% / 52.0% / 18.9%): powerful data. Keep.
+- **Procurement Fingerprint radar charts** (`184637.png`): good concept, weak visual execution. Keep concept, apply editorial treatment (Playfair labels, administration colors, clean grid).
+
+**What's broken — root causes:**
+- **Risk Matrix** (`185012.png`, `190645.png`): 5×12 cells with single-letter sector abbreviations. Root cause: cells identify sectors but fail to encode risk MAGNITUDE visually. A colored box that requires reading the tooltip to understand the value is not a visualization — it's a lookup table pretending to be one. Fix: encode magnitude within each cell.
+- **Systemic Patterns 25-Year Timeline** (`190941.png`): flat multi-line chart, no annotations, no editorial treatment. Root cause: rendered with default recharts styling, not wrapped in `EditorialChartFrame`, no Playfair headline, no named administration transition lines, no call-out annotation for the most alarming data point. Fix: full editorial treatment.
+- **Political Cycle spaghetti chart** (`191000.png`): 5 administrations overlaid as lines. Root cause: wrong chart type for comparing N complete time series. Fix: small multiples (one panel per administration, consistent Y axis, same color as administration's identity color).
+- **Election Year Effect null finding** (`191142.png`): 23.34% vs 23.46% — a delta of 0.12 percentage points. Root cause: section was built assuming a statistically significant effect; the data says otherwise. This is the most embarrassing element on the page — it presents meaningless numbers with the visual weight of a meaningful finding. Fix: delete entirely, OR replace with explicit editorial statement: "No election-year distortion detected in this dataset. Risk rates remain consistent across electoral cycles — a finding in itself."
+- **Compare Periods looks like a settings form** (`191151.png`): Root cause: results rendered as a plain table. Fix: after user runs comparison, render results as side-by-side administration portrait cards (matching `184325.png` dossier format) — not a table.
+- **4 tabs overlap in content**: Administration Overview and Pattern Composition probably overlap. Political Cycle and Systemic Patterns definitely overlap. Root cause: features added incrementally without IA review. Fix: consolidate.
+
+**Design questions Opus must answer:**
+1. **New tab structure**: what are the final 2–3 tabs? Likely: **Profile** (dossier, top vendors, key events) / **Patterns** (systemic trends + risk matrix) / **Compare** (compare periods tool + cross-admin view). Propose with justification.
+2. **Risk Matrix redesign**: how to encode 5×12 risk magnitudes in small cells? Evaluate:
+   - Option A: Heatmap cells — color saturation (light=low, saturated=high), miniature risk score number in center (tabular-nums, 11px)
+   - Option B: Mini horizontal sparkbar per cell — 80% width, height=4px, color from RISK_COLORS
+   - Option C: Circle per cell — radius proportional to risk relative to sector average (center point)
+   AMLO's row call-out must be editorial: a 2px left border in `RISK_COLORS.critical` + right-margin annotation ("Highest risk rate in the modern record"), NOT a CSS focus box.
+3. **Political Cycle fix**: small multiples (one panel per administration, 5 panels, consistent Y axis) vs animated transition between administrations. Which is more readable and easier to implement?
+4. **Election Year Effect**: delete entirely or add null finding statement? Both are valid. Pick one and justify.
+5. **What additional vendor/institution lists belong in the Administration Profile?** The user said "more of these lists." What data exists for each administration? (Possible additions: top institutions by high-risk award, top procurement categories, key risk events timeline.) Verify each field in the API before speccing.
+6. **Administration colors**: verify in `Administrations.tsx` what colors are currently used for Fox / Calderón / EPN / AMLO / Sheinbaum. Your spec must use these exact colors.
+
+**Constraints:**
+- `formatVendorName()` on every vendor name — the Top Vendors list (`190824.png`) already does this and must continue to
+- `EditorialChartFrame` must wrap every new or redesigned chart — it provides the Playfair kicker/headline/lede chrome
+- Radar charts: keep concept, apply editorial treatment — do not delete them
+
+---
+
+## DESIGN CONSTANTS (embedded — do not re-read CLAUDE.md for these)
+
+### Typography
 ```
-Large data numbers:    font-playfair-display italic font-extrabold tabular-nums
-Section kickers:       font-mono text-xs uppercase tracking-wider text-text-muted
-Vendor/institution:    formatVendorName() or formatEntityName() — never raw name
-Contract names:        shortenContractName() — always
+Large data numbers:   font-playfair-display italic font-extrabold tabular-nums
+Section kickers:      font-mono text-xs uppercase tracking-wider text-text-muted
+Editorial chart wrap: EditorialChartFrame (provides kicker/headline/lede chrome)
+Body text:            Inter / system-ui
+```
 
-Risk critical (≥0.60): RISK_COLORS.critical from @/lib/constants
+### Color tokens (always use these — never raw hex in className)
+```
+Risk critical (≥0.60): RISK_COLORS.critical  from '@/lib/constants'
 Risk high (≥0.40):     RISK_COLORS.high
 Risk medium (≥0.25):   RISK_COLORS.medium
-Risk low (<0.25):       text-text-muted — NEVER green (absolute rule)
-Sector colors:         SECTOR_COLORS from @/lib/constants
-
-Editorial chart palette:
-  HIGHLIGHT_COLOR:   sector-salud red (story charts)
-  REFERENCE_COLOR:   sector-tecnologia purple
-  ANCHOR_COLOR:      #a06820 (dashboard amber)
-
-Design reference for all redesigns: Dashboard.tsx — match its density
+Risk low (<0.25):      text-text-muted — NEVER green (absolute rule — CLAUDE.md §3.10)
+Sector colors:         SECTOR_COLORS         from '@/lib/constants'
+Chart highlight:       HIGHLIGHT_COLOR        (sector-salud red)
+Chart reference:       REFERENCE_COLOR        (sector-tecnologia purple)
+Chart anchor:          ANCHOR_COLOR           (#a06820 amber — use via style={{}})
 ```
 
----
+### Canonical components (use these — never re-implement inline)
+```
+EditorialChartFrame   frontend/src/components/stories/EditorialChartFrame.tsx
+DotBar                frontend/src/components/shared/DotBar.tsx
+DotBarRow             (ranked list rows with DotBar)
+StatRow               (dense stat rows)
+EntityIdentityChip    (entity links — vendor/institution/sector/case)
+formatVendorName()    frontend/src/lib/utils.ts
+formatEntityName()    frontend/src/lib/utils.ts
+shortenContractName() frontend/src/lib/utils.ts  ← L0 must be done first
+```
 
-## FAILURE MODES — PREVENTION
+### Forbidden patterns (causes lint:tokens failure)
+```
+text-red-400   bg-emerald-*   raw #hex in className string
+"probability of corruption" in any user-visible string
+```
 
-**FM-1: DESIGNUS spec too vague**
-DESIGNUS MUST specify exact layout for every component it proposes. "Redesign the chart"
-is not a spec. "Replace the line chart with a horizontal ranked bar — institution name
-left-aligned, MXN value right-aligned, risk badge in between, 40px row height, sorted
-by MXN descending" IS a spec.
+### What "good" looks like in this codebase
+- **Density target**: `Dashboard.tsx` — study its stat-row height, padding, typography hierarchy
+- **Best list component**: Top Vendors section in `Administrations.tsx` — dot-bar rows (`190824.png`)
+- **Best dossier format**: AMLO profile section in `Administrations.tsx` (`184325.png`)
+- **Best editorial charts**: `frontend/src/components/stories/charts/` — all wrapped in `EditorialChartFrame`
+- **Best table format**: Administration Comparison table in `Administrations.tsx` (`184919.png`)
 
-**FM-2: Parallel file editing**
-SEQUENCER checks file_locks before every FOX brief assignment. If a file is locked by
-another mission, that file is OFF LIMITS until the locking mission deploys.
-
-**FM-3: Gate run before pilots finish**
-SLIPPY runs gates STRICTLY after FALCO and PEPPY both report complete. Not before.
-
-**FM-4: Blank Playwright screenshots**
-Apply animation-freeze protocol (Rules 2+3) before EVERY screenshot. No exceptions.
-
-**FM-5: Spanish leaking in English mode**
-PEPPY audits ALL files touched by ANY pilot for untranslated strings. Not just Peppy's files.
-
-**FM-6: Cross-mission contamination**
-One worktree per mission. Pilots work inside the worktree. Never edit main repo directly
-while a mission is active.
-
-**FM-7: Deploying without PATROL sign-off**
-DEPLOYER is blocked by PATROL. PATROL must explicitly report "PASS" before DEPLOYER runs.
-No exceptions for "small changes."
-
-**FM-8: Missing BUILD_ID bump**
-FALCO or SLIPPY (whoever does the last edit) bumps BUILD_ID in constants.ts.
-Format: `'{YYYY-MM-DD}-mcloud-{mission-id}-{slug}'`
-Example: `'2026-05-17-mcloud-M7-administrations'`
+### What "bad" looks like — the audit language
+- **"Warehouse with a chair"**: huge paddings, one item per visual row, data starts 40% down viewport. Always compress.
+- **"Made with paint"**: default recharts styling, flat single color, no annotations, no Playfair headline, no editorial kicker. Always wrap in `EditorialChartFrame`.
+- **Truncated names**: `...` without tooltip = SYS-1 violation. Never acceptable.
+- **Repeated stats**: same number in hero AND right panel = SYS-5 violation. Say it once.
+- **Spaghetti charts**: 5+ overlaid lines with no annotation. Always prefer small multiples.
+- **Null findings as if findings**: equal numbers in stat cards with the visual weight of a discovery. Label null results as null, or delete them.
 
 ---
 
-## FINAL NOTES
+## PLAYWRIGHT PROTOCOL
 
-- lylat.md is the human-readable brief. mcloud.db is the machine state. Both stay in sync.
-- When in doubt about a design decision: look at Dashboard.tsx. That is the reference.
-- "Warehouse with a chair" = any page where the content floats in a sea of whitespace. Fix it.
-- "Made with paint" = any chart that uses default recharts styling with no editorial treatment. Fix it.
-- SYS-1 through SYS-6 apply to every single file touched. They are not optional.
-- The user wants to "not come back to this ever." Treat every commit as permanent.
+**Rule 1** — Never `window.scrollTo()`. Use `browser_press_key` with `"PageDown"`, wait 600ms between presses.
+
+**Rule 2** — Disable animations immediately after every navigation:
+```javascript
+() => {
+  const s = document.createElement('style');
+  s.id = 'sf-freeze';
+  s.textContent = `
+    *, *::before, *::after {
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+  `;
+  document.head.appendChild(s);
+  document.querySelectorAll('*').forEach(el => {
+    if (parseFloat(window.getComputedStyle(el).opacity) < 0.5) {
+      el.style.setProperty('opacity', '1', 'important');
+    }
+  });
+  return 'frozen';
+}
+```
+
+**Rule 3** — Pre-warm before screenshotting: press `End`, wait 800ms, press `Home`, wait 300ms. Then scroll and screenshot.
+
+**Rule 4** — Screenshot naming: `designs/{mission-id}-before/{n}.png` (pad n to 3 digits)
+
+**Rule 5** — Viewport screenshots only. Never `fullPage: true` — framer-motion elements render at opacity:0 for off-screen content.
+
+**Rule 6** — Atlas prerequisite: before visiting `/atlas`, set:
+```javascript
+() => { localStorage.setItem('rubli_atlas_visited_v1', '1'); return 'set'; }
+```
+The value must be the string `'1'` — not `'true'`.
+
+---
+
+## FAILURE MODES
+
+**FM-1: Vague spec (most common)**
+DESIGNUS produces "redesign the chart to be more editorial" instead of a buildable spec.
+Prevention: every replaced/added component must have ALL SIX: type, dimensions, data fields,
+visual treatment, responsive behavior, pilot assignment. Run the pre-spec checklist (D6).
+A brief without ALL SIX is incomplete. Do not save it.
+
+**FM-2: Unverified file references**
+DESIGNUS writes "FOX should edit `Administrations.tsx`" without verifying the component
+name. FOX then spends 10 minutes searching.
+Prevention: Grep for the component name or a visible string from the screenshot BEFORE
+writing the "For FOX" callouts. Write `file:line` not just `file`.
+
+**FM-3: Proposing non-existent components**
+DESIGNUS proposes a "HeatCell component" without checking if one exists.
+Prevention: before speccing any new component pattern, grep for it. If it exists (DotBar,
+StatRow, EntityIdentityChip), use it. If it doesn't exist, note explicitly:
+"New component required — FALCO builds this in Phase 2."
+
+**FM-4: Speccing data fields that don't exist in the API**
+DESIGNUS speccing a USD equivalent column when the API doesn't expose it.
+Prevention: for any field not seen in the current page's data, verify it exists via
+`curl -s http://localhost:8001/api/v1/{endpoint}` before speccing it. Flag unverified
+fields as ⚠️ data dependency in the spec.
+
+**FM-5: Blank Playwright screenshots**
+Prevention: animation-freeze protocol (Rules 2+3) before EVERY screenshot. No exceptions.
+
+**FM-6: M4 three concepts that are secretly the same**
+DESIGNUS presents "treemap, bubble treemap, nested treemap" as three concepts.
+Prevention: each concept must use a fundamentally different visual metaphor. If two concepts
+share the same primary encoding (e.g., area = spend), they are variants, not alternatives.
+Force genuine diversity: one area-encoding concept, one position-encoding concept, one
+structure-encoding concept.
+
+**FM-7: DESIGNUS writing implementation code**
+DESIGNUS writes TSX instead of a spec.
+Prevention: if you find yourself writing `const HeatCell = () =>`, stop. DESIGNUS writes
+prose specs. The spec says "color saturation encodes risk magnitude." FALCO writes the TSX.
+
+**FM-8: L0 not verified before speccing contract/name utilities**
+DESIGNUS specs `shortenContractName()` or `<TruncatedName>` without confirming L0 is done.
+Prevention: before writing any spec that references L0 utilities, grep:
+`grep -r "shortenContractName" frontend/src/lib/utils.ts`
+If not found: add a prerequisite block to the spec: "L0 must be complete before this spec
+can be implemented. `shortenContractName()` is required at: [list every spec element that uses it]."
+
+---
+
+*MCLOUD v2 — design phase only — state in lylat.md and ACTIVE_WORK.md*
+*Rewritten 2026-05-17 — stripped SQLite/worktrees/cron — armed with mission context*
