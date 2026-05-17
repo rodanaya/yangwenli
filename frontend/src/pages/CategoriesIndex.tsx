@@ -447,12 +447,13 @@ export default function CategoriesIndex() {
         )}
 
         {!isLoading && !isError && displayed.length === 0 && (
-          <p
-            className="font-mono text-sm"
-            style={{ color: 'var(--color-text-muted)' }}
+          <div
+            className="py-16 text-center"
+            role="status"
+            aria-live="polite"
           >
-            {t('index.noResults')}
-          </p>
+            <p className="text-sm font-mono text-text-muted">{t('index.noResults')}</p>
+          </div>
         )}
 
         {!isLoading && !isError && displayed.length > 0 && (

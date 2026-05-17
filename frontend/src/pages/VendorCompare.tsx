@@ -258,7 +258,7 @@ function VendorSearchInput({
                 )
               })
             ) : (
-              <div className="px-4 py-3 text-xs text-text-muted">{t('noResults')}</div>
+              <div className="px-4 py-3 text-xs text-text-muted" role="status" aria-live="polite">{t('noResults')}</div>
             )}
           </div>
         </div>

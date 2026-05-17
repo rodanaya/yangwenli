@@ -615,7 +615,7 @@ export default function TrendsTab() {
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center">
+              <div className="py-12 text-center" role="status" aria-live="polite">
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>
@@ -672,7 +672,7 @@ export default function TrendsTab() {
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center">
+              <div className="py-12 text-center" role="status" aria-live="polite">
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>

@@ -216,7 +216,7 @@ function QuadrantCard({
           ))}
         </div>
       ) : (
-        <div className="px-5 py-8 text-center text-sm text-text-muted">
+        <div className="px-5 py-8 text-center text-sm text-text-muted" role="status" aria-live="polite">
           {lang === 'es' ? 'Sin datos.' : 'No data.'}
         </div>
       )}

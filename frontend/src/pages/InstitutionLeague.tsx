@@ -1414,7 +1414,7 @@ export default function InstitutionLeague() {
           )}
 
           {!isLoading && !isError && items.length === 0 && (
-            <div className="rounded-sm border border-border bg-background/50 p-8 text-center">
+            <div className="rounded-sm border border-border bg-background/50 p-8 text-center" role="status" aria-live="polite">
               <p className="text-text-secondary text-sm">{t('empty')}</p>
               <p className="text-text-muted text-xs mt-1">
                 {t('filters.adjustFilters')}

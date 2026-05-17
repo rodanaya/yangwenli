@@ -119,7 +119,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-sm" />)}
           </div>
         ) : suspects.length === 0 ? (
-          <div className="py-8 text-center text-sm text-text-muted">
+          <div className="py-8 text-center text-sm text-text-muted" role="status" aria-live="polite">
             {isEs ? 'No hay sospechosos en este nivel' : 'No suspects in this tier'}
           </div>
         ) : (
