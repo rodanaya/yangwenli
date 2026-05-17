@@ -180,7 +180,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                       {s.ghost_signal_count} {isEs ? 'señ' : 'sig'}
                     </span>
                   </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-accent group-hover:translate-x-0.5 transition-all self-center shrink-0" />
+                  <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-accent group-hover:translate-x-0.5 transition-all self-center shrink-0" aria-hidden="true" />
                 </button>
               )
             })}

@@ -562,7 +562,7 @@ function AtlasLink({
               {caption[lang]}
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} />
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} aria-hidden="true" />
         </div>
       </Link>
     </ScrollReveal>
@@ -612,7 +612,7 @@ function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; l
               {body}
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: tour.accent }} />
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: tour.accent }} aria-hidden="true" />
         </div>
       </Link>
     </ScrollReveal>
@@ -1327,7 +1327,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           <span>{lang === 'es' ? (BYLINE_ES[story.byline] ?? story.byline) : story.byline}</span>
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
+            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
             {story.estimatedMinutes} min {t('storyType.readTime', 'read')}
           </span>
           {story.status && (() => {
@@ -1635,7 +1635,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         {story.nextSteps && story.nextSteps.length > 0 && (
           <div className="mt-8 p-4 rounded-sm border border-border bg-background-card">
             <h4 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
-              <ChevronRight className="h-4 w-4 text-risk-critical" />
+              <ChevronRight className="h-4 w-4 text-risk-critical" aria-hidden="true" />
               {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">

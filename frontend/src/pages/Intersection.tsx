@@ -123,7 +123,7 @@ function VendorRow({
           {secondary}
         </div>
       </div>
-      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
     </div>
   )
 }
@@ -612,7 +612,7 @@ export default function Intersection() {
 
             {/* Methodology caveat */}
             <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-card">
-              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
               <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
                 {lang === 'es' ? (
                   <>

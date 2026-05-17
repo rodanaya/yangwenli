@@ -709,7 +709,7 @@ export default function ProcurementCalendar() {
         {/* Election year banner */}
         {isElectionYear && (
           <div className="flex items-start gap-3 rounded-sm border border-risk-high/40 bg-risk-high/10 px-4 py-3">
-            <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
+            <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
             <p className="text-xs text-accent leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
             </p>
@@ -849,7 +849,7 @@ export default function ProcurementCalendar() {
               {/* December spike annotation */}
               {decemberSpikeRatio !== null && decemberSpikeRatio > 1.2 && (
                 <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <TrendingUp className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
+                  <TrendingUp className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="text-sm font-semibold text-risk-high">
                       {t('patterns.decemberSpike', { year, num: formatNumber(stats.decemberContracts) })}
@@ -864,7 +864,7 @@ export default function ProcurementCalendar() {
               {/* Election year note */}
               {isElectionYear && (
                 <div className="border border-amber-800/50 bg-risk-high/10/20 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="text-sm font-semibold text-accent">
                       {t('patterns.electionPattern')}
@@ -879,7 +879,7 @@ export default function ProcurementCalendar() {
               {/* High risk day annotation */}
               {stats.highestRiskDay && stats.highestRiskDay.risk_rate > 0.25 && (
                 <div className={cn('border rounded-sm px-4 py-3 flex gap-3 items-start', getRiskBadgeColor(stats.highestRiskDay.risk_rate))}>
-                  <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                  <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="text-sm font-semibold">
                       {t('patterns.peakRiskDayLabel', {
@@ -922,7 +922,7 @@ export default function ProcurementCalendar() {
 
         {/* Source footnote */}
         <div className="text-[10px] text-text-muted pt-2 border-t border-border/50">
-          <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" />
+          <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" aria-hidden="true" />
           {t('source')}
         </div>
       </div>

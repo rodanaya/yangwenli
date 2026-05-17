@@ -888,7 +888,7 @@ export default function CapturaHeatmap() {
         <div className="bg-background-card border border-risk-critical/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-sm bg-risk-critical/10 flex items-center justify-center flex-shrink-0">
-              <Info className="h-5 w-5 text-risk-critical" />
+              <Info className="h-5 w-5 text-risk-critical" aria-hidden="true" />
             </div>
             <div>
               <h3 className="font-serif text-lg text-text-primary mb-1">
@@ -907,7 +907,7 @@ export default function CapturaHeatmap() {
           <div className="bg-background-card border border-risk-high/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-sm bg-risk-high/10 flex items-center justify-center flex-shrink-0">
-                <Info className="h-5 w-5 text-risk-high" />
+                <Info className="h-5 w-5 text-risk-high" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">

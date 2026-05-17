@@ -775,7 +775,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
   return (
     <div className="relative" style={{ minWidth: 220 }}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" aria-hidden="true" />
         <input
           type="text"
           value={query}
@@ -1826,7 +1826,7 @@ export default function Atlas() {
                       : 'Todas las investigaciones'
                   })()}
                 </span>
-                <ArrowUpRight className="h-3 w-3" />
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
             </motion.div>
           )}
@@ -1863,7 +1863,7 @@ export default function Atlas() {
             className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm"
             style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
           >
-            <Sparkles className="h-3 w-3" />
+            <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span className="opacity-80 uppercase tracking-[0.1em]">
               {lang === 'en' ? 'Found' : 'Encontrado'}:
             </span>
@@ -1915,7 +1915,7 @@ export default function Atlas() {
               ? 'Render a second constellation alongside this one. Pick a year for each canvas to see the same lens at two moments in time — e.g. Peña 2014 vs COVID 2020.'
               : 'Renderiza una segunda constelación junto a la actual. Elige un año para cada lienzo para ver la misma lente en dos momentos — ej. Peña 2014 vs COVID 2020.'}
           >
-            <Layers className="h-3 w-3" />
+            <Layers className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Compare years' : 'Comparar años'}
           </button>
 

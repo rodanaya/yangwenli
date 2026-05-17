@@ -105,7 +105,7 @@ function RiskScoreDisclaimer() {
       title={t('riskScoreTooltip')}
       aria-label={t('riskScoreTooltip')}
     >
-      <Info className="h-3 w-3 text-text-muted/50 hover:text-text-muted transition-colors" />
+      <Info className="h-3 w-3 text-text-muted/50 hover:text-text-muted transition-colors" aria-hidden="true" />
     </span>
   )
 }
@@ -375,7 +375,7 @@ function CaseCard({
           <VerifyPanel />
         </div>
 
-        <ChevronRight className="absolute bottom-3 right-3 h-3.5 w-3.5 text-text-muted/30 group-hover:text-accent transition-colors" />
+        <ChevronRight className="absolute bottom-3 right-3 h-3.5 w-3.5 text-text-muted/30 group-hover:text-accent transition-colors" aria-hidden="true" />
       </div>
     </div>
   )
@@ -408,12 +408,12 @@ function SortHeader({
         {label}
         {active ? (
           sortDir === 'desc' ? (
-            <ArrowDown className="h-3 w-3 text-accent" />
+            <ArrowDown className="h-3 w-3 text-accent" aria-hidden="true" />
           ) : (
-            <ArrowUp className="h-3 w-3 text-accent" />
+            <ArrowUp className="h-3 w-3 text-accent" aria-hidden="true" />
           )
         ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-40" />
+          <ArrowUpDown className="h-3 w-3 opacity-40" aria-hidden="true" />
         )}
       </span>
     </th>
@@ -536,7 +536,7 @@ export function Investigation() {
       <div className="container mx-auto p-6">
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="flex items-center gap-3 p-6 text-text-muted bg-background-card">
-            <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" />
+            <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" aria-hidden="true" />
             <span>{t('loadingError')}</span>
           </div>
         </div>
@@ -654,7 +654,7 @@ export function Investigation() {
         <div className="flex items-center gap-2">
           {/* Search box */}
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" aria-hidden="true" />
             <input
               type="text"
               aria-label={isEs ? 'Buscar casos de investigación' : 'Search investigation cases'}
@@ -957,7 +957,7 @@ function CaseTableRow({
               <span className="text-text-muted">&mdash;</span>
             )}
           </span>
-          <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" aria-hidden="true" />
         </div>
       </td>
     </tr>

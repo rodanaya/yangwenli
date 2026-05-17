@@ -1427,7 +1427,7 @@ export default function RedesKnownDossier() {
     return (
       <div className="max-w-6xl mx-auto pb-12">
         <div className="mt-8 rounded border border-border/60 bg-background px-6 py-8 text-center">
-          <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" />
+          <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" aria-hidden="true" />
           <p
             className="text-text-primary mb-1"
             style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontSize: '1.15rem' }}

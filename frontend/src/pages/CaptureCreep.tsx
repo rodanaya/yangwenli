@@ -140,7 +140,7 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
         </div>
       </div>
 
-      <ChevronRight className="hidden md:block h-4 w-4 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="hidden md:block h-4 w-4 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
     </article>
   )
 }
@@ -296,7 +296,7 @@ export default function CaptureCreep() {
       ) : (
         <div className="space-y-6">
           <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
-            <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
             <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
               {lang === 'es' ? (
                 <>

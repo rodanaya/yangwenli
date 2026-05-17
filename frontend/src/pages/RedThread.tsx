@@ -208,7 +208,7 @@ function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
           className="rounded-sm border px-4 py-2.5 mb-5 flex items-center gap-3 flex-wrap"
           style={{ backgroundColor: meta.bg, borderColor: meta.color + '44' }}
         >
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} aria-hidden="true" />
           <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
           <span className="text-sm font-bold text-text-primary">{meta.label}</span>
           <span className="text-text-muted">·</span>
@@ -804,7 +804,7 @@ export default function RedThread() {
   if (vendorError && vendorErrorStatus === 404) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
-        <AlertTriangle className="h-8 w-8 text-text-muted" />
+        <AlertTriangle className="h-8 w-8 text-text-muted" aria-hidden="true" />
         <div>
           <p className="text-text-primary font-medium mb-1">
             {t('errors.vendorNotFound')}

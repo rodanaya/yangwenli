@@ -30,7 +30,7 @@ function ErrorFallbackUI({
       <div className="w-full max-w-md rounded-sm border border-border/60 overflow-hidden bg-background-card" style={{ borderColor: 'var(--color-risk-high, #f59e0b)' }}>
         <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <h3 className="flex items-center gap-2 text-risk-high">
-            <AlertTriangle className="h-5 w-5" />
+            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
             {t('emptyState.errorTitle')}
           </h3>
         </div>
@@ -45,11 +45,11 @@ function ErrorFallbackUI({
           )}
           <div className="flex gap-2">
             <Button onClick={onReset} variant="outline" size="sm">
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('emptyState.tryAgain')}
             </Button>
             <Button onClick={onGoHome} variant="outline" size="sm">
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('emptyState.goHome')}
             </Button>
           </div>

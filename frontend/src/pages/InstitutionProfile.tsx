@@ -789,7 +789,7 @@ export function InstitutionProfile() {
             {/* AI Intelligence Brief */}
             <div>
               <div className="flex items-center gap-2 px-1 mb-2">
-                <Brain className="h-3.5 w-3.5 text-accent" />
+                <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
                   {t('profile.overview.intelligenceBrief')}
                 </span>
@@ -815,7 +815,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <Shield className="h-3.5 w-3.5 text-accent" />
+                      <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('profile.overview.riskDistribution')}
                     </h3>
                   </div>
@@ -867,7 +867,7 @@ export function InstitutionProfile() {
                   <div className="card-elevated">
                     <div className="pb-2 pt-4">
                       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                        <Shield className="h-3.5 w-3.5 text-accent" />
+                        <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                         {t('profile.integrityScoreLabel')}
                         <GradeBadge10 grade={scorecard.grade} size="sm" />
                       </h3>
@@ -913,7 +913,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <Users className="h-3.5 w-3.5 text-accent" />
+                      <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('profile.overview.topVendors')}
                     </h3>
                   </div>
@@ -949,7 +949,7 @@ export function InstitutionProfile() {
                     >
                       <div className="pb-2 pt-4">
                         <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
-                          <AlertTriangle className="h-3.5 w-3.5" />
+                          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                           {t('profile.overview.mostSuspiciousContract')}
                         </h3>
                       </div>
@@ -990,7 +990,7 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                    <TrendingUp className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                     {t('profile.risk.trajectory')}
                   </h3>
                   {timelineTrend && (
@@ -1002,7 +1002,7 @@ export function InstitutionProfile() {
                     )}>
                       {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :
                        timelineTrend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> :
-                       <Minus className="h-3 w-3" />}
+                       <Minus className="h-3 w-3" aria-hidden="true" />}
                       {timelineTrend.direction === 'up' ? t('profile.risk.trendUp') :
                        timelineTrend.direction === 'down' ? t('profile.risk.trendDown') : t('profile.risk.trendStable')}
                     </div>
@@ -1036,7 +1036,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Shield className="h-3.5 w-3.5 text-accent" />
+                  <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Risk factor breakdown' : 'Desglose de factores de riesgo'}
                 </h3>
               </div>
@@ -1061,7 +1061,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Users className="h-3.5 w-3.5 text-accent" />
+                  <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Peer comparison' : 'Comparacion con pares'}
                   {peerComparison && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
@@ -1149,7 +1149,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+                      <AlertTriangle className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('benchmarks.procurementMethod')}
                     </h3>
                   </div>
@@ -1223,7 +1223,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                  <TrendingUp className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Vendor loyalty — long-term relationships' : 'Lealtad de proveedores — relaciones de largo plazo'}
                 </h3>
               </div>
@@ -1234,7 +1234,7 @@ export function InstitutionProfile() {
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingLoyalty')}</p>
                 ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
                   <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
-                    <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" />
+                    <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" aria-hidden="true" />
                     <VendorLoyaltyHeatmap vendorLoyalty={vendorLoyalty} />
                     <p className="mt-2 text-[10px] text-text-muted/50 italic">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
                   </div>
@@ -1248,7 +1248,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  <Calendar className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {t('profile.longestTenuredVendors', 'Long-tenured Vendors')}
                 </h3>
               </div>
@@ -1302,7 +1302,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <FileText className="h-3.5 w-3.5 text-accent" />
+                  <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Top procurement categories' : 'Principales categorias de contratacion'}
                 </h3>
               </div>
@@ -1361,7 +1361,7 @@ export function InstitutionProfile() {
               </div>
             ) : !officialsData?.data_available || sortedOfficials.length === 0 ? (
               <div className="card-elevated p-8 text-center">
-                <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" />
+                <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" aria-hidden="true" />
                 <p className="text-sm text-text-muted">{t('profile.noOfficialsData')}</p>
                 {officialsData?.note && (
                   <p className="text-[10px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
@@ -1457,7 +1457,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <DollarSign className="h-3.5 w-3.5 text-accent" />
+                  <DollarSign className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Spending evolution' : 'Evolucion del gasto'}
                   {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
@@ -1473,7 +1473,7 @@ export function InstitutionProfile() {
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingTimeline')}</p>
                 ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
                   <div className="relative" ref={spendingChartRef}>
-                    <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" />
+                    <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" aria-hidden="true" />
                     <SpendingOverTimeChart data={riskTimeline!.timeline} />
                   </div>
                 ) : (
@@ -1487,7 +1487,7 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high" aria-hidden="true" />
                   {lang === 'en' ? 'Highest-risk contracts' : 'Contratos de mayor riesgo'}
                   </h3>
                   <Link to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`} className="text-xs text-accent hover:underline flex items-center gap-1">
@@ -1517,7 +1517,7 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <FileText className="h-3.5 w-3.5 text-accent" />
+                    <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Recent contracts' : 'Contratos recientes'}
                   </h3>
                   <Link to={`/contracts?institution_id=${institutionId}`} className="text-xs text-accent hover:underline flex items-center gap-1">
@@ -1551,7 +1551,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-3">
                 <h3 className="flex items-center gap-2 text-sm font-medium">
-                  <AlertTriangle className="h-4 w-4 text-risk-high" />
+                  <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
                   {lang === 'en' ? 'ASF Audit Findings' : 'Hallazgos de auditoria ASF'}
                 </h3>
               </div>
@@ -1625,7 +1625,7 @@ export function InstitutionProfile() {
               <div className="card-elevated border-l-4 border-l-risk-critical">
                 <div className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-risk-critical" />
+                    <Shield className="h-4 w-4 text-risk-critical" aria-hidden="true" />
                     <h3 className="text-sm font-bold text-risk-critical">{lang === 'en' ? 'Documented corruption case' : 'Caso de corrupcion documentado'}</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed">
@@ -1652,7 +1652,7 @@ export function InstitutionProfile() {
                   ) : (
                     <>
                       <div className="flex items-center gap-2 mb-3">
-                        <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
+                        <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" aria-hidden="true" />
                         <h2 className="text-sm font-bold text-text-primary">{lang === 'en' ? 'Documented scandals in the sector' : 'Escandalos documentados en el sector'}</h2>
                         <span className="text-xs text-text-muted">({sectorCases!.length})</span>
                       </div>
@@ -1668,7 +1668,7 @@ export function InstitutionProfile() {
                               name={c.name_es || c.name_en}
                               size="xs"
                             />
-                            <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                            <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" aria-hidden="true" />
                           </div>
                         ))}
                       </div>
@@ -1682,7 +1682,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  <Calendar className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Cross-registry timeline' : 'Linea de tiempo cruzada'}
                 </h3>
               </div>
@@ -1941,7 +1941,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   {riskClr && v.avg_risk_score != null && (
                     <span className="text-xs font-bold font-mono w-8 text-right" style={{ color: riskClr }}>{(v.avg_risk_score * 100).toFixed(0)}%</span>
                   )}
-                  <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
                 </div>
               </div>
               <DotBar
@@ -2239,7 +2239,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       onClick={() => onView?.(contract.id)}
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+        <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
         <div className="min-w-0">
           <p className="text-xs font-medium truncate max-w-[260px] text-text-primary">{contract.title || t('profile.untitled')}</p>
           <div className="flex items-center gap-1.5 text-xs text-text-muted mt-0.5">

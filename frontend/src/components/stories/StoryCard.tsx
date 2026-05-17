@@ -135,7 +135,7 @@ export function StoryCard(props: StoryCardProps) {
       {/* Footer */}
       <div className="flex items-center gap-3 pt-1 text-[11px] text-text-muted">
         <span className="inline-flex items-center gap-1">
-          <Clock className="h-3 w-3" />
+          <Clock className="h-3 w-3" aria-hidden="true" />
           {estimatedMinutes} min
         </span>
         {era && (

@@ -326,7 +326,7 @@ export default function VendorsTab() {
             {showSearchLoading ? (
               <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
             ) : (
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" aria-hidden="true" />
             )}
             <input
               type="text"
@@ -450,7 +450,7 @@ export default function VendorsTab() {
       ) : error ? (
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="p-8 text-center bg-background-card">
-            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-text-primary mb-2">Failed to load vendors</p>
             <p className="text-xs text-text-muted mb-3">
               {(error as Error).message === 'Network Error'
@@ -458,14 +458,14 @@ export default function VendorsTab() {
                 : (error as Error).message || 'An unexpected error occurred.'}
             </p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
               Retry
             </Button>
           </div>
         </div>
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
-          <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
+          <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
           <p className="text-sm text-text-muted">
             No vendors match your filters.
           </p>
@@ -537,7 +537,7 @@ export default function VendorsTab() {
               onClick={() => updateFilter('page', filters.page! - 1)}
               aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {filters.page}/{data.pagination.total_pages}
@@ -550,7 +550,7 @@ export default function VendorsTab() {
               onClick={() => updateFilter('page', filters.page! + 1)}
               aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -622,7 +622,7 @@ function FlashVendorRadar() {
             </div>
           ) : error ? (
             <div className="py-8 text-center">
-              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
+              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" aria-hidden="true" />
               <p className="text-xs text-text-muted">Failed to load flash vendor data</p>
             </div>
           ) : !allDots.length ? (

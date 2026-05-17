@@ -67,7 +67,7 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
           )}
           {error && (
             <div className="flex items-start gap-2 text-sm text-risk-critical">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
               {error}
             </div>
           )}

@@ -39,7 +39,7 @@ export function ChartDownloadButton({ targetRef, filename = 'chart', className }
           disabled={loading}
           aria-label="Download chart as PNG"
         >
-          <Download className="h-3 w-3" />
+          <Download className="h-3 w-3" aria-hidden="true" />
         </Button>
       </TooltipTrigger>
       <TooltipContent><p className="text-xs">Download PNG</p></TooltipContent>

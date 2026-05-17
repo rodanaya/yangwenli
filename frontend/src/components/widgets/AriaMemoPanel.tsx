@@ -119,7 +119,7 @@ function MemoEmptyState({ vendorId, vendorName }: { vendorId: number; vendorName
   if (!shap) {
     return (
       <div className="flex flex-col items-center gap-2 py-6 text-center">
-        <FileText className="h-8 w-8 text-text-muted/40" />
+        <FileText className="h-8 w-8 text-text-muted/40" aria-hidden="true" />
         <p className="text-sm text-text-muted">
           Análisis narrativo no disponible para{' '}
           <span className="font-semibold text-text-secondary">{vendorName}</span>
@@ -249,7 +249,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-background-elevated/50">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent-data" />
+          <Sparkles className="h-4 w-4 text-accent-data" aria-hidden="true" />
           <span className="text-sm font-semibold text-text-primary">
             Análisis de Investigación
           </span>
@@ -289,7 +289,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
           <MemoSkeleton />
         ) : error ? (
           <div className="flex items-center gap-2 text-sm text-risk-critical py-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
             {t('memo.loadError')}
           </div>
         ) : memo?.memo_text ? (

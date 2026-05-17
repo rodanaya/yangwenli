@@ -1565,7 +1565,7 @@ export default function PriceIntelligence() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center gap-3 p-6 text-text-secondary border border-border rounded-sm bg-background/40">
-          <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" />
+          <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-text-secondary">{t('compranetUnavailableTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('errorMessage')}</p>
@@ -1651,7 +1651,7 @@ export default function PriceIntelligence() {
           >
             {t('pageTitle')}
           </h1>
-          <ShareButton label={t('share')} className="mt-1 flex-shrink-0" />
+          <ShareButton label={t('share')} className="mt-1 flex-shrink-0" aria-hidden="true" />
         </div>
         <p
           className="mt-3 max-w-2xl text-text-secondary mb-4"
@@ -1803,7 +1803,7 @@ export default function PriceIntelligence() {
           })()
         ) : (
           <div className="rounded-sm border border-border bg-background/40 p-6 text-center">
-            <AlertTriangle className="w-5 h-5 text-text-muted mx-auto mb-2" />
+            <AlertTriangle className="w-5 h-5 text-text-muted mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-text-muted">
               {t('noAnomaliesAtThreshold')}
             </p>

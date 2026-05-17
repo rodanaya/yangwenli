@@ -214,7 +214,7 @@ function VendorSearchInput({
         className="flex items-center gap-2 border border-border rounded-lg bg-background/60 px-4 py-3"
         style={{ borderColor: isOpen ? `${color}60` : undefined }}
       >
-        <Search className="h-4 w-4 text-text-muted flex-shrink-0" />
+        <Search className="h-4 w-4 text-text-muted flex-shrink-0" aria-hidden="true" />
         <input
           ref={inputRef}
           type="text"
@@ -793,7 +793,7 @@ export default function VendorCompare() {
       {/* Error state */}
       {hasError && (
         <div className="rounded-md border border-risk-critical/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
-          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" />
+          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium text-risk-critical">{t('errorTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">

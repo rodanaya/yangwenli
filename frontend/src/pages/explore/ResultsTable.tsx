@@ -126,7 +126,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   if (query.error) {
     return (
       <div className="py-10 text-center">
-        <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2 opacity-60" />
+        <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2 opacity-60" aria-hidden="true" />
         <p className="text-sm text-text-primary mb-1">Failed to load results</p>
         <p className="text-xs text-text-muted mb-3">
           {(query.error as Error).message || 'An unexpected error occurred.'}
@@ -199,10 +199,10 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           <thead>
             <tr>
               <th className="data-cell-header text-left" scope="col">Vendor</th>
-              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
-              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden lg:table-cell" />
+              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" aria-hidden="true" />
+              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden lg:table-cell" aria-hidden="true" />
               <th className="data-cell-header text-right hidden xl:table-cell w-20" scope="col">Anomaly</th>
               <th className="data-cell-header w-16" scope="col" />
             </tr>
@@ -246,9 +246,9 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <thead>
           <tr>
             <th className="data-cell-header text-left" scope="col">Institution</th>
-            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
-            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
+            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" aria-hidden="true" />
+            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
             <th className="data-cell-header w-16" scope="col" />
           </tr>
         </thead>

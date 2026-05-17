@@ -822,7 +822,7 @@ export default function Executive() {
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Detection gap — magazine triptych: [42 official | 145× | 6,118 detected] */}
@@ -928,7 +928,7 @@ export default function Executive() {
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Audit gap — magazine triptych: [5% audited | 19× | MX$1.25T unreviewed] */}
@@ -1031,7 +1031,7 @@ export default function Executive() {
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Threshold-bunching histogram — the statistical fingerprint */}
@@ -1211,7 +1211,7 @@ export default function Executive() {
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
 
@@ -1596,7 +1596,7 @@ export default function Executive() {
         {/* ─── Documented Cases Timeline ─── */}
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
           </div>
           <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">

@@ -67,7 +67,7 @@ export function AddToWatchlistButton({
   if (success) {
     return (
       <Button variant="outline" size={size} disabled className={className}>
-        <CheckCircle className="h-4 w-4 mr-1.5 text-risk-low" />
+        <CheckCircle className="h-4 w-4 mr-1.5 text-risk-low" aria-hidden="true" />
         {t('added', { defaultValue: 'Added' })}
       </Button>
     )
@@ -81,7 +81,7 @@ export function AddToWatchlistButton({
         onClick={() => setShowForm(true)}
         className={className}
       >
-        <Eye className="h-4 w-4 mr-1.5" />
+        <Eye className="h-4 w-4 mr-1.5" aria-hidden="true" />
         {t('addToWatchlist', { defaultValue: 'Add to Watchlist' })}
       </Button>
     )

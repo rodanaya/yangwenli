@@ -1250,7 +1250,7 @@ export default function CorruptionClusters() {
           <EvidenceStrip gtTypes={gtTypes} gtTotal={gtTotal} />
 
           <div className="flex items-start gap-2 pt-3 border-t border-border/20 text-[11px] text-text-muted leading-relaxed">
-            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" />
+            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" aria-hidden="true" />
             <p>
               {isEs ? (
                 <>

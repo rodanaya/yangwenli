@@ -112,7 +112,7 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
           <span className="tabular-nums">Score {c.score.toFixed(0)}</span>
         </div>
       </div>
-      <ChevronRight className="hidden md:block h-4 w-4 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="hidden md:block h-4 w-4 text-text-muted flex-shrink-0 group-hover:text-text-primary group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
     </article>
   )
 }
@@ -302,7 +302,7 @@ export default function Relationships() {
           ) : (
             <div className="space-y-6">
               <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-elevated">
-                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
                   {lang === 'es'
                     ? 'La captura institucional no es prueba de irregularidad. Algunas concentraciones legítimas emergen de certificación técnica, exclusividad regional, o dependencia regulatoria de proveedor único. Cada fila abajo merece investigación — no acusación.'

@@ -152,7 +152,7 @@ export function ExplorePage() {
 
       {/* Crossfilter orientation */}
       <div className="flex items-center gap-2 text-xs text-text-muted border-b border-border/20 pb-4">
-        <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+        <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" aria-hidden="true" />
         <span>{t('page.crossfilterHint')}</span>
         {hasFilters && (
           <button
@@ -195,7 +195,7 @@ export function ExplorePage() {
             }}
           >
             <div className="flex items-center gap-2 shrink-0">
-              <TrendingUp className="h-3.5 w-3.5" style={{ color: activeSectorMeta.color }} />
+              <TrendingUp className="h-3.5 w-3.5" style={{ color: activeSectorMeta.color }} aria-hidden="true" />
               <span className="text-sm font-semibold" style={{ color: activeSectorMeta.color }}>
                 {ts(activeSectorMeta.code)}
               </span>

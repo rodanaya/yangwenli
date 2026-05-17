@@ -231,7 +231,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             <ul className="space-y-1">
               {aiInsights.slice(0, 4).map((insight, i) => (
                 <li key={i} className="flex items-start gap-1.5 text-xs text-text-secondary">
-                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-risk-high" />
+                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-risk-high" aria-hidden="true" />
                   {insight}
                 </li>
               ))}
@@ -280,7 +280,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           <ul className="space-y-1">
             {asfCases.slice(0, 5).map((c, i) => (
               <li key={i} className="flex items-start gap-1.5 text-xs text-text-secondary">
-                <FileText className="h-3 w-3 shrink-0 mt-0.5 text-text-muted" />
+                <FileText className="h-3 w-3 shrink-0 mt-0.5 text-text-muted" aria-hidden="true" />
                 {c.title ?? c.case_name ?? `Case ${c.case_id ?? i + 1}`}
               </li>
             ))}
@@ -558,7 +558,7 @@ export function EntityProfileDrawer() {
         {/* Header bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            <ExternalLink className="h-3.5 w-3.5 text-accent" />
+            <ExternalLink className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
             <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase">
               {state.entityType === 'vendor' ? 'Vendor Profile' : 'Institution Profile'}
             </span>

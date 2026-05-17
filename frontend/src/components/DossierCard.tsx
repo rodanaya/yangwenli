@@ -106,7 +106,7 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
         {/* #89 — Risk summary banner: shown for medium/high/critical scores */}
         {hasRisk && dossier.highest_risk_name && (
           <div className={`flex items-center gap-1.5 mt-2 px-2 py-1 rounded border ${getRiskBannerClass(dossier.highest_risk_score)}`}>
-            <AlertTriangle className={`h-3 w-3 shrink-0 ${getRiskColor(dossier.highest_risk_score)}`} />
+            <AlertTriangle className={`h-3 w-3 shrink-0 ${getRiskColor(dossier.highest_risk_score)}`} aria-hidden="true" />
             <span className={`text-[10px] font-bold uppercase tracking-wide shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
               {getRiskLabel(dossier.highest_risk_score)}
             </span>
@@ -192,7 +192,7 @@ export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
             }}
             aria-label={`View contracts for ${item.item_name}`}
           >
-            <ExternalLink className="h-3 w-3 mr-1" />
+            <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
             Contracts
           </Button>
         )}

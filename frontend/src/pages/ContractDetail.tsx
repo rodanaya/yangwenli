@@ -83,7 +83,7 @@ export default function ContractDetail() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center max-w-md">
-          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" />
+          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" aria-hidden="true" />
           <p className="text-text-secondary mb-2">Contract not found or unavailable.</p>
           <p className="text-[11px] text-text-muted font-mono mb-6">ID: {contractId}</p>
           <button
@@ -198,7 +198,7 @@ export default function ContractDetail() {
             <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
           ) : (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
-              <User className="h-3.5 w-3.5 shrink-0" />
+              <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || 'Unknown vendor')}</span>
             </span>
           )}
@@ -338,7 +338,7 @@ export default function ContractDetail() {
                 {/* Disclaimer for high-risk */}
                 {isHighRisk && (
                   <div className="mt-4 flex items-start gap-2 rounded-sm bg-risk-high/5 border border-risk-high/20 px-3 py-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" aria-hidden="true" />
                     <p className="text-[11px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
                       an investigative signal, not a verdict.
@@ -582,7 +582,7 @@ export default function ContractDetail() {
             <div className="space-y-1.5">
               {contract.vendor_id && (
                 <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
-                  <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                  <User className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
                       Vendor profile
@@ -649,7 +649,7 @@ export default function ContractDetail() {
       <footer className="mt-16 pt-6 border-t border-border">
         <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-text-muted">
           <div className="flex items-center gap-2">
-            <Database className="h-3 w-3" />
+            <Database className="h-3 w-3" aria-hidden="true" />
             <span>Source: COMPRANET · Federal Procurement Data</span>
           </div>
           <div className="flex items-center gap-3">
@@ -838,7 +838,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
         {delay != null && (
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Clock className="h-3 w-3" />
+              <Clock className="h-3 w-3" aria-hidden="true" />
               Publication → Award
             </p>
             <p className={`text-2xl font-bold font-mono tabular-nums ${delayColor}`}>
@@ -863,7 +863,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
         {isElection && (
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Zap className="h-3 w-3" />
+              <Zap className="h-3 w-3" aria-hidden="true" />
               Timing
             </p>
             <p className="text-lg font-bold text-risk-high leading-tight">

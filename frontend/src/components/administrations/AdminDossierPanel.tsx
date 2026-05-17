@@ -163,7 +163,7 @@ export function AdminDossierPanel({
         <div className="lg:col-span-1 space-y-4">
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <BookOpen className="h-3.5 w-3.5 text-accent" />
+              <BookOpen className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.politicalContext')}
               </span>
@@ -179,7 +179,7 @@ export function AdminDossierPanel({
           {/* Known Scandals */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.knownScandals')}
               </span>
@@ -191,7 +191,7 @@ export function AdminDossierPanel({
             </div>
             {dossier.scandals.length === 0 ? (
               <div className="rounded-sm border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
-                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" />
+                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" aria-hidden="true" />
                 <p className="text-xs text-text-muted italic leading-relaxed">
                   {t('dossier.noScandals')}
                 </p>
@@ -347,7 +347,7 @@ export function AdminDossierPanel({
           {/* Top Vendors */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <Users className="h-3.5 w-3.5 text-accent" />
+              <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('vendorSection.title')}
               </span>
@@ -363,7 +363,7 @@ export function AdminDossierPanel({
           {topSectors.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <Activity className="h-3.5 w-3.5 text-accent" />
+                <Activity className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                   {t('dossier.topSectors')}
                 </span>

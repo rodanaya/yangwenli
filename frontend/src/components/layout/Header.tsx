@@ -178,7 +178,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           onClick={onMenuClick}
           aria-label={tc('header.openMenu')}
         >
-          <Menu className="h-4 w-4 text-text-muted" />
+          <Menu className="h-4 w-4 text-text-muted" aria-hidden="true" />
         </Button>
         {/* Editorial dateline — Economist/NYT masthead feel */}
         <span
@@ -222,7 +222,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
               aria-label={`${tc('search')} (Ctrl+K)`}
             >
-              <Search className="h-3.5 w-3.5 text-text-muted" />
+              <Search className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -249,7 +249,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               onClick={() => navigate('/methodology')}
               aria-label={tc('header.alertsLabel', { count: alertCount })}
             >
-              <Shield className="h-3.5 w-3.5 text-text-muted" />
+              <Shield className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
               {alertCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-risk-critical text-xs font-bold text-text-primary">
                   {alertCount > 9 ? '!' : alertCount}

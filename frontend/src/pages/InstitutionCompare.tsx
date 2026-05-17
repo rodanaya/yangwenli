@@ -348,7 +348,7 @@ function VeredictoHeader({
           </span>
         </div>
         <div className="hidden sm:flex items-center text-text-muted text-lg">
-          <Scale className="h-5 w-5" />
+          <Scale className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="flex items-center gap-3">
           <HallazgoStat
@@ -906,7 +906,7 @@ function InstitutionSearchInput({
           backgroundColor: selectedId ? `${accentColor}08` : undefined,
         }}
       >
-        <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+        <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
         <input
           id={id}
           type="text"
@@ -1118,7 +1118,7 @@ export default function InstitutionCompare() {
               className="px-8"
               aria-label={isEs ? 'Comparar instituciones' : 'Compare institutions'}
             >
-              <Scale className="h-4 w-4 mr-2" />
+              <Scale className="h-4 w-4 mr-2" aria-hidden="true" />
               {isEs ? 'Comparar' : 'Compare'}
             </Button>
           </div>
@@ -1135,7 +1135,7 @@ export default function InstitutionCompare() {
       {/* Error state */}
       {hasError && (
         <div className="rounded-lg border border-risk-critical/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
-          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" />
+          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium text-risk-critical">{t('compare.loadError')}</p>
             <p className="text-xs text-text-muted mt-0.5">

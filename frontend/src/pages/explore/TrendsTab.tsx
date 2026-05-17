@@ -318,7 +318,7 @@ export default function TrendsTab() {
               onClick={() => setSelectedYear((y) => Math.max(2002, y - 1))}
               disabled={selectedYear <= 2002}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-thin">
               {years.map((year) => (
@@ -339,7 +339,7 @@ export default function TrendsTab() {
               onClick={() => setSelectedYear((y) => Math.min(2025, y + 1))}
               disabled={selectedYear >= 2025}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
           {currentAdmin && (
@@ -397,9 +397,9 @@ export default function TrendsTab() {
               className={`flex items-center gap-0.5 ${yoyChanges.avgRisk <= 0 ? 'text-risk-low' : 'text-risk-high'}`}
             >
               {yoyChanges.avgRisk <= 0 ? (
-                <TrendingDown className="h-3 w-3" />
+                <TrendingDown className="h-3 w-3" aria-hidden="true" />
               ) : (
-                <TrendingUp className="h-3 w-3" />
+                <TrendingUp className="h-3 w-3" aria-hidden="true" />
               )}
               {yoyChanges.avgRisk >= 0 ? '+' : ''}
               {yoyChanges.avgRisk.toFixed(1)} pts YoY
@@ -416,7 +416,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   Historical Trends
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -478,7 +478,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   Procurement Transparency Pulse
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -528,7 +528,7 @@ export default function TrendsTab() {
           <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4" />
+                <Target className="h-4 w-4" aria-hidden="true" />
                 Sector Risk DNA
               </h3>
               <div className="flex items-center gap-1.5">
@@ -635,7 +635,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Compass className="h-4 w-4" />
+                  <Compass className="h-4 w-4" aria-hidden="true" />
                   Sector Landscape
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -759,7 +759,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4 w-4" aria-hidden="true" />
                   Market Dynamics
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -802,7 +802,7 @@ export default function TrendsTab() {
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="px-4 pt-3 pb-1 border-b border-border/60 bg-background-card">
             <h3 className="text-xs flex items-center gap-1.5 text-text-muted">
-              <Flag className="h-3.5 w-3.5" />
+              <Flag className="h-3.5 w-3.5" aria-hidden="true" />
               Key Events
               {yearEvents.length > 0 && (
                 <Badge variant="outline" className="text-xs px-1 py-0 ml-1">

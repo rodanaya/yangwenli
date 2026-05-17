@@ -425,7 +425,7 @@ export function InvestigationCaseDetail() {
                     backgroundColor: `${confidenceColor}14`,
                   }}
                 >
-                  <Shield className="h-3 w-3" />
+                  <Shield className="h-3 w-3" aria-hidden="true" />
                   {t('caseDetail.confidencePct', { pct: confidencePct })}
                 </span>
                 {/* Fraud type */}
@@ -485,7 +485,7 @@ export function InvestigationCaseDetail() {
                   backgroundColor: CARD,
                 }}
               >
-                <Shield className="h-3.5 w-3.5" />
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" />
                 ASF
               <span className="sr-only"> (opens in new tab)</span></a>
               <a
@@ -505,7 +505,7 @@ export function InvestigationCaseDetail() {
                   backgroundColor: CARD,
                 }}
               >
-                <Newspaper className="h-3.5 w-3.5" />
+                <Newspaper className="h-3.5 w-3.5" aria-hidden="true" />
                 News
               <span className="sr-only"> (opens in new tab)</span></a>
               <button
@@ -542,7 +542,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('caseDetail.addEvidenceBtn')}
               </button>
               {detail.validation_status === 'corroborated' && (
@@ -562,7 +562,7 @@ export function InvestigationCaseDetail() {
                     cursor: 'pointer',
                   }}
                 >
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   {t('caseDetail.promoteToGT')}
                 </button>
               )}
@@ -637,7 +637,7 @@ export function InvestigationCaseDetail() {
             }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
                 {t('caseDetail.caseNarrative')}
               </p>
@@ -788,7 +788,7 @@ export function InvestigationCaseDetail() {
           <section>
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: INK_DIM }} />
+                <Users className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
                 <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                   {t('caseDetail.vendorsInvolved')}
                 </h2>
@@ -814,7 +814,7 @@ export function InvestigationCaseDetail() {
                       border: `1px solid ${BORDER}`,
                     }}
                   >
-                    <Shield className="h-3 w-3" />
+                    <Shield className="h-3 w-3" aria-hidden="true" />
                     {t('caseDetail.asfLookupBtn')}
                   <span className="sr-only"> (opens in new tab)</span></a>
                   <a
@@ -833,7 +833,7 @@ export function InvestigationCaseDetail() {
                       border: `1px solid ${BORDER}`,
                     }}
                   >
-                    <Newspaper className="h-3 w-3" />
+                    <Newspaper className="h-3 w-3" aria-hidden="true" />
                     {t('caseDetail.newsBtn')}
                   <span className="sr-only"> (opens in new tab)</span></a>
                 </div>
@@ -1071,7 +1071,7 @@ export function InvestigationCaseDetail() {
         <section>
           <div className="flex items-baseline justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.evidenceLog')}
               </h2>
@@ -1097,7 +1097,7 @@ export function InvestigationCaseDetail() {
                 cursor: 'pointer',
               }}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3" aria-hidden="true" />
               {t('caseDetail.addEvidenceBtn')}
             </button>
           </div>
@@ -1155,7 +1155,7 @@ export function InvestigationCaseDetail() {
                         zIndex: 1,
                       }}
                     >
-                      <Newspaper className="h-2.5 w-2.5" style={{ color: strengthColor }} />
+                      <Newspaper className="h-2.5 w-2.5" style={{ color: strengthColor }} aria-hidden="true" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -1385,7 +1385,7 @@ export function InvestigationCaseDetail() {
                     {addEvidenceMutation.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
                     ) : (
-                      <Send className="h-3 w-3 mr-1" />
+                      <Send className="h-3 w-3 mr-1" aria-hidden="true" />
                     )}
                     Submit
                   </Button>
@@ -1462,7 +1462,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <XCircle className="h-3.5 w-3.5" />
+                <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 Refute
               </button>
               <button
@@ -1507,7 +1507,7 @@ export function InvestigationCaseDetail() {
                   {promoteMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
                   Promote to GT
                 </button>
@@ -1712,7 +1712,7 @@ export function InvestigationCaseDetail() {
                   {promoteMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                   ) : (
-                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   )}
                   Promote
                 </Button>

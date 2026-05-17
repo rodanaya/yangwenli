@@ -600,7 +600,7 @@ export function Contracts() {
       {/* Subheader: live count + actions */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-text-muted flex items-center gap-2" aria-live="polite">
-          <FileText className="h-3.5 w-3.5 text-accent" />
+          <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
           <span>
             {data ? `${formatNumber(data?.pagination?.total ?? 0)} ${t('common:results', 'resultados')}` : t('common:loading', 'Cargando...')}
             {isFetching && !isLoading && (
@@ -664,7 +664,7 @@ export function Contracts() {
         {showSearchLoading ? (
           <Loader2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin pointer-events-none" />
         ) : (
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" aria-hidden="true" />
         )}
         <input
           type="text"
@@ -1030,7 +1030,7 @@ export function Contracts() {
             </div>
           ) : error ? (
             <div className="p-8 text-center" role="alert">
-              <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+              <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" aria-hidden="true" />
               <h3 className="text-sm font-medium mb-1">Failed to load contracts</h3>
               <p className="text-xs text-text-muted mb-3">
                 {(error as Error).message === 'Network Error'
@@ -1038,14 +1038,14 @@ export function Contracts() {
                   : (error as Error).message || 'An unexpected error occurred.'}
               </p>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                 Retry
               </Button>
             </div>
           ) : data?.data?.length === 0 ? (
             !hasActiveFilters ? (
               <div className="p-12 text-center">
-                <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" />
+                <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" aria-hidden="true" />
                 <p className="text-base font-semibold text-text-primary mb-1">{t('emptyInitial')}</p>
                 <p className="text-xs text-text-muted max-w-xs mx-auto leading-relaxed">
                   {t('emptyInitialDesc')}
@@ -1053,7 +1053,7 @@ export function Contracts() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileSearch className="h-8 w-8 text-text-muted mb-3" />
+                <FileSearch className="h-8 w-8 text-text-muted mb-3" aria-hidden="true" />
                 <p className="text-sm font-medium text-text-secondary">{t('emptyFiltered')}</p>
                 <p className="text-xs text-text-muted mt-1">{t('emptyFilteredDesc')}</p>
               </div>
@@ -1176,7 +1176,7 @@ export function Contracts() {
               onClick={() => updateFilter('page', Math.max(1, (filters.page || 1) - 1))}
               aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {clampPage(filters.page || 1, data.pagination?.total_pages ?? 1)}/{Math.max(1, data.pagination?.total_pages ?? 1)}
@@ -1189,7 +1189,7 @@ export function Contracts() {
               onClick={() => updateFilter('page', Math.min(data.pagination?.total_pages ?? 1, (filters.page || 1) + 1))}
               aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </nav>
@@ -1225,7 +1225,7 @@ export function Contracts() {
             className="h-7 text-xs px-3 rounded-full"
             onClick={() => setIsCompareOpen(true)}
           >
-            <GitCompareArrows className="h-3.5 w-3.5 mr-1.5" />
+            <GitCompareArrows className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
             Compare
           </Button>
           <button
@@ -1467,7 +1467,7 @@ function ContractRow({
                 aria-label="Multivariate anomaly detected"
                 className="text-risk-high cursor-help leading-none inline-flex"
               >
-                <AlertTriangle className="h-3 w-3" />
+                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
               </span>
             )}
             <span

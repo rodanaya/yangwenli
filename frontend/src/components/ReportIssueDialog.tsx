@@ -142,7 +142,7 @@ export function ReportIssueDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageSquarePlus className="h-4 w-4 text-accent" />
+            <MessageSquarePlus className="h-4 w-4 text-accent" aria-hidden="true" />
             {t('reportIssue.title')}
           </DialogTitle>
         </DialogHeader>

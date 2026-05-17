@@ -1003,7 +1003,7 @@ export default function CategoryProfile() {
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <User className="h-3 w-3 flex-shrink-0" />
+                    <User className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
                     <span>{t('profile.table.vendor')}</span>
                     <span className="text-text-muted/30">&rarr;</span>
                     <Building2 className="h-3 w-3 flex-shrink-0" />

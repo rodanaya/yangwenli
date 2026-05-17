@@ -606,7 +606,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
         </div>
 
         {/* Open arrow */}
-        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" />
+        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" aria-hidden="true" />
 
         {/* ─── LINE 2 ─────────────────────────────────────────────────── */}
 
@@ -1813,7 +1813,7 @@ export default function AriaPage() {
             ))}
             <span className="mx-1 h-4 w-px bg-border hidden sm:inline-block" aria-hidden />
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" aria-hidden="true" />
               <input
                 type="text"
                 aria-label={isEs ? 'Buscar en la cola ARIA' : 'Search ARIA queue'}
@@ -2157,7 +2157,7 @@ export default function AriaPage() {
             </div>
           ) : leadsItems.length === 0 ? (
             <div className="surface-card p-10 text-center">
-              <Search className="h-8 w-8 mx-auto mb-3 text-text-primary" />
+              <Search className="h-8 w-8 mx-auto mb-3 text-text-primary" aria-hidden="true" />
               <p className="text-sm font-medium text-text-secondary mb-1">
                 {search
                   ? t('emptyState.noSearchResults', { query: search })
@@ -2226,7 +2226,7 @@ export default function AriaPage() {
         <section>
           <div className="rounded-sm border border-border bg-background-card p-4">
             <div className="flex items-start gap-3">
-              <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" />
+              <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-xs text-text-muted space-y-1 leading-relaxed">
                 <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-text-secondary">
                   {isEs ? '§ METODOLOGÍA · ' : '§ METHODOLOGY · '}{t('about.title', { defaultValue: 'Sobre ARIA' })}

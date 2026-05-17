@@ -1007,7 +1007,7 @@ export default function Administrations() {
       {/* Incomplete data warning for Sheinbaum */}
       {selectedAdmin === 'Sheinbaum' && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-sm border border-risk-medium/30 bg-risk-medium/5">
-          <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-risk-medium">{t('incompleteDataset')}</p>
             <p className="text-xs text-text-muted mt-0.5">
@@ -1372,7 +1372,7 @@ export default function Administrations() {
             {yearAnomalies.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border/20">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <AlertTriangle className="h-3 w-3 text-risk-medium" />
+                  <AlertTriangle className="h-3 w-3 text-risk-medium" aria-hidden="true" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono">
                     {t('aiDetectedAnomalies')}
                   </span>
@@ -1525,17 +1525,17 @@ export default function Administrations() {
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/20">
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.from}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-accent" />
+                    <ArrowRight className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.to}</span>
                     {/* Enhancement C: Net Change indicator */}
                     <div className="ml-auto flex items-center gap-1">
                       {netIsWorse ? (
-                        <TrendingUp className="h-4 w-4 text-risk-critical" />
+                        <TrendingUp className="h-4 w-4 text-risk-critical" aria-hidden="true" />
                       ) : netIsBetter ? (
-                        <TrendingDown className="h-4 w-4 text-risk-low" />
+                        <TrendingDown className="h-4 w-4 text-risk-low" aria-hidden="true" />
                       ) : (
-                        <Minus className="h-4 w-4 text-text-muted" />
+                        <Minus className="h-4 w-4 text-text-muted" aria-hidden="true" />
                       )}
                       <span className={cn(
                         'text-sm font-bold font-mono',
@@ -1631,7 +1631,7 @@ export default function Administrations() {
                 {t('documentedCasesNote')}
               </p>
               <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-background-elevated/20 p-3">
-                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-xs text-text-secondary leading-relaxed">
                   {t('groundTruthNote')}
                 </p>

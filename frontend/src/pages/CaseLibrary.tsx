@@ -424,7 +424,7 @@ function CaseRow({
 
         {/* Right: chevron */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
         </div>
       </div>
     </button>
@@ -735,7 +735,7 @@ export default function CaseLibrary() {
           {/* Search */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
               <input
                 type="text"
                 aria-label={t('filters.searchAriaLabel', 'Search corruption cases and vendors')}
@@ -874,7 +874,7 @@ export default function CaseLibrary() {
               borderLeft: '3px solid #ef4444',
             }}
           >
-            <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" aria-hidden="true" />
             <div>
               <p
                 className="text-[13px] font-semibold text-risk-critical mb-1"
@@ -1093,7 +1093,7 @@ export default function CaseLibrary() {
                   ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, investigaciones periodísticas'
                   : 'Judicial records, ASF audits, SAT EFOS registry, journalism investigations'}
               </span>
-              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" />
+              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" aria-hidden="true" />
             </p>
           </>
         )}

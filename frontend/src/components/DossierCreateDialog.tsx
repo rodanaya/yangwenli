@@ -104,7 +104,7 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
               style={{ borderLeftWidth: 3, borderLeftColor: color }}
             >
               <div className="flex items-center gap-1.5 mb-1">
-                <FolderOpen className="h-3 w-3 text-accent shrink-0" />
+                <FolderOpen className="h-3 w-3 text-accent shrink-0" aria-hidden="true" />
                 <span className="font-semibold text-[11px] truncate text-text-primary">
                   {name || tw('dossierCreate.previewDefault')}
                 </span>
