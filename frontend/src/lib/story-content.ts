@@ -435,9 +435,9 @@ export const STORIES: StoryDef[] = [
         pullquote: {
           quote: 'Official enforcement has confirmed 42 ghost companies. The structural evidence suggests thousands more.',
           quote_es: 'La fiscalización oficial ha confirmado 42 empresas fantasma. La evidencia estructural sugiere miles más.',
-          stat: '1,200-2,400',
-          statLabel: 'estimated unrecognized ghost companies',
-          statLabel_es: 'empresas fantasma estimadas no reconocidas',
+          stat: '~1,200',
+          statLabel: 'estimated unrecognized ghost companies (structural minimum)',
+          statLabel_es: 'empresas fantasma no reconocidas (mínimo estructural estimado)',
           barValue: 0.034,
           barLabel: '42 SAT-confirmed against ~1,200 structural minimum (RUBLI P2)',
           barLabel_es: '42 confirmadas SAT contra ~1,200 mínimo estructural (RUBLI P2)',
@@ -928,10 +928,9 @@ export const STORIES: StoryDef[] = [
           'Una concentración de esta magnitud no ocurre por dinámica de mercado competitivo. Ocurre porque la arquitectura de contratación del IMSS permitió a un pequeño conjunto de proveedores acumular ventajas compuestas: familiaridad con el catálogo, infraestructura de entrega ajustada a las especificaciones del IMSS y elegibilidad para adjudicación directa basada en historial de contratación previo. El mecanismo legal es "relación de proveedor existente" bajo el Artículo 41 de la Ley de Adquisiciones — una cláusula que convierte la dependencia pasada en preferencia presente.',
         ],
         chartConfig: {
-          type: 'editorial-dumbbell',
+          type: 'inline-stacked-bar',
           title: 'IMSS Concentration — How Much of Each Vendor\'s Revenue Comes From One Customer',
           title_es: 'Concentración IMSS — Cuánto del ingreso de cada proveedor proviene de un solo cliente',
-          chartId: 'big-four-imss-share',
           stacked: {
             rows: [
               { label: 'Grupo Fármacos', total: 133.4, highlight: 80.0, annotation: '60.1% IMSS', annotation_es: '60.1% IMSS' },
@@ -1234,7 +1233,7 @@ export const STORIES: StoryDef[] = [
           'El umbral OCDE del 15 por ciento, trazado como línea de referencia en esta gráfica, se ubica en una parte de la gráfica que México no ha visitado desde antes de que comenzaran los registros de CompraNet. Llegar a ese umbral requeriría una reestructuración fundamental de cómo la contratación federal mexicana genera oferentes: análisis sistemático de mercado antes de la licitación, inteligencia competitiva sobre proveedores potenciales, búsqueda activa de proveedores calificados, y especificaciones de licitación diseñadas para maximizar y no minimizar el campo competitivo.',
         ],
         chartConfig: {
-          type: 'editorial-slope',
+          type: 'inline-area',
           title: 'Single-Bid Rate in Competitive Procedures 2002-2024',
           title_es: 'Tasa de oferta única en procedimientos competitivos 2002-2024',
           chartId: 'single-bid-trend',
@@ -1627,7 +1626,6 @@ export const STORIES: StoryDef[] = [
           type: 'editorial-swimlane',
           title: 'Institution × Pattern — Capture and Intermediation Map',
           title_es: 'Institución × Patrón — Mapa de captura e intermediación',
-          chartId: 'institution-pattern-swimlane',
         },
         pullquote: {
           quote: 'La Estafa Maestra moved 7.67 billion pesos through an intermediary structure in two years. RUBLI\'s current P3 population is running 526 billion.',
@@ -1846,7 +1844,6 @@ export const STORIES: StoryDef[] = [
           type: 'editorial-slope',
           title: 'Direct Award Rate 2010-2024 vs OECD Ceiling',
           title_es: 'Tasa de adjudicación directa 2010-2024 vs techo OCDE',
-          chartId: 'da-rate-slope',
         },
         pullquote: {
           quote: 'The pandemic did not create Mexico\'s direct-award culture. It was an accelerant applied to a pre-existing structural condition.',
@@ -2395,7 +2392,7 @@ export const STORIES: StoryDef[] = [
           'Adyacentes a esos probables pasos están contratistas internacionales de servicios petroleros — TÉCNICAS REUNIDAS S.A. (7.2 mil millones / 2 contratos en PEMEX), un consorcio liderado por PETROBRAS (5.9 mil millones / 2 contratos en PEMEX), PRIDE INTERNATIONAL (5.5 mil millones / 6 contratos en PEMEX) — todos con calificaciones de riesgo menores a 0.25. Estos representan el extremo legítimo de la población P3: especialistas extranjeros con pericia técnica que PEMEX no puede contratar domésticamente, ganando estructuralmente pocos contratos grandes. El imperativo investigativo es separar el patrón TÉCNICAS REUNIDAS (única fuente legítima) del patrón CONSTRUCTORA ARHNOS (casi con certeza paso). El algoritmo P3 de RUBLI marca ambos con la misma forma; el trabajo humano consiste en distinguir cuál es cuál.',
         ],
         chartConfig: {
-          type: 'editorial-treemap',
+          type: 'inline-bar',
           title: 'Top P3 Intermediary-Pattern Vendors by Total Contract Value',
           title_es: 'Top proveedores con patrón de intermediario P3 por valor total de contratos',
           chartId: 'p3-top-vendors',
@@ -3079,9 +3076,9 @@ export const STORIES: StoryDef[] = [
       color: '#dc2626',
     },
     kickerStats: [
-      { prefix: 'En 2020, el', value: '87%', suffix: 'de los contratos fue adjudicación directa.', tone: 'critical' },
-      { prefix: 'HEMOSER cobró', value: '17.2 mil M', suffix: 'en adjudicaciones del mismo día.', tone: 'data' },
-      { prefix: '215,000 contratos', value: '↑23%', suffix: 'sobre el año anterior.', tone: 'muted' },
+      { prefix: 'In 2020,', prefix_es: 'En 2020, el', value: '87%', suffix: 'of contracts were direct awards.', suffix_es: 'de los contratos fue adjudicación directa.', tone: 'critical' },
+      { prefix: 'HEMOSER collected', prefix_es: 'HEMOSER cobró', value: '17.2B', suffix: 'in same-day awards.', suffix_es: 'en adjudicaciones del mismo día.', tone: 'data' },
+      { prefix: '215,000 contracts', prefix_es: '215,000 contratos', value: '↑23%', suffix: 'above the prior year.', suffix_es: 'sobre el año anterior.', tone: 'muted' },
     ],
     lensTags: {
       patterns: ['P2', 'P5'],

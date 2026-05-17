@@ -489,19 +489,22 @@ export function InlineBarChart({
                 rx={1}
               />
 
-              {pt.annotation && barW > 60 && (
-                <text
-                  x={LABEL_W + barW - 4}
-                  y={y + BAR_HEIGHT / 2 + 1}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                  fontSize={10}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill="rgba(255,255,255,0.85)"
-                >
-                  {annoFor(pt)}
-                </text>
-              )}
+              {pt.annotation && barW > 140 && (() => {
+                const txt = annoFor(pt) ?? ''
+                return (
+                  <text
+                    x={LABEL_W + barW - 6}
+                    y={y + BAR_HEIGHT / 2 + 1}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                    fontSize={9}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill="rgba(255,255,255,0.85)"
+                  >
+                    {txt.length > 22 ? txt.slice(0, 21) + '…' : txt}
+                  </text>
+                )
+              })()}
 
               <text
                 x={LABEL_W + barW + 5}
@@ -917,9 +920,11 @@ export function InlineAreaChart({
 export function InlineSpikeChart({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const pts = data.points
   const mx = maxVal(pts, data.maxValue)
@@ -932,6 +937,9 @@ export function InlineSpikeChart({
   const barGap = pts.length > 1 ? plotW / pts.length : plotW
 
   const anchorPt = pts.find((p) => p.highlight) ?? pts.reduce((a, b) => (a.value > b.value ? a : b), pts[0])
+  const annoFor = (pt: { annotation?: string; annotation_es?: string }) =>
+    lang === 'es' ? (pt.annotation_es ?? pt.annotation) : pt.annotation
+  const cardAnnotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
 
   return (
     <ChartCard
@@ -946,7 +954,7 @@ export function InlineSpikeChart({
             }
           : undefined
       }
-      annotation={data.annotation}
+      annotation={cardAnnotation}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -973,26 +981,29 @@ export function InlineSpikeChart({
                 rx={1}
               />
 
-              {pt.highlight && pt.annotation && (
-                <text
-                  x={bx + barW / 2}
-                  y={by - 4}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fontFamily="var(--font-family-mono, monospace)"
-                  fill={HIGHLIGHT_COLOR}
-                  fontWeight={700}
-                >
-                  {pt.annotation}
-                </text>
-              )}
+              {pt.highlight && pt.annotation && (() => {
+                const txt = annoFor(pt) ?? ''
+                return (
+                  <text
+                    x={bx + barW / 2}
+                    y={Math.max(12, by - 4)}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill={HIGHLIGHT_COLOR}
+                    fontWeight={700}
+                  >
+                    {txt.length > 7 ? txt.slice(0, 6) + '…' : txt}
+                  </text>
+                )
+              })()}
 
               {pt.highlight && !pt.annotation && (
                 <text
                   x={bx + barW / 2}
-                  y={by - 4}
+                  y={Math.max(12, by - 4)}
                   textAnchor="middle"
-                  fontSize={10}
+                  fontSize={9}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill={HIGHLIGHT_COLOR}
                   fontWeight={700}
@@ -1939,8 +1950,6 @@ export function ClevelandPairChart({
     return pt.label_es ?? pt.label
   }
 
-  const yLabelText = lang === 'es' ? (data.yLabel_es ?? data.yLabel) : data.yLabel
-
   // Sort by gap (value - value2) descending
   const sorted = [...data.points].sort((a, b) => {
     const gapA = a.value - (a.value2 ?? 0)
@@ -1966,8 +1975,8 @@ export function ClevelandPairChart({
       }
     : undefined
 
-  // Column header labels (bilingual)
-  const actualLabel = yLabelText ? yLabelText : (lang === 'es' ? 'REAL' : 'ACTUAL')
+  // Column header labels (bilingual) — fixed short strings; yLabel belongs in annotation
+  const actualLabel = lang === 'es' ? 'REAL' : 'ACTUAL'
   const referenceLabel = lang === 'es' ? 'REFERENCIA' : 'REFERENCE'
 
   return (

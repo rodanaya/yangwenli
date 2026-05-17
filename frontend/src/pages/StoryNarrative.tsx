@@ -317,7 +317,7 @@ function renderChartBlock(
     return (
       <ScrollReveal className={className}>
         {InlineChart ? (
-          <InlineChart data={cfg.data} title={cfg.title} lang={lang} />
+          <InlineChart data={cfg.data} title={lang === 'es' ? (cfg.title_es ?? cfg.title) : cfg.title} lang={lang} />
         ) : (
           <div
             className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
