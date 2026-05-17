@@ -128,28 +128,9 @@ function z0SectorBodies(lang: 'en' | 'es'): SectorBody[] {
   }))
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Sector symbol glyphs — rendered as centered SVG <text> inside each Z0 body.
-// Chosen for cross-platform Unicode support: all six are in the Basic
-// Multilingual Plane and render on Windows, macOS, Linux, Android, iOS
-// without requiring any custom font. The ⚙ gear and ✚ cross are especially
-// well-supported at small display sizes.
-// ────────────────────────────────────────────────────────────────────────────
-
-const SECTOR_SYMBOLS: Record<string, string> = {
-  salud:           '✚',  // Medical cross (U+271A HEAVY GREEK CROSS)
-  educacion:       '◎',  // Open bullseye — book/lens (U+25CE BULLSEYE)
-  infraestructura: '△',  // Triangle — arch / structure (U+25B3)
-  energia:         '⚡', // Lightning bolt (U+26A1)
-  defensa:         '⬟',  // Pentagon (U+2B1F) — shield silhouette
-  tecnologia:      '⬡',  // Hexagon — circuit/chip (U+2B21)
-  hacienda:        '◈',  // Diamond with dot — coin/balance (U+25C8)
-  gobernacion:     '⬠',  // Pentagon variant — columns/seal (U+2B20)
-  agricultura:     '❋',  // Eight-petalled flower — wheat (U+274B)
-  ambiente:        '◉',  // Circle with dot — tree ring (U+25C9)
-  trabajo:         '⚙',  // Gear (U+2699 GEAR)
-  otros:           '⊕',  // Plus in circle — catch-all (U+2295)
-}
+// Unicode glyphs removed — SVG shapes are self-sufficient and cross-platform.
+// The text-overlay approach caused double-cross visual noise on salud and
+// font-rendering failures on Windows for ⬟/⬡/⬠ (Supplemental Arrows-B block).
 
 // ────────────────────────────────────────────────────────────────────────────
 // Sector shape helpers — each returns an SVG <polygon> or <path> centered at
@@ -184,14 +165,16 @@ function getSectorShapeElement(
   const props = { fill, fillOpacity, stroke, strokeWidth }
   switch (code) {
     case 'salud': {
-      // Medical cross — thick plus sign
-      const arm = r * 0.42, w = r * 0.35
+      // Medical cross — proportions match international Red Cross symbol.
+      // Each arm is 1/3 of total width; total span is r*1.8.
+      // arm = half-length of each arm from center; w = half-width of the bar.
+      const arm = r * 0.72, w = r * 0.24
       const d = [
         `M ${cx - w} ${cy - arm}`, `L ${cx + w} ${cy - arm}`,
-        `L ${cx + w} ${cy - w}`, `L ${cx + arm} ${cy - w}`,
+        `L ${cx + w} ${cy - w}`,   `L ${cx + arm} ${cy - w}`,
         `L ${cx + arm} ${cy + w}`, `L ${cx + w} ${cy + w}`,
         `L ${cx + w} ${cy + arm}`, `L ${cx - w} ${cy + arm}`,
-        `L ${cx - w} ${cy + w}`, `L ${cx - arm} ${cy + w}`,
+        `L ${cx - w} ${cy + w}`,   `L ${cx - arm} ${cy + w}`,
         `L ${cx - arm} ${cy - w}`, `L ${cx - w} ${cy - w}`, 'Z',
       ].join(' ')
       return <path d={d} {...props} />
@@ -796,13 +779,6 @@ function SectorBodyVisual({
 }) {
   const [hovered, setHovered] = useState(false)
   const rEffective = hovered ? r + 6 : r
-  // Symbol glyph — scale to 58% of the current radius so it stays legible
-  // at the smallest sector circles (~22px r) and doesn't crowd the large ones
-  // (~50px r). On hover the circle expands +6px but we keep the glyph size
-  // anchored to r (not rEffective) so it doesn't appear to "shrink" relative
-  // to the circle as the body grows.
-  const glyphSize = Math.round(r * 0.58)
-  const glyph = sectorCode ? (SECTOR_SYMBOLS[sectorCode] ?? null) : null
 
   return (
     <motion.g
@@ -822,22 +798,6 @@ function SectorBodyVisual({
         cx, cy, rEffective,
         color, hovered ? 0.95 : 0.85,
         'var(--color-background)', 2,
-      )}
-
-      {/* Sector symbol glyph — white, centered, non-interactive */}
-      {glyph && (
-        <text
-          x={cx}
-          y={cy}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={glyphSize}
-          fill="rgba(255,255,255,0.92)"
-          style={{ pointerEvents: 'none', userSelect: 'none' }}
-          aria-hidden="true"
-        >
-          {glyph}
-        </text>
       )}
 
       <text
