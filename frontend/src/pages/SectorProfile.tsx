@@ -528,6 +528,7 @@ interface PhiDetailData {
 }
 
 function PhiGradePanel({ data }: { data: PhiDetailData }) {
+  const { t } = useTranslation('sectors')
   const grade = data.grade ?? '—'
   const score = data.phi_composite_score ?? null
   const compRate = data.indicators?.competition_rate?.value ?? null
@@ -541,21 +542,21 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
 
   const indicators: Array<{ label: string; value: string | null; benchmark: string; highlight: boolean }> = [
     {
-      label: 'Competition Rate',
+      label: t('phi.competitionRate'),
       value: compRate != null ? `${compRate.toFixed(1)}%` : null,
-      benchmark: 'OECD avg: 75%',
+      benchmark: t('phi.oecdCompetition'),
       highlight: compRate != null && compRate < 50,
     },
     {
-      label: 'Avg Bidders',
+      label: t('phi.avgBidders'),
       value: avgBidders != null ? avgBidders.toFixed(2) : null,
-      benchmark: 'OECD avg: 3+',
+      benchmark: t('phi.oecdBidders'),
       highlight: avgBidders != null && avgBidders < 2,
     },
     {
-      label: 'Single-Bid Rate',
+      label: t('phi.singleBidRate'),
       value: singleBidRate != null ? `${singleBidRate.toFixed(1)}%` : null,
-      benchmark: 'OECD target: <20%',
+      benchmark: t('phi.oecdSingleBid'),
       highlight: singleBidRate != null && singleBidRate > 30,
     },
   ]
@@ -1297,7 +1298,7 @@ export function SectorProfile() {
                   id="phi-grade-heading"
                   className="text-sm font-bold text-text-secondary uppercase tracking-[0.15em]"
                 >
-                  Procurement Health Index
+                  {t('phiHeading')}
                 </h2>
               </div>
               <PhiGradePanel data={phiDetail} />

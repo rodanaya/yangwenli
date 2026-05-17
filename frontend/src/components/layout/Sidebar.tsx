@@ -162,9 +162,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   })
   const caseCount = caseStats?.total_cases ?? 0
 
-  // ARIA T1 count (5 min stale)
+  // ARIA T1 count — shares cache key with AriaQueue page so both show the same live count
   const { data: ariaStats } = useQuery({
-    queryKey: ['aria-stats-sidebar'],
+    queryKey: ['aria-stats'],
     queryFn: () => ariaApi.getStats(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

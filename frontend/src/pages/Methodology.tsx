@@ -524,7 +524,8 @@ const V33WeightsChart = memo(function V33WeightsChart() {
 // ============================================================================
 
 function ModelEvolutionTimeline() {
-  const { t } = useTranslation('methodology')
+  const { t, i18n } = useTranslation('methodology')
+  const isEs = i18n.language?.startsWith('es')
   const steps = MODEL_EVOLUTION_STEPS
   const nodes = steps.reduce<ReactNode[]>((acc, step, i) => {
     if (i > 0) {
@@ -574,6 +575,14 @@ function ModelEvolutionTimeline() {
           >
             {step.metric}
           </span>
+          {step.version === 'v3.3' && (
+            <span
+              className="text-[9px] font-semibold tracking-[0.12em] uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted"
+              title={isEs ? 'AUC que se obtendría prediciendo siempre la proporción de la clase mayoritaria' : 'AUC from always predicting the majority class proportion'}
+            >
+              {isEs ? 'línea base modelo nulo' : 'null model baseline'}
+            </span>
+          )}
           {step.active && (
             <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
               {t('evolution.active')}

@@ -250,11 +250,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               aria-label={tc('header.alertsLabel', { count: alertCount })}
             >
               <Shield className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
-              {alertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-risk-critical text-xs font-bold text-text-primary">
-                  {alertCount > 9 ? '!' : alertCount}
-                </span>
-              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>

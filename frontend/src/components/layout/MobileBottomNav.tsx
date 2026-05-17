@@ -17,10 +17,10 @@ export function MobileBottomNav({ onMenuClick }: Props) {
   const { t } = useTranslation('nav')
 
   const NAV_ITEMS = [
-    { label: t('dashboard'), href: '/dashboard', icon: LayoutDashboard },
-    { label: t('ariaQueue'), href: '/aria',      icon: Shield },
-    { label: t('sectors'),   href: '/sectors',   icon: BarChart3 },
-    { label: t('network'),   href: '/network',   icon: Network },
+    { label: t('dashboard'),      href: '/dashboard', icon: LayoutDashboard },
+    { label: t('ariaQueueShort'), href: '/aria',      icon: Shield },
+    { label: t('sectors'),        href: '/sectors',   icon: BarChart3 },
+    { label: t('network'),        href: '/network',   icon: Network },
   ]
 
   return (
