@@ -439,7 +439,7 @@ function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border-2"
+      className="flex items-center gap-2 rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 border-2"
       style={{
         backgroundColor: active ? tier.color : tier.bg,
         borderColor: tier.color,
@@ -653,7 +653,7 @@ export default function InstitutionScorecards() {
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
-              className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+              className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                 selectedTier === null
                   ? 'bg-white text-text-primary border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
                   : 'bg-transparent text-text-secondary border-border hover:border-border-hover'
@@ -699,7 +699,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={key}
                     onClick={() => handleSortChange(key)}
-                    className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                       sortBy === key
                         ? 'bg-background-elevated border-border text-text-primary'
                         : 'bg-transparent border-border text-text-secondary hover:border-border hover:text-text-secondary'
@@ -734,7 +734,7 @@ export default function InstitutionScorecards() {
               </div>
               <button
                 type="submit"
-                className="rounded-sm border border-border bg-background-elevated px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                className="rounded-sm border border-border bg-background-elevated px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {t('filters.go')}
               </button>
@@ -799,7 +799,7 @@ export default function InstitutionScorecards() {
               <p className="text-sm text-text-muted">{t('noResults')}</p>
               <button
                 onClick={() => { setSelectedTier(null); setSearch(''); setSearchInput(''); setPage(1) }}
-                className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
+                className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 underline"
                 aria-label={t('aria.clearFilters')}
               >
                 {t('aria.clearFilters')}
@@ -821,7 +821,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               aria-label={t('pagination.previous')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -848,7 +848,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                       pageNum === page
                         ? 'bg-white text-text-primary'
                         : 'text-text-muted hover:text-text-secondary hover:bg-background-elevated'
@@ -865,7 +865,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               aria-label={t('pagination.next')}
             >
               {t('pagination.next')}

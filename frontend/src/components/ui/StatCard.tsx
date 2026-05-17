@@ -31,6 +31,9 @@ export function StatCard({
         className
       )}
       onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
       whileTap={{ scale: 0.98 }}
     >
