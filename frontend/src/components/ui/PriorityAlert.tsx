@@ -36,7 +36,7 @@ const SEVERITY_STYLE: Record<
   critical: {
     bg: 'bg-[color:var(--color-risk-critical)]/10',
     border: 'border-[color:var(--color-risk-critical)]/40',
-    text: 'text-[color:var(--color-risk-critical)]',
+    text: 'text-risk-critical',
     iconColor: 'var(--color-risk-critical)',
     Icon: ShieldAlert,
   },

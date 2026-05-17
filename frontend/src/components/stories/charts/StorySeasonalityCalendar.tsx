@@ -31,7 +31,7 @@ export function StorySeasonalityCalendar() {
 
       {/* OECD context */}
       <div className="rounded-sm border border-oecd/20 bg-oecd/5 p-3">
-        <p className="text-xs font-mono uppercase tracking-wide text-[color:var(--color-oecd)] mb-1">
+        <p className="text-xs font-mono uppercase tracking-wide text-oecd mb-1">
           {t('seasonality.oecdLabel')}
         </p>
         <p className="text-sm text-text-secondary">

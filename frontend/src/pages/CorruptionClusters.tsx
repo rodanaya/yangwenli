@@ -737,6 +737,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
       <table
         className="w-full border-separate"
         style={{ borderSpacing: '0 2px', minWidth: 520 }}
+        aria-label="Vendor clusters ranked by corruption risk"
       >
         <thead>
           <tr>

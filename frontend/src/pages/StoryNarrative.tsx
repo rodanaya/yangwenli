@@ -1230,8 +1230,8 @@ function ChapterSection({
 // through canonical risk + accent + OECD tokens.
 const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
   solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-risk-high',                   bg: 'bg-risk-high/10',                                  border: 'border-risk-high/30' },
-  reporteado:  { labelKey: 'story.statusReporteado', color: 'text-[color:var(--color-accent-data)]', bg: 'bg-[color:var(--color-accent-data)]/10',     border: 'border-[color:var(--color-accent-data)]/30'   },
-  auditado:    { labelKey: 'story.statusAuditado',  color: 'text-[color:var(--color-oecd)]',        bg: 'bg-[color:var(--color-oecd)]/10',            border: 'border-[color:var(--color-oecd)]/30' },
+  reporteado:  { labelKey: 'story.statusReporteado', color: 'text-accent-data', bg: 'bg-accent-data/10',     border: 'border-accent-data/30'   },
+  auditado:    { labelKey: 'story.statusAuditado',  color: 'text-oecd',        bg: 'bg-oecd/10',            border: 'border-oecd/30' },
   procesado:   { labelKey: 'story.statusProcesado', color: 'text-risk-critical',                   bg: 'bg-risk-critical/10',                          border: 'border-risk-critical/30'   },
 }
 

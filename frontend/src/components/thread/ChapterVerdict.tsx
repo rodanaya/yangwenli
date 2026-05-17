@@ -201,7 +201,7 @@ export function ChapterVerdict({
     if (aria.in_ground_truth) flags.push(t('verdict.groundTruthLabel', { defaultValue: 'GT' }))
     evidence.push({
       label: t('verdict.evidence.external', { defaultValue: 'External validation' }),
-      value: <span className="text-[color:var(--color-accent)]">{flags.join(' · ')}</span>,
+      value: <span className="text-accent">{flags.join(' · ')}</span>,
       weight: 'high',
     })
   }

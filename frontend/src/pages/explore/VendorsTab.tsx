@@ -475,7 +475,7 @@ export default function VendorsTab() {
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-x-auto">
-          <table className="w-full min-w-[640px] text-xs">
+          <table className="w-full min-w-[640px] text-xs" aria-label="Vendors ranked by procurement activity">
             <thead>
               <tr className="bg-background-elevated/50">
                 <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>

@@ -210,9 +210,9 @@ const STATUS_META: Record<
   },
   auditado: {
     label: 'UNDER AUDIT',
-    color: 'text-[color:var(--color-oecd)]',
-    border: 'border-[color:var(--color-oecd)]/30',
-    bg: 'bg-[color:var(--color-oecd)]/[0.06]',
+    color: 'text-oecd',
+    border: 'border-oecd/30',
+    bg: 'bg-oecd/[0.06]',
   },
   reporteado: {
     label: 'REPORTED',
@@ -817,7 +817,7 @@ function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
         </div>
         <Link
           to="/atlas"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-accent hover:text-accent"
           style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', background: 'rgba(160,104,32,0.06)' }}
         >
           {isEs ? 'Entrar al Observatorio →' : 'Enter Observatory →'}

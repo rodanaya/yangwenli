@@ -504,7 +504,7 @@ function PatternCard({
           <div className="flex items-center justify-end">
             <Link
               to={`/aria?pattern=${meta.code}`}
-              className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-[color:var(--color-accent)] transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors"
             >
               <ArrowUpRight className="h-3 w-3" />
               {isEs ? 'Ver en cola ARIA' : 'View in ARIA queue'}
@@ -517,7 +517,7 @@ function PatternCard({
         <div className="px-5 pb-4 flex items-center justify-end">
           <Link
             to={`/aria?pattern=${meta.code}`}
-            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-[color:var(--color-accent)] transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors"
           >
             <ArrowUpRight className="h-3 w-3" />
             {isEs ? 'Ver en cola ARIA' : 'View in ARIA queue'}

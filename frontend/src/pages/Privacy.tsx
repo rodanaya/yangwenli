@@ -107,7 +107,7 @@ export default function Privacy() {
           <div className="space-y-4">
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Database className="h-4 w-4 text-blue-400/70" aria-hidden="true" />
+                <Database className="h-4 w-4 text-accent-data/70" aria-hidden="true" />
                 <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros de contrataciones' : 'Procurement Records'}</span>
               </div>
               <p>
@@ -120,7 +120,7 @@ export default function Privacy() {
 
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-green-400/70" aria-hidden="true" />
+                <FileText className="h-4 w-4 text-text-muted/70" aria-hidden="true" />
                 <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros públicos de sanciones' : 'Public Sanctions Registries'}</span>
               </div>
               <p>

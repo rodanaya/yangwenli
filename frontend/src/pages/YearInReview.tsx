@@ -460,11 +460,11 @@ function RiskEvolution({
 
               {/* OECD threshold */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-[color:var(--color-oecd)] w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-oecd w-28 flex-shrink-0">
                   {t('riskEvolution.oecdTarget')}
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
-                <span className="font-mono text-xs text-[color:var(--color-oecd)] w-14 text-right flex-shrink-0 tabular-nums">
+                <span className="font-mono text-xs text-oecd w-14 text-right flex-shrink-0 tabular-nums">
                   {OECD_HIGH_RISK_THRESHOLD}%
                 </span>
               </div>
@@ -605,7 +605,7 @@ function ProcedureTypeSection({
             style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
             <div className="h-2 w-px bg-oecd" />
-            <span className="text-[9px] font-mono text-[color:var(--color-oecd)] whitespace-nowrap">
+            <span className="text-[9px] font-mono text-oecd whitespace-nowrap">
               {t('procedureType.oecdLimit')}
             </span>
           </div>

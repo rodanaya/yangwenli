@@ -66,7 +66,7 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
     icon: CheckCircle2,
     // Bible §3.10: no green for verification semantics in a corruption context.
     // Amber gold signals "confirmed finding" without implying safety.
-    className: 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30',
+    className: 'bg-accent/10 text-accent border border-accent/30',
   },
   refuted: {
     icon: XCircle,

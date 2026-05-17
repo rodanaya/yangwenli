@@ -673,7 +673,7 @@ export function InvestigationCaseDetail() {
                         const [headerRow, ...bodyRows] = rows
                         elements.push(
                           <div key={`table-${i}`} className="overflow-x-auto my-4" style={{ fontFamily: 'var(--font-family-sans, system-ui)' }}>
-                            <table className="w-full text-xs border-collapse">
+                            <table className="w-full text-xs border-collapse" aria-label="Evidence data table">
                               <thead>
                                 <tr>
                                   {parseCells(headerRow).map((cell, ci) => (

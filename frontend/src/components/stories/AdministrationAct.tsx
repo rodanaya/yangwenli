@@ -30,14 +30,14 @@ interface AdministrationActProps {
 const PARTY_COLORS: Record<PartyKey, { border: string; badge: string; badgeText: string; accent: string }> = {
   PAN: {
     border: 'var(--color-sector-educacion)',
-    badge: 'bg-blue-600',
-    badgeText: 'text-text-primary',
+    badge: 'bg-sector-educacion',
+    badgeText: 'text-white',
     accent: 'var(--color-sector-educacion)',
   },
   PRI: {
     border: 'var(--color-sector-hacienda)',
-    badge: 'bg-green-600',
-    badgeText: 'text-text-primary',
+    badge: 'bg-sector-hacienda',
+    badgeText: 'text-white',
     accent: 'var(--color-sector-hacienda)',
   },
   MORENA: {

@@ -718,7 +718,7 @@ export default function CaseLibrary() {
             tin avoids the misimpression that "Cases" = our work. */}
         <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
           <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-[color:var(--color-accent)] mr-2">
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-accent mr-2">
               {i18n.language === 'es' ? 'Corpus de entrenamiento' : 'Training corpus'}
             </span>
             {i18n.language === 'es'

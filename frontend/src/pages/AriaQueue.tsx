@@ -689,7 +689,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             <span className="inline-flex items-center gap-1">
               {item.in_ground_truth && (
                 <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30"
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30"
                   title={isEs
                     ? 'Anclado en corpus GT — ya documentado como corrupción. IPS elevado refleja el anclaje, no solo señal del modelo.'
                     : 'GT-anchored — already documented corruption. High IPS reflects GT boost, not model-only signal.'}
@@ -1932,7 +1932,7 @@ export default function AriaPage() {
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
                     gtOnly
-                      ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border-[color:var(--color-accent)]/30'
+                      ? 'bg-accent/10 text-accent border-accent/30'
                       : 'bg-background-card text-text-secondary border-border hover:border-border'
                   )}
                   title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}

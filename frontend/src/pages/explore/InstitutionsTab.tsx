@@ -494,7 +494,7 @@ export default function InstitutionsTab() {
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
-          <table className="w-full text-xs min-w-[600px]">
+          <table className="w-full text-xs min-w-[600px]" aria-label="Institutions ranked by procurement activity">
             <thead>
               <tr className="bg-background-elevated/50">
                 <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>

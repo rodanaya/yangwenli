@@ -300,7 +300,7 @@ function HeroImpactSection({
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
             High-risk rate
-            <span className="text-[color:var(--color-oecd)] ml-1">(OECD: max 15%)</span>
+            <span className="text-oecd ml-1">(OECD: max 15%)</span>
           </span>
         </div>
 
@@ -490,7 +490,7 @@ function HeroSection({
                 <span className="text-sm font-medium text-text-secondary">
                   {highRiskPct.toFixed(1)}% {t('sectorHighRisk')}
                   {' · '}
-                  <span className="text-[color:var(--color-oecd)]">{t('metricRiskNote')}</span>
+                  <span className="text-oecd">{t('metricRiskNote')}</span>
                 </span>
               </div>
             )}
@@ -518,7 +518,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
   return (
     <section className="mb-10">
       <div className="rounded-sm border border-oecd/20 bg-oecd/5 p-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-oecd)] mb-3">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-oecd mb-3">
           {t('oecdContextTitle')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -305,7 +305,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)] flex-shrink-0" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" />
               <span className="text-[10px] font-mono text-[color:var(--color-text-on-dark-muted)] tracking-wide">
                 {t('contractsIndexed')}
               </span>
@@ -315,7 +315,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="flex justify-center py-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="text-xs font-mono">{t('contractsIndexedShort')}</p>
@@ -465,7 +465,7 @@ function SidebarNavItem({
         'group relative flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)]',
         isActive
-          ? 'border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-accent-glow)] text-text-primary pl-[calc(0.625rem-3px)] font-semibold'
+          ? 'border-l-[3px] border-accent bg-[color:var(--color-accent-glow)] text-text-primary pl-[calc(0.625rem-3px)] font-semibold'
           : 'text-text-secondary hover:text-text-primary hover:bg-[color:var(--color-sidebar-hover)]',
         collapsed && 'justify-center px-0',
       )}
@@ -481,7 +481,7 @@ function SidebarNavItem({
           aria-hidden="true"
         />
         {badge > 0 && collapsed && (
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[color:var(--color-accent)]" aria-hidden="true" />
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
         )}
         {countBadge > 0 && collapsed && badge === 0 && (
           <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-[color:var(--color-text-on-dark-muted)]" aria-hidden="true" />
@@ -491,7 +491,7 @@ function SidebarNavItem({
       {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
         <span
-          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[color:var(--color-accent)] text-[10px] font-bold text-[color:var(--color-sidebar)] px-1"
+          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent text-[10px] font-bold text-[color:var(--color-sidebar)] px-1"
           aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}

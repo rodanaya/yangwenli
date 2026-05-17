@@ -272,7 +272,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               >
                 <Database className="h-3 w-3 text-text-muted" />
                 <span className="text-text-muted">DQ</span>
-                <span className="text-[color:var(--color-accent)] font-bold uppercase tracking-wide">{qualityLabel}</span>
+                <span className="text-accent font-bold uppercase tracking-wide">{qualityLabel}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -286,8 +286,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <TooltipTrigger asChild>
             <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[10px] text-text-muted tracking-[0.1em] uppercase">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[color:var(--color-accent)] opacity-60 animate-ping" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
               </span>
               <span className="font-mono">{tc('header.live')}</span>
             </div>
@@ -309,7 +309,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label={tc('header.userMenu')}
               >
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--color-accent-glow)] text-[color:var(--color-accent)] text-[9px] font-bold">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--color-accent-glow)] text-accent text-[9px] font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
                 <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
@@ -329,7 +329,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                   </button>
                   <button
                     onClick={() => { setUserMenuOpen(false); logout() }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-[color:var(--color-risk-critical)] hover:bg-background-elevated transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-risk-critical hover:bg-background-elevated transition-colors"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     {tc('header.signOut')}
