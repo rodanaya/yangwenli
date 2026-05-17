@@ -195,7 +195,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           </button>
         </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <table className="w-full text-sm" role="grid">
+        <table className="w-full text-sm" role="grid" aria-label="Vendor search results">
           <thead>
             <tr>
               <th className="data-cell-header text-left" scope="col">Vendor</th>
@@ -242,7 +242,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <table className="w-full text-sm" role="grid">
+      <table className="w-full text-sm" role="grid" aria-label="Institution search results">
         <thead>
           <tr>
             <th className="data-cell-header text-left" scope="col">Institution</th>

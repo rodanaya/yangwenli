@@ -115,6 +115,9 @@ export function ContractCompareModal({
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contract-compare-title"
         style={{
           position: 'relative',
           zIndex: 1,
@@ -129,7 +132,7 @@ export function ContractCompareModal({
         <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background-card z-10">
           <div className="flex items-center gap-2">
             <GitCompareArrows className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold">
+            <h2 id="contract-compare-title" className="text-sm font-semibold">
               Compare Contracts
               <span className="ml-1.5 text-xs font-normal text-text-muted">({n} selected)</span>
             </h2>
