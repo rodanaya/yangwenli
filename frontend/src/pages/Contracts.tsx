@@ -1097,7 +1097,6 @@ export function Contracts() {
                     {CONTRACT_COLUMN_DEFS.map((col) => (
                       <th scope="col"
                         key={col.key}
-                        scope="col"
                         className={cn(
                           'px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',

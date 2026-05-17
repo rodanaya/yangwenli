@@ -15,7 +15,7 @@
  * so transitions between zoom levels can animate the camera. ESC pops one
  * level via the explore reducer.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
@@ -175,7 +175,7 @@ function getSectorShapeElement(
   cx: number, cy: number, r: number,
   fill: string, fillOpacity: number,
   stroke: string, strokeWidth: number,
-): React.ReactElement {
+): ReactElement {
   const props = { fill, fillOpacity, stroke, strokeWidth }
   switch (code) {
 
@@ -478,7 +478,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
   // Pinch baseline — distance + center + zoom at pinch start
   const pinchRef = useRef<{ baseDist: number; baseZoom: number; baseCenterX: number; baseCenterY: number; basePanX: number; basePanY: number } | null>(null)
 
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
+  const onPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     // Only left button for mouse — touch/pen reports button 0 too
     if (e.pointerType === 'mouse' && e.button !== 0) return
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
@@ -513,7 +513,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     }
   }, [pan, zoom])
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
+  const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!pointersRef.current.has(e.pointerId)) return
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
 
@@ -550,7 +550,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     }
   }, [])
 
-  const onPointerUp = useCallback((e: React.PointerEvent) => {
+  const onPointerUp = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current
     pointersRef.current.delete(e.pointerId)
     const wrapper = wrapperRef.current
@@ -596,6 +596,12 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
     const el = wrapperRef.current
     if (!el) return
     const onWheel = (e: WheelEvent) => {
+      // Don't intercept wheel events that originate inside a panel scroll container.
+      const path = e.composedPath()
+      for (const target of path) {
+        if (target === el) break
+        if (target instanceof HTMLElement && target.dataset.scrollPanel === 'true') return
+      }
       e.preventDefault()
       const delta = -e.deltaY * 0.0015
       setZoom((z) => Math.max(0.5, Math.min(3.5, z * (1 + delta))))
@@ -1245,7 +1251,7 @@ function InstCard({
         </span>
         {showOecd && (
           <span className="font-mono text-[8px] ml-2" style={{ color: '#06b6d4' }}>
-            OCDE: {OECD_DA_THRESHOLD}%
+            {lang === 'en' ? 'OECD' : 'OCDE'}: {OECD_DA_THRESHOLD}%
           </span>
         )}
       </div>
@@ -1272,7 +1278,7 @@ function InstCard({
 
       {/* CTA */}
       <div className="font-mono text-[9px] font-bold" style={{ color: sectorAccent }}>
-        {lang === 'en' ? 'VER INSTITUCÍON →' : 'VER INSTITUCIÓN →'}
+        {lang === 'en' ? 'SEE INSTITUTION →' : 'VER INSTITUCIÓN →'}
       </div>
     </div>
   )
@@ -1312,6 +1318,7 @@ function Z1Panel({
   return (
     <div
       className="absolute inset-0 z-[5] overflow-y-auto"
+      data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -1366,7 +1373,7 @@ function Z1Panel({
             className="px-4 py-1 font-mono text-[9px] tracking-widest uppercase border-t border-b"
             style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}
           >
-            {lang === 'en' ? 'LAS QUE SIGUEN' : 'LAS QUE SIGUEN'}
+            {lang === 'en' ? 'NEXT IN LINE' : 'LAS QUE SIGUEN'}
           </div>
           <div className="grid grid-cols-1 divide-y" style={{ borderColor: 'var(--color-border)' }}>
             {features.map((inst) => (
@@ -1395,9 +1402,12 @@ function Z1Panel({
             onClick={() => setTailExpanded((x) => !x)}
           >
             <span>
-              {lang === 'en'
-                ? `${tail.length} MORE INSTITUTIONS · ${(100 - parseFloat(top4Pct)).toFixed(0)}% OF SPEND`
-                : `${tail.length} INSTITUCIONES MÁS · ${(100 - parseFloat(top4Pct)).toFixed(0)}% DEL GASTO`}
+              {(() => {
+                const rest = top4Pct !== '—' ? `${(100 - parseFloat(top4Pct)).toFixed(0)}%` : '—'
+                return lang === 'en'
+                  ? `${tail.length} MORE INSTITUTIONS · ${rest} OF SPEND`
+                  : `${tail.length} INSTITUCIONES MÁS · ${rest} DEL GASTO`
+              })()}
             </span>
             <span>{tailExpanded ? '↑' : '↓'}</span>
           </button>
@@ -1458,9 +1468,25 @@ function Z2Panel({
   const totalVendors = (data as { total_vendors?: number } | undefined)?.total_vendors ?? vendors.length
   const max = Math.max(...vendors.map((v) => v.total_value_mxn || 0), 1)
 
+  const [riskFilter, setRiskFilter] = useState<'all' | 'high' | 'critical'>('all')
+
+  const FILTERS: Array<{ key: 'all' | 'high' | 'critical'; labelEn: string; labelEs: string; color: string }> = [
+    { key: 'all',      labelEn: 'ALL',   labelEs: 'TODOS', color: 'var(--color-text-muted)' },
+    { key: 'high',     labelEn: 'HIGH+', labelEs: 'ALTA+', color: RISK_COLORS.high },
+    { key: 'critical', labelEn: 'CRIT',  labelEs: 'CRIT',  color: RISK_COLORS.critical },
+  ]
+
+  const filteredVendors = vendors.filter((v) => {
+    const score = v.avg_risk_score ?? 0
+    if (riskFilter === 'critical') return score >= 0.60
+    if (riskFilter === 'high')     return score >= 0.40
+    return true
+  })
+
   return (
     <div
       className="absolute inset-0 z-[5] overflow-y-auto"
+      data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -1503,6 +1529,30 @@ function Z2Panel({
         </div>
       )}
 
+      {/* Filter chips */}
+      {!isLoading && !isError && vendors.length > 0 && (
+        <div className="px-4 py-2 flex items-center gap-1.5 border-b" style={{ borderColor: 'var(--color-border)' }}>
+          {FILTERS.map((chip) => {
+            const isActive = riskFilter === chip.key
+            return (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setRiskFilter(chip.key)}
+                className="px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest rounded-sm cursor-pointer"
+                style={
+                  isActive
+                    ? { background: `${chip.color}20`, border: `1px solid ${chip.color}60`, color: chip.color }
+                    : { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }
+                }
+              >
+                {lang === 'en' ? chip.labelEn : chip.labelEs}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {/* Vendor rows */}
       <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
         {isLoading && (
@@ -1515,7 +1565,12 @@ function Z2Panel({
             {lang === 'en' ? 'No vendor data available.' : 'Sin datos de proveedores.'}
           </div>
         )}
-        {vendors.map((v, i) => {
+        {!isLoading && !isError && filteredVendors.length === 0 && vendors.length > 0 && (
+          <div className="py-8 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'No vendors at this risk level.' : 'Sin proveedores en este nivel.'}
+          </div>
+        )}
+        {filteredVendors.map((v, i) => {
           const level = getRiskLevelFromScore(v.avg_risk_score ?? 0)
           const fill = RISK_COLORS[level]
           const barPct = ((v.total_value_mxn || 0) / max) * 100
@@ -1523,7 +1578,7 @@ function Z2Panel({
             <div
               key={v.vendor_id}
               className="flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors"
-              style={{ '--hover-bg': 'var(--color-background-card)' } as React.CSSProperties}
+              style={{ '--hover-bg': 'var(--color-background-card)' } as CSSProperties}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
               onClick={() =>
@@ -1642,6 +1697,7 @@ function Z3Panel({
   return (
     <div
       className="absolute inset-0 z-[5] overflow-y-auto"
+      data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >

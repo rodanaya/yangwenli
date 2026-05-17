@@ -66,30 +66,32 @@ function getHoverId(hover: ReturnType<typeof useExploreState>['hover'], kind: Fo
 function Breadcrumbs({ lang }: { lang: 'en' | 'es' }) {
   const state = useExploreState()
   const dispatch = useExploreDispatch()
+  const stack = state.stack
+  const currentFocus = stack[stack.length - 1]
+  const parentFocus = stack.length > 1 ? stack[stack.length - 2] : null
+
   return (
-    <div className="flex-1 min-w-0 px-4 py-2 flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted overflow-x-auto whitespace-nowrap">
-      {state.stack.map((f, i) => {
-        const isLast = i === state.stack.length - 1
-        const label = focusLabel(f, lang)
-        return (
-          <span key={i} className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                // 2026-05-09 Phase 3: single dispatch instead of looping
-                // pop-focus, so the URL writer only fires once.
-                dispatch({ type: 'pop-to-level', level: i })
-              }}
-              className={isLast ? 'text-text-primary' : 'hover:text-text-secondary transition-colors'}
-              style={{ cursor: isLast ? 'default' : 'pointer', background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 'inherit', textTransform: 'inherit', letterSpacing: 'inherit', color: 'inherit' }}
-              disabled={isLast}
-            >
-              {label}
-            </button>
-            {!isLast && <span className="opacity-60">›</span>}
-          </span>
-        )
-      })}
+    <div className="flex-1 min-w-0 px-4 py-2 flex items-center gap-2 min-w-0">
+      {parentFocus != null && (
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'pop-focus' })}
+          className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-secondary transition-colors shrink-0"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          aria-label={lang === 'en' ? 'Back' : 'Atrás'}
+        >
+          ←
+          <span className="truncate max-w-[80px]">{focusLabel(parentFocus, lang)}</span>
+        </button>
+      )}
+      {parentFocus != null && (
+        <span className="text-text-muted opacity-40 shrink-0">›</span>
+      )}
+      <span
+        className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-primary font-bold truncate min-w-0"
+      >
+        {currentFocus ? focusLabel(currentFocus, lang) : (lang === 'en' ? 'Sistema' : 'Sistema')}
+      </span>
     </div>
   )
 }
@@ -408,17 +410,107 @@ function SectorBriefing({
       )
     }
   }
+  // ── Editorial sector risk briefing ─────────────────────────────────────
+  // Replaces the prior "X institutions in this sector. Hover any body…"
+  // copy (the canvas already says that visually). What a journalist
+  // actually needs at Z1 is: which institutions are the worst, what is the
+  // typical DA rate here, and how big is the spend pool. Computed once
+  // from the same `data.institutions` array the canvas already drew.
+  const institutions = data?.institutions ?? []
+  const t1Count = institutions.filter((i) => (i.risk ?? 0) >= 0.6).length
+  const t2Count = institutions.filter((i) => (i.risk ?? 0) >= 0.4 && (i.risk ?? 0) < 0.6).length
+  const tieredCount = t1Count + t2Count
+  const daInstitutions = institutions.filter((i) => i.direct_award_pct != null)
+  const avgDaPct = daInstitutions.length > 0
+    ? (daInstitutions.reduce((s, i) => s + (i.direct_award_pct ?? 0), 0) / daInstitutions.length) * 100
+    : null
+  const totalSpend = institutions.reduce((s, i) => s + (i.total_amount_mxn ?? 0), 0)
+  const topRisk = [...institutions]
+    .sort((a, b) => (b.risk ?? 0) - (a.risk ?? 0))
+    .slice(0, 2)
+
   return (
     <div>
       <Eyebrow color={accent}>{lang === 'en' ? `Sector · Z1` : `Sector · Z1`}</Eyebrow>
-      <h2 className="text-lg font-bold mb-2" style={{ color: accent }}>{lang === 'en' ? data?.sector_name_en : data?.sector_name_es}</h2>
-      <p className="text-xs text-text-secondary leading-relaxed mb-3">
-        {lang === 'en'
-          ? `${data?.total ?? '—'} institutions in this sector. Hover any body for a preview, click to drill into vendors.`
-          : `${data?.total ?? '—'} instituciones en este sector. Pasa el cursor para una vista previa, clic para profundizar.`}
-      </p>
+      <h2 className="text-lg font-bold mb-3" style={{ color: accent }}>{lang === 'en' ? data?.sector_name_en : data?.sector_name_es}</h2>
+
+      {/* Editorial stats — count of T1+T2, avg DA, total spend */}
+      {data ? (
+        <>
+          <Stat
+            label={lang === 'en' ? 'Critical + high risk' : 'Crítico + alto riesgo'}
+            value={
+              institutions.length > 0
+                ? `${tieredCount} / ${institutions.length}`
+                : '—'
+            }
+          />
+          <Stat
+            label={lang === 'en' ? 'Avg direct award' : 'Adj. directa prom.'}
+            value={avgDaPct != null ? `${avgDaPct.toFixed(0)}%` : '—'}
+          />
+          <Stat
+            label={lang === 'en' ? 'Total sector spend' : 'Gasto total sector'}
+            value={formatCompactMXN(totalSpend)}
+          />
+        </>
+      ) : (
+        <div className="space-y-2 my-3" aria-live="polite">
+          <div className="h-3 w-3/4 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
+        </div>
+      )}
+
+      {/* HIGHEST RISK — top 2 institutions by risk score, each with a
+          Playfair Italic 800 number anchored to risk color. */}
+      {topRisk.length > 0 && (
+        <div className="mt-4">
+          <div className="font-mono text-[9px] uppercase tracking-widest text-text-muted mb-2">
+            {lang === 'en' ? 'Highest risk' : 'Mayor riesgo'}
+          </div>
+          <div className="space-y-2">
+            {topRisk.map((inst) => {
+              const score = inst.risk ?? 0
+              const level = getRiskLevelFromScore(score)
+              const riskColor = RISK_COLORS[level]
+              const isLow = level === 'low'
+              return (
+                <div
+                  key={inst.institution_id}
+                  className="pl-2 border-l-2"
+                  style={{ borderColor: riskColor }}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs text-text-primary truncate min-w-0">
+                      {toTitleCase(inst.name)}
+                    </span>
+                    <span
+                      className="tabular-nums shrink-0"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontStyle: 'italic',
+                        fontWeight: 800,
+                        fontSize: '1rem',
+                        color: isLow ? 'var(--color-text-muted)' : riskColor,
+                      }}
+                    >
+                      {(score * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-mono text-text-muted tracking-wide mt-0.5">
+                    {formatNumber(inst.total_contracts ?? 0)}
+                    {lang === 'en' ? ' contracts · ' : ' contratos · '}
+                    {formatCompactMXN(inst.total_amount_mxn ?? 0)}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <SectorStoryChip sectorCode={sectorCode} lang={lang} />
-      <Tip lang={lang} />
     </div>
   )
 }
@@ -530,6 +622,35 @@ function InstitutionBriefing({
           />
         </div>
       )}
+      {vendors?.data && (() => {
+        const standouts = vendors.data
+          .filter(v => (v.avg_risk_score ?? 0) >= 0.40)
+          .sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+          .slice(0, 3)
+        if (standouts.length === 0) return null
+        return (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted mb-2">
+              {lang === 'en' ? 'Standout risks' : 'Riesgos destacados'}
+            </div>
+            <div className="space-y-1.5">
+              {standouts.map(v => {
+                const riskColor = RISK_COLORS[getRiskLevelFromScore(v.avg_risk_score ?? 0)]
+                return (
+                  <div key={v.vendor_id} className="flex items-center gap-2 py-1 border-l-2 pl-2" style={{ borderColor: riskColor }}>
+                    <span className="flex-1 font-mono text-[10px] truncate" style={{ color: 'var(--color-text-primary)' }} title={v.vendor_name}>
+                      {v.vendor_name}
+                    </span>
+                    <span className="font-mono text-[10px] font-bold tabular-nums flex-shrink-0" style={{ color: riskColor }}>
+                      {((v.avg_risk_score ?? 0) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
       <RiskPill score={risk} />
       <button
         type="button"

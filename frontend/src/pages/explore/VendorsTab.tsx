@@ -482,7 +482,6 @@ export default function VendorsTab() {
                 {VENDOR_COLUMNS.map((col) => (
                   <th scope="col"
                     key={col.key}
-                    scope="col"
                     className={cn(
                       'px-3 py-2 font-semibold text-text-muted whitespace-nowrap cursor-pointer select-none hover:text-text-primary transition-colors',
                       col.align === 'right' ? 'text-right' : 'text-left',
