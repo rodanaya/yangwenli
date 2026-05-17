@@ -344,7 +344,7 @@ function SectorHoverPreview({
           <Stat label={lang === 'en' ? 'Institutions' : 'Instituciones'} value={formatNumber(totals.institutions)} />
           <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(totals.contracts)} />
           <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(totals.value)} />
-          <RiskPill score={totals.avgRisk} />
+          <RiskPill score={totals.avgRisk} lang={lang} />
         </>
       )}
       <p className="mt-3 text-[11px] text-text-muted leading-relaxed">
@@ -402,7 +402,7 @@ function SectorBriefing({
           {inst.direct_award_pct != null && (
             <Stat label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'} value={`${(inst.direct_award_pct * 100).toFixed(0)}%`} />
           )}
-          <RiskPill score={inst.risk} />
+          <RiskPill score={inst.risk} lang={lang} />
           <p className="mt-2 text-[11px] text-text-muted">
             {lang === 'en' ? 'Click to drill into vendors.' : 'Clic para profundizar a proveedores.'}
           </p>
@@ -422,7 +422,7 @@ function SectorBriefing({
   const tieredCount = t1Count + t2Count
   const daInstitutions = institutions.filter((i) => i.direct_award_pct != null)
   const avgDaPct = daInstitutions.length > 0
-    ? (daInstitutions.reduce((s, i) => s + (i.direct_award_pct ?? 0), 0) / daInstitutions.length) * 100
+    ? Math.min(100, (daInstitutions.reduce((s, i) => s + (i.direct_award_pct ?? 0), 0) / daInstitutions.length) * 100)
     : null
   const totalSpend = institutions.reduce((s, i) => s + (i.total_amount_mxn ?? 0), 0)
   const topRisk = [...institutions]
@@ -564,7 +564,7 @@ function InstitutionBriefing({
           </div>
           <Stat label={lang === 'en' ? 'Contracts here' : 'Contratos aquí'} value={formatNumber(v.contract_count)} />
           <Stat label={lang === 'en' ? 'Value' : 'Valor'} value={formatCompactMXN(v.total_value_mxn)} />
-          <RiskPill score={risk} />
+          <RiskPill score={risk} lang={lang} />
           <p className="mt-2 text-[11px] text-text-muted">
             {lang === 'en' ? 'Click to open the Red Thread for this vendor.' : 'Clic para abrir el Hilo Rojo del proveedor.'}
           </p>
@@ -651,7 +651,7 @@ function InstitutionBriefing({
           </div>
         )
       })()}
-      <RiskPill score={risk} />
+      <RiskPill score={risk} lang={lang} />
       <button
         type="button"
         onClick={() => navigate(`/print/institutions/${institutionId}`)}
@@ -787,7 +787,7 @@ function VendorBriefing({
           </div>
         )
       })()}
-      <RiskPill score={risk} />
+      <RiskPill score={risk} lang={lang} />
       <button
         type="button"
         onClick={() => navigate(`/thread/${vendorId}`)}
@@ -1182,7 +1182,7 @@ function ContractBriefing({
 
       {/* ── 7. Risk verdict + narrative ────────────────────────────────── */}
       <div className="mb-3 pb-3 border-b border-border/40">
-        <RiskPill score={risk} />
+        <RiskPill score={risk} lang={lang} />
         {(() => {
           const narrative = renderRiskNarrative()
           if (!narrative) return null
@@ -1326,9 +1326,12 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function RiskPill({ score }: { score: number }) {
+const RISK_LEVEL_ES: Record<string, string> = { critical: 'crítico', high: 'alto', medium: 'medio', low: 'bajo' }
+
+function RiskPill({ score, lang = 'en' }: { score: number; lang?: 'en' | 'es' }) {
   const level = getRiskLevelFromScore(score)
   const color = RISK_COLORS[level]
+  const levelLabel = lang === 'es' ? (RISK_LEVEL_ES[level] ?? level) : level
   // Score bar — 22 dots, score×22 filled. Mirrors the DotBar primitive
   // rhythm used elsewhere in the app, just inline so this stays a single
   // briefing-panel atom.
@@ -1341,7 +1344,7 @@ function RiskPill({ score }: { score: number }) {
           className="text-[9px] font-mono uppercase tracking-[0.16em] px-1.5 py-0.5 rounded-sm"
           style={{ color, background: `${color}1a`, border: `1px solid ${color}40` }}
         >
-          {level}
+          {levelLabel}
         </span>
         <span className="text-sm font-mono font-bold tabular-nums" style={{ color }}>
           {(score * 100).toFixed(1)}%

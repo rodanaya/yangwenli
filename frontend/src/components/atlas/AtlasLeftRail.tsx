@@ -216,13 +216,16 @@ export function AtlasLeftRail({
               />
               <div className="min-w-0">
                 <div
-                  className="text-[11px] font-mono font-bold truncate"
-                  style={{ color: 'var(--color-text-primary)' }}
+                  className="font-serif font-bold text-[13px] leading-[1.15] tracking-[-0.005em] truncate"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    color: 'var(--color-text-primary)',
+                  }}
                 >
                   {story.title[lang]}
                 </div>
                 <div
-                  className="text-[9px] font-mono mt-0.5"
+                  className="font-mono text-[9px] uppercase tracking-widest mt-1"
                   style={{ color: 'var(--color-text-muted)' }}
                 >
                   {story.chapters.length} {lang === 'en' ? 'cap' : 'cap'} · {story.duration}

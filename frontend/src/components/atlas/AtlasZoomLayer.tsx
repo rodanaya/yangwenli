@@ -258,13 +258,19 @@ export function AtlasZoomLayer({
   }, [isDragging, screenToSvgScale])
 
   // Wheel zoom — only active when zoomed. Scrolling up zooms in.
-  // React onWheel is passive by default (preventDefault is a no-op). We attach
-  // a native non-passive listener via the ref so the page doesn't scroll
-  // while the user wheels over the zoomed atlas.
+  // Attached to window (not wrapperRef) so ClusterDetailPanel's fixed z-50
+  // overlay doesn't swallow wheel events when it visually overlaps the canvas.
+  // A rect-based guard ensures we only intercept events whose cursor is
+  // spatially within the canvas bounds; events outside skip preventDefault.
   useEffect(() => {
+    if (!isZoomed) return
     const el = wrapperRef.current
-    if (!el || !isZoomed) return
+    if (!el) return
     const onWheel = (e: WheelEvent) => {
+      const rect = el.getBoundingClientRect()
+      // Only act when cursor is within the canvas bounds
+      if (e.clientX < rect.left || e.clientX > rect.right ||
+          e.clientY < rect.top  || e.clientY > rect.bottom) return
       e.preventDefault()
       const delta = -e.deltaY * WHEEL_ZOOM_STEP
       setUserZoom((z) => {
@@ -272,8 +278,8 @@ export function AtlasZoomLayer({
         return Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, next))
       })
     }
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
+    window.addEventListener('wheel', onWheel, { passive: false })
+    return () => window.removeEventListener('wheel', onWheel)
   }, [isZoomed])
 
   // Cluster click handler — dispatches zoom-into-cluster (legacy) OR
@@ -374,7 +380,7 @@ export function AtlasZoomLayer({
         style={{
           overflow: 'hidden',
           position: 'relative',
-          cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'default',
+          cursor: isZoomed ? (isDragging ? 'grabbing' : 'grab') : 'crosshair',
           // Click-outside: if zoomed and user clicks the container (background)
           // but NOT a vendor dot or the constellation clusters, escape zoom.
           touchAction: isZoomed ? 'none' : undefined,
@@ -428,6 +434,15 @@ export function AtlasZoomLayer({
           />
         )}
       </div>
+
+      {!isZoomed && (
+        <div
+          className="font-mono text-[9px] uppercase tracking-widest text-center py-1"
+          style={{ color: 'var(--color-text-muted)', letterSpacing: '0.14em' }}
+        >
+          click a cluster · then drag to pan · scroll to zoom
+        </div>
+      )}
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
       {isZoomed && (

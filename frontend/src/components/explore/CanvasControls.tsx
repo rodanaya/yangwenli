@@ -40,7 +40,7 @@ export function YearScrubber({ lang }: { lang: 'en' | 'es' }) {
         value={year ?? YEAR_MAX}
         onChange={(e) => dispatch({ type: 'set-year', year: Number(e.target.value) })}
         className="flex-1 cursor-pointer appearance-none"
-        style={{ height: 2, accentColor: 'var(--color-accent)' }}
+        style={{ height: 2, accentColor: 'var(--color-accent)', touchAction: 'none' }}
         aria-label={lang === 'en' ? 'Year filter' : 'Filtro de año'}
       />
       {!isAll && (

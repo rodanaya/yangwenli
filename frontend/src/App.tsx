@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider, QueryCache, keepPreviousData } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
@@ -19,6 +19,12 @@ import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
 const EntityProfileDrawer = lazy(() =>
   import('@/components/EntityProfileDrawer').then(m => ({ default: m.EntityProfileDrawer }))
 )
+
+// Preserves ?s=&i=&v= query params when the sidebar navigates to /spatial
+function SpatialRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/explore${search}`} replace />
+}
 
 // Lazy load all page components for code splitting
 const Contracts = lazy(() => import('@/pages/Contracts'))
@@ -321,7 +327,7 @@ function App() {
                   working unchanged. */}
               <Route path="observatorio" element={<Navigate to="/atlas" replace />} />
               <Route path="observatory"  element={<Navigate to="/atlas" replace />} />
-              <Route path="spatial" element={<Navigate to="/explore" replace />} />
+              <Route path="spatial" element={<SpatialRedirect />} />
               <Route
                 path="sectors"
                 element={

@@ -298,7 +298,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
 
   const investigateLink = useMemo(() => {
     if (!meta) return '/aria'
-    if (mode === 'patterns') return `/clusters#${meta.code}`
+    if (mode === 'patterns') return `/patterns/${meta.code}`
     if (mode === 'sectors')  return `/sectors?sector=${meta.code}`
     if (mode === 'categories') return `/sectors?view=categories&category=${meta.code}`
     return '/administrations'

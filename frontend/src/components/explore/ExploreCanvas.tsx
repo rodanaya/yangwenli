@@ -28,6 +28,7 @@ import {
   SECTOR_COLORS,
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import {
   getPinAnnotation,
   useExploreState,
@@ -1510,7 +1511,9 @@ function Z2Panel({
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
           {isLoading
             ? '…'
-            : `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · showing top' : 'proveedores · top'} ${vendors.length}`}
+            : riskFilter === 'all'
+              ? `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · showing top' : 'proveedores · top'} ${vendors.length}`
+              : `${filteredVendors.length} ${lang === 'en' ? 'vendors (filtered)' : 'proveedores (filtrado)'}`}
         </div>
       </div>
 
@@ -1585,7 +1588,7 @@ function Z2Panel({
                 dispatch({
                   type: 'drill-into-vendor',
                   vendorId: v.vendor_id,
-                  vendorName: v.vendor_name,
+                  vendorName: formatVendorName(v.vendor_name),
                 })
               }
             >
@@ -1605,9 +1608,9 @@ function Z2Panel({
               <span
                 className="flex-1 font-mono text-[10px] truncate"
                 style={{ color: 'var(--color-text-primary)' }}
-                title={v.vendor_name}
+                title={formatVendorName(v.vendor_name)}
               >
-                {v.vendor_name}
+                {formatVendorName(v.vendor_name)}
               </span>
               {/* Spend bar */}
               <div className="w-28 h-1.5 rounded-full flex-shrink-0 hidden sm:block" style={{ background: 'var(--color-border)' }}>
