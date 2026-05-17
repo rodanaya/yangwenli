@@ -197,7 +197,7 @@ export default function CaptureCreep() {
           }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XII</span>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
               {lang === 'es'
@@ -222,7 +222,7 @@ export default function CaptureCreep() {
               {lang === 'es' ? (
                 <>
                   Cómo un proveedor{' '}
-                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                     captura
                   </span>{' '}
                   una institución.
@@ -230,7 +230,7 @@ export default function CaptureCreep() {
               ) : (
                 <>
                   How a vendor{' '}
-                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                  <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                     captures
                   </span>{' '}
                   an institution.

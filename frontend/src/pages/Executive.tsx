@@ -319,7 +319,7 @@ export default function Executive() {
                 fontWeight: 400,
               }}
             >
-              <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·I</span>
+              <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·I</span>
               <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
               <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
                 {lang === 'en' ? 'RUBLI executive briefing' : 'RUBLI reporte ejecutivo'}
@@ -356,17 +356,17 @@ export default function Executive() {
             {lang === 'en' ? (
               <>
                 Twenty-three years.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 trillion</span>
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 trillion</span>
                 {' '}in federal contracts. More than{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>7 in 10</span>
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 in 10</span>
                 {' '}bypass competitive bidding.
               </>
             ) : (
               <>
                 Veintitrés años.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 billones</span>
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 billones</span>
                 {' '}en contratos federales. Más de{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>7 de cada 10</span>
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 de cada 10</span>
                 {' '}evitan la licitación competitiva.
               </>
             )}
@@ -717,9 +717,9 @@ export default function Executive() {
                 <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span style={{ color: '#dc2626' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
                 <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
+                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
               </div>
             </motion.div>
 
@@ -781,7 +781,7 @@ export default function Executive() {
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
                 <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
+                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
                 <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
               </div>
             </motion.div>
@@ -820,7 +820,7 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#dc2626' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" />
                 </span>
@@ -854,7 +854,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#dc2626' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                       145×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -883,13 +883,13 @@ export default function Executive() {
                     >
                       <span
                         className="font-mono font-bold text-[42px] leading-none tabular-nums"
-                        style={{ color: '#dc2626' }}
+                        style={{ color: 'var(--color-risk-critical)' }}
                       >
                         6,118
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"
-                        style={{ color: '#dc2626', opacity: 0.65 }}
+                        style={{ color: 'var(--color-risk-critical)', opacity: 0.65 }}
                       >
                         {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
                       </span>
@@ -1209,7 +1209,7 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#a06820' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
                   <ArrowUpRight className="h-2.5 w-2.5" />
                 </span>
@@ -1218,13 +1218,13 @@ export default function Executive() {
               {/* Plain-English explanation of the pattern, before any number */}
               <p className="text-xs text-text-secondary leading-[1.55] mb-3">
                 {lang === 'en'
-                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: '#a06820' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
-                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: '#a06820' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
+                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
+                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
                 }
               </p>
 
               <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>15,923</span>
                 <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
               </div>
               {/* Cleveland pair per institution: filled dot = top vendor share,
@@ -1591,7 +1591,7 @@ export default function Executive() {
         </section>
 
         {/* ─── Amber divider ─── */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />
 
         {/* ─── Documented Cases Timeline ─── */}
         <section className="mb-12">
@@ -1685,7 +1685,7 @@ export default function Executive() {
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
-                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: 'var(--color-risk-critical)' }}
                     >
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>

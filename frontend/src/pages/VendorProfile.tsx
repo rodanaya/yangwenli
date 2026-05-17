@@ -458,7 +458,7 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
     >
       <p
         className="text-[9px] font-mono uppercase tracking-[0.18em] mb-4"
-        style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}
+        style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}
       >
         § 10 · {isEs ? 'Procedencia' : 'Provenance'}
       </p>

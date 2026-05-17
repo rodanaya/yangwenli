@@ -585,7 +585,7 @@ export default function Administrations() {
             }}
           >
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XI</span>
+              <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XI</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>
                 {isEs
@@ -610,7 +610,7 @@ export default function Administrations() {
                 {isEs ? (
                   <>
                     Cinco administraciones,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                       un solo patrón.
                     </span>
                   </>
@@ -621,7 +621,7 @@ export default function Administrations() {
                         the actual count (Fox / Calderón / Peña Nieto / AMLO /
                         Sheinbaum). Aligned to five. */}
                     Five administrations,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                       one pattern.
                     </span>
                   </>

@@ -349,7 +349,7 @@ export function AtlasLeftRail({
               >
                 <span
                   className="font-mono font-bold text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   ◆
                 </span>

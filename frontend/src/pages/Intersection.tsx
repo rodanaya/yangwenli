@@ -483,7 +483,7 @@ export default function Intersection() {
           }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIII</span>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
               {lang === 'es' ? 'Informe de inteligencia · La brecha regulatoria' : 'Intelligence brief · The regulatory gap'}

@@ -439,7 +439,7 @@ export function InstitutionProfile() {
     if (!history || history.length < 3) return null
     const last3 = history.slice(-3)
     const slope = (last3[last3.length - 1].hhi - last3[0].hhi) / (last3.length - 1)
-    if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: '#dc2626' }
+    if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: 'var(--color-risk-critical)' }
     if (slope < -50) return { label: lang === 'en' ? 'Diversifying' : 'Diversificando', color: '#16a34a' }
     return { label: lang === 'en' ? 'Stable' : 'Estable', color: '#eab308' }
   }, [institution?.supplier_diversity?.history])
@@ -663,7 +663,7 @@ export function InstitutionProfile() {
             fontWeight: 400,
           }}
         >
-          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
             {getInstitutionTypeLabel(institution.institution_type)}

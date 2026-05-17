@@ -117,7 +117,7 @@ export function VendorHero({
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·D</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·D</span>
             <span style={{ width: 24, height: 1, background: 'rgba(160, 104, 32, 0.45)', display: 'inline-block' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               {isEs ? 'Expediente del proveedor' : 'Vendor dossier'}

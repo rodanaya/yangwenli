@@ -1486,7 +1486,7 @@ export default function RedesKnownDossier() {
           }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIV</span>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
               {isEs ? 'Inteligencia de red · ARIA + Louvain' : 'Network intelligence · ARIA + Louvain'}
@@ -1508,14 +1508,14 @@ export default function RedesKnownDossier() {
           {isEs ? (
             <>
               La{' '}
-              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                 red invisible.
               </span>
             </>
           ) : (
             <>
               The{' '}
-              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                 invisible
               </span>
               {' '}network.

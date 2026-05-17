@@ -455,7 +455,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
                   {lang === 'en' ? 'YOUR NOTES' : 'TUS NOTAS'}
                 </div>
                 {note && (
-                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: '#a06820' }}>
+                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: 'var(--color-accent)' }}>
                     {lang === 'en' ? 'saved locally' : 'guardado local'}
                   </span>
                 )}
@@ -522,7 +522,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
         <div className="flex items-center gap-3 min-w-0 sm:flex-1 sm:order-2">
           <div
             className="font-mono font-extrabold text-[22px] leading-none tabular-nums flex-shrink-0"
-            style={{ color: '#a06820', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
+            style={{ color: 'var(--color-accent)', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
           >
             {snapshot.year}
           </div>
@@ -613,7 +613,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             >
               <span
                 className="font-mono font-bold text-[10px] uppercase tracking-[0.14em] flex-shrink-0"
-                style={{ color: '#dc2626' }}
+                style={{ color: 'var(--color-risk-critical)' }}
               >
                 ◆ {lang === 'en' ? 'KEY EVENT' : 'EVENTO CLAVE'}
               </span>
@@ -628,7 +628,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
               animate={{ opacity: 1 }}
               className="text-[10px] font-mono text-text-muted"
             >
-              <span style={{ color: '#a06820' }}>—</span> {lang === 'en' ? 'no major documented case this year' : 'sin caso documentado mayor este año'}
+              <span style={{ color: 'var(--color-accent)' }}>—</span> {lang === 'en' ? 'no major documented case this year' : 'sin caso documentado mayor este año'}
             </motion.div>
           )}
         </AnimatePresence>
@@ -821,7 +821,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
                   <span className="font-mono font-bold text-[11px] text-text-primary truncate">
                     {v.displayName}
                   </span>
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: '#a06820' }}>
+                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: 'var(--color-accent)' }}>
                     {v.pattern} · {v.sector}
                   </span>
                 </div>
@@ -1645,7 +1645,7 @@ export default function Atlas() {
             fontWeight: 400,
           }}
         >
-          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
           <span style={{ width: 28, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
             {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
@@ -1666,11 +1666,11 @@ export default function Atlas() {
         >
           {lang === 'en' ? (
             <>
-              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine trillion pesos</span> in federal procurement.
+              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nine trillion pesos</span> in federal procurement.
             </>
           ) : (
             <>
-              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve billones de pesos</span> en contratación federal.
+              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nueve billones de pesos</span> en contratación federal.
             </>
           )}
         </h1>
@@ -1784,7 +1784,7 @@ export default function Atlas() {
                     setStoriesMenuOpen(false)
                   }}
                   className="w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
-                  style={{ background: 'var(--color-border)', color: '#dc2626' }}
+                  style={{ background: 'var(--color-border)', color: 'var(--color-risk-critical)' }}
                 >
                   <Square className="h-3 w-3 inline mr-1.5" />
                   {lang === 'en' ? 'Close story' : 'Cerrar historia'}
@@ -1860,7 +1860,7 @@ export default function Atlas() {
             initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm"
-            style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+            style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
           >
             <Sparkles className="h-3 w-3" />
             <span className="opacity-80 uppercase tracking-[0.1em]">
@@ -1887,7 +1887,7 @@ export default function Atlas() {
             <button
               onClick={() => setPinnedCode(null)}
               className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(160,104,32,0.18)', color: '#a06820' }}
+              style={{ background: 'rgba(160,104,32,0.18)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Click to unpin' : 'Clic para despinear'}
             >
               <Pin className="h-3 w-3" />
@@ -1922,7 +1922,7 @@ export default function Atlas() {
           {notesCount > 0 && (
             <div
               className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-sm"
-              style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+              style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Personal notes — saved in your browser' : 'Notas personales — guardadas en tu navegador'}
             >
               <NotebookPen className="h-3 w-3" />
@@ -2325,7 +2325,7 @@ export default function Atlas() {
       {/* ── Constellation canvas A (always shown) ──────────────────────── */}
       {compareMode && (
         <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: '#a06820' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
+          <span className="font-bold" style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
           <span>·</span>
           <span>{snapshot.year}</span>
         </div>
@@ -2353,7 +2353,7 @@ export default function Atlas() {
               boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
             }}
           >
-            <span style={{ color: '#a06820' }}>▶</span>
+            <span style={{ color: 'var(--color-accent)' }}>▶</span>
             <span className="font-bold">
               {lang === 'en' ? 'Ch' : 'Cap'} {activeChapter + 1}/{activeStory.chapters.length}
             </span>
@@ -2416,7 +2416,7 @@ export default function Atlas() {
         return (
           <>
             <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
-              <span className="font-bold" style={{ color: '#dc2626' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
+              <span className="font-bold" style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
               <span>·</span>
               <span>{snapshotB.year}</span>
             </div>

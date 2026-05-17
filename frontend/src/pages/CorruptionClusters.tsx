@@ -226,8 +226,8 @@ const PATTERN_SECTOR_MATRIX: Record<string, number[]> = {
 // ── GT evidence distribution (documented cases from ground_truth_cases) ─────
 function buildGtTypes(isEs: boolean) {
   return [
-    { type: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud', count: 432, color: '#dc2626' },
-    { type: isEs ? 'Captura institucional' : 'Institutional capture',   count: 317, color: '#dc2626' },
+    { type: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud', count: 432, color: 'var(--color-risk-critical)' },
+    { type: isEs ? 'Captura institucional' : 'Institutional capture',   count: 317, color: 'var(--color-risk-critical)' },
     { type: isEs ? 'Captura licitación única' : 'Single-bid capture', count: 216, color: '#f59e0b' },
     { type: isEs ? 'Empresa fantasma' : 'Ghost company',        count: 144, color: '#f59e0b' },
     { type: isEs ? 'Monopolio' : 'Monopoly',               count: 71,  color: '#78716c' },
@@ -1034,7 +1034,7 @@ export default function CorruptionClusters() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                7 <span style={{ color: '#dc2626' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
+                7 <span style={{ color: 'var(--color-risk-critical)' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {isEs ? 'ANÁLISIS · ARIA v1.1' : 'ANALYSIS · ARIA v1.1'}
@@ -1050,7 +1050,7 @@ export default function CorruptionClusters() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#dc2626' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {formatNumber(totalT1)}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">

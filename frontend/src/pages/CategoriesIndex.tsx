@@ -124,7 +124,7 @@ function CategoryCard({ item, lang }: CategoryCardProps) {
           {/* Spend */}
           <div
             className="font-mono text-sm tabular-nums font-semibold"
-            style={{ color: '#a06820' }}
+            style={{ color: 'var(--color-accent)' }}
           >
             {formatCompactMXN(item.total_value)}
           </div>
@@ -305,7 +305,7 @@ export default function CategoriesIndex() {
             </div>
             <div
               className="font-mono text-xl tabular-nums font-semibold"
-              style={{ color: '#a06820' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               {formatCompactMXN(totalValue)}
             </div>

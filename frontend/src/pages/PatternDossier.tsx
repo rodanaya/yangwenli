@@ -292,7 +292,7 @@ export default function PatternDossier() {
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
                 {[
                   { label: isEs ? 'Proveedores' : 'Vendors', value: spotlight.vendor_count.toLocaleString(), color: undefined },
-                  { label: 'T1', value: spotlight.t1_count.toLocaleString(), color: '#dc2626' },
+                  { label: 'T1', value: spotlight.t1_count.toLocaleString(), color: 'var(--color-risk-critical)' },
                   { label: 'T2', value: spotlight.t2_count.toLocaleString(), color: undefined },
                   { label: isEs ? 'Casos GT' : 'GT Cases', value: spotlight.gt_case_count.toLocaleString(), color: undefined },
                   ...(spotlight.avg_da_rate != null ? [{ label: 'DA%', value: `${Math.round(spotlight.avg_da_rate * 100)}%`, color: spotlight.avg_da_rate > 0.5 ? '#ef4444' : undefined }] : []),
@@ -516,7 +516,7 @@ export default function PatternDossier() {
               <>
                 <span
                   className="font-mono font-bold tabular-nums"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   {spotlight.gt_case_count.toLocaleString()}
                 </span>{' '}
@@ -527,7 +527,7 @@ export default function PatternDossier() {
               <>
                 <span
                   className="font-mono font-bold tabular-nums"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   {spotlight.gt_case_count.toLocaleString()}
                 </span>{' '}
@@ -539,7 +539,7 @@ export default function PatternDossier() {
           <Link
             to={`/cases?type=${caseType}`}
             className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
-            style={{ color: '#dc2626' }}
+            style={{ color: 'var(--color-risk-critical)' }}
           >
             <span aria-hidden="true">→</span>
             {isEs ? 'Ver casos de corrupción' : 'View corruption cases'}
