@@ -15,7 +15,7 @@
  * so transitions between zoom levels can animate the camera. ESC pops one
  * level via the explore reducer.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
@@ -1441,7 +1441,8 @@ function Z1Panel({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z2Panel — HTML overlay: vendor ranked list for an institution
+// Z2Panel — editorial three-shelf vendor list sorted by investigative priority
+// Critical risk / Flagged / Routine (collapsed by default)
 // ────────────────────────────────────────────────────────────────────────────
 
 function Z2Panel({
@@ -1466,23 +1467,15 @@ function Z2Panel({
   })
 
   const vendors = data?.data ?? []
-  const totalVendors = (data as { total_vendors?: number } | undefined)?.total_vendors ?? vendors.length
-  const max = Math.max(...vendors.map((v) => v.total_value_mxn || 0), 1)
+  const totalVendors = data?.total ?? vendors.length
 
-  const [riskFilter, setRiskFilter] = useState<'all' | 'high' | 'critical'>('all')
+  // Sort by risk descending — investigative priority order, not spend
+  const sorted = [...vendors].sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+  const shelfCritical = sorted.filter((v) => (v.avg_risk_score ?? 0) >= 0.60)
+  const shelfFlagged  = sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.60 })
+  const shelfRoutine  = sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25)
 
-  const FILTERS: Array<{ key: 'all' | 'high' | 'critical'; labelEn: string; labelEs: string; color: string }> = [
-    { key: 'all',      labelEn: 'ALL',   labelEs: 'TODOS', color: 'var(--color-text-muted)' },
-    { key: 'high',     labelEn: 'HIGH+', labelEs: 'ALTA+', color: RISK_COLORS.high },
-    { key: 'critical', labelEn: 'CRIT',  labelEs: 'CRIT',  color: RISK_COLORS.critical },
-  ]
-
-  const filteredVendors = vendors.filter((v) => {
-    const score = v.avg_risk_score ?? 0
-    if (riskFilter === 'critical') return score >= 0.60
-    if (riskFilter === 'high')     return score >= 0.40
-    return true
-  })
+  const [routineOpen, setRoutineOpen] = useState(false)
 
   return (
     <div
@@ -1496,150 +1489,165 @@ function Z2Panel({
         className="px-4 py-3 sticky top-0 border-b"
         style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
       >
-        <div
-          className="font-mono text-[10px] tracking-widest uppercase"
-          style={{ color: 'var(--color-accent)' }}
-        >
+        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z2 · VENDORS' : 'Z2 · PROVEEDORES'}
         </div>
-        <div
-          className="text-sm font-semibold mt-0.5 truncate"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
+        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
           {institutionName}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
           {isLoading
             ? '…'
-            : riskFilter === 'all'
-              ? `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · showing top' : 'proveedores · top'} ${vendors.length}`
-              : `${filteredVendors.length} ${lang === 'en' ? 'vendors (filtered)' : 'proveedores (filtrado)'}`}
+            : `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · sorted by risk' : 'proveedores · por riesgo'}`}
         </div>
       </div>
 
-      {/* Column headers */}
-      {!isLoading && !isError && vendors.length > 0 && (
-        <div
-          className="px-4 py-1.5 flex items-center gap-2 border-b font-mono text-[9px] uppercase tracking-widest"
-          style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
-        >
-          <span className="w-4 flex-shrink-0" />
-          <span className="w-3 flex-shrink-0" />
-          <span className="flex-1">{lang === 'en' ? 'VENDOR' : 'PROVEEDOR'}</span>
-          <span className="w-28 flex-shrink-0 hidden sm:block" />
-          <span className="w-20 text-right flex-shrink-0">{lang === 'en' ? 'SPEND' : 'MONTO'}</span>
-          <span className="w-10 text-right flex-shrink-0 hidden sm:block">{lang === 'en' ? 'CTRS' : 'CTRS'}</span>
+      {isLoading && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'Loading…' : 'Cargando…'}
+        </div>
+      )}
+      {isError && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No vendor data available.' : 'Sin datos de proveedores.'}
+        </div>
+      )}
+      {!isLoading && !isError && vendors.length === 0 && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No vendors found.' : 'Sin proveedores.'}
         </div>
       )}
 
-      {/* Filter chips */}
+      {/* Three editorial shelves */}
       {!isLoading && !isError && vendors.length > 0 && (
-        <div className="px-4 py-2 flex items-center gap-1.5 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          {FILTERS.map((chip) => {
-            const isActive = riskFilter === chip.key
-            return (
-              <button
-                key={chip.key}
-                type="button"
-                onClick={() => setRiskFilter(chip.key)}
-                className="px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest rounded-sm cursor-pointer"
-                style={
-                  isActive
-                    ? { background: `${chip.color}20`, border: `1px solid ${chip.color}60`, color: chip.color }
-                    : { background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }
-                }
-              >
-                {lang === 'en' ? chip.labelEn : chip.labelEs}
-              </button>
-            )
-          })}
-        </div>
-      )}
+        <div className="py-3 space-y-2">
 
-      {/* Vendor rows */}
-      <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
-        {isLoading && (
-          <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'en' ? 'Loading…' : 'Cargando…'}
-          </div>
-        )}
-        {isError && (
-          <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'en' ? 'No vendor data available.' : 'Sin datos de proveedores.'}
-          </div>
-        )}
-        {!isLoading && !isError && filteredVendors.length === 0 && vendors.length > 0 && (
-          <div className="py-8 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'en' ? 'No vendors at this risk level.' : 'Sin proveedores en este nivel.'}
-          </div>
-        )}
-        {filteredVendors.map((v, i) => {
-          const level = getRiskLevelFromScore(v.avg_risk_score ?? 0)
-          const fill = RISK_COLORS[level]
-          const barPct = ((v.total_value_mxn || 0) / max) * 100
-          return (
+          {/* Shelf 1 — Critical Risk */}
+          {shelfCritical.length > 0 && (
             <div
-              key={v.vendor_id}
-              className="flex items-center gap-2 px-4 py-2 cursor-pointer transition-colors"
-              style={{ '--hover-bg': 'var(--color-background-card)' } as CSSProperties}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-              onClick={() =>
-                dispatch({
-                  type: 'drill-into-vendor',
-                  vendorId: v.vendor_id,
-                  vendorName: formatVendorName(v.vendor_name),
-                })
-              }
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: `2px solid ${RISK_COLORS.critical}` }}
             >
-              {/* Risk stripe */}
               <div
-                className="w-1 h-5 rounded-full flex-shrink-0"
-                style={{ background: fill }}
-              />
-              {/* Rank */}
-              <span
-                className="font-mono text-[9px] w-3 text-right flex-shrink-0 tabular-nums"
-                style={{ color: 'var(--color-text-muted)' }}
+                className="flex items-center gap-2 px-3 py-1.5"
+                style={{ background: `${RISK_COLORS.critical}12`, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}
               >
-                {i + 1}
-              </span>
-              {/* Vendor name */}
-              <span
-                className="flex-1 font-mono text-[10px] truncate"
-                style={{ color: 'var(--color-text-primary)' }}
-                title={formatVendorName(v.vendor_name)}
-              >
-                {formatVendorName(v.vendor_name)}
-              </span>
-              {/* Spend bar */}
-              <div className="w-28 h-1.5 rounded-full flex-shrink-0 hidden sm:block" style={{ background: 'var(--color-border)' }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${barPct}%`, background: fill, opacity: 0.65 }}
-                />
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.critical }}>
+                  {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfCritical.length}
+                </span>
               </div>
-              {/* Amount */}
-              <span
-                className="font-mono text-[10px] font-bold w-20 text-right flex-shrink-0 tabular-nums"
-                style={{ color: fill }}
-              >
-                {formatCompactMXN(v.total_value_mxn ?? 0)}
-              </span>
-              {/* Contract count */}
-              <span
-                className="font-mono text-[9px] w-10 text-right flex-shrink-0 tabular-nums hidden sm:block"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                {formatNumber(v.contract_count)}
-              </span>
+              {shelfCritical.map((v, i) => (
+                <div
+                  key={v.vendor_id}
+                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
+                >
+                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: RISK_COLORS.critical }} />
+                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{i + 1}</span>
+                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-primary)' }} title={formatVendorName(v.vendor_name)}>
+                    {formatVendorName(v.vendor_name)}
+                  </span>
+                  <span className="font-mono text-[10px] font-bold tabular-nums flex-shrink-0" style={{ color: RISK_COLORS.critical }}>
+                    {formatCompactMXN(v.total_value_mxn ?? 0)}
+                  </span>
+                </div>
+              ))}
             </div>
-          )
-        })}
-      </div>
+          )}
+
+          {/* Shelf 2 — Flagged / High-Medium */}
+          {shelfFlagged.length > 0 && (
+            <div
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: `2px solid ${RISK_COLORS.high}` }}
+            >
+              <div
+                className="flex items-center gap-2 px-3 py-1.5"
+                style={{ background: `${RISK_COLORS.high}12`, borderBottom: `1px solid ${RISK_COLORS.high}25` }}
+              >
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.high }}>
+                  {lang === 'en' ? 'FLAGGED · HIGH RISK' : 'SEÑALADO · RIESGO ALTO'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfFlagged.length}
+                </span>
+              </div>
+              {shelfFlagged.map((v, i) => (
+                <div
+                  key={v.vendor_id}
+                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
+                >
+                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: RISK_COLORS.high }} />
+                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfCritical.length + i + 1}</span>
+                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-primary)' }} title={formatVendorName(v.vendor_name)}>
+                    {formatVendorName(v.vendor_name)}
+                  </span>
+                  <span className="font-mono text-[10px] font-bold tabular-nums flex-shrink-0" style={{ color: RISK_COLORS.high }}>
+                    {formatCompactMXN(v.total_value_mxn ?? 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Shelf 3 — Routine / Low Risk (collapsed by default) */}
+          {shelfRoutine.length > 0 && (
+            <div
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: '2px solid var(--color-border)' }}
+            >
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 px-3 py-1.5 cursor-pointer text-left"
+                style={{
+                  background: 'var(--color-background-card)',
+                  borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none',
+                }}
+                onClick={() => setRoutineOpen((o) => !o)}
+              >
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'ROUTINE · LOW RISK' : 'RUTINARIO · RIESGO BAJO'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfRoutine.length}
+                </span>
+                <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {routineOpen ? '▾' : '▸'}
+                </span>
+              </button>
+              {routineOpen && shelfRoutine.map((v, i) => (
+                <div
+                  key={v.vendor_id}
+                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
+                >
+                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: 'var(--color-text-muted)' }} />
+                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfCritical.length + shelfFlagged.length + i + 1}</span>
+                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-secondary)' }} title={formatVendorName(v.vendor_name)}>
+                    {formatVendorName(v.vendor_name)}
+                  </span>
+                  <span className="font-mono text-[10px] tabular-nums flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+                    {formatCompactMXN(v.total_value_mxn ?? 0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
-      {vendors.length > 0 && (
+      {!isLoading && !isError && vendors.length > 0 && (
         <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
           {lang === 'en'
             ? 'tap → Red Thread · full investigation profile'
@@ -1651,7 +1659,7 @@ function Z2Panel({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z3Panel — HTML overlay: contract list for a vendor
+// Z3Panel — editorial contract view: "LOS 3 QUE IMPORTAN" + year bars + full list
 // ────────────────────────────────────────────────────────────────────────────
 
 function Z3Panel({
@@ -1679,7 +1687,12 @@ function Z3Panel({
 
   const contracts = data?.data ?? []
 
-  // Group by year for the distribution bar
+  // Top 3 by risk score — "the ones that matter"
+  const top3 = [...contracts]
+    .sort((a, b) => (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
+    .slice(0, 3)
+
+  // Group by year for the distribution bars
   const byYear = new Map<number, { count: number; amount: number }>()
   contracts.forEach((c) => {
     const yr = Number(c.contract_year ?? 0)
@@ -1692,10 +1705,10 @@ function Z3Panel({
   const yearEntries = Array.from(byYear.entries()).sort(([a], [b]) => a - b)
   const maxYearAmt = Math.max(...yearEntries.map(([, v]) => v.amount), 1)
 
-  // Top contracts by amount
-  const topContracts = [...contracts]
-    .sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
-    .slice(0, 20)
+  // Full list sorted by amount for the collapsed section
+  const byAmount = [...contracts].sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
+
+  const [listOpen, setListOpen] = useState(false)
 
   return (
     <div
@@ -1709,16 +1722,10 @@ function Z3Panel({
         className="px-4 py-3 sticky top-0 border-b"
         style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
       >
-        <div
-          className="font-mono text-[10px] tracking-widest uppercase"
-          style={{ color: 'var(--color-accent)' }}
-        >
+        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z3 · CONTRACTS' : 'Z3 · CONTRATOS'}
         </div>
-        <div
-          className="text-sm font-semibold mt-0.5 truncate"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
+        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
           {vendorName}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -1737,44 +1744,106 @@ function Z3Panel({
         </div>
       )}
 
-      {/* Year distribution */}
+      {/* LOS 3 QUE IMPORTAN — highest-risk contracts with editorial signals */}
+      {!isLoading && !isError && top3.length > 0 && (
+        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
+          <div
+            className="font-mono text-[9px] tracking-widest uppercase mb-3"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {lang === 'en' ? 'HIGHEST RISK CONTRACTS' : 'LOS 3 QUE IMPORTAN'}
+          </div>
+          <div className="space-y-3">
+            {top3.map((c) => {
+              const score = Number(c.risk_score ?? 0)
+              const level = getRiskLevelFromScore(score)
+              const fill = RISK_COLORS[level]
+              const isHighlighted = c.id === highlightContractId
+              const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
+                ?? (c.is_direct_award
+                  ? (lang === 'en' ? 'direct award' : 'adjudicación directa')
+                  : (lang === 'en' ? 'open bid' : 'licitación'))
+              const title = (c as ContractListItem & { title?: string }).title
+
+              const signals: string[] = []
+              if (c.is_direct_award) signals.push(lang === 'en' ? 'DIRECT AWARD' : 'ADJ. DIRECTA')
+              if (c.is_single_bid)   signals.push(lang === 'en' ? 'SINGLE BID' : 'OFERTA ÚNICA')
+              if (Number(c.amount_mxn) > 500_000_000) signals.push(lang === 'en' ? 'LARGE CONTRACT' : 'ALTO MONTO')
+
+              return (
+                <div
+                  key={c.id}
+                  className="border-l-2 pl-3 cursor-pointer rounded-r-sm"
+                  style={{
+                    borderColor: fill,
+                    background: isHighlighted ? `${fill}10` : 'transparent',
+                  }}
+                  onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isHighlighted ? `${fill}10` : 'transparent' }}
+                  onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+                >
+                  <div className="flex items-center gap-2 flex-wrap py-0.5">
+                    <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                      {c.contract_year}
+                    </span>
+                    <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color: fill }}>
+                      {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+                    </span>
+                    <span
+                      className="px-1 py-0.5 font-mono text-[8px] uppercase rounded-sm"
+                      style={{ background: `${fill}20`, color: fill, border: `1px solid ${fill}40` }}
+                    >
+                      {level}
+                    </span>
+                  </div>
+                  {signals.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-0.5">
+                      {signals.map((s) => (
+                        <span
+                          key={s}
+                          className="font-mono text-[8px] px-1 rounded-sm"
+                          style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                        >
+                          ↳ {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="font-mono text-[9px] mt-0.5 pb-0.5 line-clamp-1" style={{ color: 'var(--color-text-secondary)' }}>
+                    {title ?? procType}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Activity by year */}
       {yearEntries.length > 0 && (
         <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
           <div
             className="font-mono text-[9px] tracking-widest uppercase mb-2"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            {lang === 'en' ? 'BY YEAR' : 'POR AÑO'}
+            {lang === 'en' ? 'ACTIVITY BY YEAR' : 'ACTIVIDAD POR AÑO'}
           </div>
           <div className="space-y-1">
             {yearEntries.map(([yr, { count, amount }]) => (
               <div key={yr} className="flex items-center gap-2">
-                <span
-                  className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
+                <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
                   {yr}
                 </span>
                 <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--color-border)' }}>
                   <div
                     className="h-full rounded-full"
-                    style={{
-                      width: `${(amount / maxYearAmt) * 100}%`,
-                      background: 'var(--color-accent)',
-                      opacity: 0.55,
-                    }}
+                    style={{ width: `${(amount / maxYearAmt) * 100}%`, background: 'var(--color-accent)', opacity: 0.55 }}
                   />
                 </div>
-                <span
-                  className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
+                <span className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
                   {formatCompactMXN(amount)}
                 </span>
-                <span
-                  className="font-mono text-[9px] w-6 text-right flex-shrink-0 tabular-nums"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
+                <span className="font-mono text-[9px] w-5 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
                   {count}
                 </span>
               </div>
@@ -1783,58 +1852,54 @@ function Z3Panel({
         </div>
       )}
 
-      {/* Top contracts by amount */}
-      {topContracts.length > 0 && (
+      {/* Full list — collapsible */}
+      {byAmount.length > 0 && (
         <div className="px-4 py-3">
-          <div
-            className="font-mono text-[9px] tracking-widest uppercase mb-2"
-            style={{ color: 'var(--color-text-muted)' }}
+          <button
+            type="button"
+            className="w-full flex items-center justify-between py-1 cursor-pointer"
+            onClick={() => setListOpen((o) => !o)}
           >
-            {lang === 'en' ? 'TOP CONTRACTS BY AMOUNT' : 'CONTRATOS POR MONTO'}
-          </div>
-          <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
-            {topContracts.map((c) => {
-              const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
-              const fill = RISK_COLORS[level]
-              const isHighlighted = c.id === highlightContractId
-              const label = (c as ContractListItem & { title?: string }).title
-                ?? (c as ContractListItem & { procedure_type?: string }).procedure_type
-                ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
-              return (
-                <div
-                  key={c.id}
-                  className="flex items-start gap-2 py-2 cursor-pointer transition-colors"
-                  style={isHighlighted ? { background: `${fill}18` } : {}}
-                  onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                  onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
-                  onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-                >
+            <span className="font-mono text-[9px] tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? `ALL ${byAmount.length} CONTRACTS` : `TODOS (${byAmount.length})`}
+            </span>
+            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {listOpen ? '▾' : '▸'}
+            </span>
+          </button>
+          {listOpen && (
+            <div className="mt-2 divide-y" style={{ borderColor: 'var(--color-border)' }}>
+              {byAmount.map((c) => {
+                const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
+                const fill = RISK_COLORS[level]
+                const isHighlighted = c.id === highlightContractId
+                const label = (c as ContractListItem & { title?: string }).title
+                  ?? (c as ContractListItem & { procedure_type?: string | null }).procedure_type
+                  ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
+                return (
                   <div
-                    className="w-1 h-4 rounded-full flex-shrink-0 mt-0.5"
-                    style={{ background: fill }}
-                  />
-                  <span
-                    className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums pt-0.5"
-                    style={{ color: 'var(--color-text-muted)' }}
+                    key={c.id}
+                    className="flex items-start gap-2 py-1.5 cursor-pointer"
+                    style={isHighlighted ? { background: `${fill}18` } : {}}
+                    onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                    onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
+                    onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
                   >
-                    {c.contract_year}
-                  </span>
-                  <span
-                    className="font-mono text-[10px] font-bold w-20 flex-shrink-0 tabular-nums"
-                    style={{ color: fill }}
-                  >
-                    {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-                  </span>
-                  <span
-                    className="flex-1 font-mono text-[9px] line-clamp-2"
-                    style={{ color: 'var(--color-text-secondary)' }}
-                  >
-                    {label}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+                    <div className="w-0.5 h-4 rounded-full flex-shrink-0 mt-0.5" style={{ background: fill }} />
+                    <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums pt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                      {c.contract_year}
+                    </span>
+                    <span className="font-mono text-[10px] font-bold w-20 flex-shrink-0 tabular-nums" style={{ color: fill }}>
+                      {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+                    </span>
+                    <span className="flex-1 font-mono text-[9px] line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
+                      {label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>
