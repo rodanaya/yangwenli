@@ -728,7 +728,7 @@ export default function InstitutionScorecards() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t('filters.search')}
-                  className="w-full rounded-sm border border-border bg-background-elevated pl-8 pr-3 py-1.5 text-sm text-text-primary placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-border transition-colors"
+                  className="w-full rounded-sm border border-border bg-background-elevated pl-8 pr-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-colors"
                   aria-label={t('aria.searchByName')}
                 />
               </div>
