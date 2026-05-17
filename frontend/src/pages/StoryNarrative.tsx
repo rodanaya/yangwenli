@@ -1597,7 +1597,9 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
 }
 
 function MethodologySection({ story }: { story: StoryDef }) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const ls = localizeStory(story, lang)
   const statusCfg = story.status ? STATUS_CONFIG[story.status] : null
 
   return (

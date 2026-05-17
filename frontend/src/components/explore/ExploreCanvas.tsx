@@ -595,7 +595,6 @@ void sectorApi
 // Z1Panel — HTML overlay: editorial institution briefing for a sector
 // ────────────────────────────────────────────────────────────────────────────
 
-type Z0SortKey = 'spend' | 'risk' | 'contracts' | 'critical'
 type Z1SortKey = 'risk' | 'spend' | 'contracts' | 'da_pct' | 'hr_pct' | 'sector_share'
 type Z2SortKey = 'risk' | 'spend' | 'contracts' | 'year'
 type Z3SortKey = 'amount' | 'year' | 'risk'
@@ -660,11 +659,86 @@ function InstRow({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z0Panel — El Panorama: proportional sector intelligence card grid
-// Replaces the SVG floating-icon canvas with data-encoded editorial cards.
-// Card flex-basis is proportional to sector spend share (floored at 8% so tiny
-// sectors stay readable). Sort bar: SPEND (default) / RISK / CONTR / CRITICAL.
+// Z0Panel — El Panorama: territory map
+// Full-bleed squarified treemap. Rectangle area ∝ sector spend (GASTO mode)
+// or weighted-risk contract count (RIESGO mode). No scroll, no header —
+// the map is the interface. Click any territory to drill into Z1 institutions.
+// Squarify algorithm: Bruls, Huizing, van Wijk (2000).
 // ────────────────────────────────────────────────────────────────────────────
+
+interface TmItem { id: number; code: string; value: number }
+interface TmCell extends TmItem { x: number; y: number; w: number; h: number }
+
+function tmAspect(row: TmItem[], cw: number, ch: number, total: number): number {
+  const rowTotal = row.reduce((s, i) => s + i.value, 0)
+  let worst = 0
+  if (cw >= ch) {
+    const sh = (rowTotal / total) * ch
+    for (const item of row) {
+      const iw = (item.value / rowTotal) * cw
+      worst = Math.max(worst, iw > 0 && sh > 0 ? Math.max(iw / sh, sh / iw) : Infinity)
+    }
+  } else {
+    const sw = (rowTotal / total) * cw
+    for (const item of row) {
+      const ih = (item.value / rowTotal) * ch
+      worst = Math.max(worst, sw > 0 && ih > 0 ? Math.max(sw / ih, ih / sw) : Infinity)
+    }
+  }
+  return worst
+}
+
+function squarifyLayout(
+  items: TmItem[], x: number, y: number, w: number, h: number, total: number,
+): TmCell[] {
+  if (items.length === 0) return []
+  if (items.length === 1) return [{ ...items[0], x, y, w, h }]
+  let row: TmItem[] = []
+  let prevWorst = Infinity
+  let splitIdx = 0
+  for (let i = 0; i < items.length; i++) {
+    const next = [...row, items[i]]
+    const worst = tmAspect(next, w, h, total)
+    if (worst <= prevWorst || row.length === 0) { row = next; prevWorst = worst; splitIdx = i + 1 }
+    else break
+  }
+  const rowTotal = row.reduce((s, i) => s + i.value, 0)
+  const results: TmCell[] = []
+  if (w >= h) {
+    const sh = (rowTotal / total) * h
+    let cx = x
+    for (const item of row) {
+      const iw = (item.value / rowTotal) * w
+      results.push({ ...item, x: cx, y, w: iw, h: sh }); cx += iw
+    }
+    const rest = items.slice(splitIdx)
+    if (rest.length > 0) results.push(...squarifyLayout(rest, x, y + sh, w, h - sh, total - rowTotal))
+  } else {
+    const sw = (rowTotal / total) * w
+    let cy = y
+    for (const item of row) {
+      const ih = (item.value / rowTotal) * h
+      results.push({ ...item, x, y: cy, w: sw, h: ih }); cy += ih
+    }
+    const rest = items.slice(splitIdx)
+    if (rest.length > 0) results.push(...squarifyLayout(rest, x + sw, y, w - sw, h, total - rowTotal))
+  }
+  return results
+}
+
+function squarify(items: TmItem[], w: number, h: number): TmCell[] {
+  if (!items.length || w < 1 || h < 1) return []
+  const sorted = [...items].sort((a, b) => b.value - a.value)
+  const total = sorted.reduce((s, i) => s + i.value, 0)
+  return total > 0 ? squarifyLayout(sorted, 0, 0, w, h, total) : []
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
 
 function Z0Panel({
   lang,
@@ -673,181 +747,199 @@ function Z0Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ w: 0, h: 0 })
+  const [mode, setMode] = useState<'spend' | 'risk'>('spend')
+  const [hoverId, setHoverId] = useState<number | null>(null)
+
   const { data: sectorStats, isLoading } = useQuery({
     queryKey: ['explore', 'z0-sector-stats'],
     queryFn: () => sectorApi.getAll(),
     staleTime: 30 * 60 * 1000,
   })
 
-  const [sortKey, setSortKey] = useState<Z0SortKey>('spend')
-  const stats = sectorStats?.data ?? []
-  const totalSpend = sectorStats?.total_value_mxn ?? stats.reduce((s, r) => s + r.total_value_mxn, 0)
-
-  const sorted = useMemo(() => {
-    return [...stats].sort((a, b) => {
-      switch (sortKey) {
-        case 'spend':     return b.total_value_mxn - a.total_value_mxn
-        case 'risk':      return (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0)
-        case 'contracts': return b.total_contracts - a.total_contracts
-        case 'critical':  return b.critical_risk_count - a.critical_risk_count
-        default:          return 0
-      }
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect
+      setDims({ w: Math.floor(width), h: Math.floor(height) })
     })
-  }, [stats, sortKey])
+    obs.observe(el)
+    setDims({ w: Math.floor(el.offsetWidth), h: Math.floor(el.offsetHeight) })
+    return () => obs.disconnect()
+  }, [])
+
+  const stats = sectorStats?.data ?? []
+  const totalSpend = sectorStats?.total_value_mxn ?? 0
+
+  const tmItems = useMemo(
+    (): TmItem[] => stats.map((s) => ({
+      id: s.sector_id,
+      code: s.sector_code,
+      value: mode === 'spend'
+        ? s.total_value_mxn
+        : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
+    })),
+    [stats, mode],
+  )
+
+  const cells = useMemo(() => squarify(tmItems, dims.w, dims.h), [tmItems, dims])
 
   return (
     <div
-      className="absolute inset-0 z-[5] overflow-y-auto"
-      data-scroll-panel="true"
-      style={{ background: 'var(--color-background)' }}
+      ref={containerRef}
+      className="absolute inset-0 z-[5]"
+      style={{ background: 'var(--color-background)', overflow: 'hidden' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div
-        className="sticky top-0 z-[6] px-4 py-3 border-b flex items-start justify-between gap-3 flex-wrap"
-        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}
-      >
-        <div>
-          <div className="font-mono text-[9px] tracking-[0.18em] uppercase font-bold" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'en' ? 'EL PANORAMA · SECTOR INTELLIGENCE' : 'EL PANORAMA · INTELIGENCIA SECTORIAL'}
-          </div>
-          <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            {isLoading
-              ? '…'
-              : `12 ${lang === 'en' ? 'sectors · ' : 'sectores · '}${formatCompactMXN(totalSpend)} ${lang === 'en' ? 'validated spend' : 'gasto validado'}`}
-          </div>
-        </div>
-        <div className="flex items-center gap-1 flex-wrap flex-shrink-0">
-          {(['spend', 'risk', 'contracts', 'critical'] as Z0SortKey[]).map((k) => {
-            const label =
-              k === 'spend'     ? (lang === 'en' ? 'SPEND'    : 'GASTO')
-              : k === 'risk'    ? (lang === 'en' ? 'RISK'     : 'RIESGO')
-              : k === 'contracts' ? (lang === 'en' ? 'CONTR.'  : 'CONTR.')
-              :                   (lang === 'en' ? 'CRITICAL' : 'CRÍTICO')
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setSortKey(k)}
-                className="px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider"
-                style={{
-                  background: sortKey === k ? 'var(--color-accent)' : 'var(--color-border)',
-                  color: sortKey === k ? '#fff' : 'var(--color-text-muted)',
-                  borderRadius: 2,
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.1s',
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {isLoading && (
-        <div className="py-16 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'Loading sector intelligence…' : 'Cargando…'}
+        <div
+          className="flex h-full items-center justify-center font-mono text-[10px]"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {lang === 'en' ? 'loading…' : 'cargando…'}
         </div>
       )}
 
-      {/* Proportional card grid */}
-      {!isLoading && stats.length > 0 && (
-        <div
-          className="flex flex-wrap"
-          style={{ gap: 2, padding: '4px', alignContent: 'flex-start' }}
-        >
-          {sorted.map((s) => {
-            const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 8
-            const basis = Math.max(8, spendPct)
-            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-            const totalRisk = s.critical_risk_count + s.high_risk_count + s.medium_risk_count + s.low_risk_count
-            const avgRiskPct = Math.round((s.avg_risk_score ?? 0) * 100)
-            const sectorLabel = getSectorName(s.sector_code, lang)
+      {!isLoading && cells.map((cell) => {
+        const s = stats.find((x) => x.sector_id === cell.id)
+        if (!s) return null
+        const hovered = hoverId === cell.id
+        const color = SECTOR_COLORS[cell.code] ?? '#64748b'
+        const minDim = Math.min(cell.w, cell.h)
+        const pad = minDim > 80 ? 10 : 6
+        const nameFontSize = Math.min(26, Math.max(10, minDim * 0.12))
+        const codeFontSize = Math.min(10, Math.max(7, minDim * 0.044))
+        const spendFontSize = Math.max(8, Math.min(11, minDim * 0.048))
+        const sectorLabel = getSectorName(cell.code, lang)
+        const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
 
-            return (
-              <div
-                key={s.sector_id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
-                style={{
-                  flexBasis: `calc(${basis}% - 4px)`,
-                  flexGrow: 1,
-                  flexShrink: 0,
-                  minWidth: 128,
-                  minHeight: 130,
-                  borderLeft: `3px solid ${color}`,
-                  background: 'var(--color-background-card)',
-                  padding: '10px 12px 8px',
-                  cursor: 'pointer',
-                  transition: 'box-shadow 0.15s',
-                  boxSizing: 'border-box',
-                }}
-                onClick={() => dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 14px rgba(0,0,0,0.10)' }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '' }}
-              >
-                {/* Kicker */}
-                <div className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color }}>
-                  {s.sector_code}
-                </div>
-                {/* Sector name */}
-                <div className="font-mono text-[10px] font-medium leading-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                  {sectorLabel}
-                </div>
-                {/* Spend — Playfair Italic 800 */}
-                <div
-                  className="tabular-nums mb-0.5"
-                  style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontWeight: 800,
-                    fontStyle: 'italic',
-                    fontSize: 'clamp(13px, 1.8vw, 20px)',
-                    lineHeight: 1.1,
-                    color,
-                  }}
-                >
-                  {formatCompactMXN(s.total_value_mxn)}
-                </div>
-                {/* % of total spend */}
-                <div className="font-mono text-[8px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                  {spendPct.toFixed(1)}% {lang === 'en' ? 'of spend' : 'del gasto'}
-                </div>
-                {/* Risk distribution bar */}
-                {totalRisk > 0 && (
-                  <div className="h-1.5 flex overflow-hidden rounded-sm mb-1.5" style={{ gap: 1 }}>
-                    {s.critical_risk_count > 0 && (
-                      <div style={{ flex: s.critical_risk_count, background: RISK_COLORS.critical, minWidth: 2 }} />
-                    )}
-                    {s.high_risk_count > 0 && (
-                      <div style={{ flex: s.high_risk_count, background: RISK_COLORS.high, minWidth: 2 }} />
-                    )}
-                    {s.medium_risk_count > 0 && (
-                      <div style={{ flex: s.medium_risk_count, background: RISK_COLORS.medium, minWidth: 2 }} />
-                    )}
-                    {s.low_risk_count > 0 && (
-                      <div style={{ flex: s.low_risk_count, background: 'var(--color-border)', minWidth: 2 }} />
-                    )}
-                  </div>
-                )}
-                {/* Risk summary */}
-                <div className="flex items-center gap-2 flex-wrap font-mono text-[8px]">
-                  {s.critical_risk_count > 0 && (
-                    <span className="font-bold" style={{ color: RISK_COLORS.critical }}>
-                      {s.critical_risk_count} {lang === 'en' ? 'crit' : 'crít'}
-                    </span>
-                  )}
-                  <span style={{ color: 'var(--color-text-muted)' }}>{avgRiskPct} RS</span>
-                  <span style={{ color: 'var(--color-text-muted)' }}>{(s.direct_award_pct ?? 0).toFixed(0)}% DA</span>
-                </div>
+        return (
+          <div
+            key={cell.id}
+            role="button"
+            tabIndex={0}
+            aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
+            style={{
+              position: 'absolute',
+              left: cell.x + 1,
+              top: cell.y + 1,
+              width: cell.w - 2,
+              height: cell.h - 2,
+              background: hexToRgba(color, 0.06),
+              borderLeft: `4px solid ${color}`,
+              boxSizing: 'border-box',
+              cursor: 'pointer',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: pad,
+              transition: 'filter 0.12s',
+              filter: hovered ? 'brightness(1.08)' : undefined,
+            }}
+            onClick={() => dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })}
+            onKeyDown={(e) => { if (e.key === 'Enter') dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code }) }}
+            onMouseEnter={() => setHoverId(cell.id)}
+            onMouseLeave={() => setHoverId(null)}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
+              <span style={{
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: codeFontSize,
+                fontWeight: 700,
+                color,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.18em',
+                lineHeight: 1,
+              }}>
+                {cell.code}
+              </span>
+              {s.critical_risk_count > 0 && minDim > 40 && (
+                <span style={{
+                  fontFamily: 'var(--font-family-mono, monospace)',
+                  fontSize: codeFontSize,
+                  fontWeight: 700,
+                  color: RISK_COLORS.critical,
+                  lineHeight: 1,
+                  whiteSpace: 'nowrap' as const,
+                }}>
+                  ◆{s.critical_risk_count}
+                </span>
+              )}
+            </div>
+            {minDim > 48 && (
+              <div style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontWeight: 800,
+                fontStyle: 'italic',
+                fontSize: nameFontSize,
+                color,
+                lineHeight: 1.15,
+                overflow: 'hidden',
+                flexGrow: 1,
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                <span style={{ overflow: 'hidden' }}>{sectorLabel}</span>
               </div>
-            )
-          })}
+            )}
+            {minDim > 56 && (
+              <div style={{
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: spendFontSize,
+                color: 'var(--color-text-muted)',
+                lineHeight: 1,
+                flexShrink: 0,
+              }}>
+                {formatCompactMXN(s.total_value_mxn)}
+                {minDim > 100 && (
+                  <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {!isLoading && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 14,
+            right: 14,
+            zIndex: 10,
+            display: 'flex',
+            gap: 2,
+            padding: 3,
+            background: 'var(--color-background)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 4,
+          }}
+        >
+          {(['spend', 'risk'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setMode(m) }}
+              style={{
+                fontFamily: 'var(--font-family-mono, monospace)',
+                fontSize: 8,
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase' as const,
+                padding: '3px 8px',
+                background: mode === m ? 'var(--color-accent)' : 'transparent',
+                color: mode === m ? '#fff' : 'var(--color-text-muted)',
+                border: 'none',
+                borderRadius: 2,
+                cursor: 'pointer',
+              }}
+            >
+              {m === 'spend' ? (lang === 'en' ? 'SPEND' : 'GASTO') : (lang === 'en' ? 'RISK' : 'RIESGO')}
+            </button>
+          ))}
         </div>
       )}
     </div>
