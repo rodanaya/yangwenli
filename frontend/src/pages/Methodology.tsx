@@ -725,7 +725,7 @@ export function Methodology() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
                 <span className="text-text-secondary">RUBLI</span>
               </span>
               <span className="text-text-primary">·</span>

@@ -868,7 +868,7 @@ export function Sectors() {
                           const sbPct = cat.single_bid_pct ?? 0
                           const sbDotClass =
                             sbPct > 25
-                              ? 'bg-red-500'
+                              ? 'bg-risk-critical'
                               : sbPct >= 15
                                 ? 'bg-amber-500'
                                 : 'bg-zinc-400'

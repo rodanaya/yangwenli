@@ -628,7 +628,7 @@ function MostExtremeCallout({
       aria-label={lang === 'en' ? 'The most extreme contract' : 'El contrato más extremo'}
     >
       {/* Red accent bar */}
-      <div className="absolute top-0 left-0 h-full w-1 bg-red-500" aria-hidden="true" />
+      <div className="absolute top-0 left-0 h-full w-1 bg-risk-critical" aria-hidden="true" />
       <div className="flex items-start gap-3 mb-3">
         <Flame className="w-5 h-5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>
@@ -1404,7 +1404,7 @@ function RiskLevelPriceGap({
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+                <span className="w-2 h-2 rounded-full bg-risk-critical" aria-hidden="true" />
                 <span className="text-xs font-semibold text-text-secondary">
                   {lang === 'en' ? 'Critical + High risk' : 'Crítico + Alto riesgo'}
                 </span>
@@ -1624,7 +1624,7 @@ export default function PriceIntelligence() {
         {/* Dateline strip — newspaper masthead grammar */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>

@@ -486,7 +486,7 @@ function RiskEvolution({
         <div
           className={cn(
             'h-2 w-2 rounded-full flex-shrink-0 mt-1.5',
-            isAboveOECD ? 'bg-red-500 animate-pulse' : 'bg-text-muted',
+            isAboveOECD ? 'bg-risk-critical animate-pulse' : 'bg-text-muted',
           )}
         />
         <div>
@@ -683,7 +683,7 @@ function TopVendorsTable({
               className={cn(
                 'w-full grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 items-center px-3 py-3 text-left transition-colors rounded cursor-pointer',
                 'hover:bg-background-elevated/40',
-                rank === 1 && 'bg-red-500/5',
+                rank === 1 && 'bg-risk-critical/5',
               )}
             >
               <span

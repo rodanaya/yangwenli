@@ -929,7 +929,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical">
               {t('featuredLabel')}
             </span>
-            <span className="h-px w-8 bg-red-500/50" />
+            <span className="h-px w-8 bg-risk-critical/50" />
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
               {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
             </span>
@@ -1249,7 +1249,7 @@ function AriaLiveTicker() {
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical">
             LIVE
           </span>
@@ -1446,7 +1446,7 @@ export default function Journalists() {
         <header className="pt-14 sm:pt-20 pb-10">
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">
                 RUBLI
               </span>

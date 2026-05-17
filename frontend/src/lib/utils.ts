@@ -415,8 +415,8 @@ export function getAnomalyInfo(mahalanobisDistance: number | undefined | null): 
   if (pValue < 0.01) {
     return {
       label: 'Anomalous',
-      dotClass: 'bg-red-500',
-      badgeClass: 'bg-red-500/20 text-red-400 border border-red-500/30',
+      dotClass: 'bg-risk-critical',
+      badgeClass: 'bg-risk-critical/20 text-risk-critical border border-risk-critical/30',
     }
   }
   if (pValue < 0.05) {

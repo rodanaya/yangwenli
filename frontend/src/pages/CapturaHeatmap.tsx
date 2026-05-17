@@ -1077,7 +1077,7 @@ export default function CapturaHeatmap() {
             </div>
             {highCaptureCount > 0 && (
               <div className="flex items-center gap-2 text-xs text-risk-critical">
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-risk-critical animate-pulse shrink-0" />
                 <span className="font-mono tabular-nums">
                   {highCaptureCount} {t('stats.highCaptureFlows')}
                 </span>
