@@ -236,7 +236,7 @@ function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
   const filled = Math.round(value * dots)
   const w = dots * (size + gap) - gap
   return (
-    <svg width={w} height={size} style={{ display: 'block' }}>
+    <svg aria-hidden="true" width={w} height={size} style={{ display: 'block' }}>
       {Array.from({ length: dots }, (_, i) => (
         <circle
           key={i}

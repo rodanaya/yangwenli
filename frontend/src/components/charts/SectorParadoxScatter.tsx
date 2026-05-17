@@ -85,11 +85,11 @@ export function SectorParadoxScatter() {
       <div className="flex items-center gap-4 text-xs text-text-muted font-mono">
         <span className="font-medium">Bubble size = total contract value</span>
         <div className="flex items-center gap-1.5">
-          <svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="currentColor" fillOpacity={0.4} /></svg>
+          <svg aria-hidden="true" width="14" height="14"><circle cx="7" cy="7" r="5" fill="currentColor" fillOpacity={0.4} /></svg>
           <span>~40B MXN</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <svg width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity={0.4} /></svg>
+          <svg aria-hidden="true" width="24" height="24"><circle cx="12" cy="12" r="10" fill="currentColor" fillOpacity={0.4} /></svg>
           <span>~3T MXN</span>
         </div>
       </div>

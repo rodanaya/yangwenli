@@ -33,7 +33,7 @@
  *     finding={{ label: 'FINDING', body: '…' }}
  *     footer="Source: COMPRANET 2002–2025"
  *   >
- *     <svg viewBox="0 0 ..." />
+ *     <svg aria-hidden="true" viewBox="0 0 ..." />
  *   </EditorialChartFrame>
  *
  * Migration is opt-in — existing charts keep working. New charts SHOULD

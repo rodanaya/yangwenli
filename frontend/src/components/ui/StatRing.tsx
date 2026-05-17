@@ -14,7 +14,7 @@ export function StatRing({ value, label, sublabel, color = 'var(--color-accent)'
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+        <svg aria-hidden="true" width={size} height={size} className="-rotate-90">
           {/* Track */}
           <circle
             cx={size / 2} cy={size / 2} r={radius}

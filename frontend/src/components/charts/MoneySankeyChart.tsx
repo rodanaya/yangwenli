@@ -171,7 +171,7 @@ export function MoneySankeyChart({ flows, height = 350 }: Props) {
 
   return (
     <div ref={containerRef} className="relative" style={{ height }}>
-      <svg ref={svgRef} width={containerWidth} height={height}>
+      <svg aria-hidden="true" ref={svgRef} width={containerWidth} height={height}>
         {/* Links */}
         <g>
           {sankeyData.links.map((link, i) => {

@@ -143,7 +143,7 @@ function SexenioDotColumns({
       aria-label="Dot matrix chart showing contract value by presidential administration"
       className="flex items-center justify-center"
     >
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
         {data.map((d, colIdx) => {
           const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * ROWS)) : 0
           const cx = offsetX + colIdx * (COL_W + COL_GAP) + COL_W / 2
@@ -246,7 +246,7 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
       role="img"
       aria-label="Dot matrix chart showing contract value by subcategory"
     >
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
         {data.map((d, rowIdx) => {
           const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * DOTS)) : 0
           const cy = 12 + rowIdx * ROW_H + ROW_H / 2

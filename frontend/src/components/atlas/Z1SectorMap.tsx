@@ -77,7 +77,7 @@ export const Z1SectorMap = memo(function Z1SectorMap({
   if (isLoading) {
     return (
       <div className="w-full" style={{ aspectRatio: `${SVG_W} / ${SVG_H}` }}>
-        <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto">
+        <svg aria-hidden="true" viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto">
           <text
             x={SVG_W / 2}
             y={SVG_H / 2}
@@ -96,7 +96,7 @@ export const Z1SectorMap = memo(function Z1SectorMap({
   if (isError || !data || data.institutions.length === 0) {
     return (
       <div className="w-full" style={{ aspectRatio: `${SVG_W} / ${SVG_H}` }}>
-        <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto">
+        <svg aria-hidden="true" viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto">
           <text
             x={SVG_W / 2}
             y={SVG_H / 2}

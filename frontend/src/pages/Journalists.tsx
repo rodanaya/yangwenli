@@ -768,7 +768,7 @@ function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
       >
         {/* Mini constellation preview */}
         <div className="hidden md:block flex-shrink-0 w-[120px] h-[80px] opacity-70" aria-hidden="true">
-          <svg viewBox="0 0 120 80" className="w-full h-full">
+          <svg aria-hidden="true" viewBox="0 0 120 80" className="w-full h-full">
             {/* Background dots grid */}
             {Array.from({ length: 24 }).map((_, i) => (
               <circle key={i} cx={10 + (i % 6) * 20} cy={10 + Math.floor(i / 6) * 20} r={1} fill="var(--color-accent)" opacity={0.2} />

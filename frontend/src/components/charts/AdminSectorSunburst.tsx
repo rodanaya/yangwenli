@@ -112,7 +112,7 @@ export function AdminSectorSunburst() {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <svg
+      <svg aria-hidden="true"
         viewBox={`0 0 ${totalW} ${totalH}`}
         className="w-full"
         style={{ maxWidth: 380 }}

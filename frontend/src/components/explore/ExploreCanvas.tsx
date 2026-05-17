@@ -568,7 +568,7 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
           </span>
         </button>
       )}
-      <svg
+      <svg aria-hidden="true"
         viewBox={`0 0 ${SVG_W} ${SVG_H}`}
         className="w-full h-full"
         preserveAspectRatio="xMidYMid slice"

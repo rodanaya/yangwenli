@@ -381,7 +381,7 @@ const CoefficientChart = memo(function CoefficientChart() {
 
   return (
     <div role="img" aria-label={t('dataLabels.ariaModelCoefficients')}>
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
+      <svg aria-hidden="true" viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {/* Zero reference line */}
         <line
           x1={MD_LABEL_W + ZERO_DOT * MD_DOT_GAP + MD_DOT_R}

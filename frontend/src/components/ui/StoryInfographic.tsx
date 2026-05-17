@@ -217,7 +217,7 @@ function RingChart({ data, labels, active }: { data: number[]; labels: string[];
 
   return (
     <div className="flex items-center gap-4">
-      <svg width={size} height={size} className="shrink-0">
+      <svg aria-hidden="true" width={size} height={size} className="shrink-0">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
         {segments.map((seg, i) => (
           <motion.circle

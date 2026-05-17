@@ -1226,7 +1226,7 @@ function RiskPill({ score }: { score: number }) {
           {(score * 100).toFixed(1)}%
         </span>
       </div>
-      <svg width="100%" height={6} viewBox={`0 0 ${N * 5} 6`} preserveAspectRatio="none">
+      <svg aria-hidden="true" width="100%" height={6} viewBox={`0 0 ${N * 5} 6`} preserveAspectRatio="none">
         {Array.from({ length: N }, (_, i) => (
           <rect
             key={i}

@@ -699,7 +699,7 @@ function PairedDotStrips({
 
   return (
     <div style={{ minHeight: 260 }}>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
         <title>
           Paired dot strips comparing {nameA} and {nameB} across risk levels
         </title>
