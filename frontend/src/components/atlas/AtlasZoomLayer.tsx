@@ -26,6 +26,7 @@
  */
 
 import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ConcentrationConstellation } from '@/components/charts/ConcentrationConstellation'
 import type {
   ConstellationMode,
@@ -198,8 +199,12 @@ export function AtlasZoomLayer({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [userZoom, setUserZoom] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
+  const isDraggingCommittedRef = useRef(false)
   const dragStateRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+
+  // Distance threshold — below this a mousedown+mouseup sequence is a click, not a drag
+  const DRAG_THRESHOLD = 6 // px in screen space
 
   // Reset pan/zoom whenever the active cluster changes (or zoom exits)
   useEffect(() => {
@@ -220,33 +225,43 @@ export function AtlasZoomLayer({
     if (!isZoomed) return
     // Don't start drag on right-click or modifier keys
     if (e.button !== 0 || e.shiftKey) return
-    e.preventDefault()
-    e.stopPropagation()
+    // Record start position but do NOT preventDefault/stopPropagation yet.
+    // The drag is committed in onMove only after DRAG_THRESHOLD is exceeded,
+    // so plain clicks on vendor dots pass through normally.
+    isDraggingCommittedRef.current = false
     dragStateRef.current = {
       startX: e.clientX,
       startY: e.clientY,
       baseX: panOffset.x,
       baseY: panOffset.y,
     }
-    setIsDragging(true)
   }, [isZoomed, panOffset])
 
   // Window-level mousemove/mouseup so dragging continues if cursor leaves the
-  // wrapper (Mapbox-style — drag doesn't break when you cross the chart edge)
+  // wrapper (Mapbox-style — drag doesn't break when you cross the chart edge).
+  // Only attaches when dragStateRef has a pending start (set by handlePanMouseDown).
+  // Drag is committed only after the pointer moves > DRAG_THRESHOLD px.
   useEffect(() => {
-    if (!isDragging) return
     const onMove = (e: MouseEvent) => {
       const drag = dragStateRef.current
       if (!drag) return
+      const dx = e.clientX - drag.startX
+      const dy = e.clientY - drag.startY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (!isDraggingCommittedRef.current) {
+        if (dist < DRAG_THRESHOLD) return // still below threshold — treat as click
+        // Cross the threshold — commit to drag
+        isDraggingCommittedRef.current = true
+        setIsDragging(true)
+      }
       const scale = screenToSvgScale()
       // Pan moves in original SVG coords; we want screen-pixel feel, so
       // multiply the screen delta by SVG/screen ratio
-      const dx = (e.clientX - drag.startX) * scale
-      const dy = (e.clientY - drag.startY) * scale
-      setPanOffset({ x: drag.baseX + dx, y: drag.baseY + dy })
+      setPanOffset({ x: drag.baseX + dx * scale, y: drag.baseY + dy * scale })
     }
     const onUp = () => {
       dragStateRef.current = null
+      isDraggingCommittedRef.current = false
       setIsDragging(false)
     }
     window.addEventListener('mousemove', onMove)
@@ -255,7 +270,7 @@ export function AtlasZoomLayer({
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
-  }, [isDragging, screenToSvgScale])
+  }, [screenToSvgScale])
 
   // Wheel zoom — only active when zoomed. Scrolling up zooms in.
   // Attached to window (not wrapperRef) so ClusterDetailPanel's fixed z-50
@@ -311,8 +326,8 @@ export function AtlasZoomLayer({
   // Click-outside handler — dispatches escape-zoom when zoomed.
   // Suppress when the user just finished a drag (so panning doesn't escape).
   const handleFieldClick = () => {
+    if (isDraggingCommittedRef.current) return
     if (isDragging) return
-    if (dragStateRef.current) return
     if (isZoomed) {
       dispatch({ type: 'escape-zoom' })
     }
@@ -362,15 +377,20 @@ export function AtlasZoomLayer({
             font-size: 3.5px !important;
           }
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
-            display: none;
+            font-size: 5px !important;
+            font-weight: 600 !important;
           }
           /* Dim the constellation lattice when zoomed so the vendor-level
              dots overlay (which IS more granular detail) dominates the view.
              User report: "instead of giving me a closer look and seeing
              more dots it just zooms in." Vendor overlay r-values bumped
-             3-4× alongside this rule. */
+             3-4× alongside this rule. Named vendor circles are exempted
+             so the large outlier dots remain identifiable anchors. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle {
             opacity: 0.18;
+          }
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle[data-named-vendor="true"] {
+            opacity: 1 !important;
           }
         `}</style>
       )}
@@ -646,6 +666,7 @@ function VendorDotOverlay({
   selection,
   dispatch,
 }: VendorDotOverlayProps) {
+  const navigate = useNavigate()
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [lasso, setLasso] = useState<LassoRect | null>(null)
   const isDraggingRef = useRef(false)
@@ -799,6 +820,7 @@ function VendorDotOverlay({
                   e.stopPropagation()
                   if (!dot.isMock) {
                     dispatch({ type: 'toggle-vendor-selection', id: dot.id })
+                    navigate(`/thread/${dot.id}`)
                   }
                 }}
                 onMouseEnter={() => setHoveredId(dot.id)}

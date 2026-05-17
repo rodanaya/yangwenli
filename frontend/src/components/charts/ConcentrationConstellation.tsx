@@ -935,6 +935,7 @@ export function ConcentrationConstellation({
                   fillOpacity={dotOpacity}
                   stroke="var(--color-background, #faf9f6)"
                   strokeWidth={0.8}
+                  data-named-vendor="true"
                 />
                 {/* Vendor name label — 9px mono. atlas-named-vendor-label
                     class lets AtlasZoomLayer hide these when zoomed (the
