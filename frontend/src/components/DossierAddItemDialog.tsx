@@ -163,7 +163,7 @@ export function DossierAddItemDialog({
                     ) : isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin text-accent shrink-0" />
                     ) : (
-                      <Users className="h-4 w-4 text-text-muted shrink-0" />
+                      <Users className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
                     )}
                     <span className="flex-1 truncate font-medium text-text-primary">
                       {vendor.name}

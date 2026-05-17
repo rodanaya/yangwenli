@@ -1041,7 +1041,7 @@ function CommunityDossier({
               onClick={(e) => e.stopPropagation()}
             >
               {isEs ? 'Cola ARIA' : 'ARIA Queue'}
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           )}
         </div>

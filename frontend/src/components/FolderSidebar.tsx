@@ -63,7 +63,7 @@ export function FolderSidebar({
             : 'text-text-secondary hover:bg-background-elevated'
         )}
       >
-        <FolderOpen className="h-3.5 w-3.5" />
+        <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="flex-1 text-left">{t('folderSidebar.allItems')}</span>
       </button>
 

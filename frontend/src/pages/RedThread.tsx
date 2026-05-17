@@ -826,7 +826,7 @@ export default function RedThread() {
   if (vendorError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
-        <AlertTriangle className="h-8 w-8 text-risk-critical" />
+        <AlertTriangle className="h-8 w-8 text-risk-critical" aria-hidden="true" />
         <div>
           <p className="text-text-primary font-medium mb-1">{t('errors.loadFailed')}</p>
           <p className="text-text-muted text-sm">

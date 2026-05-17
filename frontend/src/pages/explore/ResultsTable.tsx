@@ -544,7 +544,7 @@ function InlineDossierTrigger({
                     ) : isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin text-accent shrink-0" />
                     ) : (
-                      <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} />
+                      <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} aria-hidden="true" />
                     )}
                     <span className="truncate text-text-secondary">{d.name}</span>
                   </button>

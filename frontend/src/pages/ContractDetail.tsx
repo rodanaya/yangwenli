@@ -618,7 +618,7 @@ export default function ContractDetail() {
                       Investigation thread
                     </span>
                   </div>
-                  <ChevronRight className="h-3 w-3" />
+                  <ChevronRight className="h-3 w-3" aria-hidden="true" />
                 </Link>
               )}
             </div>

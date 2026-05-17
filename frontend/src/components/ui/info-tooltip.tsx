@@ -49,7 +49,7 @@ export function InfoTooltip({ termKey, label, size = 14, className, side = 'top'
           aria-label={title}
         >
           {label && <span className="text-xs font-medium">{label}</span>}
-          <HelpCircle className="shrink-0" size={size} />
+          <HelpCircle className="shrink-0" size={size} aria-hidden="true" />
         </button>
       </TooltipTrigger>
       <TooltipContent side={side} className="max-w-xs p-3">

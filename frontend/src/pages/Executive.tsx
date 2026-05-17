@@ -1768,7 +1768,7 @@ export default function Executive() {
         <footer className="pt-8 border-t border-border">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono text-text-muted mb-4">
             <span className="inline-flex items-center gap-1.5">
-              <Shield className="h-3 w-3" />
+              <Shield className="h-3 w-3" aria-hidden="true" />
               AUC 0.785
             </span>
             <span>·</span>

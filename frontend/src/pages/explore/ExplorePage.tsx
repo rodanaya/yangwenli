@@ -265,7 +265,7 @@ export function ExplorePage() {
               )}
               aria-pressed={filters.entityType === 'vendor'}
             >
-              <Users className="h-3 w-3" />
+              <Users className="h-3 w-3" aria-hidden="true" />
               {t('page.entityToggle.vendors')}
             </button>
             <button

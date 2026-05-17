@@ -1765,7 +1765,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
                 </p>
                 <p className="text-xs text-text-muted">{link.description}</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
+              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-text-secondary transition-colors shrink-0" aria-hidden="true" />
             </Link>
           ))}
         </div>

@@ -217,7 +217,7 @@ function GeneralTab() {
             aria-label={t('general.dataInfo.refreshLabel')}
             className="p-2 rounded-sm text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
         <div className="px-6 py-4 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>

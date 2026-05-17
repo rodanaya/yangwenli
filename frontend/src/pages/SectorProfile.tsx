@@ -1095,7 +1095,7 @@ export function SectorProfile() {
         <p className="text-text-muted mb-4">{t('profile.sectorNotFoundMsg')}</p>
         <Link to="/sectors">
           <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             {t('profile.backToSectors')}
           </Button>
         </Link>

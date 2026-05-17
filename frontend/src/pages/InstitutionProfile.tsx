@@ -475,7 +475,7 @@ export function InstitutionProfile() {
         </p>
         <Link to="/institutions/health">
           <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             {t('profile.backToInstitutions')}
           </Button>
         </Link>

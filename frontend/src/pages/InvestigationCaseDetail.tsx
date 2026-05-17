@@ -367,7 +367,7 @@ export function InvestigationCaseDetail() {
                 padding: 0,
               }}
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3 w-3" aria-hidden="true" />
               {t('caseDetail.breadcrumb')}
             </button>
             <span style={{ color: INK_FAINT, fontSize: 10 }}>/</span>
@@ -942,7 +942,7 @@ export function InvestigationCaseDetail() {
                           color: INK_DIM,
                         }}
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
                         {t('caseDetail.contractsLabel')}
                       </Link>
                       <Link
@@ -973,7 +973,7 @@ export function InvestigationCaseDetail() {
         {detail.questions.length > 0 && (
           <section>
             <div className="flex items-baseline gap-2 mb-4">
-              <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} />
+              <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.investigationQuestions')}
               </h2>
@@ -1218,7 +1218,7 @@ export function InvestigationCaseDetail() {
                           }}
                         >
                           {ev.source_title || t('caseDetail.untitledSource')}
-                          <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
+                          <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" aria-hidden="true" />
                         <span className="sr-only"> (opens in new tab)</span></a>
                       ) : (
                         <p
@@ -1482,7 +1482,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <HelpCircle className="h-3.5 w-3.5" />
+                <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 Inconclusive
               </button>
               {detail.validation_status === 'corroborated' && (

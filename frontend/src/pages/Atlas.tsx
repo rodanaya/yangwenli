@@ -452,7 +452,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5">
-                  <NotebookPen className="h-3 w-3" />
+                  <NotebookPen className="h-3 w-3" aria-hidden="true" />
                   {lang === 'en' ? 'YOUR NOTES' : 'TUS NOTAS'}
                 </div>
                 {note && (
@@ -1721,7 +1721,7 @@ export default function Atlas() {
             aria-expanded={storiesMenuOpen}
             aria-label={lang === 'en' ? 'Open stories menu' : 'Abrir menú de historias'}
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             {activeStory
               ? (lang === 'en' ? activeStory.title.en : activeStory.title.es)
               : (lang === 'en' ? '▶ Stories' : '▶ Historias')
@@ -1787,7 +1787,7 @@ export default function Atlas() {
                   className="w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
                   style={{ background: 'var(--color-border)', color: 'var(--color-risk-critical)' }}
                 >
-                  <Square className="h-3 w-3 inline mr-1.5" />
+                  <Square className="h-3 w-3 inline mr-1.5" aria-hidden="true" />
                   {lang === 'en' ? 'Close story' : 'Cerrar historia'}
                 </button>
               )}
@@ -1809,7 +1809,7 @@ export default function Atlas() {
                 className="w-full text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.1em] font-bold text-text-secondary hover:bg-background-elevated/40 transition-colors flex items-center justify-between border-t border-border/50"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <FileText className="h-3 w-3" />
+                  <FileText className="h-3 w-3" aria-hidden="true" />
                   {(() => {
                     if (mode === 'patterns' && pinnedCode && /^P[1-7]$/.test(pinnedCode)) {
                       return lang === 'en'
@@ -1926,7 +1926,7 @@ export default function Atlas() {
               style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Personal notes — saved in your browser' : 'Notas personales — guardadas en tu navegador'}
             >
-              <NotebookPen className="h-3 w-3" />
+              <NotebookPen className="h-3 w-3" aria-hidden="true" />
               <span className="font-bold">{notesCount}</span>
               <span className="opacity-70">{lang === 'en' ? (notesCount === 1 ? 'note' : 'notes') : 'notas'}</span>
             </div>
@@ -2100,7 +2100,7 @@ export default function Atlas() {
                       aria-label={lang === 'en' ? 'Read the full long-form investigation in a new tab' : 'Leer la investigación completa en una pestaña nueva'}
                       title={lang === 'en' ? 'Read full investigation' : 'Leer investigación completa'}
                     >
-                      <FileText className="h-2.5 w-2.5" />
+                      <FileText className="h-2.5 w-2.5" aria-hidden="true" />
                       <span className="hidden sm:inline">{lang === 'en' ? 'FULL' : 'COMPLETA'}</span>
                     </Link>
                   )}
@@ -2144,7 +2144,7 @@ export default function Atlas() {
                     aria-label={lang === 'en' ? 'Next chapter' : 'Siguiente capítulo'}
                     title={lang === 'en' ? 'Next' : 'Siguiente'}
                   >
-                    <SkipForward className="h-3.5 w-3.5 text-text-muted" />
+                    <SkipForward className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => { setActiveStory(null); setActiveChapter(0); setStoryPlaying(false); setStoryEnded(false) }}
