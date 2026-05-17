@@ -590,6 +590,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
             style={{ color: reviewGlyph.color }}
             aria-label={t('reviewPopover.updateTitle')}
+            aria-expanded={reviewOpen}
             title={`${isEs ? reviewGlyph.titleEs : reviewGlyph.titleEn} — ${t('reviewPopover.updateTitle')}`}
           >
             {reviewGlyph.char}
