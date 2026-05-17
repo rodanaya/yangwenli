@@ -30,6 +30,7 @@ import {
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { formatEntityName } from '@/lib/entity/format'
+import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
   getPinAnnotation,
   useExploreState,
@@ -1166,6 +1167,11 @@ void sectorApi
 // Z1Panel — HTML overlay: editorial institution briefing for a sector
 // ────────────────────────────────────────────────────────────────────────────
 
+type Z1SortKey = 'risk' | 'spend' | 'contracts' | 'da_pct' | 'hr_pct' | 'sector_share'
+type Z2SortKey = 'risk' | 'spend' | 'contracts' | 'year'
+type Z3SortKey = 'amount' | 'year' | 'risk'
+type SortOrder = 'asc' | 'desc'
+
 function tierMark(risk: number): { glyph: string; color: string; label: string } {
   if (risk >= 0.60) return { glyph: '◆', color: RISK_COLORS.critical, label: 'T1' }
   if (risk >= 0.40) return { glyph: '◆', color: RISK_COLORS.high,     label: 'T2' }
@@ -1173,73 +1179,54 @@ function tierMark(risk: number): { glyph: string; color: string; label: string }
   return               { glyph: '●', color: '#71717a',                label: 'T4' }
 }
 
-function InstCard({
+function InstRow({
   inst,
-  totalSectorSpend,
-  isTop,
-  lang,
+  sectorShare,
+  lang: _lang,
   dispatch,
 }: {
   inst: SpatialInstitution
-  totalSectorSpend: number
-  isTop: boolean
+  sectorShare: number
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
   const tier = tierMark(inst.risk)
-  const da = inst.direct_award_pct ?? null
-  const hr = inst.high_risk_pct ?? null
-  const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
   const riskScore = Math.round(inst.risk * 100)
   const displayName = formatEntityName('institution', inst.name, 'full')
-
+  const da = inst.direct_award_pct
+  const hr = inst.high_risk_pct
   return (
-    <div
-      className="flex flex-col px-3 py-2 cursor-pointer transition-colors"
-      style={{
-        borderLeft: `2px solid ${isTop ? tier.color : `${tier.color}50`}`,
-        background: isTop ? `${tier.color}08` : 'transparent',
-      }}
+    <tr
+      className="cursor-pointer transition-colors"
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isTop ? `${tier.color}08` : 'transparent' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
       onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
     >
-      {/* Row 1: tier label · name (wraps up to 2 lines) */}
-      <div className="flex items-start gap-1.5 min-w-0">
-        <span className="font-mono text-[9px] font-bold shrink-0 pt-0.5" style={{ color: tier.color }}>
-          {tier.glyph}{tier.label}
-        </span>
-        <span className="font-mono text-[11px] font-medium min-w-0 leading-snug" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-          {displayName}
-        </span>
-      </div>
-
-      {/* Row 2: amount · risk · DA% · HR% · contracts · share */}
-      <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1 pl-5">
-        <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: tier.color }}>
-          {formatCompactMXN(inst.total_amount_mxn)}
-        </span>
-        <span className="font-mono text-[9px] tabular-nums" style={{ color: tier.color }}>
-          RS·{riskScore}
-        </span>
-        {da != null && (
-          <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-            DA·{da.toFixed(0)}%
-          </span>
-        )}
-        {hr != null && hr > 5 && (
-          <span className="font-mono text-[9px] tabular-nums" style={{ color: RISK_COLORS.high }}>
-            HR·{hr.toFixed(0)}%
-          </span>
-        )}
-        <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-          {formatNumber(inst.total_contracts)} {lang === 'en' ? 'ctr' : 'ctr'}
-        </span>
-        <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-          {shareOfSector.toFixed(1)}% {lang === 'en' ? 'of sector' : 'del sector'}
-        </span>
-      </div>
-    </div>
+      <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] font-bold whitespace-nowrap" style={{ color: tier.color }}>
+        {tier.glyph}{tier.label}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        {displayName}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: tier.color }}>
+        {formatCompactMXN(inst.total_amount_mxn)}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: tier.color }}>
+        {riskScore}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
+        {da != null ? `${da.toFixed(0)}%` : '—'}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: (hr ?? 0) > 10 ? RISK_COLORS.high : 'var(--color-text-muted)' }}>
+        {hr != null ? `${hr.toFixed(0)}%` : '—'}
+      </td>
+      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
+        {formatNumber(inst.total_contracts)}
+      </td>
+      <td className="pr-3 pl-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
+        {sectorShare.toFixed(1)}%
+      </td>
+    </tr>
   )
 }
 
@@ -1269,13 +1256,34 @@ function Z1Panel({
   const top4Share = institutions.slice(0, 4).reduce((s, i) => s + i.total_amount_mxn, 0)
   const top4Pct = totalSectorSpend > 0 ? (top4Share / totalSectorSpend * 100).toFixed(0) : '—'
 
-  // Sort by risk descending — investigative priority order
-  const sorted = [...institutions].sort((a, b) => (b.risk ?? 0) - (a.risk ?? 0))
-  const shelfCritical = sorted.filter((inst) => (inst.risk ?? 0) >= 0.60)
-  const shelfHigh     = sorted.filter((inst) => { const r = inst.risk ?? 0; return r >= 0.40 && r < 0.60 })
-  const shelfRoutine  = sorted.filter((inst) => (inst.risk ?? 0) < 0.40)
-
+  const [sortKey, setSortKey] = useState<Z1SortKey>('risk')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [routineOpen, setRoutineOpen] = useState(true)
+
+  const handleSort = (key: Z1SortKey) => {
+    if (sortKey === key) setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
+    else { setSortKey(key); setSortOrder('desc') }
+  }
+
+  const sectorShareOf = (inst: SpatialInstitution) =>
+    totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+
+  const sorted = [...institutions].sort((a, b) => {
+    const dir = sortOrder === 'desc' ? -1 : 1
+    switch (sortKey) {
+      case 'risk':         return dir * ((b.risk ?? 0) - (a.risk ?? 0))
+      case 'spend':        return dir * (b.total_amount_mxn - a.total_amount_mxn)
+      case 'contracts':    return dir * (b.total_contracts - a.total_contracts)
+      case 'da_pct':       return dir * ((b.direct_award_pct ?? 0) - (a.direct_award_pct ?? 0))
+      case 'hr_pct':       return dir * ((b.high_risk_pct ?? 0) - (a.high_risk_pct ?? 0))
+      case 'sector_share': return dir * (sectorShareOf(b) - sectorShareOf(a))
+      default:             return 0
+    }
+  })
+  const useShelf = sortKey === 'risk'
+  const shelfCritical = useShelf ? sorted.filter((i) => (i.risk ?? 0) >= 0.60) : []
+  const shelfHigh     = useShelf ? sorted.filter((i) => { const r = i.risk ?? 0; return r >= 0.40 && r < 0.60 }) : []
+  const shelfRoutine  = useShelf ? sorted.filter((i) => (i.risk ?? 0) < 0.40) : sorted
 
   return (
     <div
@@ -1322,107 +1330,86 @@ function Z1Panel({
         </div>
       )}
 
-      {/* Three editorial shelves */}
+      {/* Sortable table */}
       {!isLoading && !isError && institutions.length > 0 && (
-        <div className="py-3 space-y-2">
-
-          {/* Shelf 1 — Critical Risk */}
-          {shelfCritical.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: `2px solid ${RISK_COLORS.critical}` }}
-            >
-              <div
-                className="flex items-center gap-2 px-3 py-1.5"
-                style={{ background: `${RISK_COLORS.critical}12`, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.critical }}>
-                  {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfCritical.length}
-                </span>
-              </div>
-              {shelfCritical.map((inst) => (
-                <InstCard
-                  key={inst.institution_id}
-                  inst={inst}
-                  totalSectorSpend={totalSectorSpend}
-                  isTop={false}
-                  lang={lang}
-                  dispatch={dispatch}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Shelf 2 — High Priority */}
-          {shelfHigh.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: `2px solid ${RISK_COLORS.high}` }}
-            >
-              <div
-                className="flex items-center gap-2 px-3 py-1.5"
-                style={{ background: `${RISK_COLORS.high}12`, borderBottom: `1px solid ${RISK_COLORS.high}25` }}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.high }}>
-                  {lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfHigh.length}
-                </span>
-              </div>
-              {shelfHigh.map((inst) => (
-                <InstCard
-                  key={inst.institution_id}
-                  inst={inst}
-                  totalSectorSpend={totalSectorSpend}
-                  isTop={false}
-                  lang={lang}
-                  dispatch={dispatch}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Shelf 3 — Routine Activity (collapsed by default) */}
-          {shelfRoutine.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: '2px solid var(--color-border)' }}
-            >
-              <button
-                type="button"
-                className="w-full flex items-center gap-2 px-3 py-1.5 cursor-pointer text-left"
-                style={{
-                  background: 'var(--color-background-card)',
-                  borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none',
-                }}
-                onClick={() => setRoutineOpen((o) => !o)}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'ROUTINE ACTIVITY · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfRoutine.length}
-                </span>
-                <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {routineOpen ? '▾' : '▸'}
-                </span>
-              </button>
-              {routineOpen && shelfRoutine.map((inst) => (
-                <InstCard
-                  key={inst.institution_id}
-                  inst={inst}
-                  totalSectorSpend={totalSectorSpend}
-                  isTop={false}
-                  lang={lang}
-                  dispatch={dispatch}
-                />
-              ))}
-            </div>
-          )}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0" style={{ background: 'var(--color-background)', zIndex: 2, borderBottom: '1px solid var(--color-border)' }}>
+              <tr>
+                <th className="pl-3 pr-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
+                  {lang === 'en' ? 'TIER' : 'NIVEL'}
+                </th>
+                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'INSTITUTION' : 'INSTITUCIÓN'}
+                </th>
+                <SortHeaderTh<Z1SortKey> field="spend" label={lang === 'en' ? 'SPEND' : 'GASTO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
+                <SortHeaderTh<Z1SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z1SortKey> field="da_pct" label="DA%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z1SortKey> field="hr_pct" label="HR%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z1SortKey> field="contracts" label="CTR" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z1SortKey> field="sector_share" label="%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="pr-3 pl-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+              </tr>
+            </thead>
+            <tbody>
+              {useShelf ? (
+                <>
+                  {shelfCritical.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
+                          {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
+                          <span className="float-right tabular-nums">{shelfCritical.length}</span>
+                        </td>
+                      </tr>
+                      {shelfCritical.map((inst) => (
+                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
+                      ))}
+                    </>
+                  )}
+                  {shelfHigh.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
+                          {lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
+                          <span className="float-right tabular-nums">{shelfHigh.length}</span>
+                        </td>
+                      </tr>
+                      {shelfHigh.map((inst) => (
+                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
+                      ))}
+                    </>
+                  )}
+                  {shelfRoutine.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={8} style={{ padding: 0 }}>
+                          <button
+                            type="button"
+                            className="w-full flex items-center gap-2 px-3 py-1 text-left"
+                            style={{ background: 'var(--color-background-card)', borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }}
+                            onClick={() => setRoutineOpen((o) => !o)}
+                          >
+                            <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
+                              {lang === 'en' ? 'ROUTINE ACTIVITY · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
+                            </span>
+                            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfRoutine.length}</span>
+                            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{routineOpen ? '▾' : '▸'}</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {routineOpen && shelfRoutine.map((inst) => (
+                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
+                      ))}
+                    </>
+                  )}
+                </>
+              ) : (
+                sorted.map((inst) => (
+                  <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -1467,53 +1454,64 @@ function Z2Panel({
   const vendors = data?.data ?? []
   const totalVendors = data?.total ?? vendors.length
 
-  // Sort by risk descending — investigative priority order, not spend
-  const sorted = [...vendors].sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
-  const shelfCritical = sorted.filter((v) => (v.avg_risk_score ?? 0) >= 0.60)
-  const shelfFlagged  = sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.60 })
-  const shelfRoutine  = sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25)
-
+  const [sortKey, setSortKey] = useState<Z2SortKey>('risk')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [routineOpen, setRoutineOpen] = useState(true)
 
-  const VendorCard = ({ v, rank, accentColor, dispatch: d }: { v: (typeof sorted)[0]; rank: number; accentColor: string; dispatch: typeof dispatch }) => {
+  const handleSort = (key: Z2SortKey) => {
+    if (sortKey === key) setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
+    else { setSortKey(key); setSortOrder('desc') }
+  }
+
+  const sorted = [...vendors].sort((a, b) => {
+    const dir = sortOrder === 'desc' ? -1 : 1
+    switch (sortKey) {
+      case 'risk':      return dir * ((b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+      case 'spend':     return dir * ((b.total_value_mxn ?? 0) - (a.total_value_mxn ?? 0))
+      case 'contracts': return dir * (b.contract_count - a.contract_count)
+      case 'year':      return dir * ((b.last_year ?? 0) - (a.last_year ?? 0))
+      default:          return 0
+    }
+  })
+  const useShelf = sortKey === 'risk'
+  const shelfCritical = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) >= 0.60) : []
+  const shelfFlagged  = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.60 }) : []
+  const shelfRoutine  = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sorted
+
+  const VendorRow = ({ v, rank }: { v: (typeof sorted)[0]; rank: number }) => {
     const score = v.avg_risk_score ?? 0
     const riskPct = Math.round(score * 100)
+    const accentColor = score >= 0.60 ? RISK_COLORS.critical :
+                        score >= 0.40 ? RISK_COLORS.high :
+                        score >= 0.25 ? RISK_COLORS.medium :
+                        'var(--color-text-muted)'
     const yearRange = (v.first_year && v.last_year && v.first_year !== v.last_year)
       ? `${v.first_year}–${v.last_year}`
-      : v.last_year ? `${v.last_year}` : null
+      : v.last_year ? `${v.last_year}` : '—'
     return (
-      <div
-        className="flex flex-col px-3 py-1.5 cursor-pointer"
+      <tr
+        className="cursor-pointer transition-colors"
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-        onClick={() => d({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name, 300) })}
+        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name, 300) })}
       >
-        <div className="flex items-start gap-1.5 min-w-0">
-          <div className="w-0.5 h-4 flex-shrink-0 rounded-full mt-0.5" style={{ background: accentColor }} />
-          <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums pt-0.5" style={{ color: 'var(--color-text-muted)' }}>{rank}</span>
-          <span className="font-mono text-[10px] font-medium min-w-0 leading-snug" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-            {formatVendorName(v.vendor_name, 300)}
-          </span>
-        </div>
-        <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 pl-7">
-          <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: accentColor }}>
-            {formatCompactMXN(v.total_value_mxn ?? 0)}
-          </span>
-          {score > 0 && (
-            <span className="font-mono text-[9px] tabular-nums" style={{ color: accentColor }}>
-              RS·{riskPct}
-            </span>
-          )}
-          <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-            {formatNumber(v.contract_count)} {lang === 'en' ? 'ctr' : 'ctr'}
-          </span>
-          {yearRange && (
-            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-              {yearRange}
-            </span>
-          )}
-        </div>
-      </div>
+        <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: accentColor }}>{rank}</td>
+        <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+          {formatVendorName(v.vendor_name, 300)}
+        </td>
+        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: accentColor }}>
+          {formatCompactMXN(v.total_value_mxn ?? 0)}
+        </td>
+        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: score > 0 ? accentColor : 'var(--color-text-muted)' }}>
+          {score > 0 ? riskPct : '—'}
+        </td>
+        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
+          {formatNumber(v.contract_count)}
+        </td>
+        <td className="pr-3 pl-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
+          {yearRange}
+        </td>
+      </tr>
     )
   }
 
@@ -1558,86 +1556,69 @@ function Z2Panel({
         </div>
       )}
 
-      {/* Three editorial shelves */}
+      {/* Sortable vendor table */}
       {!isLoading && !isError && vendors.length > 0 && (
-        <div className="py-3 space-y-2">
-
-          {/* Shelf 1 — Critical Risk */}
-          {shelfCritical.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: `2px solid ${RISK_COLORS.critical}` }}
-            >
-              <div
-                className="flex items-center gap-2 px-3 py-1.5"
-                style={{ background: `${RISK_COLORS.critical}12`, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.critical }}>
-                  {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfCritical.length}
-                </span>
-              </div>
-              {shelfCritical.map((v, i) => (
-                <VendorCard key={v.vendor_id} v={v} rank={i + 1} accentColor={RISK_COLORS.critical} dispatch={dispatch} />
-              ))}
-            </div>
-          )}
-
-          {/* Shelf 2 — Flagged / High-Medium */}
-          {shelfFlagged.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: `2px solid ${RISK_COLORS.high}` }}
-            >
-              <div
-                className="flex items-center gap-2 px-3 py-1.5"
-                style={{ background: `${RISK_COLORS.high}12`, borderBottom: `1px solid ${RISK_COLORS.high}25` }}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.high }}>
-                  {lang === 'en' ? 'FLAGGED · HIGH RISK' : 'SEÑALADO · RIESGO ALTO'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfFlagged.length}
-                </span>
-              </div>
-              {shelfFlagged.map((v, i) => (
-                <VendorCard key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} accentColor={RISK_COLORS.high} dispatch={dispatch} />
-              ))}
-            </div>
-          )}
-
-          {/* Shelf 3 — Routine / Low Risk (collapsed by default) */}
-          {shelfRoutine.length > 0 && (
-            <div
-              className="mx-3 rounded-r-sm overflow-hidden"
-              style={{ borderLeft: '2px solid var(--color-border)' }}
-            >
-              <button
-                type="button"
-                className="w-full flex items-center gap-2 px-3 py-1.5 cursor-pointer text-left"
-                style={{
-                  background: 'var(--color-background-card)',
-                  borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none',
-                }}
-                onClick={() => setRoutineOpen((o) => !o)}
-              >
-                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'ROUTINE · LOW RISK' : 'RUTINARIO · RIESGO BAJO'}
-                </span>
-                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {shelfRoutine.length}
-                </span>
-                <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {routineOpen ? '▾' : '▸'}
-                </span>
-              </button>
-              {routineOpen && shelfRoutine.map((v, i) => (
-                <VendorCard key={v.vendor_id} v={v} rank={shelfCritical.length + shelfFlagged.length + i + 1} accentColor="var(--color-text-muted)" dispatch={dispatch} />
-              ))}
-            </div>
-          )}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0" style={{ background: 'var(--color-background)', zIndex: 2, borderBottom: '1px solid var(--color-border)' }}>
+              <tr>
+                <th className="pl-3 pr-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-right" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>#</th>
+                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'VENDOR' : 'PROVEEDOR'}
+                </th>
+                <SortHeaderTh<Z2SortKey> field="spend" label={lang === 'en' ? 'SPEND' : 'GASTO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
+                <SortHeaderTh<Z2SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z2SortKey> field="contracts" label="CTR" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+                <SortHeaderTh<Z2SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="pr-3 pl-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
+              </tr>
+            </thead>
+            <tbody>
+              {useShelf ? (
+                <>
+                  {shelfCritical.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
+                          {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
+                          <span className="float-right tabular-nums">{shelfCritical.length}</span>
+                        </td>
+                      </tr>
+                      {shelfCritical.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)}
+                    </>
+                  )}
+                  {shelfFlagged.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
+                          {lang === 'en' ? 'FLAGGED · HIGH RISK' : 'SEÑALADO · RIESGO ALTO'}
+                          <span className="float-right tabular-nums">{shelfFlagged.length}</span>
+                        </td>
+                      </tr>
+                      {shelfFlagged.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} />)}
+                    </>
+                  )}
+                  {shelfRoutine.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={6} style={{ padding: 0 }}>
+                          <button type="button" className="w-full flex items-center gap-2 px-3 py-1 text-left" style={{ background: 'var(--color-background-card)', borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }} onClick={() => setRoutineOpen((o) => !o)}>
+                            <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
+                              {lang === 'en' ? 'ROUTINE · LOW RISK' : 'RUTINARIO · RIESGO BAJO'}
+                            </span>
+                            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfRoutine.length}</span>
+                            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{routineOpen ? '▾' : '▸'}</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {routineOpen && shelfRoutine.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfFlagged.length + i + 1} />)}
+                    </>
+                  )}
+                </>
+              ) : (
+                sorted.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -1700,10 +1681,24 @@ function Z3Panel({
   const yearEntries = Array.from(byYear.entries()).sort(([a], [b]) => a - b)
   const maxYearAmt = Math.max(...yearEntries.map(([, v]) => v.amount), 1)
 
-  // Full list sorted by amount for the collapsed section
-  const byAmount = [...contracts].sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
-
+  const [z3SortKey, setZ3SortKey] = useState<Z3SortKey>('amount')
+  const [z3SortOrder, setZ3SortOrder] = useState<SortOrder>('desc')
   const [listOpen, setListOpen] = useState(true)
+
+  const handleZ3Sort = (key: Z3SortKey) => {
+    if (z3SortKey === key) setZ3SortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
+    else { setZ3SortKey(key); setZ3SortOrder('desc') }
+  }
+
+  const sortedContracts = [...contracts].sort((a, b) => {
+    const dir = z3SortOrder === 'desc' ? -1 : 1
+    switch (z3SortKey) {
+      case 'amount': return dir * ((Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
+      case 'year':   return dir * ((Number(b.contract_year) || 0) - (Number(a.contract_year) || 0))
+      case 'risk':   return dir * ((Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
+      default:       return 0
+    }
+  })
 
   return (
     <div
@@ -1847,8 +1842,8 @@ function Z3Panel({
         </div>
       )}
 
-      {/* Full list — collapsible */}
-      {byAmount.length > 0 && (
+      {/* Full list — sortable table */}
+      {sortedContracts.length > 0 && (
         <div className="px-4 py-3">
           <button
             type="button"
@@ -1856,43 +1851,57 @@ function Z3Panel({
             onClick={() => setListOpen((o) => !o)}
           >
             <span className="font-mono text-[9px] tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
-              {lang === 'en' ? `ALL ${byAmount.length} CONTRACTS` : `TODOS (${byAmount.length})`}
+              {lang === 'en' ? `ALL ${sortedContracts.length} CONTRACTS` : `TODOS (${sortedContracts.length})`}
             </span>
             <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
               {listOpen ? '▾' : '▸'}
             </span>
           </button>
           {listOpen && (
-            <div className="mt-2 divide-y" style={{ borderColor: 'var(--color-border)' }}>
-              {byAmount.map((c) => {
-                const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
-                const fill = RISK_COLORS[level]
-                const isHighlighted = c.id === highlightContractId
-                const label = (c as ContractListItem & { title?: string }).title
-                  ?? (c as ContractListItem & { procedure_type?: string | null }).procedure_type
-                  ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
-                return (
-                  <div
-                    key={c.id}
-                    className="flex items-start gap-2 py-1.5 cursor-pointer"
-                    style={isHighlighted ? { background: `${fill}18` } : {}}
-                    onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                    onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
-                    onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-                  >
-                    <div className="w-0.5 h-4 rounded-full flex-shrink-0 mt-0.5" style={{ background: fill }} />
-                    <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums pt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                      {c.contract_year}
-                    </span>
-                    <span className="font-mono text-[10px] font-bold w-20 flex-shrink-0 tabular-nums" style={{ color: fill }}>
-                      {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-                    </span>
-                    <span className="flex-1 font-mono text-[9px] line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
-                      {label}
-                    </span>
-                  </div>
-                )
-              })}
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <SortHeaderTh<Z3SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="pr-2 pb-1 pt-1 font-mono text-[8px] text-left" />
+                    <SortHeaderTh<Z3SortKey> field="amount" label={lang === 'en' ? 'AMOUNT' : 'MONTO'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
+                    <SortHeaderTh<Z3SortKey> field="risk" label="RS" activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
+                    <th className="px-2 pb-1 pt-1 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
+                      {lang === 'en' ? 'DESCRIPTION' : 'DESCRIPCIÓN'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedContracts.map((c) => {
+                    const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
+                    const fill = RISK_COLORS[level]
+                    const isHighlighted = c.id === highlightContractId
+                    const label = (c as ContractListItem & { title?: string }).title
+                      ?? (c as ContractListItem & { procedure_type?: string | null }).procedure_type
+                      ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
+                    return (
+                      <tr
+                        key={c.id}
+                        className="cursor-pointer transition-colors"
+                        style={isHighlighted ? { background: `${fill}18` } : {}}
+                        onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                        onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
+                        onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+                      >
+                        <td className="pr-2 py-1.5 font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{c.contract_year}</td>
+                        <td className="px-2 py-1.5 font-mono text-[10px] font-bold tabular-nums text-right whitespace-nowrap" style={{ color: fill }}>
+                          {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+                        </td>
+                        <td className="px-2 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: fill }}>
+                          {Number(c.risk_score ?? 0) > 0 ? Math.round(Number(c.risk_score) * 100) : '—'}
+                        </td>
+                        <td className="px-2 py-1.5 font-mono text-[9px] line-clamp-1 max-w-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                          {label}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
