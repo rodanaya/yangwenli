@@ -755,6 +755,17 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
         </g>
       </svg>
 
+      {/* Z1 HTML overlay — editorial institution list replaces SVG bubble scatter */}
+      {focus.kind === 'sector' && (
+        <Z1Panel
+          key={`z1panel-${focus.sectorId}`}
+          sectorId={focus.sectorId}
+          sectorCode={focus.sectorCode}
+          lang={lang}
+          dispatch={dispatch}
+        />
+      )}
+
       {/* Z2 HTML overlay — vendor ranked list replaces SVG bubble scatter */}
       {focus.kind === 'institution' && (
         <Z2Panel
@@ -1002,16 +1013,16 @@ function PinRing({ cx, cy, r, color }: { cx: number; cy: number; r: number; colo
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z1 — sector view (institutions inside one sector)
+// Z1 — sector view: backdrop only (list in Z1Panel HTML overlay)
 // ────────────────────────────────────────────────────────────────────────────
 
 function Z1Layer({
-  sectorId,
+  sectorId: _sectorId,
   sectorCode,
-  lang,
-  dispatch,
-  triggerDrill,
-  pinAnnotation,
+  lang: _lang,
+  dispatch: _dispatch,
+  triggerDrill: _triggerDrill,
+  pinAnnotation: _pinAnnotation,
 }: {
   sectorId: number
   sectorCode: string
@@ -1020,73 +1031,14 @@ function Z1Layer({
   triggerDrill: (bodyX: number, bodyY: number, drill: () => void) => void
   pinAnnotation: Focus | null
 }) {
-  // ⚠️ Hooks must come before any early return — moved useExploreState here
-  // (was below the loading/error returns, which violated rules-of-hooks and
-  // would throw "Rendered more hooks than during the previous render" when
-  // the query transitioned from loading → ready).
-  const exploreState = useExploreState()
-  const riskFloor = exploreState.riskFloor
-  // Track which institution is hovered so we can show the full name at the
-  // bottom of the canvas — avoiding SVG overflow-clip that truncates chip labels
-  // near the edges, and providing a large readable label for small bubbles.
-  const [hoveredInstName, setHoveredInstName] = useState<string | null>(null)
-  const [hoveredInstTooltip, setHoveredInstTooltip] = useState<{
-    cx: number; cy: number; r: number; inst: SpatialInstitution
-  } | null>(null)
-  // Touch / mobile: first tap selects (shows tooltip + name), second tap drills in.
-  // Mouse users get immediate drill-in since hover already shows the name.
-  const [selectedInstId, setSelectedInstId] = useState<number | null>(null)
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['explore', 'z1', sectorId],
-    queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId, limit: 60 }),
-    enabled: sectorId > 0 && sectorId <= 12,
-    staleTime: 10 * 60 * 1000,
-  })
-
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
-
-  if (isLoading) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'Loading sector…' : 'Cargando sector…'}
-      </text>
-    )
-  }
-  if (isError || !data || data.institutions.length === 0) {
-    return (
-      <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fontSize={14} fill="var(--color-text-muted)" fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? 'No institution data.' : 'Sin datos.'}
-      </text>
-    )
-  }
-
-  // Phase 4: filter institutions by risk floor — drops anything below the
-  // chosen threshold so the user can focus on high-risk planets only.
-  const passesFloor = (risk: number) => {
-    if (riskFloor === 'all') return true
-    if (riskFloor === 'medium') return risk >= 0.25
-    if (riskFloor === 'high') return risk >= 0.40
-    if (riskFloor === 'critical') return risk >= 0.60
-    return true
-  }
-  const filteredInstitutions = data.institutions.filter((i) => passesFloor(i.risk))
-
-  const xOf = (fx: number) => PAD + fx * (SVG_W - PAD * 2)
-  const yOf = (fy: number) => PAD + fy * (SVG_H - PAD * 2)
-  const rOf = (size: number) => 8 + size * 32 // 8..40 px in viewBox units
-
-  // Sector-tinted radial gradient — reinforces sector identity by tinting
-  // the canvas backdrop with the sector's accent. Each Z1 instance gets its
-  // own gradient ID so multiple cached layers don't share a defs node.
   const gradId = `z1-bg-${sectorCode}`
-
   return (
     <motion.g
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <defs>
         <radialGradient id={gradId} cx="50%" cy="50%" r="65%">
@@ -1096,234 +1048,10 @@ function Z1Layer({
         </radialGradient>
       </defs>
       <rect x={0} y={0} width={SVG_W} height={SVG_H} fill={`url(#${gradId})`} pointerEvents="none" />
-
-      {/* Eyebrow */}
-      <text
-        x={PAD}
-        y={PAD}
-        fontSize={11}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight={700}
-        letterSpacing={1.4}
-        fill={sectorAccent}
-      >
-        {`Z1 · ${(lang === 'en' ? data.sector_name_en : data.sector_name_es).toUpperCase()} · ${filteredInstitutions.length}/${data.total} ${lang === 'en' ? 'INSTITUTIONS' : 'INSTITUCIONES'}`}
-      </text>
-      {/* Bottom label: shows full institution name when hovering, hint otherwise */}
-      <text
-        x={PAD}
-        y={SVG_H - PAD * 0.5}
-        fontSize={hoveredInstName ? 11 : 10}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight={hoveredInstName ? 700 : 400}
-        fill={hoveredInstName ? sectorAccent : 'var(--color-text-muted)'}
-      >
-        {hoveredInstName
-          ? `▶ ${hoveredInstName}`
-          : lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
-      </text>
-
-      {/* Render smallest-first so large institutions (IMSS) paint on top in SVG z-order */}
-      {[...filteredInstitutions].reverse().map((inst) => {
-        const i = filteredInstitutions.indexOf(inst)
-        const cx = xOf(inst.fx)
-        const cy = yOf(inst.fy)
-        const isPinned =
-          pinAnnotation?.kind === 'institution' &&
-          pinAnnotation.institutionId === inst.institution_id
-        return (
-          <InstitutionBodyVisual
-            key={inst.institution_id}
-            inst={inst}
-            cx={cx}
-            cy={cy}
-            r={rOf(inst.size)}
-            index={i}
-            isPinned={isPinned}
-            isSelected={selectedInstId === inst.institution_id}
-            onClick={() => {
-              const iid = inst.institution_id
-              if (selectedInstId === iid) {
-                // Second tap / confirmed click → drill in
-                setSelectedInstId(null)
-                triggerDrill(cx, cy, () =>
-                  dispatch({ type: 'drill-into-institution', institutionId: iid, institutionName: inst.name })
-                )
-              } else {
-                // First tap → select and show name; mouse users who hovered already get instant drill
-                const alreadyHovered = hoveredInstTooltip?.inst.institution_id === iid
-                if (alreadyHovered) {
-                  // Desktop: hover already showed name, one click is enough
-                  triggerDrill(cx, cy, () =>
-                    dispatch({ type: 'drill-into-institution', institutionId: iid, institutionName: inst.name })
-                  )
-                } else {
-                  // Touch: select first
-                  setSelectedInstId(iid)
-                  setHoveredInstName(inst.name)
-                  setHoveredInstTooltip({ cx, cy, r: rOf(inst.size), inst })
-                  dispatch({ type: 'set-hover', hover: { kind: 'institution', id: iid } })
-                }
-              }
-            }}
-            onHover={(hovering) => {
-              setHoveredInstName(hovering ? inst.name : null)
-              setHoveredInstTooltip(hovering ? { cx, cy, r: rOf(inst.size), inst } : null)
-              if (!hovering && selectedInstId === inst.institution_id) return // keep selected state
-              dispatch({
-                type: 'set-hover',
-                hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
-              })
-            }}
-          />
-        )
-      })}
-
-      {/* Floating name tooltip — rendered LAST so it sits above all bubbles.
-          Shows the full institution name + key metrics near the hovered body. */}
-      {hoveredInstTooltip && (() => {
-        const { cx: tx, cy: ty, r: tr, inst: ti } = hoveredInstTooltip
-        const fullName = ti.name.length > 52 ? ti.name.slice(0, 51) + '…' : ti.name
-        const metricLine = `${formatNumber(ti.total_contracts)} contratos · ${formatCompactMXN(ti.total_amount_mxn)}`
-        const charW = 7.2   // approx px per char at 12px mono
-        const boxW = Math.min(Math.max(fullName.length, metricLine.length) * charW + 20, 460)
-        const boxH = 38
-        const margin = 8
-        // Position above the bubble; clamp to canvas bounds
-        let bx = tx - boxW / 2
-        let by = ty - tr - margin - boxH
-        bx = Math.max(PAD, Math.min(SVG_W - PAD - boxW, bx))
-        by = Math.max(PAD + 14, by)
-        const level = getRiskLevelFromScore(ti.risk)
-        const accent = RISK_COLORS[level]
-        return (
-          <g pointerEvents="none">
-            <rect x={bx} y={by} width={boxW} height={boxH} rx={4}
-              fill="var(--color-background-card)" fillOpacity={0.98}
-              stroke="var(--color-border)" strokeWidth={0.8} />
-            <rect x={bx} y={by} width={3} height={boxH} rx={1.5} fill={accent} />
-            <text x={bx + 10} y={by + 14} fontSize={12}
-              fontFamily="var(--font-family-mono, monospace)" fontWeight={700}
-              fill="var(--color-text-primary)">
-              {fullName}
-            </text>
-            <text x={bx + 10} y={by + 28} fontSize={9.5}
-              fontFamily="var(--font-family-mono, monospace)" fontWeight={400}
-              fill="var(--color-text-muted)">
-              {metricLine}
-            </text>
-          </g>
-        )
-      })()}
     </motion.g>
   )
 }
 
-function InstitutionBodyVisual({
-  inst,
-  cx,
-  cy,
-  r,
-  onClick,
-  onHover,
-  isSelected = false,
-  isPinned = false,
-  index = 0,
-}: {
-  inst: SpatialInstitution
-  cx: number
-  cy: number
-  r: number
-  onClick: () => void
-  onHover: (hovering: boolean) => void
-  isSelected?: boolean
-  isPinned?: boolean
-  index?: number
-}) {
-  const [hovered, setHovered] = useState(false)
-  const active = hovered || isSelected
-  const level = getRiskLevelFromScore(inst.risk)
-  const fill = RISK_COLORS[level]
-  const rEffective = active ? r * 1.15 : r
-  const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
-  const lbl = shortLabel(inst.name)
-
-  // Three-tier label strategy — only top 12 by spend get any label.
-  // Showing chips on all 60 institutions buries IMSS under clutter.
-  //   large (r ≥ 16, top 12): acronym inside the circle
-  //   medium (top 12, r < 16): pill chip below the circle
-  //   everything else: no chip; hover tooltip + bottom bar only
-  const showLabel   = index < 12
-  const insideLabel = showLabel && r >= 16
-  const chipLabel   = showLabel && !insideLabel
-  const chipW = Math.min(lbl.length * 6.2 + 14, 130)
-  const chipH = 18  // taller chip → bigger tap target, readable at 11px
-  const insideFill = (level === 'high' || level === 'low') ? '#1c1a15' : 'white'
-
-  return (
-    <motion.g
-      initial={{ opacity: 0, scale: 0.1 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: index * 0.018, ease: [0.22, 1, 0.36, 1] }}
-      style={{ cursor: 'pointer', transformOrigin: `${cx}px ${cy}px` }}
-      onClick={onClick}
-      onMouseEnter={() => { setHovered(true); onHover(true) }}
-      onMouseLeave={() => { setHovered(false); onHover(false) }}
-      onTouchStart={() => onHover(true)}
-    >
-      <title>{tooltip}</title>
-      {active && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
-      {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={active ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={3} />
-
-      {/* Large: acronym inside the bubble */}
-      {insideLabel && (
-        <text
-          x={cx}
-          y={cy + Math.round(Math.max(10, Math.min(14, r * 0.34)) * 0.38)}
-          textAnchor="middle"
-          fontSize={Math.max(10, Math.min(14, Math.round(r * 0.34)))}
-          fontFamily="var(--font-family-mono, monospace)"
-          fontWeight={700}
-          fill={insideFill}
-          style={{ pointerEvents: 'none' }}
-        >
-          {lbl}
-        </text>
-      )}
-
-      {/* Medium: pill chip below the bubble — 11px for mobile readability */}
-      {chipLabel && (
-        <>
-          <rect
-            x={cx - chipW / 2}
-            y={cy + r + 3}
-            width={chipW}
-            height={chipH}
-            rx={chipH / 2}
-            fill={isSelected ? fill : 'var(--color-background-card)'}
-            fillOpacity={isSelected ? 0.20 : 0.97}
-            stroke={fill}
-            strokeWidth={isSelected ? 2 : 1.5}
-            style={{ pointerEvents: 'none' }}
-          />
-          <text
-            x={cx}
-            y={cy + r + 3 + chipH * 0.70}
-            textAnchor="middle"
-            fontSize={11}
-            fontFamily="var(--font-family-mono, monospace)"
-            fontWeight={700}
-            fill="var(--color-text-primary)"
-            style={{ pointerEvents: 'none' }}
-          >
-            {lbl}
-          </text>
-        </>
-      )}
-    </motion.g>
-  )
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z2 — institution view: just backdrop gradient (list in Z2Panel HTML overlay)
@@ -1424,6 +1152,282 @@ function Z3Layer({
 // die from tree-shaking in a future refactor that prunes it; remove later
 // when an explore-specific sector endpoint exists.
 void sectorApi
+
+// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// Z1Panel — HTML overlay: editorial institution briefing for a sector
+// ────────────────────────────────────────────────────────────────────────────
+
+const OECD_DA_THRESHOLD = 25 // OECD direct-award benchmark %
+
+function tierMark(risk: number): { glyph: string; color: string; label: string } {
+  if (risk >= 0.60) return { glyph: '◆', color: RISK_COLORS.critical, label: 'T1' }
+  if (risk >= 0.40) return { glyph: '◆', color: RISK_COLORS.high,     label: 'T2' }
+  if (risk >= 0.25) return { glyph: '●', color: RISK_COLORS.medium,   label: 'T3' }
+  return               { glyph: '●', color: '#71717a',                label: 'T4' }
+}
+
+function daFlag(pct: number | null): boolean {
+  return pct != null && pct > OECD_DA_THRESHOLD
+}
+
+function InstCard({
+  inst,
+  sectorAccent,
+  totalSectorSpend,
+  lang,
+  isBanner,
+  dispatch,
+}: {
+  inst: SpatialInstitution
+  sectorAccent: string
+  totalSectorSpend: number
+  lang: 'en' | 'es'
+  isBanner: boolean
+  dispatch: ReturnType<typeof useExploreDispatch>
+}) {
+  const tier = tierMark(inst.risk)
+  const da = inst.direct_award_pct ?? null
+  const showDaFlag = daFlag(da)
+  const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+  const bigNum = da != null ? `${da.toFixed(1)}%` : `${(inst.risk * 100).toFixed(1)}%`
+  const bigNumLabel = da != null
+    ? (lang === 'en' ? 'direct awards' : 'adjudicaciones directas')
+    : (lang === 'en' ? 'avg risk score' : 'indicador de riesgo')
+  const showOecd = da != null && da > OECD_DA_THRESHOLD
+
+  return (
+    <div
+      className={`cursor-pointer transition-colors ${isBanner ? 'p-4' : 'p-3'}`}
+      style={{
+        borderLeft: `3px solid ${tier.color}`,
+        background: 'var(--color-background-card)',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+      onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
+    >
+      {/* Tier + flags row */}
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="font-mono text-[10px] font-bold" style={{ color: tier.color }}>
+          {tier.glyph} {tier.label}
+        </span>
+        {showDaFlag && (
+          <span className="font-mono text-[8px] px-1 py-0.5 rounded" style={{ background: `${tier.color}20`, color: tier.color }}>
+            DA
+          </span>
+        )}
+        {(inst.high_risk_pct ?? 0) > 15 && (
+          <span className="font-mono text-[8px] px-1 py-0.5 rounded" style={{ background: `${RISK_COLORS.critical}20`, color: RISK_COLORS.critical }}>
+            HR
+          </span>
+        )}
+      </div>
+
+      {/* Institution name */}
+      <div
+        className={`font-semibold ${isBanner ? 'text-sm' : 'text-xs'} leading-tight mb-1`}
+        style={{ color: 'var(--color-text-primary)' }}
+      >
+        {inst.name}
+      </div>
+
+      {/* Big number */}
+      <div className="mb-1">
+        <span
+          className={`font-mono font-bold tabular-nums ${isBanner ? 'text-2xl' : 'text-lg'}`}
+          style={{ color: tier.color, fontFamily: 'var(--font-family-serif, serif)', fontStyle: 'italic' }}
+        >
+          {bigNum}
+        </span>
+        <span className="font-mono text-[9px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
+          {bigNumLabel}
+        </span>
+        {showOecd && (
+          <span className="font-mono text-[8px] ml-2" style={{ color: '#06b6d4' }}>
+            OCDE: {OECD_DA_THRESHOLD}%
+          </span>
+        )}
+      </div>
+
+      {/* Metrics row */}
+      <div className="font-mono text-[9px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+        {formatNumber(inst.total_contracts)} {lang === 'en' ? 'contracts' : 'contratos'} · {formatCompactMXN(inst.total_amount_mxn)}
+      </div>
+
+      {/* Sector share bar */}
+      {isBanner && (
+        <div className="mb-2">
+          <div className="h-1.5 rounded-full mb-0.5" style={{ background: 'var(--color-border)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{ width: `${Math.min(shareOfSector, 100)}%`, background: tier.color, opacity: 0.6 }}
+            />
+          </div>
+          <div className="font-mono text-[8px]" style={{ color: 'var(--color-text-muted)' }}>
+            {shareOfSector.toFixed(1)}% {lang === 'en' ? 'of sector spend' : 'del gasto del sector'}
+          </div>
+        </div>
+      )}
+
+      {/* CTA */}
+      <div className="font-mono text-[9px] font-bold" style={{ color: sectorAccent }}>
+        {lang === 'en' ? 'VER INSTITUCÍON →' : 'VER INSTITUCIÓN →'}
+      </div>
+    </div>
+  )
+}
+
+function Z1Panel({
+  sectorId,
+  sectorCode,
+  lang,
+  dispatch,
+}: {
+  sectorId: number
+  sectorCode: string
+  lang: 'en' | 'es'
+  dispatch: ReturnType<typeof useExploreDispatch>
+}) {
+  const [tailExpanded, setTailExpanded] = useState(false)
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['explore', 'z1', sectorId],
+    queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId, limit: 60 }),
+    enabled: sectorId > 0 && sectorId <= 12,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const institutions = data?.institutions ?? []
+  const totalSectorSpend = institutions.reduce((s, i) => s + i.total_amount_mxn, 0)
+
+  const banner   = institutions[0]
+  const features = institutions.slice(1, 4)
+  const tail     = institutions.slice(4)
+
+  // Editorial dek: top N institutions' spend share
+  const top4Share = institutions.slice(0, 4).reduce((s, i) => s + i.total_amount_mxn, 0)
+  const top4Pct = totalSectorSpend > 0 ? (top4Share / totalSectorSpend * 100).toFixed(0) : '—'
+
+  return (
+    <div
+      className="absolute inset-0 z-[5] overflow-y-auto"
+      style={{ background: 'var(--color-background)', top: '48px' }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div
+        className="px-4 py-3 sticky top-0 border-b"
+        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
+      >
+        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: sectorAccent }}>
+          {lang === 'en'
+            ? `Z1 · ${data?.sector_name_en?.toUpperCase() ?? sectorCode.toUpperCase()}`
+            : `Z1 · ${data?.sector_name_es?.toUpperCase() ?? sectorCode.toUpperCase()}`}
+        </div>
+        {!isLoading && institutions.length > 0 && (
+          <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en'
+              ? `Top 4 institutions control ${top4Pct}% of sector spend`
+              : `Las 4 principales concentran ${top4Pct}% del gasto del sector`}
+          </div>
+        )}
+      </div>
+
+      {isLoading && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'Loading…' : 'Cargando…'}
+        </div>
+      )}
+      {isError && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No institution data.' : 'Sin datos.'}
+        </div>
+      )}
+
+      {/* Banner — #1 institution */}
+      {banner && (
+        <div className="p-3">
+          <InstCard
+            inst={banner}
+            sectorAccent={sectorAccent}
+            totalSectorSpend={totalSectorSpend}
+            lang={lang}
+            isBanner={true}
+            dispatch={dispatch}
+          />
+        </div>
+      )}
+
+      {/* Feature row — #2 / #3 / #4 */}
+      {features.length > 0 && (
+        <>
+          <div
+            className="px-4 py-1 font-mono text-[9px] tracking-widest uppercase border-t border-b"
+            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}
+          >
+            {lang === 'en' ? 'LAS QUE SIGUEN' : 'LAS QUE SIGUEN'}
+          </div>
+          <div className="grid grid-cols-1 divide-y" style={{ borderColor: 'var(--color-border)' }}>
+            {features.map((inst) => (
+              <div key={inst.institution_id} className="px-3">
+                <InstCard
+                  inst={inst}
+                  sectorAccent={sectorAccent}
+                  totalSectorSpend={totalSectorSpend}
+                  lang={lang}
+                  isBanner={false}
+                  dispatch={dispatch}
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Long tail — collapsed by default */}
+      {tail.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="w-full px-4 py-2.5 flex items-center justify-between border-t font-mono text-[9px] tracking-widest uppercase"
+            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-background)' }}
+            onClick={() => setTailExpanded((x) => !x)}
+          >
+            <span>
+              {lang === 'en'
+                ? `${tail.length} MORE INSTITUTIONS · ${(100 - parseFloat(top4Pct)).toFixed(0)}% OF SPEND`
+                : `${tail.length} INSTITUCIONES MÁS · ${(100 - parseFloat(top4Pct)).toFixed(0)}% DEL GASTO`}
+            </span>
+            <span>{tailExpanded ? '↑' : '↓'}</span>
+          </button>
+          {tailExpanded && (
+            <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+              {tail.map((inst) => {
+                const tier = tierMark(inst.risk)
+                const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend * 100) : 0
+                return (
+                  <div
+                    key={inst.institution_id}
+                    className="flex items-center gap-2 px-4 py-2 cursor-pointer"
+                    style={{ borderLeft: `2px solid ${tier.color}` }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+                    onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
+                  >
+                    <span className="font-mono text-[9px]" style={{ color: tier.color }}>{tier.glyph}{tier.label}</span>
+                    <span className="flex-1 font-mono text-[10px] truncate" style={{ color: 'var(--color-text-primary)' }}>{inst.name}</span>
+                    <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shareOfSector.toFixed(1)}%</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z2Panel — HTML overlay: vendor ranked list for an institution
@@ -1776,117 +1780,4 @@ function Z3Panel({
       )}
     </div>
   )
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ────────────────────────────────────────────────────────────────────────────
-
-// Spanish + English connector / stop words that must not contribute to
-// an institution acronym. Without this list, "INSTITUTO MEXICANO DEL
-// SEGURO SOCIAL" produced "IMDSS" because DEL was treated as a content
-// word. The audit (F032) flagged this on prod — IMSS rendered as IMDSS
-// on the Salud Z1 map. Fix: filter connectors before acronym build.
-const ACRONYM_STOP_WORDS = new Set([
-  // Spanish
-  'DE', 'DEL', 'LA', 'EL', 'LAS', 'LOS', 'Y', 'EN', 'A', 'AL',
-  'POR', 'PARA', 'CON', 'SIN', 'SOBRE',
-  // English (rarely needed but defensive)
-  'OF', 'THE', 'AND', 'FOR', 'TO', 'IN', 'ON',
-  // Mexican corporate-entity suffix tokens — these are the parts of
-  // names like "S.A. DE C.V." or "S.C." that the dot-stripping regex
-  // leaves intact. Without filtering, a Title-Case vendor name like
-  // "Servicios y Construcciones del Norte S.A. de C.V." passes only
-  // "S.A." and "C.V." through the upper-only filter and the acronym
-  // builder returns "SC" (Audit V017, 2026-05-12).
-  'S.A.', 'S.C.', 'A.C.', 'C.V.', 'R.L.', 'S.N.C.', 'S.A.B.',
-  'S.A.P.I.', 'S.A.S.',
-])
-
-// Canonical Mexican federal entity acronyms. The heuristic
-// (initials-of-content-words) doesn't always recover the conventional
-// public acronym — "PETRÓLEOS MEXICANOS" → PM, not PEMEX. This map
-// short-circuits the heuristic for the names a journalist will
-// recognize on sight. Keys are upper-cased + accent-normalized to
-// match what the database stores.
-const CANONICAL_ACRONYMS: Record<string, string> = {
-  'PETROLEOS MEXICANOS': 'PEMEX',
-  'SECRETARIA DE SALUD': 'SSA',
-  'SERVICIO DE ADMINISTRACION TRIBUTARIA': 'SAT',
-  'INSTITUTO POLITECNICO NACIONAL': 'IPN',
-  'UNIVERSIDAD NACIONAL AUTONOMA DE MEXICO': 'UNAM',
-  'INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRABAJADORES DEL ESTADO': 'ISSSTE',
-  'COMISION NACIONAL DEL AGUA': 'CONAGUA',
-  'SECRETARIA DE LA DEFENSA NACIONAL': 'SEDENA',
-  'SECRETARIA DE MARINA': 'SEMAR',
-  'SECRETARIA DE RELACIONES EXTERIORES': 'SRE',
-  'SECRETARIA DE COMUNICACIONES Y TRANSPORTES': 'SCT',
-  'SECRETARIA DE INFRAESTRUCTURA COMUNICACIONES Y TRANSPORTES': 'SICT',
-  'SECRETARIA DE HACIENDA Y CREDITO PUBLICO': 'SHCP',
-  'SECRETARIA DE LA FUNCION PUBLICA': 'SFP',
-  'SECRETARIA DE EDUCACION PUBLICA': 'SEP',
-  'SECRETARIA DE BIENESTAR': 'BIENESTAR',
-  'CONSEJO NACIONAL DE CIENCIA Y TECNOLOGIA': 'CONACYT',
-  // Additional high-volume federal institutions
-  'COMISION FEDERAL DE ELECTRICIDAD': 'CFE',
-  'BANCO NACIONAL DE OBRAS Y SERVICIOS PUBLICOS': 'BANOBRAS',
-  'BANCO NACIONAL DE COMERCIO EXTERIOR': 'BANCOMEXT',
-  'INSTITUTO DEL FONDO NACIONAL DE LA VIVIENDA PARA LOS TRABAJADORES': 'INFONAVIT',
-  'SECRETARIA DE MEDIO AMBIENTE Y RECURSOS NATURALES': 'SEMARNAT',
-  'INSTITUTO MEXICANO DEL SEGURO SOCIAL': 'IMSS',
-  'SECRETARIA DE GOBERNACION': 'SEGOB',
-  'SECRETARIA DE AGRICULTURA Y DESARROLLO RURAL': 'SADER',
-  'SECRETARIA DE AGRICULTURA GANADERIA DESARROLLO RURAL PESCA Y ALIMENTACION': 'SAGARPA',
-  'SECRETARIA DE ENERGIA': 'SENER',
-  'INSTITUTO NACIONAL ELECTORAL': 'INE',
-  'COMISION NACIONAL PARA EL DESARROLLO DE LOS PUEBLOS INDIGENAS': 'CDI',
-  'COMISION NACIONAL DE VIVIENDA': 'CONAVI',
-  'FONDO NACIONAL DE HABITACIONES POPULARES': 'FONHAPO',
-  'SISTEMA DE ADMINISTRACION TRIBUTARIA': 'SAT',
-  'AGENCIA DE SEGURIDAD ENERGIA Y AMBIENTE': 'ASEA',
-  'COMISION REGULADORA DE ENERGIA': 'CRE',
-  'COMISION NACIONAL BANCARIA Y DE VALORES': 'CNBV',
-  'INSTITUTO NACIONAL DE ESTADISTICA Y GEOGRAFIA': 'INEGI',
-  'COORDINACION NACIONAL DE PROTECCION CIVIL': 'CNPC',
-  'SECRETARIA DE SEGURIDAD Y PROTECCION CIUDADANA': 'SSPC',
-  'INSTITUTO NACIONAL DE SALUD PUBLICA': 'INSP',
-  'COMISION COORDINADORA DE INSTITUTOS NACIONALES DE SALUD': 'CCINSHAE',
-  'HOSPITAL GENERAL DE MEXICO': 'HGM',
-  'INSTITUTO NACIONAL DE CANCEROLOGIA': 'INCAN',
-  'INSTITUTO NACIONAL DE CARDIOLOGIA': 'INC',
-  'INSTITUTO NACIONAL DE CIENCIAS MEDICAS Y NUTRICION': 'INCMN',
-  'INSTITUTO NACIONAL DE NEUROLOGIA Y NEUROCIRUGIA': 'INNN',
-  'INSTITUTO NACIONAL DE PEDIATRIA': 'INP',
-  'INSTITUTO NACIONAL DE PERINATOLOGIA': 'INPER',
-  'INSTITUTO NACIONAL DE PSIQUIATRIA': 'INPRF',
-  'INSTITUTO NACIONAL DE REHABILITACION': 'INR',
-  'INSTITUTO NACIONAL DE ENFERMEDADES RESPIRATORIAS': 'INER',
-}
-
-/** Strip diacritics so DB names like "PETRÓLEOS" match the canonical map keys. */
-function stripAccents(s: string): string {
-  // U+0300..U+036F = Combining Diacritical Marks block.
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '')
-}
-
-function shortLabel(name: string): string {
-  const trimmed = name.trim()
-  // Canonical override — try the full normalized name first.
-  const normalized = stripAccents(trimmed.toUpperCase()).replace(/\s+/g, ' ')
-  if (CANONICAL_ACRONYMS[normalized]) return CANONICAL_ACRONYMS[normalized]
-  // Normalize hyphens to spaces so "COAH-Servicios" splits into two tokens.
-  const tokens = trimmed.replace(/[,-]/g, ' ').split(/\s+/)
-  // All-caps path: structures A/B store names as INSTITUTO MEXICANO DEL SEGURO SOCIAL.
-  const upperWords = tokens.filter((w) => w.length >= 3 && /^[A-Za-z]/.test(w) && w === w.toUpperCase() && !ACRONYM_STOP_WORDS.has(w))
-  if (upperWords.length >= 2 && upperWords.length <= 6) {
-    return upperWords.map((w) => w[0]).join('').slice(0, 6)
-  }
-  // Title-case fallback: structures C/D store names as "Instituto de Salud de Veracruz" → "ISV".
-  // /^[A-Za-zÀ-ÿ]/ skips tokens that start with ", ", numbers — hospital names often have
-  // quoted subnames like "Dr. Eduardo Liceaga" that produce stray punctuation initials.
-  const contentWords = tokens.filter((w) => w.length >= 3 && /^[A-Za-zÀ-ÿ]/.test(w) && !ACRONYM_STOP_WORDS.has(w.toUpperCase()))
-  if (contentWords.length >= 2) {
-    return contentWords.map((w) => w[0].toUpperCase()).join('').slice(0, 5)
-  }
-  return trimmed.length > 10 ? trimmed.slice(0, 9) + '…' : trimmed
 }
