@@ -1,4 +1,48 @@
 ---
+## Visual Review — 2026-05-17T00:03:33Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | ⚠ |
+| https://rubli.xyz/atlas | 403 | ⚠ |
+| https://rubli.xyz/aria | 403 | ⚠ |
+| https://rubli.xyz/sectors | 403 | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 | ⚠ |
+| https://rubli.xyz/cases | 403 | ⚠ |
+| https://rubli.xyz/methodology | 403 | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | ⚠ |
+
+Note: All 403s are egress-proxy interception (Anthropic sandbox blocks outbound HTTPS to rubli.xyz). TLS handshake succeeds to 37.60.232.109 — server is reachable; WAF drops cloud-VPS IPs before response. Consistent with all prior runs — not a site regression. To validate true HTTP status, run from VPS or an unrestricted host.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/sectors | 403 (egress proxy blocked — empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 17 hits — all false positives:
+- Company names in `Executive.tsx` (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`)
+- Type/tier key lookups (`TIER_STYLES[tierName as TierKey]`) — `InstitutionScorecards.tsx:443`
+- Academic author abbreviation (`Mahalanobis, P.C.`) — `Methodology.tsx:118`
+- Legal suffix constants (`'S.A.', 'S.C.', 'A.C.', 'C.V.'` etc.) — `ExploreCanvas.tsx:1620–1621` (lines drifted from 1508–1509 in 2026-05-16 run — file was edited)
+- Sankey mock vendor names (`Maypo S.A.`) — `StoryMoneySankeyChart.tsx:22,37`
+- Pattern bilingual objects (`P1..P7 {es:..., en:...}`) — `AriaQueue.tsx:963–969` (correctly structured, not a leak)
+- Comment string in `CaseLibrary.tsx:304` (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+Egress proxy blocks all outbound HTTPS from this sandbox — HTTP and API checks cannot be validated from this environment. Persistent infrastructure limitation, not a site failure. Bilingual gap scan: no genuine i18n leaks or new hardcoded English-only strings. ExploreCanvas.tsx legal suffix line numbers drifted (+112 lines vs 2026-05-16 run), consistent with file edits between runs. No new regressions.
+
+---
 ## Visual Review — 2026-05-16T00:04:32Z
 
 ### HTTP Status
