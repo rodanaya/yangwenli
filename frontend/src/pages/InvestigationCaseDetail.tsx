@@ -487,7 +487,7 @@ export function InvestigationCaseDetail() {
               >
                 <Shield className="h-3.5 w-3.5" />
                 ASF
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <a
                 href={newsSearchUrl}
                 target="_blank"
@@ -507,7 +507,7 @@ export function InvestigationCaseDetail() {
               >
                 <Newspaper className="h-3.5 w-3.5" />
                 News
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <button
                 onClick={() => setShowStatusModal(true)}
                 className="transition-colors hover:opacity-80"
@@ -816,7 +816,7 @@ export function InvestigationCaseDetail() {
                   >
                     <Shield className="h-3 w-3" />
                     {t('caseDetail.asfLookupBtn')}
-                  </a>
+                  <span className="sr-only"> (opens in new tab)</span></a>
                   <a
                     href={`https://www.google.com/search?q=${encodeURIComponent(`"${toTitleCase(firstVendor.name)}" corrupción contrato gobierno México`)}`}
                     target="_blank"
@@ -835,7 +835,7 @@ export function InvestigationCaseDetail() {
                   >
                     <Newspaper className="h-3 w-3" />
                     {t('caseDetail.newsBtn')}
-                  </a>
+                  <span className="sr-only"> (opens in new tab)</span></a>
                 </div>
               )}
             </div>
@@ -1219,7 +1219,7 @@ export function InvestigationCaseDetail() {
                         >
                           {ev.source_title || t('caseDetail.untitledSource')}
                           <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
-                        </a>
+                        <span className="sr-only"> (opens in new tab)</span></a>
                       ) : (
                         <p
                           style={{

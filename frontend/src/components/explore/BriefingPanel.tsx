@@ -1115,7 +1115,7 @@ function ContractBriefing({
         >
           <ExternalLink className="w-3 h-3" />
           <span>{lang === 'en' ? 'View on COMPRANET' : 'Ver en COMPRANET'}</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       )}
 
       {/* ── 10. CTAs — Red Thread (primary) + Dossier (secondary) ─────── */}

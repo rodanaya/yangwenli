@@ -292,7 +292,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 >
                   <ExternalLink className="h-3 w-3" />
                   {tCommon('contractDetail.viewOnCompranet')}
-                </a>
+                <span className="sr-only"> (opens in new tab)</span></a>
               )}
             </section>
 

@@ -1616,7 +1616,7 @@ function ContractRow({
           >
             <ExternalLink className="h-3 w-3" />
             COMPRANET
-          </a>
+          <span className="sr-only"> (opens in new tab)</span></a>
         )}
         <div className="ml-auto flex items-center gap-3">
           <button

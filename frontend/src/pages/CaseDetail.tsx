@@ -1650,7 +1650,7 @@ function CaseBody({
                       onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = TEXT_PRIMARY)}
                     >
                       {src.outlet}
-                    </a>
+                    <span className="sr-only"> (opens in new tab)</span></a>
                   ) : (
                     <span style={{ fontSize: 11, ...MONO, color: TEXT_PRIMARY, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {src.outlet}
@@ -2355,7 +2355,7 @@ function CaseBody({
                         >
                           {src.title}
                           <ExternalLink size={11} style={{ color: TEXT_MUTED }} />
-                        </a>
+                        <span className="sr-only"> (opens in new tab)</span></a>
                       ) : (
                         src.title
                       )}

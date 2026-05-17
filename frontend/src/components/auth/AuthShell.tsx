@@ -20,7 +20,7 @@ interface AuthShellProps {
 export function AuthShell({ title, children, overline }: AuthShellProps) {
   const { t } = useTranslation('auth')
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Masthead */}
         <div className="mb-8 text-center">
@@ -50,7 +50,7 @@ export function AuthShell({ title, children, overline }: AuthShellProps) {
           {children}
         </div>
       </div>
-    </div>
+    </main>
   )
 }
 

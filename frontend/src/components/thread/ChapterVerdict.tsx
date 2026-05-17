@@ -379,7 +379,7 @@ export function ChapterVerdict({
                       className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
                     >
                       Ver artículo →
-                    </a>
+                    <span className="sr-only"> (opens in new tab)</span></a>
                   )}
                 </div>
               )

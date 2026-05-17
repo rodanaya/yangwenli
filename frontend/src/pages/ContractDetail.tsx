@@ -570,7 +570,7 @@ export default function ContractDetail() {
               >
                 <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                 View on COMPRANET
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
                 Official government procurement record.
               </p>

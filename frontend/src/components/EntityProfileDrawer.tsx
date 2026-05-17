@@ -316,7 +316,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
         >
           <Search className="h-3.5 w-3.5" />
           <span className="text-xs leading-tight">Search News</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   )
@@ -468,7 +468,7 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
         >
           <Search className="h-3.5 w-3.5" />
           <span className="text-xs leading-tight">Search News</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   )
