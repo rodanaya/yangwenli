@@ -171,7 +171,7 @@ export function SharedContractsModal({
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="h-6 w-6 border-2 border-border border-t-amber-500 rounded-full animate-spin" />
+              <div className="h-6 w-6 border-2 border-border border-t-accent rounded-full animate-spin" />
               <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
                 {lang === 'en' ? 'Loading contracts…' : 'Cargando contratos…'}
               </span>
