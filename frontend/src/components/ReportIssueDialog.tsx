@@ -77,7 +77,7 @@ export function ReportIssueDialog({
       label: t('reportIssue.categories.feature'),
       description: t('reportIssue.categories.featureDesc'),
       Icon: Lightbulb,
-      color: 'text-blue-400 border-blue-500/30 bg-blue-500/5',
+      color: 'text-accent border-accent/30 bg-accent/5',
     },
     {
       value: 'other',

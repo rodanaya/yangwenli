@@ -604,7 +604,7 @@ function ProcedureTypeSection({
             className="absolute top-0 bottom-0 flex flex-col items-center"
             style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
-            <div className="h-2 w-px bg-cyan-400" />
+            <div className="h-2 w-px bg-oecd" />
             <span className="text-[9px] font-mono text-[color:var(--color-oecd)] whitespace-nowrap">
               {t('procedureType.oecdLimit')}
             </span>

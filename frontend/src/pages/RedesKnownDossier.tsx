@@ -1092,7 +1092,7 @@ function SignatureRow({
         <DotBar value={value} color={color} dots={22} size={5} gap={2} />
         {benchmark != null && (
           <span
-            className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
+            className="absolute top-0 bottom-0 w-px bg-oecd/60"
             style={{ left: `${benchmark * 100}%` }}
             aria-hidden="true"
           />

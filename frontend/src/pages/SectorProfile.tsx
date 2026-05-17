@@ -494,7 +494,7 @@ function InsightCard({
     critical: { border: 'border-risk-critical/30 bg-risk-critical/5', text: 'text-risk-critical' },
     warning:  { border: 'border-risk-high/30 bg-risk-high/5', text: 'text-risk-high' },
     positive: { border: 'border-border-hover bg-background-elevated', text: 'text-text-muted' },
-    info:     { border: 'border-cyan-500/30 bg-cyan-500/5', text: 'text-[color:var(--color-oecd)]' },
+    info:     { border: 'border-oecd/30 bg-oecd/5', text: 'text-oecd' },
   }[type]
 
   return (

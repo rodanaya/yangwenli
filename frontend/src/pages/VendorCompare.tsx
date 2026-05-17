@@ -846,7 +846,7 @@ export default function VendorCompare() {
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-6 mt-3">
                     <div className="flex items-center gap-1.5">
-                      <span className="h-px w-6 bg-cyan-400 inline-block" />
+                      <span className="h-px w-6 bg-oecd inline-block" />
                       <span className="text-xs text-text-muted">{toTitleCase(vendorA.name).slice(0, 25)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">

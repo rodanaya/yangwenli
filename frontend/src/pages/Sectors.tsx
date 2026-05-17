@@ -1238,8 +1238,8 @@ export function Sectors() {
                 />
                 {i18n.language === 'es' ? 'Zona de prioridad: riesgo ≥ 20% y gasto ≥ 1B' : 'Priority zone: risk ≥ 20% and spend ≥ 1B'}
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#22d3ee] uppercase tracking-[0.12em]">
-                <span className="inline-block h-px w-6 border-t border-dashed border-[#22d3ee]" aria-hidden="true" />
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-oecd uppercase tracking-[0.12em]">
+                <span className="inline-block h-px w-6 border-t border-dashed border-oecd" aria-hidden="true" />
                 {i18n.language === 'es' ? 'OCDE 25%' : 'OECD 25%'}
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">

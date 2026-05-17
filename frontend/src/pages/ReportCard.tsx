@@ -517,7 +517,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
 
   return (
     <section className="mb-10">
-      <div className="rounded-sm border border-cyan-500/20 bg-cyan-500/5 p-5">
+      <div className="rounded-sm border border-oecd/20 bg-oecd/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-oecd)] mb-3">
           {t('oecdContextTitle')}
         </p>

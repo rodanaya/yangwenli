@@ -101,18 +101,18 @@ function captureColor(pct: number): string {
 function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-blue-500/20 bg-blue-500/5 rounded-sm p-4">
+    <div className="border border-accent/20 bg-accent/5 rounded-sm p-4">
       <button
         className="flex items-center gap-2 w-full text-left"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="capture-explainer-body"
       >
-        <Info className="w-4 h-4 text-blue-400 shrink-0" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-wide text-blue-400 font-semibold">
+        <Info className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
+        <span className="text-[11px] uppercase tracking-wide text-accent font-medium">
           {t('whatIsCapture.label')}
         </span>
-        <span className="ml-auto text-blue-400/60 text-xs">{open ? '−' : '+'}</span>
+        <span className="ml-auto text-accent/60 text-xs">{open ? '−' : '+'}</span>
       </button>
       {open && (
         <div id="capture-explainer-body" className="mt-3 space-y-3">

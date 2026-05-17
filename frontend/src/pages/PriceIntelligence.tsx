@@ -292,7 +292,7 @@ function ExtremeCaseCard({
       <div className="flex items-center justify-between pt-2 border-t border-border">
         <Link
           to={`/contracts/${contract.contract_id}`}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-accent bg-accent/10 hover:bg-accent/20 transition-colors"
           aria-label={lang === 'en' ? `View contract detail ${contract.contract_id}` : `Ver detalle del contrato ${contract.contract_id}`}
         >
           {t('viewContract')}
@@ -598,7 +598,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
           <p className="text-xs text-text-muted italic">{t('methodologyDisclaimer')}</p>
           <Link
             to="/methodology"
-            className="inline-flex items-center gap-1 text-blue-400 hover:underline text-xs"
+            className="inline-flex items-center gap-1 text-accent hover:underline text-xs"
           >
             {t('viewFullMethodology')}
             <ExternalLink className="w-3 h-3" />
