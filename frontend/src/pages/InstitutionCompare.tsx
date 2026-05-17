@@ -25,6 +25,7 @@ import { formatCompactMXN, formatPercentSafe, formatNumber, toTitleCase, cn } fr
 import { ArrowLeft, AlertCircle, Search, TrendingUp, TrendingDown, Minus, Scale } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ============================================================================
 // Constants
@@ -189,7 +190,7 @@ function SectorTag({ sectorId }: { sectorId?: number }) {
       className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
       style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
       {s.name}
     </span>
   )
@@ -347,7 +348,7 @@ function VeredictoHeader({
           </span>
         </div>
         <div className="hidden sm:flex items-center text-text-muted text-lg">
-          <Scale className="h-5 w-5" />
+          <Scale className="h-5 w-5" aria-hidden="true" />
         </div>
         <div className="flex items-center gap-3">
           <HallazgoStat
@@ -415,16 +416,16 @@ function MetricTable({
         <table className="w-full text-sm" aria-label={isEs ? 'Comparacion de metricas institucionales' : 'Institutional metric comparison'}>
           <thead>
             <tr className="border-b border-border bg-background/40">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {isEs ? 'Metrica' : 'Metric'}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
                 {nameA}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_B }}>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_B }}>
                 {nameB}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
                 Delta
               </th>
             </tr>
@@ -496,6 +497,8 @@ function TopVendorsComparison({
   nameB,
   totalA,
   totalB,
+  loadingA,
+  loadingB,
 }: {
   vendorsA: InstitutionVendorItem[]
   vendorsB: InstitutionVendorItem[]
@@ -503,6 +506,8 @@ function TopVendorsComparison({
   nameB: string
   totalA: number
   totalB: number
+  loadingA?: boolean
+  loadingB?: boolean
 }) {
   const { t, i18n } = useTranslation('institutions')
   const isEs = i18n.language.startsWith('es')
@@ -514,11 +519,13 @@ function TopVendorsComparison({
     accentColor,
     instName,
     total,
+    loading,
   }: {
     vendors: InstitutionVendorItem[]
     accentColor: string
     instName: string
     total: number
+    loading?: boolean
   }) {
     return (
       <div className="flex-1 min-w-0">
@@ -528,7 +535,13 @@ function TopVendorsComparison({
         >
           {instName}
         </h4>
-        {vendors.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full rounded" />
+            ))}
+          </div>
+        ) : vendors.length === 0 ? (
           <p className="text-xs text-text-muted italic">{t('profile.noVendorData')}</p>
         ) : (
           <div className="space-y-2">
@@ -573,22 +586,14 @@ function TopVendorsComparison({
                     </div>
                   </div>
                   {/* Share dot-matrix */}
-                  {(() => {
-                    const N = 22, DR = 2, DG = 5
-                    const filled = Math.max(1, Math.round((Math.min(share, 100) / 100) * N))
-                    return (
-                      <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="mt-1.5" aria-hidden="true">
-                        {Array.from({ length: N }).map((_, k) => (
-                          <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                            fill={k < filled ? accentColor : 'var(--color-background-elevated)'}
-                            stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                            strokeWidth={k < filled ? 0 : 0.5}
-                            fillOpacity={k < filled ? 0.85 : 1}
-                          />
-                        ))}
-                      </svg>
-                    )
-                  })()}
+                  <DotBar
+                    value={Math.min(share, 100)}
+                    max={100}
+                    color={accentColor}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border-hover)"
+                    className="mt-1.5"
+                  />
                 </div>
               )
             })}
@@ -612,8 +617,8 @@ function TopVendorsComparison({
           : 'Top 5 vendors by contracted value. The percentage indicates each vendor\'s share of total institutional spending.'}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} />
-        <VendorColumn vendors={top5B} accentColor={COLOR_B} instName={nameB} total={totalB} />
+        <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} loading={loadingA} />
+        <VendorColumn vendors={top5B} accentColor={COLOR_B} instName={nameB} total={totalB} loading={loadingB} />
       </div>
     </section>
   )
@@ -694,7 +699,7 @@ function PairedDotStrips({
 
   return (
     <div style={{ minHeight: 260 }}>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
         <title>
           Paired dot strips comparing {nameA} and {nameB} across risk levels
         </title>
@@ -901,10 +906,14 @@ function InstitutionSearchInput({
           backgroundColor: selectedId ? `${accentColor}08` : undefined,
         }}
       >
-        <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+        <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
         <input
           id={id}
           type="text"
+          role="combobox"
+          aria-expanded={!!(results && results.data.length > 0 && !selectedId && query.length >= 2)}
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
           placeholder={isEsSearch ? 'Buscar por nombre...' : 'Search by name...'}
           value={query}
           onChange={(e) => {
@@ -928,7 +937,7 @@ function InstitutionSearchInput({
 
       {/* Dropdown results */}
       {results && results.data.length > 0 && !selectedId && query.length >= 2 && (
-        <ul className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-background-card shadow-xl max-h-56 overflow-y-auto">
+        <ul role="listbox" aria-label={isEsSearch ? `Resultados de ${label}` : `${label} results`} className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-background-card shadow-xl max-h-56 overflow-y-auto">
           {results.data.map((inst) => (
             <li key={inst.id}>
               <button
@@ -1023,13 +1032,13 @@ export default function InstitutionCompare() {
   })
 
   // Top vendors for each institution
-  const { data: vendorsAResp } = useQuery({
+  const { data: vendorsAResp, isLoading: loadingVendorsA } = useQuery({
     queryKey: ['institution-vendors', effectiveA],
     queryFn: () => institutionApi.getVendors(effectiveA!, 10),
     enabled: effectiveA !== null && instA !== undefined,
   })
 
-  const { data: vendorsBResp } = useQuery({
+  const { data: vendorsBResp, isLoading: loadingVendorsB } = useQuery({
     queryKey: ['institution-vendors', effectiveB],
     queryFn: () => institutionApi.getVendors(effectiveB!, 10),
     enabled: effectiveB !== null && instB !== undefined,
@@ -1062,7 +1071,7 @@ export default function InstitutionCompare() {
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide"
           aria-label={isEs ? 'Regresar a Instituciones' : 'Back to Institutions'}
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Instituciones' : 'Institutions'}
         </Link>
       </div>
@@ -1109,7 +1118,7 @@ export default function InstitutionCompare() {
               className="px-8"
               aria-label={isEs ? 'Comparar instituciones' : 'Compare institutions'}
             >
-              <Scale className="h-4 w-4 mr-2" />
+              <Scale className="h-4 w-4 mr-2" aria-hidden="true" />
               {isEs ? 'Comparar' : 'Compare'}
             </Button>
           </div>
@@ -1125,8 +1134,8 @@ export default function InstitutionCompare() {
 
       {/* Error state */}
       {hasError && (
-        <div className="rounded-lg border border-red-500/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
-          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" />
+        <div className="rounded-lg border border-risk-critical/30 bg-risk-critical/10 px-4 py-3 flex items-start gap-2 mb-6">
+          <AlertCircle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium text-risk-critical">{t('compare.loadError')}</p>
             <p className="text-xs text-text-muted mt-0.5">
@@ -1164,6 +1173,8 @@ export default function InstitutionCompare() {
             nameB={nameB}
             totalA={instA.total_amount_mxn ?? 0}
             totalB={instB.total_amount_mxn ?? 0}
+            loadingA={loadingVendorsA}
+            loadingB={loadingVendorsB}
           />
 
           {/* Risk distribution */}

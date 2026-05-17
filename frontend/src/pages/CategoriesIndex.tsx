@@ -124,7 +124,7 @@ function CategoryCard({ item, lang }: CategoryCardProps) {
           {/* Spend */}
           <div
             className="font-mono text-sm tabular-nums font-semibold"
-            style={{ color: '#a06820' }}
+            style={{ color: 'var(--color-accent)' }}
           >
             {formatCompactMXN(item.total_value)}
           </div>
@@ -245,7 +245,7 @@ export default function CategoriesIndex() {
   ]
 
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       {/* ── Editorial header ────────────────────────────────────────────────── */}
       <header className="bg-background-elevated border-b border-border px-6 py-10 md:px-12 lg:px-16">
         {/* Kicker */}
@@ -305,7 +305,7 @@ export default function CategoriesIndex() {
             </div>
             <div
               className="font-mono text-xl tabular-nums font-semibold"
-              style={{ color: '#a06820' }}
+              style={{ color: 'var(--color-accent)' }}
             >
               {formatCompactMXN(totalValue)}
             </div>
@@ -447,12 +447,13 @@ export default function CategoriesIndex() {
         )}
 
         {!isLoading && !isError && displayed.length === 0 && (
-          <p
-            className="font-mono text-sm"
-            style={{ color: 'var(--color-text-muted)' }}
+          <div
+            className="py-16 text-center"
+            role="status"
+            aria-live="polite"
           >
-            {t('index.noResults')}
-          </p>
+            <p className="text-sm font-mono text-text-muted">{t('index.noResults')}</p>
+          </div>
         )}
 
         {!isLoading && !isError && displayed.length > 0 && (
@@ -463,6 +464,6 @@ export default function CategoriesIndex() {
           </div>
         )}
       </section>
-    </main>
+    </div>
   )
 }

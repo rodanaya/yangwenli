@@ -137,7 +137,7 @@ export function RiskFeedbackButton({
               Analyst Feedback
             </DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-muted-foreground -mt-1 mb-3">
+          <p className="text-xs text-text-muted -mt-1 mb-3">
             Mark this {entityType} to track your assessment alongside the AI
             risk score.
           </p>
@@ -167,17 +167,17 @@ export function RiskFeedbackButton({
                     <div className="text-xs font-medium leading-tight">
                       {opt.label}
                       {isSelected && (
-                        <span className="ml-1.5 text-[10px] text-muted-foreground font-normal">
+                        <span className="ml-1.5 text-[10px] text-text-muted font-normal">
                           (current)
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5 leading-tight">
+                    <div className="text-[11px] text-text-muted mt-0.5 leading-tight">
                       {opt.description}
                     </div>
                   </div>
                   {isLoading && (
-                    <span className="ml-auto text-[10px] text-muted-foreground">saving…</span>
+                    <span className="ml-auto text-[10px] text-text-muted">saving…</span>
                   )}
                 </button>
               )
@@ -192,7 +192,7 @@ export function RiskFeedbackButton({
                 disabled={removeMutation.isPending || submitMutation.isPending}
                 className={cn(
                   'w-full flex items-center gap-2 rounded-md px-3 py-1.5 text-xs',
-                  'text-muted-foreground hover:bg-destructive/10 hover:text-destructive',
+                  'text-text-muted hover:bg-risk-critical/10 hover:text-risk-critical',
                   'transition-colors disabled:opacity-50'
                 )}
               >

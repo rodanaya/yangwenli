@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorName, getRiskLevelFromScore } from '@/lib/constants'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -65,7 +66,7 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
     icon: CheckCircle2,
     // Bible §3.10: no green for verification semantics in a corruption context.
     // Amber gold signals "confirmed finding" without implying safety.
-    className: 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30',
+    className: 'bg-accent/10 text-accent border border-accent/30',
   },
   refuted: {
     icon: XCircle,
@@ -104,7 +105,7 @@ function RiskScoreDisclaimer() {
       title={t('riskScoreTooltip')}
       aria-label={t('riskScoreTooltip')}
     >
-      <Info className="h-3 w-3 text-text-muted/50 hover:text-text-muted transition-colors" />
+      <Info className="h-3 w-3 text-text-muted/50 hover:text-text-muted transition-colors" aria-hidden="true" />
     </span>
   )
 }
@@ -116,7 +117,7 @@ function RiskScoreDisclaimer() {
 function VerifyPanel() {
   const { t } = useTranslation('investigation')
   return (
-    <details className="mt-3 border border-amber-500/15 rounded bg-amber-500/[0.03] group/verify">
+    <details className="mt-3 border border-risk-high/15 rounded bg-risk-high/[0.03] group/verify">
       <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[10px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
         <Info className="h-3 w-3 text-risk-high/60 flex-shrink-0" aria-hidden="true" />
         {t('verify.toggle')}
@@ -179,8 +180,8 @@ const SIGNAL_TAG_CLASS: Record<string, string> = {
   year_end_concentration: 'text-text-secondary bg-border/15 border-border/30',
   high_avg_risk_score: 'text-risk-critical bg-risk-critical/10 border-risk-critical/25',
   high_direct_award_rate: 'text-text-secondary bg-border/15 border-border/30',
-  corporate_group_pattern: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
-  multi_entity_anomaly: 'text-purple-400 bg-purple-400/10 border-purple-400/25',
+  corporate_group_pattern: 'text-text-secondary bg-border/15 border-border/30',
+  multi_entity_anomaly: 'text-text-secondary bg-border/15 border-border/30',
 }
 
 // ============================================================================
@@ -351,24 +352,22 @@ function CaseCard({
 
         {/* Risk bar — dot-matrix */}
         <div className="mt-3">
-          {(() => {
-            const DOTS = 30, DOT_R = 2.5, DOT_GAP = 6
-            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
-            const riskColor = caseItem.suspicion_score >= 0.6 ? '#ef4444'
-              : caseItem.suspicion_score >= 0.4 ? '#f59e0b'
-              : caseItem.suspicion_score >= 0.25 ? '#a16207' : 'var(--color-text-muted)'
-            return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} width={DOTS * DOT_GAP} height={10}>
-                {Array.from({ length: DOTS }).map((_, i) => (
-                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
-                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
-                    strokeWidth={0.5}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={caseItem.suspicion_score}
+            max={1}
+            color={
+              caseItem.suspicion_score >= 0.6 ? 'var(--color-risk-critical)'
+              : caseItem.suspicion_score >= 0.4 ? 'var(--color-risk-high)'
+              : caseItem.suspicion_score >= 0.25 ? 'var(--color-risk-medium)'
+              : 'var(--color-text-muted)'
+            }
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={30}
+            dotR={2.5}
+            dotGap={6}
+            thresholds={[0.25, 0.40, 0.60]}
+          />
         </div>
 
         {/* Verify panel — stops click propagation so opening it doesn't navigate */}
@@ -376,7 +375,7 @@ function CaseCard({
           <VerifyPanel />
         </div>
 
-        <ChevronRight className="absolute bottom-3 right-3 h-3.5 w-3.5 text-text-muted/30 group-hover:text-accent transition-colors" />
+        <ChevronRight className="absolute bottom-3 right-3 h-3.5 w-3.5 text-text-muted/30 group-hover:text-accent transition-colors" aria-hidden="true" />
       </div>
     </div>
   )
@@ -409,12 +408,12 @@ function SortHeader({
         {label}
         {active ? (
           sortDir === 'desc' ? (
-            <ArrowDown className="h-3 w-3 text-accent" />
+            <ArrowDown className="h-3 w-3 text-accent" aria-hidden="true" />
           ) : (
-            <ArrowUp className="h-3 w-3 text-accent" />
+            <ArrowUp className="h-3 w-3 text-accent" aria-hidden="true" />
           )
         ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-40" />
+          <ArrowUpDown className="h-3 w-3 opacity-40" aria-hidden="true" />
         )}
       </span>
     </th>
@@ -536,8 +535,8 @@ export function Investigation() {
     return (
       <div className="container mx-auto p-6">
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
-          <div className="flex items-center gap-3 p-6 text-muted-foreground bg-background-card">
-            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+          <div className="flex items-center gap-3 p-6 text-text-muted bg-background-card">
+            <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" aria-hidden="true" />
             <span>{t('loadingError')}</span>
           </div>
         </div>
@@ -655,9 +654,10 @@ export function Investigation() {
         <div className="flex items-center gap-2">
           {/* Search box */}
           <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted/50" aria-hidden="true" />
             <input
               type="text"
+              aria-label={isEs ? 'Buscar casos de investigación' : 'Search investigation cases'}
               placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -669,6 +669,7 @@ export function Investigation() {
             {/* Score filter dropdown */}
             <select
               className="text-xs bg-background-elevated border border-border/40 rounded px-2 py-1.5 text-text-secondary font-mono"
+              aria-label={isEs ? 'Filtrar por puntuación' : 'Filter by score'}
               value={minScore ?? ''}
               onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
             >
@@ -685,14 +686,14 @@ export function Investigation() {
                 className={cn('px-2 py-1.5 transition-colors', viewMode === 'cards' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary')}
                 title={t('viewCards')}
               >
-                <LayoutGrid className="h-3.5 w-3.5" />
+                <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
               <button
                 onClick={() => setViewMode('table')}
                 className={cn('px-2 py-1.5 transition-colors', viewMode === 'table' ? 'bg-accent/15 text-accent' : 'text-text-muted hover:text-text-secondary')}
                 title={t('viewTable')}
               >
-                <List className="h-3.5 w-3.5" />
+                <List className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </div>
 
@@ -763,14 +764,14 @@ export function Investigation() {
                   <thead className="border-b border-border/40 bg-background-elevated/60">
                     <tr>
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.case')}</th>
-                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.sector')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.case')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.sector')}</th>
                       <SortHeader label={t('tableCol.score')} field="suspicion_score" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('card.contracts')} field="total_contracts" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('tableCol.value')} field="total_value_mxn" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.status')}</th>
-                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('signalTags.title', 'Signal')}</th>
-                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('tableCol.evidence')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.status')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('signalTags.title', 'Signal')}</th>
+                      <th scope="col" className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('tableCol.evidence')}</th>
                     </tr>
                   </thead>
               <tbody className="divide-y divide-border/30">
@@ -875,24 +876,22 @@ function CaseTableRow({
             <RiskScoreDisclaimer />
           </div>
           {/* Mini dot-matrix in table cell */}
-          {(() => {
-            const DOTS = 20, DOT_R = 2, DOT_GAP = 5
-            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
-            const riskColor = priority.level === 'critical' ? '#ef4444'
-              : priority.level === 'high' ? '#f59e0b'
-              : priority.level === 'medium' ? '#a16207' : 'var(--color-text-muted)'
-            return (
-              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} width={DOTS * DOT_GAP} height={8}>
-                {Array.from({ length: DOTS }).map((_, i) => (
-                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                    fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
-                    strokeWidth={0.5}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={caseItem.suspicion_score}
+            max={1}
+            color={
+              priority.level === 'critical' ? 'var(--color-risk-critical)'
+              : priority.level === 'high' ? 'var(--color-risk-high)'
+              : priority.level === 'medium' ? 'var(--color-risk-medium)'
+              : 'var(--color-text-muted)'
+            }
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+            dotR={2}
+            dotGap={5}
+            thresholds={[0.25, 0.40, 0.60]}
+          />
         </div>
       </td>
 
@@ -929,17 +928,19 @@ function CaseTableRow({
             </span>
           )}
           {caseItem.total_contracts > 50 && caseItem.suspicion_score >= 0.4 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+              style={{ backgroundColor: 'var(--color-risk-high)15', color: 'var(--color-risk-high)', borderColor: 'color-mix(in srgb, var(--color-risk-high) 30%, transparent)' }}>
               Alta concentracion
             </span>
           )}
           {caseItem.vendor_count <= 1 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border text-text-secondary bg-border/15 border-border/30">
               Inst. unica
             </span>
           )}
           {caseItem.signals_triggered.includes('multiple_price_anomalies') && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded border"
+              style={{ backgroundColor: 'var(--color-risk-critical)15', color: 'var(--color-risk-critical)', borderColor: 'color-mix(in srgb, var(--color-risk-critical) 25%, transparent)' }}>
               Precios anomalos
             </span>
           )}
@@ -956,7 +957,7 @@ function CaseTableRow({
               <span className="text-text-muted">&mdash;</span>
             )}
           </span>
-          <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" />
+          <ChevronRight className="h-3.5 w-3.5 text-text-muted group-hover:text-accent transition-colors" aria-hidden="true" />
         </div>
       </td>
     </tr>

@@ -210,6 +210,7 @@ export function SearchOverlay({ lang }: { lang: 'en' | 'es' }) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={lang === 'en' ? 'Search sectors, institutions, vendors…' : 'Buscar sectores, instituciones, proveedores…'}
+              aria-label={lang === 'en' ? 'Search sectors, institutions, vendors' : 'Buscar sectores, instituciones, proveedores'}
               className="w-full px-4 py-3 text-base bg-transparent border-b border-border outline-none"
               style={{
                 color: 'var(--color-text-primary)',

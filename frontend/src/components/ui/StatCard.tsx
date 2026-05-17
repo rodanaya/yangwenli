@@ -26,11 +26,14 @@ export function StatCard({
   return (
     <motion.div
       className={cn(
-        'rounded-sm border border-border/30 bg-card p-4 transition-all duration-200',
+        'rounded-sm border border-border/30 bg-background-card p-4 transition-all duration-200',
         onClick && 'cursor-pointer hover:border-border/60 hover:bg-background-elevated/10',
         className
       )}
       onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick() } } : undefined}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
       whileTap={{ scale: 0.98 }}
     >

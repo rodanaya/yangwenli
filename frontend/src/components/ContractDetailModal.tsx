@@ -10,6 +10,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
 import { ContractExplainPanel } from '@/components/ContractExplainPanel'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
+import { DotBar } from '@/components/ui/DotBar'
 import {
   Building2,
   Calendar,
@@ -61,7 +62,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
           <LoadingSkeleton />
         ) : error ? (
           <div className="py-8 text-center text-text-muted">
-            <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <ShieldAlert className="h-8 w-8 mx-auto mb-2 opacity-50" aria-hidden="true" />
             <p className="text-sm">{t('detail.errorLoading')}</p>
           </div>
         ) : contract ? (
@@ -164,7 +165,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
                 {/* Disclaimer for high/critical risk */}
                 {(contract.risk_level === 'high' || contract.risk_level === 'critical') && (
-                  <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                  <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-risk-high/5 border border-risk-high/20">
                     <span className="text-risk-high/80 mt-0.5 flex-shrink-0 text-sm">⚠️</span>
                     <p className="text-[10px] text-text-muted leading-relaxed">
                       {t('riskScoreTooltipBody')}
@@ -207,7 +208,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     <Badge variant="outline" className="text-xs">{tCommon('contractDetail.flagHighValue')}</Badge>
                   )}
                   {contract.is_threshold_gaming && (
-                    <Badge className="text-xs bg-risk-high/10/30 text-risk-high border border-amber-500/30" title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}>
+                    <Badge className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30" title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}>
                       {tCommon('contractDetail.flagThresholdGaming')}
                     </Badge>
                   )}
@@ -229,31 +230,21 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                           </span>
                           {isAiConfirmed && (
                             <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
-                              <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                               {tCommon('contractDetail.aiConfirmed')}
                             </Badge>
                           )}
                         </div>
-                        {(() => {
-                          const N = 20, DR = 2, DG = 5
-                          const pct = Math.min(contract.ensemble_anomaly_score, 1)
-                          const filled = Math.max(1, Math.round(pct * N))
-                          const color = isAiConfirmed ? '#f87171' : '#9ca3af'
-                          return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                              {Array.from({ length: N }).map((_, k) => (
-                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? color : 'var(--color-background-elevated)'}
-                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                  strokeWidth={k < filled ? 0 : 0.5}
-                                  fillOpacity={k < filled ? 0.85 : 1}
-                                />
-                              ))}
-                            </svg>
-                          )
-                        })()}
+                        <DotBar
+                          value={contract.ensemble_anomaly_score}
+                          max={1}
+                          color={isAiConfirmed ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
+                          emptyColor="var(--color-background-elevated)"
+                          emptyStroke="var(--color-border-hover)"
+                          dots={20}
+                        />
                       </div>
                       <div className="text-right text-[10px] text-text-muted">
                         <p>{tCommon('contractDetail.ensemble')}</p>
@@ -299,9 +290,9 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   {tCommon('contractDetail.viewOnCompranet')}
-                </a>
+                <span className="sr-only"> (opens in new tab)</span></a>
               )}
             </section>
 
@@ -364,7 +355,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
       )}
       {isElection && (
         <span
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10/40 text-risk-high border border-amber-600/30"
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30"
           title="Contract awarded during a federal election year"
         >
           <Zap className="h-2.5 w-2.5" aria-hidden="true" />

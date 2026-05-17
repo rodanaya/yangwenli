@@ -22,11 +22,12 @@ interface EditorialTableProps<T> {
   className?: string
   initialSortKey?: string
   initialSortDir?: 'asc' | 'desc'
+  label?: string
 }
 
 export function EditorialTable<T>({
   columns, data, keyFn, onRowClick, flagFn, emptyMessage = 'No records found.',
-  className, initialSortKey, initialSortDir = 'desc'
+  className, initialSortKey, initialSortDir = 'desc', label
 }: EditorialTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(initialSortKey ?? null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>(initialSortDir)
@@ -42,12 +43,13 @@ export function EditorialTable<T>({
 
   return (
     <div className={cn('w-full overflow-x-auto', className)}>
-      <table className="editorial-table">
+      <table className="editorial-table" aria-label={label}>
         <thead>
           <tr>
             {columns.map(col => (
               <th
                 key={col.key}
+                scope="col"
                 className={cn(
                   col.numeric && 'num',
                   col.sortable && 'cursor-pointer select-none hover:text-text-secondary transition-colors',

@@ -9,6 +9,7 @@
  * and don't travel to a global audience.
  */
 import { useTranslation } from 'react-i18next'
+import { DotBar } from './DotBar'
 
 /** Convert a raw API enum string (e.g. "low_risk", "pillar_conduct") to a readable label */
 function formatRiskDriver(raw: string): string {
@@ -134,29 +135,13 @@ export function PillarBar({
   maxScore: number
   color: string
 }) {
-  const pct = Math.max(0, Math.min(100, (score / maxScore) * 100))
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
         <span>{label}</span>
         <span className="font-medium font-mono tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
-      {(() => {
-        const N = 22, DR = 2, DG = 5
-        const filled = Math.max(1, Math.round((pct / 100) * N))
-        return (
-          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                fill={k < filled ? color : 'var(--color-background-elevated)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-          </svg>
-        )
-      })()}
+      <DotBar value={score} max={maxScore} color={color} emptyColor="var(--color-background-elevated)" emptyStroke="var(--color-border-hover)" />
     </div>
   )
 }

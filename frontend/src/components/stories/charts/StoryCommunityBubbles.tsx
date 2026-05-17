@@ -99,7 +99,7 @@ export function StoryCommunityBubbles() {
             href="/network"
             className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {t('communityBubbles.exploreLink')}
           </a>
         </div>
@@ -150,7 +150,7 @@ export function StoryCommunityBubbles() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="var(--color-text-muted)" strokeWidth={2} />
+            <circle cx={CX} cy={CY} r={38} fill="var(--color-background-elevated)" stroke="var(--color-text-muted)" strokeWidth={2} />
             <text x={CX} y={CY - 4} textAnchor="middle" fill="var(--color-background-elevated)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono)">
               {t('communityBubbles.centerLabel')}
             </text>
@@ -203,7 +203,7 @@ export function StoryCommunityBubbles() {
             { label: t('communityBubbles.legendLow'),      color: 'var(--color-sector-hacienda)' },
           ].map(({ label, color }) => (
             <span key={label} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} aria-hidden="true" />
               {label}
             </span>
           ))}

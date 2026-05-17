@@ -114,7 +114,7 @@ export function DossierAddItemDialog({
         <div className="space-y-3 mt-1">
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" aria-hidden="true" />
             <Input
               autoFocus
               placeholder={lang === 'en' ? 'Search vendors...' : 'Buscar proveedores...'}
@@ -159,11 +159,11 @@ export function DossierAddItemDialog({
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left text-sm hover:bg-background-elevated/60 transition-colors disabled:opacity-60 border border-transparent hover:border-border/40"
                   >
                     {isAdded ? (
-                      <CheckCircle className="h-4 w-4 text-risk-low shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-risk-low shrink-0" aria-hidden="true" />
                     ) : isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin text-accent shrink-0" />
                     ) : (
-                      <Users className="h-4 w-4 text-text-muted shrink-0" />
+                      <Users className="h-4 w-4 text-text-muted shrink-0" aria-hidden="true" />
                     )}
                     <span className="flex-1 truncate font-medium text-text-primary">
                       {vendor.name}

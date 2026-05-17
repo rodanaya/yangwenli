@@ -22,6 +22,7 @@ import { contractApi, exportApi } from '@/api/client'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { DotBar } from '@/components/ui/DotBar'
 import { RiskExplainTooltip } from '@/components/RiskExplainTooltip'
 import { TableExportButton } from '@/components/TableExportButton'
 import { SECTORS, RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
@@ -599,7 +600,7 @@ export function Contracts() {
       {/* Subheader: live count + actions */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-text-muted flex items-center gap-2" aria-live="polite">
-          <FileText className="h-3.5 w-3.5 text-accent" />
+          <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
           <span>
             {data ? `${formatNumber(data?.pagination?.total ?? 0)} ${t('common:results', 'resultados')}` : t('common:loading', 'Cargando...')}
             {isFetching && !isLoading && (
@@ -639,7 +640,7 @@ export function Contracts() {
       {/* Pre-2010 data quality banner — shown when year filter is ≤2010 or no year filter (includes 2002+ data) */}
       {!pre2010Dismissed && (!filters.year || filters.year <= 2010) && (
         <div
-          className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"
+          className="flex items-start gap-3 rounded-md border border-risk-high/30 bg-risk-high/5 px-4 py-3 text-text-secondary"
           role="alert"
           aria-live="polite"
         >
@@ -651,7 +652,7 @@ export function Contracts() {
               setPre2010Dismissed(true)
             }}
             aria-label="Dismiss data quality notice"
-            className="ml-2 shrink-0 text-amber-600 hover:text-amber-800 transition-colors"
+            className="ml-2 shrink-0 text-risk-high hover:text-risk-critical transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -663,7 +664,7 @@ export function Contracts() {
         {showSearchLoading ? (
           <Loader2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted animate-spin pointer-events-none" />
         ) : (
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted pointer-events-none" aria-hidden="true" />
         )}
         <input
           type="text"
@@ -697,7 +698,7 @@ export function Contracts() {
               className={cn(
                 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition-colors',
                 isActive
-                  ? 'bg-amber-500/20 text-risk-high border-amber-500/40 font-medium'
+                  ? 'bg-risk-high/20 text-risk-high border-risk-high/40 font-medium'
                   : 'bg-background-elevated text-text-secondary hover:bg-background-elevated border-border'
               )}
             >
@@ -828,8 +829,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_direct_award
-              ? 'border-amber-500 text-risk-high bg-risk-high/10 font-semibold'
-              : 'border-border text-text-muted hover:border-amber-500/50 hover:text-risk-high'
+              ? 'border-risk-high text-risk-high bg-risk-high/10 font-semibold'
+              : 'border-border text-text-muted hover:border-risk-high/50 hover:text-risk-high'
           )}
           aria-pressed={!!filters.is_direct_award}
         >
@@ -842,8 +843,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             filters.is_single_bid
-              ? 'border-red-500 text-risk-critical bg-risk-critical/10 font-semibold'
-              : 'border-border text-text-muted hover:border-red-500/50 hover:text-risk-critical'
+              ? 'border-risk-critical text-risk-critical bg-risk-critical/10 font-semibold'
+              : 'border-border text-text-muted hover:border-risk-critical/50 hover:text-risk-critical'
           )}
           aria-pressed={!!filters.is_single_bid}
         >
@@ -856,8 +857,8 @@ export function Contracts() {
           className={cn(
             'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
             showAnomalyScore
-              ? 'border-purple-500 text-purple-400 bg-purple-500/10 font-semibold'
-              : 'border-border text-text-muted hover:border-purple-500/50 hover:text-purple-400'
+              ? 'border-accent-data text-accent-data bg-accent-data/10 font-semibold'
+              : 'border-border text-text-muted hover:border-accent-data/50 hover:text-accent-data'
           )}
           aria-pressed={showAnomalyScore}
           title="Toggle PyOD ensemble anomaly score column"
@@ -1007,7 +1008,7 @@ export function Contracts() {
               <button
                 key={tag.key}
                 onClick={() => removeFilterTag(tag.key)}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/20 text-risk-high border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-risk-high/20 text-risk-high border border-risk-high/40 hover:bg-risk-high/30 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
                 {tag.label}
@@ -1029,7 +1030,7 @@ export function Contracts() {
             </div>
           ) : error ? (
             <div className="p-8 text-center" role="alert">
-              <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+              <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" aria-hidden="true" />
               <h3 className="text-sm font-medium mb-1">Failed to load contracts</h3>
               <p className="text-xs text-text-muted mb-3">
                 {(error as Error).message === 'Network Error'
@@ -1037,14 +1038,14 @@ export function Contracts() {
                   : (error as Error).message || 'An unexpected error occurred.'}
               </p>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
-                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
                 Retry
               </Button>
             </div>
           ) : data?.data?.length === 0 ? (
             !hasActiveFilters ? (
               <div className="p-12 text-center">
-                <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" />
+                <FileText className="h-14 w-14 mx-auto mb-4 opacity-10" aria-hidden="true" />
                 <p className="text-base font-semibold text-text-primary mb-1">{t('emptyInitial')}</p>
                 <p className="text-xs text-text-muted max-w-xs mx-auto leading-relaxed">
                   {t('emptyInitialDesc')}
@@ -1052,7 +1053,7 @@ export function Contracts() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <FileSearch className="h-8 w-8 text-text-muted mb-3" />
+                <FileSearch className="h-8 w-8 text-text-muted mb-3" aria-hidden="true" />
                 <p className="text-sm font-medium text-text-secondary">{t('emptyFiltered')}</p>
                 <p className="text-xs text-text-muted mt-1">{t('emptyFilteredDesc')}</p>
               </div>
@@ -1079,7 +1080,7 @@ export function Contracts() {
               <table className="w-full table-fixed" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b border-border">
                   <tr>
-                    <th className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
+                    <th scope="col" className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
                       {compareIds.size > 0 && (
                         <button
                           onClick={clearCompare}
@@ -1091,13 +1092,14 @@ export function Contracts() {
                         </button>
                       )}
                     </th>
-                    <th className="px-2 py-2 w-8" />
+                    <th scope="col" className="px-2 py-2 w-8" />
                     {/* Fix 4: Column headers via t() */}
                     {CONTRACT_COLUMN_DEFS.map((col) => (
-                      <th
+                      <th scope="col"
                         key={col.key}
+                        scope="col"
                         className={cn(
-                          'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] select-none',
+                          'px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
@@ -1125,13 +1127,14 @@ export function Contracts() {
                     {/* #9 — optional ensemble anomaly score column header */}
                     {showAnomalyScore && (
                       <th
-                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-purple-400 select-none whitespace-nowrap"
+                        scope="col"
+                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-data select-none whitespace-nowrap"
                         title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
                       >
                         PyOD
                       </th>
                     )}
-                    <th className="px-2 py-2 w-8" />
+                    <th scope="col" className="px-2 py-2 w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -1157,7 +1160,7 @@ export function Contracts() {
 
       {/* Pagination — Fix 6: use filters.per_page throughout */}
       {data && (data?.pagination?.total ?? 0) > 0 && (
-        <div className="flex items-center justify-between">
+        <nav aria-label="Pagination" className="flex items-center justify-between">
           <p className="text-xs text-text-muted font-mono tabular-nums">
             {(() => {
               const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination?.total ?? 0)
@@ -1173,7 +1176,7 @@ export function Contracts() {
               onClick={() => updateFilter('page', Math.max(1, (filters.page || 1) - 1))}
               aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {clampPage(filters.page || 1, data.pagination?.total_pages ?? 1)}/{Math.max(1, data.pagination?.total_pages ?? 1)}
@@ -1186,10 +1189,10 @@ export function Contracts() {
               onClick={() => updateFilter('page', Math.min(data.pagination?.total_pages ?? 1, (filters.page || 1) + 1))}
               aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
-        </div>
+        </nav>
       )}
 
       {isDetailOpen && (
@@ -1222,7 +1225,7 @@ export function Contracts() {
             className="h-7 text-xs px-3 rounded-full"
             onClick={() => setIsCompareOpen(true)}
           >
-            <GitCompareArrows className="h-3.5 w-3.5 mr-1.5" />
+            <GitCompareArrows className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
             Compare
           </Button>
           <button
@@ -1340,24 +1343,20 @@ function ContractRow({
           {contract.risk_score != null && (
             <div className="flex items-center gap-1.5">
               {(() => {
-                const N = 12, DR = 1.75, DG = 4
-                const pct = Math.min(contract.risk_score, 1)
-                const filled = Math.max(1, Math.round(pct * N))
                 const color = contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
                   : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
                   : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
                   : RISK_COLORS.low
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
+                  <DotBar
+                    value={contract.risk_score}
+                    max={1}
+                    color={color}
+                    dots={12}
+                    dotR={1.75}
+                    dotGap={4}
+                    thresholds={[0.25, 0.40, 0.60]}
+                  />
                 )
               })()}
               <span className="font-mono text-[10px] text-text-muted tabular-nums">{contract.risk_score.toFixed(3)}</span>
@@ -1390,7 +1389,7 @@ function ContractRow({
           <div className="flex items-center gap-1 min-w-0">
             {contract.vendor_is_individual && (
               <span
-                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-amber-500/40 bg-risk-high/10 text-risk-high leading-none"
+                className="shrink-0 text-[9px] font-bold px-1 py-0.5 rounded border border-risk-high/40 bg-risk-high/10 text-risk-high leading-none"
                 title="Natural person (individual) — not a company"
               >
                 PERSON
@@ -1468,7 +1467,7 @@ function ContractRow({
                 aria-label="Multivariate anomaly detected"
                 className="text-risk-high cursor-help leading-none inline-flex"
               >
-                <AlertTriangle className="h-3 w-3" />
+                <AlertTriangle className="h-3 w-3" aria-hidden="true" />
               </span>
             )}
             <span
@@ -1490,23 +1489,18 @@ function ContractRow({
           {contract.ensemble_anomaly_score != null ? (
             <div className="flex items-center gap-1.5 justify-end" title={`PyOD ensemble score: ${contract.ensemble_anomaly_score.toFixed(3)}`}>
               {(() => {
-                const N = 12, DR = 1.75, DG = 4
-                const pct = Math.min(contract.ensemble_anomaly_score, 1)
-                const filled = Math.max(1, Math.round(pct * N))
                 const color = contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
                   : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
                   : '#94a3b8'
                 return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
+                  <DotBar
+                    value={contract.ensemble_anomaly_score}
+                    max={1}
+                    color={color}
+                    dots={12}
+                    dotR={1.75}
+                    dotGap={4}
+                  />
                 )
               })()}
               <span
@@ -1536,7 +1530,7 @@ function ContractRow({
             onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
             aria-label={`View details for ${contract.contract_number || contract.id}`}
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
           <Link
             to={`/contracts/${contract.id}`}
@@ -1545,7 +1539,7 @@ function ContractRow({
             onClick={(e) => e.stopPropagation()}
             aria-label={`Open full page for ${contract.contract_number || contract.id}`}
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
       </td>
@@ -1620,16 +1614,16 @@ function ContractRow({
             onClick={(e) => e.stopPropagation()}
             title="View on COMPRANET"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             COMPRANET
-          </a>
+          <span className="sr-only"> (opens in new tab)</span></a>
         )}
         <div className="ml-auto flex items-center gap-3">
           <button
             className="text-xs text-accent hover:underline flex items-center gap-1"
             onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
           >
-            <Eye className="h-3 w-3" />
+            <Eye className="h-3 w-3" aria-hidden="true" />
             {t('table.fullDetails')}
           </button>
           <Link
@@ -1638,7 +1632,7 @@ function ContractRow({
             className="text-xs text-accent hover:underline flex items-center gap-1"
             title="Open full page"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             Full page
           </Link>
         </div>

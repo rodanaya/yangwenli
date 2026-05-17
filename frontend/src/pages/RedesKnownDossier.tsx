@@ -815,7 +815,7 @@ function CommunityDossier({
       aria-expanded={isExpanded}
       className={cn(
         'rounded-sm border overflow-hidden transition-all cursor-pointer',
-        'bg-surface-card border-border',
+        'bg-background-card border-border',
         isActive ? 'border-border ring-1 ring-border' : 'hover:border-border',
       )}
       style={{
@@ -1041,7 +1041,7 @@ function CommunityDossier({
               onClick={(e) => e.stopPropagation()}
             >
               {isEs ? 'Cola ARIA' : 'ARIA Queue'}
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           )}
         </div>
@@ -1092,7 +1092,7 @@ function SignatureRow({
         <DotBar value={value} color={color} dots={22} size={5} gap={2} />
         {benchmark != null && (
           <span
-            className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
+            className="absolute top-0 bottom-0 w-px bg-oecd/60"
             style={{ left: `${benchmark * 100}%` }}
             aria-hidden="true"
           />
@@ -1107,7 +1107,7 @@ function SignatureRow({
         {pct}%
       </span>
       {benchmarkLabel && (
-        <span className="text-[9px] text-[color:var(--color-oecd)]/70 font-mono w-16 text-right">
+        <span className="text-[9px] text-oecd/70 font-mono w-16 text-right">
           {benchmarkLabel}
         </span>
       )}
@@ -1426,8 +1426,8 @@ export default function RedesKnownDossier() {
   if (dataError) {
     return (
       <div className="max-w-6xl mx-auto pb-12">
-        <div className="mt-8 rounded border border-border/60 bg-surface px-6 py-8 text-center">
-          <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" />
+        <div className="mt-8 rounded border border-border/60 bg-background px-6 py-8 text-center">
+          <Network className="mx-auto mb-4 h-8 w-8 text-text-muted/40" aria-hidden="true" />
           <p
             className="text-text-primary mb-1"
             style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontSize: '1.15rem' }}
@@ -1486,7 +1486,7 @@ export default function RedesKnownDossier() {
           }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIV</span>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
               {isEs ? 'Inteligencia de red · ARIA + Louvain' : 'Network intelligence · ARIA + Louvain'}
@@ -1508,14 +1508,14 @@ export default function RedesKnownDossier() {
           {isEs ? (
             <>
               La{' '}
-              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                 red invisible.
               </span>
             </>
           ) : (
             <>
               The{' '}
-              <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+              <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                 invisible
               </span>
               {' '}network.
@@ -1565,22 +1565,22 @@ export default function RedesKnownDossier() {
         </div>
 
         {/* Real-data callout derived from spotlight query */}
-        <div className="inline-flex items-center gap-3 rounded-sm border border-[color:var(--color-accent)]/25 bg-[color:var(--color-accent)]/8 px-4 py-2">
-          <span className="h-2 w-2 rounded-full bg-[color:var(--color-accent)] animate-pulse flex-shrink-0" />
+        <div className="inline-flex items-center gap-3 rounded-sm border border-accent/25 bg-accent/8 px-4 py-2">
+          <span className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0" aria-hidden="true" />
           <span className="text-sm font-mono">
-            <span className="text-[color:var(--color-accent)] font-bold">
+            <span className="text-accent font-bold">
               {formatNumber(communities.reduce((s, c) => s + c.vendors, 0))}
             </span>
             <span className="text-text-muted/70 ml-1.5">
               {isEs ? 'proveedores en ' : 'vendors across '}
             </span>
-            <span className="text-[color:var(--color-accent)] font-bold">
+            <span className="text-accent font-bold">
               {communities.length}
             </span>
             <span className="text-text-muted/70 ml-1.5">
               {isEs ? 'clústeres de patrones · ' : 'pattern clusters · '}
             </span>
-            <span className="text-[color:var(--color-accent)] font-bold">
+            <span className="text-accent font-bold">
               {communities.reduce((s, c) => s + c.confirmed, 0)}
             </span>
             <span className="text-text-muted/70 ml-1.5">

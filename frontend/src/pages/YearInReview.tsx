@@ -169,7 +169,7 @@ function SectorDistributionFull({
               disabled={!hasData}
               className={cn(
                 'w-full group flex items-center gap-3 py-1.5 px-1 rounded transition-colors text-left',
-                hasData ? 'hover:bg-card-hover/40 cursor-pointer' : 'opacity-40 cursor-not-allowed',
+                hasData ? 'hover:bg-background-elevated/40 cursor-pointer' : 'opacity-40 cursor-not-allowed',
               )}
               aria-label={`${s.name}: ${formatCompactMXN(s.value)}`}
             >
@@ -404,7 +404,7 @@ function RiskEvolution({
         <HallazgoStat
           value={`${yearRow.high_risk_pct.toFixed(1)}%`}
           label={`${t('riskEvolution.thisYear')} · ${validYear}`}
-          color={isAboveOECD ? 'border-red-500' : 'border-amber-500'}
+          color={isAboveOECD ? 'border-risk-critical' : 'border-risk-high'}
         />
         <HallazgoStat
           value={`${historicalAvg.toFixed(1)}%`}
@@ -421,42 +421,19 @@ function RiskEvolution({
       {/* Visual tape: three stacked dot-matrix strips */}
       <div className="rounded-sm border border-border/30 bg-background-elevated/30 p-5 space-y-4">
         {(() => {
-          const N = 50, DR = 3, DG = 8
-          const oecdIdx = Math.round((oecdPct / 100) * N)
-          const renderStrip = (pct: number, color: string) => {
-            const filled = Math.max(0, Math.min(N, Math.round((pct / 100) * N)))
-            return (
-              <svg
-                viewBox={`0 0 ${N * DG} 10`}
-                width={N * DG}
-                height={10}
-                aria-hidden="true"
-              >
-                {Array.from({ length: N }).map((_, i) => (
-                  <circle
-                    key={i}
-                    cx={i * DG + DR}
-                    cy={5}
-                    r={DR}
-                    fill={i < filled ? color : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={i < filled ? 0 : 0.5}
-                    fillOpacity={i < filled ? 0.85 : 1}
-                  />
-                ))}
-                {/* OECD marker line */}
-                <line
-                  x1={oecdIdx * DG + DR}
-                  y1={0}
-                  x2={oecdIdx * DG + DR}
-                  y2={10}
-                  stroke="#22d3ee"
-                  strokeWidth={1}
-                  strokeOpacity={0.8}
-                />
-              </svg>
-            )
-          }
+          const renderStrip = (pct: number, color: string) => (
+            <DotBar
+              value={pct}
+              max={100}
+              color={color}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={50}
+              dotR={3}
+              dotGap={8}
+              thresholds={[{ value: oecdPct, color: '#22d3ee' }]}
+            />
+          )
           return (
             <>
               {/* This year */}
@@ -483,11 +460,11 @@ function RiskEvolution({
 
               {/* OECD threshold */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-[0.15em] text-[color:var(--color-oecd)] w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-oecd w-28 flex-shrink-0">
                   {t('riskEvolution.oecdTarget')}
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
-                <span className="font-mono text-xs text-[color:var(--color-oecd)] w-14 text-right flex-shrink-0 tabular-nums">
+                <span className="font-mono text-xs text-oecd w-14 text-right flex-shrink-0 tabular-nums">
                   {OECD_HIGH_RISK_THRESHOLD}%
                 </span>
               </div>
@@ -503,13 +480,13 @@ function RiskEvolution({
       <div
         className={cn(
           'mt-4 rounded-sm border px-4 py-3 flex items-start gap-3',
-          isAboveOECD ? 'border-red-500/30 bg-red-500/5' : 'border-border-hover bg-background-elevated',
+          isAboveOECD ? 'border-risk-critical/30 bg-risk-critical/5' : 'border-border-hover bg-background-elevated',
         )}
       >
         <div
           className={cn(
             'h-2 w-2 rounded-full flex-shrink-0 mt-1.5',
-            isAboveOECD ? 'bg-red-500 animate-pulse' : 'bg-text-muted',
+            isAboveOECD ? 'bg-risk-critical animate-pulse' : 'bg-text-muted',
           )}
         />
         <div>
@@ -627,8 +604,8 @@ function ProcedureTypeSection({
             className="absolute top-0 bottom-0 flex flex-col items-center"
             style={{ left: `${OECD_DIRECT_AWARD_LIMIT}%`, transform: 'translateX(-50%)' }}
           >
-            <div className="h-2 w-px bg-cyan-400" />
-            <span className="text-[9px] font-mono text-[color:var(--color-oecd)] whitespace-nowrap">
+            <div className="h-2 w-px bg-oecd" />
+            <span className="text-[9px] font-mono text-oecd whitespace-nowrap">
               {t('procedureType.oecdLimit')}
             </span>
           </div>
@@ -639,7 +616,7 @@ function ProcedureTypeSection({
         </p>
 
         {isAboveOECD && (
-          <div className="mt-3 flex items-start gap-2 rounded border border-red-500/30 bg-red-500/5 px-3 py-2">
+          <div className="mt-3 flex items-start gap-2 rounded border border-risk-critical/30 bg-risk-critical/5 px-3 py-2">
             <AlertTriangle className="h-3.5 w-3.5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[11px] text-risk-critical/90 leading-relaxed">
               {t('findings.highDirectAward', { pct: directPct.toFixed(1) })}
@@ -705,8 +682,8 @@ function TopVendorsTable({
               onClick={() => onVendorClick(v.vendor_id)}
               className={cn(
                 'w-full grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 items-center px-3 py-3 text-left transition-colors rounded cursor-pointer',
-                'hover:bg-card-hover/40',
-                rank === 1 && 'bg-red-500/5',
+                'hover:bg-background-elevated/40',
+                rank === 1 && 'bg-risk-critical/5',
               )}
             >
               <span
@@ -804,7 +781,7 @@ function NotableRiskContracts({
           <motion.button
             key={c.id ?? i}
             onClick={() => c.id && onContractClick(c.id)}
-            className="w-full text-left rounded-r-lg bg-card/40 hover:bg-card-hover/40 transition-all p-4"
+            className="w-full text-left rounded-r-lg bg-background-card/40 hover:bg-background-elevated/40 transition-all p-4"
             style={{ borderLeft: `3px solid ${color}` }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1149,7 +1126,7 @@ export default function YearInReview() {
       </header>
 
       {isLoading && (
-        <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+        <div className="h-32 rounded border border-border bg-background animate-pulse" />
       )}
 
       <div className="space-y-8">
@@ -1170,7 +1147,7 @@ export default function YearInReview() {
                   className={cn(
                     'px-3.5 py-1.5 text-sm font-bold transition-all rounded-sm border',
                     y === validYear
-                      ? 'bg-risk-high/10 text-risk-high border-amber-500/60 shadow-sm'
+                      ? 'bg-risk-high/10 text-risk-high border-risk-high/60 shadow-sm'
                       : 'text-text-muted hover:text-text-primary border-border/40 hover:border-border',
                   )}
                   style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -1245,7 +1222,7 @@ export default function YearInReview() {
                   value={`${yearRow.high_risk_pct.toFixed(1)}%`}
                   label={t('heroStats.highRiskRate')}
                   annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} ${t('contracts')}`}
-                  color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
+                  color={yearRow.high_risk_pct >= 15 ? 'border-risk-critical' : 'border-risk-high'}
                 />
               </motion.div>
               <motion.div variants={staggerItem}>
@@ -1253,7 +1230,7 @@ export default function YearInReview() {
                   value={topSector?.name ?? '--'}
                   label={t('heroStats.topSector')}
                   annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
-                  color="border-amber-500"
+                  color="border-risk-high"
                   className="[&>div:first-child]:text-2xl"
                 />
               </motion.div>
@@ -1269,7 +1246,7 @@ export default function YearInReview() {
                   color={
                     spendingChangePct == null ? 'border-border'
                       : spendingChangePct > 0 ? 'border-text-muted'
-                        : 'border-red-500'
+                        : 'border-risk-critical'
                   }
                 />
               </motion.div>
@@ -1401,7 +1378,7 @@ export default function YearInReview() {
 
             {/* Full sector distribution (ALL 12) */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorAll.sectionLabel')}
               </p>
               <p
@@ -1431,7 +1408,7 @@ export default function YearInReview() {
 
             {/* Sector growth — diverging chart */}
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('sectorGrowthFull.sectionLabel')}
               </p>
               <p
@@ -1464,7 +1441,7 @@ export default function YearInReview() {
           {/* Risk Evolution */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('riskEvolution.sectionLabel')}
               </p>
               <p
@@ -1484,7 +1461,7 @@ export default function YearInReview() {
           {/* Procedure Type */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                 {t('procedureType.sectionLabel')}
               </p>
               <p
@@ -1505,7 +1482,7 @@ export default function YearInReview() {
 
           {/* Monthly spending */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('monthly.sectionLabel')}
             </p>
             <p
@@ -1534,11 +1511,11 @@ export default function YearInReview() {
           {/* Spotlight — top vendor */}
           {topVendor && !vendorsLoading && (
             <motion.div variants={fadeIn} initial="initial" animate="animate">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-3">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-3">
                 {t('spotlight.label')}
               </p>
               <div
-                className="rounded-sm border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
+                className="rounded-sm border border-border/40 bg-background-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
                 onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
                 role="button"
                 tabIndex={0}
@@ -1589,7 +1566,7 @@ export default function YearInReview() {
 
           {/* Top 20 Vendors */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
               {t('topVendorsFull.sectionLabel')}
             </p>
             <p
@@ -1620,7 +1597,7 @@ export default function YearInReview() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" aria-hidden="true" />
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 {t('notableRisks.sectionLabel')}
               </p>
             </div>
@@ -1663,7 +1640,7 @@ export default function YearInReview() {
                     'px-2.5 py-1 rounded-sm text-xs font-mono transition-colors',
                     y === validYear
                       ? 'bg-text-primary text-background font-bold'
-                      : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent',
+                      : 'text-text-muted hover:text-text-primary hover:bg-background-elevated border border-transparent',
                   )}
                   aria-current={y === validYear ? 'page' : undefined}
                 >

@@ -56,35 +56,35 @@ export function ReportIssueDialog({
       label: t('reportIssue.categories.bug'),
       description: t('reportIssue.categories.bugDesc'),
       Icon: Bug,
-      color: 'text-risk-critical border-red-500/30 bg-red-500/5',
+      color: 'text-risk-critical border-risk-critical/30 bg-risk-critical/5',
     },
     {
       value: 'wrong_data',
       label: t('reportIssue.categories.wrongData'),
       description: t('reportIssue.categories.wrongDataDesc'),
       Icon: Database,
-      color: 'text-risk-high border-amber-500/30 bg-amber-500/5',
+      color: 'text-risk-high border-risk-high/30 bg-risk-high/5',
     },
     {
       value: 'data_correction',
       label: t('reportIssue.categories.dispute'),
       description: t('reportIssue.categories.disputeDesc'),
       Icon: Flag,
-      color: 'text-orange-400 border-orange-500/30 bg-orange-500/5',
+      color: 'text-risk-high border-risk-high/30 bg-risk-high/5',
     },
     {
       value: 'feature_request',
       label: t('reportIssue.categories.feature'),
       description: t('reportIssue.categories.featureDesc'),
       Icon: Lightbulb,
-      color: 'text-blue-400 border-blue-500/30 bg-blue-500/5',
+      color: 'text-accent border-accent/30 bg-accent/5',
     },
     {
       value: 'other',
       label: t('reportIssue.categories.other'),
       description: t('reportIssue.categories.otherDesc'),
       Icon: HelpCircle,
-      color: 'text-text-muted border-border/40 bg-surface/30',
+      color: 'text-text-muted border-border/40 bg-background/30',
     },
   ]
 
@@ -142,7 +142,7 @@ export function ReportIssueDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <MessageSquarePlus className="h-4 w-4 text-accent" />
+            <MessageSquarePlus className="h-4 w-4 text-accent" aria-hidden="true" />
             {t('reportIssue.title')}
           </DialogTitle>
         </DialogHeader>

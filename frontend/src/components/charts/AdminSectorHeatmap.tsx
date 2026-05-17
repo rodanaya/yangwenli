@@ -206,7 +206,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                       <div
                         className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-background-card border border-border rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"
                       >
-                        <p className="text-[10px] font-semibold text-text-primary mb-0.5">
+                        <p className="text-[10px] font-medium text-text-primary mb-0.5">
                           {admin.fullName} &middot; {sector.nameEN}
                         </p>
                         <p className="text-[10px] font-mono text-text-muted">

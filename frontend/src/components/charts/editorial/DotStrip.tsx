@@ -178,7 +178,7 @@ export function DotStrip({
         })}
       </ul>
       {oecdMark && (
-        <div className="text-[10px] font-mono text-[color:var(--color-oecd)] mt-1.5">
+        <div className="text-[10px] font-mono text-oecd mt-1.5">
           {oecdMark.label ?? `OCDE · ${Math.round(oecdMark.fraction * 100)}%`}
         </div>
       )}

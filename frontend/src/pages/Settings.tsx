@@ -31,6 +31,7 @@ import {
   Archive,
 } from 'lucide-react'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ============================================================================
 // Types & Constants
@@ -204,7 +205,7 @@ function GeneralTab() {
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderLeft: '3px solid var(--color-accent-data)' }}>
           <div>
             <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
-              <Database className="h-4 w-4 text-accent-data" />
+              <Database className="h-4 w-4 text-accent-data" aria-hidden="true" />
               {t('general.dataInfo.title')}
             </h3>
             <p className="text-xs text-text-muted mt-0.5">{t('general.dataInfo.description')}</p>
@@ -216,7 +217,7 @@ function GeneralTab() {
             aria-label={t('general.dataInfo.refreshLabel')}
             className="p-2 rounded-sm text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
         </div>
         <div className="px-6 py-4 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>
@@ -299,7 +300,7 @@ function GeneralTab() {
       <div className="card-elevated rounded-sm overflow-hidden">
         <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
           <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
-            <Info className="h-4 w-4 text-accent" />
+            <Info className="h-4 w-4 text-accent" aria-hidden="true" />
             {t('general.about.title')}
           </h3>
         </div>
@@ -475,7 +476,7 @@ function DataQualityTab() {
     return (
       <Card>
         <CardContent className="p-10 text-center space-y-3">
-          <Database className="h-8 w-8 mx-auto text-text-muted opacity-40" />
+          <Database className="h-8 w-8 mx-auto text-text-muted opacity-40" aria-hidden="true" />
           <p className="text-sm font-medium text-text-primary">Data Quality Metrics Not Yet Computed</p>
           <p className="text-xs text-text-muted max-w-sm mx-auto">
             Run <code className="bg-background-card px-1.5 py-0.5 rounded text-accent font-mono">python -m scripts.precompute_stats</code> from the backend directory to generate quality metrics for {formatNumber(data.total_contracts)} contracts.
@@ -496,7 +497,7 @@ function DataQualityTab() {
         </p>
         {data.last_calculated && (
           <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3 w-3" aria-hidden="true" />
             Last calculated: {new Date(data.last_calculated).toLocaleString()}
           </div>
         )}
@@ -549,7 +550,7 @@ function DataQualityTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
+              <Database className="h-4 w-4" aria-hidden="true" />
               Quality by Data Period
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
@@ -566,7 +567,7 @@ function DataQualityTab() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+            <Clock className="h-4 w-4" aria-hidden="true" />
             Data Structure Timeline
           </CardTitle>
           <p className="text-xs text-text-muted mt-1">
@@ -608,7 +609,7 @@ function DataQualityTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileWarning className="h-4 w-4" />
+              <FileWarning className="h-4 w-4" aria-hidden="true" />
               Field Completeness
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
@@ -623,14 +624,14 @@ function DataQualityTab() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-risk-high" />
+              <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
               Key Issues
             </CardTitle>
           </CardHeader>
           <CardContent>
             {data.key_issues.length === 0 ? (
               <div className="flex items-center justify-center py-8 text-text-muted">
-                <CheckCircle className="h-5 w-5 mr-2 text-risk-low" />
+                <CheckCircle className="h-5 w-5 mr-2 text-risk-low" aria-hidden="true" />
                 No critical issues detected
               </div>
             ) : (
@@ -644,7 +645,7 @@ function DataQualityTab() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Info className="h-4 w-4" />
+            <Info className="h-4 w-4" aria-hidden="true" />
             Understanding Quality Grades
           </CardTitle>
         </CardHeader>
@@ -1113,27 +1114,17 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
         <div key={field.field_name} className="flex items-center gap-3">
           <div className="w-28 text-sm font-medium truncate">{field.field_name}</div>
           <div className="flex-1">
-            {(() => {
-              const N = 24, DR = 2, DG = 5
-              const filled = Math.max(1, Math.round((field.fill_rate / 100) * N))
-              // No green low — best fill bucket = OECD cyan. Tokens.
-              const color = field.fill_rate >= 90 ? 'var(--color-oecd)'
+            <DotBar
+              value={field.fill_rate}
+              max={100}
+              color={field.fill_rate >= 90 ? 'var(--color-oecd)'
                 : field.fill_rate >= 70 ? 'var(--color-accent-data)'
                 : field.fill_rate >= 50 ? 'var(--color-risk-medium)'
-                : '#f87171'
-              return (
-                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? color : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+                : 'var(--color-risk-critical)'}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={24}
+            />
           </div>
           <div className="w-16 text-right text-sm font-mono tabular-nums">{field.fill_rate.toFixed(1)}%</div>
         </div>

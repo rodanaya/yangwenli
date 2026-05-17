@@ -76,7 +76,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                 {/* Anomaly dot */}
                 {d.hasAnomaly && (
                   <div
-                    className="absolute -top-1 w-2 h-2 rounded-full bg-orange-400 z-10"
+                    className="absolute -top-1 w-2 h-2 rounded-full bg-risk-high z-10"
                     style={{ top: `${100 - barHeight - 8}%` }}
                     title={d.anomalyNote}
                   />
@@ -110,7 +110,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                       {t('cronologia.risk')}: {(d.avgRiskScore * 100).toFixed(0)}%
                     </p>
                     {d.hasAnomaly && d.anomalyNote && (
-                      <p className="text-[10px] text-orange-400 mt-0.5">
+                      <p className="text-[10px] text-risk-high mt-0.5">
                         {d.anomalyNote}
                       </p>
                     )}

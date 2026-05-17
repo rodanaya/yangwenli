@@ -52,7 +52,7 @@ export function NotFound() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('notFound.searchPlaceholder')}
-            className="w-full rounded-sm border border-border bg-background-elevated pl-9 pr-3 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-sm border border-border bg-background-elevated pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label={t('notFound.searchPlaceholder')}
           />
         </div>
@@ -71,7 +71,7 @@ export function NotFound() {
           onClick={() => navigate('/')}
           className="flex items-center gap-2 px-4 py-2 rounded-sm border border-border text-sm font-semibold text-text-secondary hover:bg-background-elevated hover:border-border-hover transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('notFound.backHome')}
         </button>
         <button

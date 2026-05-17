@@ -59,7 +59,7 @@ function PatternBadge({ pattern }: { pattern: string | null }) {
     ? tAria(`patterns.${pattern}`, { defaultValue: PATTERN_LABELS[pattern] })
     : pattern
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-600/30">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-accent-data/10 text-accent-data border border-accent-data/30">
       {pattern} · {label}
     </span>
   )
@@ -149,7 +149,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
               key={t}
               onClick={() => setTier(t)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                tier === t ? 'bg-red-600 text-text-primary' : 'text-text-secondary hover:text-text-primary'
+                tier === t ? 'bg-risk-critical text-white' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               T{t}
@@ -169,16 +169,16 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" aria-label={t('ariaWidget.tableAriaLabel', { defaultValue: 'ARIA investigation leads' })}>
             <thead>
               <tr className="text-left text-[11px] text-text-muted uppercase tracking-wider border-b border-border">
-                <th className="pb-2 pr-2">#</th>
-                <th className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.sector')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.risk')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.ips')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.pattern')}</th>
-                <th className="pb-2 pr-2 text-right">{t('amount')}</th>
+                <th scope="col" className="pb-2 pr-2">#</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.sector')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.risk')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.ips')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.pattern')}</th>
+                <th scope="col" className="pb-2 pr-2 text-right">{t('amount')}</th>
               </tr>
             </thead>
             <tbody>

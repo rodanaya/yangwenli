@@ -226,10 +226,10 @@ const PATTERN_SECTOR_MATRIX: Record<string, number[]> = {
 // ── GT evidence distribution (documented cases from ground_truth_cases) ─────
 function buildGtTypes(isEs: boolean) {
   return [
-    { type: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud', count: 432, color: '#dc2626' },
-    { type: isEs ? 'Captura institucional' : 'Institutional capture',   count: 317, color: '#dc2626' },
-    { type: isEs ? 'Captura licitación única' : 'Single-bid capture', count: 216, color: '#f59e0b' },
-    { type: isEs ? 'Empresa fantasma' : 'Ghost company',        count: 144, color: '#f59e0b' },
+    { type: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud', count: 432, color: 'var(--color-risk-critical)' },
+    { type: isEs ? 'Captura institucional' : 'Institutional capture',   count: 317, color: 'var(--color-risk-critical)' },
+    { type: isEs ? 'Captura licitación única' : 'Single-bid capture', count: 216, color: 'var(--color-risk-high)' },
+    { type: isEs ? 'Empresa fantasma' : 'Ghost company',        count: 144, color: 'var(--color-risk-high)' },
     { type: isEs ? 'Monopolio' : 'Monopoly',               count: 71,  color: '#78716c' },
     { type: isEs ? 'Sobreprecio' : 'Overpricing',             count: 70,  color: '#78716c' },
     { type: isEs ? 'Otros' : 'Other',                   count: 93,  color: '#57534e' },
@@ -441,11 +441,6 @@ function ComplementaryTypologyCard({
   typology: ComplementaryTypology
   isEs: boolean
 }) {
-  // Render each stat as a 20-dot row where `filled = round(value / max * 20)`.
-  const DOTS = 20
-  const DOT_SIZE = 6
-  const DOT_GAP = 3
-  const ROW_W = DOTS * (DOT_SIZE + DOT_GAP) - DOT_GAP
   return (
     <article
       className="rounded-sm p-5 transition-colors hover:bg-background-elevated"
@@ -474,8 +469,6 @@ function ComplementaryTypologyCard({
       {/* Dot-viz rows: one per stat */}
       <div className="space-y-2.5">
         {typology.stats.map((stat) => {
-          const ratio = Math.max(0, Math.min(1, stat.value / stat.max))
-          const filled = Math.round(ratio * DOTS)
           const accent = stat.color ?? typology.color
           return (
             <div key={stat.label}>
@@ -493,24 +486,13 @@ function ComplementaryTypologyCard({
                   )}
                 </span>
               </div>
-              <svg
-                width={ROW_W}
-                height={DOT_SIZE}
-                style={{ display: 'block' }}
-                aria-hidden
-              >
-                {Array.from({ length: DOTS }, (_, i) => (
-                  <circle
-                    key={i}
-                    cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
-                    cy={DOT_SIZE / 2}
-                    r={DOT_SIZE / 2}
-                    fill={i < filled ? accent : 'var(--color-background-elevated)'}
-                    stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={i < filled ? 0 : 0.5}
-                  />
-                ))}
-              </svg>
+              <DotBar
+                value={Math.max(0, Math.min(1, stat.value / stat.max))}
+                color={accent}
+                dots={20}
+                size={6}
+                gap={3}
+              />
             </div>
           )
         })}
@@ -524,7 +506,7 @@ function ComplementaryTypologyCard({
             style={{ color: typology.color }}
           >
             {typology.linkLabel}
-            <ArrowUpRight className="h-3 w-3" />
+            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </footer>
       )}
@@ -755,17 +737,18 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
       <table
         className="w-full border-separate"
         style={{ borderSpacing: '0 2px', minWidth: 520 }}
+        aria-label="Vendor clusters ranked by corruption risk"
       >
         <thead>
           <tr>
-            <th
+            <th scope="col"
               className="text-left text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '28%' }}
             >
               {isEs ? 'Patrón' : 'Pattern'}
             </th>
             {MATRIX_SECTORS.map((s) => (
-              <th
+              <th scope="col"
                 key={s}
                 className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
                 style={{ fontWeight: 500 }}
@@ -773,7 +756,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                 {s}
               </th>
             ))}
-            <th
+            <th scope="col"
               className="text-right text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '56px' }}
             >
@@ -1000,7 +983,7 @@ function PatternVendorCard({
           className="inline-flex items-center gap-1 text-[10px] font-mono text-accent hover:underline"
         >
           {isEs ? 'Ver cola ARIA' : 'View ARIA queue'}
-          <ArrowUpRight className="h-3 w-3" />
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </Link>
       </footer>
     </article>
@@ -1051,7 +1034,7 @@ export default function CorruptionClusters() {
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
-                7 <span style={{ color: '#dc2626' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
+                7 <span style={{ color: 'var(--color-risk-critical)' }}>{isEs ? 'tipologías' : 'typologies'}</span> {isEs ? 'de captura del Estado' : 'of state capture'}
               </h1>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {isEs ? 'ANÁLISIS · ARIA v1.1' : 'ANALYSIS · ARIA v1.1'}
@@ -1067,7 +1050,7 @@ export default function CorruptionClusters() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#dc2626' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {formatNumber(totalT1)}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -1267,7 +1250,7 @@ export default function CorruptionClusters() {
           <EvidenceStrip gtTypes={gtTypes} gtTotal={gtTotal} />
 
           <div className="flex items-start gap-2 pt-3 border-t border-border/20 text-[11px] text-text-muted leading-relaxed">
-            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" />
+            <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5 text-risk-high/70" aria-hidden="true" />
             <p>
               {isEs ? (
                 <>
@@ -1296,7 +1279,7 @@ export default function CorruptionClusters() {
             className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
           >
             {isEs ? 'Explorar cola ARIA completa' : 'Explore full ARIA queue'}
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
       </Act>
@@ -1351,7 +1334,7 @@ export default function CorruptionClusters() {
               className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
             >
               {isEs ? 'Ver todos los investigados en ARIA' : 'View all subjects in ARIA queue'}
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
         </Act>

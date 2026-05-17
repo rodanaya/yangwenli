@@ -36,7 +36,7 @@ export function StoryVendorFingerprint() {
             href="/aria"
             className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {t('vendorFingerprint.ariaLink')}
           </a>
         </div>
@@ -46,8 +46,8 @@ export function StoryVendorFingerprint() {
       {/* Section overline with risk pill — rendered as custom kicker row before content */}
       <div className="flex items-center gap-3 -mt-1">
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
-                        bg-risk-critical/10 border border-red-500/20 text-xs text-risk-critical">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                        bg-risk-critical/10 border border-risk-critical/20 text-xs text-risk-critical">
+          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           {t('vendorFingerprint.criticalPill')}
         </div>
       </div>
@@ -57,7 +57,7 @@ export function StoryVendorFingerprint() {
         {[
           { label: t('vendorFingerprint.factor1Label'), value: '+1.24', color: 'text-risk-critical', note: t('vendorFingerprint.factor1Note') },
           { label: t('vendorFingerprint.factor2Label'), value: '+0.88', color: 'text-risk-critical', note: t('vendorFingerprint.factor2Note') },
-          { label: t('vendorFingerprint.factor3Label'), value: '+0.62', color: 'text-orange-400', note: t('vendorFingerprint.factor3Note') },
+          { label: t('vendorFingerprint.factor3Label'), value: '+0.62', color: 'text-risk-high', note: t('vendorFingerprint.factor3Note') },
           { label: t('vendorFingerprint.factor4Label'), value: '-0.14', color: 'text-teal-400', note: t('vendorFingerprint.factor4Note') },
         ].map((f) => (
           <div key={f.label} className="rounded-lg border border-border bg-background-card p-2.5 text-center">

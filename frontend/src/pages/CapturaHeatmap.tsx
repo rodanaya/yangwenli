@@ -21,6 +21,7 @@ import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { Info } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Hook: detect mobile viewport (below md = 768px)
@@ -100,18 +101,18 @@ function captureColor(pct: number): string {
 function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-blue-500/20 bg-blue-500/5 rounded-sm p-4">
+    <div className="border border-accent/20 bg-accent/5 rounded-sm p-4">
       <button
         className="flex items-center gap-2 w-full text-left"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="capture-explainer-body"
       >
-        <Info className="w-4 h-4 text-blue-400 shrink-0" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-wide text-blue-400 font-semibold">
+        <Info className="w-4 h-4 text-accent shrink-0" aria-hidden="true" />
+        <span className="text-[11px] uppercase tracking-wide text-accent font-medium">
           {t('whatIsCapture.label')}
         </span>
-        <span className="ml-auto text-blue-400/60 text-xs">{open ? '−' : '+'}</span>
+        <span className="ml-auto text-accent/60 text-xs">{open ? '−' : '+'}</span>
       </button>
       {open && (
         <div id="capture-explainer-body" className="mt-3 space-y-3">
@@ -147,7 +148,7 @@ function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) 
 function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className="border border-amber-500/20 bg-amber-500/5 rounded-sm p-4 mb-4">
+    <div className="border border-risk-high/20 bg-risk-high/5 rounded-sm p-4 mb-4">
       <button
         className="flex items-center gap-2 w-full text-left"
         onClick={() => setOpen((v) => !v)}
@@ -204,7 +205,7 @@ function TopCapturedList({
         return (
           <li
             key={`${row.institutionId}-${row.topVendorId}`}
-            className="bg-surface-card border border-border rounded-sm px-4 py-3 flex items-start gap-4"
+            className="bg-background-card border border-border rounded-sm px-4 py-3 flex items-start gap-4"
           >
             {/* Rank number */}
             <span
@@ -243,7 +244,7 @@ function TopCapturedList({
             <div className="text-right shrink-0">
               <div
                 className="text-lg font-bold font-mono tabular-nums leading-tight"
-                style={{ color: row.pct >= 0.5 ? '#f87171' : row.pct >= 0.3 ? '#fb923c' : row.pct >= 0.15 ? '#fbbf24' : '#94a3b8' }}
+                style={{ color: row.pct >= 0.5 ? 'var(--color-risk-critical)' : row.pct >= 0.3 ? 'var(--color-risk-high)' : row.pct >= 0.15 ? 'var(--color-risk-medium)' : 'var(--color-text-muted)' }}
               >
                 {formatPercent(row.pct, 1)}
               </div>
@@ -261,14 +262,14 @@ function TopCapturedList({
 function HhiBadge({ hhi, t }: { hhi: number; t: ReturnType<typeof useTranslation>['t'] }) {
   if (hhi > 0.25) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-red-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
         {t('hhi.highCapture')}
       </span>
     )
   }
   if (hhi > 0.15) {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-orange-500/15 text-orange-400 border border-orange-500/30">
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10 text-risk-high border border-risk-high/30">
         {t('hhi.moderate')}
       </span>
     )
@@ -290,7 +291,7 @@ function HeroCaptureCallout({
 }) {
   return (
     <div
-      className="border border-red-500/30 bg-red-500/5 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+      className="border border-risk-critical/30 bg-risk-critical/5 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
       role="region"
       aria-label={t('hero.worstCapture')}
     >
@@ -357,7 +358,7 @@ function CaptureBarChart({
           <div
             key={row.institutionId}
             role="listitem"
-            className="bg-surface-card border border-border rounded-sm px-4 py-3 hover:border-border transition-colors"
+            className="bg-background-card border border-border rounded-sm px-4 py-3 hover:border-border transition-colors"
           >
             <div className="flex items-start gap-3">
               {/* Rank */}
@@ -383,22 +384,16 @@ function CaptureBarChart({
 
                 {/* Horizontal bar */}
                 <div className="flex items-center gap-2">
-                  {(() => {
-                    const N = 30, DR = 2.5, DG = 6
-                    const filled = Math.max(1, Math.round((Math.min(100, pct) / 100) * N))
-                    return (
-                      <svg viewBox={`0 0 ${N * DG} 7`} width={N * DG} height={7} aria-hidden="true">
-                        {Array.from({ length: N }).map((_, k) => (
-                          <circle key={k} cx={k * DG + DR} cy={3.5} r={DR}
-                            fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                            stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                            strokeWidth={k < filled ? 0 : 0.5}
-                            fillOpacity={k < filled ? 0.85 : 1}
-                          />
-                        ))}
-                      </svg>
-                    )
-                  })()}
+                  <DotBar
+                    value={Math.min(100, pct)}
+                    max={100}
+                    color={barColor}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border-hover)"
+                    dots={30}
+                    dotR={2.5}
+                    dotGap={6}
+                  />
                   <span
                     className="text-sm font-bold font-mono tabular-nums shrink-0 w-14 text-right"
                     style={{ color: textColor }}
@@ -643,7 +638,7 @@ export default function CapturaHeatmap() {
           {!isLoading && (
             <div className="flex items-baseline gap-5">
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#f87171' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                   {topCaptured.length > 0 ? severeCount : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -651,7 +646,7 @@ export default function CapturaHeatmap() {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: '#fb923c' }}>
+                <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-risk-high)' }}>
                   {valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
                 </div>
                 <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">
@@ -690,7 +685,7 @@ export default function CapturaHeatmap() {
       </div>
 
       {/* ===== Editorial lede: WHY this matters ===== */}
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mb-6">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-2">
           {t('editorialLede.overline')}
         </p>
@@ -710,7 +705,7 @@ export default function CapturaHeatmap() {
       {!isLoading && !error && topCaptured.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {/* Stat 1: severe capture count */}
-          <div className="border-l-2 border-red-500 pl-4 py-1">
+          <div className="border-l-2 border-risk-critical pl-4 py-1">
             <div className="text-2xl font-mono font-bold text-risk-critical">
               {topCaptured.filter(r => r.pct >= 0.5).length}
             </div>
@@ -719,8 +714,8 @@ export default function CapturaHeatmap() {
             </div>
           </div>
           {/* Stat 2: value at risk */}
-          <div className="border-l-2 border-orange-500 pl-4 py-1">
-            <div className="text-2xl font-mono font-bold text-orange-400">
+          <div className="border-l-2 border-risk-high pl-4 py-1">
+            <div className="text-2xl font-mono font-bold text-risk-high">
               {formatCompactMXN(topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0))}
             </div>
             <div className="text-[10px] text-text-secondary uppercase tracking-wide mt-0.5">
@@ -729,7 +724,7 @@ export default function CapturaHeatmap() {
           </div>
           {/* Stat 3: highest concentration */}
           {topCaptured[0] && (
-            <div className="border-l-2 border-amber-500 pl-4 py-1">
+            <div className="border-l-2 border-risk-high pl-4 py-1">
               <div className="text-2xl font-mono font-bold text-risk-high">
                 {(topCaptured[0].pct * 100).toFixed(1)}%
               </div>
@@ -772,15 +767,15 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Filters ===== */}
-      <div className="space-y-3 rounded-sm border border-border bg-surface-card/40 p-4">
+      <div className="space-y-3 rounded-sm border border-border bg-background-card/40 p-4">
         {/* Current filter state indicator */}
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="text-text-muted/60 uppercase tracking-wide">{t('filters.currentView')}:</span>
-          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-sm font-medium">
+          <span className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-accent px-2.5 py-0.5 rounded-sm font-medium">
             {sectorId ? SECTORS.find((s) => s.id === sectorId)?.name : t('filters.allSectors')}
           </span>
           <span className="text-text-muted/40">·</span>
-          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-sm font-medium">
+          <span className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-accent px-2.5 py-0.5 rounded-sm font-medium">
             {yearRange === 'all'
               ? t('filters.allYears')
               : yearRange === '2018'
@@ -794,7 +789,7 @@ export default function CapturaHeatmap() {
                 setYearRange('all')
                 setMinCapture(0)
               }}
-              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
+              className="ml-auto inline-flex items-center gap-1 text-[11px] text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-2.5 py-0.5 rounded-sm hover:bg-risk-high/10 transition-colors"
             >
               ↺ {t('filters.resetAll')}
             </button>
@@ -812,7 +807,7 @@ export default function CapturaHeatmap() {
               onChange={(e) =>
                 setSectorId(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
+              className="bg-background-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
             >
               <option value="">{t('filters.allSectors')}</option>
               {SECTORS.map((s) => (
@@ -831,7 +826,7 @@ export default function CapturaHeatmap() {
               id="captura-year-select"
               value={yearRange}
               onChange={(e) => setYearRange(e.target.value)}
-              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
+              className="bg-background-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
             >
               <option value="all">{t('filters.allYears')}</option>
               <option value="2018">{t('filters.period2018')}</option>
@@ -859,8 +854,8 @@ export default function CapturaHeatmap() {
                 className={cn(
                   'px-3 py-1 rounded-sm text-xs font-medium border transition-colors',
                   minCapture === value
-                    ? 'bg-primary/20 border-primary/50 text-primary'
-                    : 'bg-surface-card border-border text-text-muted/70 hover:border-border hover:text-text-primary'
+                    ? 'bg-accent/20 border-accent/50 text-accent'
+                    : 'bg-background-card border-border text-text-muted/70 hover:border-border hover:text-text-primary'
                 )}
               >
                 {label}
@@ -890,10 +885,10 @@ export default function CapturaHeatmap() {
 
       {/* ===== Error ===== */}
       {error && !isLoading && (
-        <div className="bg-surface-card border border-red-500/20 rounded-sm p-6">
+        <div className="bg-background-card border border-risk-critical/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-sm bg-risk-critical/10 flex items-center justify-center flex-shrink-0">
-              <Info className="h-5 w-5 text-risk-critical" />
+              <Info className="h-5 w-5 text-risk-critical" aria-hidden="true" />
             </div>
             <div>
               <h3 className="font-serif text-lg text-text-primary mb-1">
@@ -909,10 +904,10 @@ export default function CapturaHeatmap() {
       {/* ===== Empty state — clean, user-facing ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="space-y-5">
-          <div className="bg-surface-card border border-amber-500/20 rounded-sm p-6">
+          <div className="bg-background-card border border-risk-high/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-sm bg-risk-high/10 flex items-center justify-center flex-shrink-0">
-                <Info className="h-5 w-5 text-risk-high" />
+                <Info className="h-5 w-5 text-risk-high" aria-hidden="true" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
@@ -930,7 +925,7 @@ export default function CapturaHeatmap() {
                     setYearRange('all')
                     setMinCapture(0)
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-amber-500/30 px-3 py-1.5 rounded-sm hover:bg-risk-high/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-accent-hover font-medium border border-risk-high/30 px-3 py-1.5 rounded-sm hover:bg-risk-high/10 transition-colors"
                 >
                   ↺ {t('emptyState.resetButton')}
                 </button>
@@ -1013,7 +1008,7 @@ export default function CapturaHeatmap() {
               return (
                 <li
                   key={`${cell.institution}||${cell.vendor}`}
-                  className="bg-surface-card border border-border rounded-sm px-4 py-3 flex items-center gap-3"
+                  className="bg-background-card border border-border rounded-sm px-4 py-3 flex items-center gap-3"
                 >
                   <span className="text-[13px] font-mono text-text-muted/50 w-5 shrink-0 text-right">
                     {idx + 1}
@@ -1082,7 +1077,7 @@ export default function CapturaHeatmap() {
             </div>
             {highCaptureCount > 0 && (
               <div className="flex items-center gap-2 text-xs text-risk-critical">
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <span className="h-2 w-2 rounded-full bg-risk-critical animate-pulse shrink-0" aria-hidden="true" />
                 <span className="font-mono tabular-nums">
                   {highCaptureCount} {t('stats.highCaptureFlows')}
                 </span>
@@ -1113,7 +1108,7 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Methodology footer ===== */}
-      <div className="bg-surface-card/50 border border-border rounded-sm p-5 text-xs text-text-muted/50 space-y-1">
+      <div className="bg-background-card/50 border border-border rounded-sm p-5 text-xs text-text-muted/50 space-y-1">
         <h4 className="font-serif text-text-muted/70 text-sm">{t('methodology.title')}</h4>
         <p>{t('methodology.content')}</p>
       </div>

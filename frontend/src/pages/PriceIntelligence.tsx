@@ -42,6 +42,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // --- Constants ---------------------------------------------------------------
 
@@ -243,13 +244,13 @@ function ExtremeCaseCard({
 
   return (
     <article
-      className="border border-border rounded-sm bg-background/40 p-4 hover:border-orange-500/40 transition-colors"
+      className="border border-border rounded-sm bg-background/40 p-4 hover:border-risk-high/40 transition-colors"
       role="article"
       aria-label={t('cardAriaLabel', { vendorName: contract.vendor_name })}
     >
       {/* Top row: sector + year + risk */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+        <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted">
           {sectorName} &middot; {contract.contract_year}
         </span>
         <RiskScoreBadge score={contract.risk_score ?? 0} />
@@ -258,7 +259,7 @@ function ExtremeCaseCard({
       {/* Overpricing factor -- hero number */}
       <div className="flex items-baseline gap-2 mb-2">
         <span
-          className="text-3xl font-bold text-orange-400 font-mono tabular-nums"
+          className="text-3xl font-bold text-risk-high font-mono tabular-nums"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {overpricingFactor}x
@@ -291,11 +292,11 @@ function ExtremeCaseCard({
       <div className="flex items-center justify-between pt-2 border-t border-border">
         <Link
           to={`/contracts/${contract.contract_id}`}
-          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-accent bg-accent/10 hover:bg-accent/20 transition-colors"
           aria-label={lang === 'en' ? `View contract detail ${contract.contract_id}` : `Ver detalle del contrato ${contract.contract_id}`}
         >
           {t('viewContract')}
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
         {contract.vendor_id && (
           <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
@@ -388,22 +389,22 @@ function ReincidentesSection({
         <table className="w-full text-sm" aria-label={lang === 'en' ? 'Repeat-offender vendors' : 'Proveedores reincidentes'}>
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Proveedor
               </th>
-              <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Anos
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Contratos
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Valor total
               </th>
-              <th className="text-center py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-center py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Sector
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Z-score prom
               </th>
             </tr>
@@ -425,7 +426,7 @@ function ReincidentesSection({
                       {v.yearsList.map((yr) => {
                         const cls =
                           yr >= 2023
-                            ? 'text-orange-300 bg-orange-500/15 border-orange-500/30'
+                            ? 'text-risk-high bg-risk-high/15 border-risk-high/30'
                             : yr >= 2020
                               ? 'text-risk-high bg-risk-high/10 border-risk-high/30'
                               : 'text-text-secondary bg-background-elevated border-border'
@@ -448,7 +449,7 @@ function ReincidentesSection({
                   </td>
                   <td className="py-2 px-3 text-center hidden sm:table-cell">
                     <span
-                      className="inline-block text-[9px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full border"
+                      className="inline-block text-[9px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full border"
                       style={{
                         color: sectorColor,
                         borderColor: `${sectorColor}44`,
@@ -458,7 +459,7 @@ function ReincidentesSection({
                       {getSectorName(v.sector_id)}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-orange-400 text-xs font-mono">
+                  <td className="py-2 px-3 text-right tabular-nums text-risk-high text-xs font-mono">
                     +{v.avg_z.toFixed(1)}&sigma;
                   </td>
                 </tr>
@@ -576,7 +577,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
       >
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-text-muted" aria-hidden="true" />
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted group-hover:text-text-secondary transition-colors">
+          <span className="text-[10px] font-medium uppercase tracking-widest text-text-muted group-hover:text-text-secondary transition-colors">
             {t('methodologyLabel')}
           </span>
         </div>
@@ -597,10 +598,10 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
           <p className="text-xs text-text-muted italic">{t('methodologyDisclaimer')}</p>
           <Link
             to="/methodology"
-            className="inline-flex items-center gap-1 text-blue-400 hover:underline text-xs"
+            className="inline-flex items-center gap-1 text-accent hover:underline text-xs"
           >
             {t('viewFullMethodology')}
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3 h-3" aria-hidden="true" />
           </Link>
         </div>
       )}
@@ -622,12 +623,12 @@ function MostExtremeCallout({
   const factor = (contract.z_price_ratio ?? 0).toFixed(1)
   return (
     <aside
-      className="relative overflow-hidden rounded-sm border border-red-500/30 bg-gradient-to-br from-red-950/40 via-background-elevated to-background-elevated p-5 md:p-6"
+      className="relative overflow-hidden rounded-sm border border-risk-critical/30 bg-gradient-to-br from-risk-critical/5 via-background-elevated to-background-elevated p-5 md:p-6"
       role="complementary"
       aria-label={lang === 'en' ? 'The most extreme contract' : 'El contrato más extremo'}
     >
       {/* Red accent bar */}
-      <div className="absolute top-0 left-0 h-full w-1 bg-red-500" aria-hidden="true" />
+      <div className="absolute top-0 left-0 h-full w-1 bg-risk-critical" aria-hidden="true" />
       <div className="flex items-start gap-3 mb-3">
         <Flame className="w-5 h-5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
         <div>
@@ -679,13 +680,13 @@ function MostExtremeCallout({
               className="inline-flex items-center gap-1 font-mono uppercase tracking-wide text-risk-critical hover:text-risk-critical/80 border border-risk-critical/30 hover:border-risk-critical/60 rounded px-2 py-0.5 transition-colors"
             >
               Abrir expediente
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" aria-hidden="true" />
             </Link>
           </div>
         </div>
 
         {/* Hero factor */}
-        <div className="border-l-2 border-red-500 pl-4 md:pl-5 md:text-right">
+        <div className="border-l-2 border-risk-critical pl-4 md:pl-5 md:text-right">
           <div
             className="font-bold text-risk-critical font-mono tabular-nums leading-none"
             style={{
@@ -910,7 +911,7 @@ function SectorDistributionCurves({
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: sector.color }}
                 />
-                <span className="text-[11px] font-semibold text-text-secondary">{sector.name}</span>
+                <span className="text-[11px] font-medium text-text-secondary">{sector.name}</span>
               </div>
               <span className="text-[9px] font-mono text-text-muted tabular-nums">
                 {formatNumber(sector.count)} anomalías
@@ -1118,15 +1119,15 @@ function OverpricingTimelineSection({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2 max-w-2xl">
-        <div className="border-l-2 border-orange-500 pl-3 py-0.5">
-          <div className="text-lg font-mono font-bold text-orange-400 tabular-nums">
+        <div className="border-l-2 border-risk-high pl-3 py-0.5">
+          <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {peakYear.year}
           </div>
           <div className="text-[10px] text-text-muted uppercase tracking-wide">
             año con más anomalías · {formatNumber(peakYear.count)}
           </div>
         </div>
-        <div className="border-l-2 border-red-500 pl-3 py-0.5">
+        <div className="border-l-2 border-risk-critical pl-3 py-0.5">
           <div className="text-lg font-mono font-bold text-risk-critical tabular-nums">
             {peakValueYear.year}
           </div>
@@ -1134,7 +1135,7 @@ function OverpricingTimelineSection({
             pico de valor · {formatCompactMXN(peakValueYear.total_value)}
           </div>
         </div>
-        <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+        <div className="border-l-2 border-risk-high pl-3 py-0.5">
           <div className="text-lg font-mono font-bold text-risk-high tabular-nums">
             {yearData.length}
           </div>
@@ -1374,7 +1375,7 @@ function RiskLevelPriceGap({
           El precio que paga el Estado por procurement sospechoso
         </h2>
         <p className="text-xs text-text-muted mt-0.5 max-w-2xl">
-          Contratos con <strong className="text-orange-400">múltiples banderas de riesgo</strong>{' '}
+          Contratos con <strong className="text-risk-high">múltiples banderas de riesgo</strong>{' '}
           (crítico + alto) vs contratos con riesgo medio o bajo. La diferencia en precio promedio
           revela la prima que introducen los patrones de corrupción.
         </p>
@@ -1403,7 +1404,7 @@ function RiskLevelPriceGap({
           <div>
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+                <span className="w-2 h-2 rounded-full bg-risk-critical" aria-hidden="true" />
                 <span className="text-xs font-semibold text-text-secondary">
                   {lang === 'en' ? 'Critical + High risk' : 'Crítico + Alto riesgo'}
                 </span>
@@ -1416,22 +1417,17 @@ function RiskLevelPriceGap({
               </div>
             </div>
             <div className="relative">
-              {(() => {
-                const N = 40, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((flaggedPct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 12`} width={N * DG} height={12} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                        fill={k < filled ? '#dc2626' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={flaggedPct}
+                max={100}
+                color="var(--color-risk-critical)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={40}
+                dotR={3}
+                dotGap={8}
+                ariaLabel={lang === 'en' ? 'Critical and high risk average price share' : 'Cuota de precio promedio en riesgo crítico y alto'}
+              />
               <p className="text-[10px] font-mono text-risk-critical/80 mt-1 tracking-wide">
                 precio promedio · +{stats.flagged.avg_z.toFixed(1)}σ
               </p>
@@ -1455,22 +1451,17 @@ function RiskLevelPriceGap({
               </div>
             </div>
             <div className="relative">
-              {(() => {
-                const N = 40, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((standardPct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 12`} width={N * DG} height={12} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                        fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={standardPct}
+                max={100}
+                color="var(--color-text-muted)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={40}
+                dotR={3}
+                dotGap={8}
+                ariaLabel={lang === 'en' ? 'Medium and low risk average price share' : 'Cuota de precio promedio en riesgo medio y bajo'}
+              />
               <p className="text-[10px] font-mono text-text-secondary mt-1 tracking-wide">
                 precio promedio · +{stats.standard.avg_z.toFixed(1)}σ
               </p>
@@ -1574,7 +1565,7 @@ export default function PriceIntelligence() {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center gap-3 p-6 text-text-secondary border border-border rounded-sm bg-background/40">
-          <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" />
+          <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-text-secondary">{t('compranetUnavailableTitle')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('errorMessage')}</p>
@@ -1633,7 +1624,7 @@ export default function PriceIntelligence() {
         {/* Dateline strip — newspaper masthead grammar */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>
@@ -1660,7 +1651,7 @@ export default function PriceIntelligence() {
           >
             {t('pageTitle')}
           </h1>
-          <ShareButton label={t('share')} className="mt-1 flex-shrink-0" />
+          <ShareButton label={t('share')} className="mt-1 flex-shrink-0" aria-hidden="true" />
         </div>
         <p
           className="mt-3 max-w-2xl text-text-secondary mb-4"
@@ -1739,7 +1730,7 @@ export default function PriceIntelligence() {
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                   dangerouslySetInnerHTML={{
                     __html: t('kpiLede', {
-                      n: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
+                      n: `<strong class="text-risk-high">${formatNumber(summary.total_outliers)}</strong>`,
                       value: `<strong class="text-risk-critical">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
                       z: `<strong class="text-risk-high">${avgZ.toFixed(1)}</strong>`,
                       interpolation: { escapeValue: false },
@@ -1750,8 +1741,8 @@ export default function PriceIntelligence() {
                 {/* 5-KPI strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {/* 1. Total contracts */}
-                  <div className="border-l-2 border-orange-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">
+                  <div className="border-l-2 border-risk-high pl-3 py-0.5">
+                    <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       {formatNumber(summary.total_outliers)}
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1760,7 +1751,7 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 2. Value at risk */}
-                  <div className="border-l-2 border-red-500 pl-3 py-0.5">
+                  <div className="border-l-2 border-risk-critical pl-3 py-0.5">
                     <div className="text-xl font-mono font-bold text-risk-critical tabular-nums">
                       {formatCompactMXN(summary.total_value_mxn)}
                     </div>
@@ -1770,7 +1761,7 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 3. Average z-score */}
-                  <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+                  <div className="border-l-2 border-risk-high pl-3 py-0.5">
                     <div className="text-xl font-mono font-bold text-risk-high tabular-nums">
                       +{avgZ.toFixed(1)}&sigma;
                     </div>
@@ -1780,8 +1771,8 @@ export default function PriceIntelligence() {
                   </div>
 
                   {/* 4. Estimated overpricing */}
-                  <div className="border-l-2 border-purple-500 pl-3 py-0.5">
-                    <div className="text-xl font-mono font-bold text-purple-400 tabular-nums">
+                  <div className="border-l-2 border-accent-data pl-3 py-0.5">
+                    <div className="text-xl font-mono font-bold text-accent-data tabular-nums">
                       {formatCompactMXN(estimatedSavings)}
                     </div>
                     <div className="text-[10px] text-text-muted uppercase tracking-wide">
@@ -1812,7 +1803,7 @@ export default function PriceIntelligence() {
           })()
         ) : (
           <div className="rounded-sm border border-border bg-background/40 p-6 text-center">
-            <AlertTriangle className="w-5 h-5 text-text-muted mx-auto mb-2" />
+            <AlertTriangle className="w-5 h-5 text-text-muted mx-auto mb-2" aria-hidden="true" />
             <p className="text-sm text-text-muted">
               {t('noAnomaliesAtThreshold')}
             </p>
@@ -1839,10 +1830,10 @@ export default function PriceIntelligence() {
           <div className="flex items-center justify-between mb-1">
             <label
               htmlFor="z-threshold-slider"
-              className="text-xs font-semibold uppercase tracking-widest text-text-muted"
+              className="text-xs font-medium uppercase tracking-widest text-text-muted"
             >
               Min Z-Score:{' '}
-              <span className="text-orange-400 font-bold">{zThreshold.toFixed(1)}&sigma;</span>
+              <span className="text-risk-high font-bold">{zThreshold.toFixed(1)}&sigma;</span>
             </label>
             <span className="text-xs text-text-muted">{t('zThresholdHint')}</span>
           </div>
@@ -1869,7 +1860,7 @@ export default function PriceIntelligence() {
 
         {/* Sector chips */}
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
             {t('filterBySector')}
           </p>
           <div className="flex flex-wrap gap-2" role="group" aria-label={t('filterAriaLabel')}>
@@ -1878,7 +1869,7 @@ export default function PriceIntelligence() {
               className={[
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
                 activeSectorId === null
-                  ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
+                  ? 'bg-risk-high/20 border-risk-high/60 text-risk-high'
                   : 'border-border text-text-muted hover:border-border hover:text-text-secondary',
               ].join(' ')}
               aria-pressed={activeSectorId === null}
@@ -1980,16 +1971,16 @@ export default function PriceIntelligence() {
               <table className="w-full text-sm" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderSector')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderContracts')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                       {t('tableHeaderAmount')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderAvgZ')}
                     </th>
                   </tr>
@@ -2011,7 +2002,7 @@ export default function PriceIntelligence() {
                       <td className="py-2 px-3 text-right font-mono tabular-nums text-text-secondary hidden sm:table-cell">
                         {formatCompactMXN(s.totalValue)}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono tabular-nums text-orange-400">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums text-risk-high">
                         +{(s.avgZ ?? 0).toFixed(1)}&sigma;
                       </td>
                     </tr>
@@ -2069,9 +2060,16 @@ export default function PriceIntelligence() {
             ))}
           </div>
         ) : extremeCases.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-text-muted gap-2">
-            <AlertTriangle className="w-6 h-6" />
-            <p className="text-sm">{t('noResults')}</p>
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center gap-2 border border-border rounded-sm bg-background/40 max-w-2xl mx-auto">
+            <CheckCircle2 className="w-6 h-6 text-text-muted" aria-hidden="true" />
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+              {activeSectorId != null ? 'Filtro activo' : 'Sin resultados'}
+            </p>
+            <p className="text-sm text-text-secondary max-w-md">
+              {activeSectorId != null
+                ? `Ningún contrato del sector seleccionado supera ${zThreshold.toFixed(1)}σ. Prueba con otro sector o reduce el umbral.`
+                : `Ningún contrato supera el umbral ${zThreshold.toFixed(1)}σ con los filtros actuales. Reduce el Z-score para ver más casos.`}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2110,7 +2108,7 @@ export default function PriceIntelligence() {
         const avgZ = summary.avg_z_score || 3
         const savings = avgZ > 1 ? summary.total_value_mxn * (1 - 1 / avgZ) : 0
         return (
-          <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4 max-w-3xl">
+          <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4 max-w-3xl">
             <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
               HALLAZGO
             </p>
@@ -2140,14 +2138,14 @@ export default function PriceIntelligence() {
           className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors border border-border hover:border-border rounded px-2.5 py-1"
         >
           {t('spendingCategories')}
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
         <Link
           to="/aria"
           className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-risk-high/80 transition-colors border border-risk-high/30 hover:border-risk-high/60 rounded px-2.5 py-1 font-mono uppercase tracking-wide"
         >
           Cola de investigacion ARIA
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
       </div>
 

@@ -105,7 +105,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const color = getRiskColor(d.risk_level)
 
   return (
-    <div className="bg-surface-primary border border-border-subtle rounded-lg p-3 shadow-xl max-w-xs text-xs">
+    <div className="bg-background-primary border border-border-subtle rounded-lg p-3 shadow-xl max-w-xs text-xs">
       <p className="font-semibold text-text-primary mb-1 leading-snug">
         {truncate(d.title || 'Untitled Contract', 40)}
       </p>
@@ -150,12 +150,12 @@ function RiskLegend() {
     <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
       {RISK_LEGEND_ENTRIES.map(({ value, color }) => (
         <span key={value} className="flex items-center gap-1.5 text-xs text-text-secondary capitalize">
-          <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+          <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} aria-hidden="true" />
           {value}
         </span>
       ))}
       <span className="flex items-center gap-1.5 text-xs text-text-secondary">
-        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-text-muted, #64748b)' }} />
+        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-text-muted, #64748b)' }} aria-hidden="true" />
         unknown
       </span>
     </div>
@@ -223,12 +223,12 @@ export function VendorContractRiskMatrix({
     return (
       <div
         className={cn(
-          'bg-surface-secondary rounded-lg p-4 flex flex-col items-center justify-center',
+          'bg-background-elevated rounded-lg p-4 flex flex-col items-center justify-center',
           'min-h-[200px]',
           className
         )}
       >
-        <AlertTriangle className="text-text-muted mb-2" size={24} />
+        <AlertTriangle className="text-text-muted mb-2" size={24} aria-hidden="true" />
         <p className="text-sm font-normal text-text-muted text-center max-w-sm">
           No hay puntuaciones de riesgo disponibles para los contratos de este proveedor en el período analizado.
         </p>
@@ -239,7 +239,7 @@ export function VendorContractRiskMatrix({
   const displayName = vendorName || 'Vendor'
 
   return (
-    <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
+    <div className={cn('bg-background-elevated rounded-lg p-4', className)}>
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ export function VendorContractRiskMatrix({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                  className="text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 rounded-sm"
                   aria-label="About this chart"
                 >
                   <AlertTriangle size={13} />

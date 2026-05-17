@@ -848,7 +848,7 @@ function VendorDotOverlay({
               {(hoveredDot.riskScore * 100).toFixed(0)}%
             </span>
             {!hoveredDot.isMock && (
-              <span style={{ color: '#a06820', marginLeft: 6 }}>
+              <span style={{ color: 'var(--color-accent)', marginLeft: 6 }}>
                 {isSelected
                   ? (lang === 'en' ? '✓ selected' : '✓ seleccionado')
                   : (lang === 'en' ? 'click to select' : 'clic para seleccionar')

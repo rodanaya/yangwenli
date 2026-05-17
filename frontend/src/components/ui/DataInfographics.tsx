@@ -127,8 +127,8 @@ export function DataInfographics() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-[#dc2626]/10 border border-[#dc2626]/20">
-            <BarChart2 className="h-5 w-5 text-[#dc2626]" />
+          <div className="p-2 rounded-lg bg-risk-critical/10 border border-risk-critical/20">
+            <BarChart2 className="h-5 w-5 text-risk-critical" />
           </div>
           <div>
             <h2
@@ -170,14 +170,14 @@ export function DataInfographics() {
             className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background-elevated border border-border hover:bg-background-elevated transition-colors"
             aria-label="Previous"
           >
-            <ChevronLeft className="h-5 w-5 text-text-secondary" />
+            <ChevronLeft className="h-5 w-5 text-text-secondary" aria-hidden="true" />
           </button>
           <button
             onClick={next}
             className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background-elevated border border-border hover:bg-background-elevated transition-colors"
             aria-label="Next"
           >
-            <ChevronRight className="h-5 w-5 text-text-secondary" />
+            <ChevronRight className="h-5 w-5 text-text-secondary" aria-hidden="true" />
           </button>
         </div>
 
@@ -216,7 +216,7 @@ export function DataInfographics() {
                   className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-border text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
                   title={`${t('infographics.download')} SVG`}
                 >
-                  <Download className="h-3.5 w-3.5" />
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
                   SVG
                 </button>
               </div>
@@ -233,7 +233,7 @@ export function DataInfographics() {
             onClick={() => setActive(i)}
             className={`flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden border transition-all ${
               i === active
-                ? 'border-[#dc2626] opacity-100 scale-100'
+                ? 'border-risk-critical opacity-100 scale-100'
                 : 'border-border opacity-50 hover:opacity-75 hover:border-border'
             }`}
           >

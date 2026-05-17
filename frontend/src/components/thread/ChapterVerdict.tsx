@@ -201,7 +201,7 @@ export function ChapterVerdict({
     if (aria.in_ground_truth) flags.push(t('verdict.groundTruthLabel', { defaultValue: 'GT' }))
     evidence.push({
       label: t('verdict.evidence.external', { defaultValue: 'External validation' }),
-      value: <span className="text-[color:var(--color-accent)]">{flags.join(' · ')}</span>,
+      value: <span className="text-accent">{flags.join(' · ')}</span>,
       weight: 'high',
     })
   }
@@ -379,7 +379,7 @@ export function ChapterVerdict({
                       className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
                     >
                       Ver artículo →
-                    </a>
+                    <span className="sr-only"> (opens in new tab)</span></a>
                   )}
                 </div>
               )
@@ -405,7 +405,7 @@ export function ChapterVerdict({
             to="/workspace"
             className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
           >
-            <BookmarkPlus className="w-3.5 h-3.5" />
+            <BookmarkPlus className="w-3.5 h-3.5" aria-hidden="true" />
             {t('verdict.addToWorkspace')}
           </Link>
           <button
@@ -417,14 +417,14 @@ export function ChapterVerdict({
             }}
             className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5" aria-hidden="true" />
             {t('verdict.exportPdf')}
           </button>
           <Link
             to="/methodology"
             className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
           >
-            <FileText className="w-3 h-3" />
+            <FileText className="w-3 h-3" aria-hidden="true" />
             {t('verdict.methodologyLink')}
           </Link>
         </div>

@@ -449,6 +449,7 @@ export function RiskSpendBeeswarm({ sectors }: RiskSpendBeeswarmProps) {
                 onMouseEnter={() => setHoveredId(node.sector.sector_id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => navigate(`/sectors/${node.sector.sector_id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/sectors/${node.sector.sector_id}`) } }}
               >
                 {/* Soft halo behind the glyph keeps small symbols (otros, ambiente)
                     legible against grid lines and the priority-quadrant tint. */}

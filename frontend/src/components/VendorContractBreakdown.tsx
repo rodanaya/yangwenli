@@ -67,12 +67,12 @@ function BreakdownSkeleton() {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <div className="flex-1 flex flex-col items-center gap-2">
-        <div className="h-3 w-28 rounded bg-surface-muted/50 animate-pulse" />
-        <div className="h-40 w-40 rounded-full bg-surface-muted/50 animate-pulse" />
+        <div className="h-3 w-28 rounded bg-background-elevated/50 animate-pulse" />
+        <div className="h-40 w-40 rounded-full bg-background-elevated/50 animate-pulse" />
       </div>
       <div className="flex-1 flex flex-col items-center gap-2">
-        <div className="h-3 w-28 rounded bg-surface-muted/50 animate-pulse" />
-        <div className="h-40 w-40 rounded-full bg-surface-muted/50 animate-pulse" />
+        <div className="h-3 w-28 rounded bg-background-elevated/50 animate-pulse" />
+        <div className="h-40 w-40 rounded-full bg-background-elevated/50 animate-pulse" />
       </div>
     </div>
   )
@@ -89,7 +89,7 @@ interface StatBoxProps {
 
 function StatBox({ label, value }: StatBoxProps) {
   return (
-    <div className="bg-surface-tertiary rounded p-2 flex flex-col items-center min-w-0">
+    <div className="bg-background-tertiary rounded p-2 flex flex-col items-center min-w-0">
       <span className="text-[10px] uppercase tracking-wider text-text-muted truncate w-full text-center">
         {label}
       </span>
@@ -185,7 +185,7 @@ export function VendorContractBreakdown({
   return (
     <div
       className={cn(
-        'bg-surface-secondary rounded-lg p-4 flex flex-col gap-4',
+        'bg-background-elevated rounded-lg p-4 flex flex-col gap-4',
         className
       )}
       aria-label="Vendor contract breakdown"

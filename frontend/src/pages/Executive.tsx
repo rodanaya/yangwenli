@@ -319,7 +319,7 @@ export default function Executive() {
                 fontWeight: 400,
               }}
             >
-              <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·I</span>
+              <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·I</span>
               <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
               <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
                 {lang === 'en' ? 'RUBLI executive briefing' : 'RUBLI reporte ejecutivo'}
@@ -327,10 +327,10 @@ export default function Executive() {
             </div>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-[#a06820] transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent transition-colors"
               aria-label={lang === 'en' ? 'Print this page' : 'Imprimir esta página'}
             >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-3.5 w-3.5" aria-hidden="true" />
               {lang === 'en' ? 'Print / PDF' : 'Imprimir / PDF'}
             </button>
           </div>
@@ -356,18 +356,18 @@ export default function Executive() {
             {lang === 'en' ? (
               <>
                 Twenty-three years.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 trillion</span>
-                {' '}in federal contracts.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Three out of four</span>
-                {' '}awarded without competition.
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 trillion</span>
+                {' '}in federal contracts. More than{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 in 10</span>
+                {' '}bypass competitive bidding.
               </>
             ) : (
               <>
                 Veintitrés años.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>MX$9.9 billones</span>
-                {' '}en contratos federales.{' '}
-                <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#dc2626' }}>Tres de cada cuatro</span>
-                {' '}sin licitación.
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>MX$9.9 billones</span>
+                {' '}en contratos federales. Más de{' '}
+                <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-risk-critical)' }}>7 de cada 10</span>
+                {' '}evitan la licitación competitiva.
               </>
             )}
           </h1>
@@ -503,7 +503,7 @@ export default function Executive() {
               className="text-[10px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
             >
               {lang === 'en' ? 'Open full Observatory' : 'Abrir Observatorio completo'}
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </div>
         </motion.section>
@@ -581,7 +581,7 @@ export default function Executive() {
             {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
                 Click anchors to el-gran-precio (the big-contract risk story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -628,7 +628,7 @@ export default function Executive() {
             {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip
                 Click anchors to marea-de-adjudicaciones (canonical DA story). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#dc2626] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-critical focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -682,7 +682,7 @@ export default function Executive() {
             {/* Tile 3 — High+Critical with risk distribution bar
                 Click anchors to el-sexenio-del-riesgo (the riskiest era). */}
             <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#f59e0b] focus-visible:outline-offset-2"
+              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-high focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -717,9 +717,9 @@ export default function Executive() {
                 <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span style={{ color: '#dc2626' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-                <span style={{ color: '#f59e0b' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
+                <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
               </div>
             </motion.div>
 
@@ -781,7 +781,7 @@ export default function Executive() {
               </div>
               <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
                 <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                <span style={{ color: '#a06820' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
+                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
                 <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
               </div>
             </motion.div>
@@ -804,7 +804,7 @@ export default function Executive() {
 
             {/* Finding 01 — Ghost Economy: compare-gap animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -820,9 +820,9 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 01 · GHOST ECONOMY' : 'HALLAZGO 01 · ECONOMÍA FANTASMA'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#dc2626' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-critical)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Detection gap — magazine triptych: [42 official | 145× | 6,118 detected] */}
@@ -854,7 +854,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#dc2626' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-critical)' }}>
                       145×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -883,13 +883,13 @@ export default function Executive() {
                     >
                       <span
                         className="font-mono font-bold text-[42px] leading-none tabular-nums"
-                        style={{ color: '#dc2626' }}
+                        style={{ color: 'var(--color-risk-critical)' }}
                       >
                         6,118
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1"
-                        style={{ color: '#dc2626', opacity: 0.65 }}
+                        style={{ color: 'var(--color-risk-critical)', opacity: 0.65 }}
                       >
                         {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
                       </span>
@@ -910,7 +910,7 @@ export default function Executive() {
 
             {/* Finding 02 — Audit Blindspot: fill animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -926,9 +926,9 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 02 · AUDIT BLINDSPOT' : 'HALLAZGO 02 · PUNTO CIEGO DE AUDITORÍA'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#f59e0b' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-risk-high)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Audit gap — magazine triptych: [5% audited | 19× | MX$1.25T unreviewed] */}
@@ -960,7 +960,7 @@ export default function Executive() {
                     className="flex flex-col items-center justify-center flex-shrink-0"
                     style={{ width: 50, background: 'var(--color-background)' }}
                   >
-                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: '#f59e0b' }}>
+                    <span className="font-mono font-bold text-[15px] leading-none" style={{ color: 'var(--color-risk-high)' }}>
                       19×
                     </span>
                     <span className="text-[7px] font-mono text-text-muted mt-0.5 leading-none">gap</span>
@@ -986,13 +986,13 @@ export default function Executive() {
                     >
                       <span
                         className="font-mono font-bold text-[36px] leading-none tabular-nums"
-                        style={{ color: '#f59e0b' }}
+                        style={{ color: 'var(--color-risk-high)' }}
                       >
                         {lang === 'en' ? 'MX$1.25T' : 'MX$1.25 bln'}
                       </span>
                       <span
                         className="text-[8px] font-mono uppercase tracking-[0.1em] mt-1.5"
-                        style={{ color: '#f59e0b', opacity: 0.7 }}
+                        style={{ color: 'var(--color-risk-high)', opacity: 0.7 }}
                       >
                         {lang === 'en' ? '95% never audited' : '95% sin auditar · billones'}
                       </span>
@@ -1013,7 +1013,7 @@ export default function Executive() {
 
             {/* Finding 03 — Threshold Gaming: two-bar comparison */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#8b5cf6' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1031,7 +1031,7 @@ export default function Executive() {
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#8b5cf6' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
               {/* Threshold-bunching histogram — the statistical fingerprint */}
@@ -1193,7 +1193,7 @@ export default function Executive() {
 
             {/* Finding 04 — Institutional Capture: dot-field animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[#a06820] focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1209,22 +1209,22 @@ export default function Executive() {
                 <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   {lang === 'en' ? 'FINDING 04 · INSTITUTIONAL CAPTURE' : 'HALLAZGO 04 · CAPTURA INSTITUCIONAL'}
                 </span>
-                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: '#a06820' }}>
+                <span className="text-[9px] font-mono uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1" style={{ color: 'var(--color-accent)' }}>
                   {lang === 'en' ? 'investigate' : 'investigar'}
-                  <ArrowUpRight className="h-2.5 w-2.5" />
+                  <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
                 </span>
               </div>
 
               {/* Plain-English explanation of the pattern, before any number */}
               <p className="text-xs text-text-secondary leading-[1.55] mb-3">
                 {lang === 'en'
-                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: '#a06820' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
-                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: '#a06820' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
+                  ? <>One vendor controls <strong className="text-text-primary">80%+ of one institution's category budget for five-plus years</strong>. RUBLI calls this <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — capture</span>: a monopoly built inside a single agency, often invisible at the national level.</>
+                  : <>Un proveedor controla <strong className="text-text-primary">80% o más del presupuesto de una categoría dentro de una institución durante cinco o más años</strong>. RUBLI lo llama <span className="font-mono" style={{ color: 'var(--color-accent)' }}>P6 — captura</span>: un monopolio construido dentro de una sola dependencia, frecuentemente invisible a nivel nacional.</>
                 }
               </p>
 
               <div className="flex items-end gap-3 mb-4">
-                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: '#a06820' }}>15,923</span>
+                <span className="font-mono font-bold text-[40px] tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>15,923</span>
                 <span className="font-mono text-[11px] text-text-muted mb-1 leading-[1.35]">{lang === 'en' ? 'vendors fit\nthe P6 fingerprint' : 'proveedores ajustan\na la huella P6'}</span>
               </div>
               {/* Cleveland pair per institution: filled dot = top vendor share,
@@ -1319,7 +1319,7 @@ export default function Executive() {
                                 fontWeight="700"
                                 fill={inst.captured ? '#a06820' : 'var(--color-text-muted)'}
                               >
-                                +{gap}pp
+                                +{Number.isInteger(gap) ? gap : gap.toFixed(1)}pp
                               </text>
                             </motion.svg>
                           </div>
@@ -1353,6 +1353,15 @@ export default function Executive() {
           <div id="pesos-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
           </div>
+          {/* U-007: surface the methodological caveat that previously only
+              lived as a code comment. The aggregate scales high+critical
+              contract counts by total spend, assuming each risk band's
+              average ticket equals the population mean. */}
+          <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/70 mb-2">
+            {lang === 'en'
+              ? '(estimated · assumes uniform value distribution across risk bands)'
+              : '(estimado · supone distribución uniforme de valor entre bandas de riesgo)'}
+          </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
               ? 'Risk scores count contracts. This counts pesos. For each ARIA pattern we estimate the financial exposure using pattern-specific overpayment models — direct overcharges (P5), full ghost-network volume (P2), capture premiums, monopoly discounts lost. Estimates are illustrative; methodology in the footnote.'
@@ -1380,10 +1389,10 @@ export default function Executive() {
             </div>
             <button
               onClick={() => navigate('/sectors?view=categories')}
-              className="text-[10px] font-mono uppercase tracking-[0.1em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
+              className="text-[10px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
             >
               {lang === 'en' ? 'All categories' : 'Todas'}
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
@@ -1503,12 +1512,12 @@ export default function Executive() {
               {lang === 'en' ? (
                 <>
                   Per-sector calibrated logistic regression · vendor-stratified validation · Test AUC <strong className="text-text-secondary">0.785</strong> · 72 active spending categories · 1,830 vendor memos (440 LLM-narrative) · model <strong className="text-text-secondary">v0.8.5</strong>. See the{' '}
-                  <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.
+                  <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.
                 </>
               ) : (
                 <>
                   Regresión logística calibrada por sector · validación estratificada por proveedor · AUC <strong className="text-text-secondary">0.785</strong> · 72 categorías activas · 1,830 memos de proveedores (440 LLM-narrativos) · modelo <strong className="text-text-secondary">v0.8.5</strong>. Consulta la{' '}
-                  <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.
+                  <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.
                 </>
               )}
             </div>
@@ -1582,12 +1591,12 @@ export default function Executive() {
         </section>
 
         {/* ─── Amber divider ─── */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />
 
         {/* ─── Documented Cases Timeline ─── */}
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
-            <Clock className="h-3 w-3" />
+            <Clock className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
           </div>
           <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">
@@ -1616,12 +1625,12 @@ export default function Executive() {
             {audiences.map((a, idx) => (
               <motion.div
                 key={a.key}
-                className="surface-card rounded-sm p-5 border-l-2 border-[#a06820]/40"
+                className="surface-card rounded-sm p-5 border-l-2 border-accent/40"
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + idx * 0.08 }}
               >
-                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-3">
+                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-3">
                   {t(`recommendations.${a.key}.audience`)}
                 </div>
                 <ul className="space-y-3">
@@ -1644,15 +1653,15 @@ export default function Executive() {
           <section className="mb-12">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#dc2626] animate-pulse" aria-hidden />
+                <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden />
                 {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
               </div>
               <button
                 onClick={() => navigate('/contracts?risk_level=critical')}
-                className="text-[11px] font-mono uppercase tracking-[0.12em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1"
+                className="text-[11px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1"
               >
                 {lang === 'en' ? 'View all' : 'Ver todas'}
-                <ArrowUpRight className="h-3 w-3" />
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
             <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">
@@ -1672,11 +1681,11 @@ export default function Executive() {
                     onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && navigate(`/contracts/${c.id}`)}
                     role="link"
                     tabIndex={0}
-                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus:bg-background-elevated"
+                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/50 focus:bg-background-elevated"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
-                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: 'var(--color-risk-critical)' }}
                     >
                       {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
                     </span>
@@ -1720,10 +1729,10 @@ export default function Executive() {
         {/* ─── CTA ─── */}
         <section className="mb-12 print-hide">
           <div
-            className="rounded-sm p-8 border border-[#a06820]/30"
+            className="rounded-sm p-8 border border-accent/30"
             style={{ background: 'linear-gradient(135deg, rgba(160,104,32,0.06), rgba(160,104,32,0.02))' }}
           >
-            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-2">
+            <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-accent mb-2">
               {lang === 'en' ? 'Start Here' : 'Comienza aquí'}
             </div>
             <h3
@@ -1740,14 +1749,14 @@ export default function Executive() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => navigate('/aria')}
-                className="inline-flex items-center gap-1.5 bg-[#a06820] hover:bg-[#835616] text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#a06820]/40"
+                className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/80 text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
               >
                 {lang === 'en' ? 'Open ARIA queue' : 'Abrir cola ARIA'}
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
               <button
                 onClick={() => navigate('/explore?entity=vendor')}
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-[#a06820]/5 text-[#a06820] border border-[#a06820]/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
               >
                 {lang === 'en' ? 'Search a vendor' : 'Buscar un proveedor'}
               </button>
@@ -1759,7 +1768,7 @@ export default function Executive() {
         <footer className="pt-8 border-t border-border">
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-mono text-text-muted mb-4">
             <span className="inline-flex items-center gap-1.5">
-              <Shield className="h-3 w-3" />
+              <Shield className="h-3 w-3" aria-hidden="true" />
               AUC 0.785
             </span>
             <span>·</span>

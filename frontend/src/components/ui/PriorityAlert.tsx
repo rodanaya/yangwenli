@@ -34,23 +34,23 @@ const SEVERITY_STYLE: Record<
   { bg: string; border: string; text: string; iconColor: string; Icon: typeof AlertTriangle }
 > = {
   critical: {
-    bg: 'bg-[color:var(--color-risk-critical)]/10',
-    border: 'border-[color:var(--color-risk-critical)]/40',
-    text: 'text-[color:var(--color-risk-critical)]',
+    bg: 'bg-risk-critical/10',
+    border: 'border-risk-critical/40',
+    text: 'text-risk-critical',
     iconColor: 'var(--color-risk-critical)',
     Icon: ShieldAlert,
   },
   high: {
-    bg: 'bg-[color:var(--color-risk-high)]/10',
-    border: 'border-[color:var(--color-risk-high)]/40',
-    text: 'text-[color:var(--color-risk-high)]',
+    bg: 'bg-risk-high/10',
+    border: 'border-risk-high/40',
+    text: 'text-risk-high',
     iconColor: 'var(--color-risk-high)',
     Icon: AlertTriangle,
   },
   medium: {
-    bg: 'bg-[color:var(--color-risk-medium)]/10',
-    border: 'border-[color:var(--color-risk-medium)]/40',
-    text: 'text-[color:var(--color-risk-medium)]',
+    bg: 'bg-risk-medium/10',
+    border: 'border-risk-medium/40',
+    text: 'text-risk-medium',
     iconColor: 'var(--color-risk-medium)',
     Icon: FlagIcon,
   },

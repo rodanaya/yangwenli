@@ -145,7 +145,7 @@ export function RiskPyramid() {
       {/* stats cards */}
       <div className="grid grid-cols-4 gap-3">
         {PYRAMID_DATA.map(d => (
-          <div key={d.level} className="rounded-lg p-3 bg-surface-elevated border border-border text-center space-y-1">
+          <div key={d.level} className="rounded-lg p-3 bg-background-elevated border border-border text-center space-y-1">
             <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: d.color }}>
               {d.label}
             </div>

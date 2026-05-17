@@ -22,7 +22,7 @@ export function AppBanner() {
         className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent"
         aria-hidden="true"
       />
-      <Sparkles className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+      <Sparkles className="h-3.5 w-3.5 text-accent flex-shrink-0" aria-hidden="true" />
       <p className="flex-1 text-[11px] text-accent font-medium tracking-tight leading-tight min-w-0">
         <span className="font-bold font-mono uppercase tracking-[0.08em] mr-1.5">RUBLI&nbsp;v3.0&nbsp;·&nbsp;Dossiers</span>
         <span className="text-accent/70 mx-1.5 hidden sm:inline">·</span>

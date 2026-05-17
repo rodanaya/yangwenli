@@ -199,7 +199,7 @@ export default function VendorContractTimeline({
     return (
       <div
         className={cn(
-          'bg-surface-secondary rounded-lg p-4 flex items-center justify-center',
+          'bg-background-elevated rounded-lg p-4 flex items-center justify-center',
           'border-2 border-dashed border-border',
           'min-h-[220px]',
           className,
@@ -216,7 +216,7 @@ export default function VendorContractTimeline({
 
   return (
     <div
-      className={cn('bg-surface-secondary rounded-lg p-4 space-y-3', className)}
+      className={cn('bg-background-elevated rounded-lg p-4 space-y-3', className)}
       role="region"
       aria-label={`Contract timeline for ${vendorName}`}
     >
@@ -344,6 +344,7 @@ function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count:
         viewBox={`0 0 ${chartW} ${chartH}`}
         className="w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
       >
         {barData.map((item, colIdx) => {
           const filled = Math.max(1, Math.round((item.count / maxCount) * YC_ROWS))
@@ -367,7 +368,7 @@ function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count:
                     cx={xCenter}
                     cy={dotY}
                     r={YC_DOT_R}
-                    fill={isFilled ? '#3b82f6' : 'var(--color-background-elevated)'}
+                    fill={isFilled ? 'var(--color-sector-educacion)' : 'var(--color-background-elevated)'}
                     stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.4}
                     fillOpacity={isFilled ? 0.7 : 1}

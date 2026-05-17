@@ -23,6 +23,7 @@ import {
   quoteFor,
 } from '@/lib/collusion/inferPattern'
 import { DuetArrow } from './DuetArrow'
+import { DotBar } from '@/components/ui/DotBar'
 
 type Variant = 'full' | 'compact'
 
@@ -167,22 +168,16 @@ export function PairDossierRow({
           <>
             {/* Shares bar — single hairline bar showing scale of the duet vs the larger vendor */}
             <div className="mt-3 flex items-center gap-3">
-              {(() => {
-                const N = 30, DR = 1.5, DG = 4
-                const filled = Math.max(1, Math.round((sharesBarPct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                        fill={k < filled ? accent : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.8 : 0.3}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={sharesBarPct}
+                max={100}
+                color={accent}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={1.5}
+                dotGap={4}
+              />
               <span className="text-[9px] font-mono text-text-muted uppercase tracking-[0.15em] tabular-nums">
                 {sharesBarPct.toFixed(0)}% {t('dossier.ofLarger', { defaultValue: 'del mayor' })}
               </span>
@@ -258,6 +253,7 @@ export function PairDossierRow({
                 onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
                 className="inline-flex items-center gap-1 transition-colors"
                 style={{ color: accent }}
+                aria-label={t('pairCard.investigationThread')}
               >
                 <ChevronRight className="h-3 w-3" aria-hidden="true" />
               </button>

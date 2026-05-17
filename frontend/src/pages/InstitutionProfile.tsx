@@ -68,6 +68,7 @@ import {
   type ComposedLayer,
 } from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
+import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { CategoryCaptureDumbbell } from '@/components/sectors/CategoryCaptureDumbbell'
 
@@ -438,7 +439,7 @@ export function InstitutionProfile() {
     if (!history || history.length < 3) return null
     const last3 = history.slice(-3)
     const slope = (last3[last3.length - 1].hhi - last3[0].hhi) / (last3.length - 1)
-    if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: '#dc2626' }
+    if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: 'var(--color-risk-critical)' }
     if (slope < -50) return { label: lang === 'en' ? 'Diversifying' : 'Diversificando', color: '#16a34a' }
     return { label: lang === 'en' ? 'Stable' : 'Estable', color: '#eab308' }
   }, [institution?.supplier_diversity?.history])
@@ -474,7 +475,7 @@ export function InstitutionProfile() {
         </p>
         <Link to="/institutions/health">
           <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
             {t('profile.backToInstitutions')}
           </Button>
         </Link>
@@ -503,10 +504,10 @@ export function InstitutionProfile() {
       {/* ---- BREADCRUMB NAV ---- */}
       <nav className="flex items-center gap-2 text-xs text-text-muted" aria-label="Breadcrumb">
         <Link to="/institutions/health" className="hover:text-accent transition-colors flex items-center gap-1">
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {t('profile.breadcrumb')}
         </Link>
-        <ChevronRight className="h-3 w-3" />
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
         <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
       </nav>
 
@@ -515,7 +516,7 @@ export function InstitutionProfile() {
         {/* Dateline strip — newspaper masthead grammar */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>
@@ -594,18 +595,18 @@ export function InstitutionProfile() {
               onClick={() => setNetworkOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 transition-colors font-medium"
             >
-              <Network className="h-3.5 w-3.5" />
+              <Network className="h-3.5 w-3.5" aria-hidden="true" />
               {t('profile.networkButton')}
             </button>
             <Link to={`/contracts?institution_id=${institutionId}`}>
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-                <FileText className="h-3.5 w-3.5" />
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('profile.allContractsButton')}
               </button>
             </Link>
             <Link to={`/institutions/compare?a=${institutionId}`}>
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-                <GitCompare className="h-3.5 w-3.5" />
+                <GitCompare className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('profile.compareButton')}
               </button>
             </Link>
@@ -662,7 +663,7 @@ export function InstitutionProfile() {
             fontWeight: 400,
           }}
         >
-          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·INST</span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
             {getInstitutionTypeLabel(institution.institution_type)}
@@ -788,7 +789,7 @@ export function InstitutionProfile() {
             {/* AI Intelligence Brief */}
             <div>
               <div className="flex items-center gap-2 px-1 mb-2">
-                <Brain className="h-3.5 w-3.5 text-accent" />
+                <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
                   {t('profile.overview.intelligenceBrief')}
                 </span>
@@ -814,7 +815,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <Shield className="h-3.5 w-3.5 text-accent" />
+                      <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('profile.overview.riskDistribution')}
                     </h3>
                   </div>
@@ -831,7 +832,7 @@ export function InstitutionProfile() {
                           <div key={r.level}>
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-1.5">
-                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} />
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} aria-hidden="true" />
                                 <span className="text-xs text-text-secondary">{r.label}</span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -839,22 +840,13 @@ export function InstitutionProfile() {
                                 <span className="text-xs font-bold font-mono" style={{ color: r.color }}>{r.pct.toFixed(0)}%</span>
                               </div>
                             </div>
-                            {(() => {
-                              const N = 22, DR = 2, DG = 5.5
-                              const filled = Math.max(1, Math.round((r.pct / 100) * N))
-                              return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                                  {Array.from({ length: N }).map((_, k) => (
-                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? r.color : 'var(--color-background-elevated)'}
-                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                      strokeWidth={k < filled ? 0 : 0.5}
-                                      fillOpacity={k < filled ? 0.85 : 1}
-                                    />
-                                  ))}
-                                </svg>
-                              )
-                            })()}
+                            <DotBar
+                              value={r.pct}
+                              max={100}
+                              color={r.color}
+                              emptyStroke="var(--color-border-hover)"
+                              dotGap={5.5}
+                            />
                           </div>
                         ))}
                         {riskProfile?.effective_risk != null && (
@@ -875,7 +867,7 @@ export function InstitutionProfile() {
                   <div className="card-elevated">
                     <div className="pb-2 pt-4">
                       <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                        <Shield className="h-3.5 w-3.5 text-accent" />
+                        <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                         {t('profile.integrityScoreLabel')}
                         <GradeBadge10 grade={scorecard.grade} size="sm" />
                       </h3>
@@ -921,7 +913,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <Users className="h-3.5 w-3.5 text-accent" />
+                      <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('profile.overview.topVendors')}
                     </h3>
                   </div>
@@ -957,7 +949,7 @@ export function InstitutionProfile() {
                     >
                       <div className="pb-2 pt-4">
                         <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
-                          <AlertTriangle className="h-3.5 w-3.5" />
+                          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
                           {t('profile.overview.mostSuspiciousContract')}
                         </h3>
                       </div>
@@ -998,19 +990,19 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                    <TrendingUp className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                     {t('profile.risk.trajectory')}
                   </h3>
                   {timelineTrend && (
                     <div className={cn(
                       'flex items-center gap-1 text-xs font-mono font-bold px-2 py-0.5 rounded-full',
                       timelineTrend.direction === 'up' ? 'bg-risk-critical/10 text-risk-critical' :
-                      timelineTrend.direction === 'down' ? 'bg-green-500/10 text-green-500' :
+                      timelineTrend.direction === 'down' ? 'bg-text-muted/10 text-text-secondary' :
                       'bg-text-muted/10 text-text-muted'
                     )}>
                       {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :
                        timelineTrend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> :
-                       <Minus className="h-3 w-3" />}
+                       <Minus className="h-3 w-3" aria-hidden="true" />}
                       {timelineTrend.direction === 'up' ? t('profile.risk.trendUp') :
                        timelineTrend.direction === 'down' ? t('profile.risk.trendDown') : t('profile.risk.trendStable')}
                     </div>
@@ -1044,7 +1036,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Shield className="h-3.5 w-3.5 text-accent" />
+                  <Shield className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Risk factor breakdown' : 'Desglose de factores de riesgo'}
                 </h3>
               </div>
@@ -1069,7 +1061,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Users className="h-3.5 w-3.5 text-accent" />
+                  <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Peer comparison' : 'Comparacion con pares'}
                   {peerComparison && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
@@ -1157,7 +1149,7 @@ export function InstitutionProfile() {
                 <div className="card-elevated">
                   <div className="pb-2 pt-4">
                     <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                      <AlertTriangle className="h-3.5 w-3.5 text-accent" />
+                      <AlertTriangle className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                       {t('benchmarks.procurementMethod')}
                     </h3>
                   </div>
@@ -1231,7 +1223,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <TrendingUp className="h-3.5 w-3.5 text-accent" />
+                  <TrendingUp className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Vendor loyalty — long-term relationships' : 'Lealtad de proveedores — relaciones de largo plazo'}
                 </h3>
               </div>
@@ -1242,7 +1234,7 @@ export function InstitutionProfile() {
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingLoyalty')}</p>
                 ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
                   <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
-                    <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" />
+                    <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" aria-hidden="true" />
                     <VendorLoyaltyHeatmap vendorLoyalty={vendorLoyalty} />
                     <p className="mt-2 text-[10px] text-text-muted/50 italic">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
                   </div>
@@ -1256,7 +1248,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  <Calendar className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {t('profile.longestTenuredVendors', 'Long-tenured Vendors')}
                 </h3>
               </div>
@@ -1310,7 +1302,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <FileText className="h-3.5 w-3.5 text-accent" />
+                  <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Top procurement categories' : 'Principales categorias de contratacion'}
                 </h3>
               </div>
@@ -1369,7 +1361,7 @@ export function InstitutionProfile() {
               </div>
             ) : !officialsData?.data_available || sortedOfficials.length === 0 ? (
               <div className="card-elevated p-8 text-center">
-                <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" />
+                <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" aria-hidden="true" />
                 <p className="text-sm text-text-muted">{t('profile.noOfficialsData')}</p>
                 {officialsData?.note && (
                   <p className="text-[10px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
@@ -1465,7 +1457,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <DollarSign className="h-3.5 w-3.5 text-accent" />
+                  <DollarSign className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Spending evolution' : 'Evolucion del gasto'}
                   {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
@@ -1481,7 +1473,7 @@ export function InstitutionProfile() {
                   <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingTimeline')}</p>
                 ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
                   <div className="relative" ref={spendingChartRef}>
-                    <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" />
+                    <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" aria-hidden="true" />
                     <SpendingOverTimeChart data={riskTimeline!.timeline} />
                   </div>
                 ) : (
@@ -1495,7 +1487,7 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high" aria-hidden="true" />
                   {lang === 'en' ? 'Highest-risk contracts' : 'Contratos de mayor riesgo'}
                   </h3>
                   <Link to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`} className="text-xs text-accent hover:underline flex items-center gap-1">
@@ -1525,7 +1517,7 @@ export function InstitutionProfile() {
               <div className="pb-2 pt-4">
                 <div className="flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                    <FileText className="h-3.5 w-3.5 text-accent" />
+                    <FileText className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Recent contracts' : 'Contratos recientes'}
                   </h3>
                   <Link to={`/contracts?institution_id=${institutionId}`} className="text-xs text-accent hover:underline flex items-center gap-1">
@@ -1559,7 +1551,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-3">
                 <h3 className="flex items-center gap-2 text-sm font-medium">
-                  <AlertTriangle className="h-4 w-4 text-risk-high" />
+                  <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
                   {lang === 'en' ? 'ASF Audit Findings' : 'Hallazgos de auditoria ASF'}
                 </h3>
               </div>
@@ -1633,7 +1625,7 @@ export function InstitutionProfile() {
               <div className="card-elevated border-l-4 border-l-risk-critical">
                 <div className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-risk-critical" />
+                    <Shield className="h-4 w-4 text-risk-critical" aria-hidden="true" />
                     <h3 className="text-sm font-bold text-risk-critical">{lang === 'en' ? 'Documented corruption case' : 'Caso de corrupcion documentado'}</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed">
@@ -1660,7 +1652,7 @@ export function InstitutionProfile() {
                   ) : (
                     <>
                       <div className="flex items-center gap-2 mb-3">
-                        <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
+                        <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" aria-hidden="true" />
                         <h2 className="text-sm font-bold text-text-primary">{lang === 'en' ? 'Documented scandals in the sector' : 'Escandalos documentados en el sector'}</h2>
                         <span className="text-xs text-text-muted">({sectorCases!.length})</span>
                       </div>
@@ -1676,7 +1668,7 @@ export function InstitutionProfile() {
                               name={c.name_es || c.name_en}
                               size="xs"
                             />
-                            <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" />
+                            <ChevronRight className="h-3 w-3 text-text-muted flex-shrink-0" aria-hidden="true" />
                           </div>
                         ))}
                       </div>
@@ -1690,7 +1682,7 @@ export function InstitutionProfile() {
             <div className="card-elevated">
               <div className="pb-2 pt-4">
                 <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
-                  <Calendar className="h-3.5 w-3.5 text-accent" />
+                  <Calendar className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                   {lang === 'en' ? 'Cross-registry timeline' : 'Linea de tiempo cruzada'}
                 </h3>
               </div>
@@ -1813,25 +1805,17 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           )}
         </div>
       </div>
-      {(() => {
-        const N = 30, DR = 2.5, DG = 6
-        const filled = Math.max(1, Math.round((Math.min(100, value) / 100) * N))
-        const benchIdx = Math.round((benchmark / 100) * N)
-        const benchX = benchIdx * DG + DR
-        return (
-          <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-            <line x1={benchX} y1={0} x2={benchX} y2={8} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} />
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={Math.min(100, value)}
+        max={100}
+        color={barColor}
+        emptyColor="var(--color-background-elevated)"
+        emptyStroke="var(--color-border-hover)"
+        dots={30}
+        dotR={2.5}
+        dotGap={6}
+        thresholds={[{ value: benchmark, color: 'var(--color-text-muted)' }]}
+      />
       <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
         <span>0%</span><span>{lang === 'en' ? 'Avg.' : 'Prom.'} {benchmark}%</span><span>100%</span>
       </div>
@@ -1957,25 +1941,18 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   {riskClr && v.avg_risk_score != null && (
                     <span className="text-xs font-bold font-mono w-8 text-right" style={{ color: riskClr }}>{(v.avg_risk_score * 100).toFixed(0)}%</span>
                   )}
-                  <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
                 </div>
               </div>
-              {(() => {
-                const N = 30, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((barW / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? 'var(--color-oecd)' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.7 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={barW}
+                max={100}
+                color="var(--color-oecd)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={2}
+                dotGap={5}
+              />
             </div>
           </div>
         )
@@ -2007,9 +1984,9 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     <table className="w-full border-separate" style={{ borderSpacing: 2 }} aria-label="Vendor loyalty over time">
       <thead>
         <tr>
-          <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
+          <th scope="col" className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
           {displayYears.map((yr) => (
-            <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
+            <th scope="col" key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
           ))}
         </tr>
       </thead>
@@ -2262,7 +2239,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       onClick={() => onView?.(contract.id)}
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+        <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
         <div className="min-w-0">
           <p className="text-xs font-medium truncate max-w-[260px] text-text-primary">{contract.title || t('profile.untitled')}</p>
           <div className="flex items-center gap-1.5 text-xs text-text-muted mt-0.5">

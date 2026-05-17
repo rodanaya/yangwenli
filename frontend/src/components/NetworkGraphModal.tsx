@@ -273,7 +273,7 @@ export function NetworkGraphModal({
                   aria-label="Zoom in"
                   title="Zoom in"
                 >
-                  <ZoomIn className="w-3.5 h-3.5" />
+                  <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={handleZoomOut}
@@ -281,7 +281,7 @@ export function NetworkGraphModal({
                   aria-label="Zoom out"
                   title="Zoom out"
                 >
-                  <ZoomOut className="w-3.5 h-3.5" />
+                  <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={handleReset}
@@ -289,7 +289,7 @@ export function NetworkGraphModal({
                   aria-label="Reset zoom"
                   title="Reset zoom"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -341,7 +341,7 @@ export function NetworkGraphModal({
                 </p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" aria-hidden="true" />
+                    <span className="inline-block w-3 h-3 rounded-full bg-sector-educacion" aria-hidden="true" />
                     {lang === 'en' ? 'Institution' : 'Institución'}
                   </span>
                   {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
@@ -361,11 +361,11 @@ export function NetworkGraphModal({
                 {/* Edge / size legend */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-muted/60 mt-1">
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block h-px w-6 bg-[#f87171]/60 border-t-2 border-[#f87171]/60" aria-hidden="true" />
+                    <span className="inline-block h-px w-6 bg-risk-critical/60 border-t-2 border-risk-critical/60" aria-hidden="true" />
                     {lang === 'en' ? 'High-risk connection' : 'Conexión de alto riesgo'}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="inline-block h-px w-6 bg-[#475569]/60 border-t-2 border-[#475569]/60" aria-hidden="true" />
+                    <span className="inline-block h-px w-6 bg-text-muted/60 border-t-2 border-text-muted/60" aria-hidden="true" />
                     {lang === 'en' ? 'Normal connection' : 'Conexión normal'}
                   </span>
                   <span className="text-text-muted/40">

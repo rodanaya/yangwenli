@@ -116,7 +116,7 @@ function Tooltip({
   return (
     <div
       role="tooltip"
-      className="pointer-events-none fixed z-50 select-none rounded border border-[color:var(--color-border)] bg-[color:var(--color-background-card)] shadow-lg"
+      className="pointer-events-none fixed z-50 select-none rounded border border-border bg-background-card shadow-lg"
       style={{ left, top, width: tipW }}
     >
       {/* Sector color strip */}
@@ -133,7 +133,7 @@ function Tooltip({
         <div className="space-y-1">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-[color:var(--color-text-muted)]">{row.label}</span>
+              <span className="text-[11px] text-text-muted">{row.label}</span>
               <span
                 className="text-[11px] font-mono tabular-nums font-bold"
                 style={{ color: row.color ?? 'var(--color-text-primary)' }}
@@ -258,7 +258,7 @@ export function SectorTreemap({ sectors }: SectorTreemapProps) {
     return (
       <div
         ref={containerRef}
-        className="w-full bg-[color:var(--color-background-elevated)] rounded"
+        className="w-full bg-background-elevated rounded"
         style={{ height: 480 }}
         aria-label="Loading treemap"
       />

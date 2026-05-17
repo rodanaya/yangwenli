@@ -15,6 +15,7 @@ import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -124,14 +125,14 @@ function gradeToMexican(grade: string, _score?: number): MexicanGrade {
     case 'C+':
     case 'C':
       // Regular -- amber
-      return { label: 'Regular', labelEN: 'Fair', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
+      return { label: 'Regular', labelEN: 'Fair', color: 'var(--color-risk-high)', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
     case 'D':
     case 'D-':
       // Deficiente -- darker amber
       return { label: 'Deficiente', labelEN: 'Deficient', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'rojo', tier: 'bad' }
     default:
       // Critico -- red
-      return { label: 'Critico', labelEN: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
+      return { label: 'Critico', labelEN: 'Critical', color: 'var(--color-risk-critical)', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
   }
 }
 
@@ -141,8 +142,8 @@ function gradeToMexican(grade: string, _score?: number): MexicanGrade {
 function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }) {
   const lights: Array<{ key: 'verde' | 'amarillo' | 'rojo'; color: string }> = [
     { key: 'verde', color: '#a1a1aa' },
-    { key: 'amarillo', color: '#f59e0b' },
-    { key: 'rojo', color: '#ef4444' },
+    { key: 'amarillo', color: 'var(--color-risk-high)' },
+    { key: 'rojo', color: 'var(--color-risk-critical)' },
   ]
   return (
     <div
@@ -299,7 +300,7 @@ function HeroImpactSection({
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-1">
             High-risk rate
-            <span className="text-[color:var(--color-oecd)] ml-1">(OECD: max 15%)</span>
+            <span className="text-oecd ml-1">(OECD: max 15%)</span>
           </span>
         </div>
 
@@ -489,7 +490,7 @@ function HeroSection({
                 <span className="text-sm font-medium text-text-secondary">
                   {highRiskPct.toFixed(1)}% {t('sectorHighRisk')}
                   {' · '}
-                  <span className="text-[color:var(--color-oecd)]">{t('metricRiskNote')}</span>
+                  <span className="text-oecd">{t('metricRiskNote')}</span>
                 </span>
               </div>
             )}
@@ -516,8 +517,8 @@ function OECDContextPanel({ national }: { national: PHINational }) {
 
   return (
     <section className="mb-10">
-      <div className="rounded-sm border border-cyan-500/20 bg-cyan-500/5 p-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-oecd)] mb-3">
+      <div className="rounded-sm border border-oecd/20 bg-oecd/5 p-5">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-oecd mb-3">
           {t('oecdContextTitle')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -749,7 +750,7 @@ function WhatThisMeans({
       <h2 className="text-lg font-serif font-bold mb-4 text-text-primary">
         {t('whatThisMeansTitle')}
       </h2>
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5">
+      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-3">
           HALLAZGO
         </p>
@@ -757,7 +758,7 @@ function WhatThisMeans({
           {bullets.map((bullet, i) => (
             <li key={i} className="flex gap-3 text-sm leading-relaxed text-text-secondary">
               <span
-                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-amber-500/20"
+                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-risk-high/10 text-risk-high border border-risk-high/20"
                 aria-hidden="true"
               >
                 {i + 1}
@@ -872,22 +873,16 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                     aria-valuemax={100}
                     aria-label={`${displayName}: ${combinedPct.toFixed(1)}% ${t('sectorHighRisk')}`}
                   >
-                    {(() => {
-                      const N = 30, DR = 3, DG = 8
-                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
-                      return (
-                        <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
-                          {Array.from({ length: N }).map((_, k) => (
-                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : 'var(--color-background-elevated)'}
-                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                              strokeWidth={k < filled ? 0 : 0.5}
-                              fillOpacity={k < filled ? 0.85 : 1}
-                            />
-                          ))}
-                        </svg>
-                      )
-                    })()}
+                    <DotBar
+                      value={barWidth}
+                      max={100}
+                      color={color}
+                      emptyColor="var(--color-background-elevated)"
+                      emptyStroke="var(--color-border-hover)"
+                      dots={30}
+                      dotR={3}
+                      dotGap={8}
+                    />
                   </div>
 
                   {/* Pct label */}
@@ -967,8 +962,8 @@ function TrendSection() {
 
   const trendConfig = {
     improving: { icon: '\u2191', color: '#a1a1aa', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
-    stable:    { icon: '\u2192', color: '#6b7280', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
-    worsening: { icon: '\u2193', color: '#ef4444', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
+    stable:    { icon: '\u2192', color: 'var(--color-text-muted)', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
+    worsening: { icon: '\u2193', color: 'var(--color-risk-critical)', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
   }[trendDirection]
 
   const earliestYear = years.length > 0 ? years[0].year : 2010
@@ -1079,7 +1074,7 @@ function LoadingState() {
     <div className="flex items-center justify-center min-h-[40vh] bg-background">
       <div className="text-center">
         <div
-          className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-amber-500 mx-auto mb-4"
+          className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-accent mx-auto mb-4"
           role="status"
           aria-label={t('loading')}
         />
@@ -1095,7 +1090,7 @@ function ComputingState() {
     <div className="flex items-center justify-center min-h-[40vh] bg-background">
       <div className="text-center max-w-md">
         <div
-          className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-amber-500 mx-auto mb-4"
+          className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-accent mx-auto mb-4"
           role="status"
         />
         <p className="font-bold mb-2 text-text-primary">
@@ -1199,12 +1194,12 @@ function ReportCard() {
   const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1427
 
   return (
-    <main className="min-h-screen bg-background" id="main-content">
+    <main className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Page header — NATIONAL SYSTEM HEALTH */}
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
             <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
               Salud del Sistema · Índice Nacional de Integridad
             </p>

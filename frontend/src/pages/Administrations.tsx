@@ -11,6 +11,7 @@
  */
 
 import { lazy, Suspense, useMemo, useState } from 'react'
+import { DotBar } from '@/components/ui/DotBar'
 import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
 import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
@@ -531,8 +532,8 @@ export default function Administrations() {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-6">
         <div className="text-center max-w-md space-y-4">
-          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-            <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
+          <div className="w-12 h-12 rounded-full bg-risk-critical/10 flex items-center justify-center mx-auto">
+            <AlertTriangle className="h-5 w-5 text-risk-critical" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-bold text-text-primary">{t('loadError', 'Data unavailable')}</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
@@ -584,7 +585,7 @@ export default function Administrations() {
             }}
           >
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XI</span>
+              <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XI</span>
               <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
               <span>
                 {isEs
@@ -609,7 +610,7 @@ export default function Administrations() {
                 {isEs ? (
                   <>
                     Cinco administraciones,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                       un solo patrón.
                     </span>
                   </>
@@ -620,7 +621,7 @@ export default function Administrations() {
                         the actual count (Fox / Calderón / Peña Nieto / AMLO /
                         Sheinbaum). Aligned to five. */}
                     Five administrations,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>
+                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
                       one pattern.
                     </span>
                   </>
@@ -667,14 +668,14 @@ export default function Administrations() {
               return (
                 <>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
                     <span>
                       {t('classifiedHeader.highestRiskNote')}{' '}
                       <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-low" />
+                    <span className="w-2 h-2 rounded-full bg-risk-low" aria-hidden="true" />
                     <span>
                       {t('classifiedHeader.lowestRiskNote')}{' '}
                       <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
@@ -1006,7 +1007,7 @@ export default function Administrations() {
       {/* Incomplete data warning for Sheinbaum */}
       {selectedAdmin === 'Sheinbaum' && (
         <div className="flex items-start gap-3 px-4 py-3 rounded-sm border border-risk-medium/30 bg-risk-medium/5">
-          <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" aria-hidden="true" />
           <div>
             <p className="text-sm font-semibold text-risk-medium">{t('incompleteDataset')}</p>
             <p className="text-xs text-text-muted mt-0.5">
@@ -1078,23 +1079,16 @@ export default function Administrations() {
                     {ADMIN_DISPLAY_NAMES[a.name] ?? a.name}
                   </span>
                   <div className="flex-1 relative flex items-center">
-                    {(() => {
-                      const N = 40, DR = 3, DG = 8
-                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
-                      const color = isAmlo ? '#dc2626' : partyColor
-                      return (
-                        <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                          {Array.from({ length: N }).map((_, k) => (
-                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : 'var(--color-background-elevated)'}
-                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                              strokeWidth={k < filled ? 0 : 0.5}
-                              fillOpacity={k < filled ? 0.85 : 1}
-                            />
-                          ))}
-                        </svg>
-                      )
-                    })()}
+                    <DotBar
+                      value={barWidth}
+                      max={100}
+                      color={isAmlo ? '#dc2626' : partyColor}
+                      emptyColor="var(--color-background-elevated)"
+                      emptyStroke="var(--color-border-hover)"
+                      dots={40}
+                      dotR={3}
+                      dotGap={8}
+                    />
                     {isAmlo && (
                       <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse pl-2">
                         {t('evidenceSection.amloMultiplier')}
@@ -1154,11 +1148,11 @@ export default function Administrations() {
               <table className="w-full text-sm" aria-label="Administration comparison metrics">
                 <thead>
                   <tr>
-                    <th className="data-cell-header text-left">{t('table.metric')}</th>
+                    <th scope="col" className="data-cell-header text-left" scope="col">{t('table.metric')}</th>
                     {adminAggs.map((a) => {
                       const adminColor = ADMIN_COLORS[a.name]
                       return (
-                        <th
+                        <th scope="col"
                           key={a.name}
                           className="data-cell-header text-right"
                           style={{ color: a.name === selectedAdmin ? adminColor : `${adminColor}70` }}
@@ -1362,7 +1356,7 @@ export default function Administrations() {
                   <div className="flex flex-wrap gap-4 mt-1 px-1">
                     {lines.map((ln) => (
                       <div key={ln.key} className="flex items-center gap-1.5">
-                        <svg width={16} height={10}><line x1={0} y1={5} x2={16} y2={5} stroke={ln.color} strokeWidth={1.8} /><circle cx={8} cy={5} r={2.2} fill={ln.color} /></svg>
+                        <svg width={16} height={10} aria-hidden="true"><line x1={0} y1={5} x2={16} y2={5} stroke={ln.color} strokeWidth={1.8} /><circle cx={8} cy={5} r={2.2} fill={ln.color} /></svg>
                         <span className="text-[10px] font-mono text-text-muted">{ln.label}</span>
                       </div>
                     ))}
@@ -1378,7 +1372,7 @@ export default function Administrations() {
             {yearAnomalies.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border/20">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <AlertTriangle className="h-3 w-3 text-risk-medium" />
+                  <AlertTriangle className="h-3 w-3 text-risk-medium" aria-hidden="true" />
                   <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono">
                     {t('aiDetectedAnomalies')}
                   </span>
@@ -1439,11 +1433,11 @@ export default function Administrations() {
             <table className="w-full text-xs font-mono" aria-label="Sector risk metrics by administration">
               <thead>
                 <tr>
-                  <th className="data-cell-header text-left">{t('heatmap.sector')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
-                  <th className="data-cell-header text-right" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
+                  <th scope="col" className="data-cell-header text-left" scope="col">{t('heatmap.sector')}</th>
+                  <th scope="col" className="data-cell-header text-right" scope="col" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
+                  <th scope="col" className="data-cell-header text-right" scope="col" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
+                  <th scope="col" className="data-cell-header text-right" scope="col" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
+                  <th scope="col" className="data-cell-header text-right" scope="col" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1454,7 +1448,7 @@ export default function Administrations() {
                   <tr key={sector.sectorId} className="hover:bg-background-elevated/30 transition-colors">
                     <td className="data-cell">
                       <div className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} />
+                        <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} aria-hidden="true" />
                         <span className="text-text-secondary">{sector.name}</span>
                       </div>
                     </td>
@@ -1525,23 +1519,23 @@ export default function Administrations() {
                     'rounded-sm border p-3 transition-all',
                     isRelevant
                       ? 'border-accent/30 bg-accent/5'
-                      : 'border-border/20 bg-card opacity-60'
+                      : 'border-border/20 bg-background-card opacity-60'
                   )}
                 >
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/20">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} />
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.from}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-accent" />
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} />
+                    <ArrowRight className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.to}</span>
                     {/* Enhancement C: Net Change indicator */}
                     <div className="ml-auto flex items-center gap-1">
                       {netIsWorse ? (
-                        <TrendingUp className="h-4 w-4 text-risk-critical" />
+                        <TrendingUp className="h-4 w-4 text-risk-critical" aria-hidden="true" />
                       ) : netIsBetter ? (
-                        <TrendingDown className="h-4 w-4 text-risk-low" />
+                        <TrendingDown className="h-4 w-4 text-risk-low" aria-hidden="true" />
                       ) : (
-                        <Minus className="h-4 w-4 text-text-muted" />
+                        <Minus className="h-4 w-4 text-text-muted" aria-hidden="true" />
                       )}
                       <span className={cn(
                         'text-sm font-bold font-mono',
@@ -1636,8 +1630,8 @@ export default function Administrations() {
               <p className="text-xs text-text-muted/70 italic mb-3">
                 {t('documentedCasesNote')}
               </p>
-              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-card-hover/20 p-3">
-                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-background-elevated/20 p-3">
+                <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-xs text-text-secondary leading-relaxed">
                   {t('groundTruthNote')}
                 </p>
@@ -1724,43 +1718,27 @@ function TransitionMiniBar({
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{fromName}</span>
         <div className="flex-1">
-          {(() => {
-            const N = 20, DR = 2, DG = 5
-            const filled = Math.max(1, Math.round((fromPct / 100) * N))
-            return (
-              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                {Array.from({ length: N }).map((_, k) => (
-                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
-                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={k < filled ? 0 : 0.5}
-                    fillOpacity={k < filled ? 0.5 : 1}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={fromPct}
+            max={100}
+            color="var(--color-text-muted)"
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+          />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{toName}</span>
         <div className="flex-1">
-          {(() => {
-            const N = 20, DR = 2, DG = 5
-            const filled = Math.max(1, Math.round((toPct / 100) * N))
-            return (
-              <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                {Array.from({ length: N }).map((_, k) => (
-                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? toBarColor : 'var(--color-background-elevated)'}
-                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                    strokeWidth={k < filled ? 0 : 0.5}
-                    fillOpacity={k < filled ? 0.85 : 1}
-                  />
-                ))}
-              </svg>
-            )
-          })()}
+          <DotBar
+            value={toPct}
+            max={100}
+            color={toBarColor}
+            emptyColor="var(--color-background-elevated)"
+            emptyStroke="var(--color-border-hover)"
+            dots={20}
+          />
         </div>
       </div>
     </div>

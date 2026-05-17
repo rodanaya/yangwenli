@@ -210,9 +210,9 @@ const STATUS_META: Record<
   },
   auditado: {
     label: 'UNDER AUDIT',
-    color: 'text-[color:var(--color-oecd)]',
-    border: 'border-[color:var(--color-oecd)]/30',
-    bg: 'bg-[color:var(--color-oecd)]/[0.06]',
+    color: 'text-oecd',
+    border: 'border-oecd/30',
+    bg: 'bg-oecd/[0.06]',
   },
   reporteado: {
     label: 'REPORTED',
@@ -768,7 +768,7 @@ function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
       >
         {/* Mini constellation preview */}
         <div className="hidden md:block flex-shrink-0 w-[120px] h-[80px] opacity-70" aria-hidden="true">
-          <svg viewBox="0 0 120 80" className="w-full h-full">
+          <svg aria-hidden="true" viewBox="0 0 120 80" className="w-full h-full">
             {/* Background dots grid */}
             {Array.from({ length: 24 }).map((_, i) => (
               <circle key={i} cx={10 + (i % 6) * 20} cy={10 + Math.floor(i / 6) * 20} r={1} fill="var(--color-accent)" opacity={0.2} />
@@ -817,7 +817,7 @@ function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
         </div>
         <Link
           to="/atlas"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-accent hover:text-accent"
           style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', background: 'rgba(160,104,32,0.06)' }}
         >
           {isEs ? 'Entrar al Observatorio →' : 'Enter Observatory →'}
@@ -877,7 +877,7 @@ function SectionBreak() {
   return (
     <div className="my-12 sm:my-14 flex items-center justify-center" aria-hidden="true">
       <span className="block h-px w-16 bg-border" />
-      <span className="mx-3 h-1.5 w-1.5 rounded-full bg-text-muted opacity-60" />
+      <span className="mx-3 h-1.5 w-1.5 rounded-full bg-text-muted opacity-60" aria-hidden="true" />
       <span className="block h-px w-16 bg-border" />
     </div>
   )
@@ -929,7 +929,7 @@ export function FeaturedCard({ item }: { item: Investigation }) {
             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical">
               {t('featuredLabel')}
             </span>
-            <span className="h-px w-8 bg-red-500/50" />
+            <span className="h-px w-8 bg-risk-critical/50" />
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
               {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
             </span>
@@ -1249,7 +1249,7 @@ function AriaLiveTicker() {
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical">
             LIVE
           </span>
@@ -1446,7 +1446,7 @@ export default function Journalists() {
         <header className="pt-14 sm:pt-20 pb-10">
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">
                 RUBLI
               </span>

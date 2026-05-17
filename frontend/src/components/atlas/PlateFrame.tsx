@@ -155,7 +155,7 @@ export function PlateFrame({
         }}
       >
         <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-          <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·{folio}</span>
+          <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·{folio}</span>
           <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
           <span>{contextLabelText}</span>
         </span>

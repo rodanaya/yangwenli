@@ -213,7 +213,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
           <span>{t('timeSeries.contractsLegend')}</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-0.5 bg-red-400" />
+          <div className="w-3 h-0.5 bg-risk-critical/80" />
           <span>{t('timeSeries.avgRiskLegend')}</span>
         </div>
         <span className="ml-auto">{t('timeSeries.dragHint')}</span>

@@ -226,7 +226,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             </p>
           </div>
         </div>
-        <div className="animate-pulse bg-surface-muted rounded h-64 w-full" />
+        <div className="animate-pulse bg-background-elevated rounded h-64 w-full" />
       </div>
     )
   }
@@ -278,9 +278,9 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             onClick={handleDownload}
             title={`Download CSV (${minYear}–${maxYear})`}
             aria-label="Download chart data as CSV"
-            className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-muted/60 transition-colors"
+            className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/60 transition-colors"
           >
-            <DownloadIcon className="w-3.5 h-3.5" />
+            <DownloadIcon className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
 
           {/* Retry button when API failed but fallback is shown */}

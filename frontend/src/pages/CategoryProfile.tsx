@@ -28,6 +28,7 @@ import {
   User,
 } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
+import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { getLedeForCategory } from '@/lib/entity/lede'
 import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
@@ -142,7 +143,7 @@ function SexenioDotColumns({
       aria-label="Dot matrix chart showing contract value by presidential administration"
       className="flex items-center justify-center"
     >
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
         {data.map((d, colIdx) => {
           const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * ROWS)) : 0
           const cx = offsetX + colIdx * (COL_W + COL_GAP) + COL_W / 2
@@ -245,7 +246,7 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
       role="img"
       aria-label="Dot matrix chart showing contract value by subcategory"
     >
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
         {data.map((d, rowIdx) => {
           const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * DOTS)) : 0
           const cy = 12 + rowIdx * ROW_H + ROW_H / 2
@@ -464,7 +465,7 @@ export default function CategoryProfile() {
             fontWeight: 400,
           }}
         >
-          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
             Folio · {missingFolio}
           </span>
           <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -498,7 +499,7 @@ export default function CategoryProfile() {
               to="/sectors?view=categories"
               className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1.5 rounded-sm"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3 w-3" aria-hidden="true" />
               {t('profile.notFound.backLink')}
             </Link>
           </div>
@@ -550,7 +551,7 @@ export default function CategoryProfile() {
           to="/categories"
           className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-3"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {t('profile.breadcrumb')}
         </Link>
 
@@ -574,7 +575,7 @@ export default function CategoryProfile() {
                 fontWeight: 400,
               }}
             >
-              <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+              <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
                 {isEs ? 'Categoría' : 'Category'}·{folioNumber}
               </span>
               <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -583,7 +584,7 @@ export default function CategoryProfile() {
                   className="inline-flex items-center gap-1.5"
                   style={{ color: sectorColor }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} />
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} aria-hidden="true" />
                   <span style={{ fontStyle: 'italic', fontWeight: 500 }}>{sectorLabel}</span>
                 </span>
               )}
@@ -926,22 +927,16 @@ export default function CategoryProfile() {
                         </div>
                         <div className="w-28 flex-shrink-0">
                           <div className="flex items-center gap-2">
-                            {(() => {
-                              const N = 14, DR = 2, DG = 4.5
-                              const filled = Math.max(1, Math.round((Math.min(v.market_share_pct, 100) / 100) * N))
-                              return (
-                                <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                                  {Array.from({ length: N }).map((_, k) => (
-                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? vendorRiskColor : 'var(--color-background-elevated)'}
-                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                      strokeWidth={k < filled ? 0 : 0.5}
-                                      fillOpacity={k < filled ? 0.7 : 1}
-                                    />
-                                  ))}
-                                </svg>
-                              )
-                            })()}
+                            <DotBar
+                              value={v.market_share_pct}
+                              max={100}
+                              color={vendorRiskColor}
+                              emptyColor="var(--color-background-elevated)"
+                              emptyStroke="var(--color-border-hover)"
+                              dots={14}
+                              dotR={2}
+                              dotGap={4.5}
+                            />
                             <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
                               {v.market_share_pct.toFixed(1)}%
                             </span>
@@ -1008,7 +1003,7 @@ export default function CategoryProfile() {
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
-                    <User className="h-3 w-3 flex-shrink-0" />
+                    <User className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
                     <span>{t('profile.table.vendor')}</span>
                     <span className="text-text-muted/30">&rarr;</span>
                     <Building2 className="h-3 w-3 flex-shrink-0" />
@@ -1035,24 +1030,16 @@ export default function CategoryProfile() {
                             <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
                             <EntityIdentityChip type="institution" id={pair.institution_id} name={pair.institution_name} size="xs" hideIcon />
                           </div>
-                          {(() => {
-                            const pct = Math.min(pair.total_value / maxVal, 1)
-                            const N = 30, DR = 1.5, DG = 4
-                            const filled = Math.max(1, Math.round(pct * N))
-                            const color = getRiskColor(pair.avg_risk)
-                            return (
-                              <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-                                {Array.from({ length: N }).map((_, k) => (
-                                  <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                                    fill={k < filled ? color : 'var(--color-background-elevated)'}
-                                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                    strokeWidth={k < filled ? 0 : 0.5}
-                                    fillOpacity={k < filled ? 0.7 : 1}
-                                  />
-                                ))}
-                              </svg>
-                            )
-                          })()}
+                          <DotBar
+                            value={Math.min(pair.total_value / maxVal, 1)}
+                            max={1}
+                            color={getRiskColor(pair.avg_risk)}
+                            emptyColor="var(--color-background-elevated)"
+                            emptyStroke="var(--color-border-hover)"
+                            dots={30}
+                            dotR={1.5}
+                            dotGap={4}
+                          />
                         </div>
                         <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
                           {formatCompactMXN(pair.total_value)}
@@ -1166,7 +1153,7 @@ export default function CategoryProfile() {
             onClick={() => navigate(`/contracts?category_id=${categoryId}`)}
             className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors font-mono uppercase tracking-wide"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {t('profile.actions.viewAll')}
           </button>
         </div>
@@ -1243,7 +1230,7 @@ export default function CategoryProfile() {
                     {heavySkew && (
                       <span
                         className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider"
-                        style={{ color: '#f59e0b', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
+                        style={{ color: 'var(--color-risk-high)', backgroundColor: '#f59e0b18', border: '1px solid #f59e0b40' }}
                       >
                         {isEs ? 'Distribución asimétrica' : 'Heavy skew'}
                       </span>
@@ -1402,6 +1389,7 @@ export default function CategoryProfile() {
                       viewBox={`0 0 ${svgW} ${svgH}`}
                       width={svgW}
                       height={svgH}
+                      role="img"
                       aria-label={isEs ? 'Valor medio por año' : 'Average value by year'}
                       className="overflow-visible"
                     >
@@ -1550,14 +1538,14 @@ export default function CategoryProfile() {
 
                 {/* Procedure breakdown bar */}
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Desglose por procedimiento' : 'Procedure breakdown'}
                   </div>
                   <div className="h-5 rounded-sm overflow-hidden flex w-full">
                     {procedure_breakdown
                       .filter(p => p.pct_contracts > 0.5)
                       .map(p => {
-                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: 'var(--color-text-muted)' }
                         return (
                           <div
                             key={p.type}
@@ -1572,7 +1560,7 @@ export default function CategoryProfile() {
                     {procedure_breakdown
                       .filter(p => p.pct_contracts > 0.5)
                       .map(p => {
-                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: '#94a3b8' }
+                        const meta = PROC_LABELS[p.type] ?? { es: p.type, en: p.type, color: 'var(--color-text-muted)' }
                         return (
                           <div key={p.type} className="flex items-center gap-1.5">
                             <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
@@ -1600,11 +1588,13 @@ export default function CategoryProfile() {
                   const lastYear = yearly_trend[yearly_trend.length - 1].year
                   return (
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
                       </div>
                       <div className="relative">
-                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 48 }}>
+                        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 48 }}
+                          role="img" aria-label={isEs ? 'Tendencia adjudicación directa %' : 'Direct award % trend'}
+                        >
                           {/* Sector avg reference line */}
                           {sector_da_avg != null && (
                             <line
@@ -1716,7 +1706,7 @@ export default function CategoryProfile() {
 
                 {/* Monthly bar chart */}
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                  <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-2">
                     {isEs ? 'Gasto por mes (% del total)' : 'Spend by month (% of total)'}
                   </div>
                   <div className="flex items-end gap-1 h-16">
@@ -1763,10 +1753,12 @@ export default function CategoryProfile() {
                   }).join(' ')
                   return (
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                      <div className="text-[10px] font-medium uppercase tracking-widest text-text-muted mb-1">
                         {isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
                       </div>
-                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}>
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 40 }}
+                        role="img" aria-label={isEs ? 'Diciembre % año a año' : 'December % year-over-year'}
+                      >
                         {/* 8.33% reference */}
                         <line x1="0" y1={H - (8.33 / 40) * H} x2={W} y2={H - (8.33 / 40) * H}
                           stroke="#94a3b8" strokeWidth="1" strokeDasharray="3,3" />
@@ -2026,8 +2018,6 @@ export default function CategoryProfile() {
                   {sisters.map((sc) => {
                     const scRisk = sc.avg_risk
                     const scColor = getRiskColor(scRisk)
-                    const N = 12, DR = 1.75, DG = 4
-                    const filled = Math.max(1, Math.round(Math.min(scRisk, 1) * N))
                     return (
                       <div
                         key={sc.category_id}
@@ -2044,25 +2034,17 @@ export default function CategoryProfile() {
                           />
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <svg
-                            viewBox={`0 0 ${N * DG} 6`}
-                            width={N * DG}
-                            height={6}
-                            aria-hidden="true"
-                          >
-                            {Array.from({ length: N }).map((_, k) => (
-                              <circle
-                                key={k}
-                                cx={k * DG + DR}
-                                cy={3}
-                                r={DR}
-                                fill={k < filled ? scColor : 'var(--color-background-elevated)'}
-                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                strokeWidth={k < filled ? 0 : 0.5}
-                                fillOpacity={k < filled ? 0.7 : 1}
-                              />
-                            ))}
-                          </svg>
+                          <DotBar
+                            value={scRisk}
+                            max={1}
+                            color={scColor}
+                            emptyColor="var(--color-background-elevated)"
+                            emptyStroke="var(--color-border-hover)"
+                            dots={12}
+                            dotR={1.75}
+                            dotGap={4}
+                            thresholds={[0.25, 0.40, 0.60]}
+                          />
                           <span
                             className="text-xs font-mono tabular-nums w-8 text-right"
                             style={{ color: scColor }}

@@ -60,7 +60,7 @@ const RISK_FLOORS: Array<{
 }> = [
   { id: 'all',      en: 'All',    es: 'Todo',  color: 'var(--color-text-muted)' },
   { id: 'medium',   en: 'Med+',   es: 'Med+',  color: '#a06820' },
-  { id: 'high',     en: 'High+',  es: 'Alto+', color: '#f59e0b' },
+  { id: 'high',     en: 'High+',  es: 'Alto+', color: 'var(--color-risk-high)' },
   { id: 'critical', en: 'Crit',   es: 'Crít',  color: '#dc2626' },
 ]
 
@@ -191,7 +191,7 @@ export function AtlasLeftRail({
             aria-label={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
             title={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
           >
-            <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} />
+            <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} aria-hidden="true" />
           </button>
         </div>
       )}
@@ -349,7 +349,7 @@ export function AtlasLeftRail({
               >
                 <span
                   className="font-mono font-bold text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   ◆
                 </span>
@@ -418,7 +418,7 @@ export function AtlasLeftRail({
                 }
               }}
               placeholder={lang === 'en' ? 'Toka, Edenred, IMSS…' : 'Toka, Edenred, IMSS…'}
-              className="w-full pl-7 pr-2.5 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none"
+              className="w-full pl-7 pr-2.5 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
               style={{
                 background: 'var(--color-background-elevated, var(--color-border))',
                 border: '1px solid var(--color-border)',

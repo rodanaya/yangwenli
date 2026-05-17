@@ -215,7 +215,7 @@ export default function Terms() {
               : 'You are free to inspect, fork, and build upon the codebase in accordance with that licence. The licence text is available in the '}
             <a href="https://github.com/rodanaya/yangwenli/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               {isEs ? 'repositorio' : 'repository'}
-            </a>.
+            <span className="sr-only"> (opens in new tab)</span></a>.
           </p>
           <p>
             {isEs
@@ -231,7 +231,7 @@ export default function Terms() {
               : 'If you identify data errors, methodological issues, or privacy concerns, please report them via '}
             <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               GitHub Issues
-            </a>.{' '}
+            <span className="sr-only"> (opens in new tab)</span></a>.{' '}
             {isEs
               ? 'Tomamos en serio la calidad de los datos y nos esforzamos por atender los reportes sustantivos con prontitud.'
               : 'We take data quality seriously and aim to address substantive reports promptly.'}
@@ -256,7 +256,7 @@ export default function Terms() {
           >
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             {isEs ? 'Código fuente (MIT)' : 'Source code (MIT)'}
-          </a>
+          <span className="sr-only"> (opens in new tab)</span></a>
           <a href="/privacy" className="text-xs text-text-secondary hover:text-text-primary transition-colors">
             {isEs ? 'Aviso de privacidad' : 'Privacy Policy'}
           </a>

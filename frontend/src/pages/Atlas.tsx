@@ -316,6 +316,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
           exit={{ x: 440, opacity: 0 }}
           transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
           role="dialog"
+          aria-modal="true"
           aria-label={`${meta.label} — cluster details`}
         >
           {/* Header */}
@@ -451,11 +452,11 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5">
-                  <NotebookPen className="h-3 w-3" />
+                  <NotebookPen className="h-3 w-3" aria-hidden="true" />
                   {lang === 'en' ? 'YOUR NOTES' : 'TUS NOTAS'}
                 </div>
                 {note && (
-                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: '#a06820' }}>
+                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: 'var(--color-accent)' }}>
                     {lang === 'en' ? 'saved locally' : 'guardado local'}
                   </span>
                 )}
@@ -467,7 +468,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
                   ? 'What did you find when you investigated this cluster? Notes save automatically to your browser.'
                   : '¿Qué encontraste al investigar este cúmulo? Las notas se guardan automáticamente en tu navegador.'
                 }
-                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none transition-colors"
+                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 transition-colors"
                 style={{
                   background: 'var(--color-background)',
                   border: '1px solid var(--color-border)',
@@ -488,7 +489,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
               style={{ background: meta.color, color: 'var(--color-background)' }}
             >
               {lang === 'en' ? 'Investigate' : 'Investigar'}
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         </motion.aside>
@@ -522,7 +523,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
         <div className="flex items-center gap-3 min-w-0 sm:flex-1 sm:order-2">
           <div
             className="font-mono font-extrabold text-[22px] leading-none tabular-nums flex-shrink-0"
-            style={{ color: '#a06820', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
+            style={{ color: 'var(--color-accent)', fontFamily: "'Playfair Display', Georgia, serif", fontWeight: 800 }}
           >
             {snapshot.year}
           </div>
@@ -560,7 +561,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
             aria-label={lang === 'en' ? 'Previous year' : 'Año anterior'}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
 
           <button
@@ -584,7 +585,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
             aria-label={lang === 'en' ? 'Next year' : 'Siguiente año'}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -613,7 +614,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             >
               <span
                 className="font-mono font-bold text-[10px] uppercase tracking-[0.14em] flex-shrink-0"
-                style={{ color: '#dc2626' }}
+                style={{ color: 'var(--color-risk-critical)' }}
               >
                 ◆ {lang === 'en' ? 'KEY EVENT' : 'EVENTO CLAVE'}
               </span>
@@ -628,7 +629,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
               animate={{ opacity: 1 }}
               className="text-[10px] font-mono text-text-muted"
             >
-              <span style={{ color: '#a06820' }}>—</span> {lang === 'en' ? 'no major documented case this year' : 'sin caso documentado mayor este año'}
+              <span style={{ color: 'var(--color-accent)' }}>—</span> {lang === 'en' ? 'no major documented case this year' : 'sin caso documentado mayor este año'}
             </motion.div>
           )}
         </AnimatePresence>
@@ -774,7 +775,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
   return (
     <div className="relative" style={{ minWidth: 220 }}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" aria-hidden="true" />
         <input
           type="text"
           value={query}
@@ -783,7 +784,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
           onBlur={() => setTimeout(() => setOpen(false), 180)}
           onKeyDown={handleKeyDown}
           placeholder={lang === 'en' ? 'Find a vendor (Toka, Edenred, IMSS…)' : 'Buscar proveedor (Toka, Edenred…)'}
-          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none"
+          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
           style={{
             background: 'var(--color-background-elevated, var(--color-border))',
             border: '1px solid var(--color-border)',
@@ -821,7 +822,7 @@ function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
                   <span className="font-mono font-bold text-[11px] text-text-primary truncate">
                     {v.displayName}
                   </span>
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: '#a06820' }}>
+                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: 'var(--color-accent)' }}>
                     {v.pattern} · {v.sector}
                   </span>
                 </div>
@@ -1313,19 +1314,29 @@ export default function Atlas() {
   // floor, lens, pin) — the user has a specific view they want to restore.
   useEffect(() => {
     const VISITED_KEY = 'rubli_atlas_visited_v1'
-    const hasUrlState = searchParams.toString().length > 0
-    // Skip auto-tour if URL has Atlas-C specific params (shared investigation link)
-    const hasSharedState = hasAtlasCParams(searchParams)
-    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
-    // constellation off-screen — the chart it's narrating becomes invisible
-    // until the reader scrolls past several hundred pixels of editorial copy.
-    // Suppress the first-visit auto-launch on mobile; the user can still tap
-    // "Play story" explicitly. Don't set the visited flag so they still get
-    // the tour when they later open the same URL on desktop.
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    // D-048: read the flag synchronously from localStorage AND from the
+    // current URL (not the React searchParams closure, which may not be
+    // populated on the very first render). The auto-tour must fire at
+    // most once per browser, never re-fire on lens/year/mode changes.
     let visited = false
     try { visited = window.localStorage.getItem(VISITED_KEY) === '1' } catch {}
-    if (!visited && !hasUrlState && !hasSharedState && !isMobile) {
+    if (visited) {
+      // Already visited — never auto-launch again, period.
+      return
+    }
+    // Read URL state directly from window.location so we don't depend on
+    // the router's async population of searchParams.
+    const rawSearch = typeof window !== 'undefined' ? window.location.search : ''
+    const hasUrlState = rawSearch.length > 1 // accounts for the leading "?"
+    const liveParams = new URLSearchParams(rawSearch)
+    const hasSharedState = hasAtlasCParams(liveParams)
+    // 2026-05-08 audit fix: on phones (<768px) the chapter card pushes the
+    // constellation off-screen — suppress the first-visit auto-launch on
+    // mobile; the user can still tap "Play story" explicitly. Don't set the
+    // visited flag so they still get the tour when they later open the same
+    // URL on desktop.
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+    if (!hasUrlState && !hasSharedState && !isMobile) {
       // Wait briefly for the page to settle before launching
       const id = setTimeout(() => {
         // V6: launch a long-form story for first-time visitors
@@ -1337,10 +1348,11 @@ export default function Atlas() {
       return () => clearTimeout(id)
     }
     // Mark as visited if arriving via ?story= or any Atlas-C shared state
-    if (searchParams.get('story') || hasSharedState) {
+    if (liveParams.get('story') || hasSharedState) {
       try { window.localStorage.setItem(VISITED_KEY, '1') } catch {}
     }
-    // intentionally only on mount
+    // intentionally only on mount — do NOT include searchParams in deps,
+    // otherwise the effect re-evaluates when lens/year/mode change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -1634,7 +1646,7 @@ export default function Atlas() {
             fontWeight: 400,
           }}
         >
-          <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
+          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
           <span style={{ width: 28, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
             {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
@@ -1655,11 +1667,11 @@ export default function Atlas() {
         >
           {lang === 'en' ? (
             <>
-              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nine trillion pesos</span> in federal procurement.
+              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nine trillion pesos</span> in federal procurement.
             </>
           ) : (
             <>
-              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: '#a06820' }}>nueve billones de pesos</span> en contratación federal.
+              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nueve billones de pesos</span> en contratación federal.
             </>
           )}
         </h1>
@@ -1709,7 +1721,7 @@ export default function Atlas() {
             aria-expanded={storiesMenuOpen}
             aria-label={lang === 'en' ? 'Open stories menu' : 'Abrir menú de historias'}
           >
-            <BookOpen className="h-3.5 w-3.5" />
+            <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             {activeStory
               ? (lang === 'en' ? activeStory.title.en : activeStory.title.es)
               : (lang === 'en' ? '▶ Stories' : '▶ Historias')
@@ -1773,9 +1785,9 @@ export default function Atlas() {
                     setStoriesMenuOpen(false)
                   }}
                   className="w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-[0.1em] font-bold transition-colors"
-                  style={{ background: 'var(--color-border)', color: '#dc2626' }}
+                  style={{ background: 'var(--color-border)', color: 'var(--color-risk-critical)' }}
                 >
-                  <Square className="h-3 w-3 inline mr-1.5" />
+                  <Square className="h-3 w-3 inline mr-1.5" aria-hidden="true" />
                   {lang === 'en' ? 'Close story' : 'Cerrar historia'}
                 </button>
               )}
@@ -1797,7 +1809,7 @@ export default function Atlas() {
                 className="w-full text-left px-4 py-2.5 text-[10px] font-mono uppercase tracking-[0.1em] font-bold text-text-secondary hover:bg-background-elevated/40 transition-colors flex items-center justify-between border-t border-border/50"
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <FileText className="h-3 w-3" />
+                  <FileText className="h-3 w-3" aria-hidden="true" />
                   {(() => {
                     if (mode === 'patterns' && pinnedCode && /^P[1-7]$/.test(pinnedCode)) {
                       return lang === 'en'
@@ -1814,7 +1826,7 @@ export default function Atlas() {
                       : 'Todas las investigaciones'
                   })()}
                 </span>
-                <ArrowUpRight className="h-3 w-3" />
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
             </motion.div>
           )}
@@ -1849,9 +1861,9 @@ export default function Atlas() {
             initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm"
-            style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+            style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
           >
-            <Sparkles className="h-3 w-3" />
+            <Sparkles className="h-3 w-3" aria-hidden="true" />
             <span className="opacity-80 uppercase tracking-[0.1em]">
               {lang === 'en' ? 'Found' : 'Encontrado'}:
             </span>
@@ -1876,10 +1888,10 @@ export default function Atlas() {
             <button
               onClick={() => setPinnedCode(null)}
               className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(160,104,32,0.18)', color: '#a06820' }}
+              style={{ background: 'rgba(160,104,32,0.18)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Click to unpin' : 'Clic para despinear'}
             >
-              <Pin className="h-3 w-3" />
+              <Pin className="h-3 w-3" aria-hidden="true" />
               <span className="font-bold uppercase tracking-[0.1em]">{lang === 'en' ? 'Pinned' : 'Pineado'}</span>
               <span className="opacity-90">{pinnedCode.slice(0, 14)}</span>
             </button>
@@ -1903,7 +1915,7 @@ export default function Atlas() {
               ? 'Render a second constellation alongside this one. Pick a year for each canvas to see the same lens at two moments in time — e.g. Peña 2014 vs COVID 2020.'
               : 'Renderiza una segunda constelación junto a la actual. Elige un año para cada lienzo para ver la misma lente en dos momentos — ej. Peña 2014 vs COVID 2020.'}
           >
-            <Layers className="h-3 w-3" />
+            <Layers className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Compare years' : 'Comparar años'}
           </button>
 
@@ -1911,10 +1923,10 @@ export default function Atlas() {
           {notesCount > 0 && (
             <div
               className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-sm"
-              style={{ background: 'rgba(160,104,32,0.10)', color: '#a06820' }}
+              style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Personal notes — saved in your browser' : 'Notas personales — guardadas en tu navegador'}
             >
-              <NotebookPen className="h-3 w-3" />
+              <NotebookPen className="h-3 w-3" aria-hidden="true" />
               <span className="font-bold">{notesCount}</span>
               <span className="opacity-70">{lang === 'en' ? (notesCount === 1 ? 'note' : 'notes') : 'notas'}</span>
             </div>
@@ -1922,7 +1934,7 @@ export default function Atlas() {
 
           {/* Live T1 count */}
           <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
-            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
+            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} aria-hidden="true" />
             <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 299)}</span>
             <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
           </div>
@@ -2010,7 +2022,7 @@ export default function Atlas() {
                 aria-pressed={isActive}
               >
                 {!isActive && (
-                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} />
+                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} aria-hidden="true" />
                 )}
                 {lang === 'en' ? f.en : f.es}
               </button>
@@ -2077,7 +2089,7 @@ export default function Atlas() {
                       aria-label={lang === 'en' ? 'Read the full long-form investigation in a new tab' : 'Leer la investigación completa en una pestaña nueva'}
                       title={lang === 'en' ? 'Read full investigation' : 'Leer investigación completa'}
                     >
-                      <FileText className="h-2.5 w-2.5" />
+                      <FileText className="h-2.5 w-2.5" aria-hidden="true" />
                       <span className="hidden sm:inline">{lang === 'en' ? 'FULL' : 'COMPLETA'}</span>
                     </Link>
                   )}
@@ -2121,7 +2133,7 @@ export default function Atlas() {
                     aria-label={lang === 'en' ? 'Next chapter' : 'Siguiente capítulo'}
                     title={lang === 'en' ? 'Next' : 'Siguiente'}
                   >
-                    <SkipForward className="h-3.5 w-3.5 text-text-muted" />
+                    <SkipForward className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
                   </button>
                   <button
                     onClick={() => { setActiveStory(null); setActiveChapter(0); setStoryPlaying(false); setStoryEnded(false) }}
@@ -2197,7 +2209,7 @@ export default function Atlas() {
                       style={{ background: activeStory.accent, color: 'white' }}
                     >
                       {lang === 'en' ? 'Continue' : 'Continuar'}
-                      <ArrowUpRight className="h-3 w-3 rotate-45" />
+                      <ArrowUpRight className="h-3 w-3 rotate-45" aria-hidden="true" />
                     </button>
                   )}
                   {isLastChapter && (
@@ -2254,7 +2266,7 @@ export default function Atlas() {
                     className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
                     style={{ background: activeStory.accent, color: 'white' }}
                   >
-                    <FileText className="h-3 w-3" />
+                    <FileText className="h-3 w-3" aria-hidden="true" />
                     {lang === 'en' ? 'Read the full investigation' : 'Leer la investigación completa'}
                   </button>
                 )}
@@ -2282,7 +2294,7 @@ export default function Atlas() {
                     className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5"
                     style={{ border: '1px solid var(--color-border)', color: s.accent }}
                   >
-                    <BookOpen className="h-3 w-3" />
+                    <BookOpen className="h-3 w-3" aria-hidden="true" />
                     {s.title[lang]}
                   </button>
                 ))}
@@ -2303,7 +2315,7 @@ export default function Atlas() {
       {/* ── Constellation canvas A (always shown) ──────────────────────── */}
       {compareMode && (
         <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1.5 inline-flex items-center gap-1.5">
-          <span className="font-bold" style={{ color: '#a06820' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
+          <span className="font-bold" style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'YEAR A' : 'AÑO A'}</span>
           <span>·</span>
           <span>{snapshot.year}</span>
         </div>
@@ -2331,7 +2343,7 @@ export default function Atlas() {
               boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
             }}
           >
-            <span style={{ color: '#a06820' }}>▶</span>
+            <span style={{ color: 'var(--color-accent)' }}>▶</span>
             <span className="font-bold">
               {lang === 'en' ? 'Ch' : 'Cap'} {activeChapter + 1}/{activeStory.chapters.length}
             </span>
@@ -2394,7 +2406,7 @@ export default function Atlas() {
         return (
           <>
             <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-6 mb-1.5 inline-flex items-center gap-1.5">
-              <span className="font-bold" style={{ color: '#dc2626' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
+              <span className="font-bold" style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'YEAR B' : 'AÑO B'}</span>
               <span>·</span>
               <span>{snapshotB.year}</span>
             </div>
@@ -2446,8 +2458,8 @@ export default function Atlas() {
             : (lang === 'en' ? 'illustrative snapshot' : 'instantánea ilustrativa')}
         </span>
         {lang === 'en'
-          ? <>Categories lens shows 32 of 72 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-[#a06820] hover:underline">methodology</a> for scope and limits.</>
-          : <>La lente de categorías muestra 32 de 72 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-[#a06820] hover:underline">metodología</a> para alcance y límites.</>
+          ? <>Categories lens shows 32 of 72 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.</>
+          : <>La lente de categorías muestra 32 de 72 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.</>
         }
       </div>
 

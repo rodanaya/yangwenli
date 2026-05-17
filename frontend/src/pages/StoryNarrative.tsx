@@ -223,7 +223,7 @@ function ChapterSources({ sources }: { sources: string[] }) {
         className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors group"
         aria-expanded={open}
       >
-        <FileText className="h-3 w-3 group-hover:text-text-secondary" />
+        <FileText className="h-3 w-3 group-hover:text-text-secondary" aria-hidden="true" />
         <span className="font-mono">{open ? '−' : '+'}</span>
         <span>{t('story.sources', { count: sources.length })}</span>
         <span className="text-text-primary">&mdash; {open ? t('story.collapse') : t('story.viewCitations')}</span>
@@ -562,7 +562,7 @@ function AtlasLink({
               {caption[lang]}
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} />
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: accentColor }} aria-hidden="true" />
         </div>
       </Link>
     </ScrollReveal>
@@ -612,7 +612,7 @@ function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; l
               {body}
             </p>
           </div>
-          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: tour.accent }} />
+          <ArrowRight className="h-5 w-5 flex-shrink-0" style={{ color: tour.accent }} aria-hidden="true" />
         </div>
       </Link>
     </ScrollReveal>
@@ -1233,8 +1233,8 @@ function ChapterSection({
 // through canonical risk + accent + OECD tokens.
 const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
   solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-risk-high',                   bg: 'bg-risk-high/10',                                  border: 'border-risk-high/30' },
-  reporteado:  { labelKey: 'story.statusReporteado', color: 'text-[color:var(--color-accent-data)]', bg: 'bg-[color:var(--color-accent-data)]/10',     border: 'border-[color:var(--color-accent-data)]/30'   },
-  auditado:    { labelKey: 'story.statusAuditado',  color: 'text-[color:var(--color-oecd)]',        bg: 'bg-[color:var(--color-oecd)]/10',            border: 'border-[color:var(--color-oecd)]/30' },
+  reporteado:  { labelKey: 'story.statusReporteado', color: 'text-accent-data', bg: 'bg-accent-data/10',     border: 'border-accent-data/30'   },
+  auditado:    { labelKey: 'story.statusAuditado',  color: 'text-oecd',        bg: 'bg-oecd/10',            border: 'border-oecd/30' },
   procesado:   { labelKey: 'story.statusProcesado', color: 'text-risk-critical',                   bg: 'bg-risk-critical/10',                          border: 'border-risk-critical/30'   },
 }
 
@@ -1330,7 +1330,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           <span>{lang === 'es' ? (BYLINE_ES[story.byline] ?? story.byline) : story.byline}</span>
           <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
+            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
             {story.estimatedMinutes} min {t('storyType.readTime', 'read')}
           </span>
           {story.status && (() => {
@@ -1339,7 +1339,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${sc.bg} ${sc.border} ${sc.color}`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
                 {t(sc.labelKey, story.status)}
               </span>
             )
@@ -1609,7 +1609,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         {/* Investigation status badge */}
         {statusCfg && (
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color}`}>
-            <span className="w-2 h-2 rounded-full bg-current opacity-80" />
+            <span className="w-2 h-2 rounded-full bg-current opacity-80" aria-hidden="true" />
             {t('story.statusLabel')}: {t(statusCfg.labelKey)}
           </div>
         )}
@@ -1638,7 +1638,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         {story.nextSteps && story.nextSteps.length > 0 && (
           <div className="mt-8 p-4 rounded-sm border border-border bg-background-card">
             <h4 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
-              <ChevronRight className="h-4 w-4 text-risk-critical" />
+              <ChevronRight className="h-4 w-4 text-risk-critical" aria-hidden="true" />
               {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">
@@ -1658,14 +1658,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.fullMethodology')}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
           <Link
             to="/model"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.modelTransparency')}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -1768,7 +1768,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
                 </p>
                 <p className="text-xs text-text-muted">{link.description}</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
+              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-text-secondary transition-colors shrink-0" aria-hidden="true" />
             </Link>
           ))}
         </div>
@@ -1894,7 +1894,7 @@ export default function StoryNarrative() {
                 onClick={() => navigate('/journalists')}
                 className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide px-4 py-2 rounded-full border border-border hover:border-border-hover text-text-primary transition-colors"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('story.allStories')}
               </button>
             </div>
@@ -1921,7 +1921,7 @@ export default function StoryNarrative() {
             to="/journalists"
             className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t('story.allStories')}
           </Link>
           <span className="text-[10px] text-text-muted font-mono tabular-nums">
@@ -1938,7 +1938,7 @@ export default function StoryNarrative() {
 
       {/* ── ACT I: THE INVESTIGATION ── */}
       {/* Wider container so hero/feature/data-spotlight variants can breakout */}
-      <main className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-6">
+      <div className="relative max-w-6xl mx-auto px-2 sm:px-4 pt-6">
         <Act number="I" label={t('story.actInvestigation', 'THE INVESTIGATION')} className="space-y-0">
           {story.chapters.map((chapter, idx) => {
             const variant = pickChapterVariant(chapter, idx, story.chapters.length)
@@ -1959,7 +1959,7 @@ export default function StoryNarrative() {
             )
           })}
         </Act>
-      </main>
+      </div>
 
       {/* ── DRAMATIS PERSONAE — named subjects with dossier links ── */}
       {story.entities && story.entities.length > 0 && (

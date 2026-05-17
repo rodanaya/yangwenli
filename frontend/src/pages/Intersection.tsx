@@ -123,7 +123,7 @@ function VendorRow({
           {secondary}
         </div>
       </div>
-      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+      <ChevronRight className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
     </div>
   )
 }
@@ -216,7 +216,7 @@ function QuadrantCard({
           ))}
         </div>
       ) : (
-        <div className="px-5 py-8 text-center text-sm text-text-muted">
+        <div className="px-5 py-8 text-center text-sm text-text-muted" role="status" aria-live="polite">
           {lang === 'es' ? 'Sin datos.' : 'No data.'}
         </div>
       )}
@@ -483,7 +483,7 @@ export default function Intersection() {
           }}
         >
           <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            <span style={{ color: '#a06820', fontWeight: 500 }}>Folio·XIII</span>
+            <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIII</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
               {lang === 'es' ? 'Informe de inteligencia · La brecha regulatoria' : 'Intelligence brief · The regulatory gap'}
@@ -612,7 +612,7 @@ export default function Intersection() {
 
             {/* Methodology caveat */}
             <div className="flex items-start gap-2.5 px-4 py-3 rounded-sm border border-border bg-background-card">
-              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
+              <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" aria-hidden="true" />
               <p className="text-[11px] leading-[1.6] text-text-secondary max-w-prose">
                 {lang === 'es' ? (
                   <>
@@ -671,6 +671,21 @@ export default function Intersection() {
                 Confirmed + Blind Spot share a compact 2-column grid below.
                 This hierarchy mirrors the actual editorial weight: Novelty is
                 the platform's pitch; the other two are context + humility. */}
+            {selectedSector && (() => {
+              const sectorLower = selectedSector.toLowerCase()
+              const noveltyFiltered = data.rankings.novelty.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const confirmedFiltered = data.rankings.confirmed.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const blindspotFiltered = data.rankings.blindspot.filter((v) => v.primary_sector_name?.toLowerCase() === sectorLower)
+              const allEmpty = noveltyFiltered.length === 0 && confirmedFiltered.length === 0 && blindspotFiltered.length === 0
+              if (!allEmpty) return null
+              return (
+                <div className="py-8 text-center text-text-muted text-sm font-mono">
+                  {lang === 'es'
+                    ? 'Sin proveedores clasificados en este sector para el umbral de riesgo actual.'
+                    : 'No vendors in this sector meet the current risk threshold.'}
+                </div>
+              )
+            })()}
             <div className="space-y-5">
               {/* NOVELTY — dominant, full width */}
               <QuadrantCard

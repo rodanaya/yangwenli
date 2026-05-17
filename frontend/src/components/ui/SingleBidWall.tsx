@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 import { getLocale } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 interface SingleBidWallProps {
   count: number
@@ -93,22 +94,16 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
                 {pct.toFixed(1)}%
               </p>
             </div>
-            {(() => {
-              const N = 50, DR = 3, DG = 8
-              const filled = Math.max(1, Math.round((barWidth / 100) * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, i) => (
-                    <circle key={i} cx={i * DG + DR} cy={5} r={DR}
-                      fill={i < filled ? '#ef4444' : 'var(--color-background-elevated)'}
-                      stroke={i < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={i < filled ? 0 : 0.5}
-                      fillOpacity={i < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={barWidth}
+              max={100}
+              color="var(--color-risk-critical)"
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={50}
+              dotR={3}
+              dotGap={8}
+            />
             <p className="text-[10px] text-risk-critical/40 font-mono mt-1.5 text-center">
               {pct.toFixed(1)}% de todos los contratos — con competencia ficticia
             </p>

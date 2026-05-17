@@ -318,7 +318,7 @@ export default function TrendsTab() {
               onClick={() => setSelectedYear((y) => Math.max(2002, y - 1))}
               disabled={selectedYear <= 2002}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </Button>
             <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 scrollbar-thin">
               {years.map((year) => (
@@ -339,7 +339,7 @@ export default function TrendsTab() {
               onClick={() => setSelectedYear((y) => Math.min(2025, y + 1))}
               disabled={selectedYear >= 2025}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
           {currentAdmin && (
@@ -397,9 +397,9 @@ export default function TrendsTab() {
               className={`flex items-center gap-0.5 ${yoyChanges.avgRisk <= 0 ? 'text-risk-low' : 'text-risk-high'}`}
             >
               {yoyChanges.avgRisk <= 0 ? (
-                <TrendingDown className="h-3 w-3" />
+                <TrendingDown className="h-3 w-3" aria-hidden="true" />
               ) : (
-                <TrendingUp className="h-3 w-3" />
+                <TrendingUp className="h-3 w-3" aria-hidden="true" />
               )}
               {yoyChanges.avgRisk >= 0 ? '+' : ''}
               {yoyChanges.avgRisk.toFixed(1)} pts YoY
@@ -416,7 +416,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   Historical Trends
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -478,7 +478,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   Procurement Transparency Pulse
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -528,7 +528,7 @@ export default function TrendsTab() {
           <div className="px-4 py-3 border-b border-border/60 bg-background-card">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4" />
+                <Target className="h-4 w-4" aria-hidden="true" />
                 Sector Risk DNA
               </h3>
               <div className="flex items-center gap-1.5">
@@ -615,7 +615,7 @@ export default function TrendsTab() {
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center">
+              <div className="py-12 text-center" role="status" aria-live="polite">
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>
@@ -635,7 +635,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Compass className="h-4 w-4" />
+                  <Compass className="h-4 w-4" aria-hidden="true" />
                   Sector Landscape
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -665,14 +665,14 @@ export default function TrendsTab() {
                 <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 -mt-1">
                   {sectorBubbleData.map((s) => (
                     <span key={s.code} className="flex items-center gap-1 text-xs text-text-muted">
-                      <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                      <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} aria-hidden="true" />
                       {s.name}
                     </span>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center">
+              <div className="py-12 text-center" role="status" aria-live="polite">
                 <p className="text-sm text-text-muted">
                   {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
                 </p>
@@ -759,7 +759,7 @@ export default function TrendsTab() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4 w-4" aria-hidden="true" />
                   Market Dynamics
                 </h3>
                 <p className="text-xs text-text-muted">
@@ -802,7 +802,7 @@ export default function TrendsTab() {
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="px-4 pt-3 pb-1 border-b border-border/60 bg-background-card">
             <h3 className="text-xs flex items-center gap-1.5 text-text-muted">
-              <Flag className="h-3.5 w-3.5" />
+              <Flag className="h-3.5 w-3.5" aria-hidden="true" />
               Key Events
               {yearEvents.length > 0 && (
                 <Badge variant="outline" className="text-xs px-1 py-0 ml-1">
@@ -863,7 +863,7 @@ export default function TrendsTab() {
                               onClick={() => setSelectedYear(event.year)}
                               className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-text-muted hover:bg-background-elevated transition-colors border border-border/30"
                             >
-                              <IconComp className="h-2.5 w-2.5 shrink-0" />
+                              <IconComp className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
                               <span className="truncate max-w-[120px]">{event.title}</span>
                               <span className="font-mono">{event.year}</span>
                             </button>

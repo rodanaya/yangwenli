@@ -178,7 +178,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           onClick={onMenuClick}
           aria-label={tc('header.openMenu')}
         >
-          <Menu className="h-4 w-4 text-text-muted" />
+          <Menu className="h-4 w-4 text-text-muted" aria-hidden="true" />
         </Button>
         {/* Editorial dateline — Economist/NYT masthead feel */}
         <span
@@ -222,7 +222,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
               aria-label={`${tc('search')} (Ctrl+K)`}
             >
-              <Search className="h-3.5 w-3.5 text-text-muted" />
+              <Search className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -249,7 +249,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               onClick={() => navigate('/methodology')}
               aria-label={tc('header.alertsLabel', { count: alertCount })}
             >
-              <Shield className="h-3.5 w-3.5 text-text-muted" />
+              <Shield className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
               {alertCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-risk-critical text-xs font-bold text-text-primary">
                   {alertCount > 9 ? '!' : alertCount}
@@ -270,9 +270,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-sm text-[10px] font-mono tracking-[0.1em] text-text-secondary bg-background-elevated border border-border hover:border-border-hover hover:text-text-primary transition-colors"
                 onClick={() => navigate('/settings?tab=quality')}
               >
-                <Database className="h-3 w-3 text-text-muted" />
+                <Database className="h-3 w-3 text-text-muted" aria-hidden="true" />
                 <span className="text-text-muted">DQ</span>
-                <span className="text-[color:var(--color-accent)] font-bold uppercase tracking-wide">{qualityLabel}</span>
+                <span className="text-accent font-bold uppercase tracking-wide">{qualityLabel}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -286,8 +286,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <TooltipTrigger asChild>
             <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[10px] text-text-muted tracking-[0.1em] uppercase">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-[color:var(--color-accent)] opacity-60 animate-ping" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" aria-hidden="true" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
               </span>
               <span className="font-mono">{tc('header.live')}</span>
             </div>
@@ -308,30 +308,34 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-1.5 h-7 px-2 rounded-sm text-[10px] font-mono tracking-[0.08em] uppercase text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                 aria-label={tc('header.userMenu')}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
               >
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[color:var(--color-accent-glow)] text-[color:var(--color-accent)] text-[9px] font-bold">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-glow text-accent text-[9px] font-bold">
                   {user.name.charAt(0).toUpperCase()}
                 </span>
                 <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
               </button>
               {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-border bg-background-card shadow-xl z-50 py-1">
+                <div role="menu" aria-label={tc('header.userMenu')} className="absolute right-0 top-full mt-1 w-44 rounded-sm border border-border bg-background-card shadow-xl z-50 py-1">
                   <div className="px-3 py-2 border-b border-border">
                     <p className="text-xs font-semibold text-text-primary truncate">{user.name}</p>
                     <p className="text-[10px] text-text-muted truncate font-mono">{user.email}</p>
                   </div>
                   <button
+                    role="menuitem"
                     onClick={() => { setUserMenuOpen(false); navigate('/workspace') }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
                   >
-                    <Briefcase className="h-3.5 w-3.5" />
+                    <Briefcase className="h-3.5 w-3.5" aria-hidden="true" />
                     {tc('header.myInvestigations')}
                   </button>
                   <button
+                    role="menuitem"
                     onClick={() => { setUserMenuOpen(false); logout() }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-[color:var(--color-risk-critical)] hover:bg-background-elevated transition-colors"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:text-risk-critical hover:bg-background-elevated transition-colors"
                   >
-                    <LogOut className="h-3.5 w-3.5" />
+                    <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                     {tc('header.signOut')}
                   </button>
                 </div>

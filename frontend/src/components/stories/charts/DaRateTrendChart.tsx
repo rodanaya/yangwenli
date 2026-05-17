@@ -248,7 +248,7 @@ export function DaRateTrendChart() {
           const avg = yearsInEra.reduce((s, d) => s + d.rate, 0) / yearsInEra.length
           return (
             <span key={era} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: ERA_DOT[era] }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: ERA_DOT[era] }} aria-hidden="true" />
               <span className="text-text-secondary font-semibold">{ERA_LABEL[era]}</span>
               <span className="text-text-muted">{`${t('daRateTrend.averagePrefix')} ${avg.toFixed(1)}%`}</span>
             </span>

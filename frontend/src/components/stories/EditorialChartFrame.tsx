@@ -33,7 +33,7 @@
  *     finding={{ label: 'FINDING', body: '…' }}
  *     footer="Source: COMPRANET 2002–2025"
  *   >
- *     <svg viewBox="0 0 ..." />
+ *     <svg aria-hidden="true" viewBox="0 0 ..." />
  *   </EditorialChartFrame>
  *
  * Migration is opt-in — existing charts keep working. New charts SHOULD
@@ -41,7 +41,7 @@
  * migrate it.
  *
  * Editorial token reuse: any caller can pass `tone="card"` (default)
- * for the rounded-bg-card body or `tone="bare"` for inline use inside
+ * for the rounded-bg-background-card body or `tone="bare"` for inline use inside
  * a parent with its own chrome.
  */
 import { motion } from 'framer-motion'
@@ -171,7 +171,7 @@ export function EditorialChartFrame({
 
       {/* Optional finding callout */}
       {finding && (
-        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
+        <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4">
           <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
             {finding.label}
           </p>

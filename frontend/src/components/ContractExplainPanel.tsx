@@ -49,25 +49,25 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
         onClick={fetchExplanation}
         className="w-full flex items-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/15 transition-colors text-left"
       >
-        <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
+        <Sparkles className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
         <span className="text-sm text-accent/90 font-medium">{t('contractExplain.explain')}</span>
         {open ? (
-          <ChevronUp className="w-4 h-4 ml-auto text-accent" />
+          <ChevronUp className="w-4 h-4 ml-auto text-accent" aria-hidden="true" />
         ) : (
-          <ChevronDown className="w-4 h-4 ml-auto text-accent" />
+          <ChevronDown className="w-4 h-4 ml-auto text-accent" aria-hidden="true" />
         )}
       </button>
       {open && (
         <div className="px-4 py-3 bg-background-elevated/60">
           {loading && (
             <div className="flex items-center gap-2 text-sm text-text-muted">
-              <div className="w-4 h-4 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--color-accent-data)', borderTopColor: 'transparent' }} />
               {t('contractExplain.generating')}
             </div>
           )}
           {error && (
             <div className="flex items-start gap-2 text-sm text-risk-critical">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
               {error}
             </div>
           )}

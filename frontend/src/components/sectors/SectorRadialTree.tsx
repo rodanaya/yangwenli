@@ -109,7 +109,7 @@ function Tooltip({ data, lang }: { data: TooltipState; lang: string }) {
   return (
     <div
       role="tooltip"
-      className="pointer-events-none fixed z-50 select-none rounded border border-[color:var(--color-border)] bg-[color:var(--color-background-card)] shadow-lg"
+      className="pointer-events-none fixed z-50 select-none rounded border border-border bg-background-card shadow-lg"
       style={{ left, top, width: tipW }}
     >
       <div className="h-1 w-full rounded-t" style={{ backgroundColor: color }} />
@@ -120,7 +120,7 @@ function Tooltip({ data, lang }: { data: TooltipState; lang: string }) {
         <div className="space-y-1">
           {rows.map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-[color:var(--color-text-muted)]">{row.label}</span>
+              <span className="text-[11px] text-text-muted">{row.label}</span>
               <span
                 className="text-[11px] font-mono tabular-nums font-bold"
                 style={{ color: row.color ?? 'var(--color-text-primary)' }}
@@ -130,7 +130,7 @@ function Tooltip({ data, lang }: { data: TooltipState; lang: string }) {
             </div>
           ))}
         </div>
-        <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.1em] text-[color:var(--color-text-muted)]">
+        <p className="mt-2 text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
           {lang === 'es' ? 'Clic para ver perfil →' : 'Click to view profile →'}
         </p>
       </div>

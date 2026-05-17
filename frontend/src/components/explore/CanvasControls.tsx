@@ -185,6 +185,66 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
   )
 }
 
+// Sector palette — 6 most prominent sectors for the legend key
+const LEGEND_SECTORS = [
+  { color: '#dc2626', labelEn: 'Health',         labelEs: 'Salud' },
+  { color: '#ea580c', labelEn: 'Infrastructure',  labelEs: 'Infraestructura' },
+  { color: '#eab308', labelEn: 'Energy',          labelEs: 'Energía' },
+  { color: '#3b82f6', labelEn: 'Education',       labelEs: 'Educación' },
+  { color: '#16a34a', labelEn: 'Treasury',        labelEs: 'Hacienda' },
+  { color: '#64748b', labelEn: 'Other',           labelEs: 'Otros' },
+]
+
+const LEGEND_RISK = [
+  { color: '#ef4444', labelEn: 'Critical ≥0.60', labelEs: 'Crítico ≥0.60' },
+  { color: '#f59e0b', labelEn: 'High ≥0.40',     labelEs: 'Alto ≥0.40' },
+  { color: '#a16207', labelEn: 'Medium ≥0.25',   labelEs: 'Medio ≥0.25' },
+  { color: '#71717a', labelEn: 'Low <0.25',       labelEs: 'Bajo <0.25' },
+]
+
+/**
+ * MapLegend — floating key chip at bottom-right of the canvas.
+ * Shows size/color meaning for the active lens.
+ */
+export function MapLegend({ lang }: { lang: 'en' | 'es' }) {
+  const state = useExploreState()
+  const isRisk = state.lens === 'risk'
+  const rows = isRisk ? LEGEND_RISK : LEGEND_SECTORS
+  const sizeKey = isRisk
+    ? (lang === 'en' ? 'size = risk score' : 'tamaño = riesgo')
+    : (lang === 'en' ? 'size = total spend' : 'tamaño = gasto total')
+
+  return (
+    <div
+      className="absolute bottom-16 right-3 z-10 pointer-events-none"
+      style={{
+        background: 'var(--color-background-card, #fff)',
+        border: '1px solid var(--color-border)',
+        borderRadius: 4,
+        padding: '8px 10px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        minWidth: 140,
+      }}
+    >
+      <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1.5">
+        {lang === 'en' ? 'Legend' : 'Leyenda'}
+      </p>
+      <p className="text-[9px] font-mono text-text-muted mb-2 italic">{sizeKey}</p>
+      {rows.map((r) => (
+        <div key={r.color} className="flex items-center gap-1.5 mb-1">
+          <span
+            className="h-2 w-2 rounded-full flex-shrink-0"
+            style={{ backgroundColor: r.color }}
+          />
+          <span className="text-[9px] font-mono text-text-secondary">
+            {lang === 'en' ? r.labelEn : r.labelEs}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /**
  * ShareViewButton — copies the current /explore URL (with focus stack
  * encoded by useExploreUrlSync) to the clipboard. Sits below the risk

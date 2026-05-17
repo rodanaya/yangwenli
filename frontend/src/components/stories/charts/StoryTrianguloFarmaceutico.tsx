@@ -246,7 +246,7 @@ export function StoryTrianguloFarmaceutico() {
           return (
             <div key={v.id} className="flex items-center gap-3">
               <div className="w-32 text-[11px] font-mono text-text-secondary">{v.label}</div>
-              <svg viewBox="0 0 420 14" className="flex-1 h-3">
+              <svg aria-hidden="true" viewBox="0 0 420 14" className="flex-1 h-3">
                 {Array.from({ length: 50 }).map((_, i) => {
                   const isFilled = i < filled
                   const isOecd = i === 12

@@ -85,6 +85,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       >
         {/* Backdrop */}
         <div
+          aria-hidden="true"
           style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }}
           onClick={() => onOpenChange(false)}
         />

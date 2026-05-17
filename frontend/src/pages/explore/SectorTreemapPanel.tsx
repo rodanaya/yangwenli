@@ -6,6 +6,7 @@ import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 interface SectorTreemapPanelProps {
   selectedSectorId: number | undefined
@@ -102,7 +103,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
               className={cn(
                 'px-2 py-0.5 border-l border-border/30 transition-colors',
                 viewMode === 'risk'
-                  ? 'bg-red-500/20 text-risk-critical'
+                  ? 'bg-risk-critical/20 text-risk-critical'
                   : 'text-text-muted hover:text-text-secondary'
               )}
             >
@@ -166,22 +167,13 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
               </span>
 
               {/* Dot-matrix strip */}
-              {(() => {
-                const N = 22, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((barPct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={barPct}
+                max={100}
+                color={barColor}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+              />
 
               {/* Metric label */}
               <span className="text-[10px] font-mono text-text-muted flex-shrink-0 w-16 text-right">

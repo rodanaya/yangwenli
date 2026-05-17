@@ -117,7 +117,7 @@ export function VendorHero({
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·D</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·D</span>
             <span style={{ width: 24, height: 1, background: 'rgba(160, 104, 32, 0.45)', display: 'inline-block' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               {isEs ? 'Expediente del proveedor' : 'Vendor dossier'}
@@ -382,9 +382,9 @@ function IdentityLine({
         >
           <span>{vendor.rfc}</span>
           {rfcCopied ? (
-            <Check className="h-3 w-3 text-text-muted" />
+            <Check className="h-3 w-3 text-text-muted" aria-hidden="true" />
           ) : (
-            <Copy className="h-3 w-3 opacity-60" />
+            <Copy className="h-3 w-3 opacity-60" aria-hidden="true" />
           )}
         </button>
       )}

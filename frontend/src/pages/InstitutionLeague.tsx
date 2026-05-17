@@ -14,6 +14,7 @@
  */
 
 import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
+import { DotBar } from '@/components/ui/DotBar'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
@@ -377,8 +378,8 @@ function RedFlagCard({
       onClick={() => onNavigate(item.institution_id)}
       className="relative w-full text-left group transition-all
         border border-border bg-background-elevated/40
-        hover:bg-[color:var(--color-risk-critical)]/8
-        hover:border-[color:var(--color-risk-critical)]/40
+        hover:bg-risk-critical/8
+        hover:border-risk-critical/40
         focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-risk-critical)]/50"
       style={{
         borderLeft: '4px solid var(--color-risk-critical)',
@@ -590,7 +591,7 @@ function ScoreHistogram({
 
         {/* Median marker line across the chart */}
         <div
-          className="absolute top-5 bottom-14 border-l border-dashed border-amber-500/60 pointer-events-none"
+          className="absolute top-5 bottom-14 border-l border-dashed border-risk-high/60 pointer-events-none"
           style={{ left: `calc(${medianPct}% * 0.9 + 5%)` }}
           aria-hidden="true"
         >
@@ -736,22 +737,14 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>
-              {(() => {
-                const N = 20, DR = 2, DG = 5
-                const filled = Math.max(1, Math.round((pct / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={pct}
+                max={100}
+                color={barColor}
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={20}
+              />
               <span className="text-[10px] font-mono tabular-nums text-text-secondary w-10 text-right">
                 {p.value.toFixed(0)}/{p.max}
               </span>
@@ -996,7 +989,7 @@ export default function InstitutionLeague() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>
               Folio·VII
             </span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
@@ -1205,7 +1198,7 @@ export default function InstitutionLeague() {
         {/* Red Flags — DOMINANT verdict cards */}
         {!hasFilters && redFlagItems.length >= 3 && (
           <section aria-labelledby="redflags-heading" className="space-y-4">
-            <div className="border-l-2 border-[color:var(--color-risk-critical)] pl-4">
+            <div className="border-l-2 border-risk-critical pl-4">
               <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}
@@ -1421,7 +1414,7 @@ export default function InstitutionLeague() {
           )}
 
           {!isLoading && !isError && items.length === 0 && (
-            <div className="rounded-sm border border-border bg-background/50 p-8 text-center">
+            <div className="rounded-sm border border-border bg-background/50 p-8 text-center" role="status" aria-live="polite">
               <p className="text-text-secondary text-sm">{t('empty')}</p>
               <p className="text-text-muted text-xs mt-1">
                 {t('filters.adjustFilters')}
@@ -1434,12 +1427,12 @@ export default function InstitutionLeague() {
               <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border bg-background/80">
-                    <th className="px-2 py-2 text-left w-12">
+                    <th scope="col" className="px-2 py-2 text-left w-12">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         #
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th scope="col" className="px-2 py-2 text-left">
                       <SortHeader
                         label={t('columns.institution')}
                         sortKey="institution_name"
@@ -1448,7 +1441,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-2 py-2 text-left w-24">
+                    <th scope="col" className="px-2 py-2 text-left w-24">
                       <SortHeader
                         label={t('columns.score')}
                         sortKey="total_score"
@@ -1457,22 +1450,22 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-2 py-2 text-center w-24">
+                    <th scope="col" className="px-2 py-2 text-center w-24">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
+                    <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.pillars')} <span className="opacity-50 normal-case">O P V R E</span>
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-center w-12 hidden sm:table-cell">
+                    <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.trend')}
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left hidden md:table-cell w-24">
+                    <th scope="col" className="px-2 py-2 text-left hidden md:table-cell w-24">
                       <SortHeader
                         label={t('columns.percentile')}
                         sortKey="national_percentile"
@@ -1789,7 +1782,7 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
             onClick={() => setTab(tab.id)}
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
-                ? 'border-yellow-400 text-yellow-400'
+                ? 'border-accent text-accent'
                 : 'border-transparent text-text-secondary hover:text-text-secondary'
             }`}
           >

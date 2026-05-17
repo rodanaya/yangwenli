@@ -35,7 +35,7 @@ const TIMELINE_CASES: TimelineCase[] = [
 export const ERA_BANDS = [
   { label: 'Calderón',    start: 2008, end: 2012, color: '#8b5cf6' },
   { label: 'Peña Nieto',  start: 2012, end: 2018, color: '#f97316' },
-  { label: 'AMLO',        start: 2018, end: 2024, color: '#dc2626' },
+  { label: 'AMLO',        start: 2018, end: 2024, color: 'var(--color-risk-critical)' },
   { label: 'Sheinbaum',   start: 2024, end: 2025, color: '#10b981' },
 ]
 

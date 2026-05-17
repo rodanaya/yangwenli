@@ -330,8 +330,11 @@ function SectorHoverPreview({
         {getSectorName(sector.code, lang)}
       </h2>
       {isLoading && (
-        <div className="text-[10px] font-mono text-text-muted opacity-70 py-1">
-          {lang === 'en' ? 'loading preview…' : 'cargando vista…'}
+        <div className="space-y-2 py-1" aria-live="polite">
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-3/5 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/5 bg-background-elevated rounded animate-pulse" />
         </div>
       )}
       {totals && (
@@ -744,8 +747,10 @@ function BriefingShell({
     <div>
       {header}
       {state === 'loading' && (
-        <div className="text-[11px] font-mono text-text-muted opacity-70 py-3" aria-live="polite">
-          {loadingLabel ?? (lang === 'en' ? 'Loading…' : 'Cargando…')}
+        <div className="space-y-2 py-2" aria-live="polite" aria-label={loadingLabel ?? (lang === 'en' ? 'Loading…' : 'Cargando…')}>
+          <div className="h-4 w-3/4 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-2/3 bg-background-elevated rounded animate-pulse" />
+          <div className="h-3 w-1/2 bg-background-elevated rounded animate-pulse" />
         </div>
       )}
       {state === 'empty' && (
@@ -1108,9 +1113,9 @@ function ContractBriefing({
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors mb-3"
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
           <span>{lang === 'en' ? 'View on COMPRANET' : 'Ver en COMPRANET'}</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       )}
 
       {/* ── 10. CTAs — Red Thread (primary) + Dossier (secondary) ─────── */}
@@ -1221,7 +1226,7 @@ function RiskPill({ score }: { score: number }) {
           {(score * 100).toFixed(1)}%
         </span>
       </div>
-      <svg width="100%" height={6} viewBox={`0 0 ${N * 5} 6`} preserveAspectRatio="none">
+      <svg aria-hidden="true" width="100%" height={6} viewBox={`0 0 ${N * 5} 6`} preserveAspectRatio="none">
         {Array.from({ length: N }, (_, i) => (
           <rect
             key={i}

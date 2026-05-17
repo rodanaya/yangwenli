@@ -261,6 +261,13 @@ def cases_by_sector(sector_id: int):
         return cached
 
     with get_db() as conn:
+        # Guard: return empty list if the table doesn't exist yet (older deployed DB)
+        tbl = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='procurement_scandals'"
+        ).fetchone()
+        if not tbl:
+            return []
+
         rows = conn.execute(
             """
             SELECT id, name_en, name_es, slug, fraud_type, administration,

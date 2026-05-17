@@ -75,7 +75,7 @@ export function PatternDiagnostic({
               key={f.feature}
               className={cn(
                 'grid grid-cols-[140px_1fr_64px] gap-3 items-center px-1 py-1 rounded-sm border-l-2 transition-opacity',
-                isAnomalous && isPositive ? 'bg-[color:var(--color-risk-critical)]/[0.04]' : ''
+                isAnomalous && isPositive ? 'bg-risk-critical/[0.04]' : ''
               )}
               style={{
                 borderLeftColor: isAnomalous && isPositive ? markerColor : 'transparent',
@@ -191,11 +191,11 @@ export function PatternDiagnostic({
           {referenceLabel}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-risk-critical)' }} />
+          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-risk-critical)' }} aria-hidden="true" />
           tail (|z| ≥ 1) raises risk
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-text-muted)' }} />
+          <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-text-muted)' }} aria-hidden="true" />
           within range or protective
         </span>
       </div>

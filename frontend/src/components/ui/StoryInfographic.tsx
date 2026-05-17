@@ -217,7 +217,7 @@ function RingChart({ data, labels, active }: { data: number[]; labels: string[];
 
   return (
     <div className="flex items-center gap-4">
-      <svg width={size} height={size} className="shrink-0">
+      <svg aria-hidden="true" width={size} height={size} className="shrink-0">
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
         {segments.map((seg, i) => (
           <motion.circle
@@ -245,7 +245,7 @@ function RingChart({ data, labels, active }: { data: number[]; labels: string[];
             animate={{ opacity: active ? 1 : 0, x: active ? 0 : -6 }}
             transition={{ duration: 0.35, delay: i * 0.08 }}
           >
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: RING_COLORS[i] }} />
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: RING_COLORS[i] }} aria-hidden="true" />
             <span className="text-[10px] text-text-secondary">{l}</span>
           </motion.div>
         ))}
@@ -370,10 +370,10 @@ export default function StoryInfographic() {
               {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
             </button>
             <button onClick={prev} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('prevSlide')}>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
             <button onClick={goNext} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('nextSlide')}>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>

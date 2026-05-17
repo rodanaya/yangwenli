@@ -117,7 +117,7 @@ function AnimatedGauge({
           {sublabel.toUpperCase()}
         </text>
       </svg>
-      <p className="text-[11px] font-semibold text-text-secondary mt-1">{label}</p>
+      <p className="text-[11px] font-medium text-text-secondary mt-1">{label}</p>
     </div>
   )
 }

@@ -381,7 +381,7 @@ const CoefficientChart = memo(function CoefficientChart() {
 
   return (
     <div role="img" aria-label={t('dataLabels.ariaModelCoefficients')}>
-      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
+      <svg aria-hidden="true" viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
         {/* Zero reference line */}
         <line
           x1={MD_LABEL_W + ZERO_DOT * MD_DOT_GAP + MD_DOT_R}
@@ -725,7 +725,7 @@ export function Methodology() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
                 <span className="text-text-secondary">RUBLI</span>
               </span>
               <span className="text-text-primary">·</span>
@@ -764,7 +764,7 @@ export function Methodology() {
             className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
             title={t('heroHeader.exportPdf')}
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" />
             PDF
           </button>
         </div>
@@ -968,11 +968,11 @@ export function Methodology() {
                   <table className="w-full text-xs" role="table" aria-label="Risk level thresholds">
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColThreshold')}</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColMeaning')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColDistribution')}</th>
-                        <th className="text-right py-2 text-text-muted font-medium">{t('body.overview.tableColCount')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColThreshold')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColMeaning')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColDistribution')}</th>
+                        <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.overview.tableColCount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1034,11 +1034,11 @@ export function Methodology() {
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#52525b]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-text-secondary" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendDecreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#64748b]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-text-muted" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendNoSignal')}</span>
                 </div>
               </div>
@@ -1148,12 +1148,12 @@ export function Methodology() {
                 <table className="w-full text-xs" role="table" aria-label={t('body.validation.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColCase')}</th>
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColType')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColContracts')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColDetected')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColHighPlus')}</th>
-                      <th className="text-right py-2 text-text-muted font-medium">{t('body.validation.tableColAvgScore')}</th>
+                      <th scope="col" className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColCase')}</th>
+                      <th scope="col" className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColType')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColContracts')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColDetected')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColHighPlus')}</th>
+                      <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.validation.tableColAvgScore')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1414,10 +1414,10 @@ export function Methodology() {
                   <table className="w-full text-xs" role="table" aria-label={t('body.v33section.tableAriaLabel')}>
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColMetric')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV33')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV60')}</th>
-                        <th className="text-right py-2 text-text-muted font-medium">{t('body.v33section.tableColChange')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColMetric')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV33')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV60')}</th>
+                        <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.v33section.tableColChange')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1455,11 +1455,11 @@ export function Methodology() {
                 <table className="w-full text-xs" role="table" aria-label={t('body.dataSources.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColStructure')}</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColYears')}</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColQuality')}</th>
-                      <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColRfc')}</th>
-                      <th className="text-left py-2 text-text-muted font-medium">{t('body.dataSources.tableColNotes')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColStructure')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColYears')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColQuality')}</th>
+                      <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColRfc')}</th>
+                      <th scope="col" className="text-left py-2 text-text-muted font-medium">{t('body.dataSources.tableColNotes')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1529,21 +1529,21 @@ export function Methodology() {
               {/* Severity summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>
@@ -1556,9 +1556,9 @@ export function Methodology() {
                 <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
                   <thead className="border-b border-border">
                     <tr>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">

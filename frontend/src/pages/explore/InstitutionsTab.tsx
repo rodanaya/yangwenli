@@ -16,6 +16,7 @@ import {
   getRiskLevel,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { institutionApi, analysisApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
@@ -369,7 +370,7 @@ export default function InstitutionsTab() {
             {showSearchLoading ? (
               <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
             ) : (
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" aria-hidden="true" />
             )}
             <input
               type="text"
@@ -473,7 +474,7 @@ export default function InstitutionsTab() {
       ) : error ? (
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="p-8 text-center bg-background-card">
-            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-text-primary mb-2">{t('empty.failedToLoadInstitutions')}</p>
             <p className="text-xs text-text-muted mb-3">
               {(error as Error).message === 'Network Error'
@@ -481,25 +482,26 @@ export default function InstitutionsTab() {
                 : (error as Error).message || 'An unexpected error occurred.'}
             </p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
               {tc('retry')}
             </Button>
           </div>
         </div>
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
-          <Building className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
+          <Building className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
           <p className="text-sm text-text-muted">{t('empty.noInstitutionsMatch')}</p>
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden overflow-x-auto">
-          <table className="w-full text-xs min-w-[600px]">
+          <table className="w-full text-xs min-w-[600px]" aria-label="Institutions ranked by procurement activity">
             <thead>
               <tr className="bg-background-elevated/50">
-                <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
+                <th scope="col" className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {INST_COLUMNS.map((col) => (
-                  <th
+                  <th scope="col"
                     key={col.key}
+                    scope="col"
                     className={cn(
                       'px-3 py-2 font-semibold text-text-muted whitespace-nowrap cursor-pointer select-none hover:text-text-primary transition-colors',
                       col.align === 'right' ? 'text-right' : 'text-left',
@@ -521,7 +523,7 @@ export default function InstitutionsTab() {
                     </span>
                   </th>
                 ))}
-                <th className="w-8 px-2" />
+                <th scope="col" className="w-8 px-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -554,7 +556,7 @@ export default function InstitutionsTab() {
               onClick={() => updateFilter('page', filters.page! - 1)}
               aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {filters.page}/{data.pagination?.total_pages ?? 1}
@@ -567,7 +569,7 @@ export default function InstitutionsTab() {
               onClick={() => updateFilter('page', filters.page! + 1)}
               aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -630,7 +632,7 @@ function ValueConcentrationAlerts() {
             </div>
           ) : error ? (
             <div className="py-8 text-center">
-              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
+              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" aria-hidden="true" />
               <p className="text-xs text-text-muted">{t('concentration.failed')}</p>
             </div>
           ) : !rows.length ? (
@@ -643,11 +645,11 @@ function ValueConcentrationAlerts() {
               <table className="w-full text-xs" role="table" aria-label="Value concentration alerts">
                 <thead>
                   <tr className="bg-background-elevated/50">
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.institution')}</th>
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('institutions.col.avg_risk_score')}</th>
+                    <th scope="col" className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.institution')}</th>
+                    <th scope="col" className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('institutions.col.avg_risk_score')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -658,9 +660,9 @@ function ValueConcentrationAlerts() {
                     // Row highlight based on share severity
                     const rowBg =
                       row.value_share_pct >= 75
-                        ? 'bg-red-500/8 hover:bg-red-500/12'
+                        ? 'bg-risk-critical/8 hover:bg-risk-critical/12'
                         : row.value_share_pct >= 50
-                          ? 'bg-amber-500/8 hover:bg-amber-500/12'
+                          ? 'bg-risk-high/8 hover:bg-risk-high/12'
                           : 'hover:bg-accent/[0.04]'
 
                     // Share color
@@ -829,23 +831,17 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
       <td className="px-3 py-2 text-right">
         {institution.avg_risk_score != null ? (
           <div className="flex items-center justify-end gap-1.5">
-            {(() => {
-              const N = 10, DR = 1.5, DG = 4
-              const pct = Math.min(institution.avg_risk_score, 1)
-              const filled = Math.max(1, Math.round(pct * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={institution.avg_risk_score}
+              max={1}
+              color={riskColor}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={10}
+              dotR={1.5}
+              dotGap={4}
+              thresholds={[0.25, 0.40, 0.60]}
+            />
             <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(institution.avg_risk_score * 100).toFixed(0)}%
             </span>
@@ -888,7 +884,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
           className="text-text-muted group-hover:text-accent transition-colors"
           aria-label={`View ${toTitleCase(institution.name)} details`}
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
         </Link>
       </td>
     </tr>

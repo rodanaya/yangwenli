@@ -14,7 +14,7 @@ export function RiskScoreDisclaimer({ className }: { className?: string }) {
           className={`inline-flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors ${className ?? ''}`}
           aria-label="Risk score interpretation"
         >
-          <Info className="h-3.5 w-3.5" />
+          <Info className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">

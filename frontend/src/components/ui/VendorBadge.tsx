@@ -27,8 +27,8 @@ export function VendorBadge({ isEfos, efosStage, isSfp }: VendorBadgeProps) {
         <span
           className={
             definitivo
-              ? 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/10/70 text-risk-critical border border-red-700 shrink-0'
-              : 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10/60 text-accent border border-amber-800 shrink-0'
+              ? 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-critical/15 text-risk-critical border border-risk-critical/40 shrink-0'
+              : 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10 text-accent border border-risk-high/40 shrink-0'
           }
           title={
             definitivo
@@ -42,7 +42,7 @@ export function VendorBadge({ isEfos, efosStage, isSfp }: VendorBadgeProps) {
       )}
       {isSfp && (
         <span
-          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-950/60 text-orange-300 border border-orange-700 shrink-0"
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-risk-high/10 text-risk-high border border-risk-high/30 shrink-0"
           title="Sanctioned by SFP (Secretaría de la Función Pública)"
           aria-label="SFP sanctioned"
         >

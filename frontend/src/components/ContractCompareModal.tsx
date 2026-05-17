@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { X, GitCompareArrows, ExternalLink } from 'lucide-react'
 import { cn, formatCompactMXN, formatDate, toTitleCase, getRiskLevel } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import type { ContractListItem } from '@/api/types'
 
 interface ContractCompareModalProps {
@@ -48,23 +49,17 @@ function RiskBar({ score }: { score?: number }) {
   const color = RISK_COLORS[level]
   return (
     <div className="flex items-center gap-1.5">
-      {(() => {
-        const N = 12, DR = 1.5, DG = 4
-        const pct = Math.min(score, 1)
-        const filled = Math.max(1, Math.round(pct * N))
-        return (
-          <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                fill={k < filled ? color : 'var(--color-border)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={score}
+        max={1}
+        color={color}
+        emptyColor="var(--color-border)"
+        emptyStroke="var(--color-border-hover)"
+        dots={12}
+        dotR={1.5}
+        dotGap={4}
+        thresholds={[0.25, 0.40, 0.60]}
+      />
       <span className="font-mono tabular-nums font-semibold" style={{ color }}>
         {(score * 100).toFixed(0)}%
       </span>
@@ -120,6 +115,9 @@ export function ContractCompareModal({
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="contract-compare-title"
         style={{
           position: 'relative',
           zIndex: 1,
@@ -133,8 +131,8 @@ export function ContractCompareModal({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background-card z-10">
           <div className="flex items-center gap-2">
-            <GitCompareArrows className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold">
+            <GitCompareArrows className="h-4 w-4 text-accent" aria-hidden="true" />
+            <h2 id="contract-compare-title" className="text-sm font-semibold">
               Compare Contracts
               <span className="ml-1.5 text-xs font-normal text-text-muted">({n} selected)</span>
             </h2>
@@ -150,7 +148,7 @@ export function ContractCompareModal({
 
         {/* Content */}
         <div className="p-0 overflow-x-auto">
-          <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }} aria-label="Contract comparison">
             <colgroup>
               <col style={{ width: '7rem' }} />
               {contracts.map((_, i) => (
@@ -186,7 +184,7 @@ export function ContractCompareModal({
                         onClick={() => { onOpenChange(false); onViewDetail(c.id) }}
                         className="mt-1.5 text-xs text-accent hover:underline flex items-center gap-1"
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
                         Full details
                       </button>
                     </td>

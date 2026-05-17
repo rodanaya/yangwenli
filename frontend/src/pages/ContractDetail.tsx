@@ -23,6 +23,7 @@ import {
   formatCompactUSD,
   formatDate,
 } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import type { ContractDetail as ContractDetailType } from '@/api/types'
 import {
@@ -71,9 +72,9 @@ export default function ContractDetail() {
   // Risk palette — derived from score
   const riskPalette = useMemo(() => {
     const score = contract?.risk_score ?? 0
-    if (score >= 0.6) return { color: '#dc2626', label: 'CRITICAL', bg: 'bg-red-600/10', border: 'border-red-600/30' }
-    if (score >= 0.4) return { color: '#ea580c', label: 'HIGH', bg: 'bg-orange-600/10', border: 'border-orange-600/30' }
-    if (score >= 0.25) return { color: '#eab308', label: 'MEDIUM', bg: 'bg-amber-600/10', border: 'border-amber-600/30' }
+    if (score >= 0.6) return { color: 'var(--color-risk-critical)', label: 'CRITICAL', bg: 'bg-risk-critical/10', border: 'border-risk-critical/30' }
+    if (score >= 0.4) return { color: 'var(--color-risk-high)', label: 'HIGH', bg: 'bg-risk-high/10', border: 'border-risk-high/30' }
+    if (score >= 0.25) return { color: 'var(--color-risk-medium)', label: 'MEDIUM', bg: 'bg-risk-medium/10', border: 'border-risk-medium/30' }
     return { color: 'var(--color-text-muted)', label: 'LOW', bg: 'bg-background-elevated', border: 'border-border' }
   }, [contract?.risk_score])
 
@@ -82,14 +83,14 @@ export default function ContractDetail() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center max-w-md">
-          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" />
+          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" aria-hidden="true" />
           <p className="text-text-secondary mb-2">Contract not found or unavailable.</p>
           <p className="text-[11px] text-text-muted font-mono mb-6">ID: {contractId}</p>
           <button
             onClick={() => navigate('/contracts')}
             className="inline-flex items-center gap-2 text-xs text-text-secondary hover:text-text-secondary border border-border rounded-sm px-3 py-1.5"
           >
-            <ArrowLeft className="h-3 w-3" />
+            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
             Back to contracts
           </button>
         </div>
@@ -113,15 +114,15 @@ export default function ContractDetail() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6 md:py-10">
       {/* ----- Breadcrumb ----- */}
-      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8">
+      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8" aria-label="Breadcrumb">
         <Link
           to="/contracts"
           className="inline-flex items-center gap-1 hover:text-text-secondary transition-colors"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           Contracts
         </Link>
-        <ChevronRight className="h-3 w-3 text-text-primary" />
+        <ChevronRight className="h-3 w-3 text-text-primary" aria-hidden="true" />
         <span className="text-text-secondary font-mono tabular-nums">
           {contract.contract_number || `#${contract.id}`}
         </span>
@@ -132,7 +133,7 @@ export default function ContractDetail() {
         {/* Dateline strip */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>
@@ -175,7 +176,7 @@ export default function ContractDetail() {
             </span>
           )}
           {contract.is_election_year && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10/40 text-risk-high border border-amber-600/30">
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-risk-high/10 text-risk-high border border-risk-high/30">
               <Zap className="h-2.5 w-2.5" aria-hidden="true" />
               ELECTION YEAR
             </span>
@@ -197,7 +198,7 @@ export default function ContractDetail() {
             <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
           ) : (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
-              <User className="h-3.5 w-3.5 shrink-0" />
+              <User className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || 'Unknown vendor')}</span>
             </span>
           )}
@@ -295,7 +296,7 @@ export default function ContractDetail() {
       {/* ----- Main grid: content left, sidebar right ----- */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 lg:gap-14">
         {/* ================== MAIN COLUMN ================== */}
-        <main className="min-w-0 space-y-12">
+        <div className="min-w-0 space-y-12">
           {/* ----- Risk Assessment ----- */}
           <Section overline="Finding · Risk Assessment" title="What the model sees">
             <div className="space-y-6">
@@ -318,29 +319,17 @@ export default function ContractDetail() {
                   )}
                 </div>
                 {/* Dot-matrix 0-1 with threshold markers */}
-                {(() => {
-                  const N = 40, DR = 3, DG = 8
-                  const pct = Math.min((contract.risk_score ?? 0), 1)
-                  const filled = Math.round(pct * N)
-                  const totalW = N * DG
-                  const markerX = (t: number) => (t / 100) * totalW
-                  return (
-                    <svg viewBox={`0 0 ${totalW} 12`} width={totalW} height={12} aria-hidden="true">
-                      {Array.from({ length: N }).map((_, k) => (
-                        <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                          fill={k < filled ? riskPalette.color : 'var(--color-background-elevated)'}
-                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                          strokeWidth={k < filled ? 0 : 0.5}
-                          fillOpacity={k < filled ? 0.85 : 1}
-                        />
-                      ))}
-                      {/* Threshold markers */}
-                      {[25, 40, 60].map((t) => (
-                        <line key={t} x1={markerX(t)} y1={0} x2={markerX(t)} y2={12} stroke="var(--color-text-muted)" strokeWidth={0.6} strokeOpacity={0.5} strokeDasharray="2 2" />
-                      ))}
-                    </svg>
-                  )
-                })()}
+                <DotBar
+                  value={contract.risk_score ?? 0}
+                  max={1}
+                  color={riskPalette.color}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border-hover)"
+                  dots={40}
+                  dotR={3}
+                  dotGap={8}
+                  thresholds={[0.25, 0.40, 0.60]}
+                />
                 <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
@@ -348,8 +337,8 @@ export default function ContractDetail() {
 
                 {/* Disclaimer for high-risk */}
                 {isHighRisk && (
-                  <div className="mt-4 flex items-start gap-2 rounded-sm bg-amber-500/5 border border-amber-500/20 px-3 py-2">
-                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" />
+                  <div className="mt-4 flex items-start gap-2 rounded-sm bg-risk-high/5 border border-risk-high/20 px-3 py-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-risk-high/80 mt-0.5 shrink-0" aria-hidden="true" />
                     <p className="text-[11px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
                       an investigative signal, not a verdict.
@@ -370,12 +359,12 @@ export default function ContractDetail() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {contract.is_direct_award && (
-                      <Badge className="text-xs bg-orange-600/15 text-orange-400 border border-orange-600/30">
+                      <Badge className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30">
                         Direct award
                       </Badge>
                     )}
                     {contract.is_single_bid && (
-                      <Badge className="text-xs bg-red-600/15 text-risk-critical border border-red-600/30">
+                      <Badge className="text-xs bg-risk-critical/15 text-risk-critical border border-risk-critical/30">
                         Single bid
                       </Badge>
                     )}
@@ -391,7 +380,7 @@ export default function ContractDetail() {
                     )}
                     {contract.is_threshold_gaming && (
                       <Badge
-                        className="text-xs bg-risk-high/10/30 text-risk-high border border-amber-500/30"
+                        className="text-xs bg-risk-high/10 text-risk-high border border-risk-high/30"
                         title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}
                       >
                         Threshold gaming
@@ -529,7 +518,7 @@ export default function ContractDetail() {
               </div>
             </Section>
           )}
-        </main>
+        </div>
 
         {/* ================== SIDEBAR ================== */}
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
@@ -579,9 +568,9 @@ export default function ContractDetail() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-risk-high hover:text-accent font-medium group"
               >
-                <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                 View on COMPRANET
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
                 Official government procurement record.
               </p>
@@ -593,7 +582,7 @@ export default function ContractDetail() {
             <div className="space-y-1.5">
               {contract.vendor_id && (
                 <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
-                  <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                  <User className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] text-text-muted uppercase tracking-[0.15em] mb-0.5">
                       Vendor profile
@@ -624,12 +613,12 @@ export default function ContractDetail() {
                   className="flex items-center justify-between group py-2 text-risk-high hover:text-accent"
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5" />
+                    <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                     <span className="text-xs font-mono uppercase tracking-[0.15em]">
                       Investigation thread
                     </span>
                   </div>
-                  <ChevronRight className="h-3 w-3" />
+                  <ChevronRight className="h-3 w-3" aria-hidden="true" />
                 </Link>
               )}
             </div>
@@ -660,7 +649,7 @@ export default function ContractDetail() {
       <footer className="mt-16 pt-6 border-t border-border">
         <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-text-muted">
           <div className="flex items-center gap-2">
-            <Database className="h-3 w-3" />
+            <Database className="h-3 w-3" aria-hidden="true" />
             <span>Source: COMPRANET · Federal Procurement Data</span>
           </div>
           <div className="flex items-center gap-3">
@@ -693,7 +682,7 @@ function Section({
 }) {
   return (
     <section>
-      <div className="mb-5 border-l-[3px] border-red-600 pl-5">
+      <div className="mb-5 border-l-[3px] border-risk-critical pl-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
           {overline}
         </p>
@@ -760,13 +749,14 @@ function AnomalyScoreCard({
               {(score * 100).toFixed(0)}%
             </span>
             {isAiConfirmed && (
-              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-red-600/20 text-risk-critical border border-red-600/30">
+              <Badge className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
                 <svg
                   className="h-2.5 w-2.5"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2.5"
+                  aria-hidden="true"
                 >
                   <path
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
@@ -783,24 +773,16 @@ function AnomalyScoreCard({
           IForest +<br />COPOD
         </span>
       </div>
-      {(() => {
-        const N = 24, DR = 2, DG = 5.5
-        const pct = Math.min(score, 1)
-        const filled = Math.max(1, Math.round(pct * N))
-        const color = isAiConfirmed ? '#f87171' : 'var(--color-text-muted)'
-        return (
-          <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-            {Array.from({ length: N }).map((_, k) => (
-              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                fill={k < filled ? color : 'var(--color-background-elevated)'}
-                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                strokeWidth={k < filled ? 0 : 0.5}
-                fillOpacity={k < filled ? 0.85 : 1}
-              />
-            ))}
-          </svg>
-        )
-      })()}
+      <DotBar
+        value={score}
+        max={1}
+        color={isAiConfirmed ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
+        emptyColor="var(--color-background-elevated)"
+        emptyStroke="var(--color-border-hover)"
+        dots={24}
+        dotR={2}
+        dotGap={5.5}
+      />
     </div>
   )
 }
@@ -838,7 +820,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
       : delay < 5
       ? 'text-risk-critical'
       : delay < 15
-      ? 'text-orange-500'
+      ? 'text-risk-high'
       : 'text-text-secondary'
 
   const delayNote =
@@ -856,7 +838,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
         {delay != null && (
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Clock className="h-3 w-3" />
+              <Clock className="h-3 w-3" aria-hidden="true" />
               Publication → Award
             </p>
             <p className={`text-2xl font-bold font-mono tabular-nums ${delayColor}`}>
@@ -881,7 +863,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
         {isElection && (
           <div>
             <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
-              <Zap className="h-3 w-3" />
+              <Zap className="h-3 w-3" aria-hidden="true" />
               Timing
             </p>
             <p className="text-lg font-bold text-risk-high leading-tight">
@@ -931,7 +913,7 @@ function IdRow({ label, value }: { label: string; value: string }) {
         title="Copy to clipboard"
       >
         <span className="font-mono tabular-nums">{value}</span>
-        <Copy className="h-3 w-3 text-text-muted group-hover:text-text-secondary" />
+        <Copy className="h-3 w-3 text-text-muted group-hover:text-text-secondary" aria-hidden="true" />
       </button>
     </div>
   )

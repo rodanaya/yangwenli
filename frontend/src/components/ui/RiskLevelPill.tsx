@@ -19,20 +19,20 @@ const RISK_STYLES = {
   critical: {
     bg: 'bg-risk-critical/15',
     text: 'text-risk-critical',
-    border: 'border-red-500/30',
-    dot: '#ef4444',
+    border: 'border-risk-critical/30',
+    dot: 'var(--color-risk-critical)',
   },
   high: {
     bg: 'bg-risk-high/15',
     text: 'text-risk-high',
-    border: 'border-amber-500/30',
-    dot: '#f59e0b',
+    border: 'border-risk-high/30',
+    dot: 'var(--color-risk-high)',
   },
   medium: {
-    bg: 'bg-amber-900/20',
-    text: 'text-amber-600',
-    border: 'border-amber-800/30',
-    dot: '#a16207',
+    bg: 'bg-risk-medium/10',
+    text: 'text-risk-medium',
+    border: 'border-risk-medium/30',
+    dot: 'var(--color-risk-medium)',
   },
   low: {
     bg: 'bg-background-elevated',

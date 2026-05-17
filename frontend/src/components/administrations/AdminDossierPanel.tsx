@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { PresidentAvatar } from './PresidentAvatar'
 import { ProcurementGradeCard } from './ProcurementGradeCard'
@@ -162,7 +163,7 @@ export function AdminDossierPanel({
         <div className="lg:col-span-1 space-y-4">
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <BookOpen className="h-3.5 w-3.5 text-accent" />
+              <BookOpen className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.politicalContext')}
               </span>
@@ -178,7 +179,7 @@ export function AdminDossierPanel({
           {/* Known Scandals */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.knownScandals')}
               </span>
@@ -190,7 +191,7 @@ export function AdminDossierPanel({
             </div>
             {dossier.scandals.length === 0 ? (
               <div className="rounded-sm border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
-                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" />
+                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" aria-hidden="true" />
                 <p className="text-xs text-text-muted italic leading-relaxed">
                   {t('dossier.noScandals')}
                 </p>
@@ -227,7 +228,7 @@ export function AdminDossierPanel({
                               to={`/cases/${scandal.caseId}`}
                               className="text-[9px] text-accent hover:text-accent/80 font-mono transition-colors flex items-center gap-0.5 ml-auto"
                             >
-                              <ExternalLink className="h-2.5 w-2.5" />
+                              <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
                               {t('dossier.linkToCases')}
                             </Link>
                           )}
@@ -243,7 +244,7 @@ export function AdminDossierPanel({
                   to="/cases"
                   className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 font-mono mt-1 transition-colors"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   {t('dossier.linkToCases')}
                 </Link>
               </div>
@@ -273,13 +274,13 @@ export function AdminDossierPanel({
                       label: t('dossier.keyFiguresLabels.singleBidRate'),
                       value: `${agg.singleBidPct.toFixed(1)}%`,
                       sub: agg.singleBidPct > 20 ? t('dossier.keyFiguresLabels.aboveAvg') : t('dossier.keyFiguresLabels.typical'),
-                      color: agg.singleBidPct > 20 ? '#f87171' : '#fbbf24',
+                      color: agg.singleBidPct > 20 ? 'var(--color-risk-critical)' : 'var(--color-risk-high)',
                     },
                     {
                       label: t('dossier.keyFiguresLabels.directAwardRate'),
                       value: `${agg.directAwardPct.toFixed(1)}%`,
                       sub: agg.directAwardPct > 70 ? t('dossier.keyFiguresLabels.critical') : agg.directAwardPct > 50 ? t('dossier.keyFiguresLabels.elevated') : t('dossier.keyFiguresLabels.moderate'),
-                      color: agg.directAwardPct > 70 ? '#f87171' : agg.directAwardPct > 50 ? '#fb923c' : '#fbbf24',
+                      color: agg.directAwardPct > 70 ? 'var(--color-risk-critical)' : agg.directAwardPct > 50 ? 'var(--color-risk-high)' : 'var(--color-risk-medium)',
                     },
                   ]
                   return figures.map((fig) => (
@@ -346,7 +347,7 @@ export function AdminDossierPanel({
           {/* Top Vendors */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <Users className="h-3.5 w-3.5 text-accent" />
+              <Users className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('vendorSection.title')}
               </span>
@@ -362,7 +363,7 @@ export function AdminDossierPanel({
           {topSectors.length > 0 && (
             <div>
               <div className="flex items-center gap-1.5 mb-2">
-                <Activity className="h-3.5 w-3.5 text-accent" />
+                <Activity className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                   {t('dossier.topSectors')}
                 </span>
@@ -387,22 +388,16 @@ export function AdminDossierPanel({
                             {formatNumber(sector.contracts)}
                           </span>
                         </div>
-                        {(() => {
-                          const N = 20, DR = 1.75, DG = 4.5
-                          const filled = Math.max(1, Math.round((pct / 100) * N))
-                          return (
-                            <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                              {Array.from({ length: N }).map((_, k) => (
-                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : 'var(--color-background-elevated)'}
-                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                                  strokeWidth={k < filled ? 0 : 0.5}
-                                  fillOpacity={k < filled ? 0.7 : 1}
-                                />
-                              ))}
-                            </svg>
-                          )
-                        })()}
+                        <DotBar
+                          value={pct}
+                          max={100}
+                          color={sector.color}
+                          emptyColor="var(--color-background-elevated)"
+                          emptyStroke="var(--color-border-hover)"
+                          dots={20}
+                          dotR={1.75}
+                          dotGap={4.5}
+                        />
                       </div>
                     </div>
                   )

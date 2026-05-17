@@ -231,7 +231,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             <ul className="space-y-1">
               {aiInsights.slice(0, 4).map((insight, i) => (
                 <li key={i} className="flex items-start gap-1.5 text-xs text-text-secondary">
-                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-risk-high" />
+                  <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5 text-risk-high" aria-hidden="true" />
                   {insight}
                 </li>
               ))}
@@ -280,7 +280,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           <ul className="space-y-1">
             {asfCases.slice(0, 5).map((c, i) => (
               <li key={i} className="flex items-start gap-1.5 text-xs text-text-secondary">
-                <FileText className="h-3 w-3 shrink-0 mt-0.5 text-text-muted" />
+                <FileText className="h-3 w-3 shrink-0 mt-0.5 text-text-muted" aria-hidden="true" />
                 {c.title ?? c.case_name ?? `Case ${c.case_id ?? i + 1}`}
               </li>
             ))}
@@ -298,14 +298,14 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           href={investigationUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Open Investigation</span>
         </a>
         <a
           href={contractsUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <FileText className="h-3.5 w-3.5" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">View Contracts</span>
         </a>
         <a
@@ -314,9 +314,9 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Search News</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   )
@@ -450,14 +450,14 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
           href={investigationUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Open Investigation</span>
         </a>
         <a
           href={contractsUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <FileText className="h-3.5 w-3.5" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">View Contracts</span>
         </a>
         <a
@@ -466,9 +466,9 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Search News</span>
-        </a>
+        <span className="sr-only"> (opens in new tab)</span></a>
       </div>
     </div>
   )
@@ -541,7 +541,7 @@ export function EntityProfileDrawer() {
       <div
         role="presentation"
         onClick={close}
-        className="fixed inset-0 z-40 bg-[color:var(--color-text-primary)]/40 backdrop-blur-[1px]"
+        className="fixed inset-0 z-40 bg-text-primary/40 backdrop-blur-[1px]"
         aria-hidden="true"
       />
 
@@ -558,7 +558,7 @@ export function EntityProfileDrawer() {
         {/* Header bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            <ExternalLink className="h-3.5 w-3.5 text-accent" />
+            <ExternalLink className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
             <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase">
               {state.entityType === 'vendor' ? 'Vendor Profile' : 'Institution Profile'}
             </span>

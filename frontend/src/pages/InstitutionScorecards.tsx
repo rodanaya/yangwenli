@@ -44,6 +44,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { scorecardApi } from '@/api/client'
 import { formatNumber } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -227,26 +228,20 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
     <div className="space-y-1" aria-label={t('pillarsChart.ariaLabel')}>
       {pillars.map(({ key, labelKey, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
-        const color = pct > 70 ? '#71717a' : pct > 40 ? '#fbbf24' : '#f87171'
+        const color = pct > 70 ? 'var(--color-text-muted)' : pct > 40 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
         return (
           <div key={key} className="flex items-center gap-2">
             <span className="text-[9px] font-mono text-text-muted w-8 flex-shrink-0">{t(labelKey)}</span>
-            {(() => {
-              const N = 14, DR = 1.5, DG = 4
-              const filled = Math.max(1, Math.round((pct / 100) * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                      fill={k < filled ? color : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={pct}
+              max={100}
+              color={color}
+              emptyColor="var(--color-background-elevated)"
+              emptyStroke="var(--color-border-hover)"
+              dots={14}
+              dotR={1.5}
+              dotGap={4}
+            />
             <span className="text-[9px] font-mono tabular-nums text-text-muted w-8 text-right flex-shrink-0">
               {value.toFixed(1)}/{max}
             </span>
@@ -262,7 +257,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
 // ---------------------------------------------------------------------------
 
 function TrendIcon({ direction, t }: { direction: string | null; t: (key: string) => string }) {
-  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label={t('trend.improving')} />
+  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-text-secondary" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-risk-critical" aria-label={t('trend.declining')} />
   return <Minus className="h-3 w-3 text-text-muted" aria-label={t('trend.stable')} />
 }
@@ -284,12 +279,15 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
   return (
     <article
-      className="group flex flex-col rounded-sm border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-white/20"
+      className="group flex flex-col rounded-sm border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-accent/60"
       style={{
         borderColor: tier.border,
         backgroundColor: 'rgba(24,24,27,0.70)',
       }}
+      role="button"
+      tabIndex={0}
       onClick={() => onNavigate(item.institution_id)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(item.institution_id) } }}
     >
       {/* Top accent strip */}
       <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: tier.color }} aria-hidden="true" />
@@ -324,7 +322,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
             {/* Red signal badge */}
             {hasRedSignals && (
               <span
-                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-risk-critical bg-risk-critical/10 border border-red-500/20"
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-risk-critical bg-risk-critical/10 border border-risk-critical/20"
                 aria-label={t('aria.redAlerts', { count: item.signal_count_red })}
               >
                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
@@ -370,8 +368,8 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
         {/* Top risk driver */}
         {item.top_risk_driver && (
           <div className="pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-amber-500/8 border border-amber-500/15 text-[9px] text-risk-high font-mono uppercase tracking-wide">
-              <span className="h-1 w-1 rounded-full bg-amber-400 flex-shrink-0" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-risk-high/8 border border-risk-high/15 text-[9px] text-risk-high font-mono uppercase tracking-wide">
+              <span className="h-1 w-1 rounded-full bg-risk-high flex-shrink-0" aria-hidden="true" />
               {item.top_risk_driver}
             </span>
           </div>
@@ -380,7 +378,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
       {/* Footer CTA */}
       <button
-        className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none"
+        className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         style={{ borderColor: tier.border, color: tier.color }}
         onClick={(e) => { e.stopPropagation(); onNavigate(item.institution_id) }}
         aria-label={t('aria.profileLink', { name: item.institution_name })}
@@ -444,7 +442,7 @@ function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border-2"
+      className="flex items-center gap-2 rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 border-2"
       style={{
         backgroundColor: active ? tier.color : tier.bg,
         borderColor: tier.color,
@@ -618,8 +616,8 @@ export default function InstitutionScorecards() {
 
       <div className="space-y-6">
         {/* Explainer context */}
-        <div className="rounded-sm border border-violet-500/20 bg-violet-500/5 px-4 py-3">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-[color:var(--color-sector-tecnologia)] mb-1">
+        <div className="rounded-sm border border-accent/20 bg-accent/5 px-4 py-3">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-sector-tecnologia mb-1">
             HALLAZGO
           </p>
           <p className="text-sm text-text-secondary leading-relaxed">
@@ -658,7 +656,7 @@ export default function InstitutionScorecards() {
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
-              className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+              className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                 selectedTier === null
                   ? 'bg-white text-text-primary border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
                   : 'bg-transparent text-text-secondary border-border hover:border-border-hover'
@@ -704,7 +702,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={key}
                     onClick={() => handleSortChange(key)}
-                    className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                       sortBy === key
                         ? 'bg-background-elevated border-border text-text-primary'
                         : 'bg-transparent border-border text-text-secondary hover:border-border hover:text-text-secondary'
@@ -733,13 +731,13 @@ export default function InstitutionScorecards() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t('filters.search')}
-                  className="w-full rounded-sm border border-border bg-background-elevated pl-8 pr-3 py-1.5 text-sm text-text-primary placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-border transition-colors"
+                  className="w-full rounded-sm border border-border bg-background-elevated pl-8 pr-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition-colors"
                   aria-label={t('aria.searchByName')}
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-sm border border-border bg-background-elevated px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                className="rounded-sm border border-border bg-background-elevated px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {t('filters.go')}
               </button>
@@ -804,7 +802,7 @@ export default function InstitutionScorecards() {
               <p className="text-sm text-text-muted">{t('noResults')}</p>
               <button
                 onClick={() => { setSelectedTier(null); setSearch(''); setSearchInput(''); setPage(1) }}
-                className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
+                className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 underline"
                 aria-label={t('aria.clearFilters')}
               >
                 {t('aria.clearFilters')}
@@ -826,7 +824,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               aria-label={t('pagination.previous')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -853,7 +851,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
                       pageNum === page
                         ? 'bg-white text-text-primary'
                         : 'text-text-muted hover:text-text-secondary hover:bg-background-elevated'
@@ -870,7 +868,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               aria-label={t('pagination.next')}
             >
               {t('pagination.next')}
@@ -880,7 +878,7 @@ export default function InstitutionScorecards() {
         )}
 
         {/* Footer note — context footnote */}
-        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
+        <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high/70 mb-1">
             {t('footnotes.title')}
           </p>

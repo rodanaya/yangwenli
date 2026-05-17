@@ -367,7 +367,7 @@ export function InvestigationCaseDetail() {
                 padding: 0,
               }}
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3 w-3" aria-hidden="true" />
               {t('caseDetail.breadcrumb')}
             </button>
             <span style={{ color: INK_FAINT, fontSize: 10 }}>/</span>
@@ -425,7 +425,7 @@ export function InvestigationCaseDetail() {
                     backgroundColor: `${confidenceColor}14`,
                   }}
                 >
-                  <Shield className="h-3 w-3" />
+                  <Shield className="h-3 w-3" aria-hidden="true" />
                   {t('caseDetail.confidencePct', { pct: confidencePct })}
                 </span>
                 {/* Fraud type */}
@@ -485,9 +485,9 @@ export function InvestigationCaseDetail() {
                   backgroundColor: CARD,
                 }}
               >
-                <Shield className="h-3.5 w-3.5" />
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" />
                 ASF
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <a
                 href={newsSearchUrl}
                 target="_blank"
@@ -505,9 +505,9 @@ export function InvestigationCaseDetail() {
                   backgroundColor: CARD,
                 }}
               >
-                <Newspaper className="h-3.5 w-3.5" />
+                <Newspaper className="h-3.5 w-3.5" aria-hidden="true" />
                 News
-              </a>
+              <span className="sr-only"> (opens in new tab)</span></a>
               <button
                 onClick={() => setShowStatusModal(true)}
                 className="transition-colors hover:opacity-80"
@@ -542,7 +542,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('caseDetail.addEvidenceBtn')}
               </button>
               {detail.validation_status === 'corroborated' && (
@@ -562,7 +562,7 @@ export function InvestigationCaseDetail() {
                     cursor: 'pointer',
                   }}
                 >
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   {t('caseDetail.promoteToGT')}
                 </button>
               )}
@@ -637,7 +637,7 @@ export function InvestigationCaseDetail() {
             }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
                 {t('caseDetail.caseNarrative')}
               </p>
@@ -673,7 +673,7 @@ export function InvestigationCaseDetail() {
                         const [headerRow, ...bodyRows] = rows
                         elements.push(
                           <div key={`table-${i}`} className="overflow-x-auto my-4" style={{ fontFamily: 'var(--font-family-sans, system-ui)' }}>
-                            <table className="w-full text-xs border-collapse">
+                            <table className="w-full text-xs border-collapse" aria-label="Evidence data table">
                               <thead>
                                 <tr>
                                   {parseCells(headerRow).map((cell, ci) => (
@@ -788,7 +788,7 @@ export function InvestigationCaseDetail() {
           <section>
             <div className="flex items-baseline justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: INK_DIM }} />
+                <Users className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
                 <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                   {t('caseDetail.vendorsInvolved')}
                 </h2>
@@ -814,9 +814,9 @@ export function InvestigationCaseDetail() {
                       border: `1px solid ${BORDER}`,
                     }}
                   >
-                    <Shield className="h-3 w-3" />
+                    <Shield className="h-3 w-3" aria-hidden="true" />
                     {t('caseDetail.asfLookupBtn')}
-                  </a>
+                  <span className="sr-only"> (opens in new tab)</span></a>
                   <a
                     href={`https://www.google.com/search?q=${encodeURIComponent(`"${toTitleCase(firstVendor.name)}" corrupción contrato gobierno México`)}`}
                     target="_blank"
@@ -833,9 +833,9 @@ export function InvestigationCaseDetail() {
                       border: `1px solid ${BORDER}`,
                     }}
                   >
-                    <Newspaper className="h-3 w-3" />
+                    <Newspaper className="h-3 w-3" aria-hidden="true" />
                     {t('caseDetail.newsBtn')}
-                  </a>
+                  <span className="sr-only"> (opens in new tab)</span></a>
                 </div>
               )}
             </div>
@@ -942,7 +942,7 @@ export function InvestigationCaseDetail() {
                           color: INK_DIM,
                         }}
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
                         {t('caseDetail.contractsLabel')}
                       </Link>
                       <Link
@@ -973,7 +973,7 @@ export function InvestigationCaseDetail() {
         {detail.questions.length > 0 && (
           <section>
             <div className="flex items-baseline gap-2 mb-4">
-              <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} />
+              <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.investigationQuestions')}
               </h2>
@@ -1071,7 +1071,7 @@ export function InvestigationCaseDetail() {
         <section>
           <div className="flex items-baseline justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} aria-hidden="true" />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
                 {t('caseDetail.evidenceLog')}
               </h2>
@@ -1097,7 +1097,7 @@ export function InvestigationCaseDetail() {
                 cursor: 'pointer',
               }}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3" aria-hidden="true" />
               {t('caseDetail.addEvidenceBtn')}
             </button>
           </div>
@@ -1155,7 +1155,7 @@ export function InvestigationCaseDetail() {
                         zIndex: 1,
                       }}
                     >
-                      <Newspaper className="h-2.5 w-2.5" style={{ color: strengthColor }} />
+                      <Newspaper className="h-2.5 w-2.5" style={{ color: strengthColor }} aria-hidden="true" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -1218,8 +1218,8 @@ export function InvestigationCaseDetail() {
                           }}
                         >
                           {ev.source_title || t('caseDetail.untitledSource')}
-                          <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
-                        </a>
+                          <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" aria-hidden="true" />
+                        <span className="sr-only"> (opens in new tab)</span></a>
                       ) : (
                         <p
                           style={{
@@ -1284,6 +1284,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder={t('caseDetail.sourceUrlPlaceholder')}
+                  aria-label={t('caseDetail.sourceUrlPlaceholder')}
                   value={evidenceUrl}
                   onChange={(e) => setEvidenceUrl(e.target.value)}
                 />
@@ -1299,6 +1300,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder="Article / document title"
+                  aria-label="Article or document title"
                   value={evidenceTitle}
                   onChange={(e) => setEvidenceTitle(e.target.value)}
                 />
@@ -1317,6 +1319,7 @@ export function InvestigationCaseDetail() {
                   }}
                   rows={3}
                   placeholder="Summary / relevance to this case"
+                  aria-label="Evidence summary and relevance to case"
                   value={evidenceSummary}
                   onChange={(e) => setEvidenceSummary(e.target.value)}
                 />
@@ -1331,6 +1334,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Evidence type"
                     value={evidenceType}
                     onChange={(e) => setEvidenceType(e.target.value)}
                   >
@@ -1349,6 +1353,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Evidence credibility"
                     value={credibility}
                     onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
                   >
@@ -1367,6 +1372,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Publication date"
                     value={datePublished}
                     onChange={(e) => setDatePublished(e.target.value)}
                   />
@@ -1379,7 +1385,7 @@ export function InvestigationCaseDetail() {
                     {addEvidenceMutation.isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin mr-1" />
                     ) : (
-                      <Send className="h-3 w-3 mr-1" />
+                      <Send className="h-3 w-3 mr-1" aria-hidden="true" />
                     )}
                     Submit
                   </Button>
@@ -1456,7 +1462,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <XCircle className="h-3.5 w-3.5" />
+                <XCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 Refute
               </button>
               <button
@@ -1476,7 +1482,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                <HelpCircle className="h-3.5 w-3.5" />
+                <HelpCircle className="h-3.5 w-3.5" aria-hidden="true" />
                 Inconclusive
               </button>
               {detail.validation_status === 'corroborated' && (
@@ -1501,7 +1507,7 @@ export function InvestigationCaseDetail() {
                   {promoteMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : (
-                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                   )}
                   Promote to GT
                 </button>
@@ -1577,6 +1583,7 @@ export function InvestigationCaseDetail() {
                     color: INK,
                     outline: 'none',
                   }}
+                  aria-label="Case status"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value as InvestigationValidationStatus)}
                 >
@@ -1600,6 +1607,7 @@ export function InvestigationCaseDetail() {
                   }}
                   rows={3}
                   placeholder="Review notes (optional)"
+                  aria-label="Review notes"
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
                 />
@@ -1615,6 +1623,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder="Reviewer name"
+                  aria-label="Reviewer name"
                   value={reviewerName}
                   onChange={(e) => setReviewerName(e.target.value)}
                 />
@@ -1703,7 +1712,7 @@ export function InvestigationCaseDetail() {
                   {promoteMutation.isPending ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                   ) : (
-                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                   )}
                   Promote
                 </Button>

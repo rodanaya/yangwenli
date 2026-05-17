@@ -75,7 +75,7 @@ export default function Privacy() {
         </div>
 
         {/* Summary card */}
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.04] p-4 mb-10">
+        <div className="rounded-lg border border-risk-high/20 bg-risk-high/[0.04] p-4 mb-10">
           <p className="text-sm text-text-primary leading-relaxed">
             <span className="font-semibold text-risk-high/80">TL;DR{isEs ? '' : ':'}:</span>{' '}
             {isEs
@@ -97,7 +97,7 @@ export default function Privacy() {
             {isEs ? 'Para consultas relacionadas con datos, contáctenos a través de ' : 'For data-related enquiries, contact us via '}
             <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               GitHub Issues
-            </a>
+            <span className="sr-only"> (opens in new tab)</span></a>
             {isEs ? '. Nos comprometemos a responder en un plazo de 30 días.' : '. We aim to respond within 30 days.'}
           </p>
         </Section>
@@ -107,20 +107,20 @@ export default function Privacy() {
           <div className="space-y-4">
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Database className="h-4 w-4 text-blue-400/70" aria-hidden="true" />
+                <Database className="h-4 w-4 text-accent-data/70" aria-hidden="true" />
                 <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros de contrataciones' : 'Procurement Records'}</span>
               </div>
               <p>
                 {isEs
-                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-text-primary">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
-                  : <>Approximately 3.1 million contract records sourced from <strong className="text-text-primary">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
+                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-text-primary">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx<span className="sr-only"> (opens in new tab)</span></a>.</>
+                  : <>Approximately 3.1 million contract records sourced from <strong className="text-text-primary">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">compranet.hacienda.gob.mx<span className="sr-only"> (opens in new tab)</span></a>.</>
                 }
               </p>
             </div>
 
             <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-4 w-4 text-green-400/70" aria-hidden="true" />
+                <FileText className="h-4 w-4 text-text-muted/70" aria-hidden="true" />
                 <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros públicos de sanciones' : 'Public Sanctions Registries'}</span>
               </div>
               <p>
@@ -236,7 +236,7 @@ export default function Privacy() {
             }
             <a href="https://github.com/rodanaya/yangwenli/issues" target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-hover underline underline-offset-2">
               {isEs ? 'issue en GitHub' : 'GitHub Issue'}
-            </a>{' '}
+            <span className="sr-only"> (opens in new tab)</span></a>{' '}
             {isEs ? <>etiquetado <Tag>privacy</Tag>. Responderemos en un plazo de 30 días.</> : <>labelled <Tag>privacy</Tag>. We will respond within 30 days.</>}
           </p>
         </Section>
@@ -277,7 +277,7 @@ export default function Privacy() {
           >
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             {isEs ? 'Código fuente (MIT)' : 'Source code (MIT)'}
-          </a>
+          <span className="sr-only"> (opens in new tab)</span></a>
           <a href="/terms" className="text-xs text-text-secondary hover:text-text-primary transition-colors">
             {isEs ? 'Términos de uso' : 'Terms of Use'}
           </a>

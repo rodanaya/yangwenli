@@ -378,22 +378,22 @@ export function VendorActivityTab({
         ) : contracts?.data && contracts.data.length > 0 ? (
           <>
             <div className="border border-border rounded-sm overflow-hidden">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label={isEs ? 'Contratos del proveedor' : 'Vendor contracts'}>
                 <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
                   <tr>
-                    <th className="text-left px-3 py-2 font-semibold">
+                    <th scope="col" className="text-left px-3 py-2 font-semibold">
                       {isEs ? 'Descripción' : 'Description'}
                     </th>
-                    <th className="text-left px-3 py-2 font-semibold">
+                    <th scope="col" className="text-left px-3 py-2 font-semibold">
                       {isEs ? 'Institución' : 'Institution'}
                     </th>
-                    <th className="text-right px-3 py-2 font-semibold">
+                    <th scope="col" className="text-right px-3 py-2 font-semibold">
                       {isEs ? 'Monto' : 'Amount'}
                     </th>
-                    <th className="text-center px-3 py-2 font-semibold">
+                    <th scope="col" className="text-center px-3 py-2 font-semibold">
                       {isEs ? 'Fecha' : 'Date'}
                     </th>
-                    <th className="text-center px-3 py-2 font-semibold">
+                    <th scope="col" className="text-center px-3 py-2 font-semibold">
                       {isEs ? 'Riesgo' : 'Risk'}
                     </th>
                   </tr>

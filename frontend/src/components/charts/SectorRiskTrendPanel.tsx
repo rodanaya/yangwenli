@@ -434,13 +434,13 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   // ---- Loading state ----
   if (isLoading) {
     return (
-      <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
+      <div className={cn('bg-background-elevated rounded-lg p-4', className)}>
         <div className="flex items-center justify-between mb-3">
           <p className="text-base font-bold text-text-primary">{t('charts.trendTitle')}</p>
         </div>
         <div className="animate-pulse space-y-2">
-          <div className="bg-surface-muted rounded h-6 w-48" />
-          <div className="bg-surface-muted rounded" style={{ height: 380 }} />
+          <div className="bg-background-elevated rounded h-6 w-48" />
+          <div className="bg-background-elevated rounded" style={{ height: 380 }} />
         </div>
       </div>
     )
@@ -449,7 +449,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   // ---- Empty state (no sector data at all) ----
   if (chartData.length === 0) {
     return (
-      <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
+      <div className={cn('bg-background-elevated rounded-lg p-4', className)}>
         <p className="text-base font-bold text-text-primary mb-2">
           {t('charts.trendTitle')}
         </p>
@@ -489,7 +489,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   )
 
   return (
-    <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
+    <div className={cn('bg-background-elevated rounded-lg p-4', className)}>
       {/* ---- Header ---- */}
       <div className="flex items-start justify-between mb-3 gap-2">
         <div>
@@ -504,7 +504,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
           {/* Data source badge */}
           {isLive ? (
             <span className="flex items-center gap-1 text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block animate-pulse" aria-hidden="true" />
               Live data
             </span>
           ) : usingFallback ? (
@@ -522,10 +522,10 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
             onClick={handleDownload}
             title={`Download CSV (${minYear}–${maxYear})`}
             aria-label="Download sector risk trend data as CSV"
-            className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-muted/60 transition-colors"
+            className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/60 transition-colors"
             disabled={visibleLines.length === 0}
           >
-            <DownloadIcon className="w-3.5 h-3.5" />
+            <DownloadIcon className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>

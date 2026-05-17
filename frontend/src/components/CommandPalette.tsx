@@ -320,7 +320,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               onSelect={() => go(`/explore?tab=vendors&search=${encodeURIComponent(debouncedQuery.trim().toUpperCase())}`)}
               className="gap-2"
             >
-              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" aria-hidden="true" />
               <span className="text-accent font-medium">{t('cmdPalette.searchByRfc')}</span>
               <span className="font-mono text-xs text-text-primary shrink-0">{debouncedQuery.trim().toUpperCase()}</span>
             </CommandItem>
@@ -341,7 +341,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       onSelect={() => go(`/vendors/${v.id}`)}
                       className="gap-2"
                     >
-                      <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                      <Users className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                       <span className="truncate">{formatVendorName(v.name)}</span>
                       {v.rfc && <span className="text-xs font-mono text-text-muted ml-1 shrink-0">{v.rfc}</span>}
                       <VendorBadge isEfos={v.is_efos} isSfp={v.is_sfp_sanctioned} />
@@ -385,7 +385,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     onSelect={() => go(`/contracts?search=${encodeURIComponent(c.title)}`)}
                     className="gap-2"
                   >
-                    <FileText className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                    <FileText className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                     <span className="truncate flex-1">{c.title}</span>
                     {c.year && <span className="text-xs text-text-muted shrink-0">{c.year}</span>}
                     {c.risk_level && <RiskPill level={c.risk_level} />}
@@ -403,7 +403,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     onSelect={() => go(`/cases/${cs.slug}`)}
                     className="gap-2"
                   >
-                    <BookOpen className="h-3.5 w-3.5 text-text-muted shrink-0" />
+                    <BookOpen className="h-3.5 w-3.5 text-text-muted shrink-0" aria-hidden="true" />
                     <span className="truncate flex-1">{cs.title}</span>
                     {cs.sector && <span className="text-xs text-text-muted shrink-0">{cs.sector}</span>}
                     {cs.year && <span className="text-xs text-text-muted shrink-0">{cs.year}</span>}

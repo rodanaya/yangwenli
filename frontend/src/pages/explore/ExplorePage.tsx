@@ -152,7 +152,7 @@ export function ExplorePage() {
 
       {/* Crossfilter orientation */}
       <div className="flex items-center gap-2 text-xs text-text-muted border-b border-border/20 pb-4">
-        <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+        <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" aria-hidden="true" />
         <span>{t('page.crossfilterHint')}</span>
         {hasFilters && (
           <button
@@ -195,7 +195,7 @@ export function ExplorePage() {
             }}
           >
             <div className="flex items-center gap-2 shrink-0">
-              <TrendingUp className="h-3.5 w-3.5" style={{ color: activeSectorMeta.color }} />
+              <TrendingUp className="h-3.5 w-3.5" style={{ color: activeSectorMeta.color }} aria-hidden="true" />
               <span className="text-sm font-semibold" style={{ color: activeSectorMeta.color }}>
                 {ts(activeSectorMeta.code)}
               </span>
@@ -216,7 +216,7 @@ export function ExplorePage() {
               </div>
               <div>
                 <span className="text-text-muted">{t('page.sectorIntel.highPlusRisk')}</span>
-                <span className="ml-1.5 font-mono font-semibold text-orange-400">
+                <span className="ml-1.5 font-mono font-semibold text-risk-high">
                   {riskRate.toFixed(1)}%
                 </span>
               </div>
@@ -265,7 +265,7 @@ export function ExplorePage() {
               )}
               aria-pressed={filters.entityType === 'vendor'}
             >
-              <Users className="h-3 w-3" />
+              <Users className="h-3 w-3" aria-hidden="true" />
               {t('page.entityToggle.vendors')}
             </button>
             <button
@@ -303,6 +303,7 @@ export function ExplorePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <input
             type="text"
+            aria-label={t('page.searchAriaLabel', { defaultValue: 'Search vendors, institutions, or categories' })}
             value={filters.searchText}
             onChange={handleSearchChange}
             placeholder={t('page.searchPlaceholder', { entityType: filters.entityType })}

@@ -266,7 +266,7 @@ export function RiskFactorBadge({ factor, zScore, showExplainer = false, classNa
         'inline-flex items-center gap-1 text-xs font-mono rounded px-1.5 py-0.5 border cursor-help transition-colors',
         isPositive && 'bg-risk-critical/10 border-risk-critical/30 text-risk-critical hover:bg-risk-critical/20',
         isNegative && 'bg-risk-low/10 border-risk-low/30 text-risk-low hover:bg-risk-low/20',
-        !isPositive && !isNegative && 'bg-muted/30 border-border text-text-muted hover:bg-muted/50',
+        !isPositive && !isNegative && 'bg-background-elevated/30 border-border text-text-muted hover:bg-background-elevated/50',
         className
       )}
       aria-label={`${explanation.title}: coefficient ${coeffStr}`}
@@ -325,7 +325,7 @@ export function RiskFactorCard({ factor, trigger, className }: RiskFactorCardPro
         onClick={() => setOpen(!open)}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen(!open)}
         aria-expanded={open}
-        aria-haspopup="true"
+        aria-haspopup="dialog"
         className="cursor-pointer"
       >
         {trigger ?? (
@@ -383,7 +383,7 @@ export function RiskFactorCard({ factor, trigger, className }: RiskFactorCardPro
 
             {/* Citation */}
             <div className="flex items-start gap-1.5 pt-1 border-t border-border/50">
-              <BookOpen size={11} className="text-text-muted mt-0.5 shrink-0" />
+              <BookOpen size={11} className="text-text-muted mt-0.5 shrink-0" aria-hidden="true" />
               <p className="text-xs text-text-muted italic">{explanation.citation}</p>
             </div>
           </div>
@@ -414,13 +414,13 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
 
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="w-full text-xs border-collapse">
+      <table className="w-full text-xs border-collapse" aria-label="Risk factor coefficients">
         <thead>
           <tr className="border-b border-border text-text-muted">
-            <th className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Factor</th>
-            <th className="text-right py-2 pr-4 font-semibold uppercase tracking-wider w-24">Coefficient</th>
-            <th className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Evidence Strength</th>
-            <th className="text-left py-2 font-semibold uppercase tracking-wider hidden md:table-cell">Key Source</th>
+            <th scope="col" className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Factor</th>
+            <th scope="col" className="text-right py-2 pr-4 font-semibold uppercase tracking-wider w-24">Coefficient</th>
+            <th scope="col" className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Evidence Strength</th>
+            <th scope="col" className="text-left py-2 font-semibold uppercase tracking-wider hidden md:table-cell">Key Source</th>
           </tr>
         </thead>
         <tbody>
@@ -433,7 +433,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
             const coeffStr = isPositive ? `+${coeff.toFixed(3)}` : coeff.toFixed(3)
 
             return (
-              <tr key={key} className="border-b border-border/40 hover:bg-muted/20 transition-colors group">
+              <tr key={key} className="border-b border-border/40 hover:bg-background-elevated/20 transition-colors group">
                 <td className="py-2 pr-4">
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>

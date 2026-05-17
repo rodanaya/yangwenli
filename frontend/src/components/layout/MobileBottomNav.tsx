@@ -41,13 +41,13 @@ export function MobileBottomNav({ onMenuClick }: Props) {
             className={cn(
               'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium transition-colors',
               isActive
-                ? 'text-[color:var(--color-accent)]'
+                ? 'text-accent'
                 : 'text-text-muted active:text-text-primary'
             )}
             aria-current={isActive ? 'page' : undefined}
           >
             <Icon
-              className={cn('h-5 w-5', isActive ? 'text-[color:var(--color-accent)]' : 'text-text-muted')}
+              className={cn('h-5 w-5', isActive ? 'text-accent' : 'text-text-muted')}
               aria-hidden="true"
             />
             <span className="truncate max-w-[56px] text-center">{label}</span>

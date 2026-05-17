@@ -42,6 +42,7 @@ import { ConcentricConstellation, classifyRole } from '@/components/thread/Conce
 import { InstitutionalRibbon } from '@/components/thread/InstitutionalRibbon'
 import { MoneyStaircase } from '@/components/thread/MoneyStaircase'
 import { ChapterVerdict } from '@/components/thread/ChapterVerdict'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -168,9 +169,10 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
 // ─── Chapter 3: The Pattern ─────────────────────────────────────────────────
 
-function ChapterPattern({ waterfall, ariaPattern, t }: {
+function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
   waterfall: Array<{ feature: string; contribution: number; z_score: number; label_en: string }>
   ariaPattern: string | null
+  isLoading?: boolean
   t: TFunction
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -206,7 +208,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
           className="rounded-sm border px-4 py-2.5 mb-5 flex items-center gap-3 flex-wrap"
           style={{ backgroundColor: meta.bg, borderColor: meta.color + '44' }}
         >
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} />
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} aria-hidden="true" />
           <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
           <span className="text-sm font-bold text-text-primary">{meta.label}</span>
           <span className="text-text-muted">·</span>
@@ -220,21 +222,30 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
           and contribution value. Reader sees instantly which "lab values"
           are out of normal range vs within the population. */}
       <div ref={ref}>
-        <PatternDiagnostic
-          features={sortedSix}
-          inView={inView}
-          raisesLabel={t('pattern.raisesRisk', { defaultValue: 'raises' })}
-          lowersLabel={t('pattern.lowersRisk', { defaultValue: 'lowers' })}
-          referenceLabel={t('pattern.sectorReference', { defaultValue: 'sector p25–p75' })}
-          diagnosisLabel={t('pattern.diagnosis', {
-            defaultValue: '{{anomalous}} of {{total}} lab values outside sector reference range',
-            anomalous: sortedSix.filter((f) => Math.abs(f.z_score) >= 1).length,
-            total: sortedSix.length,
-          })}
-        />
+        {isLoading && safeWaterfall.length === 0 ? (
+          <div className="space-y-2" role="status" aria-live="polite" aria-label={t('pattern.loadingLabel', { defaultValue: 'Loading diagnostic features' })}>
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        ) : (
+          <PatternDiagnostic
+            features={sortedSix}
+            inView={inView}
+            raisesLabel={t('pattern.raisesRisk', { defaultValue: 'raises' })}
+            lowersLabel={t('pattern.lowersRisk', { defaultValue: 'lowers' })}
+            referenceLabel={t('pattern.sectorReference', { defaultValue: 'sector p25–p75' })}
+            diagnosisLabel={t('pattern.diagnosis', {
+              defaultValue: '{{anomalous}} of {{total}} lab values outside sector reference range',
+              anomalous: sortedSix.filter((f) => Math.abs(f.z_score) >= 1).length,
+              total: sortedSix.length,
+            })}
+          />
+        )}
       </div>
 
-      {safeWaterfall.length === 0 && (
+      {!isLoading && safeWaterfall.length === 0 && (
         <div className="text-text-secondary text-sm italic">{t('pattern.noData')}</div>
       )}
 
@@ -305,7 +316,12 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
       {/* The constellation — always renders, even with 0 co-bidders */}
       <div className="bg-background-card border border-border rounded-sm p-4 mb-3">
         {coBidders === null ? (
-          <div className="h-[340px] rounded bg-background-elevated animate-pulse" />
+          <div
+            className="h-[340px] rounded bg-background-elevated animate-pulse"
+            role="status"
+            aria-live="polite"
+            aria-label={t('network.loadingConstellation', { defaultValue: 'Loading network constellation' })}
+          />
         ) : (
           <ConcentricConstellation
             subjectName={vendor.name}
@@ -318,6 +334,23 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
           />
         )}
       </div>
+
+      {/* Empty-state note — coBidders is loaded but contains zero entries.
+          A blank space here reads as "data missing"; this clarifies it's
+          an editorial finding (the vendor never shared a procedure). */}
+      {coBidders !== null && coBidders.length === 0 && (
+        <div className="rounded-sm border border-border bg-background-card/40 px-4 py-3 mb-3">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
+            {t('network.noCoBiddersLabel', { defaultValue: 'No co-bidders on record' })}
+          </p>
+          <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
+            {t('network.noCoBiddersBody', {
+              defaultValue:
+                'This vendor has not participated in a single procedure alongside another bidder in the COMPRANET record. Either every contract was awarded by direct adjudication, or every competitive procedure had only one valid bidder. Both are themselves signals.',
+            })}
+          </p>
+        </div>
+      )}
 
       {/* Topology read — plain-language interpretation */}
       <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
@@ -375,9 +408,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
         to={`/network?vendor=${vendorId}`}
         className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors mt-4"
       >
-        <GitBranch className="w-3.5 h-3.5" />
+        <GitBranch className="w-3.5 h-3.5" aria-hidden="true" />
         {t('network.openNetworkGraph')}
-        <ExternalLink className="w-3 h-3" />
+        <ExternalLink className="w-3 h-3" aria-hidden="true" />
       </Link>
     </ChapterShell>
   )
@@ -528,23 +561,35 @@ function ChapterMoney({ timeline, t }: {
  * heading instead of dominating the layout.
  */
 function RedThreadLine({ progress }: { progress: number }) {
+  // Clamp once for both the fill height and the tip-dot position so the
+  // dot can never escape the line at the bottom of the page.
+  const pct = Math.max(0, Math.min(100, progress * 100))
   return (
     <div
+      role="progressbar"
+      aria-label="Investigation progress"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
       className="fixed left-0 top-0 bottom-0 w-[3px] pointer-events-none z-50"
       style={{ background: 'rgba(220,38,38,0.08)' }}
     >
       <motion.div
         className="absolute top-0 left-0 w-full origin-top"
-        style={{ height: `${Math.min(100, progress * 100)}%`, background: 'linear-gradient(to bottom, #dc2626, #991b1b88)' }}
+        style={{
+          height: `${pct}%`,
+          background: 'linear-gradient(to bottom, var(--color-risk-critical), rgba(153,27,27,0.55))',
+        }}
         transition={{ ease: 'linear', duration: 0 }}
       />
       {/* Glowing pulse dot at tip */}
       <motion.div
+        aria-hidden="true"
         className="absolute left-0 w-3 h-3 rounded-full -translate-x-[5px]"
         style={{
-          top: `${Math.min(99, progress * 100)}%`,
-          background: '#dc2626',
-          boxShadow: '0 0 8px 2px #dc262688',
+          top: `${Math.min(99, pct)}%`,
+          background: 'var(--color-risk-critical)',
+          boxShadow: '0 0 8px 2px rgba(220,38,38,0.53)',
         }}
       />
     </div>
@@ -554,30 +599,59 @@ function RedThreadLine({ progress }: { progress: number }) {
 // ─── Chapter Navigation Dots ────────────────────────────────────────────────
 
 function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id: string; label: string; icon: React.ElementType }> }) {
+  // Smooth scroll + focus management for keyboard nav. Arrow keys cycle
+  // through chapter anchors so screen-reader / keyboard users can move
+  // through the investigation without a mouse.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLAnchorElement>, idx: number) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      e.preventDefault()
+      const next = chapters[(idx + 1) % chapters.length]
+      document.getElementById(`chapter-nav-${next.id}`)?.focus()
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault()
+      const prev = chapters[(idx - 1 + chapters.length) % chapters.length]
+      document.getElementById(`chapter-nav-${prev.id}`)?.focus()
+    }
+  }
+
   return (
-    <div className="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
-      {chapters.map((ch, idx) => (
-        <a
-          key={ch.id}
-          href={`#chapter-${ch.id}`}
-          className="group flex items-center gap-2 justify-end"
-          title={ch.label}
-        >
-          <span className={cn(
-            'text-xs opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hidden md:block',
-            active === idx && 'opacity-100 text-text-primary'
-          )}>
-            {ch.label}
-          </span>
-          <div className={cn(
-            'w-2 h-2 rounded-full transition-all duration-300',
-            active === idx
-              ? 'bg-[#dc2626] scale-125 shadow-[0_0_6px_2px_#dc262666]'
-              : 'bg-background-elevated hover:bg-background'
-          )} />
-        </a>
-      ))}
-    </div>
+    <nav
+      aria-label="Investigation chapters"
+      className="fixed right-5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3"
+    >
+      {chapters.map((ch, idx) => {
+        const isActive = active === idx
+        return (
+          <a
+            key={ch.id}
+            id={`chapter-nav-${ch.id}`}
+            href={`#chapter-${ch.id}`}
+            aria-label={`Chapter ${idx + 1}: ${ch.label}`}
+            aria-current={isActive ? 'true' : undefined}
+            onKeyDown={(e) => onKeyDown(e, idx)}
+            className="group flex items-center gap-2 justify-end focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-risk-critical)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] rounded-full"
+          >
+            <span className={cn(
+              'text-xs transition-opacity text-text-muted hidden md:block',
+              isActive
+                ? 'opacity-100 text-text-primary font-medium'
+                : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+            )}>
+              {ch.label}
+            </span>
+            <span
+              aria-hidden="true"
+              className={cn(
+                'rounded-full transition-all duration-300',
+                isActive
+                  ? 'w-2.5 h-2.5 bg-[var(--color-risk-critical)] shadow-[0_0_8px_2px_rgba(220,38,38,0.5)] ring-2 ring-[var(--color-risk-critical)]/30'
+                  : 'w-2 h-2 bg-background-elevated group-hover:bg-text-muted'
+              )}
+            />
+          </a>
+        )
+      })}
+    </nav>
   )
 }
 
@@ -658,7 +732,7 @@ export default function RedThread() {
     ...COMMON_QUERY_OPTS,
   })
 
-  const { data: waterfall } = useQuery({
+  const { data: waterfall, isLoading: waterfallLoading } = useQuery({
     queryKey: ['vendor-waterfall', id],
     queryFn: () => vendorApi.getRiskWaterfall(id),
     enabled: !!id && !isNaN(id),
@@ -730,7 +804,7 @@ export default function RedThread() {
   if (vendorError && vendorErrorStatus === 404) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
-        <AlertTriangle className="h-8 w-8 text-text-muted" />
+        <AlertTriangle className="h-8 w-8 text-text-muted" aria-hidden="true" />
         <div>
           <p className="text-text-primary font-medium mb-1">
             {t('errors.vendorNotFound')}
@@ -739,7 +813,7 @@ export default function RedThread() {
             {t('errors.vendorNotFoundHint', { defaultValue: 'Vendor #' + id + ' is not in the procurement database. It may have been deduplicated, or the ID is wrong.' })}
           </p>
         </div>
-        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
@@ -752,7 +826,7 @@ export default function RedThread() {
   if (vendorError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
-        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <AlertTriangle className="h-8 w-8 text-risk-critical" aria-hidden="true" />
         <div>
           <p className="text-text-primary font-medium mb-1">{t('errors.loadFailed')}</p>
           <p className="text-text-muted text-sm">
@@ -766,7 +840,7 @@ export default function RedThread() {
           >
             {t('errors.retry', { defaultValue: 'Retry' })}
           </button>
-          <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+          <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
             {t('errors.goBack')}
           </button>
         </div>
@@ -780,7 +854,7 @@ export default function RedThread() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
         <p className="text-text-muted">{t('errors.vendorNotFound')}</p>
-        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-risk-critical text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
@@ -799,7 +873,7 @@ export default function RedThread() {
           onClick={() => navigate('/aria')}
           className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm flex-shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t('nav.back')}
         </button>
         <div className="hidden sm:flex items-center gap-3 min-w-0">
@@ -867,6 +941,7 @@ export default function RedThread() {
         <ChapterPattern
           waterfall={waterfall ?? []}
           ariaPattern={aria?.primary_pattern ?? null}
+          isLoading={waterfallLoading}
           t={t}
         />
 

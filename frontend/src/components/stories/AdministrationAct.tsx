@@ -30,19 +30,19 @@ interface AdministrationActProps {
 const PARTY_COLORS: Record<PartyKey, { border: string; badge: string; badgeText: string; accent: string }> = {
   PAN: {
     border: 'var(--color-sector-educacion)',
-    badge: 'bg-blue-600',
-    badgeText: 'text-text-primary',
+    badge: 'bg-sector-educacion',
+    badgeText: 'text-white',
     accent: 'var(--color-sector-educacion)',
   },
   PRI: {
     border: 'var(--color-sector-hacienda)',
-    badge: 'bg-green-600',
-    badgeText: 'text-text-primary',
+    badge: 'bg-sector-hacienda',
+    badgeText: 'text-white',
     accent: 'var(--color-sector-hacienda)',
   },
   MORENA: {
     border: 'var(--color-sector-salud)',
-    badge: 'bg-red-700',
+    badge: 'bg-risk-critical',
     badgeText: 'text-text-primary',
     accent: 'var(--color-sector-salud)',
   },
@@ -168,7 +168,7 @@ export default function AdministrationAct({
         {stats.notableCase && (
           <div className="px-5 pb-3">
             <div className="flex items-center gap-2 text-xs text-text-muted">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-risk-high" aria-hidden="true" />
               <span>{t('actCard.notableCase')} <span className="text-text-secondary font-medium">{stats.notableCase}</span></span>
               {stats.notableCaseValue && (
                 <span className="text-risk-critical font-bold">{stats.notableCaseValue}</span>

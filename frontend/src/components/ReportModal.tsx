@@ -146,7 +146,7 @@ function openVendorPrintWindow(
 
   <div class="section">
     <h2>${labels.riskIndicators}</h2>
-    <svg width="380" height="${bars.length * 40 + 8}" aria-label="Risk metrics chart">
+    <svg width="380" height="${bars.length * 40 + 8}" role="img" aria-label="Risk metrics chart">
       <g transform="translate(0, 4)">
         ${barSvg}
       </g>

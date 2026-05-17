@@ -56,6 +56,9 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
       className="rounded-sm border border-border/60 overflow-hidden bg-background-card relative cursor-pointer hover:border-accent/40 transition-colors group"
       style={{ borderLeftWidth: 3, borderLeftColor: dossier.color }}
       onClick={() => onOpen(dossier.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(dossier.id) } }}
     >
       <div className="p-4 bg-background-card">
         <div className="flex items-start justify-between gap-2">
@@ -82,7 +85,7 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
               className="inline-flex items-center justify-center h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-accent rounded"
               onClick={(e) => e.stopPropagation()}
             >
-              <Download className="h-3 w-3" />
+              <Download className="h-3 w-3" aria-hidden="true" />
             </a>
             <Button
               variant="ghost"
@@ -103,7 +106,7 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
         {/* #89 — Risk summary banner: shown for medium/high/critical scores */}
         {hasRisk && dossier.highest_risk_name && (
           <div className={`flex items-center gap-1.5 mt-2 px-2 py-1 rounded border ${getRiskBannerClass(dossier.highest_risk_score)}`}>
-            <AlertTriangle className={`h-3 w-3 shrink-0 ${getRiskColor(dossier.highest_risk_score)}`} />
+            <AlertTriangle className={`h-3 w-3 shrink-0 ${getRiskColor(dossier.highest_risk_score)}`} aria-hidden="true" />
             <span className={`text-[10px] font-bold uppercase tracking-wide shrink-0 ${getRiskColor(dossier.highest_risk_score)}`}>
               {getRiskLabel(dossier.highest_risk_score)}
             </span>
@@ -189,7 +192,7 @@ export function DossierItemCard({ item, onRemove }: DossierItemCardProps) {
             }}
             aria-label={`View contracts for ${item.item_name}`}
           >
-            <ExternalLink className="h-3 w-3 mr-1" />
+            <ExternalLink className="h-3 w-3 mr-1" aria-hidden="true" />
             Contracts
           </Button>
         )}

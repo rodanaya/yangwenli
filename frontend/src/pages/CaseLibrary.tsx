@@ -128,8 +128,8 @@ function FilterPill({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const JUSTICE_GROUPS = [
-  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: '#ef4444', labelEs: 'Impunidad', labelEn: 'Impunity' },
-  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: '#f59e0b', labelEs: 'Investigación', labelEn: 'Investigation' },
+  { key: 'impunity', statuses: ['impunity', 'unresolved'], color: 'var(--color-risk-critical)', labelEs: 'Impunidad', labelEn: 'Impunity' },
+  { key: 'investigation', statuses: ['investigation', 'ongoing'], color: 'var(--color-risk-high)', labelEs: 'Investigación', labelEn: 'Investigation' },
   { key: 'prosecuted', statuses: ['prosecuted'], color: '#3b82f6', labelEs: 'Procesados', labelEn: 'Prosecuted' },
   { key: 'convicted', statuses: ['convicted'], color: '#22d3ee', labelEs: 'Condenados', labelEn: 'Convicted' },
   { key: 'other', statuses: ['acquitted', 'dismissed', 'settled'], color: '#71717a', labelEs: 'Otros', labelEn: 'Other' },
@@ -424,7 +424,7 @@ function CaseRow({
 
         {/* Right: chevron */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
         </div>
       </div>
     </button>
@@ -602,7 +602,7 @@ export default function CaseLibrary() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·CA</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·CA</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               {i18n.language === 'es' ? 'Casos documentados · biblioteca' : 'Documented cases · library'}
@@ -676,7 +676,7 @@ export default function CaseLibrary() {
                     fontStyle: 'italic',
                     fontWeight: 700,
                     fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                    color: '#22d3ee',
+                    color: 'var(--color-oecd)',
                   }}
                 >
                   {prosecutedCount}
@@ -717,7 +717,7 @@ export default function CaseLibrary() {
             tin avoids the misimpression that "Cases" = our work. */}
         <div className="mb-5 px-3 py-2.5 rounded-sm border border-border bg-background-card">
           <p className="text-[11px] leading-relaxed text-text-secondary max-w-3xl">
-            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-[color:var(--color-accent)] mr-2">
+            <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-accent mr-2">
               {i18n.language === 'es' ? 'Corpus de entrenamiento' : 'Training corpus'}
             </span>
             {i18n.language === 'es'
@@ -735,13 +735,14 @@ export default function CaseLibrary() {
           {/* Search */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
               <input
                 type="text"
+                aria-label={t('filters.searchAriaLabel', 'Search corruption cases and vendors')}
                 value={search ?? ''}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('filters.search')}
-                className="w-full pl-9 pr-8 py-2 text-[12px] bg-transparent focus:outline-none focus:border-amber-500/40 transition-colors"
+                className="w-full pl-9 pr-8 py-2 text-[12px] bg-transparent focus:outline-none focus:border-risk-high/40 transition-colors"
                 style={{
                   fontFamily: 'var(--font-family-mono)',
                   color: '#e5e5e3',
@@ -873,7 +874,7 @@ export default function CaseLibrary() {
               borderLeft: '3px solid #ef4444',
             }}
           >
-            <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-5 w-5 text-risk-critical mt-0.5 flex-shrink-0" aria-hidden="true" />
             <div>
               <p
                 className="text-[13px] font-semibold text-risk-critical mb-1"
@@ -1092,7 +1093,7 @@ export default function CaseLibrary() {
                   ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, investigaciones periodísticas'
                   : 'Judicial records, ASF audits, SAT EFOS registry, journalism investigations'}
               </span>
-              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" />
+              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" aria-hidden="true" />
             </p>
           </>
         )}

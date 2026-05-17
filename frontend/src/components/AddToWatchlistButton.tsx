@@ -67,7 +67,7 @@ export function AddToWatchlistButton({
   if (success) {
     return (
       <Button variant="outline" size={size} disabled className={className}>
-        <CheckCircle className="h-4 w-4 mr-1.5 text-risk-low" />
+        <CheckCircle className="h-4 w-4 mr-1.5 text-risk-low" aria-hidden="true" />
         {t('added', { defaultValue: 'Added' })}
       </Button>
     )
@@ -81,7 +81,7 @@ export function AddToWatchlistButton({
         onClick={() => setShowForm(true)}
         className={className}
       >
-        <Eye className="h-4 w-4 mr-1.5" />
+        <Eye className="h-4 w-4 mr-1.5" aria-hidden="true" />
         {t('addToWatchlist', { defaultValue: 'Add to Watchlist' })}
       </Button>
     )
@@ -90,7 +90,8 @@ export function AddToWatchlistButton({
   return (
     <div className="flex items-center gap-2 rounded-md border border-accent/30 bg-accent/[0.03] p-2">
       <input
-        className="flex-1 min-w-0 text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
+        className="flex-1 min-w-0 text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted/50"
+        aria-label={`Reason for tracking ${itemName}`}
         placeholder={`Why track ${itemName}?`}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
@@ -99,6 +100,7 @@ export function AddToWatchlistButton({
       />
       <select
         className="text-xs bg-background-elevated border border-border/50 rounded px-1.5 py-1.5 text-text-secondary"
+        aria-label="Priority"
         value={priority}
         onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
       >

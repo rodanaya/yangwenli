@@ -89,12 +89,13 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   // If avg score is "low" but ≥5% of contracts are high+critical, show at least medium
   // so the badge doesn't mislead readers skimming sector cards.
   const total = sector.total_contracts || 1
+  const highCritPct = total > 0 ? (highPlusCritical / total) * 100 : 0
   const effectiveLevel = (riskLevel === 'low' && highPlusCritical / total >= 0.05) ? 'medium' as const : riskLevel
   const daPct = sector.direct_award_pct ?? 0
   const exceedsOECD = daPct > 25
   const sbPct = sector.single_bid_pct ?? 0
   // Bible §3.10: no green for low risk. Use zinc neutral for "clean".
-  const sbDotColor = sbPct > 25 ? 'bg-red-500' : sbPct >= 15 ? 'bg-amber-500' : 'bg-zinc-400'
+  const sbDotColor = sbPct > 25 ? 'bg-risk-critical' : sbPct >= 15 ? 'bg-risk-high' : 'bg-zinc-400'
 
   return (
     <Link
@@ -123,12 +124,20 @@ function SectorCard({ sector, rank }: SectorCardProps) {
               {t(sector.sector_code)}
             </h2>
           </div>
-          <div className="flex items-center gap-1.5">
-            {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
-              OCDE {exceedsOECD ? '\u2717' : '\u2713'}
-            </span>
-            <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
+          <div className="flex flex-col items-end gap-0.5">
+            <div className="flex items-center gap-1.5">
+              {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
+              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-risk-critical/10 text-risk-critical border border-risk-critical/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
+                OCDE {exceedsOECD ? '✗' : '✓'}
+              </span>
+              <RiskLevelPill level={effectiveLevel} score={sector.avg_risk_score} />
+            </div>
+            {/* High+critical share gives numeric context below the badge */}
+            {highCritPct > 0 && (
+              <span className="text-[9px] font-mono tabular-nums text-text-muted">
+                {highCritPct.toFixed(0)}% H+C
+              </span>
+            )}
           </div>
         </div>
 
@@ -284,7 +293,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
             {/* Sector header row */}
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-[color:var(--color-background-elevated)] transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-background-elevated transition-colors text-left"
               style={{ borderLeft: `3px solid ${color}` }}
               onClick={() => toggle(sectorCode)}
               aria-expanded={isOpen}
@@ -312,15 +321,15 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
             {isOpen && cats.map((cat, idx) => {
               const riskLevel = getRiskLevelFromScore(cat.avg_risk)
               const sbDotClass =
-                (cat.single_bid_pct ?? 0) > 25 ? 'bg-red-500'
-                : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-amber-500'
+                (cat.single_bid_pct ?? 0) > 25 ? 'bg-risk-critical'
+                : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-risk-high'
                 : 'bg-zinc-400'
               const barWidth = maxSpend > 0 ? Math.min(100, (cat.total_value / maxSpend) * 100) : 0
 
               return (
                 <div
                   key={cat.category_id}
-                  className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                  className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                   style={{ borderLeft: `3px solid ${color}33` }}
                 >
                   <span className="flex-shrink-0 w-5 font-mono text-[10px] text-text-muted tabular-nums">
@@ -355,7 +364,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
                     {(cat.avg_risk * 100).toFixed(1)}%
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-1 w-10 justify-end">
-                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} aria-hidden="true" />
                     <span className="font-mono text-[10px] tabular-nums text-text-secondary">
                       {cat.direct_award_pct.toFixed(0)}%
                     </span>
@@ -511,7 +520,7 @@ export function Sectors() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·II</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·II</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
@@ -582,7 +591,7 @@ export function Sectors() {
       </header>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
 
         {/* ── WHO / WHAT axis toggle ─────────────────────────────────
             Sectors = WHO bought (12 agency taxonomy).
@@ -595,7 +604,7 @@ export function Sectors() {
             className={cn(
               'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
               view === 'sectors'
-                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
             )}
             aria-pressed={view === 'sectors'}
@@ -610,7 +619,7 @@ export function Sectors() {
             className={cn(
               'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
               view === 'categories'
-                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
             )}
             aria-pressed={view === 'categories'}
@@ -751,7 +760,7 @@ export function Sectors() {
                               className={cn(
                                 'px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
                                 catSortKey === key
-                                  ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)] border-transparent'
+                                  ? 'bg-text-primary text-background border-transparent'
                                   : 'text-text-muted border-border hover:text-text-secondary',
                               )}
                               aria-pressed={catSortKey === key}
@@ -771,7 +780,7 @@ export function Sectors() {
                             className={cn(
                               'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                               cview === v
-                                ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                                ? 'bg-text-primary text-background'
                                 : 'text-text-muted hover:text-text-secondary',
                             )}
                             aria-pressed={cview === v}
@@ -859,7 +868,7 @@ export function Sectors() {
                           const sbPct = cat.single_bid_pct ?? 0
                           const sbDotClass =
                             sbPct > 25
-                              ? 'bg-red-500'
+                              ? 'bg-risk-critical'
                               : sbPct >= 15
                                 ? 'bg-amber-500'
                                 : 'bg-zinc-400'
@@ -875,7 +884,7 @@ export function Sectors() {
                                 />
                               )}
                               <div
-                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                                 style={{ borderLeft: `3px solid ${sectorColor}` }}
                               >
                                 <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
@@ -1035,7 +1044,7 @@ export function Sectors() {
                 ]}
               />
               {isAgricultureArtifact && (
-                <div className="mb-8 -mt-4 pl-5 pr-4 py-3 rounded-r-sm border-l-4 border-[color:var(--color-border-hover)] bg-[color:var(--color-background-card)]">
+                <div className="mb-8 -mt-4 pl-5 pr-4 py-3 rounded-r-sm border-l-4 border-border-hover bg-background-card">
                   <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                     {i18n.language === 'es' ? 'Advertencia de artefacto' : 'Artifact caveat'}
                   </p>
@@ -1102,7 +1111,7 @@ export function Sectors() {
                       className={cn(
                         'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                         sectorMap === v
-                          ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                          ? 'bg-text-primary text-background'
                           : 'text-text-muted hover:text-text-secondary',
                       )}
                       aria-pressed={sectorMap === v}
@@ -1131,8 +1140,8 @@ export function Sectors() {
                   <div className="flex items-center gap-4 mb-5">
                     <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
                       <span
-                        className="inline-block h-2.5 w-4 rounded-sm border border-amber-500"
-                        style={{ background: 'rgba(245,158,11,0.15)' }}
+                        className="inline-block h-2.5 w-4 rounded-sm border border-risk-high"
+                        style={{ background: 'var(--color-risk-high-muted, rgba(245,158,11,0.15))' }}
                         aria-hidden="true"
                       />
                       {t('treemap.oecdViolatorNote')}
@@ -1229,15 +1238,15 @@ export function Sectors() {
                 />
                 {i18n.language === 'es' ? 'Zona de prioridad: riesgo ≥ 20% y gasto ≥ 1B' : 'Priority zone: risk ≥ 20% and spend ≥ 1B'}
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#22d3ee] uppercase tracking-[0.12em]">
-                <span className="inline-block h-px w-6 border-t border-dashed border-[#22d3ee]" aria-hidden="true" />
+              <div className="flex items-center gap-1.5 text-[10px] font-mono text-oecd uppercase tracking-[0.12em]">
+                <span className="inline-block h-px w-6 border-t border-dashed border-oecd" aria-hidden="true" />
                 {i18n.language === 'es' ? 'OCDE 25%' : 'OECD 25%'}
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
                 <span className="inline-flex items-center gap-0.5" aria-hidden="true">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-text-muted opacity-40" />
-                  <span className="inline-block h-2 w-2 rounded-full bg-text-muted opacity-40" />
-                  <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" />
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
+                  <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
                 </span>
                 {i18n.language === 'es' ? 'Tamaño = contratos · Símbolo = sector' : 'Size = contracts · Symbol = sector'}
               </div>
@@ -1266,7 +1275,7 @@ export function Sectors() {
         {error && (
           <div
             role="alert"
-            className="rounded-sm border border-red-500/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
+            className="rounded-sm border border-risk-critical/30 bg-risk-critical/10 p-6 text-center text-sm text-risk-critical"
           >
             {t('page.failedToLoad')}
             <button
@@ -1319,7 +1328,7 @@ export function Sectors() {
           </p>
         )}
         </>)}
-      </main>
+      </div>
     </div>
   )
 }

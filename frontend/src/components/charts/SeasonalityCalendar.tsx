@@ -97,7 +97,7 @@ export function SeasonalityCalendar() {
             'px-3 py-1 rounded-md text-xs font-mono border transition-colors',
             metric === 'risk'
               ? 'bg-accent/20 text-accent border-accent/40'
-              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-card-hover'
+              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-background-elevated'
           )}
           aria-pressed={metric === 'risk'}
         >
@@ -109,7 +109,7 @@ export function SeasonalityCalendar() {
             'px-3 py-1 rounded-md text-xs font-mono border transition-colors',
             metric === 'amount'
               ? 'bg-accent/20 text-accent border-accent/40'
-              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-card-hover'
+              : 'text-text-muted border-border/40 hover:text-text-primary hover:bg-background-elevated'
           )}
           aria-pressed={metric === 'amount'}
         >
@@ -175,18 +175,18 @@ export function SeasonalityCalendar() {
           )
         })()}
         <p className="mt-3 text-center text-xs font-mono text-text-muted">
-          <span className="text-[#f87171] font-bold">{t('months.Dec')}</span>
+          <span className="text-risk-critical font-bold">{t('months.Dec')}</span>
           {' '}+{decRiskPctHigher}% {t('seasonality.toggle_risk')} {t('seasonality.center_vsAvg')}
         </p>
       </div>
 
       {/* December annotation */}
-      <div className="flex items-start gap-2 rounded-lg border border-[#f87171]/20 bg-[#f87171]/05 px-3 py-2">
-        <span className="text-[#f87171] text-xs font-bold font-mono flex-shrink-0 mt-0.5">
+      <div className="flex items-start gap-2 rounded-lg border border-risk-critical/20 bg-risk-critical/5 px-3 py-2">
+        <span className="text-risk-critical text-xs font-bold font-mono flex-shrink-0 mt-0.5">
           DEC
         </span>
         <p className="text-[11px] text-text-secondary leading-relaxed">
-          {t('seasonality.annotation_label')} <span className="text-[#f87171] font-bold">+{decRiskPctHigher}%</span> {t('seasonality.toggle_risk')} ·{' '}
+          {t('seasonality.annotation_label')} <span className="text-risk-critical font-bold">+{decRiskPctHigher}%</span> {t('seasonality.toggle_risk')} ·{' '}
           Avg MX${decAmountM}M per contract
         </p>
       </div>
@@ -199,15 +199,15 @@ export function SeasonalityCalendar() {
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-text-muted">
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#f87171]" />
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-risk-critical" />
           {t('seasonality.legend_dec')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#f97316]" />
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-risk-high" />
           {t('seasonality.legend_adjMonths')}
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-[#3b82f6]" />
+          <span className="inline-block w-2.5 h-2.5 rounded-sm bg-sector-educacion" />
           {t('seasonality.legend_other')}
         </span>
       </div>

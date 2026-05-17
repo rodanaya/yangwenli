@@ -27,7 +27,7 @@ export function GenerateReportButton({
   return (
     <>
       <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
-        <FileText className="h-3.5 w-3.5 mr-1" />
+        <FileText className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
         {t('report.generateButton')}
       </Button>
 

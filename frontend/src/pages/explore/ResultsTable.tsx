@@ -6,6 +6,7 @@ import { vendorApi, institutionApi, dossierApi } from '@/api/client'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { RISK_COLORS, SECTORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ExternalLink,
@@ -125,7 +126,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   if (query.error) {
     return (
       <div className="py-10 text-center">
-        <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2 opacity-60" />
+        <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2 opacity-60" aria-hidden="true" />
         <p className="text-sm text-text-primary mb-1">Failed to load results</p>
         <p className="text-xs text-text-muted mb-3">
           {(query.error as Error).message || 'An unexpected error occurred.'}
@@ -134,7 +135,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           onClick={() => query.refetch()}
           className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
         >
-          <RefreshCw className="h-3 w-3" />
+          <RefreshCw className="h-3 w-3" aria-hidden="true" />
           Retry
         </button>
       </div>
@@ -170,7 +171,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           <div className="flex items-center gap-3 text-[11px] text-text-muted">
             <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(pageAvgRisk * 100).toFixed(0)}%</span></span>
             <span className="text-border/60">·</span>
-            <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
+            <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{pageHighPlus}<span className="text-text-muted font-normal">/{vendors.length}</span></span></span>
           </div>
         </div>
         {/* AI Confirmed filter chip */}
@@ -194,16 +195,16 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           </button>
         </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0">
-        <table className="w-full text-sm" role="grid">
+        <table className="w-full text-sm" role="grid" aria-label="Vendor search results">
           <thead>
             <tr>
-              <th className="data-cell-header text-left">Vendor</th>
-              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
-              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden lg:table-cell" />
-              <th className="data-cell-header text-right hidden xl:table-cell w-20">Anomaly</th>
-              <th className="data-cell-header w-16" />
+              <th className="data-cell-header text-left" scope="col">Vendor</th>
+              <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+              <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" aria-hidden="true" />
+              <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+              <SortHeader field="direct_award_pct" label="DA %" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden lg:table-cell" aria-hidden="true" />
+              <th className="data-cell-header text-right hidden xl:table-cell w-20" scope="col">Anomaly</th>
+              <th className="data-cell-header w-16" scope="col" />
             </tr>
           </thead>
           <tbody>
@@ -237,18 +238,18 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
         <div className="flex items-center gap-3 text-[11px] text-text-muted">
           <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(instPageAvgRisk * 100).toFixed(0)}%</span></span>
           <span className="text-border/60">·</span>
-          <span>High+ on page: <span className="font-mono font-semibold text-orange-400">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
+          <span>High+ on page: <span className="font-mono font-semibold text-risk-high">{instPageHighPlus}<span className="text-text-muted font-normal">/{institutions.length}</span></span></span>
         </div>
       </div>
       <div className="overflow-x-auto -mx-4 sm:mx-0">
-      <table className="w-full text-sm" role="grid">
+      <table className="w-full text-sm" role="grid" aria-label="Institution search results">
         <thead>
           <tr>
-            <th className="data-cell-header text-left">Institution</th>
-            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" />
-            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" />
-            <th className="data-cell-header w-16" />
+            <th className="data-cell-header text-left" scope="col">Institution</th>
+            <SortHeader field="total_contracts" label="Contracts" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+            <SortHeader field="total_value_mxn" label="Total Value" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right hidden md:table-cell" aria-hidden="true" />
+            <SortHeader field="avg_risk_score" label="Risk" sortField={sortField} sortOrder={sortOrder} onSort={handleSort} className="data-cell-header text-right" aria-hidden="true" />
+            <th className="data-cell-header w-16" scope="col" />
           </tr>
         </thead>
         <tbody>
@@ -315,23 +316,17 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
                 <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
                   {(score * 100).toFixed(0)}%
                 </span>
-                {(() => {
-                  const N = 14, DR = 1.75, DG = 4
-                  const pct = Math.min(score, 1)
-                  const filled = Math.max(1, Math.round(pct * N))
-                  return (
-                    <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                      {Array.from({ length: N }).map((_, k) => (
-                        <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                          fill={k < filled ? color : 'var(--color-background-elevated)'}
-                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                          strokeWidth={k < filled ? 0 : 0.5}
-                          fillOpacity={k < filled ? 0.85 : 1}
-                        />
-                      ))}
-                    </svg>
-                  )
-                })()}
+                <DotBar
+                  value={score}
+                  max={1}
+                  color={color}
+                  emptyColor="var(--color-background-elevated)"
+                  emptyStroke="var(--color-border-hover)"
+                  dots={14}
+                  dotR={1.75}
+                  dotGap={4}
+                  thresholds={[0.25, 0.40, 0.60]}
+                />
               </>
             )
           })()}
@@ -368,7 +363,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             to={`/vendors/${vendor.id}`}
             aria-label={`View ${vendor.name}`}
           >
-            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" aria-hidden="true" />
           </Link>
           <InlineDossierTrigger
             entityType="vendor"
@@ -433,7 +428,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
             to={`/institutions/${instId}`}
             aria-label={`View ${instName}`}
           >
-            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" aria-hidden="true" />
           </Link>
           <InlineDossierTrigger
             entityType="institution"
@@ -508,7 +503,7 @@ function InlineDossierTrigger({
         aria-label={`Add ${entityName} to dossier`}
         className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
       >
-        <FolderPlus className="h-3.5 w-3.5" />
+        <FolderPlus className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
 
       {open && (
@@ -545,11 +540,11 @@ function InlineDossierTrigger({
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-background-elevated/60 transition-colors disabled:opacity-60"
                   >
                     {isOk ? (
-                      <CheckCircle className="h-3 w-3 text-risk-low shrink-0" />
+                      <CheckCircle className="h-3 w-3 text-risk-low shrink-0" aria-hidden="true" />
                     ) : isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin text-accent shrink-0" />
                     ) : (
-                      <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} />
+                      <Folder className="h-3 w-3 shrink-0" style={{ color: d.color }} aria-hidden="true" />
                     )}
                     <span className="truncate text-text-secondary">{d.name}</span>
                   </button>
@@ -563,7 +558,7 @@ function InlineDossierTrigger({
               onClick={() => setOpen(false)}
               className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs text-accent hover:bg-accent/5 transition-colors"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3" aria-hidden="true" />
               New dossier
             </button>
           </div>
@@ -653,7 +648,7 @@ function Pagination({
 }) {
   if (!pagination || pagination.total_pages <= 1) return null
   return (
-    <div className="flex items-center justify-between mt-4 text-sm card p-3">
+    <nav aria-label="Pagination" className="flex items-center justify-between mt-4 text-sm card p-3">
       <span className="text-text-muted text-xs font-mono">
         {pagination.total.toLocaleString()} total
       </span>
@@ -664,9 +659,9 @@ function Pagination({
           className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </button>
-        <span className="px-3 text-text-primary font-mono text-xs font-bold">
+        <span className="px-3 text-text-primary font-mono text-xs font-bold" aria-live="polite">
           {page} / {pagination.total_pages}
         </span>
         <button
@@ -675,9 +670,9 @@ function Pagination({
           className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </nav>
   )
 }

@@ -1650,7 +1650,7 @@ function CaseBody({
                       onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = TEXT_PRIMARY)}
                     >
                       {src.outlet}
-                    </a>
+                    <span className="sr-only"> (opens in new tab)</span></a>
                   ) : (
                     <span style={{ fontSize: 11, ...MONO, color: TEXT_PRIMARY, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       {src.outlet}
@@ -1779,7 +1779,7 @@ function CaseBody({
       </motion.header>
 
       {/* BODY */}
-      <main style={{ maxWidth: 1140, margin: '0 auto', padding: '0 32px 80px' }}>
+      <div style={{ maxWidth: 1140, margin: '0 auto', padding: '0 32px 80px' }}>
         {/* VISUAL 1 — Contract timeline */}
         <Section
           index="01"
@@ -2039,7 +2039,12 @@ function CaseBody({
                       {/* DotBar risk viz */}
                       {score != null && (
                         <div style={{ maxWidth: 340 }}>
-                          <DotBar value={score} max={1} color={scoreColor} />
+                          <DotBar
+                            value={score}
+                            max={1}
+                            color={scoreColor}
+                            thresholds={[0.25, 0.40, 0.60]}
+                          />
                         </div>
                       )}
 
@@ -2350,7 +2355,7 @@ function CaseBody({
                         >
                           {src.title}
                           <ExternalLink size={11} style={{ color: TEXT_MUTED }} />
-                        </a>
+                        <span className="sr-only"> (opens in new tab)</span></a>
                       ) : (
                         src.title
                       )}
@@ -2580,7 +2585,7 @@ function CaseBody({
             </div>
           </Section>
         )}
-      </main>
+      </div>
     </div>
   )
 }

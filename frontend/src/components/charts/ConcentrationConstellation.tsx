@@ -236,7 +236,7 @@ function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
   const filled = Math.round(value * dots)
   const w = dots * (size + gap) - gap
   return (
-    <svg width={w} height={size} style={{ display: 'block' }}>
+    <svg aria-hidden="true" width={w} height={size} style={{ display: 'block' }}>
       {Array.from({ length: dots }, (_, i) => (
         <circle
           key={i}
@@ -473,7 +473,7 @@ export function ConcentrationConstellation({
   // Annotation positions in the right margin
   const annoX = PAD_L + FIELD_W + 24
   const annoLines = [
-    { row: criticalRow, anchor: marginAnchors.critical, color: '#ef4444', label: 'critical', y: PAD_T + 12 },
+    { row: criticalRow, anchor: marginAnchors.critical, color: 'var(--color-risk-critical)', label: 'critical', y: PAD_T + 12 },
     { row: highRow,     anchor: marginAnchors.high,     color: '#f59e0b', label: 'high',     y: PAD_T + FIELD_H * 0.45 },
     { row: lowRow,      anchor: marginAnchors.low,      color: 'var(--color-text-muted)', label: 'low',      y: PAD_T + FIELD_H * 0.85 },
   ]
@@ -992,7 +992,7 @@ export function ConcentrationConstellation({
               >
                 {mode === 'patterns' ? `${meta.code} · ${kickerLabel.short}` : kickerLabel.short}
               </span>
-              <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} />
+              <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} aria-hidden="true" />
             </div>
             <div className="text-sm font-bold text-text-primary mb-0.5">
               {meta.label}

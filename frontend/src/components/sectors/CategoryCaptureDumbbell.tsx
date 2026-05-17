@@ -548,6 +548,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                     style={{ cursor: 'pointer' }}
                     onClick={e => handleVendorClick(row.top2!.vendor_id, e as unknown as React.MouseEvent)}
                     role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/vendors/${row.top2!.vendor_id}`) } }}
                     aria-label={`${formatVendorName(row.top2.vendor_name)} — ${row.top2.market_share_pct.toFixed(1)}%`}
                   />
                 )}
@@ -562,6 +564,8 @@ export function CategoryCaptureDumbbell({ categories }: Props) {
                   style={{ cursor: 'pointer' }}
                   onClick={e => handleVendorClick(row.top1.vendor_id, e as unknown as React.MouseEvent)}
                   role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/vendors/${row.top1.vendor_id}`) } }}
                   aria-label={`${formatVendorName(row.top1.vendor_name)} — ${row.top1.market_share_pct.toFixed(1)}%`}
                 />
 

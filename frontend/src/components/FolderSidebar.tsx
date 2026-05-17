@@ -63,7 +63,7 @@ export function FolderSidebar({
             : 'text-text-secondary hover:bg-background-elevated'
         )}
       >
-        <FolderOpen className="h-3.5 w-3.5" />
+        <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="flex-1 text-left">{t('folderSidebar.allItems')}</span>
       </button>
 
@@ -123,6 +123,7 @@ export function FolderSidebar({
               if (e.key === 'Escape') setCreating(false)
             }}
             placeholder={t('folderSidebar.namePlaceholder')}
+            aria-label={t('folderSidebar.namePlaceholder')}
             className="w-full rounded bg-background-elevated px-2 py-1 text-xs text-text-primary outline-none focus-visible:ring-1 focus-visible:ring-accent"
             autoFocus
           />
@@ -161,7 +162,7 @@ export function FolderSidebar({
           onClick={() => setCreating(true)}
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {t('folderSidebar.newFolder')}
         </button>
       )}

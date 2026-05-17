@@ -14,7 +14,7 @@ export function StatRing({ value, label, sublabel, color = 'var(--color-accent)'
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-90">
+        <svg aria-hidden="true" width={size} height={size} className="-rotate-90">
           {/* Track */}
           <circle
             cx={size / 2} cy={size / 2} r={radius}
@@ -37,7 +37,7 @@ export function StatRing({ value, label, sublabel, color = 'var(--color-accent)'
         </div>
       </div>
       <div className="text-center">
-        <p className="text-[11px] font-semibold text-text-secondary">{label}</p>
+        <p className="text-[11px] font-medium text-text-secondary">{label}</p>
         {sublabel && <p className="text-[10px] text-text-muted">{sublabel}</p>}
       </div>
     </div>

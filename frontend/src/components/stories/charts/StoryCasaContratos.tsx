@@ -154,7 +154,7 @@ export function StoryCasaContratos() {
                   x={vx}
                   y={vy + 4}
                   textAnchor="middle"
-                  fill="#fff"
+                  fill="var(--color-background)"
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
@@ -195,7 +195,7 @@ export function StoryCasaContratos() {
             transition={{ duration: 0.6 }}
           >
             <circle cx={CX} cy={CY} r={54} fill="var(--color-sector-defensa)" fillOpacity={0.5} stroke="var(--color-sector-educacion)" strokeWidth={1.5} />
-            <circle cx={CX} cy={CY} r={44} fill="#0c1a2e" stroke="var(--color-sector-educacion)" strokeWidth={1} />
+            <circle cx={CX} cy={CY} r={44} fill="var(--color-sector-defensa)" stroke="var(--color-sector-educacion)" strokeWidth={1} />
             <text
               x={CX}
               y={CY - 4}

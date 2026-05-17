@@ -31,7 +31,7 @@ export function PoliticalCycleView() {
     return (
       <div className="card">
         <div className="pt-6 flex items-center gap-2 text-text-muted text-sm px-4 pb-3 bg-background-card">
-          <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" aria-hidden="true" />
           <span>{t('common.loadError', 'Political cycle data could not be loaded.')}</span>
         </div>
       </div>
@@ -55,7 +55,7 @@ export function PoliticalCycleView() {
       <div className="card">
         <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <h3 className="text-sm font-mono flex items-center gap-2">
-            <Activity className="h-4 w-4 text-accent" />
+            <Activity className="h-4 w-4 text-accent" aria-hidden="true" />
             Election Year Effect
           </h3>
           <p className="text-xs text-text-muted">Average procurement risk in election vs non-election years (2002–2025)</p>

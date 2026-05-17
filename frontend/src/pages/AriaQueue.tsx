@@ -163,7 +163,7 @@ function PatternChip({
       )}
       aria-pressed={isActive}
     >
-      <span className={cn('h-1 w-1 rounded-full', meta.dot)} />
+      <span className={cn('h-1 w-1 rounded-full', meta.dot)} aria-hidden="true" />
       <span className={cn(isActive ? meta.text : 'text-text-secondary')}>{t(`patterns.${pattern}`)}</span>
       <span className="font-mono tabular-nums text-text-muted">{formatNumber(count)}</span>
     </button>
@@ -252,7 +252,7 @@ function ReviewPopover({
         <button
           onClick={() => mutation.mutate(status)}
           disabled={mutation.isPending}
-          className="flex-1 py-1.5 rounded text-xs font-medium bg-amber-500 text-text-primary hover:bg-amber-400 disabled:opacity-50 transition-colors"
+          className="flex-1 py-1.5 rounded text-xs font-medium bg-risk-high text-white hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {mutation.isPending ? t('reviewPopover.saving') : t('reviewPopover.save')}
         </button>
@@ -261,14 +261,14 @@ function ReviewPopover({
           className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-card transition-colors"
           aria-label={t('reviewPopover.close')}
         >
-          <XIcon className="h-3.5 w-3.5" />
+          <XIcon className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
       {status === 'confirmed' && !inGroundTruth && (
         <button
           onClick={() => promoteMutation.mutate()}
           disabled={promoteMutation.isPending || promoteMutation.isSuccess}
-          className="w-full py-1.5 rounded text-xs font-medium border border-amber-500/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
+          className="w-full py-1.5 rounded text-xs font-medium border border-risk-high/30 text-risk-high hover:bg-risk-high/10 disabled:opacity-50 transition-colors"
         >
           {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
         </button>
@@ -376,7 +376,7 @@ function FilterChip({
         aria-label={isEs ? 'Quitar filtro' : 'Clear filter'}
         type="button"
       >
-        <XIcon className="w-2.5 h-2.5" />
+        <XIcon className="w-2.5 h-2.5" aria-hidden="true" />
       </button>
     </span>
   )
@@ -535,7 +535,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             stopPropagation still prevents double-navigation if the chip
             and row both fire. */}
         <div className="min-w-0 flex items-center gap-2">
-          <div onClick={(e) => e.stopPropagation()} className="min-w-0">
+          <div onClick={(e) => e.stopPropagation()} className="min-w-0 max-w-full overflow-hidden">
             <EntityIdentityChip
               type="vendor"
               id={item.vendor_id}
@@ -546,6 +546,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               ariaTier={item.ips_tier}
               narrative
               hideIcon
+              className="max-w-full"
             />
           </div>
           {item.new_vendor_risk && (
@@ -589,6 +590,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             className="inline-flex items-center justify-center w-6 h-6 rounded text-base leading-none hover:bg-background-elevated transition-colors"
             style={{ color: reviewGlyph.color }}
             aria-label={t('reviewPopover.updateTitle')}
+            aria-expanded={reviewOpen}
             title={`${isEs ? reviewGlyph.titleEs : reviewGlyph.titleEn} — ${t('reviewPopover.updateTitle')}`}
           >
             {reviewGlyph.char}
@@ -604,7 +606,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
         </div>
 
         {/* Open arrow */}
-        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" />
+        <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" aria-hidden="true" />
 
         {/* ─── LINE 2 ─────────────────────────────────────────────────── */}
 
@@ -613,7 +615,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Sector chip with sector-color dot */}
           {sector && (
             <span className="inline-flex items-center gap-1 max-w-[160px]">
-              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" />
+              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" aria-hidden="true" />
               {/* 2026-05-08 audit fix: sector chips were force-EN; now follow lang */}
               <span className="uppercase tracking-[0.06em] truncate" title={getSectorName(sector, isEs ? 'es' : 'en')}>
                 {getSectorName(sector, isEs ? 'es' : 'en')}
@@ -659,7 +661,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Pattern — full label inline (was: just "P5") */}
           {patternKey && patternMeta && (
             <span className={cn('inline-flex items-center gap-1', patternMeta.text)}>
-              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
+              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} aria-hidden="true" />
               <span className="font-mono font-bold">{patternKey}</span>
               <span className="text-text-secondary normal-case">{t(`patterns.${patternKey}`)}</span>
             </span>
@@ -668,7 +670,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Recency badge — derived from last_contract_year */}
           {isActive ? (
             <span className="inline-flex items-center gap-1 text-risk-high">
-              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
               <span className="uppercase tracking-[0.08em] font-bold">
                 {isEs ? `Activo ${lastYear}` : `Active ${lastYear}`}
               </span>
@@ -688,7 +690,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             <span className="inline-flex items-center gap-1">
               {item.in_ground_truth && (
                 <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30"
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30"
                   title={isEs
                     ? 'Anclado en corpus GT — ya documentado como corrupción. IPS elevado refleja el anclaje, no solo señal del modelo.'
                     : 'GT-anchored — already documented corruption. High IPS reflects GT boost, not model-only signal.'}
@@ -698,7 +700,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
               )}
               {!item.in_ground_truth && item.ips_tier === 1 && (
                 <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
                   title={isEs
                     ? 'Descubrimiento del modelo — T1 sin anclaje GT. Señal pura del modelo de riesgo.'
                     : 'Model discovery — T1 without GT anchor. Pure risk model signal.'}
@@ -728,7 +730,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Memo quality glyph — LLM narrative available */}
           {item.memo_provenance === 'llm_narrative' && (
             <span
-              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-purple-500/10 text-purple-400 border border-purple-500/20"
+              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
               title={isEs ? 'Memo investigativo LLM disponible' : 'LLM investigation memo available'}
             >
               LLM
@@ -1352,7 +1354,7 @@ export default function AriaPage() {
               fontWeight: 400,
             }}
           >
-            <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}>Folio·V</span>
+            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·V</span>
             <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
             <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
               {isEs ? 'Cola de investigación · ARIA' : 'Investigation queue · ARIA'}
@@ -1568,7 +1570,33 @@ export default function AriaPage() {
         </div>
 
         {/* aria-P2: Pattern editorial bars (replaces donut/pie pattern composition) */}
-        {Object.keys(patternCounts).length > 0 && (
+        {statsLoading ? (
+          <div className="mb-5">
+            <div className="flex items-baseline justify-between mb-2">
+              <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
+                {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
+              </p>
+              <div className="h-3 w-16 bg-background-elevated rounded animate-pulse" />
+            </div>
+            <div className="rounded-sm border border-border/60 bg-background-card overflow-hidden">
+              {Object.entries(PATTERN_LABELS).map(([key, meta], i) => (
+                <div key={key} className={cn('flex items-center gap-3 px-3 py-2.5', i > 0 && 'border-t border-border/40')}>
+                  <span
+                    className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none"
+                    style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}50` }}
+                  >
+                    {key}
+                  </span>
+                  <span className="text-[11px] font-mono text-text-secondary min-w-0 truncate flex-1">
+                    {isEs ? meta.es : meta.en}
+                  </span>
+                  <div className="flex-1 h-1.5 bg-background-elevated rounded-sm animate-pulse max-w-[120px]" />
+                  <span className="text-[10px] font-mono tabular-nums text-text-muted w-8 text-right">—</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : Object.keys(patternCounts).length > 0 ? (
           <PatternEditorialBars
             patternCounts={patternCounts}
             isEs={isEs}
@@ -1579,7 +1607,7 @@ export default function AriaPage() {
               setPage(1)
             }}
           />
-        )}
+        ) : null}
 
         {/* ════════════════════════════════════════════════════════════════
             UNIFIED FILTER BAR
@@ -1677,18 +1705,54 @@ export default function AriaPage() {
                     {preset.label}
                   </button>
                 ))}
-                <button
-                  onClick={() => setMoreFiltersOpen((v) => !v)}
-                  className={cn(
-                    'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
-                    moreFiltersOpen
-                      ? 'bg-background-elevated text-text-primary'
-                      : 'text-text-muted hover:text-text-primary'
-                  )}
-                  aria-expanded={moreFiltersOpen}
-                >
-                  {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
-                </button>
+                {(() => {
+                  // U-061: count secondary filters that are active so the
+                  // button surfaces hidden state. Primary slicers (tier,
+                  // pattern, search) live in the always-visible row and
+                  // are excluded here.
+                  const secondaryActiveCount =
+                    (sectorFilter != null ? 1 : 0) +
+                    (newVendorOnly ? 1 : 0) +
+                    (novelOnly ? 1 : 0) +
+                    (adminFilter != null ? 1 : 0) +
+                    (gtOnly ? 1 : 0) +
+                    (efosOnly ? 1 : 0) +
+                    (sfpOnly ? 1 : 0) +
+                    (webEvidenceOnly ? 1 : 0) +
+                    (llmMemoOnly ? 1 : 0) +
+                    (reviewStatusFilter != null ? 1 : 0)
+                  return (
+                    <button
+                      onClick={() => setMoreFiltersOpen((v) => !v)}
+                      className={cn(
+                        'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                        moreFiltersOpen
+                          ? 'bg-background-elevated text-text-primary'
+                          : secondaryActiveCount > 0
+                            ? 'text-accent hover:text-text-primary'
+                            : 'text-text-muted hover:text-text-primary'
+                      )}
+                      aria-expanded={moreFiltersOpen}
+                      aria-label={
+                        secondaryActiveCount > 0
+                          ? (isEs
+                              ? `Más filtros, ${secondaryActiveCount} activos`
+                              : `More filters, ${secondaryActiveCount} active`)
+                          : (isEs ? 'Más filtros' : 'More filters')
+                      }
+                    >
+                      {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
+                      {secondaryActiveCount > 0 && (
+                        <span
+                          className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent/15 text-accent text-[10px] font-mono tabular-nums font-bold"
+                          aria-hidden
+                        >
+                          {secondaryActiveCount}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })()}
               </div>
             )
           })()}
@@ -1749,9 +1813,10 @@ export default function AriaPage() {
             ))}
             <span className="mx-1 h-4 w-px bg-border hidden sm:inline-block" aria-hidden />
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-text-muted" aria-hidden="true" />
               <input
                 type="text"
+                aria-label={isEs ? 'Buscar en la cola ARIA' : 'Search ARIA queue'}
                 placeholder={t('leads.searchPlaceholder')}
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1) }}
@@ -1868,7 +1933,7 @@ export default function AriaPage() {
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
                     gtOnly
-                      ? 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border-[color:var(--color-accent)]/30'
+                      ? 'bg-accent/10 text-accent border-accent/30'
                       : 'bg-background-card text-text-secondary border-border hover:border-border'
                   )}
                   title={isEs ? 'Solo proveedores en casos de referencia documentados' : 'Only vendors in documented ground-truth cases'}
@@ -1916,7 +1981,7 @@ export default function AriaPage() {
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-medium transition-colors',
                     llmMemoOnly
-                      ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                      ? 'bg-accent-data/10 text-accent-data border-accent-data/30'
                       : 'bg-background-card text-text-secondary border-border hover:border-border'
                   )}
                   title={isEs ? 'Solo proveedores con memo investigativo LLM completo' : 'Only vendors with full LLM investigation memo'}
@@ -2092,7 +2157,7 @@ export default function AriaPage() {
             </div>
           ) : leadsItems.length === 0 ? (
             <div className="surface-card p-10 text-center">
-              <Search className="h-8 w-8 mx-auto mb-3 text-text-primary" />
+              <Search className="h-8 w-8 mx-auto mb-3 text-text-primary" aria-hidden="true" />
               <p className="text-sm font-medium text-text-secondary mb-1">
                 {search
                   ? t('emptyState.noSearchResults', { query: search })
@@ -2161,7 +2226,7 @@ export default function AriaPage() {
         <section>
           <div className="rounded-sm border border-border bg-background-card p-4">
             <div className="flex items-start gap-3">
-              <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" />
+              <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" aria-hidden="true" />
               <div className="text-xs text-text-muted space-y-1 leading-relaxed">
                 <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-text-secondary">
                   {isEs ? '§ METODOLOGÍA · ' : '§ METHODOLOGY · '}{t('about.title', { defaultValue: 'Sobre ARIA' })}

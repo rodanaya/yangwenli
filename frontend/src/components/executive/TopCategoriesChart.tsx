@@ -217,6 +217,21 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     )
   }
 
+  if (items.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted">
+          {lang === 'en' ? 'No sector data available' : 'Sin datos sectoriales disponibles'}
+        </p>
+        <p className="mt-2 text-[10px] text-text-muted/70 leading-relaxed max-w-md mx-auto">
+          {lang === 'en'
+            ? 'category_stats precompute pending — try again after the next ETL run.'
+            : 'Precómputo de category_stats pendiente — intenta de nuevo tras el siguiente ETL.'}
+        </p>
+      </div>
+    )
+  }
+
   return (
     <div>
       {/* Row 1 — top 3 categories, taller cells */}
@@ -237,15 +252,15 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
         </span>
         <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} aria-hidden="true" />
             {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} aria-hidden="true" />
             {lang === 'en' ? 'high' : 'alto'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} aria-hidden="true" />
             {lang === 'en' ? 'medium' : 'medio'}
           </span>
         </div>

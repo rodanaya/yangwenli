@@ -86,7 +86,7 @@ export function ComparePeriodView() {
       <div className="card">
         <div className="px-4 py-3 border-b border-border/60 bg-background-card">
           <h3 className="text-sm font-mono flex items-center gap-2">
-            <ArrowRight className="h-4 w-4 text-accent" />
+            <ArrowRight className="h-4 w-4 text-accent" aria-hidden="true" />
             Compare Periods
           </h3>
           <p className="text-xs text-text-muted">
@@ -197,7 +197,7 @@ export function ComparePeriodView() {
       {isError && !isLoading && (
         <div className="card">
           <div className="pt-5 flex items-center gap-2 text-text-muted text-sm px-4 pb-3 bg-background-card">
-            <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" aria-hidden="true" />
             <span>Period comparison data could not be loaded. Please try again.</span>
           </div>
         </div>
@@ -216,11 +216,11 @@ export function ComparePeriodView() {
               <table className="w-full text-sm" role="table" aria-label="Period comparison results">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em] w-1/4">Metric</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period A</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period B</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Δ (B − A)</th>
-                    <th className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Signal</th>
+                    <th scope="col" className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em] w-1/4">Metric</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period A</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period B</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Δ (B − A)</th>
+                    <th scope="col" className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Signal</th>
                   </tr>
                 </thead>
                 <tbody>

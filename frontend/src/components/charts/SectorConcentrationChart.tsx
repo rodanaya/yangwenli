@@ -228,7 +228,7 @@ export default function SectorConcentrationChart({
             { color: '#16a34a', label: t('charts.sectorConcentration.legendCompetitive') },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
-              <span className="inline-block rounded-full" style={{ width: 6, height: 6, backgroundColor: color, opacity: 0.85 }} />
+              <span className="inline-block rounded-full" style={{ width: 6, height: 6, backgroundColor: color, opacity: 0.85 }} aria-hidden="true" />
               <span className="text-[10px] font-mono text-text-muted">{label}</span>
             </div>
           ))}

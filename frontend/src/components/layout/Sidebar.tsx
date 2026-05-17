@@ -125,7 +125,7 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-2 mt-1 px-2.5 flex items-center gap-2">
-          <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-[color:var(--color-text-on-dark-muted)] select-none font-mono">
+          <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-text-on-dark-muted select-none font-mono">
             {title}
           </span>
           <span className="flex-1 h-px bg-border" aria-hidden="true" />
@@ -199,7 +199,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         // the "half-empty dark zone" that user flagged three times.
         // If content ever exceeds viewport, overflow-y-auto kicks in.
         // Desktop: full viewport height with flex-col anchoring footer.
-        'fixed left-0 top-0 flex flex-col border-r border-border bg-[color:var(--color-sidebar)] z-50',
+        'fixed left-0 top-0 flex flex-col border-r border-border bg-sidebar z-50',
         'max-h-screen overflow-y-auto md:h-screen md:overflow-y-visible',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
@@ -234,10 +234,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed && (
           <div className="min-w-0">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[color:var(--color-text-on-dark-primary)] font-bold text-lg tracking-[-0.02em] leading-none" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}>RUBLI</span>
-              <span className="text-[color:var(--color-text-on-dark-muted)] font-mono text-[9px] leading-none tracking-[0.05em]">v0.8.5</span>
+              <span className="text-text-on-dark-primary font-bold text-lg tracking-[-0.02em] leading-none" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}>RUBLI</span>
+              <span className="text-text-on-dark-muted font-mono text-[9px] leading-none tracking-[0.05em]">v0.8.5</span>
             </div>
-            <p className="text-[9px] text-[color:var(--color-text-on-dark-muted)] mt-1 truncate tracking-[0.14em] uppercase font-mono">{t('tagline')}</p>
+            <p className="text-[9px] text-text-on-dark-muted mt-1 truncate tracking-[0.14em] uppercase font-mono">{t('tagline')}</p>
           </div>
         )}
         {/* Mobile close button */}
@@ -245,7 +245,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 flex-shrink-0 md:hidden text-[color:var(--color-text-on-dark-secondary)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] ml-auto"
+            className="h-10 w-10 flex-shrink-0 md:hidden text-text-on-dark-secondary hover:text-text-on-dark-primary hover:bg-sidebar-hover ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >
@@ -305,8 +305,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)] flex-shrink-0" />
-              <span className="text-[10px] font-mono text-[color:var(--color-text-on-dark-muted)] tracking-wide">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" aria-hidden="true" />
+              <span className="text-[10px] font-mono text-text-on-dark-muted tracking-wide">
                 {t('contractsIndexed')}
               </span>
             </div>
@@ -315,7 +315,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="flex justify-center py-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--color-accent)]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="text-xs font-mono">{t('contractsIndexedShort')}</p>
@@ -351,10 +351,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <TooltipTrigger asChild>
               <button
                 onClick={() => setReportOpen(true)}
-                className="w-full flex justify-center items-center rounded-sm py-1.5 text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] transition-colors"
+                className="w-full flex justify-center items-center rounded-sm py-1.5 text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors"
                 aria-label={t('reportIssue')}
               >
-                <MessageSquarePlus className="h-4 w-4" />
+                <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
@@ -364,9 +364,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         ) : (
           <button
             onClick={() => setReportOpen(true)}
-            className="w-full flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors"
           >
-            <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
+            <MessageSquarePlus className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
             <span className="truncate">{t('reportIssue')}</span>
           </button>
         )}
@@ -381,7 +381,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => i18n.changeLanguage(i18n.language.startsWith('es') ? 'en' : 'es')}
-                    className="h-7 w-7 flex items-center justify-center rounded-sm text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)]"
+                    className="h-7 w-7 flex items-center justify-center rounded-sm text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
                     aria-label={i18n.language.startsWith('es') ? 'Switch to English' : 'Cambiar a Español'}
                   >
                     <span className="text-[10px] font-bold font-mono">
@@ -401,7 +401,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               size="icon"
               onClick={onToggle}
               className={cn(
-                'h-7 w-7 text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-[color:var(--color-sidebar-hover)] hidden md:flex',
+                'h-7 w-7 text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover hidden md:flex',
                 collapsed && 'mx-auto'
               )}
               aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
@@ -463,10 +463,10 @@ function SidebarNavItem({
       to={item.href}
       className={cn(
         'group relative flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium transition-all duration-100',
-        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)]',
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent',
         isActive
-          ? 'border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-accent-glow)] text-text-primary pl-[calc(0.625rem-3px)] font-semibold'
-          : 'text-text-secondary hover:text-text-primary hover:bg-[color:var(--color-sidebar-hover)]',
+          ? 'border-l-[3px] border-accent bg-accent-glow text-text-primary pl-[calc(0.625rem-3px)] font-semibold'
+          : 'text-text-secondary hover:text-text-primary hover:bg-sidebar-hover',
         collapsed && 'justify-center px-0',
       )}
       aria-current={isActive ? 'page' : undefined}
@@ -481,17 +481,17 @@ function SidebarNavItem({
           aria-hidden="true"
         />
         {badge > 0 && collapsed && (
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[color:var(--color-accent)]" aria-hidden="true" />
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
         )}
         {countBadge > 0 && collapsed && badge === 0 && (
-          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-[color:var(--color-text-on-dark-muted)]" aria-hidden="true" />
+          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-text-on-dark-muted" aria-hidden="true" />
         )}
       </span>
       {!collapsed && <span className="truncate">{item.title}</span>}
       {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
         <span
-          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-[color:var(--color-accent)] text-[10px] font-bold text-[color:var(--color-sidebar)] px-1"
+          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-accent text-[10px] font-bold text-sidebar px-1"
           aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}
@@ -500,7 +500,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-[color:var(--color-sidebar-hover)] text-[10px] font-mono text-text-muted px-1 border border-border"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-sidebar-hover text-[10px] font-mono text-text-muted px-1 border border-border"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
@@ -513,7 +513,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-[color:var(--color-text-primary)] border-[color:var(--color-text-primary)] text-[color:var(--color-bg-base)]">
+        <TooltipContent side="right" sideOffset={8} className="bg-text-primary border-text-primary text-bg-base">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

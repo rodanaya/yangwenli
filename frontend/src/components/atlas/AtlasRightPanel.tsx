@@ -204,7 +204,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
             </div>
             <span
               className="text-[9px] font-mono font-bold flex-shrink-0 ml-2 tabular-nums"
-              style={{ color: '#dc2626' }}
+              style={{ color: 'var(--color-risk-critical)' }}
             >
               {p.t1} T1
             </span>
@@ -255,7 +255,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           style={{ background: ACCENT, color: 'white' }}
         >
           {lang === 'en' ? '→ Open investigation queue (ARIA)' : '→ Abrir cola de investigación (ARIA)'}
-          <ArrowUpRight className="h-3 w-3" />
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -397,7 +397,7 @@ function VendorRow({ vendor, rank, lang, isMock, isSelected }: VendorRowProps) {
         {isSelected ? (
           <span
             className="text-[9px] font-mono tabular-nums flex-shrink-0 w-5 text-center flex items-center justify-center"
-            style={{ color: '#a06820' }}
+            style={{ color: 'var(--color-accent)' }}
             aria-hidden="true"
           >
             ✓

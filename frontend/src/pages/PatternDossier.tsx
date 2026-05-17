@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
-import { getRiskLevelFromScore, SECTOR_COLORS } from '@/lib/constants'
+import { getRiskLevelFromScore, SECTOR_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
@@ -240,6 +240,7 @@ export default function PatternDossier() {
 
   const codeUpper = code?.toUpperCase() ?? ''
   const caseType = CASE_TYPE_BY_PATTERN[codeUpper]
+  const patternColor = PATTERN_COLORS[codeUpper] ?? 'var(--color-risk-critical)'
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -257,7 +258,7 @@ export default function PatternDossier() {
         <div className="flex items-start gap-3">
           <span
             className="flex-shrink-0 inline-flex items-center justify-center rounded-sm px-2.5 py-1 text-sm font-bold font-mono tracking-wider"
-            style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+            style={{ backgroundColor: `${patternColor}1f`, color: patternColor }}
             aria-label={`Pattern code ${code}`}
           >
             {codeUpper}
@@ -276,9 +277,9 @@ export default function PatternDossier() {
               to={`/aria?pattern=${codeUpper}`}
               className="mt-3 inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
               style={{
-                backgroundColor: 'rgba(220,38,38,0.12)',
-                color: '#dc2626',
-                border: '1px solid rgba(220,38,38,0.25)',
+                backgroundColor: `${patternColor}1f`,
+                color: patternColor,
+                border: `1px solid ${patternColor}40`,
               }}
             >
               <span aria-hidden="true">→</span>
@@ -291,7 +292,7 @@ export default function PatternDossier() {
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
                 {[
                   { label: isEs ? 'Proveedores' : 'Vendors', value: spotlight.vendor_count.toLocaleString(), color: undefined },
-                  { label: 'T1', value: spotlight.t1_count.toLocaleString(), color: '#dc2626' },
+                  { label: 'T1', value: spotlight.t1_count.toLocaleString(), color: 'var(--color-risk-critical)' },
                   { label: 'T2', value: spotlight.t2_count.toLocaleString(), color: undefined },
                   { label: isEs ? 'Casos GT' : 'GT Cases', value: spotlight.gt_case_count.toLocaleString(), color: undefined },
                   ...(spotlight.avg_da_rate != null ? [{ label: 'DA%', value: `${Math.round(spotlight.avg_da_rate * 100)}%`, color: spotlight.avg_da_rate > 0.5 ? '#ef4444' : undefined }] : []),
@@ -305,7 +306,7 @@ export default function PatternDossier() {
                 {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
                   <div className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5 col-span-2 sm:col-span-1">
                     <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{isEs ? 'Gasto total' : 'Total spend'}</div>
-                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: '#ef4444' }}>{formatCompactMXN(spotlight.total_value_mxn)}</div>
+                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: 'var(--color-risk-critical)' }}>{formatCompactMXN(spotlight.total_value_mxn)}</div>
                   </div>
                 )}
               </div>
@@ -329,7 +330,7 @@ export default function PatternDossier() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="h-8 rounded-sm bg-[color:var(--color-sidebar)] animate-pulse border border-border"
+                className="h-8 rounded-sm bg-sidebar animate-pulse border border-border"
               />
             ))}
           </div>
@@ -515,7 +516,7 @@ export default function PatternDossier() {
               <>
                 <span
                   className="font-mono font-bold tabular-nums"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   {spotlight.gt_case_count.toLocaleString()}
                 </span>{' '}
@@ -526,7 +527,7 @@ export default function PatternDossier() {
               <>
                 <span
                   className="font-mono font-bold tabular-nums"
-                  style={{ color: '#dc2626' }}
+                  style={{ color: 'var(--color-risk-critical)' }}
                 >
                   {spotlight.gt_case_count.toLocaleString()}
                 </span>{' '}
@@ -538,7 +539,7 @@ export default function PatternDossier() {
           <Link
             to={`/cases?type=${caseType}`}
             className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] transition-colors hover:opacity-80"
-            style={{ color: '#dc2626' }}
+            style={{ color: 'var(--color-risk-critical)' }}
           >
             <span aria-hidden="true">→</span>
             {isEs ? 'Ver casos de corrupción' : 'View corruption cases'}

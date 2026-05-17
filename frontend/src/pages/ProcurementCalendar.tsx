@@ -13,6 +13,7 @@ import { motion } from 'framer-motion'
 import { AlertTriangle, TrendingUp, Info, Calendar, Zap } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import { cn, formatNumber } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { Act } from '@/components/layout/Act'
@@ -70,9 +71,9 @@ function getDayColor(total: number, riskRate: number, maxContracts: number): str
 
 function getRiskBadgeColor(riskRate: number): string {
   // Cream-mode tokens — was bg-risk-critical/10/50 etc (near-black on cream).
-  if (riskRate > 0.30) return 'text-risk-critical bg-[color:var(--color-risk-critical)]/10 border-[color:var(--color-risk-critical)]/30'
-  if (riskRate > 0.20) return 'text-risk-high bg-[color:var(--color-risk-high)]/10 border-[color:var(--color-risk-high)]/30'
-  if (riskRate > 0.10) return 'text-[color:var(--color-oecd)] bg-[color:var(--color-oecd)]/10 border-[color:var(--color-oecd)]/30'
+  if (riskRate > 0.30) return 'text-risk-critical bg-risk-critical/10 border-risk-critical/30'
+  if (riskRate > 0.20) return 'text-risk-high bg-risk-high/10 border-risk-high/30'
+  if (riskRate > 0.10) return 'text-oecd bg-oecd/10 border-oecd/30'
   return 'text-text-secondary bg-background-card border-border'
 }
 
@@ -186,7 +187,7 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
         </div>
         <div className="flex justify-between gap-4 text-text-secondary">
           <span>{t('tooltip.highRisk')}</span>
-          <span className="text-orange-300 font-mono">{formatNumber(day.high_risk_contracts)}</span>
+          <span className="text-risk-high font-mono">{formatNumber(day.high_risk_contracts)}</span>
         </div>
         <div className="flex justify-between gap-4 text-text-secondary">
           <span>{t('tooltip.riskRate')}</span>
@@ -194,15 +195,15 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
             className={cn(
               'font-mono',
               day.risk_rate > 0.30 ? 'text-risk-critical' :
-              day.risk_rate > 0.20 ? 'text-orange-400' :
-              day.risk_rate > 0.10 ? 'text-blue-400' : 'text-text-secondary'
+              day.risk_rate > 0.20 ? 'text-risk-high' :
+              day.risk_rate > 0.10 ? 'text-accent-data' : 'text-text-secondary'
             )}
           >
             {riskPct}%
           </span>
         </div>
         {isDecember && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-orange-400/80 text-[10px]">
+          <div className="mt-1.5 pt-1.5 border-t border-border/60 text-risk-high/80 text-[10px]">
             {t('events.budgetClose')}
           </div>
         )}
@@ -456,8 +457,8 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
   const avgRiskBarWidth = Math.min(100, stats.highRiskRate * 200)
 
   return (
-    <div className="rounded-sm border border-orange-800/30 bg-orange-950/10 p-5 space-y-4">
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-500 mb-1">
+    <div className="rounded-sm border border-risk-high/30 bg-risk-high/5 p-5 space-y-4">
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
         {t('decemberSection.title')}
       </p>
       <p className="text-sm text-text-secondary leading-relaxed">
@@ -478,47 +479,35 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
           <div className="space-y-1.5">
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-orange-400">{t('decemberSection.december')}</span>
+                <span style={{ color: 'var(--color-risk-high)' }}>{t('decemberSection.december')}</span>
                 <span className="text-text-secondary font-mono">{formatNumber(stats.decemberContracts)}</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((decBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#f97316' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={decBarWidth}
+                max={100}
+                color="var(--color-risk-high)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-text-muted">{t('decemberSection.monthlyAvg')}</span>
                 <span className="text-text-muted font-mono">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((avgBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={avgBarWidth}
+                max={100}
+                color="var(--color-text-muted)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
           </div>
         </div>
@@ -534,44 +523,32 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-risk-critical">{t('decemberSection.december')}</span>
                 <span className="text-text-secondary font-mono">{decRiskPct}%</span>
               </div>
-              {(() => {
-                const N = 30, DR = 3, DG = 8
-                const filled = Math.max(1, Math.round((decRiskBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 10`} width={N * DG} height={10} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                        fill={k < filled ? '#ef4444' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={decRiskBarWidth}
+                max={100}
+                color="var(--color-risk-critical)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={3}
+                dotGap={8}
+              />
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-text-muted">{t('decemberSection.restOfYear')}</span>
                 <span className="text-text-muted font-mono">{annualRiskPct}%</span>
               </div>
-              {(() => {
-                const N = 30, DR = 2.5, DG = 6.5
-                const filled = Math.max(1, Math.round((avgRiskBarWidth / 100) * N))
-                return (
-                  <svg viewBox={`0 0 ${N * DG} 8`} width={N * DG} height={8} aria-hidden="true">
-                    {Array.from({ length: N }).map((_, k) => (
-                      <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                        fill={k < filled ? '#78716c' : 'var(--color-background-elevated)'}
-                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                        strokeWidth={k < filled ? 0 : 0.5}
-                        fillOpacity={k < filled ? 0.85 : 1}
-                      />
-                    ))}
-                  </svg>
-                )
-              })()}
+              <DotBar
+                value={avgRiskBarWidth}
+                max={100}
+                color="var(--color-text-muted)"
+                emptyColor="var(--color-background-elevated)"
+                emptyStroke="var(--color-border-hover)"
+                dots={30}
+                dotR={2.5}
+                dotGap={6.5}
+              />
             </div>
           </div>
         </div>
@@ -684,7 +661,7 @@ export default function ProcurementCalendar() {
               {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-risk-high">*</span>}
             </button>
           ))}
-          <span className="text-[9px] text-amber-600/70 font-mono ml-1">{t('electionSuffix')}</span>
+          <span className="text-[9px] text-risk-high/70 font-mono ml-1">{t('electionSuffix')}</span>
         </div>
 
         {/* Stats row */}
@@ -703,7 +680,7 @@ export default function ProcurementCalendar() {
           <HallazgoStat
             value={isLoading ? '—' : formatNumber(stats.highRiskContracts)}
             label={t('stats.highRiskContracts')}
-            color="border-red-500"
+            color="border-risk-critical"
             annotation={isLoading ? undefined : t('stats.ofTotal', { pct: (stats.highRiskRate * 100).toFixed(1) })}
           />
           <HallazgoStat
@@ -712,7 +689,7 @@ export default function ProcurementCalendar() {
               : new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' })
             }
             label={t('stats.mostActiveDay')}
-            color="border-amber-500"
+            color="border-risk-high"
             annotation={
               isLoading || !stats.peakDay ? undefined
               : t('stats.contractsCount', { num: formatNumber(stats.peakDay.total_contracts) })
@@ -724,15 +701,15 @@ export default function ProcurementCalendar() {
               : `${stats.decemberJanuaryRatio.toFixed(1)}x`
             }
             label={t('stats.decVsJan')}
-            color="border-orange-500"
+            color="border-risk-high"
             annotation={t('stats.budgetCloseIndicator')}
           />
         </motion.div>
 
         {/* Election year banner */}
         {isElectionYear && (
-          <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-risk-high/10/20 px-4 py-3">
-            <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
+          <div className="flex items-start gap-3 rounded-sm border border-risk-high/40 bg-risk-high/10 px-4 py-3">
+            <Zap className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
             <p className="text-xs text-accent leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
             </p>
@@ -816,11 +793,11 @@ export default function ProcurementCalendar() {
 
             {/* December vs rest */}
             {stats.hasDecemberData && (
-              <div className="border border-orange-900/40 bg-orange-950/10 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-600 mb-1">
+              <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm p-3">
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-1">
                   {t('insights.decemberRisk')}
                 </div>
-                <div className="text-lg font-bold font-mono text-orange-400">
+                <div className="text-lg font-bold font-mono text-risk-high">
                   {(stats.decemberRiskRate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-text-muted">
@@ -838,7 +815,7 @@ export default function ProcurementCalendar() {
             )}>
               <div className={cn(
                 'text-[10px] font-mono uppercase tracking-[0.15em] mb-1',
-                isElectionYear ? 'text-amber-600' : 'text-text-muted'
+                isElectionYear ? 'text-risk-high' : 'text-text-muted'
               )}>
                 {t('insights.yearType')}
               </div>
@@ -871,10 +848,10 @@ export default function ProcurementCalendar() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* December spike annotation */}
               {decemberSpikeRatio !== null && decemberSpikeRatio > 1.2 && (
-                <div className="border border-orange-800/50 bg-orange-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <TrendingUp className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
+                <div className="border border-risk-high/30 bg-risk-high/5 rounded-sm px-4 py-3 flex gap-3 items-start">
+                  <TrendingUp className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
-                    <div className="text-sm font-semibold text-orange-300">
+                    <div className="text-sm font-semibold text-risk-high">
                       {t('patterns.decemberSpike', { year, num: formatNumber(stats.decemberContracts) })}
                     </div>
                     <div className="text-xs text-text-secondary mt-0.5">
@@ -887,7 +864,7 @@ export default function ProcurementCalendar() {
               {/* Election year note */}
               {isElectionYear && (
                 <div className="border border-amber-800/50 bg-risk-high/10/20 rounded-sm px-4 py-3 flex gap-3 items-start">
-                  <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" />
+                  <AlertTriangle className="w-4 h-4 text-risk-high mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="text-sm font-semibold text-accent">
                       {t('patterns.electionPattern')}
@@ -902,7 +879,7 @@ export default function ProcurementCalendar() {
               {/* High risk day annotation */}
               {stats.highestRiskDay && stats.highestRiskDay.risk_rate > 0.25 && (
                 <div className={cn('border rounded-sm px-4 py-3 flex gap-3 items-start', getRiskBadgeColor(stats.highestRiskDay.risk_rate))}>
-                  <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                  <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="text-sm font-semibold">
                       {t('patterns.peakRiskDayLabel', {
@@ -931,7 +908,7 @@ export default function ProcurementCalendar() {
         )}
 
         {/* Editorial findings callout */}
-        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
+        <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mt-6">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-2">
             {t('finding.label')}
           </p>
@@ -945,7 +922,7 @@ export default function ProcurementCalendar() {
 
         {/* Source footnote */}
         <div className="text-[10px] text-text-muted pt-2 border-t border-border/50">
-          <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" />
+          <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" aria-hidden="true" />
           {t('source')}
         </div>
       </div>

@@ -43,6 +43,7 @@ import { StatPill, MiniBar } from './shared'
 import { VendorBadge } from '@/components/ui/VendorBadge'
 import { EditorialScatterChart } from '@/components/charts/editorial'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
 
 // =============================================================================
 // Column and Preset Configuration
@@ -325,7 +326,7 @@ export default function VendorsTab() {
             {showSearchLoading ? (
               <Loader2 className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted animate-spin" />
             ) : (
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" />
+              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted" aria-hidden="true" />
             )}
             <input
               type="text"
@@ -449,7 +450,7 @@ export default function VendorsTab() {
       ) : error ? (
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
           <div className="p-8 text-center bg-background-card">
-            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" />
+            <AlertCircle className="h-10 w-10 text-risk-high mx-auto mb-3" aria-hidden="true" />
             <p className="text-sm text-text-primary mb-2">Failed to load vendors</p>
             <p className="text-xs text-text-muted mb-3">
               {(error as Error).message === 'Network Error'
@@ -457,14 +458,14 @@ export default function VendorsTab() {
                 : (error as Error).message || 'An unexpected error occurred.'}
             </p>
             <Button variant="outline" size="sm" onClick={() => refetch()}>
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
               Retry
             </Button>
           </div>
         </div>
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
-          <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
+          <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
           <p className="text-sm text-text-muted">
             No vendors match your filters.
           </p>
@@ -473,14 +474,15 @@ export default function VendorsTab() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full text-xs">
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <table className="w-full min-w-[640px] text-xs" aria-label="Vendors ranked by procurement activity">
             <thead>
               <tr className="bg-background-elevated/50">
-                <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
+                <th scope="col" className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {VENDOR_COLUMNS.map((col) => (
-                  <th
+                  <th scope="col"
                     key={col.key}
+                    scope="col"
                     className={cn(
                       'px-3 py-2 font-semibold text-text-muted whitespace-nowrap cursor-pointer select-none hover:text-text-primary transition-colors',
                       col.align === 'right' ? 'text-right' : 'text-left',
@@ -502,7 +504,7 @@ export default function VendorsTab() {
                     </span>
                   </th>
                 ))}
-                <th className="w-8 px-2" />
+                <th scope="col" className="w-8 px-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -535,7 +537,7 @@ export default function VendorsTab() {
               onClick={() => updateFilter('page', filters.page! - 1)}
               aria-label="Previous page"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {filters.page}/{data.pagination.total_pages}
@@ -548,7 +550,7 @@ export default function VendorsTab() {
               onClick={() => updateFilter('page', filters.page! + 1)}
               aria-label="Next page"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </div>
         </div>
@@ -620,7 +622,7 @@ function FlashVendorRadar() {
             </div>
           ) : error ? (
             <div className="py-8 text-center">
-              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" />
+              <AlertCircle className="h-8 w-8 text-risk-high mx-auto mb-2" aria-hidden="true" />
               <p className="text-xs text-text-muted">Failed to load flash vendor data</p>
             </div>
           ) : !allDots.length ? (
@@ -669,7 +671,7 @@ function FlashVendorRadar() {
 
               {/* Active badge legend */}
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-risk-critical/10 border border-red-500/20 text-risk-critical text-xs font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-risk-critical/10 border border-risk-critical/20 text-risk-critical text-xs font-medium">
                   Active
                 </span>
                 <span className="text-xs text-text-muted">= vendor still active today</span>
@@ -678,7 +680,7 @@ function FlashVendorRadar() {
 
               {/* Active vendors list (below scatter) */}
               {allDots.filter((d) => d.is_currently_active).length > 0 && (
-                <div className="rounded-md border border-red-500/20 bg-red-500/5 p-3">
+                <div className="rounded-md border border-risk-critical/20 bg-risk-critical/5 p-3">
                   <p className="text-xs font-semibold text-risk-critical mb-2">Currently Active Flash Vendors</p>
                   <div className="space-y-1">
                     {allDots
@@ -794,7 +796,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             <div className="flex items-center gap-1.5">
               <EntityIdentityChip type="vendor" id={vendor.id} name={vendor.name} size="sm" />
               {isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" />
+                <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" aria-hidden="true" />
               )}
               <VendorBadge isEfos={vendor.is_efos} efosStage={vendor.efos_stage} isSfp={vendor.is_sfp_sanctioned} />
             </div>
@@ -844,23 +846,15 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
       <td className="px-3 py-2 text-right">
         {vendor.avg_risk_score != null ? (
           <div className="flex items-center justify-end gap-1.5">
-            {(() => {
-              const N = 10, DR = 1.5, DG = 4
-              const pct = Math.min(vendor.avg_risk_score, 1)
-              const filled = Math.max(1, Math.round(pct * N))
-              return (
-                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
-                  {Array.from({ length: N }).map((_, k) => (
-                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
-                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
-                      strokeWidth={k < filled ? 0 : 0.5}
-                      fillOpacity={k < filled ? 0.85 : 1}
-                    />
-                  ))}
-                </svg>
-              )
-            })()}
+            <DotBar
+              value={vendor.avg_risk_score}
+              max={1}
+              color={riskColor ?? 'var(--color-risk-critical)'}
+              dots={10}
+              dotR={1.5}
+              dotGap={4}
+              thresholds={[0.25, 0.40, 0.60]}
+            />
             <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(vendor.avg_risk_score * 100).toFixed(0)}%
             </span>

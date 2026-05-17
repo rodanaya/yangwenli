@@ -189,7 +189,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
           </p>
           {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
             <p className="text-[10px] text-risk-high/80 font-mono mt-1">
-              <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> {t('patternsView.regimeShiftNote')}
+              <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" aria-hidden="true" /> {t('patternsView.regimeShiftNote')}
             </p>
           )}
         </div>

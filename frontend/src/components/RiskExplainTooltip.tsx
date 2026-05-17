@@ -63,13 +63,13 @@ export function RiskExplainTooltip({ contractId, riskScore, riskLevel, children 
                     <div key={f.feature} className="flex items-center gap-2">
                       <div
                         className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          dir === 'high_risk' ? 'bg-red-400' : 'bg-green-400'
+                          dir === 'high_risk' ? 'bg-risk-critical' : 'bg-text-muted'
                         }`}
                       />
                       <span className="text-xs text-text-secondary flex-1 truncate">{f.label}</span>
                       <span
                         className={`ml-auto text-xs font-mono ${
-                          dir === 'high_risk' ? 'text-risk-critical' : 'text-green-400'
+                          dir === 'high_risk' ? 'text-risk-critical' : 'text-text-secondary'
                         }`}
                       >
                         {f.z_score > 0 ? '+' : ''}

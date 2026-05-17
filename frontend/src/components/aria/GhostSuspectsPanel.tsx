@@ -97,7 +97,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                   : 'bg-background-card text-text-secondary border-border hover:border-border-hover'
               )}
             >
-              <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', meta.dot)} />
+              <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', meta.dot)} aria-hidden="true" />
               <span style={tierTab === tier ? { color: meta.color } : undefined}>
                 {isEs ? meta.labelEs : meta.label}
               </span>
@@ -119,7 +119,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-sm" />)}
           </div>
         ) : suspects.length === 0 ? (
-          <div className="py-8 text-center text-sm text-text-muted">
+          <div className="py-8 text-center text-sm text-text-muted" role="status" aria-live="polite">
             {isEs ? 'No hay sospechosos en este nivel' : 'No suspects in this tier'}
           </div>
         ) : (
@@ -180,7 +180,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                       {s.ghost_signal_count} {isEs ? 'señ' : 'sig'}
                     </span>
                   </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-accent group-hover:translate-x-0.5 transition-all self-center shrink-0" />
+                  <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-accent group-hover:translate-x-0.5 transition-all self-center shrink-0" aria-hidden="true" />
                 </button>
               )
             })}
@@ -189,13 +189,13 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
 
         {/* Ghost pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <nav aria-label={isEs ? 'Paginación' : 'Pagination'} className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <button
               onClick={() => setGhostPage(Math.max(1, ghostPage - 1))}
               disabled={ghostPage === 1}
               className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >← {isEs ? 'Anterior' : 'Previous'}</button>
-            <span className="text-xs text-text-muted font-mono tabular-nums">
+            <span className="text-xs text-text-muted font-mono tabular-nums" aria-live="polite">
               {ghostPage} / {totalPages}
             </span>
             <button
@@ -203,7 +203,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
               disabled={ghostPage === totalPages}
               className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >{isEs ? 'Siguiente' : 'Next'} →</button>
-          </div>
+          </nav>
         )}
       </div>
     </div>

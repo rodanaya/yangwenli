@@ -135,12 +135,12 @@ export function VendorProfile() {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
         <div className="flex items-center justify-center h-16 w-16 rounded-full bg-background-card border border-border mb-5">
-          <AlertTriangle className="h-8 w-8 text-risk-high" />
+          <AlertTriangle className="h-8 w-8 text-risk-high" aria-hidden="true" />
         </div>
         <h2 className="text-lg font-semibold mb-2">{t('notFound')}</h2>
         <p className="text-sm text-text-muted mb-4">{t('notFoundDescription')}</p>
         <Button onClick={() => navigate('/explore?tab=vendors')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
           {t('backToVendors')}
         </Button>
       </div>
@@ -157,7 +157,7 @@ export function VendorProfile() {
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Volver a ARIA' : 'Back to ARIA'}
         </button>
       )}
@@ -179,7 +179,7 @@ export function VendorProfile() {
                 className="h-8 text-xs"
                 title={isEs ? 'Abrir narrativa de investigación' : 'Open investigation narrative'}
               >
-                <BookOpen className="h-3.5 w-3.5" />
+                <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="ml-1.5 hidden sm:inline">
                   {isEs ? 'Hilo' : 'Thread'}
                 </span>
@@ -211,7 +211,7 @@ export function VendorProfile() {
               className="h-8 text-xs"
               title={isEs ? 'Abrir en el mapa espacial' : 'Open in spatial map'}
             >
-              <MapIcon className="h-3.5 w-3.5" />
+              <MapIcon className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="ml-1.5 hidden sm:inline">
                 {isEs ? 'Mapa' : 'Map'}
               </span>
@@ -238,7 +238,7 @@ export function VendorProfile() {
               {csvExporting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <Download className="h-3.5 w-3.5" />
+                <Download className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               <span className="ml-1.5 hidden sm:inline">
                 {csvExporting
@@ -458,7 +458,7 @@ function ProvenanceFooter({ isEs }: { isEs: boolean }) {
     >
       <p
         className="text-[9px] font-mono uppercase tracking-[0.18em] mb-4"
-        style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 500 }}
+        style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}
       >
         § 10 · {isEs ? 'Procedencia' : 'Provenance'}
       </p>

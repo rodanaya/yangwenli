@@ -138,11 +138,11 @@ export function DaBySectorChart() {
 
       <div className="mt-3 flex items-center gap-4 text-[10px] text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full opacity-50" style={{ background: 'var(--color-sector-otros)' }} />
+          <span className="w-2 h-2 rounded-full opacity-50" style={{ background: 'var(--color-sector-otros)' }} aria-hidden="true" />
           {t('daBySector.legendBelow')}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-sector-otros)' }} />
+          <span className="w-2 h-2 rounded-full" style={{ background: 'var(--color-sector-otros)' }} aria-hidden="true" />
           {t('daBySector.legendAbove')}
         </span>
       </div>
