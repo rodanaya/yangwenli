@@ -497,10 +497,11 @@ export default function InstitutionsTab() {
           <table className="w-full text-xs min-w-[600px]" aria-label="Institutions ranked by procurement activity">
             <thead>
               <tr className="bg-background-elevated/50">
-                <th className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
+                <th scope="col" className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {INST_COLUMNS.map((col) => (
                   <th
                     key={col.key}
+                    scope="col"
                     className={cn(
                       'px-3 py-2 font-semibold text-text-muted whitespace-nowrap cursor-pointer select-none hover:text-text-primary transition-colors',
                       col.align === 'right' ? 'text-right' : 'text-left',
@@ -644,11 +645,11 @@ function ValueConcentrationAlerts() {
               <table className="w-full text-xs" role="table" aria-label="Value concentration alerts">
                 <thead>
                   <tr className="bg-background-elevated/50">
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.institution')}</th>
-                    <th className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
-                    <th className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('institutions.col.avg_risk_score')}</th>
+                    <th scope="col" className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.institution')}</th>
+                    <th scope="col" className="px-3 py-2 text-left font-semibold text-text-muted whitespace-nowrap">{t('concentration.vendor')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap">{t('concentration.share')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden sm:table-cell">{t('concentration.totalValue')}</th>
+                    <th scope="col" className="px-3 py-2 text-right font-semibold text-text-muted whitespace-nowrap hidden md:table-cell">{t('institutions.col.avg_risk_score')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">

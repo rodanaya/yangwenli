@@ -1080,7 +1080,7 @@ export function Contracts() {
               <table className="w-full table-fixed" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b border-border">
                   <tr>
-                    <th className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
+                    <th scope="col" className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
                       {compareIds.size > 0 && (
                         <button
                           onClick={clearCompare}
@@ -1092,11 +1092,12 @@ export function Contracts() {
                         </button>
                       )}
                     </th>
-                    <th className="px-2 py-2 w-8" />
+                    <th scope="col" className="px-2 py-2 w-8" />
                     {/* Fix 4: Column headers via t() */}
                     {CONTRACT_COLUMN_DEFS.map((col) => (
                       <th
                         key={col.key}
+                        scope="col"
                         className={cn(
                           'px-3 py-2 text-[10px] font-medium uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
@@ -1126,13 +1127,14 @@ export function Contracts() {
                     {/* #9 — optional ensemble anomaly score column header */}
                     {showAnomalyScore && (
                       <th
+                        scope="col"
                         className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-accent-data select-none whitespace-nowrap"
                         title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
                       >
                         PyOD
                       </th>
                     )}
-                    <th className="px-2 py-2 w-8" />
+                    <th scope="col" className="px-2 py-2 w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">

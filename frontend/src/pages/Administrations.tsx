@@ -1148,7 +1148,7 @@ export default function Administrations() {
               <table className="w-full text-sm" aria-label="Administration comparison metrics">
                 <thead>
                   <tr>
-                    <th className="data-cell-header text-left">{t('table.metric')}</th>
+                    <th className="data-cell-header text-left" scope="col">{t('table.metric')}</th>
                     {adminAggs.map((a) => {
                       const adminColor = ADMIN_COLORS[a.name]
                       return (
@@ -1433,11 +1433,11 @@ export default function Administrations() {
             <table className="w-full text-xs font-mono" aria-label="Sector risk metrics by administration">
               <thead>
                 <tr>
-                  <th className="data-cell-header text-left">{t('heatmap.sector')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
-                  <th className="data-cell-header text-right" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
-                  <th className="data-cell-header text-right" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
+                  <th className="data-cell-header text-left" scope="col">{t('heatmap.sector')}</th>
+                  <th className="data-cell-header text-right" scope="col" title="Percentage of contracts awarded directly without competitive bidding">{t('heatmap.directAward')}</th>
+                  <th className="data-cell-header text-right" scope="col" title="Percentage of competitive procedures with only one bidder">{t('heatmap.singleBid')}</th>
+                  <th className="data-cell-header text-right" scope="col" title="Percentage of contracts scored as high or critical risk">{t('heatmap.highRisk')}</th>
+                  <th className="data-cell-header text-right" scope="col" title="Average risk score (0-100%)">{t('heatmap.avgRisk')}</th>
                 </tr>
               </thead>
               <tbody>
