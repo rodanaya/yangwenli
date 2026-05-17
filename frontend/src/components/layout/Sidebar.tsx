@@ -513,7 +513,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-text-primary border-[color:var(--color-text-primary)] text-bg-base">
+        <TooltipContent side="right" sideOffset={8} className="bg-text-primary border-text-primary text-bg-base">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

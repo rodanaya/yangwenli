@@ -604,7 +604,7 @@ export function Sectors() {
             className={cn(
               'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
               view === 'sectors'
-                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
             )}
             aria-pressed={view === 'sectors'}
@@ -619,7 +619,7 @@ export function Sectors() {
             className={cn(
               'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
               view === 'categories'
-                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                ? 'border-text-primary text-text-primary'
                 : 'border-transparent text-text-muted hover:text-text-secondary',
             )}
             aria-pressed={view === 'categories'}

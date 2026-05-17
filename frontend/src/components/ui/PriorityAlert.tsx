@@ -43,14 +43,14 @@ const SEVERITY_STYLE: Record<
   high: {
     bg: 'bg-risk-high/10',
     border: 'border-risk-high/40',
-    text: 'text-[color:var(--color-risk-high)]',
+    text: 'text-risk-high',
     iconColor: 'var(--color-risk-high)',
     Icon: AlertTriangle,
   },
   medium: {
-    bg: 'bg-[color:var(--color-risk-medium)]/10',
-    border: 'border-[color:var(--color-risk-medium)]/40',
-    text: 'text-[color:var(--color-risk-medium)]',
+    bg: 'bg-risk-medium/10',
+    border: 'border-risk-medium/40',
+    text: 'text-risk-medium',
     iconColor: 'var(--color-risk-medium)',
     Icon: FlagIcon,
   },
