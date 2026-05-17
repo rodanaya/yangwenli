@@ -968,11 +968,11 @@ export function Methodology() {
                   <table className="w-full text-xs" role="table" aria-label="Risk level thresholds">
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColThreshold')}</th>
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColMeaning')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColDistribution')}</th>
-                        <th className="text-right py-2 text-text-muted font-medium">{t('body.overview.tableColCount')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColLevel')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColThreshold')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColMeaning')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.overview.tableColDistribution')}</th>
+                        <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.overview.tableColCount')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1148,12 +1148,12 @@ export function Methodology() {
                 <table className="w-full text-xs" role="table" aria-label={t('body.validation.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColCase')}</th>
-                      <th className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColType')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColContracts')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColDetected')}</th>
-                      <th className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColHighPlus')}</th>
-                      <th className="text-right py-2 text-text-muted font-medium">{t('body.validation.tableColAvgScore')}</th>
+                      <th scope="col" className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColCase')}</th>
+                      <th scope="col" className="text-left py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColType')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColContracts')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColDetected')}</th>
+                      <th scope="col" className="text-right py-2 pr-2 text-text-muted font-medium">{t('body.validation.tableColHighPlus')}</th>
+                      <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.validation.tableColAvgScore')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1414,10 +1414,10 @@ export function Methodology() {
                   <table className="w-full text-xs" role="table" aria-label={t('body.v33section.tableAriaLabel')}>
                     <thead>
                       <tr className="border-b border-border/50">
-                        <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColMetric')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV33')}</th>
-                        <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV60')}</th>
-                        <th className="text-right py-2 text-text-muted font-medium">{t('body.v33section.tableColChange')}</th>
+                        <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColMetric')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV33')}</th>
+                        <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.v33section.tableColV60')}</th>
+                        <th scope="col" className="text-right py-2 text-text-muted font-medium">{t('body.v33section.tableColChange')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1455,11 +1455,11 @@ export function Methodology() {
                 <table className="w-full text-xs" role="table" aria-label={t('body.dataSources.tableAriaLabel')}>
                   <thead>
                     <tr className="border-b border-border/50">
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColStructure')}</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColYears')}</th>
-                      <th className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColQuality')}</th>
-                      <th className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColRfc')}</th>
-                      <th className="text-left py-2 text-text-muted font-medium">{t('body.dataSources.tableColNotes')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColStructure')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColYears')}</th>
+                      <th scope="col" className="text-left py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColQuality')}</th>
+                      <th scope="col" className="text-right py-2 pr-3 text-text-muted font-medium">{t('body.dataSources.tableColRfc')}</th>
+                      <th scope="col" className="text-left py-2 text-text-muted font-medium">{t('body.dataSources.tableColNotes')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1556,9 +1556,9 @@ export function Methodology() {
                 <table className="w-full text-xs" aria-label={t('limitations.tableAria')}>
                   <thead className="border-b border-border">
                     <tr>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
-                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium">{t('limitations.colLimitation')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">{t('limitations.colImpact')}</th>
+                      <th scope="col" className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">{t('limitations.colPath')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">

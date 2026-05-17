@@ -522,7 +522,7 @@ function MetricTable({
       <table className="w-full text-sm" aria-label="Vendor metric comparison">
         <thead>
           <tr className="border-b border-border bg-background/60">
-            <th className="px-3 py-2 text-left text-xs font-semibold text-text-muted">{t('metricColLabel')}</th>
+            <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-muted">{t('metricColLabel')}</th>
             <th
               className="px-3 py-2 text-center text-xs font-semibold"
               style={{ color: COMPARE_HEX.a }}
@@ -535,7 +535,7 @@ function MetricTable({
             >
               {bName.slice(0, 22)}
             </th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-text-muted">
+            <th scope="col" className="px-3 py-2 text-center text-xs font-semibold text-text-muted">
               {t('metricColDelta')}
             </th>
           </tr>

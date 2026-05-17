@@ -276,19 +276,19 @@ function VendorTable({
         >
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
+              <th scope="col" className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 #
               </th>
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
+              <th scope="col" className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.sector')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
+              <th scope="col" className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.totalValueMxn')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em] hidden sm:table-cell">
+              <th scope="col" className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em] hidden sm:table-cell">
                 {t('table.totalContracts')}
               </th>
-              <th className="text-center py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
+              <th scope="col" className="text-center py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.avgRiskScore')}
               </th>
             </tr>

@@ -389,22 +389,22 @@ function ReincidentesSection({
         <table className="w-full text-sm" aria-label={lang === 'en' ? 'Repeat-offender vendors' : 'Proveedores reincidentes'}>
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Proveedor
               </th>
-              <th className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Anos
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Contratos
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Valor total
               </th>
-              <th className="text-center py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              <th scope="col" className="text-center py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                 Sector
               </th>
-              <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+              <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                 Z-score prom
               </th>
             </tr>
@@ -1971,16 +1971,16 @@ export default function PriceIntelligence() {
               <table className="w-full text-sm" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-left py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderSector')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderContracts')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted hidden sm:table-cell">
                       {t('tableHeaderAmount')}
                     </th>
-                    <th className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
+                    <th scope="col" className="text-right py-2 px-3 text-[10px] font-medium uppercase tracking-widest text-text-muted">
                       {t('tableHeaderAvgZ')}
                     </th>
                   </tr>

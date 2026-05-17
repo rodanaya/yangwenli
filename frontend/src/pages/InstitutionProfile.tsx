@@ -1984,9 +1984,9 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     <table className="w-full border-separate" style={{ borderSpacing: 2 }} aria-label="Vendor loyalty over time">
       <thead>
         <tr>
-          <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
+          <th scope="col" className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
           {displayYears.map((yr) => (
-            <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
+            <th scope="col" key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
           ))}
         </tr>
       </thead>

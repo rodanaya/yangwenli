@@ -172,13 +172,13 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
           <table className="w-full text-sm" aria-label={t('ariaWidget.tableAriaLabel', { defaultValue: 'ARIA investigation leads' })}>
             <thead>
               <tr className="text-left text-[11px] text-text-muted uppercase tracking-wider border-b border-border">
-                <th className="pb-2 pr-2">#</th>
-                <th className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.sector')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.risk')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.ips')}</th>
-                <th className="pb-2 pr-2">{t('ariaTable.pattern')}</th>
-                <th className="pb-2 pr-2 text-right">{t('amount')}</th>
+                <th scope="col" className="pb-2 pr-2">#</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.sector')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.risk')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.ips')}</th>
+                <th scope="col" className="pb-2 pr-2">{t('ariaTable.pattern')}</th>
+                <th scope="col" className="pb-2 pr-2 text-right">{t('amount')}</th>
               </tr>
             </thead>
             <tbody>
