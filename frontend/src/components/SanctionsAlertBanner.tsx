@@ -93,9 +93,9 @@ export function SanctionsAlertBanner({
           aria-label={expanded ? 'Collapse details' : 'Expand details'}
         >
           {expanded ? (
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="h-4 w-4" aria-hidden="true" />
           ) : (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
           )}
         </button>
       </div>

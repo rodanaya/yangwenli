@@ -54,7 +54,7 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
         {open ? (
           <ChevronUp className="w-4 h-4 ml-auto text-accent" aria-hidden="true" />
         ) : (
-          <ChevronDown className="w-4 h-4 ml-auto text-accent" />
+          <ChevronDown className="w-4 h-4 ml-auto text-accent" aria-hidden="true" />
         )}
       </button>
       {open && (

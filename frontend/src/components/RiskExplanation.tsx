@@ -59,9 +59,9 @@ export function RiskExplanationPanel({ contractId, compact = false }: RiskExplan
           {data.model_type === 'sector' ? 'sector model' : 'global model'} {data.model_version}
         </span>
         {hasMore && !expanded ? (
-          <ChevronDown className="h-3 w-3 ml-auto" />
+          <ChevronDown className="h-3 w-3 ml-auto" aria-hidden="true" />
         ) : activeFeatures.length > (compact ? 3 : 5) ? (
-          <ChevronUp className="h-3 w-3 ml-auto" />
+          <ChevronUp className="h-3 w-3 ml-auto" aria-hidden="true" />
         ) : null}
       </button>
 

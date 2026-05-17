@@ -82,12 +82,12 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
       >
         {copied ? (
           <>
-            <Check className="h-3.5 w-3.5 text-text-muted" />
+            <Check className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
             <span className="text-text-muted">{t('share.copied')}</span>
           </>
         ) : (
           <>
-            <Share2 className="h-3.5 w-3.5" />
+            <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{label ?? t('share.title')}</span>
           </>
         )}
