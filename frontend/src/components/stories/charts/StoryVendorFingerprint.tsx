@@ -36,7 +36,7 @@ export function StoryVendorFingerprint() {
             href="/aria"
             className="flex items-center gap-1.5 text-xs text-risk-high hover:text-accent font-mono uppercase tracking-wide"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {t('vendorFingerprint.ariaLink')}
           </a>
         </div>

@@ -273,7 +273,7 @@ export function NetworkGraphModal({
                   aria-label="Zoom in"
                   title="Zoom in"
                 >
-                  <ZoomIn className="w-3.5 h-3.5" />
+                  <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={handleZoomOut}
@@ -281,7 +281,7 @@ export function NetworkGraphModal({
                   aria-label="Zoom out"
                   title="Zoom out"
                 >
-                  <ZoomOut className="w-3.5 h-3.5" />
+                  <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
                 <button
                   onClick={handleReset}
@@ -289,7 +289,7 @@ export function NetworkGraphModal({
                   aria-label="Reset zoom"
                   title="Reset zoom"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
             )}

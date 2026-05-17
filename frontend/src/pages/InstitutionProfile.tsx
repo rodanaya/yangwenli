@@ -504,10 +504,10 @@ export function InstitutionProfile() {
       {/* ---- BREADCRUMB NAV ---- */}
       <nav className="flex items-center gap-2 text-xs text-text-muted" aria-label="Breadcrumb">
         <Link to="/institutions/health" className="hover:text-accent transition-colors flex items-center gap-1">
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {t('profile.breadcrumb')}
         </Link>
-        <ChevronRight className="h-3 w-3" />
+        <ChevronRight className="h-3 w-3" aria-hidden="true" />
         <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
       </nav>
 
@@ -595,18 +595,18 @@ export function InstitutionProfile() {
               onClick={() => setNetworkOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 transition-colors font-medium"
             >
-              <Network className="h-3.5 w-3.5" />
+              <Network className="h-3.5 w-3.5" aria-hidden="true" />
               {t('profile.networkButton')}
             </button>
             <Link to={`/contracts?institution_id=${institutionId}`}>
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-                <FileText className="h-3.5 w-3.5" />
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('profile.allContractsButton')}
               </button>
             </Link>
             <Link to={`/institutions/compare?a=${institutionId}`}>
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-                <GitCompare className="h-3.5 w-3.5" />
+                <GitCompare className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('profile.compareButton')}
               </button>
             </Link>

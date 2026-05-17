@@ -146,7 +146,7 @@ export function VendorNetworkTab({
             className="text-sm text-accent hover:underline mt-3 inline-flex items-center gap-1"
           >
             {isEs ? 'Abrir panel de investigación' : 'Open investigation panel'}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </section>
       )}
@@ -194,7 +194,7 @@ export function VendorNetworkTab({
                 onClick={onOpenNetworkGraph}
                 className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline"
               >
-                <Network className="h-3 w-3" />
+                <Network className="h-3 w-3" aria-hidden="true" />
                 {isEs ? 'Ver grafo completo' : 'View full graph'}
               </button>
             )}

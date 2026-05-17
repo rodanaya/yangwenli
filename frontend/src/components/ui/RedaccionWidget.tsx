@@ -150,7 +150,7 @@ export default function RedaccionWidget() {
           to="/aria"
           className="inline-flex items-center gap-1 text-xs text-text-secondary hover:text-accent transition-colors font-medium"
         >
-          <ArrowRight className="h-3 w-3" />
+          <ArrowRight className="h-3 w-3" aria-hidden="true" />
           Ver todos los casos
         </Link>
       </div>

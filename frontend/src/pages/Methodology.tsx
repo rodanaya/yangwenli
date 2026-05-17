@@ -764,7 +764,7 @@ export function Methodology() {
             className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
             title={t('heroHeader.exportPdf')}
           >
-            <Printer className="w-3.5 h-3.5" />
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" />
             PDF
           </button>
         </div>

@@ -506,7 +506,7 @@ function PatternCard({
               to={`/aria?pattern=${meta.code}`}
               className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors"
             >
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               {isEs ? 'Ver en cola ARIA' : 'View in ARIA queue'}
             </Link>
           </div>
@@ -519,7 +519,7 @@ function PatternCard({
             to={`/aria?pattern=${meta.code}`}
             className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-accent transition-colors"
           >
-            <ArrowUpRight className="h-3 w-3" />
+            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             {isEs ? 'Ver en cola ARIA' : 'View in ARIA queue'}
           </Link>
         </div>

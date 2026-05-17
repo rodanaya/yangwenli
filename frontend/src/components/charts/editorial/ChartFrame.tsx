@@ -69,7 +69,7 @@ export function ChartFrame({
                 className="inline-flex items-center ml-2 text-text-muted hover:text-accent transition-colors"
                 aria-label="View methodology"
               >
-                <Info className="h-3 w-3 inline" />
+                <Info className="h-3 w-3 inline" aria-hidden="true" />
               </Link>
             )}
           </h3>

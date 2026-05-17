@@ -1113,7 +1113,7 @@ function ContractBriefing({
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors mb-3"
         >
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
           <span>{lang === 'en' ? 'View on COMPRANET' : 'Ver en COMPRANET'}</span>
         <span className="sr-only"> (opens in new tab)</span></a>
       )}

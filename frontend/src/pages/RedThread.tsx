@@ -408,9 +408,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
         to={`/network?vendor=${vendorId}`}
         className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors mt-4"
       >
-        <GitBranch className="w-3.5 h-3.5" />
+        <GitBranch className="w-3.5 h-3.5" aria-hidden="true" />
         {t('network.openNetworkGraph')}
-        <ExternalLink className="w-3 h-3" />
+        <ExternalLink className="w-3 h-3" aria-hidden="true" />
       </Link>
     </ChapterShell>
   )
@@ -873,7 +873,7 @@ export default function RedThread() {
           onClick={() => navigate('/aria')}
           className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm flex-shrink-0"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           {t('nav.back')}
         </button>
         <div className="hidden sm:flex items-center gap-3 min-w-0">

@@ -159,7 +159,7 @@ export function DossierAddItemDialog({
                     className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left text-sm hover:bg-background-elevated/60 transition-colors disabled:opacity-60 border border-transparent hover:border-border/40"
                   >
                     {isAdded ? (
-                      <CheckCircle className="h-4 w-4 text-risk-low shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-risk-low shrink-0" aria-hidden="true" />
                     ) : isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin text-accent shrink-0" />
                     ) : (

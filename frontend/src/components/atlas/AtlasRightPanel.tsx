@@ -255,7 +255,7 @@ function IdlePanel({ lang }: { lang: 'en' | 'es' }) {
           style={{ background: ACCENT, color: 'white' }}
         >
           {lang === 'en' ? '→ Open investigation queue (ARIA)' : '→ Abrir cola de investigación (ARIA)'}
-          <ArrowUpRight className="h-3 w-3" />
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </button>
       </div>
     </div>

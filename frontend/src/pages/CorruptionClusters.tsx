@@ -506,7 +506,7 @@ function ComplementaryTypologyCard({
             style={{ color: typology.color }}
           >
             {typology.linkLabel}
-            <ArrowUpRight className="h-3 w-3" />
+            <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </footer>
       )}
@@ -983,7 +983,7 @@ function PatternVendorCard({
           className="inline-flex items-center gap-1 text-[10px] font-mono text-accent hover:underline"
         >
           {isEs ? 'Ver cola ARIA' : 'View ARIA queue'}
-          <ArrowUpRight className="h-3 w-3" />
+          <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
         </Link>
       </footer>
     </article>
@@ -1279,7 +1279,7 @@ export default function CorruptionClusters() {
             className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
           >
             {isEs ? 'Explorar cola ARIA completa' : 'Explore full ARIA queue'}
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
       </Act>
@@ -1334,7 +1334,7 @@ export default function CorruptionClusters() {
               className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
             >
               {isEs ? 'Ver todos los investigados en ARIA' : 'View all subjects in ARIA queue'}
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
         </Act>

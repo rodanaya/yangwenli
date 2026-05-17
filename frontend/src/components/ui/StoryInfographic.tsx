@@ -370,10 +370,10 @@ export default function StoryInfographic() {
               {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
             </button>
             <button onClick={prev} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('prevSlide')}>
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             </button>
             <button onClick={goNext} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('nextSlide')}>
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         </div>

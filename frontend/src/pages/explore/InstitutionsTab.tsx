@@ -884,7 +884,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
           className="text-text-muted group-hover:text-accent transition-colors"
           aria-label={`View ${toTitleCase(institution.name)} details`}
         >
-          <ExternalLink className="h-3 w-3" />
+          <ExternalLink className="h-3 w-3" aria-hidden="true" />
         </Link>
       </td>
     </tr>

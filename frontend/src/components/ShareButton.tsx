@@ -103,7 +103,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
             onClick={handleWhatsApp}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
-            <MessageCircle className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+            <MessageCircle className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
             {t('share.whatsapp')}
           </button>
           <button
@@ -111,7 +111,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
             onClick={handleX}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
-            <Twitter className="h-3.5 w-3.5 text-sky-400 flex-shrink-0" />
+            <Twitter className="h-3.5 w-3.5 text-sky-400 flex-shrink-0" aria-hidden="true" />
             {t('share.postOnX')}
           </button>
           <div className="h-px bg-background-elevated my-1" role="separator" />
@@ -120,7 +120,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
             onClick={handleCopyLink}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
-            <Link className="h-3.5 w-3.5 text-text-secondary flex-shrink-0" />
+            <Link className="h-3.5 w-3.5 text-text-secondary flex-shrink-0" aria-hidden="true" />
             {t('share.copyLink')}
           </button>
         </div>

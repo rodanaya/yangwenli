@@ -157,7 +157,7 @@ export function VendorProfile() {
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-[11px] text-text-muted hover:text-text-primary mb-4 font-mono uppercase tracking-widest"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Volver a ARIA' : 'Back to ARIA'}
         </button>
       )}

@@ -191,7 +191,7 @@ export function AtlasLeftRail({
             aria-label={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
             title={lang === 'en' ? 'Reset all filters' : 'Restablecer filtros'}
           >
-            <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} />
+            <RotateCcw className="h-3.5 w-3.5" style={{ color: 'var(--color-text-muted)' }} aria-hidden="true" />
           </button>
         </div>
       )}

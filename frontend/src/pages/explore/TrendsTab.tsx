@@ -863,7 +863,7 @@ export default function TrendsTab() {
                               onClick={() => setSelectedYear(event.year)}
                               className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs text-text-muted hover:bg-background-elevated transition-colors border border-border/30"
                             >
-                              <IconComp className="h-2.5 w-2.5 shrink-0" />
+                              <IconComp className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
                               <span className="truncate max-w-[120px]">{event.title}</span>
                               <span className="font-mono">{event.year}</span>
                             </button>

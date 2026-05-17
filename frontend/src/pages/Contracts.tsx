@@ -1530,7 +1530,7 @@ function ContractRow({
             onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
             aria-label={`View details for ${contract.contract_number || contract.id}`}
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
           <Link
             to={`/contracts/${contract.id}`}
@@ -1539,7 +1539,7 @@ function ContractRow({
             onClick={(e) => e.stopPropagation()}
             aria-label={`Open full page for ${contract.contract_number || contract.id}`}
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
       </td>
@@ -1614,7 +1614,7 @@ function ContractRow({
             onClick={(e) => e.stopPropagation()}
             title="View on COMPRANET"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             COMPRANET
           <span className="sr-only"> (opens in new tab)</span></a>
         )}
@@ -1623,7 +1623,7 @@ function ContractRow({
             className="text-xs text-accent hover:underline flex items-center gap-1"
             onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
           >
-            <Eye className="h-3 w-3" />
+            <Eye className="h-3 w-3" aria-hidden="true" />
             {t('table.fullDetails')}
           </button>
           <Link
@@ -1632,7 +1632,7 @@ function ContractRow({
             className="text-xs text-accent hover:underline flex items-center gap-1"
             title="Open full page"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             Full page
           </Link>
         </div>

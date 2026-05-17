@@ -754,7 +754,7 @@ export default function VendorCompare() {
             className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
             aria-label="Back to Explore"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t('back')}
           </Link>
         </div>
@@ -778,7 +778,7 @@ export default function VendorCompare() {
           className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
           aria-label={t('back')}
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           {t('back')}
         </Link>
       </div>

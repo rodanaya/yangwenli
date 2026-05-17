@@ -135,7 +135,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
           onClick={() => query.refetch()}
           className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline"
         >
-          <RefreshCw className="h-3 w-3" />
+          <RefreshCw className="h-3 w-3" aria-hidden="true" />
           Retry
         </button>
       </div>
@@ -363,7 +363,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
             to={`/vendors/${vendor.id}`}
             aria-label={`View ${vendor.name}`}
           >
-            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" aria-hidden="true" />
           </Link>
           <InlineDossierTrigger
             entityType="vendor"
@@ -428,7 +428,7 @@ function InstitutionRow({ institution, riskColor }: { institution: any; riskColo
             to={`/institutions/${instId}`}
             aria-label={`View ${instName}`}
           >
-            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" />
+            <ExternalLink className="h-3.5 w-3.5 text-text-muted hover:text-accent transition-colors" aria-hidden="true" />
           </Link>
           <InlineDossierTrigger
             entityType="institution"
@@ -503,7 +503,7 @@ function InlineDossierTrigger({
         aria-label={`Add ${entityName} to dossier`}
         className="h-6 w-6 flex items-center justify-center rounded hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
       >
-        <FolderPlus className="h-3.5 w-3.5" />
+        <FolderPlus className="h-3.5 w-3.5" aria-hidden="true" />
       </button>
 
       {open && (
@@ -540,7 +540,7 @@ function InlineDossierTrigger({
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-background-elevated/60 transition-colors disabled:opacity-60"
                   >
                     {isOk ? (
-                      <CheckCircle className="h-3 w-3 text-risk-low shrink-0" />
+                      <CheckCircle className="h-3 w-3 text-risk-low shrink-0" aria-hidden="true" />
                     ) : isPending ? (
                       <Loader2 className="h-3 w-3 animate-spin text-accent shrink-0" />
                     ) : (
@@ -558,7 +558,7 @@ function InlineDossierTrigger({
               onClick={() => setOpen(false)}
               className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs text-accent hover:bg-accent/5 transition-colors"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3" aria-hidden="true" />
               New dossier
             </button>
           </div>

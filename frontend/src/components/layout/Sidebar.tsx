@@ -354,7 +354,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 className="w-full flex justify-center items-center rounded-sm py-1.5 text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors"
                 aria-label={t('reportIssue')}
               >
-                <MessageSquarePlus className="h-4 w-4" />
+                <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
@@ -366,7 +366,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             onClick={() => setReportOpen(true)}
             className="w-full flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-text-on-dark-muted hover:text-text-on-dark-primary hover:bg-sidebar-hover transition-colors"
           >
-            <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
+            <MessageSquarePlus className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
             <span className="truncate">{t('reportIssue')}</span>
           </button>
         )}

@@ -330,7 +330,7 @@ export default function Executive() {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-accent transition-colors"
               aria-label={lang === 'en' ? 'Print this page' : 'Imprimir esta página'}
             >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-3.5 w-3.5" aria-hidden="true" />
               {lang === 'en' ? 'Print / PDF' : 'Imprimir / PDF'}
             </button>
           </div>
@@ -503,7 +503,7 @@ export default function Executive() {
               className="text-[10px] font-mono uppercase tracking-[0.12em] font-bold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
             >
               {lang === 'en' ? 'Open full Observatory' : 'Abrir Observatorio completo'}
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </div>
         </motion.section>
@@ -1392,7 +1392,7 @@ export default function Executive() {
               className="text-[10px] font-mono uppercase tracking-[0.1em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1 flex-shrink-0 ml-4"
             >
               {lang === 'en' ? 'All categories' : 'Todas'}
-              <ArrowUpRight className="h-3 w-3" />
+              <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
@@ -1661,7 +1661,7 @@ export default function Executive() {
                 className="text-[11px] font-mono uppercase tracking-[0.12em] text-accent hover:text-accent transition-colors inline-flex items-center gap-1"
               >
                 {lang === 'en' ? 'View all' : 'Ver todas'}
-                <ArrowUpRight className="h-3 w-3" />
+                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
             </div>
             <p className="text-sm text-text-secondary leading-[1.6] mb-4 text-pretty">
@@ -1752,7 +1752,7 @@ export default function Executive() {
                 className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/80 text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
               >
                 {lang === 'en' ? 'Open ARIA queue' : 'Abrir cola ARIA'}
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
               <button
                 onClick={() => navigate('/explore?entity=vendor')}

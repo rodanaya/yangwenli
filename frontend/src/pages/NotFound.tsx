@@ -71,7 +71,7 @@ export function NotFound() {
           onClick={() => navigate('/')}
           className="flex items-center gap-2 px-4 py-2 rounded-sm border border-border text-sm font-semibold text-text-secondary hover:bg-background-elevated hover:border-border-hover transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {t('notFound.backHome')}
         </button>
         <button

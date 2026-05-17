@@ -82,7 +82,7 @@ export function RedThreadPanel({
                 config.colorClass
               )}
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="flex-1 truncate">{item.label}</span>
               {item.count != null && (
                 <span className="shrink-0 rounded-full bg-background-elevated/40 px-1.5 py-0.5 text-[10px] font-medium">

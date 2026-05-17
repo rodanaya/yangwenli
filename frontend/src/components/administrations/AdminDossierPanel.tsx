@@ -228,7 +228,7 @@ export function AdminDossierPanel({
                               to={`/cases/${scandal.caseId}`}
                               className="text-[9px] text-accent hover:text-accent/80 font-mono transition-colors flex items-center gap-0.5 ml-auto"
                             >
-                              <ExternalLink className="h-2.5 w-2.5" />
+                              <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
                               {t('dossier.linkToCases')}
                             </Link>
                           )}
@@ -244,7 +244,7 @@ export function AdminDossierPanel({
                   to="/cases"
                   className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 font-mono mt-1 transition-colors"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   {t('dossier.linkToCases')}
                 </Link>
               </div>

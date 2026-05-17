@@ -290,7 +290,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   {tCommon('contractDetail.viewOnCompranet')}
                 <span className="sr-only"> (opens in new tab)</span></a>
               )}

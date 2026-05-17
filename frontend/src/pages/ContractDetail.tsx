@@ -90,7 +90,7 @@ export default function ContractDetail() {
             onClick={() => navigate('/contracts')}
             className="inline-flex items-center gap-2 text-xs text-text-secondary hover:text-text-secondary border border-border rounded-sm px-3 py-1.5"
           >
-            <ArrowLeft className="h-3 w-3" />
+            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
             Back to contracts
           </button>
         </div>
@@ -119,10 +119,10 @@ export default function ContractDetail() {
           to="/contracts"
           className="inline-flex items-center gap-1 hover:text-text-secondary transition-colors"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           Contracts
         </Link>
-        <ChevronRight className="h-3 w-3 text-text-primary" />
+        <ChevronRight className="h-3 w-3 text-text-primary" aria-hidden="true" />
         <span className="text-text-secondary font-mono tabular-nums">
           {contract.contract_number || `#${contract.id}`}
         </span>
@@ -568,7 +568,7 @@ export default function ContractDetail() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm text-risk-high hover:text-accent font-medium group"
               >
-                <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+                <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
                 View on COMPRANET
               <span className="sr-only"> (opens in new tab)</span></a>
               <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
@@ -613,7 +613,7 @@ export default function ContractDetail() {
                   className="flex items-center justify-between group py-2 text-risk-high hover:text-accent"
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5" />
+                    <FileText className="h-3.5 w-3.5" aria-hidden="true" />
                     <span className="text-xs font-mono uppercase tracking-[0.15em]">
                       Investigation thread
                     </span>
@@ -913,7 +913,7 @@ function IdRow({ label, value }: { label: string; value: string }) {
         title="Copy to clipboard"
       >
         <span className="font-mono tabular-nums">{value}</span>
-        <Copy className="h-3 w-3 text-text-muted group-hover:text-text-secondary" />
+        <Copy className="h-3 w-3 text-text-muted group-hover:text-text-secondary" aria-hidden="true" />
       </button>
     </div>
   )

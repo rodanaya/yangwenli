@@ -1071,7 +1071,7 @@ export default function InstitutionCompare() {
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide"
           aria-label={isEs ? 'Regresar a Instituciones' : 'Back to Institutions'}
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {isEs ? 'Instituciones' : 'Institutions'}
         </Link>
       </div>

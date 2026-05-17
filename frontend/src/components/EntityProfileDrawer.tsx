@@ -298,14 +298,14 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           href={investigationUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Open Investigation</span>
         </a>
         <a
           href={contractsUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <FileText className="h-3.5 w-3.5" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">View Contracts</span>
         </a>
         <a
@@ -314,7 +314,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Search News</span>
         <span className="sr-only"> (opens in new tab)</span></a>
       </div>
@@ -450,14 +450,14 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
           href={investigationUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <AlertTriangle className="h-3.5 w-3.5" />
+          <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Open Investigation</span>
         </a>
         <a
           href={contractsUrl}
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <FileText className="h-3.5 w-3.5" />
+          <FileText className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">View Contracts</span>
         </a>
         <a
@@ -466,7 +466,7 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
           rel="noopener noreferrer"
           className="flex flex-col items-center gap-1 rounded border border-border p-2 text-center hover:border-accent hover:text-accent transition-colors text-text-muted"
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="text-xs leading-tight">Search News</span>
         <span className="sr-only"> (opens in new tab)</span></a>
       </div>

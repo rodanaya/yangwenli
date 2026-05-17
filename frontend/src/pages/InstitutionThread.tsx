@@ -227,7 +227,7 @@ export function InstitutionThread() {
             <Link to="/institutions" className="hover:text-text-primary transition-colors">
               {isEs ? 'Instituciones' : 'Institutions'}
             </Link>
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
             <span style={{ color: sectorColor }}>{getSectorName(sectorCode, lang).toUpperCase()}</span>
           </div>
           <div className="flex items-start gap-3 mb-2">

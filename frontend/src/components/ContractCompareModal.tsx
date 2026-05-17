@@ -184,7 +184,7 @@ export function ContractCompareModal({
                         onClick={() => { onOpenChange(false); onViewDetail(c.id) }}
                         className="mt-1.5 text-xs text-accent hover:underline flex items-center gap-1"
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        <ExternalLink className="h-3 w-3" aria-hidden="true" />
                         Full details
                       </button>
                     </td>

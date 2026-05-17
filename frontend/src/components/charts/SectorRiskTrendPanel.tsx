@@ -525,7 +525,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
             className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/60 transition-colors"
             disabled={visibleLines.length === 0}
           >
-            <DownloadIcon className="w-3.5 h-3.5" />
+            <DownloadIcon className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>

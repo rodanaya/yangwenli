@@ -280,7 +280,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             aria-label="Download chart data as CSV"
             className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated/60 transition-colors"
           >
-            <DownloadIcon className="w-3.5 h-3.5" />
+            <DownloadIcon className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
 
           {/* Retry button when API failed but fallback is shown */}

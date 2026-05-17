@@ -296,7 +296,7 @@ function ExtremeCaseCard({
           aria-label={lang === 'en' ? `View contract detail ${contract.contract_id}` : `Ver detalle del contrato ${contract.contract_id}`}
         >
           {t('viewContract')}
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
         {contract.vendor_id && (
           <EntityIdentityChip type="vendor" id={contract.vendor_id} name={contract.vendor_name} size="sm" />
@@ -601,7 +601,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
             className="inline-flex items-center gap-1 text-accent hover:underline text-xs"
           >
             {t('viewFullMethodology')}
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-3 h-3" aria-hidden="true" />
           </Link>
         </div>
       )}
@@ -680,7 +680,7 @@ function MostExtremeCallout({
               className="inline-flex items-center gap-1 font-mono uppercase tracking-wide text-risk-critical hover:text-risk-critical/80 border border-risk-critical/30 hover:border-risk-critical/60 rounded px-2 py-0.5 transition-colors"
             >
               Abrir expediente
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -2138,14 +2138,14 @@ export default function PriceIntelligence() {
           className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors border border-border hover:border-border rounded px-2.5 py-1"
         >
           {t('spendingCategories')}
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
         <Link
           to="/aria"
           className="inline-flex items-center gap-1.5 text-xs text-risk-high hover:text-risk-high/80 transition-colors border border-risk-high/30 hover:border-risk-high/60 rounded px-2.5 py-1 font-mono uppercase tracking-wide"
         >
           Cola de investigacion ARIA
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
         </Link>
       </div>
 

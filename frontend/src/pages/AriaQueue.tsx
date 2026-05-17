@@ -261,7 +261,7 @@ function ReviewPopover({
           className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-card transition-colors"
           aria-label={t('reviewPopover.close')}
         >
-          <XIcon className="h-3.5 w-3.5" />
+          <XIcon className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
       {status === 'confirmed' && !inGroundTruth && (
@@ -376,7 +376,7 @@ function FilterChip({
         aria-label={isEs ? 'Quitar filtro' : 'Clear filter'}
         type="button"
       >
-        <XIcon className="w-2.5 h-2.5" />
+        <XIcon className="w-2.5 h-2.5" aria-hidden="true" />
       </button>
     </span>
   )

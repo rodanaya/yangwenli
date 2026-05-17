@@ -223,7 +223,7 @@ function ChapterSources({ sources }: { sources: string[] }) {
         className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors group"
         aria-expanded={open}
       >
-        <FileText className="h-3 w-3 group-hover:text-text-secondary" />
+        <FileText className="h-3 w-3 group-hover:text-text-secondary" aria-hidden="true" />
         <span className="font-mono">{open ? '−' : '+'}</span>
         <span>{t('story.sources', { count: sources.length })}</span>
         <span className="text-text-primary">&mdash; {open ? t('story.collapse') : t('story.viewCitations')}</span>
@@ -1655,14 +1655,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.fullMethodology')}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
           <Link
             to="/model"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.modelTransparency')}
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -1891,7 +1891,7 @@ export default function StoryNarrative() {
                 onClick={() => navigate('/journalists')}
                 className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide px-4 py-2 rounded-full border border-border hover:border-border-hover text-text-primary transition-colors"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
                 {t('story.allStories')}
               </button>
             </div>
@@ -1918,7 +1918,7 @@ export default function StoryNarrative() {
             to="/journalists"
             className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             {t('story.allStories')}
           </Link>
           <span className="text-[10px] text-text-muted font-mono tabular-nums">

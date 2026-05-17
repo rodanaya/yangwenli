@@ -489,7 +489,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
               style={{ background: meta.color, color: 'var(--color-background)' }}
             >
               {lang === 'en' ? 'Investigate' : 'Investigar'}
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         </motion.aside>
@@ -561,7 +561,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
             aria-label={lang === 'en' ? 'Previous year' : 'Año anterior'}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           </button>
 
           <button
@@ -585,7 +585,7 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
             className="p-1.5 rounded-sm hover:bg-background-elevated/60 disabled:opacity-30 transition-colors"
             aria-label={lang === 'en' ? 'Next year' : 'Siguiente año'}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -1891,7 +1891,7 @@ export default function Atlas() {
               style={{ background: 'rgba(160,104,32,0.18)', color: 'var(--color-accent)' }}
               title={lang === 'en' ? 'Click to unpin' : 'Clic para despinear'}
             >
-              <Pin className="h-3 w-3" />
+              <Pin className="h-3 w-3" aria-hidden="true" />
               <span className="font-bold uppercase tracking-[0.1em]">{lang === 'en' ? 'Pinned' : 'Pineado'}</span>
               <span className="opacity-90">{pinnedCode.slice(0, 14)}</span>
             </button>
@@ -2220,7 +2220,7 @@ export default function Atlas() {
                       style={{ background: activeStory.accent, color: 'white' }}
                     >
                       {lang === 'en' ? 'Continue' : 'Continuar'}
-                      <ArrowUpRight className="h-3 w-3 rotate-45" />
+                      <ArrowUpRight className="h-3 w-3 rotate-45" aria-hidden="true" />
                     </button>
                   )}
                   {isLastChapter && (
@@ -2277,7 +2277,7 @@ export default function Atlas() {
                     className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-opacity hover:opacity-90 inline-flex items-center gap-1.5"
                     style={{ background: activeStory.accent, color: 'white' }}
                   >
-                    <FileText className="h-3 w-3" />
+                    <FileText className="h-3 w-3" aria-hidden="true" />
                     {lang === 'en' ? 'Read the full investigation' : 'Leer la investigación completa'}
                   </button>
                 )}
@@ -2305,7 +2305,7 @@ export default function Atlas() {
                     className="text-[10px] font-mono uppercase tracking-[0.1em] font-bold px-3 py-1.5 rounded-sm transition-colors hover:bg-background-elevated/40 inline-flex items-center gap-1.5"
                     style={{ border: '1px solid var(--color-border)', color: s.accent }}
                   >
-                    <BookOpen className="h-3 w-3" />
+                    <BookOpen className="h-3 w-3" aria-hidden="true" />
                     {s.title[lang]}
                   </button>
                 ))}

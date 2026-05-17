@@ -247,7 +247,7 @@ export default function Relationships() {
               style={{ color: 'var(--color-accent)' }}
             >
               {lang === 'es' ? 'Ver superficie de investigación completa' : 'Open full investigation surface'}
-              <ArrowRight className="h-3 w-3" />
+              <ArrowRight className="h-3 w-3" aria-hidden="true" />
             </Link>
           </div>
         </div>

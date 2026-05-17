@@ -270,7 +270,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-sm text-[10px] font-mono tracking-[0.1em] text-text-secondary bg-background-elevated border border-border hover:border-border-hover hover:text-text-primary transition-colors"
                 onClick={() => navigate('/settings?tab=quality')}
               >
-                <Database className="h-3 w-3 text-text-muted" />
+                <Database className="h-3 w-3 text-text-muted" aria-hidden="true" />
                 <span className="text-text-muted">DQ</span>
                 <span className="text-accent font-bold uppercase tracking-wide">{qualityLabel}</span>
               </button>

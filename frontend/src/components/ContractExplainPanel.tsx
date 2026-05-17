@@ -49,10 +49,10 @@ export function ContractExplainPanel({ contractId, riskLevel }: Props) {
         onClick={fetchExplanation}
         className="w-full flex items-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/15 transition-colors text-left"
       >
-        <Sparkles className="w-4 h-4 text-accent flex-shrink-0" />
+        <Sparkles className="w-4 h-4 text-accent flex-shrink-0" aria-hidden="true" />
         <span className="text-sm text-accent/90 font-medium">{t('contractExplain.explain')}</span>
         {open ? (
-          <ChevronUp className="w-4 h-4 ml-auto text-accent" />
+          <ChevronUp className="w-4 h-4 ml-auto text-accent" aria-hidden="true" />
         ) : (
           <ChevronDown className="w-4 h-4 ml-auto text-accent" />
         )}

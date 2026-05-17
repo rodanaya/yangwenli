@@ -135,7 +135,7 @@ export function AddToDossierButton({
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-background-elevated/60 transition-colors disabled:opacity-60"
                   >
                     {isThisSuccess ? (
-                      <CheckCircle className="h-3.5 w-3.5 text-risk-low shrink-0" />
+                      <CheckCircle className="h-3.5 w-3.5 text-risk-low shrink-0" aria-hidden="true" />
                     ) : isPending ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-accent shrink-0" />
                     ) : (
@@ -165,7 +165,7 @@ export function AddToDossierButton({
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm text-accent hover:bg-accent/5 transition-colors"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {t('dossier.newDossier')}
             </button>
           </div>

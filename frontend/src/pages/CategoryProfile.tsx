@@ -499,7 +499,7 @@ export default function CategoryProfile() {
               to="/sectors?view=categories"
               className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.15em] text-accent hover:text-accent/80 transition-colors border border-accent/30 hover:border-accent/60 px-2.5 py-1.5 rounded-sm"
             >
-              <ArrowLeft className="h-3 w-3" />
+              <ArrowLeft className="h-3 w-3" aria-hidden="true" />
               {t('profile.notFound.backLink')}
             </Link>
           </div>
@@ -551,7 +551,7 @@ export default function CategoryProfile() {
           to="/categories"
           className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-3"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
           {t('profile.breadcrumb')}
         </Link>
 
@@ -1153,7 +1153,7 @@ export default function CategoryProfile() {
             onClick={() => navigate(`/contracts?category_id=${categoryId}`)}
             className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors font-mono uppercase tracking-wide"
           >
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3" aria-hidden="true" />
             {t('profile.actions.viewAll')}
           </button>
         </div>

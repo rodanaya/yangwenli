@@ -405,7 +405,7 @@ export function ChapterVerdict({
             to="/workspace"
             className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
           >
-            <BookmarkPlus className="w-3.5 h-3.5" />
+            <BookmarkPlus className="w-3.5 h-3.5" aria-hidden="true" />
             {t('verdict.addToWorkspace')}
           </Link>
           <button
@@ -424,7 +424,7 @@ export function ChapterVerdict({
             to="/methodology"
             className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
           >
-            <FileText className="w-3 h-3" />
+            <FileText className="w-3 h-3" aria-hidden="true" />
             {t('verdict.methodologyLink')}
           </Link>
         </div>

@@ -340,7 +340,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, isFalsePositive, fpR
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-text-muted" />
+                    <Check className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
                     Copiado
                   </>
                 ) : (
