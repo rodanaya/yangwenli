@@ -253,6 +253,7 @@ export function PairDossierRow({
                 onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
                 className="inline-flex items-center gap-1 transition-colors"
                 style={{ color: accent }}
+                aria-label={t('pairCard.investigationThread')}
               >
                 <ChevronRight className="h-3 w-3" aria-hidden="true" />
               </button>
