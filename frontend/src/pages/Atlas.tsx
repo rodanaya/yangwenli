@@ -316,6 +316,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
           exit={{ x: 440, opacity: 0 }}
           transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
           role="dialog"
+          aria-modal="true"
           aria-label={`${meta.label} — cluster details`}
         >
           {/* Header */}
