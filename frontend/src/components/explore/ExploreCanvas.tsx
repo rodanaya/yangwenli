@@ -29,6 +29,7 @@ import {
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { formatEntityName } from '@/lib/entity/format'
 import {
   getPinAnnotation,
   useExploreState,
@@ -1165,8 +1166,6 @@ void sectorApi
 // Z1Panel — HTML overlay: editorial institution briefing for a sector
 // ────────────────────────────────────────────────────────────────────────────
 
-const OECD_DA_THRESHOLD = 25 // OECD direct-award benchmark %
-
 function tierMark(risk: number): { glyph: string; color: string; label: string } {
   if (risk >= 0.60) return { glyph: '◆', color: RISK_COLORS.critical, label: 'T1' }
   if (risk >= 0.40) return { glyph: '◆', color: RISK_COLORS.high,     label: 'T2' }
@@ -1174,30 +1173,29 @@ function tierMark(risk: number): { glyph: string; color: string; label: string }
   return               { glyph: '●', color: '#71717a',                label: 'T4' }
 }
 
-function daFlag(pct: number | null): boolean {
-  return pct != null && pct > OECD_DA_THRESHOLD
-}
-
 function InstCard({
   inst,
   totalSectorSpend,
   isTop,
+  lang,
   dispatch,
 }: {
   inst: SpatialInstitution
   totalSectorSpend: number
   isTop: boolean
+  lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
   const tier = tierMark(inst.risk)
   const da = inst.direct_award_pct ?? null
-  const showDaFlag = daFlag(da)
-  const showHrFlag = (inst.high_risk_pct ?? 0) > 15
   const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+  const riskScore = Math.round(inst.risk * 100)
+  const contractCount = inst.total_contracts
+  const displayName = formatEntityName('institution', inst.name, 'sm')
 
   return (
     <div
-      className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer transition-colors"
+      className="flex flex-col px-3 py-2 cursor-pointer transition-colors"
       style={{
         borderLeft: `2px solid ${isTop ? tier.color : `${tier.color}50`}`,
         background: isTop ? `${tier.color}08` : 'transparent',
@@ -1206,37 +1204,36 @@ function InstCard({
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isTop ? `${tier.color}08` : 'transparent' }}
       onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
     >
-      {/* Tier glyph + label */}
-      <span className="font-mono text-[9px] font-bold shrink-0" style={{ color: tier.color }}>
-        {tier.glyph}{tier.label}
-      </span>
-
-      {/* Flag chips */}
-      {showDaFlag && (
-        <span className="font-mono text-[7px] px-0.5 rounded shrink-0" style={{ background: `${tier.color}20`, color: tier.color }}>
-          DA
+      {/* Row 1: tier label · name · amount */}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="font-mono text-[9px] font-bold shrink-0" style={{ color: tier.color }}>
+          {tier.glyph}{tier.label}
         </span>
-      )}
-      {showHrFlag && (
-        <span className="font-mono text-[7px] px-0.5 rounded shrink-0" style={{ background: `${RISK_COLORS.critical}20`, color: RISK_COLORS.critical }}>
-          HR
+        <span className="font-mono text-[11px] font-medium flex-1 truncate min-w-0" style={{ color: 'var(--color-text-primary)' }}>
+          {displayName}
         </span>
-      )}
+        <span className="font-mono text-[10px] font-bold tabular-nums shrink-0" style={{ color: tier.color }}>
+          {formatCompactMXN(inst.total_amount_mxn)}
+        </span>
+      </div>
 
-      {/* Name */}
-      <span className="font-mono text-[10px] flex-1 truncate min-w-0" style={{ color: 'var(--color-text-primary)' }}>
-        {inst.name}
-      </span>
-
-      {/* Amount */}
-      <span className="font-mono text-[9px] font-bold tabular-nums shrink-0" style={{ color: tier.color }}>
-        {formatCompactMXN(inst.total_amount_mxn)}
-      </span>
-
-      {/* Sector share */}
-      <span className="font-mono text-[8px] tabular-nums shrink-0 w-8 text-right" style={{ color: 'var(--color-text-muted)' }}>
-        {shareOfSector.toFixed(1)}%
-      </span>
+      {/* Row 2: risk score · DA% · contracts · sector share */}
+      <div className="flex items-center gap-2 mt-0.5 min-w-0">
+        <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: tier.color }}>
+          RS·{riskScore}
+        </span>
+        {da != null && (
+          <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+            DA·{da.toFixed(0)}%
+          </span>
+        )}
+        <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+          {formatNumber(contractCount)} {lang === 'en' ? 'contracts' : 'contratos'}
+        </span>
+        <span className="font-mono text-[9px] tabular-nums shrink-0 ml-auto" style={{ color: 'var(--color-text-muted)' }}>
+          S·{shareOfSector.toFixed(1)}%
+        </span>
+      </div>
     </div>
   )
 }
@@ -1267,6 +1264,14 @@ function Z1Panel({
   const top4Share = institutions.slice(0, 4).reduce((s, i) => s + i.total_amount_mxn, 0)
   const top4Pct = totalSectorSpend > 0 ? (top4Share / totalSectorSpend * 100).toFixed(0) : '—'
 
+  // Sort by risk descending — investigative priority order
+  const sorted = [...institutions].sort((a, b) => (b.risk ?? 0) - (a.risk ?? 0))
+  const shelfCritical = sorted.filter((inst) => (inst.risk ?? 0) >= 0.60)
+  const shelfHigh     = sorted.filter((inst) => { const r = inst.risk ?? 0; return r >= 0.40 && r < 0.60 })
+  const shelfRoutine  = sorted.filter((inst) => (inst.risk ?? 0) < 0.40)
+
+  const [routineOpen, setRoutineOpen] = useState(false)
+
   return (
     <div
       className="absolute inset-0 z-[5] overflow-y-auto"
@@ -1274,23 +1279,26 @@ function Z1Panel({
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* Header */}
+      {/* Header — three-line pattern matching Z2/Z3 */}
       <div
         className="px-4 py-3 sticky top-0 border-b"
         style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
       >
         <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: sectorAccent }}>
-          {lang === 'en'
-            ? `Z1 · ${data?.sector_name_en?.toUpperCase() ?? sectorCode.toUpperCase()}`
-            : `Z1 · ${data?.sector_name_es?.toUpperCase() ?? sectorCode.toUpperCase()}`}
+          {lang === 'en' ? 'Z1 · INSTITUTIONS' : 'Z1 · INSTITUCIONES'}
         </div>
-        {!isLoading && institutions.length > 0 && (
-          <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            {lang === 'en'
+        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
+          {lang === 'en'
+            ? (data?.sector_name_en ?? sectorCode)
+            : (data?.sector_name_es ?? sectorCode)}
+        </div>
+        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+          {isLoading
+            ? '…'
+            : lang === 'en'
               ? `${institutions.length} institutions · top 4 control ${top4Pct}% of spend`
               : `${institutions.length} instituciones · las 4 principales concentran ${top4Pct}% del gasto`}
-          </div>
-        )}
+        </div>
       </div>
 
       {isLoading && (
@@ -1303,19 +1311,124 @@ function Z1Panel({
           {lang === 'en' ? 'No institution data.' : 'Sin datos.'}
         </div>
       )}
+      {!isLoading && !isError && institutions.length === 0 && (
+        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No institutions found.' : 'Sin instituciones.'}
+        </div>
+      )}
 
-      {/* Flat ranked list — all institutions visible */}
-      <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
-        {institutions.map((inst, i) => (
-          <InstCard
-            key={inst.institution_id}
-            inst={inst}
-            totalSectorSpend={totalSectorSpend}
-            isTop={i === 0}
-            dispatch={dispatch}
-          />
-        ))}
-      </div>
+      {/* Three editorial shelves */}
+      {!isLoading && !isError && institutions.length > 0 && (
+        <div className="py-3 space-y-2">
+
+          {/* Shelf 1 — Critical Risk */}
+          {shelfCritical.length > 0 && (
+            <div
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: `2px solid ${RISK_COLORS.critical}` }}
+            >
+              <div
+                className="flex items-center gap-2 px-3 py-1.5"
+                style={{ background: `${RISK_COLORS.critical}12`, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}
+              >
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.critical }}>
+                  {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfCritical.length}
+                </span>
+              </div>
+              {shelfCritical.map((inst) => (
+                <InstCard
+                  key={inst.institution_id}
+                  inst={inst}
+                  totalSectorSpend={totalSectorSpend}
+                  isTop={false}
+                  lang={lang}
+                  dispatch={dispatch}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Shelf 2 — High Priority */}
+          {shelfHigh.length > 0 && (
+            <div
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: `2px solid ${RISK_COLORS.high}` }}
+            >
+              <div
+                className="flex items-center gap-2 px-3 py-1.5"
+                style={{ background: `${RISK_COLORS.high}12`, borderBottom: `1px solid ${RISK_COLORS.high}25` }}
+              >
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: RISK_COLORS.high }}>
+                  {lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfHigh.length}
+                </span>
+              </div>
+              {shelfHigh.map((inst) => (
+                <InstCard
+                  key={inst.institution_id}
+                  inst={inst}
+                  totalSectorSpend={totalSectorSpend}
+                  isTop={false}
+                  lang={lang}
+                  dispatch={dispatch}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Shelf 3 — Routine Activity (collapsed by default) */}
+          {shelfRoutine.length > 0 && (
+            <div
+              className="mx-3 rounded-r-sm overflow-hidden"
+              style={{ borderLeft: '2px solid var(--color-border)' }}
+            >
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 px-3 py-1.5 cursor-pointer text-left"
+                style={{
+                  background: 'var(--color-background-card)',
+                  borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none',
+                }}
+                onClick={() => setRoutineOpen((o) => !o)}
+              >
+                <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'ROUTINE ACTIVITY · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
+                </span>
+                <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                  {shelfRoutine.length}
+                </span>
+                <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {routineOpen ? '▾' : '▸'}
+                </span>
+              </button>
+              {routineOpen && shelfRoutine.map((inst) => (
+                <InstCard
+                  key={inst.institution_id}
+                  inst={inst}
+                  totalSectorSpend={totalSectorSpend}
+                  isTop={false}
+                  lang={lang}
+                  dispatch={dispatch}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      {!isLoading && !isError && institutions.length > 0 && (
+        <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en'
+            ? 'tap → drill into institution vendors'
+            : 'toca → explorar proveedores de la institución'}
+        </div>
+      )}
     </div>
   )
 }
