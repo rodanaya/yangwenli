@@ -205,7 +205,7 @@ function TopCapturedList({
         return (
           <li
             key={`${row.institutionId}-${row.topVendorId}`}
-            className="bg-surface-card border border-border rounded-sm px-4 py-3 flex items-start gap-4"
+            className="bg-background-card border border-border rounded-sm px-4 py-3 flex items-start gap-4"
           >
             {/* Rank number */}
             <span
@@ -358,7 +358,7 @@ function CaptureBarChart({
           <div
             key={row.institutionId}
             role="listitem"
-            className="bg-surface-card border border-border rounded-sm px-4 py-3 hover:border-border transition-colors"
+            className="bg-background-card border border-border rounded-sm px-4 py-3 hover:border-border transition-colors"
           >
             <div className="flex items-start gap-3">
               {/* Rank */}
@@ -767,15 +767,15 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Filters ===== */}
-      <div className="space-y-3 rounded-sm border border-border bg-surface-card/40 p-4">
+      <div className="space-y-3 rounded-sm border border-border bg-background-card/40 p-4">
         {/* Current filter state indicator */}
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="text-text-muted/60 uppercase tracking-wide">{t('filters.currentView')}:</span>
-          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-sm font-medium">
+          <span className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-accent px-2.5 py-0.5 rounded-sm font-medium">
             {sectorId ? SECTORS.find((s) => s.id === sectorId)?.name : t('filters.allSectors')}
           </span>
           <span className="text-text-muted/40">·</span>
-          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-sm font-medium">
+          <span className="inline-flex items-center gap-1.5 bg-accent/15 border border-accent/30 text-accent px-2.5 py-0.5 rounded-sm font-medium">
             {yearRange === 'all'
               ? t('filters.allYears')
               : yearRange === '2018'
@@ -807,7 +807,7 @@ export default function CapturaHeatmap() {
               onChange={(e) =>
                 setSectorId(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
+              className="bg-background-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
             >
               <option value="">{t('filters.allSectors')}</option>
               {SECTORS.map((s) => (
@@ -826,7 +826,7 @@ export default function CapturaHeatmap() {
               id="captura-year-select"
               value={yearRange}
               onChange={(e) => setYearRange(e.target.value)}
-              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
+              className="bg-background-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
             >
               <option value="all">{t('filters.allYears')}</option>
               <option value="2018">{t('filters.period2018')}</option>
@@ -854,8 +854,8 @@ export default function CapturaHeatmap() {
                 className={cn(
                   'px-3 py-1 rounded-sm text-xs font-medium border transition-colors',
                   minCapture === value
-                    ? 'bg-primary/20 border-primary/50 text-primary'
-                    : 'bg-surface-card border-border text-text-muted/70 hover:border-border hover:text-text-primary'
+                    ? 'bg-accent/20 border-accent/50 text-accent'
+                    : 'bg-background-card border-border text-text-muted/70 hover:border-border hover:text-text-primary'
                 )}
               >
                 {label}
@@ -885,7 +885,7 @@ export default function CapturaHeatmap() {
 
       {/* ===== Error ===== */}
       {error && !isLoading && (
-        <div className="bg-surface-card border border-risk-critical/20 rounded-sm p-6">
+        <div className="bg-background-card border border-risk-critical/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-sm bg-risk-critical/10 flex items-center justify-center flex-shrink-0">
               <Info className="h-5 w-5 text-risk-critical" />
@@ -904,7 +904,7 @@ export default function CapturaHeatmap() {
       {/* ===== Empty state — clean, user-facing ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="space-y-5">
-          <div className="bg-surface-card border border-risk-high/20 rounded-sm p-6">
+          <div className="bg-background-card border border-risk-high/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-sm bg-risk-high/10 flex items-center justify-center flex-shrink-0">
                 <Info className="h-5 w-5 text-risk-high" />
@@ -1008,7 +1008,7 @@ export default function CapturaHeatmap() {
               return (
                 <li
                   key={`${cell.institution}||${cell.vendor}`}
-                  className="bg-surface-card border border-border rounded-sm px-4 py-3 flex items-center gap-3"
+                  className="bg-background-card border border-border rounded-sm px-4 py-3 flex items-center gap-3"
                 >
                   <span className="text-[13px] font-mono text-text-muted/50 w-5 shrink-0 text-right">
                     {idx + 1}
@@ -1108,7 +1108,7 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Methodology footer ===== */}
-      <div className="bg-surface-card/50 border border-border rounded-sm p-5 text-xs text-text-muted/50 space-y-1">
+      <div className="bg-background-card/50 border border-border rounded-sm p-5 text-xs text-text-muted/50 space-y-1">
         <h4 className="font-serif text-text-muted/70 text-sm">{t('methodology.title')}</h4>
         <p>{t('methodology.content')}</p>
       </div>

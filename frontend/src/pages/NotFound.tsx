@@ -52,7 +52,7 @@ export function NotFound() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('notFound.searchPlaceholder')}
-            className="w-full rounded-sm border border-border bg-background-elevated pl-9 pr-3 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-sm border border-border bg-background-elevated pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label={t('notFound.searchPlaceholder')}
           />
         </div>

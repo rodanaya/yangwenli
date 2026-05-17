@@ -90,7 +90,8 @@ export function AddToWatchlistButton({
   return (
     <div className="flex items-center gap-2 rounded-md border border-accent/30 bg-accent/[0.03] p-2">
       <input
-        className="flex-1 min-w-0 text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder-text-muted/50"
+        className="flex-1 min-w-0 text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-primary placeholder:text-text-muted/50"
+        aria-label={`Reason for tracking ${itemName}`}
         placeholder={`Why track ${itemName}?`}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
