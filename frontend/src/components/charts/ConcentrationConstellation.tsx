@@ -78,6 +78,22 @@ interface ConcentrationConstellationProps {
   highlightedClusterCodes?: string[]
   onClusterClick?: (clusterCode: string) => void
   className?: string
+  /**
+   * BUG-3 fix (2026-05-17): when true, renders ONLY the static low-risk
+   * background dot field + SVG border. No edges, halos, attractor rings,
+   * named-vendor dots, margin annotations, captions, or animations.
+   * Used as a position:absolute backdrop layer behind the transform layer
+   * in AtlasZoomLayer so the "gas" star field stays anchored while the
+   * user pans/zooms the cluster data on top.
+   */
+  backgroundLayer?: boolean
+  /**
+   * BUG-3 fix (2026-05-17): when true, skips rendering the low-risk dot
+   * layer (the cosmic gas). Pair with `backgroundLayer` in a sibling
+   * render so the background renders once (static) and the foreground
+   * renders the rest (transform-able).
+   */
+  noBackground?: boolean
 }
 
 // Re-export ClusterMeta so /atlas can construct override meta arrays.
@@ -263,6 +279,8 @@ export function ConcentrationConstellation({
   highlightedClusterCodes,
   onClusterClick,
   className,
+  backgroundLayer = false,
+  noBackground = false,
 }: ConcentrationConstellationProps) {
   const { i18n } = useTranslation()
   const isEs = i18n.language === 'es'
@@ -470,6 +488,50 @@ export function ConcentrationConstellation({
   const highRow = rows.find((r) => r.level === 'high')
   const lowRow = rows.find((r) => r.level === 'low')
 
+  // BUG-3 fix (2026-05-17): when used as the static backdrop in
+  // AtlasZoomLayer, render ONLY the low-risk dot field + the SVG border.
+  // No edges, halos, attractor rings, named-vendor dots, margin
+  // annotations, captions, animations, or tooltip. This layer sits
+  // position:absolute behind the transform layer and never moves, so
+  // panning a zoomed cluster no longer drags the cosmic gas with it.
+  if (backgroundLayer) {
+    return (
+      <div className="relative" aria-hidden="true">
+        <svg
+          viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+          width="100%"
+          preserveAspectRatio="xMidYMid meet"
+          className={className}
+        >
+          <rect
+            x={PAD_L - 4}
+            y={PAD_T - 4}
+            width={FIELD_W + 8}
+            height={FIELD_H + 8}
+            fill="none"
+            stroke="var(--color-border)"
+            strokeOpacity={0.6}
+            strokeWidth={1}
+          />
+          {dots.map((d, idx) => {
+            if (d.level !== 'low') return null
+            const s = DOT_STYLE.low
+            return (
+              <circle
+                key={`bg-${idx}`}
+                cx={d.x}
+                cy={d.y}
+                r={s.r}
+                fill={s.fill}
+                fillOpacity={s.alpha}
+              />
+            )
+          })}
+        </svg>
+      </div>
+    )
+  }
+
   // Annotation positions in the right margin
   const annoX = PAD_L + FIELD_W + 24
   const annoLines = [
@@ -644,8 +706,12 @@ export function ConcentrationConstellation({
             - namedVendors provided → anonymous dot fill-opacity → 0.30
             - highlightedClusterCodes → clusters not in the set dim to 0.15
               Both can be active simultaneously; the more restrictive wins. */}
-        {(['low', 'medium', 'high', 'critical'] as const).flatMap((paintLevel) =>
-          dots.map((d, idx) => {
+        {(['low', 'medium', 'high', 'critical'] as const).flatMap((paintLevel) => {
+          // BUG-3: when paired with a static backgroundLayer sibling, skip
+          // the low-risk dot field here so it isn't double-painted (and
+          // doesn't move when the user pans the transform layer).
+          if (noBackground && paintLevel === 'low') return []
+          return dots.map((d, idx) => {
             if (d.level !== paintLevel) return null
             const s = DOT_STYLE[d.level]
             // Stagger by Halton index within risk-level bands so the field
@@ -684,7 +750,7 @@ export function ConcentrationConstellation({
               />
             )
           })
-        )}
+        })}
 
         {/* ── Attractor rings, labels, hit targets (above dots) ───────────── */}
         {/* omega-N: highlight dimming — clusters not in highlightedClusterCodes

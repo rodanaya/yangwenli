@@ -95,6 +95,8 @@ const Terms = lazy(() => import('@/pages/Terms'))
 const ChartCatalog = lazy(() => import('@/pages/_dev/ChartCatalog'))
 const Patterns = lazy(() => import('@/pages/Patterns'))
 const PatternDossier = lazy(() => import('@/pages/PatternDossier'))
+const PatternConstellation = lazy(() => import('@/pages/PatternConstellation'))
+const AtlasStoryPlayer = lazy(() => import('@/pages/AtlasStoryPlayer'))
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
 function SectorRedirect() {
@@ -284,6 +286,15 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* UX-2: isolated full-screen constellation — MUST precede patterns/:code */}
+              <Route
+                path="patterns/:code/constellation"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <PatternConstellation />
+                  </SuspenseBoundary>
+                }
+              />
               <Route
                 path="patterns/:code"
                 element={
@@ -313,6 +324,15 @@ function App() {
               <Route path="capture" element={<Navigate to="/captura" replace />} />
               {/* v1.0 launch cut — CorruptionClusters subsumed by /atlas. */}
               <Route path="clusters" element={<Navigate to="/atlas" replace />} />
+              {/* UX-3: dedicated story player — MUST precede atlas (shares /atlas prefix) */}
+              <Route
+                path="atlas/stories/:slug"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <AtlasStoryPlayer />
+                  </SuspenseBoundary>
+                }
+              />
               <Route
                 path="atlas"
                 element={

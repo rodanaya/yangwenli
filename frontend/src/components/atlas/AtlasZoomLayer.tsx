@@ -388,7 +388,29 @@ export function AtlasZoomLayer({
         onClick={handleFieldClick}
         onMouseDown={handlePanMouseDown}
       >
-        {/* Transform layer — the constellation animates here */}
+        {/* ── BUG-3 fix (2026-05-17): static background dot field ──
+            The low-risk "cosmic gas" lattice renders here as a
+            position:absolute layer that NEVER transforms. Panning a zoomed
+            cluster no longer drags the background galaxy with it.
+            The transform layer below carries cluster data only. */}
+        <div
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+          aria-hidden="true"
+        >
+          <ConcentrationConstellation
+            backgroundLayer
+            mode={mode}
+            rows={rows}
+            totalContracts={totalContracts}
+            metaOverride={metaOverride}
+            seedOverride={seedOverride}
+          />
+        </div>
+
+        {/* Transform layer — cluster data only (edges, halos, rings,
+            labels, named vendors). The low-risk dots are skipped here
+            (noBackground) because the static background layer above
+            already paints them. */}
         <div
           style={{
             transform: transformStr,
@@ -401,6 +423,7 @@ export function AtlasZoomLayer({
           onClick={(e) => e.stopPropagation()}
         >
           <ConcentrationConstellation
+            noBackground
             mode={mode}
             rows={rows}
             totalContracts={totalContracts}

@@ -23,11 +23,16 @@ interface AtlasShellProps {
   leftRail: React.ReactNode
   center: React.ReactNode
   rightPanel: React.ReactNode
+  /** When true, the right panel is always visible (e.g. a cluster is selected).
+   *  Overrides the user's localStorage toggle so the panel shows without the
+   *  user having to manually open it. The floating toggle is hidden while
+   *  forceRightPanel is true to avoid fighting the forced state. */
+  forceRightPanel?: boolean
 }
 
 const RIGHT_PANEL_OPEN_KEY = 'rubli_atlas_right_panel_open_v1'
 
-export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
+export function AtlasShell({ leftRail, center, rightPanel, forceRightPanel = false }: AtlasShellProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
 
@@ -79,8 +84,11 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.view, dispatch])
 
-  // Grid columns flip between 2 and 3 based on rightPanelOpen.
-  const gridCols = rightPanelOpen ? 'lg:grid-cols-[240px_1fr_320px]' : 'lg:grid-cols-[240px_1fr]'
+  // rightPanelOpen = forceRightPanel (cluster selected) OR user toggled it on.
+  const isRightPanelVisible = forceRightPanel || rightPanelOpen
+
+  // Grid columns flip between 2 and 3 based on isRightPanelVisible.
+  const gridCols = isRightPanelVisible ? 'lg:grid-cols-[240px_1fr_320px]' : 'lg:grid-cols-[240px_1fr]'
 
   return (
     <div
@@ -102,13 +110,13 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
       {/* ── Center pane — the constellation lives here ─────────────── */}
       <main
         className="overflow-hidden min-w-0"
-        style={{ borderRight: rightPanelOpen ? '1px solid var(--color-border)' : 'none' }}
+        style={{ borderRight: isRightPanelVisible ? '1px solid var(--color-border)' : 'none' }}
       >
         {center}
       </main>
 
-      {/* ── Right panel — collapsible ──────────────────────────────── */}
-      {rightPanelOpen && (
+      {/* ── Right panel — collapsible or forced open when a cluster is selected ── */}
+      {isRightPanelVisible && (
         <aside
           className="hidden lg:flex flex-col border-l border-border overflow-y-auto"
           style={{
@@ -121,21 +129,23 @@ export function AtlasShell({ leftRail, center, rightPanel }: AtlasShellProps) {
         </aside>
       )}
 
-      {/* Floating toggle — top-right, hidden on mobile */}
-      <button
-        type="button"
-        onClick={() => setRightPanelOpen((v) => !v)}
-        className="hidden lg:flex items-center justify-center fixed top-[80px] right-3 z-30 h-8 w-8 rounded-sm hover:bg-background-elevated transition-colors"
-        style={{
-          background: 'var(--color-background-card)',
-          border: '1px solid var(--color-border)',
-          color: 'var(--color-text-secondary)',
-        }}
-        aria-label={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
-        title={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
-      >
-        <span className="text-[14px] leading-none font-mono">{rightPanelOpen ? '›' : '‹'}</span>
-      </button>
+      {/* Floating toggle — hidden on mobile and when panel is forced open by a cluster selection */}
+      {!forceRightPanel && (
+        <button
+          type="button"
+          onClick={() => setRightPanelOpen((v) => !v)}
+          className="hidden lg:flex items-center justify-center fixed top-[80px] right-3 z-30 h-8 w-8 rounded-sm hover:bg-background-elevated transition-colors"
+          style={{
+            background: 'var(--color-background-card)',
+            border: '1px solid var(--color-border)',
+            color: 'var(--color-text-secondary)',
+          }}
+          aria-label={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
+          title={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
+        >
+          <span className="text-[14px] leading-none font-mono">{rightPanelOpen ? '›' : '‹'}</span>
+        </button>
+      )}
     </div>
   )
 }

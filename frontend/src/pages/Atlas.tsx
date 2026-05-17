@@ -309,14 +309,12 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
       {meta && (
         <motion.aside
           key="cluster-panel"
-          className="fixed top-0 right-0 h-full z-50 surface-card border-l-2 shadow-2xl flex flex-col"
-          style={{ width: 'min(420px, 92vw)', borderLeftColor: meta.color }}
-          initial={{ x: 440, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 440, opacity: 0 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-          role="dialog"
-          aria-modal="true"
+          className="surface-card border-l-2 flex flex-col overflow-y-auto"
+          style={{ width: '100%', height: '100%', borderLeftColor: meta.color }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           aria-label={`${meta.label} — cluster details`}
         >
           {/* Header */}
@@ -2463,54 +2461,47 @@ export default function Atlas() {
         }
       </div>
 
-      {/* ── Cluster detail side panel — legacy modal ────────────────────
-           2026-05-09: suppressed when ?z1=true and lens=sectors so the
-           Z1 sub-constellation isn't covered by a 420px modal. Without
-           this guard, clicking a sector cluster fired BOTH the spatial
-           drill-into-sector dispatch AND the legacy selectedClusterCode
-           setter — and the legacy modal popped over the new map. */}
-      {!(z1Enabled && mode === 'sectors') && (() => {
-        // V5: compute year-delta vs previous year using yearly_trends + scaled
-        // critical/high pcts. Best-effort, illustrative when live data missing.
-        let deltaT1: number | undefined = undefined
-        let deltaPct: number | undefined = undefined
-        if (selectedMeta && yearIndex > 0) {
-          const prevSnap = effectiveSnapshot(yearIndex - 1)
-          const curSnap = snapshot
-          // T1 scales with critical+high pct vs the v0.8.5 baseline (11.01%)
-          const BASELINE = 11.01
-          const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
-          const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
-          const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
-          const t1Prev = Math.round(selectedMeta.t1 * ratioPrev)
-          deltaT1 = t1Cur - t1Prev
-          deltaPct = (curSnap.criticalPct + curSnap.highPct) - (prevSnap.criticalPct + prevSnap.highPct)
-        }
-        return (
-          <ClusterDetailPanel
-            meta={selectedMeta}
-            mode={mode}
-            pinnedCode={pinnedCode}
-            note={selectedMeta ? (notes[selectedMeta.code] ?? '') : ''}
-            yearLabel={snapshot.year}
-            yearDeltaT1={deltaT1}
-            yearDeltaPct={deltaPct}
-            onNoteChange={(text) => {
-              if (selectedMeta) setNote(selectedMeta.code, text)
-            }}
-            onTogglePin={() => {
-              if (!selectedMeta) return
-              setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))
-            }}
-            onClose={() => setSelectedClusterCode(null)}
-            lang={lang}
-          />
-        )
-      })()}
           </div>{/* /folio-skin content wrapper */}
           </div>
         }
-        rightPanel={<AtlasRightPanel lang={lang} />}
+        rightPanel={
+          // When a cluster is selected (and not in z1+sectors suppression mode),
+          // show the ClusterDetailPanel in the right rail instead of the generic
+          // AtlasRightPanel. Year-delta is computed here so it can be passed down.
+          selectedMeta && !(z1Enabled && mode === 'sectors')
+            ? (() => {
+                let deltaT1: number | undefined = undefined
+                let deltaPct: number | undefined = undefined
+                if (yearIndex > 0) {
+                  const prevSnap = effectiveSnapshot(yearIndex - 1)
+                  const curSnap = snapshot
+                  const BASELINE = 11.01
+                  const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
+                  const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
+                  const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
+                  const t1Prev = Math.round(selectedMeta.t1 * ratioPrev)
+                  deltaT1 = t1Cur - t1Prev
+                  deltaPct = (curSnap.criticalPct + curSnap.highPct) - (prevSnap.criticalPct + prevSnap.highPct)
+                }
+                return (
+                  <ClusterDetailPanel
+                    meta={selectedMeta}
+                    mode={mode}
+                    pinnedCode={pinnedCode}
+                    note={notes[selectedMeta.code] ?? ''}
+                    yearLabel={snapshot.year}
+                    yearDeltaT1={deltaT1}
+                    yearDeltaPct={deltaPct}
+                    onNoteChange={(text) => setNote(selectedMeta.code, text)}
+                    onTogglePin={() => setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))}
+                    onClose={() => setSelectedClusterCode(null)}
+                    lang={lang}
+                  />
+                )
+              })()
+            : <AtlasRightPanel lang={lang} />
+        }
+        forceRightPanel={!!(selectedMeta && !(z1Enabled && mode === 'sectors'))}
       />
     </AtlasContextProvider>
   )
