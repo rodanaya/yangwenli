@@ -330,7 +330,7 @@ export default function PatternDossier() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="h-8 rounded-sm bg-[color:var(--color-sidebar)] animate-pulse border border-border"
+                className="h-8 rounded-sm bg-sidebar animate-pulse border border-border"
               />
             ))}
           </div>

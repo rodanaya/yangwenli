@@ -174,7 +174,7 @@ export function ChapterSubject({ vendor, aria }: ChapterSubjectProps) {
           {t('subject.riskBadge', { level: riskLevelLabel })}
         </span>
         {aria && (
-          <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] bg-[color:var(--color-risk-critical)]/10 text-risk-critical border border-[color:var(--color-risk-critical)]/30">
+          <span className="px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-[0.12em] bg-risk-critical/10 text-risk-critical border border-risk-critical/30">
             {t('subject.ariaTier', { tier: aria.ips_tier })}
           </span>
         )}

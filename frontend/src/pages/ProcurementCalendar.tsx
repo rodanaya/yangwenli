@@ -71,8 +71,8 @@ function getDayColor(total: number, riskRate: number, maxContracts: number): str
 
 function getRiskBadgeColor(riskRate: number): string {
   // Cream-mode tokens — was bg-risk-critical/10/50 etc (near-black on cream).
-  if (riskRate > 0.30) return 'text-risk-critical bg-[color:var(--color-risk-critical)]/10 border-[color:var(--color-risk-critical)]/30'
-  if (riskRate > 0.20) return 'text-risk-high bg-[color:var(--color-risk-high)]/10 border-[color:var(--color-risk-high)]/30'
+  if (riskRate > 0.30) return 'text-risk-critical bg-risk-critical/10 border-risk-critical/30'
+  if (riskRate > 0.20) return 'text-risk-high bg-risk-high/10 border-risk-high/30'
   if (riskRate > 0.10) return 'text-oecd bg-oecd/10 border-oecd/30'
   return 'text-text-secondary bg-background-card border-border'
 }

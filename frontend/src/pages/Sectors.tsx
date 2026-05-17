@@ -293,7 +293,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
             {/* Sector header row */}
             <button
               type="button"
-              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-[color:var(--color-background-elevated)] transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-2.5 border-b border-border hover:bg-background-elevated transition-colors text-left"
               style={{ borderLeft: `3px solid ${color}` }}
               onClick={() => toggle(sectorCode)}
               aria-expanded={isOpen}
@@ -329,7 +329,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
               return (
                 <div
                   key={cat.category_id}
-                  className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                  className="flex items-center gap-3 pl-10 pr-4 py-2 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                   style={{ borderLeft: `3px solid ${color}33` }}
                 >
                   <span className="flex-shrink-0 w-5 font-mono text-[10px] text-text-muted tabular-nums">
@@ -760,7 +760,7 @@ export function Sectors() {
                               className={cn(
                                 'px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-[0.1em] rounded-sm border transition-colors',
                                 catSortKey === key
-                                  ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)] border-transparent'
+                                  ? 'bg-text-primary text-background border-transparent'
                                   : 'text-text-muted border-border hover:text-text-secondary',
                               )}
                               aria-pressed={catSortKey === key}
@@ -780,7 +780,7 @@ export function Sectors() {
                             className={cn(
                               'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                               cview === v
-                                ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                                ? 'bg-text-primary text-background'
                                 : 'text-text-muted hover:text-text-secondary',
                             )}
                             aria-pressed={cview === v}
@@ -884,7 +884,7 @@ export function Sectors() {
                                 />
                               )}
                               <div
-                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors"
+                                className="flex items-center gap-4 px-5 py-1.5 border-b border-border last:border-b-0 hover:bg-background-elevated transition-colors"
                                 style={{ borderLeft: `3px solid ${sectorColor}` }}
                               >
                                 <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
@@ -1044,7 +1044,7 @@ export function Sectors() {
                 ]}
               />
               {isAgricultureArtifact && (
-                <div className="mb-8 -mt-4 pl-5 pr-4 py-3 rounded-r-sm border-l-4 border-[color:var(--color-border-hover)] bg-[color:var(--color-background-card)]">
+                <div className="mb-8 -mt-4 pl-5 pr-4 py-3 rounded-r-sm border-l-4 border-border-hover bg-background-card">
                   <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                     {i18n.language === 'es' ? 'Advertencia de artefacto' : 'Artifact caveat'}
                   </p>
@@ -1111,7 +1111,7 @@ export function Sectors() {
                       className={cn(
                         'px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] transition-colors',
                         sectorMap === v
-                          ? 'bg-[color:var(--color-text-primary)] text-[color:var(--color-background)]'
+                          ? 'bg-text-primary text-background'
                           : 'text-text-muted hover:text-text-secondary',
                       )}
                       aria-pressed={sectorMap === v}

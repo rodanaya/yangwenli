@@ -378,8 +378,8 @@ function RedFlagCard({
       onClick={() => onNavigate(item.institution_id)}
       className="relative w-full text-left group transition-all
         border border-border bg-background-elevated/40
-        hover:bg-[color:var(--color-risk-critical)]/8
-        hover:border-[color:var(--color-risk-critical)]/40
+        hover:bg-risk-critical/8
+        hover:border-risk-critical/40
         focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-risk-critical)]/50"
       style={{
         borderLeft: '4px solid var(--color-risk-critical)',
@@ -1198,7 +1198,7 @@ export default function InstitutionLeague() {
         {/* Red Flags — DOMINANT verdict cards */}
         {!hasFilters && redFlagItems.length >= 3 && (
           <section aria-labelledby="redflags-heading" className="space-y-4">
-            <div className="border-l-2 border-[color:var(--color-risk-critical)] pl-4">
+            <div className="border-l-2 border-risk-critical pl-4">
               <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-risk-critical mb-1 flex items-center gap-2">
                 <Flag className="h-3 w-3" aria-hidden="true" />
                 {t('redFlags.kicker')}

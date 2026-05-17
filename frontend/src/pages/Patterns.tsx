@@ -128,7 +128,7 @@ function CrossPatternComparison({
             to={`/aria?pattern=${p.code}`}
             className={cn(
               'group grid grid-cols-[auto_1fr_auto] items-center gap-3 px-2 py-2 -mx-2 rounded-sm',
-              'hover:bg-background-elevated/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)] transition-colors',
+              'hover:bg-background-elevated/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent transition-colors',
               idx > 0 && 'border-t border-border/30'
             )}
             aria-label={`${p.code} ${name} — ${formatNumber(count)} ${isEs ? 'proveedores' : 'vendors'}`}
@@ -232,7 +232,7 @@ function PatternCard({
       <button
         type="button"
         onClick={onClick}
-        className="block w-full text-left px-5 pt-4 pb-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)] rounded-sm"
+        className="block w-full text-left px-5 pt-4 pb-3 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded-sm"
         aria-label={`${meta.code} ${name}`}
       >
         {/* Header: code badge + name + severity rank */}
@@ -662,7 +662,7 @@ export default function Patterns() {
           {Array.from({ length: 7 }).map((_, i) => (
             <div
               key={i}
-              className="h-28 rounded-sm bg-[color:var(--color-sidebar)] animate-pulse border border-border"
+              className="h-28 rounded-sm bg-sidebar animate-pulse border border-border"
             />
           ))}
         </div>

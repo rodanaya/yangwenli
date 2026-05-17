@@ -75,7 +75,7 @@ export function PatternDiagnostic({
               key={f.feature}
               className={cn(
                 'grid grid-cols-[140px_1fr_64px] gap-3 items-center px-1 py-1 rounded-sm border-l-2 transition-opacity',
-                isAnomalous && isPositive ? 'bg-[color:var(--color-risk-critical)]/[0.04]' : ''
+                isAnomalous && isPositive ? 'bg-risk-critical/[0.04]' : ''
               )}
               style={{
                 borderLeftColor: isAnomalous && isPositive ? markerColor : 'transparent',
