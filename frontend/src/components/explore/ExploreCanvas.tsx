@@ -146,12 +146,32 @@ function polyPoints(cx: number, cy: number, r: number, sides: number, rotationDe
   }).join(' ')
 }
 
-function starPoints(cx: number, cy: number, R: number, r: number, points: number): string {
+// 6-tooth gear polygon — tecnologia
+function gearPoints(cx: number, cy: number, outerR: number, innerR: number, teeth: number): string {
+  const step = (2 * Math.PI) / teeth
+  const halfTooth = step * 0.38
+  const halfValley = step * 0.28
   const pts: string[] = []
-  for (let i = 0; i < points * 2; i++) {
-    const rad = ((i * 180) / points - 90) * (Math.PI / 180)
-    const d = i % 2 === 0 ? R : r
-    pts.push(`${(cx + d * Math.cos(rad)).toFixed(2)},${(cy + d * Math.sin(rad)).toFixed(2)}`)
+  for (let i = 0; i < teeth; i++) {
+    const a = i * step - Math.PI / 2
+    const ia = (i + 0.5) * step - Math.PI / 2
+    pts.push(`${(cx + outerR * Math.cos(a - halfTooth)).toFixed(2)},${(cy + outerR * Math.sin(a - halfTooth)).toFixed(2)}`)
+    pts.push(`${(cx + outerR * Math.cos(a + halfTooth)).toFixed(2)},${(cy + outerR * Math.sin(a + halfTooth)).toFixed(2)}`)
+    pts.push(`${(cx + innerR * Math.cos(ia - halfValley)).toFixed(2)},${(cy + innerR * Math.sin(ia - halfValley)).toFixed(2)}`)
+    pts.push(`${(cx + innerR * Math.cos(ia + halfValley)).toFixed(2)},${(cy + innerR * Math.sin(ia + halfValley)).toFixed(2)}`)
+  }
+  return pts.join(' ')
+}
+
+// 12-petal sunflower polygon — agricultura
+function sunflowerPoints(cx: number, cy: number, outerR: number, innerR: number, petals: number): string {
+  const step = (2 * Math.PI) / petals
+  const pts: string[] = []
+  for (let i = 0; i < petals; i++) {
+    const aOuter = i * step - Math.PI / 2
+    const aInner = (i + 0.5) * step - Math.PI / 2
+    pts.push(`${(cx + outerR * Math.cos(aOuter)).toFixed(2)},${(cy + outerR * Math.sin(aOuter)).toFixed(2)}`)
+    pts.push(`${(cx + innerR * Math.cos(aInner)).toFixed(2)},${(cy + innerR * Math.sin(aInner)).toFixed(2)}`)
   }
   return pts.join(' ')
 }
@@ -164,10 +184,9 @@ function getSectorShapeElement(
 ): React.ReactElement {
   const props = { fill, fillOpacity, stroke, strokeWidth }
   switch (code) {
+
     case 'salud': {
-      // Medical cross — proportions match international Red Cross symbol.
-      // Each arm is 1/3 of total width; total span is r*1.8.
-      // arm = half-length of each arm from center; w = half-width of the bar.
+      // Medical cross — long thin arms matching international Red Cross proportions.
       const arm = r * 0.72, w = r * 0.24
       const d = [
         `M ${cx - w} ${cy - arm}`, `L ${cx + w} ${cy - arm}`,
@@ -179,47 +198,168 @@ function getSectorShapeElement(
       ].join(' ')
       return <path d={d} {...props} />
     }
-    case 'defensa':
-      // Pentagon (shield-like, point up)
-      return <polygon points={polyPoints(cx, cy, r, 5, -90)} {...props} />
-    case 'tecnologia':
-      // Hexagon (flat-top)
-      return <polygon points={polyPoints(cx, cy, r, 6, 0)} {...props} />
-    case 'hacienda':
-      // Diamond (rotated square)
-      return <polygon points={polyPoints(cx, cy, r, 4, -45)} {...props} />
-    case 'infraestructura':
-      // Equilateral triangle, point up
-      return <polygon points={polyPoints(cx, cy, r, 3, -90)} {...props} />
-    case 'gobernacion':
-      // 5-pointed star
-      return <polygon points={starPoints(cx, cy, r, r * 0.42, 5)} {...props} />
-    case 'agricultura':
-      // Octagon (leaf-like 8-gon)
-      return <polygon points={polyPoints(cx, cy, r, 8, 22.5)} {...props} />
-    case 'ambiente':
-      // 6-pointed star (snowflake / tree ring)
-      return <polygon points={starPoints(cx, cy, r, r * 0.5, 6)} {...props} />
-    case 'energia': {
-      // Fat lightning bolt — wide enough to read at all sizes (~0.85r wide × 2r tall).
-      // Previous version was only 0.4r wide and nearly invisible against the background.
-      const p = r
+
+    case 'defensa': {
+      // Heraldic shield — flat top, curved sides tapering to a point.
       const d = [
-        `M ${cx + p * 0.20} ${cy - p}`,           // 1 top right tip
-        `L ${cx + p * 0.45} ${cy - p * 0.05}`,    // 2 upper right bar
-        `L ${cx + p * 0.10} ${cy - p * 0.05}`,    // 3 upper left bar
-        `L ${cx - p * 0.15} ${cy + p}`,            // 4 bottom left tip
-        `L ${cx - p * 0.40} ${cy + p * 0.10}`,    // 5 lower left bar
-        `L ${cx - p * 0.05} ${cy + p * 0.10}`,    // 6 lower right bar
+        `M ${cx - r*0.68} ${cy - r*0.72}`,
+        `L ${cx + r*0.68} ${cy - r*0.72}`,
+        `L ${cx + r*0.68} ${cy + r*0.12}`,
+        `Q ${cx + r*0.68} ${cy + r*0.60} ${cx} ${cy + r*0.88}`,
+        `Q ${cx - r*0.68} ${cy + r*0.60} ${cx - r*0.68} ${cy + r*0.12}`,
         'Z',
       ].join(' ')
       return <path d={d} {...props} />
     }
-    case 'trabajo':
-      // 12-sided rounded-ish polygon (gear approximation)
-      return <polygon points={polyPoints(cx, cy, r, 12, 15)} {...props} />
+
+    case 'tecnologia':
+      // 6-tooth gear / cogwheel
+      return <polygon points={gearPoints(cx, cy, r, r * 0.65, 6)} {...props} />
+
+    case 'hacienda': {
+      // Balance scale — treasury, finance, equilibrium of accounts.
+      const pW  = r * 0.08    // pillar half-width
+      const bY  = cy - r * 0.25  // beam Y
+      const bW  = r * 0.75    // beam half-span (arm length)
+      const panCY = bY + r * 0.40  // pan rim Y
+      const panR  = r * 0.30   // pan rim half-width
+      const panD  = r * 0.14   // pan bowl depth
+      const sW  = r * 0.03    // string half-width
+      // pillar + base
+      const pillar = `M ${cx-pW} ${bY} L ${cx+pW} ${bY} L ${cx+pW} ${cy+r*0.68} L ${cx-pW} ${cy+r*0.68} Z`
+      const base   = `M ${cx-r*0.50} ${cy+r*0.68} L ${cx+r*0.50} ${cy+r*0.68} L ${cx+r*0.50} ${cy+r*0.84} L ${cx-r*0.50} ${cy+r*0.84} Z`
+      // horizontal beam bar
+      const beam   = `M ${cx-bW-pW} ${bY-r*0.08} L ${cx+bW+pW} ${bY-r*0.08} L ${cx+bW+pW} ${bY} L ${cx-bW-pW} ${bY} Z`
+      // top pivot triangle
+      const pivot  = `M ${cx} ${cy-r*0.80} L ${cx+r*0.11} ${bY-r*0.08} L ${cx-r*0.11} ${bY-r*0.08} Z`
+      // left string
+      const lX = cx - bW
+      const rX = cx + bW
+      const lStr = `M ${lX-sW} ${bY} L ${lX+sW} ${bY} L ${lX+sW} ${panCY} L ${lX-sW} ${panCY} Z`
+      const rStr = `M ${rX-sW} ${bY} L ${rX+sW} ${bY} L ${rX+sW} ${panCY} L ${rX-sW} ${panCY} Z`
+      // pans — filled arc (bowl shape, flat rim on top)
+      const lPan = `M ${lX-panR} ${panCY} Q ${lX} ${panCY+panD+panD} ${lX+panR} ${panCY} Z`
+      const rPan = `M ${rX-panR} ${panCY} Q ${rX} ${panCY+panD+panD} ${rX+panR} ${panCY} Z`
+      return <path d={[pillar, base, beam, pivot, lStr, rStr, lPan, rPan].join(' ')} {...props} />
+    }
+
+    case 'infraestructura': {
+      // Arch bridge — rectangular block with arch opening punched out (evenodd).
+      const outer = [
+        `M ${cx - r*0.90} ${cy - r*0.30}`,
+        `L ${cx + r*0.90} ${cy - r*0.30}`,
+        `L ${cx + r*0.90} ${cy + r*0.80}`,
+        `L ${cx - r*0.90} ${cy + r*0.80}`,
+        'Z',
+      ].join(' ')
+      // Arch opening: semicircle at top, open at the bottom edge
+      const arch = [
+        `M ${cx - r*0.44} ${cy + r*0.80}`,
+        `Q ${cx - r*0.44} ${cy - r*0.10} ${cx} ${cy - r*0.10}`,
+        `Q ${cx + r*0.44} ${cy - r*0.10} ${cx + r*0.44} ${cy + r*0.80}`,
+        'Z',
+      ].join(' ')
+      return <path d={`${outer} ${arch}`} fillRule="evenodd" {...props} />
+    }
+
+    case 'gobernacion': {
+      // Map pin / location marker — territorial authority.
+      const w = r * 0.56
+      const topY = cy - r * 0.78
+      const midY = cy - r * 0.20
+      const tipY = cy + r * 0.88
+      const d = [
+        `M ${cx} ${topY}`,
+        `Q ${cx + w} ${topY} ${cx + w} ${midY}`,
+        `Q ${cx + w} ${midY + r*0.30} ${cx} ${tipY}`,
+        `Q ${cx - w} ${midY + r*0.30} ${cx - w} ${midY}`,
+        `Q ${cx - w} ${topY} ${cx} ${topY}`,
+        'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+
+    case 'agricultura':
+      // Sunflower — 12 petals radiating outward
+      return <polygon points={sunflowerPoints(cx, cy, r, r * 0.56, 12)} {...props} />
+
+    case 'ambiente': {
+      // Pine tree — triangular canopy on a trunk.
+      const trunkW = r * 0.15
+      const trunkTop = cy + r * 0.20
+      const d = [
+        `M ${cx - trunkW} ${cy + r*0.85}`,
+        `L ${cx + trunkW} ${cy + r*0.85}`,
+        `L ${cx + trunkW} ${trunkTop}`,
+        `L ${cx + r*0.80} ${cy + r*0.24}`,
+        `L ${cx}          ${cy - r*0.85}`,
+        `L ${cx - r*0.80} ${cy + r*0.24}`,
+        `L ${cx - trunkW} ${trunkTop}`,
+        'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+
+    case 'energia': {
+      // Lightning bolt — fat enough to read at all sizes.
+      const p = r
+      const d = [
+        `M ${cx + p * 0.20} ${cy - p}`,
+        `L ${cx + p * 0.45} ${cy - p * 0.05}`,
+        `L ${cx + p * 0.10} ${cy - p * 0.05}`,
+        `L ${cx - p * 0.15} ${cy + p}`,
+        `L ${cx - p * 0.40} ${cy + p * 0.10}`,
+        `L ${cx - p * 0.05} ${cy + p * 0.10}`,
+        'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+
+    case 'trabajo': {
+      // Hard hat / construction helmet — worker, labor.
+      // Dome curves up from the brim shoulders; wide brim extends both sides.
+      const brimY  = cy + r * 0.22   // bottom of brim
+      const brimHW = r * 0.82        // brim half-width
+      const brimH  = r * 0.16        // brim thickness
+      const innerTop = brimY - brimH // top edge of brim / dome base
+      const d = [
+        `M ${cx - brimHW} ${brimY}`,
+        `L ${cx + brimHW} ${brimY}`,
+        `L ${cx + brimHW} ${innerTop}`,
+        `L ${cx + r*0.56} ${innerTop}`,
+        `Q ${cx + r*0.52} ${cy - r*0.82} ${cx} ${cy - r*0.82}`,
+        `Q ${cx - r*0.52} ${cy - r*0.82} ${cx - r*0.56} ${innerTop}`,
+        `L ${cx - brimHW} ${innerTop}`,
+        'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+
+    case 'educacion': {
+      // Pencil pointing upward — knowledge, learning.
+      const bW = r * 0.22   // body half-width
+      const tipH = r * 0.30 // pointed tip height
+      const top = cy - r * 0.80
+      const tipBase = top + tipH
+      const bodyBot = cy + r * 0.60
+      const eraseBot = bodyBot + r * 0.16
+      const d = [
+        `M ${cx} ${top}`,                          // tip apex
+        `L ${cx + bW} ${tipBase}`,
+        `L ${cx + bW} ${bodyBot}`,
+        `L ${cx + bW + r*0.07} ${bodyBot}`,        // eraser slightly wider
+        `L ${cx + bW + r*0.07} ${eraseBot}`,
+        `L ${cx - bW - r*0.07} ${eraseBot}`,
+        `L ${cx - bW - r*0.07} ${bodyBot}`,
+        `L ${cx - bW} ${bodyBot}`,
+        `L ${cx - bW} ${tipBase}`,
+        'Z',
+      ].join(' ')
+      return <path d={d} {...props} />
+    }
+
     default:
-      // Circle fallback for 'educacion', 'otros', unknown
+      // Circle fallback for 'otros' and unknown codes
       return <circle cx={cx} cy={cy} r={r} {...props} />
   }
 }
@@ -867,6 +1007,9 @@ function Z1Layer({
   // bottom of the canvas — avoiding SVG overflow-clip that truncates chip labels
   // near the edges, and providing a large readable label for small bubbles.
   const [hoveredInstName, setHoveredInstName] = useState<string | null>(null)
+  const [hoveredInstTooltip, setHoveredInstTooltip] = useState<{
+    cx: number; cy: number; r: number; inst: SpatialInstitution
+  } | null>(null)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
@@ -980,6 +1123,7 @@ function Z1Layer({
             }
             onHover={(hovering) => {
               setHoveredInstName(hovering ? inst.name : null)
+              setHoveredInstTooltip(hovering ? { cx, cy, r: rOf(inst.size), inst } : null)
               dispatch({
                 type: 'set-hover',
                 hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
@@ -988,6 +1132,43 @@ function Z1Layer({
           />
         )
       })}
+
+      {/* Floating name tooltip — rendered LAST so it sits above all bubbles.
+          Shows the full institution name + key metrics near the hovered body. */}
+      {hoveredInstTooltip && (() => {
+        const { cx: tx, cy: ty, r: tr, inst: ti } = hoveredInstTooltip
+        const fullName = ti.name.length > 52 ? ti.name.slice(0, 51) + '…' : ti.name
+        const metricLine = `${formatNumber(ti.total_contracts)} contratos · ${formatCompactMXN(ti.total_amount_mxn)}`
+        const charW = 7.2   // approx px per char at 12px mono
+        const boxW = Math.min(Math.max(fullName.length, metricLine.length) * charW + 20, 460)
+        const boxH = 38
+        const margin = 8
+        // Position above the bubble; clamp to canvas bounds
+        let bx = tx - boxW / 2
+        let by = ty - tr - margin - boxH
+        bx = Math.max(PAD, Math.min(SVG_W - PAD - boxW, bx))
+        by = Math.max(PAD + 14, by)
+        const level = getRiskLevelFromScore(ti.risk)
+        const accent = RISK_COLORS[level]
+        return (
+          <g pointerEvents="none">
+            <rect x={bx} y={by} width={boxW} height={boxH} rx={4}
+              fill="var(--color-background-card)" fillOpacity={0.98}
+              stroke="var(--color-border)" strokeWidth={0.8} />
+            <rect x={bx} y={by} width={3} height={boxH} rx={1.5} fill={accent} />
+            <text x={bx + 10} y={by + 14} fontSize={12}
+              fontFamily="var(--font-family-mono, monospace)" fontWeight={700}
+              fill="var(--color-text-primary)">
+              {fullName}
+            </text>
+            <text x={bx + 10} y={by + 28} fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)" fontWeight={400}
+              fill="var(--color-text-muted)">
+              {metricLine}
+            </text>
+          </g>
+        )
+      })()}
     </motion.g>
   )
 }
