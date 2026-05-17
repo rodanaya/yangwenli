@@ -1123,7 +1123,9 @@ function Z1Layer({
           : lang === 'en' ? 'click an institution · esc to zoom out' : 'clic en una institución · esc para alejar'}
       </text>
 
-      {filteredInstitutions.map((inst, i) => {
+      {/* Render smallest-first so large institutions (IMSS) paint on top in SVG z-order */}
+      {[...filteredInstitutions].reverse().map((inst) => {
+        const i = filteredInstitutions.indexOf(inst)
         const cx = xOf(inst.fx)
         const cy = yOf(inst.fy)
         const isPinned =
@@ -1246,12 +1248,14 @@ function InstitutionBodyVisual({
   const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
   const lbl = shortLabel(inst.name)
 
-  // Three-tier label strategy:
-  //   large  (r ≥ 16): acronym inside the circle
-  //   medium (r ≥  5): pill chip below the circle
-  //   small  (r <  5): no chip; name in floating tooltip / bottom bar
-  const insideLabel = r >= 16
-  const chipLabel   = !insideLabel && r >= 5
+  // Three-tier label strategy — only top 12 by spend get any label.
+  // Showing chips on all 60 institutions buries IMSS under clutter.
+  //   large (r ≥ 16, top 12): acronym inside the circle
+  //   medium (top 12, r < 16): pill chip below the circle
+  //   everything else: no chip; hover tooltip + bottom bar only
+  const showLabel   = index < 12
+  const insideLabel = showLabel && r >= 16
+  const chipLabel   = showLabel && !insideLabel
   const chipW = Math.min(lbl.length * 6.2 + 14, 130)
   const chipH = 18  // taller chip → bigger tap target, readable at 11px
   const insideFill = (level === 'high' || level === 'low') ? '#1c1a15' : 'white'
