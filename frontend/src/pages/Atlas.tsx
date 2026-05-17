@@ -2026,17 +2026,6 @@ export default function Atlas() {
         )}
       </div>
 
-      {/* ── Mobile-only year scrubber (left rail hidden below lg) ──────── */}
-      <div className="lg:hidden mb-3">
-        <YearScrubber
-          yearIndex={yearIndex}
-          setYearIndex={setYearIndex}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          lang={lang}
-        />
-      </div>
-
       {/* ── STORY READER — replaces brief tour narration with rich chapter UI ─── */}
       <AnimatePresence mode="wait">
         {activeStory && !storyEnded && activeStory.chapters[activeChapter] && (() => {
@@ -2384,8 +2373,8 @@ export default function Atlas() {
         {z1Enabled && <Z1Overlay lang={lang} />}
       </PlateFrame>
 
-      {/* ── Year scrubber A (desktop only — mobile version is above canvas) ── */}
-      <div className="hidden lg:block">
+      {/* ── Year scrubber — below canvas on all screen sizes ── */}
+      <div>
         <YearScrubber
           yearIndex={yearIndex}
           setYearIndex={setYearIndex}
