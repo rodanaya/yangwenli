@@ -400,7 +400,7 @@ function SectorBriefing({
           <Stat label={lang === 'en' ? 'Contracts' : 'Contratos'} value={formatNumber(inst.total_contracts)} />
           <Stat label={lang === 'en' ? 'Total value' : 'Valor total'} value={formatCompactMXN(inst.total_amount_mxn)} />
           {inst.direct_award_pct != null && (
-            <Stat label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'} value={`${(inst.direct_award_pct * 100).toFixed(0)}%`} />
+            <Stat label={lang === 'en' ? 'Direct award %' : 'Adj. directa %'} value={`${(inst.direct_award_pct).toFixed(0)}%`} />
           )}
           <RiskPill score={inst.risk} lang={lang} />
           <p className="mt-2 text-[11px] text-text-muted">
@@ -422,7 +422,7 @@ function SectorBriefing({
   const tieredCount = t1Count + t2Count
   const daInstitutions = institutions.filter((i) => i.direct_award_pct != null)
   const avgDaPct = daInstitutions.length > 0
-    ? Math.min(100, (daInstitutions.reduce((s, i) => s + (i.direct_award_pct ?? 0), 0) / daInstitutions.length) * 100)
+    ? Math.min(100, daInstitutions.reduce((s, i) => s + (i.direct_award_pct ?? 0), 0) / daInstitutions.length)
     : null
   const totalSpend = institutions.reduce((s, i) => s + (i.total_amount_mxn ?? 0), 0)
   const topRisk = [...institutions]
