@@ -17,7 +17,7 @@ const OUTLET_CONFIG: Record<OutletType, { bg: string; text: string }> = {
     text: 'text-text-secondary',
   },
   rubli: {
-    bg: 'bg-[#dc2626]',
+    bg: 'bg-risk-critical',
     text: 'text-text-primary',
   },
 }

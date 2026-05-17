@@ -1749,14 +1749,14 @@ export default function Executive() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => navigate('/aria')}
-                className="inline-flex items-center gap-1.5 bg-[#a06820] hover:bg-[#835616] text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#a06820]/40"
+                className="inline-flex items-center gap-1.5 bg-accent hover:bg-accent/80 text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-accent/40"
               >
                 {lang === 'en' ? 'Open ARIA queue' : 'Abrir cola ARIA'}
                 <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={() => navigate('/explore?entity=vendor')}
-                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-[#a06820]/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
+                className="inline-flex items-center gap-1.5 bg-transparent hover:bg-accent/5 text-accent border border-accent/40 font-medium text-sm px-4 py-2 rounded-sm transition-colors"
               >
                 {lang === 'en' ? 'Search a vendor' : 'Buscar un proveedor'}
               </button>

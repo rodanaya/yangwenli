@@ -233,7 +233,7 @@ export function DataInfographics() {
             onClick={() => setActive(i)}
             className={`flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden border transition-all ${
               i === active
-                ? 'border-[#dc2626] opacity-100 scale-100'
+                ? 'border-risk-critical opacity-100 scale-100'
                 : 'border-border opacity-50 hover:opacity-75 hover:border-border'
             }`}
           >
