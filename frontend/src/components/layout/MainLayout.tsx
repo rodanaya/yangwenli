@@ -51,6 +51,10 @@ export function MainLayout() {
   const location = useLocation()
   const { t } = useTranslation('common')
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Subtle grid background — intelligence aesthetic */}

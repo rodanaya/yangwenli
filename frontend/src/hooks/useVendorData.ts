@@ -63,7 +63,6 @@ export function useVendorData(
         ? vendorIdRaw
         : Number(vendorIdRaw)
   const enabled = vendorId != null && Number.isFinite(vendorId)
-  const evidenceTabActive = enabled
 
   // ───────────────────────────── Eager queries ────────────────────────────
   const vendor = useQuery({
@@ -73,11 +72,15 @@ export function useVendorData(
     staleTime: 5 * MIN,
     retry: notFoundRetry,
   })
+  // Gate all secondary queries on primary vendor success — prevents the
+  // ~56-request cascade when navigating to a non-existent vendor id.
+  const vendorFound = vendor.isSuccess
+  const evidenceTabActive = vendorFound
 
   const riskProfile = useQuery({
     queryKey: ['vendor', vendorId, 'risk-profile'],
     queryFn: () => vendorApi.getRiskProfile(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 5 * MIN,
   })
 
@@ -88,21 +91,21 @@ export function useVendorData(
         per_page: contractsPerPage,
         page: contractsPage,
       }),
-    enabled,
+    enabled: vendorFound,
     staleTime: 2 * MIN,
   })
 
   const institutions = useQuery({
     queryKey: ['vendor', vendorId, 'institutions'],
     queryFn: () => vendorApi.getInstitutions(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 5 * MIN,
   })
 
   const coBidders = useQuery({
     queryKey: ['vendor', vendorId, 'co-bidders'],
     queryFn: () => networkApi.getCoBidders(vendorId!, 5, 10),
-    enabled,
+    enabled: vendorFound,
     staleTime: 10 * MIN,
     retry: false,
   })
@@ -110,49 +113,49 @@ export function useVendorData(
   const externalFlags = useQuery({
     queryKey: ['vendor-external-flags', vendorId],
     queryFn: () => vendorApi.getExternalFlags(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 10 * MIN,
   })
 
   const qqw = useQuery<VendorQQWResponse>({
     queryKey: ['vendor-qqw', vendorId],
     queryFn: () => vendorApi.getQQW(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: HOUR,
   })
 
   const lifecycle = useQuery({
     queryKey: ['vendor', vendorId, 'risk-timeline'],
     queryFn: () => vendorApi.getRiskTimeline(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 10 * MIN,
   })
 
   const footprint = useQuery({
     queryKey: ['vendor', vendorId, 'footprint'],
     queryFn: () => vendorApi.getFootprint(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 10 * MIN,
   })
 
   const groundTruthStatus = useQuery({
     queryKey: ['vendor', vendorId, 'ground-truth-status'],
     queryFn: () => vendorApi.getGroundTruthStatus(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 30 * MIN,
   })
 
   const linkedScandals = useQuery({
     queryKey: ['vendor', vendorId, 'linked-scandals'],
     queryFn: () => vendorApi.getLinkedScandals(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 30 * MIN,
   })
 
   const shap = useQuery({
     queryKey: ['vendor', vendorId, 'shap-v52'],
     queryFn: () => vendorApi.getShap(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: HOUR,
     retry: false,
   })
@@ -160,7 +163,7 @@ export function useVendorData(
   const aria = useQuery<AriaQueueItem>({
     queryKey: ['vendor', vendorId, 'aria-detail'],
     queryFn: () => ariaApi.getVendorDetail(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: 10 * MIN,
     retry: false,
   })
@@ -168,7 +171,7 @@ export function useVendorData(
   const scorecard = useQuery<VendorScorecardData>({
     queryKey: ['vendor', vendorId, 'scorecard'],
     queryFn: () => scorecardApi.getVendor(vendorId!),
-    enabled,
+    enabled: vendorFound,
     staleTime: HOUR,
     retry: false,
   })
@@ -177,21 +180,21 @@ export function useVendorData(
   const waterfall = useQuery({
     queryKey: ['vendor', vendorId, 'risk-waterfall'],
     queryFn: () => vendorApi.getRiskWaterfall(vendorId!),
-    enabled: enabled && evidenceTabActive,
+    enabled: evidenceTabActive,
     staleTime: 10 * MIN,
   })
 
   const peerComparison = useQuery({
     queryKey: ['vendor', vendorId, 'peer-comparison'],
     queryFn: () => vendorApi.getPeerComparison(vendorId!),
-    enabled: enabled && evidenceTabActive,
+    enabled: evidenceTabActive,
     staleTime: 10 * MIN,
   })
 
   const histogram = useQuery<ContractHistogramResponse>({
     queryKey: ['vendor', vendorId, 'contract-histogram'],
     queryFn: () => vendorApi.getContractHistogram(vendorId!),
-    enabled: enabled && evidenceTabActive,
+    enabled: evidenceTabActive,
     staleTime: 30 * MIN,
     retry: false,
   })
@@ -199,7 +202,7 @@ export function useVendorData(
   const rollingTimeline = useQuery({
     queryKey: ['vendor', vendorId, 'rolling-timeline'],
     queryFn: () => vendorApi.getRollingTimeline(vendorId!),
-    enabled: enabled && evidenceTabActive,
+    enabled: evidenceTabActive,
     staleTime: HOUR,
     retry: false,
   })
@@ -208,7 +211,7 @@ export function useVendorData(
   const aiSummary = useQuery({
     queryKey: ['vendor', vendorId, 'ai-summary'],
     queryFn: () => vendorApi.getAiSummary(vendorId!),
-    enabled: enabled && loadAiSummary,
+    enabled: vendorFound && loadAiSummary,
     staleTime: 30 * MIN,
   })
 

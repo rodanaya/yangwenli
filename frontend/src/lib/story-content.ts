@@ -278,6 +278,7 @@ export interface StoryDef {
   caseIds?: number[]
   status?: StoryStatus
   nextSteps?: string[]
+  nextSteps_es?: string[]
   /**
    * Cross-surface filter tags. These let Newsroom filter stories by ARIA
    * pattern / sector / year that match the active Observatory lens, and
@@ -571,6 +572,14 @@ export const STORIES: StoryDef[] = [
       'File UIF financial intelligence request for bank transaction tracing on the top 20 individual-person P2 contractors (those with physical persons rather than companies as vendor names).',
       'Pursue criminal complaint under Art. 222 del Código Penal Federal (cohecho) for specific vendor-official pairs where RUBLI flags systematic repetition.',
     ],
+    nextSteps_es: [
+      'Solicitar vía INAI a la SFP la cola completa de investigaciones de proveedores — ¿aparecen algunos de los 6,076 proveedores P2 de RUBLI?',
+      'Cruzar los 50 proveedores P2 de mayor valor contra el RUPC para verificar registro mercantil y domicilio fiscal.',
+      'Solicitar al SAT la divulgación del pipeline de investigación del Art. 69-B — ¿cuántos proveedores están en estatus provisional y cómo se compara la prioridad del SAT con la de RUBLI?',
+      'Entrevistar a funcionarios de compras en las cinco instituciones que adjudicaron contratos a los proveedores P2 de mayor valor; solicitar actas de reunión y documentos de evaluación.',
+      'Presentar solicitud de inteligencia financiera a la UIF para rastrear transacciones bancarias de los 20 contratistas personas físicas P2 de mayor valor.',
+      'Interponer denuncia penal bajo el Art. 222 del Código Penal Federal (cohecho) para pares proveedor-funcionario donde RUBLI detecta repetición sistemática.',
+    ],
   },
 
   // =========================================================================
@@ -844,6 +853,14 @@ export const STORIES: StoryDef[] = [
       'Investigate whether procurement thresholds under LAASSP Art. 42 have been adjusted for inflation since 2012; compute the real-value erosion.',
       'Request from Congress (Cámara de Diputados) the complete list of contracts above 5B MXN approved in each fiscal year and cross-reference with RUBLI risk scores.',
       'Open dedicated case files on the four dominant IMSS pharmaceutical vendors (Grupo Fármacos, Maypo, PISA, DIMM) with focus on 2018-2025 contract awards.',
+    ],
+    nextSteps_es: [
+      'Solicitar a la SFP la lista completa de contratos superiores a 100M MXN adjudicados directamente en 2023-2025; cruzar contra los listados P2 y P6 de RUBLI.',
+      'Presentar solicitudes de auditoría a la ASF para los 20 contratos superiores a 500M MXN que RUBLI califica como riesgo crítico, citando los IDs de contrato específicos.',
+      'Comparar la tasa de cobertura de auditoría de México en contratos de gran valor contra países OCDE usando los datos del Informe de Desempeño en Contratación 2023.',
+      'Investigar si los umbrales de contratación del Art. 42 de la LAASSP han sido ajustados por inflación desde 2012; calcular la erosión en valor real.',
+      'Solicitar a la Cámara de Diputados la lista completa de contratos superiores a 5,000 MDP aprobados en cada ejercicio fiscal y cruzar con los puntajes de riesgo de RUBLI.',
+      'Abrir expedientes de investigación sobre los cuatro proveedores farmacéuticos dominantes en el IMSS (Grupo Fármacos, Maypo, PISA, DIMM), con énfasis en contratos 2018-2025.',
     ],
   },
 
@@ -1156,6 +1173,14 @@ export const STORIES: StoryDef[] = [
       'Identify which IMSS procurement directors approved the 2013-2019 Grupo Fármacos contracts using SIPOT declarations of interests and meeting records.',
       'Track the AMLO-era transition of pharmaceutical contracting from IMSS-direct to BIRMEX/INSABI: did the same P1 vendors continue dominating under the new architecture?',
     ],
+    nextSteps_es: [
+      'Interponer denuncia formal ante la COFECE bajo el Art. 53 de la LFCE solicitando investigación de Grupo Fármacos Especializados, Maypo, PISA y DIMM como posible cártel en la contratación farmacéutica del IMSS.',
+      'Solicitar al IMSS el desglose completo de contratos farmacéuticos 2007-2020, incluyendo licitantes competidores en cada convocatoria — ¿cuántos procedimientos fueron genuinamente competitivos?',
+      'Investigar el repunte de contratos de Laboratorios PISA en 2025: ¿qué contratos específicos impulsaron los 19,460 MDP anuales y bajo qué mecanismo de contratación?',
+      'Cruzar los 40 proveedores P1 no farmacéuticos contra el RUPC para identificar accionistas declarados, representantes legales y domicilios físicos.',
+      'Identificar qué directores de compras del IMSS aprobaron los contratos con Grupo Fármacos 2013-2019 usando declaraciones patrimoniales del SIPOT y actas de reunión.',
+      'Rastrear la transición del sexenio de AMLO en la contratación farmacéutica del IMSS hacia BIRMEX/INSABI: ¿los mismos proveedores P1 continuaron dominando bajo la nueva arquitectura?',
+    ],
     entities: [
       { type: 'vendor', id: 29277, name: 'Grupo Fármacos Especializados', riskScore: 0.99, ariaTier: 1, role: 'Principal suspect · 133.4B MXN',        role_es: 'Principal investigado · 133.4 MDP' },
       { type: 'vendor', id: 2873,  name: 'Farmacéuticos Maypo',           riskScore: 0.95, ariaTier: 1, role: 'Principal suspect · 88.0B MXN',          role_es: 'Principal investigado · 88.0 MDP' },
@@ -1448,6 +1473,14 @@ export const STORIES: StoryDef[] = [
       'Map single-bid rates by procurement institution to identify the worst-offending procurement units for prioritized audit.',
       'Pursue a journalistic investigation of the 2011 single-bid peak (64.4%) — what specific procurement category or institution drove the annual figure?',
     ],
+    nextSteps_es: [
+      'Solicitar a la SFP las estadísticas oficiales de oferta única 2020-2025 y comparar con el cálculo independiente de RUBLI a partir de los microdatos de COMPRANET.',
+      'Identificar los 100 procedimientos de mayor valor contractual con un solo licitante en 2023 y solicitar las actas completas de evaluación de propuestas.',
+      'Presentar denuncias de investigación ante la COFECE para los 20 pares de proveedores co-licitantes identificados en el patrón P5 de la cola ARIA de RUBLI.',
+      'Investigar qué industrias en México cuentan con certificación de "competencia efectiva" de la COFECE y cruzar sus tasas de oferta única con sectores no certificados.',
+      'Mapear las tasas de oferta única por institución compradora para identificar las unidades de compra con peor desempeño y priorizar la auditoría.',
+      'Realizar una investigación periodística sobre el pico de oferta única de 2011 (64.4%) — ¿qué categoría de compra o institución específica impulsó esa cifra anual?',
+    ],
     entities: [
       { type: 'vendor', id: 44372,  name: 'Edenred Mexico',      riskScore: 0.928, ariaTier: 1, role: 'Welfare-voucher monopolist · 1,679 single-bid wins', role_es: 'Monopolio de vales · 1,679 victorias de oferta única' },
       { type: 'vendor', id: 102627, name: 'TOKA Internacional',  riskScore: 0.988, ariaTier: 1, role: 'Welfare-voucher monopolist · 1,290 single-bid wins', role_es: 'Monopolio de vales · 1,290 victorias de oferta única' },
@@ -1688,6 +1721,14 @@ export const STORIES: StoryDef[] = [
       'Investigate whether any of the 3,821 IMSS P6 vendors were listed on the RUPC as recently established entities at the time of first contract.',
       'File information requests to ASF for the complete findings of the 2022 IMSS pharmaceutical audit, including vendor names and institutional findings.',
       'Research whether Mexico\'s 2022 procurement law reform addressed the university subcontracting carve-out that enabled La Estafa Maestra.',
+    ],
+    nextSteps_es: [
+      'Solicitar a la SFP los resultados de cualquier auditoría de compras farmacéuticas del IMSS en 2023-2025 que involucre proveedores recurrentes de adjudicación directa.',
+      'Presentar solicitud de inteligencia financiera a la UIF para datos de transacciones bancarias de los 20 proveedores intermediarios P3 de mayor valor en infraestructura.',
+      'Usar COMPRANET para identificar qué funcionarios de compras del IMSS firmaron los contratos de mayor valor con patrón P6 — cruzar con declaraciones de conflicto de interés del SIPOT.',
+      'Investigar si alguno de los 3,821 proveedores P6 del IMSS estaba registrado en el RUPC como entidad de reciente creación al momento de su primer contrato.',
+      'Solicitar a la ASF los hallazgos completos de la auditoría farmacéutica del IMSS de 2022, incluyendo nombres de proveedores y conclusiones institucionales.',
+      'Investigar si la reforma a la ley de contrataciones de 2022 atendió el vacío legal de subcontratación universitaria que posibilitó La Estafa Maestra.',
     ],
   },
 
@@ -1967,6 +2008,14 @@ export const STORIES: StoryDef[] = [
       'Research which procurement officials are authorized to approve direct awards above 10M MXN — how has that authority concentrated since 2019?',
       'Compile a dataset of Art. 41 justification documents for 2023-2024 and code the cited legal basis to identify which exception clauses are used most frequently.',
       'Interview former SFP auditors who have worked on direct-award pattern reviews about the institutional constraints they encountered.',
+    ],
+    nextSteps_es: [
+      'Solicitar a la SFP las categorías oficiales de justificación de adjudicaciones directas en 2023 — ¿qué fracción cita "emergencia", "fuente única" o "pequeño valor"?',
+      'Analizar si las compras de BIRMEX posteriores a 2019 muestran precios competitivos frente a los precios farmacéuticos previos del IMSS para las mismas categorías de medicamentos.',
+      'Presentar solicitudes de auditoría a la ASF para los 50 contratos de adjudicación directa más grandes de 2024 — ¿alguno fue adjudicado a proveedores T1/T2 de la cola ARIA de RUBLI?',
+      'Investigar qué funcionarios están autorizados para aprobar adjudicaciones directas superiores a 10M MXN — ¿cómo se ha concentrado esa autoridad desde 2019?',
+      'Compilar un conjunto de datos de documentos de justificación del Art. 41 para 2023-2024 y codificar el fundamento legal citado para identificar las cláusulas de excepción más utilizadas.',
+      'Entrevistar a ex auditores de la SFP que hayan trabajado en revisiones de patrones de adjudicación directa sobre las limitaciones institucionales que encontraron.',
     ],
   },
 
@@ -2259,6 +2308,14 @@ export const STORIES: StoryDef[] = [
       'Compile a comprehensive list of the top 1,000 AMLO-era contracts by RUBLI risk score, with procurement institution and approving unit identified.',
       'Pursue academic research collaboration with CIDE, COLMEX, or UNAM to publish a peer-reviewed analysis of the Fox-to-AMLO risk trajectory.',
     ],
+    nextSteps_es: [
+      'Solicitar a la ASF la tasa de cobertura de auditoría de los contratos de emergencia del sexenio de AMLO en salud e infraestructura.',
+      'Analizar contratos de BIRMEX e INSABI 2019-2022 para identificar proveedores que también aparezcan en las listas P1 y P6 de RUBLI.',
+      'Dar seguimiento trimestral a los puntajes de riesgo del gobierno de Sheinbaum usando datos de COMPRANET — RUBLI puede actualizar en tiempo real.',
+      'Cruzar los contratos de adjudicación directa superiores a 500M MXN del sexenio de AMLO contra el registro de sanciones de la SFP y la lista EFOS del SAT.',
+      'Compilar la lista de los 1,000 contratos del sexenio de AMLO con mayor puntaje de riesgo RUBLI, identificando la institución compradora y la unidad aprobadora.',
+      'Buscar colaboración académica con CIDE, COLMEX o UNAM para publicar un análisis arbitrado de la trayectoria de riesgo del sexenio de Fox al de AMLO.',
+    ],
     entities: [
       { type: 'vendor', id: 102627, name: 'TOKA Internacional',         riskScore: 0.988, ariaTier: 1, role: 'Welfare-voucher dominant vendor',          role_es: 'Proveedor dominante de vales del bienestar' },
       { type: 'vendor', id: 36961,  name: 'Operadora CICSA',            riskScore: 0.641, ariaTier: 2, role: 'Tren Maya contractor · 139.0B MXN',         role_es: 'Contratista Tren Maya · 139.0 MDP' },
@@ -2503,6 +2560,14 @@ export const STORIES: StoryDef[] = [
       'Research whether Mexico\'s 2022 procurement law reform addressed the university subcontracting carve-out that enabled La Estafa Maestra.',
       'Open a journalistic investigation of the top 5 P3 vendors in infrastructure — interview actual subcontractors to identify the price spreads.',
       'File COFECE complaint requesting dedicated investigation of intermediary patterns in public works procurement.',
+    ],
+    nextSteps_es: [
+      'Presentar solicitud de inteligencia financiera a la UIF para datos de transacciones bancarias de los 20 proveedores P3 de mayor valor en infraestructura.',
+      'Identificar qué universidades públicas siguen siendo utilizadas como intermediarias de compras después de La Estafa Maestra — cruzar con contratos universitarios en COMPRANET 2018-2025.',
+      'Solicitar a la SFP la lista completa de proveedores sancionados por subcontratación indebida y cruzar con la lista P3 de RUBLI.',
+      'Investigar si la reforma a la ley de contrataciones de 2022 atendió el vacío legal de subcontratación universitaria que hizo posible La Estafa Maestra.',
+      'Abrir una investigación periodística sobre los 5 principales proveedores P3 en infraestructura — entrevistar a subcontratistas reales para identificar los márgenes de precio.',
+      'Presentar denuncia ante la COFECE solicitando una investigación dedicada a los patrones de intermediarismo en la obra pública.',
     ],
   },
 
@@ -2755,6 +2820,14 @@ export const STORIES: StoryDef[] = [
       'Contact SHCP/SFP policy unit to ask whether automated threshold-clustering detection has been considered for CompraNet.',
       'File criminal complaints under Art. 17 LAASSP for specific procurement units showing systematic same-day, same-vendor, threshold-value contract splitting.',
       'Compile a journalistic investigation of the 10 most egregious same-day contract splitting cases identified by RUBLI\'s z-score analysis.',
+    ],
+    nextSteps_es: [
+      'Solicitar vía INAI a la SFP los registros de cualquier investigación del Art. 17 de la LAASSP por fragmentación de contratos en los últimos 5 años.',
+      'Identificar las 20 instituciones con mayor concentración de contratos exactamente en 300K y 210K MXN y solicitar sus expedientes de compra para esas adjudicaciones.',
+      'Comparar los valores de umbral a lo largo del tiempo contra los tamaños de los picos — ¿se desplaza el clúster cuando los umbrales denominados en UMA cambian?',
+      'Contactar a la unidad de política de la SHCP/SFP para preguntar si se ha considerado la detección automatizada de agrupamiento en umbrales para COMPRANET.',
+      'Interponer denuncias penales bajo el Art. 17 de la LAASSP para unidades de compra específicas que muestren fraccionamiento sistemático de contratos en el mismo día, mismo proveedor, mismo valor umbral.',
+      'Compilar una investigación periodística sobre los 10 casos más flagrantes de fraccionamiento de contratos en el mismo día identificados por el análisis z-score de RUBLI.',
     ],
   },
 
@@ -3516,12 +3589,14 @@ export function localizeStory(story: StoryDef, lang: 'en' | 'es'): {
   subheadline: string
   leadStatLabel: string
   leadStatSublabel: string | undefined
+  nextSteps: string[] | undefined
 } {
   return {
     headline: pickLang(story.headline, story.headline_es, lang) as string,
     subheadline: pickLang(story.subheadline, story.subheadline_es, lang) as string,
     leadStatLabel: pickLang(story.leadStat.label, story.leadStat.label_es, lang) as string,
     leadStatSublabel: pickLang(story.leadStat.sublabel, story.leadStat.sublabel_es, lang),
+    nextSteps: lang === 'es' ? (story.nextSteps_es ?? story.nextSteps) : story.nextSteps,
   }
 }
 

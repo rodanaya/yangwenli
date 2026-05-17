@@ -1471,7 +1471,7 @@ export default function Journalists() {
             }}
           >
             RUBLI{' '}
-            <span className="italic text-risk-critical">Investigations</span>
+            <span className="italic text-risk-critical">{t('masthead.headline', { defaultValue: 'Investigations' })}</span>
           </h1>
 
           <p

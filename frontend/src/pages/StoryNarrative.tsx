@@ -1635,14 +1635,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
         </div>
 
         {/* Next steps for journalists */}
-        {story.nextSteps && story.nextSteps.length > 0 && (
+        {ls.nextSteps && ls.nextSteps.length > 0 && (
           <div className="mt-8 p-4 rounded-sm border border-border bg-background-card">
             <h4 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
               <ChevronRight className="h-4 w-4 text-risk-critical" aria-hidden="true" />
               {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">
-              {story.nextSteps.map((step, i) => (
+              {ls.nextSteps.map((step, i) => (
                 <li key={i} className="flex gap-2 text-xs text-text-secondary leading-relaxed">
                   <span className="text-risk-critical font-bold shrink-0 mt-0.5">{i + 1}.</span>
                   <span>{step}</span>
