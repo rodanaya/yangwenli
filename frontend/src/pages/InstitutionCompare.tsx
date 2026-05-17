@@ -910,6 +910,10 @@ function InstitutionSearchInput({
         <input
           id={id}
           type="text"
+          role="combobox"
+          aria-expanded={!!(results && results.data.length > 0 && !selectedId && query.length >= 2)}
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
           placeholder={isEsSearch ? 'Buscar por nombre...' : 'Search by name...'}
           value={query}
           onChange={(e) => {
@@ -933,7 +937,7 @@ function InstitutionSearchInput({
 
       {/* Dropdown results */}
       {results && results.data.length > 0 && !selectedId && query.length >= 2 && (
-        <ul className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-background-card shadow-xl max-h-56 overflow-y-auto">
+        <ul role="listbox" aria-label={isEsSearch ? `Resultados de ${label}` : `${label} results`} className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-background-card shadow-xl max-h-56 overflow-y-auto">
           {results.data.map((inst) => (
             <li key={inst.id}>
               <button
