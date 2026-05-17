@@ -550,7 +550,7 @@ export default function Administrations() {
   const isEs = (i18n.language?.startsWith('es') ?? false)
 
   return (
-    <div id="main-content" className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative">
       {/* Page paper-grain — scoped to this contemplative cross-sexenio
           surface. Pattern from rubli-folio-aesthetic § "Atmosphere —
           paper-grain overlay". */}

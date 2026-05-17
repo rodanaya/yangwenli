@@ -1451,7 +1451,7 @@ export default function RedesKnownDossier() {
   }
 
   return (
-    <div id="main-content" className="relative space-y-8 max-w-6xl mx-auto pb-12">
+    <div className="relative space-y-8 max-w-6xl mx-auto pb-12">
       {/* Page paper-grain — scoped to this contemplative atlas surface.
           Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
           overlay". */}

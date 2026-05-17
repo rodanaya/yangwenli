@@ -577,7 +577,6 @@ export default function CaseLibrary() {
 
   return (
     <div
-      id="main-content"
       style={{
         background: PAGE_BG,
         minHeight: '100vh',

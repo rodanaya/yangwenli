@@ -862,7 +862,7 @@ export default function RedThread() {
   }
 
   return (
-    <div id="main-content" ref={containerRef} className="relative min-h-screen bg-[var(--color-background)]">
+    <div ref={containerRef} className="relative min-h-screen bg-[var(--color-background)]">
       {/* Fixed elements */}
       <RedThreadLine progress={scrollPct} />
       <ChapterNav active={activeChapter} chapters={chapters} />

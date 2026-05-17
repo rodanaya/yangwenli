@@ -1194,7 +1194,7 @@ function ReportCard() {
   const GT_CASES_COUNT = executiveSummary?.ground_truth?.cases ?? 1427
 
   return (
-    <main className="min-h-screen bg-background" id="main-content">
+    <main className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Page header — NATIONAL SYSTEM HEALTH */}
         <header className="mb-8 pb-5 border-b border-border">

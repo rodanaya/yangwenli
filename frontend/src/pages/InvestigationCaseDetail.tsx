@@ -342,7 +342,7 @@ export function InvestigationCaseDetail() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div id="main-content" style={{ minHeight: '100vh', background: BG, color: INK }}>
+    <div style={{ minHeight: '100vh', background: BG, color: INK }}>
       <div className="mx-auto max-w-6xl px-6 md:px-8 py-8 md:py-10 space-y-8">
 
         {/* ═══════════════════════════════════════════════════════════════════

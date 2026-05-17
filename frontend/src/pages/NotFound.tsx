@@ -16,7 +16,7 @@ export function NotFound() {
   }
 
   return (
-    <div id="main-content" className="min-h-[70vh] flex flex-col items-center justify-center gap-5 px-4 text-center">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center gap-5 px-4 text-center">
       <p className="text-[10px] font-mono font-semibold tracking-[0.18em] uppercase text-text-muted">
         {t('notFound.code')}
       </p>

@@ -623,7 +623,7 @@ export default function CapturaHeatmap() {
   const valueAtRisk = topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0)
 
   return (
-    <div id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
       {/* Utility header — same pattern as the rest of the redesign sweep. */}
       <header className="mb-5 pb-4 border-b border-border">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">

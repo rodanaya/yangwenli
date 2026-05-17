@@ -588,7 +588,7 @@ export default function Patterns() {
   const totalValue = patterns.reduce((sum, p) => sum + (p.total_value_mxn ?? 0), 0)
 
   return (
-    <div id="main-content" className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Editorial folio header */}
       <header className="mb-8">
         <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">

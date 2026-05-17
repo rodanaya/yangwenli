@@ -1331,7 +1331,7 @@ export default function AriaPage() {
   }
 
   return (
-    <div id="main-content" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ════════════════════════════════════════════════════════════════
             UTILITY HEADER — replaces EditorialPageShell.

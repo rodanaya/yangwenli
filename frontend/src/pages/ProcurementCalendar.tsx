@@ -595,7 +595,7 @@ export default function ProcurementCalendar() {
     : null
 
   return (
-    <div id="main-content" className="min-h-screen bg-background text-text-secondary">
+    <div className="min-h-screen bg-background text-text-secondary">
       <div className="max-w-6xl mx-auto px-6 py-8">
       <header className="mb-5 pb-4 border-b border-border">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">

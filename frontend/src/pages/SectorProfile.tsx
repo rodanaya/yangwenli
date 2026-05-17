@@ -1134,7 +1134,7 @@ export function SectorProfile() {
   void _shellSeverity
 
   return (
-    <article id="main-content" className="max-w-6xl mx-auto pb-12 px-4 sm:px-6 pt-4">
+    <article className="max-w-6xl mx-auto pb-12 px-4 sm:px-6 pt-4">
 
       {/* ── BREADCRUMB NAV ──────────────────────────────────────────────────── */}
       <nav
