@@ -416,16 +416,16 @@ function MetricTable({
         <table className="w-full text-sm" aria-label={isEs ? 'Comparacion de metricas institucionales' : 'Institutional metric comparison'}>
           <thead>
             <tr className="border-b border-border bg-background/40">
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
+              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {isEs ? 'Metrica' : 'Metric'}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
                 {nameA}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_B }}>
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_B }}>
                 {nameB}
               </th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
+              <th scope="col" className="px-4 py-3 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
                 Delta
               </th>
             </tr>

@@ -1427,12 +1427,12 @@ export default function InstitutionLeague() {
               <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border bg-background/80">
-                    <th className="px-2 py-2 text-left w-12">
+                    <th scope="col" className="px-2 py-2 text-left w-12">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         #
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left">
+                    <th scope="col" className="px-2 py-2 text-left">
                       <SortHeader
                         label={t('columns.institution')}
                         sortKey="institution_name"
@@ -1441,7 +1441,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-2 py-2 text-left w-24">
+                    <th scope="col" className="px-2 py-2 text-left w-24">
                       <SortHeader
                         label={t('columns.score')}
                         sortKey="total_score"
@@ -1450,22 +1450,22 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-2 py-2 text-center w-24">
+                    <th scope="col" className="px-2 py-2 text-center w-24">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
+                    <th scope="col" className="px-2 py-2 text-left hidden sm:table-cell w-28" title="O=Openness · P=Price · V=Vendors · R=Process · E=External">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.pillars')} <span className="opacity-50 normal-case">O P V R E</span>
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-center w-12 hidden sm:table-cell">
+                    <th scope="col" className="px-2 py-2 text-center w-12 hidden sm:table-cell">
                       <span className="text-[9px] font-mono font-bold text-text-muted uppercase tracking-[0.12em]">
                         {t('columns.trend')}
                       </span>
                     </th>
-                    <th className="px-2 py-2 text-left hidden md:table-cell w-24">
+                    <th scope="col" className="px-2 py-2 text-left hidden md:table-cell w-24">
                       <SortHeader
                         label={t('columns.percentile')}
                         sortKey="national_percentile"

@@ -216,11 +216,11 @@ export function ComparePeriodView() {
               <table className="w-full text-sm" role="table" aria-label="Period comparison results">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em] w-1/4">Metric</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period A</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period B</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Δ (B − A)</th>
-                    <th className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Signal</th>
+                    <th scope="col" className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em] w-1/4">Metric</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period A</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period B</th>
+                    <th scope="col" className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Δ (B − A)</th>
+                    <th scope="col" className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Signal</th>
                   </tr>
                 </thead>
                 <tbody>

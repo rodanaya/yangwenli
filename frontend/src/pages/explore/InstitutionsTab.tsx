@@ -499,7 +499,7 @@ export default function InstitutionsTab() {
               <tr className="bg-background-elevated/50">
                 <th scope="col" className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {INST_COLUMNS.map((col) => (
-                  <th
+                  <th scope="col"
                     key={col.key}
                     scope="col"
                     className={cn(
@@ -523,7 +523,7 @@ export default function InstitutionsTab() {
                     </span>
                   </th>
                 ))}
-                <th className="w-8 px-2" />
+                <th scope="col" className="w-8 px-2" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">

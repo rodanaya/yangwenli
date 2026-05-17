@@ -480,7 +480,7 @@ export default function VendorsTab() {
               <tr className="bg-background-elevated/50">
                 <th scope="col" className="w-8 px-2 py-2 text-xs font-semibold text-text-muted text-center">#</th>
                 {VENDOR_COLUMNS.map((col) => (
-                  <th
+                  <th scope="col"
                     key={col.key}
                     scope="col"
                     className={cn(

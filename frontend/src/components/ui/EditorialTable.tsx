@@ -49,6 +49,7 @@ export function EditorialTable<T>({
             {columns.map(col => (
               <th
                 key={col.key}
+                scope="col"
                 className={cn(
                   col.numeric && 'num',
                   col.sortable && 'cursor-pointer select-none hover:text-text-secondary transition-colors',

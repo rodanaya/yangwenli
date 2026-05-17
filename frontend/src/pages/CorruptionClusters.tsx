@@ -741,14 +741,14 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
       >
         <thead>
           <tr>
-            <th
+            <th scope="col"
               className="text-left text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '28%' }}
             >
               {isEs ? 'Patrón' : 'Pattern'}
             </th>
             {MATRIX_SECTORS.map((s) => (
-              <th
+              <th scope="col"
                 key={s}
                 className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
                 style={{ fontWeight: 500 }}
@@ -756,7 +756,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                 {s}
               </th>
             ))}
-            <th
+            <th scope="col"
               className="text-right text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 pb-3"
               style={{ width: '56px' }}
             >

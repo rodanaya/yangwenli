@@ -417,10 +417,10 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
       <table className="w-full text-xs border-collapse" aria-label="Risk factor coefficients">
         <thead>
           <tr className="border-b border-border text-text-muted">
-            <th className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Factor</th>
-            <th className="text-right py-2 pr-4 font-semibold uppercase tracking-wider w-24">Coefficient</th>
-            <th className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Evidence Strength</th>
-            <th className="text-left py-2 font-semibold uppercase tracking-wider hidden md:table-cell">Key Source</th>
+            <th scope="col" className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Factor</th>
+            <th scope="col" className="text-right py-2 pr-4 font-semibold uppercase tracking-wider w-24">Coefficient</th>
+            <th scope="col" className="text-left py-2 pr-4 font-semibold uppercase tracking-wider">Evidence Strength</th>
+            <th scope="col" className="text-left py-2 font-semibold uppercase tracking-wider hidden md:table-cell">Key Source</th>
           </tr>
         </thead>
         <tbody>

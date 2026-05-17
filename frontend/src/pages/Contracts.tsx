@@ -1095,7 +1095,7 @@ export function Contracts() {
                     <th scope="col" className="px-2 py-2 w-8" />
                     {/* Fix 4: Column headers via t() */}
                     {CONTRACT_COLUMN_DEFS.map((col) => (
-                      <th
+                      <th scope="col"
                         key={col.key}
                         scope="col"
                         className={cn(

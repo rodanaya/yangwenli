@@ -158,11 +158,11 @@ export function AdminSectorMatrix({
         <table className="border-separate" style={{ borderSpacing: 3 }} aria-label="Administration sector comparison matrix">
           <thead>
             <tr>
-              <th className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">
+              <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">
                 {t('matrixLegend.administration')}
               </th>
               {MATRIX_SECTORS.map((sector) => (
-                <th key={sector.key} className="text-center pb-1 align-bottom" title={sector.name}>
+                <th scope="col" key={sector.key} className="text-center pb-1 align-bottom" title={sector.name}>
                   <div className="flex justify-center">
                     <span
                       className="text-[10px] text-text-muted font-medium block"
