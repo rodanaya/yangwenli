@@ -209,7 +209,7 @@ export function VendorProfile() {
                 navigate('/')
               }}
               className="h-8 text-xs"
-              title={isEs ? 'Abrir en el mapa espacial' : 'Open in spatial map'}
+              title={isEs ? 'Abrir en El Panorama' : 'Open in El Panorama'}
             >
               <MapIcon className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="ml-1.5 hidden sm:inline">

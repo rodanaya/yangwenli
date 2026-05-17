@@ -108,7 +108,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
             aria-label={lang === 'en' ? 'Dismiss hint' : 'Cerrar pista'}
           >
             <div className="text-[9px] font-mono font-bold uppercase tracking-[0.16em] text-text-muted mb-1">
-              {lang === 'en' ? 'Spatial Map · Z0 → Z3' : 'Mapa Espacial · Z0 → Z3'}
+              {lang === 'en' ? 'El Panorama · Z0 → Z3' : 'El Panorama · Z0 → Z3'}
             </div>
             <div className="text-sm text-text-primary leading-snug">
               {lang === 'en'

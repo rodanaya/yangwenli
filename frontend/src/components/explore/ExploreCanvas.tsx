@@ -764,6 +764,11 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
         </g>
       </svg>
 
+      {/* Z0 HTML overlay — El Panorama sector intelligence card grid */}
+      {focus.kind === 'system' && (
+        <Z0Panel lang={lang} dispatch={dispatch} />
+      )}
+
       {/* Z1 HTML overlay — editorial institution list replaces SVG bubble scatter */}
       {focus.kind === 'sector' && (
         <Z1Panel
@@ -1167,6 +1172,7 @@ void sectorApi
 // Z1Panel — HTML overlay: editorial institution briefing for a sector
 // ────────────────────────────────────────────────────────────────────────────
 
+type Z0SortKey = 'spend' | 'risk' | 'contracts' | 'critical'
 type Z1SortKey = 'risk' | 'spend' | 'contracts' | 'da_pct' | 'hr_pct' | 'sector_share'
 type Z2SortKey = 'risk' | 'spend' | 'contracts' | 'year'
 type Z3SortKey = 'amount' | 'year' | 'risk'
@@ -1227,6 +1233,201 @@ function InstRow({
         {sectorShare.toFixed(1)}%
       </td>
     </tr>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z0Panel — El Panorama: proportional sector intelligence card grid
+// Replaces the SVG floating-icon canvas with data-encoded editorial cards.
+// Card flex-basis is proportional to sector spend share (floored at 8% so tiny
+// sectors stay readable). Sort bar: SPEND (default) / RISK / CONTR / CRITICAL.
+// ────────────────────────────────────────────────────────────────────────────
+
+function Z0Panel({
+  lang,
+  dispatch,
+}: {
+  lang: 'en' | 'es'
+  dispatch: ReturnType<typeof useExploreDispatch>
+}) {
+  const { data: sectorStats, isLoading } = useQuery({
+    queryKey: ['explore', 'z0-sector-stats'],
+    queryFn: () => sectorApi.getAll(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const [sortKey, setSortKey] = useState<Z0SortKey>('spend')
+  const stats = sectorStats?.data ?? []
+  const totalSpend = sectorStats?.total_value_mxn ?? stats.reduce((s, r) => s + r.total_value_mxn, 0)
+
+  const sorted = useMemo(() => {
+    return [...stats].sort((a, b) => {
+      switch (sortKey) {
+        case 'spend':     return b.total_value_mxn - a.total_value_mxn
+        case 'risk':      return (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0)
+        case 'contracts': return b.total_contracts - a.total_contracts
+        case 'critical':  return b.critical_risk_count - a.critical_risk_count
+        default:          return 0
+      }
+    })
+  }, [stats, sortKey])
+
+  return (
+    <div
+      className="absolute inset-0 z-[5] overflow-y-auto"
+      data-scroll-panel="true"
+      style={{ background: 'var(--color-background)' }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div
+        className="sticky top-0 z-[6] px-4 py-3 border-b flex items-start justify-between gap-3 flex-wrap"
+        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)' }}
+      >
+        <div>
+          <div className="font-mono text-[9px] tracking-[0.18em] uppercase font-bold" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'EL PANORAMA · SECTOR INTELLIGENCE' : 'EL PANORAMA · INTELIGENCIA SECTORIAL'}
+          </div>
+          <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            {isLoading
+              ? '…'
+              : `12 ${lang === 'en' ? 'sectors · ' : 'sectores · '}${formatCompactMXN(totalSpend)} ${lang === 'en' ? 'validated spend' : 'gasto validado'}`}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 flex-wrap flex-shrink-0">
+          {(['spend', 'risk', 'contracts', 'critical'] as Z0SortKey[]).map((k) => {
+            const label =
+              k === 'spend'     ? (lang === 'en' ? 'SPEND'    : 'GASTO')
+              : k === 'risk'    ? (lang === 'en' ? 'RISK'     : 'RIESGO')
+              : k === 'contracts' ? (lang === 'en' ? 'CONTR.'  : 'CONTR.')
+              :                   (lang === 'en' ? 'CRITICAL' : 'CRÍTICO')
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setSortKey(k)}
+                className="px-2 py-0.5 font-mono text-[8px] uppercase tracking-wider"
+                style={{
+                  background: sortKey === k ? 'var(--color-accent)' : 'var(--color-border)',
+                  color: sortKey === k ? '#fff' : 'var(--color-text-muted)',
+                  borderRadius: 2,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background 0.1s',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="py-16 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'Loading sector intelligence…' : 'Cargando…'}
+        </div>
+      )}
+
+      {/* Proportional card grid */}
+      {!isLoading && stats.length > 0 && (
+        <div
+          className="flex flex-wrap"
+          style={{ gap: 2, padding: '4px', alignContent: 'flex-start' }}
+        >
+          {sorted.map((s) => {
+            const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 8
+            const basis = Math.max(8, spendPct)
+            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+            const totalRisk = s.critical_risk_count + s.high_risk_count + s.medium_risk_count + s.low_risk_count
+            const avgRiskPct = Math.round((s.avg_risk_score ?? 0) * 100)
+            const sectorLabel = getSectorName(s.sector_code, lang)
+
+            return (
+              <div
+                key={s.sector_id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
+                style={{
+                  flexBasis: `calc(${basis}% - 4px)`,
+                  flexGrow: 1,
+                  flexShrink: 0,
+                  minWidth: 128,
+                  minHeight: 130,
+                  borderLeft: `3px solid ${color}`,
+                  background: 'var(--color-background-card)',
+                  padding: '10px 12px 8px',
+                  cursor: 'pointer',
+                  transition: 'box-shadow 0.15s',
+                  boxSizing: 'border-box',
+                }}
+                onClick={() => dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 14px rgba(0,0,0,0.10)' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '' }}
+              >
+                {/* Kicker */}
+                <div className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color }}>
+                  {s.sector_code}
+                </div>
+                {/* Sector name */}
+                <div className="font-mono text-[10px] font-medium leading-tight mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                  {sectorLabel}
+                </div>
+                {/* Spend — Playfair Italic 800 */}
+                <div
+                  className="tabular-nums mb-0.5"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontWeight: 800,
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(13px, 1.8vw, 20px)',
+                    lineHeight: 1.1,
+                    color,
+                  }}
+                >
+                  {formatCompactMXN(s.total_value_mxn)}
+                </div>
+                {/* % of total spend */}
+                <div className="font-mono text-[8px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                  {spendPct.toFixed(1)}% {lang === 'en' ? 'of spend' : 'del gasto'}
+                </div>
+                {/* Risk distribution bar */}
+                {totalRisk > 0 && (
+                  <div className="h-1.5 flex overflow-hidden rounded-sm mb-1.5" style={{ gap: 1 }}>
+                    {s.critical_risk_count > 0 && (
+                      <div style={{ flex: s.critical_risk_count, background: RISK_COLORS.critical, minWidth: 2 }} />
+                    )}
+                    {s.high_risk_count > 0 && (
+                      <div style={{ flex: s.high_risk_count, background: RISK_COLORS.high, minWidth: 2 }} />
+                    )}
+                    {s.medium_risk_count > 0 && (
+                      <div style={{ flex: s.medium_risk_count, background: RISK_COLORS.medium, minWidth: 2 }} />
+                    )}
+                    {s.low_risk_count > 0 && (
+                      <div style={{ flex: s.low_risk_count, background: 'var(--color-border)', minWidth: 2 }} />
+                    )}
+                  </div>
+                )}
+                {/* Risk summary */}
+                <div className="flex items-center gap-2 flex-wrap font-mono text-[8px]">
+                  {s.critical_risk_count > 0 && (
+                    <span className="font-bold" style={{ color: RISK_COLORS.critical }}>
+                      {s.critical_risk_count} {lang === 'en' ? 'crit' : 'crít'}
+                    </span>
+                  )}
+                  <span style={{ color: 'var(--color-text-muted)' }}>{avgRiskPct} RS</span>
+                  <span style={{ color: 'var(--color-text-muted)' }}>{(s.direct_award_pct ?? 0).toFixed(0)}% DA</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
 

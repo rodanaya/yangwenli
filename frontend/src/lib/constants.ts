@@ -157,7 +157,7 @@ export const GROUND_TRUTH_CASE_COUNT_FALLBACK = 1427
 export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 // Build identifier — bump to force Vite content hash change and bust CDN/browser cache
-export const BUILD_ID = '2026-05-17-starfox-sortable-tables'
+export const BUILD_ID = '2026-05-17-starfox-el-panorama'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
