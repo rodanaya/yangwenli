@@ -178,11 +178,11 @@ export function LeadTimeChart({ lang }: LeadTimeChartProps) {
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 px-2 text-[9px] font-mono text-text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="rounded-full" style={{ width: 7, height: 7, background: '#64748b' }} />
+          <span className="rounded-full" style={{ width: 7, height: 7, background: '#64748b' }} aria-hidden="true" />
           {lang === 'en' ? 'RUBLI flag year (data crossed critical threshold)' : 'Año señalado por RUBLI (datos cruzaron umbral crítico)'}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="rounded-full" style={{ width: 7, height: 7, background: '#dc2626', border: '1px solid white' }} />
+          <span className="rounded-full" style={{ width: 7, height: 7, background: '#dc2626', border: '1px solid white' }} aria-hidden="true" />
           {lang === 'en' ? 'scandal became public' : 'escándalo se hizo público'}
         </span>
       </div>

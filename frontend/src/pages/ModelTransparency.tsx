@@ -628,7 +628,7 @@ function AuditTrailTab() {
                         border: `1px solid ${ACCENT}33`,
                       }}
                     >
-                      <span className="h-1 w-1 rounded-full animate-pulse" style={{ backgroundColor: ACCENT }} />
+                      <span className="h-1 w-1 rounded-full animate-pulse" style={{ backgroundColor: ACCENT }} aria-hidden="true" />
                       Active
                     </span>
                   )}

@@ -584,7 +584,7 @@ export default function CategoryProfile() {
                   className="inline-flex items-center gap-1.5"
                   style={{ color: sectorColor }}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} />
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sectorColor }} aria-hidden="true" />
                   <span style={{ fontStyle: 'italic', fontWeight: 500 }}>{sectorLabel}</span>
                 </span>
               )}

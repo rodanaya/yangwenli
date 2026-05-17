@@ -190,7 +190,7 @@ function SectorTag({ sectorId }: { sectorId?: number }) {
       className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
       style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
       {s.name}
     </span>
   )

@@ -242,7 +242,7 @@ export function StoryNuevosRicos() {
           { label: t('nuevosRicos.legendLow'),      color: 'var(--color-sector-hacienda)' },
         ].map(({ label, color }) => (
           <span key={label} className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, opacity: 0.6 }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, opacity: 0.6 }} aria-hidden="true" />
             {label}
           </span>
         ))}

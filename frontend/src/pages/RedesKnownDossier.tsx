@@ -1566,7 +1566,7 @@ export default function RedesKnownDossier() {
 
         {/* Real-data callout derived from spotlight query */}
         <div className="inline-flex items-center gap-3 rounded-sm border border-accent/25 bg-accent/8 px-4 py-2">
-          <span className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0" />
+          <span className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0" aria-hidden="true" />
           <span className="text-sm font-mono">
             <span className="text-accent font-bold">
               {formatNumber(communities.reduce((s, c) => s + c.vendors, 0))}

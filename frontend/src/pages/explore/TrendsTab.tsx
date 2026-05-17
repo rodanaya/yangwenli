@@ -665,7 +665,7 @@ export default function TrendsTab() {
                 <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 -mt-1">
                   {sectorBubbleData.map((s) => (
                     <span key={s.code} className="flex items-center gap-1 text-xs text-text-muted">
-                      <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                      <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} aria-hidden="true" />
                       {s.name}
                     </span>
                   ))}

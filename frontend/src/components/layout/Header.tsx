@@ -286,8 +286,8 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <TooltipTrigger asChild>
             <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[10px] text-text-muted tracking-[0.1em] uppercase">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" aria-hidden="true" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
               </span>
               <span className="font-mono">{tc('header.live')}</span>
             </div>

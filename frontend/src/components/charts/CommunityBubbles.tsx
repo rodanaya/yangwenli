@@ -154,7 +154,7 @@ export function CommunityBubbles() {
         <span className="text-text-muted">Color = risk level</span>
         {(['low','medium','high','critical'] as const).map(l => (
           <span key={l} className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[l] }} />
+            <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[l] }} aria-hidden="true" />
             {l}
           </span>
         ))}

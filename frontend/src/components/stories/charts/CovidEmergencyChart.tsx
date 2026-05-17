@@ -55,11 +55,11 @@ export function CovidEmergencyChart() {
       {/* Legend — manual, cleaner than Recharts Legend */}
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
-          <span className="h-0.5 w-4 rounded-full" style={{ background: 'var(--color-risk-critical)' }} />
+          <span className="h-0.5 w-4 rounded-full" style={{ background: 'var(--color-risk-critical)' }} aria-hidden="true" />
           <span className="text-[10px] font-mono text-text-muted">{t('covidEmergency.daSeries')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-sector-trabajo)' }} />
+          <span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-sector-trabajo)' }} aria-hidden="true" />
           <span className="text-[10px] font-mono text-text-muted">{t('covidEmergency.singleBidSeries')}</span>
         </div>
       </div>

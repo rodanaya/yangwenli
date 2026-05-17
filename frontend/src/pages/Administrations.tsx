@@ -668,14 +668,14 @@ export default function Administrations() {
               return (
                 <>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
                     <span>
                       {t('classifiedHeader.highestRiskNote')}{' '}
                       <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-low" />
+                    <span className="w-2 h-2 rounded-full bg-risk-low" aria-hidden="true" />
                     <span>
                       {t('classifiedHeader.lowestRiskNote')}{' '}
                       <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
@@ -1448,7 +1448,7 @@ export default function Administrations() {
                   <tr key={sector.sectorId} className="hover:bg-background-elevated/30 transition-colors">
                     <td className="data-cell">
                       <div className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} />
+                        <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: sector.color }} aria-hidden="true" />
                         <span className="text-text-secondary">{sector.name}</span>
                       </div>
                     </td>
@@ -1523,10 +1523,10 @@ export default function Administrations() {
                   )}
                 >
                   <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/20">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} />
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.from}</span>
                     <ArrowRight className="h-3.5 w-3.5 text-accent" />
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} />
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} aria-hidden="true" />
                     <span className="text-xs font-bold text-text-primary">{tr.to}</span>
                     {/* Enhancement C: Net Change indicator */}
                     <div className="ml-auto flex items-center gap-1">

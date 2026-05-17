@@ -877,7 +877,7 @@ function SectionBreak() {
   return (
     <div className="my-12 sm:my-14 flex items-center justify-center" aria-hidden="true">
       <span className="block h-px w-16 bg-border" />
-      <span className="mx-3 h-1.5 w-1.5 rounded-full bg-text-muted opacity-60" />
+      <span className="mx-3 h-1.5 w-1.5 rounded-full bg-text-muted opacity-60" aria-hidden="true" />
       <span className="block h-px w-16 bg-border" />
     </div>
   )
@@ -1249,7 +1249,7 @@ function AriaLiveTicker() {
     >
       <div className="flex items-center gap-3 mb-5">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical">
             LIVE
           </span>
@@ -1446,7 +1446,7 @@ export default function Journalists() {
         <header className="pt-14 sm:pt-20 pb-10">
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
             <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">
                 RUBLI
               </span>

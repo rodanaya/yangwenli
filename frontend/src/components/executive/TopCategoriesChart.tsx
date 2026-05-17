@@ -252,15 +252,15 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
         </span>
         <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} aria-hidden="true" />
             {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} aria-hidden="true" />
             {lang === 'en' ? 'high' : 'alto'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} />
+            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} aria-hidden="true" />
             {lang === 'en' ? 'medium' : 'medio'}
           </span>
         </div>

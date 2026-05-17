@@ -97,7 +97,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
                   : 'bg-background-card text-text-secondary border-border hover:border-border-hover'
               )}
             >
-              <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', meta.dot)} />
+              <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', meta.dot)} aria-hidden="true" />
               <span style={tierTab === tier ? { color: meta.color } : undefined}>
                 {isEs ? meta.labelEs : meta.label}
               </span>

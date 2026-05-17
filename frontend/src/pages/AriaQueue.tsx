@@ -163,7 +163,7 @@ function PatternChip({
       )}
       aria-pressed={isActive}
     >
-      <span className={cn('h-1 w-1 rounded-full', meta.dot)} />
+      <span className={cn('h-1 w-1 rounded-full', meta.dot)} aria-hidden="true" />
       <span className={cn(isActive ? meta.text : 'text-text-secondary')}>{t(`patterns.${pattern}`)}</span>
       <span className="font-mono tabular-nums text-text-muted">{formatNumber(count)}</span>
     </button>
@@ -615,7 +615,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Sector chip with sector-color dot */}
           {sector && (
             <span className="inline-flex items-center gap-1 max-w-[160px]">
-              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" />
+              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" aria-hidden="true" />
               {/* 2026-05-08 audit fix: sector chips were force-EN; now follow lang */}
               <span className="uppercase tracking-[0.06em] truncate" title={getSectorName(sector, isEs ? 'es' : 'en')}>
                 {getSectorName(sector, isEs ? 'es' : 'en')}
@@ -661,7 +661,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Pattern — full label inline (was: just "P5") */}
           {patternKey && patternMeta && (
             <span className={cn('inline-flex items-center gap-1', patternMeta.text)}>
-              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} />
+              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} aria-hidden="true" />
               <span className="font-mono font-bold">{patternKey}</span>
               <span className="text-text-secondary normal-case">{t(`patterns.${patternKey}`)}</span>
             </span>
@@ -670,7 +670,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           {/* Recency badge — derived from last_contract_year */}
           {isActive ? (
             <span className="inline-flex items-center gap-1 text-risk-high">
-              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
               <span className="uppercase tracking-[0.08em] font-bold">
                 {isEs ? `Activo ${lastYear}` : `Active ${lastYear}`}
               </span>

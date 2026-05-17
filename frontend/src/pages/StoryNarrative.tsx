@@ -1336,7 +1336,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${sc.bg} ${sc.border} ${sc.color}`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" aria-hidden="true" />
                 {t(sc.labelKey, story.status)}
               </span>
             )
@@ -1606,7 +1606,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
         {/* Investigation status badge */}
         {statusCfg && (
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color}`}>
-            <span className="w-2 h-2 rounded-full bg-current opacity-80" />
+            <span className="w-2 h-2 rounded-full bg-current opacity-80" aria-hidden="true" />
             {t('story.statusLabel')}: {t(statusCfg.labelKey)}
           </div>
         )}

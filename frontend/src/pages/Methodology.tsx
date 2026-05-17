@@ -725,7 +725,7 @@ export function Methodology() {
           <div className="max-w-3xl">
             <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
                 <span className="text-text-secondary">RUBLI</span>
               </span>
               <span className="text-text-primary">·</span>
@@ -1529,21 +1529,21 @@ export function Methodology() {
               {/* Severity summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.highImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.mediumImpact')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
-                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" aria-hidden="true" />
                   <div>
                     <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
                     <span className="text-xs text-text-muted ml-1.5">{t('limitations.lowImpact')}</span>

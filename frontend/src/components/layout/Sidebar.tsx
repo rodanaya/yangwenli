@@ -305,7 +305,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" />
+              <span className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" aria-hidden="true" />
               <span className="text-[10px] font-mono text-text-on-dark-muted tracking-wide">
                 {t('contractsIndexed')}
               </span>
@@ -315,7 +315,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="flex justify-center py-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="text-xs font-mono">{t('contractsIndexedShort')}</p>

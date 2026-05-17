@@ -364,7 +364,7 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
                     {(cat.avg_risk * 100).toFixed(1)}%
                   </div>
                   <div className="flex-shrink-0 flex items-center gap-1 w-10 justify-end">
-                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotClass}`} aria-hidden="true" />
                     <span className="font-mono text-[10px] tabular-nums text-text-secondary">
                       {cat.direct_award_pct.toFixed(0)}%
                     </span>
@@ -1244,9 +1244,9 @@ export function Sectors() {
               </div>
               <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
                 <span className="inline-flex items-center gap-0.5" aria-hidden="true">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-text-muted opacity-40" />
-                  <span className="inline-block h-2 w-2 rounded-full bg-text-muted opacity-40" />
-                  <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" />
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
+                  <span className="inline-block h-3 w-3 rounded-full bg-text-muted opacity-40" aria-hidden="true" />
                 </span>
                 {i18n.language === 'es' ? 'Tamaño = contratos · Símbolo = sector' : 'Size = contracts · Symbol = sector'}
               </div>

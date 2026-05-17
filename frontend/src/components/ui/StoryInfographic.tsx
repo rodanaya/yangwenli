@@ -245,7 +245,7 @@ function RingChart({ data, labels, active }: { data: number[]; labels: string[];
             animate={{ opacity: active ? 1 : 0, x: active ? 0 : -6 }}
             transition={{ duration: 0.35, delay: i * 0.08 }}
           >
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: RING_COLORS[i] }} />
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: RING_COLORS[i] }} aria-hidden="true" />
             <span className="text-[10px] text-text-secondary">{l}</span>
           </motion.div>
         ))}

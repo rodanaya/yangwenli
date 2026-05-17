@@ -150,12 +150,12 @@ function RiskLegend() {
     <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
       {RISK_LEGEND_ENTRIES.map(({ value, color }) => (
         <span key={value} className="flex items-center gap-1.5 text-xs text-text-secondary capitalize">
-          <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+          <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} aria-hidden="true" />
           {value}
         </span>
       ))}
       <span className="flex items-center gap-1.5 text-xs text-text-secondary">
-        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-text-muted, #64748b)' }} />
+        <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-text-muted, #64748b)' }} aria-hidden="true" />
         unknown
       </span>
     </div>

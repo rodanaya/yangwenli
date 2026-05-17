@@ -516,7 +516,7 @@ export function InstitutionProfile() {
         {/* Dateline strip — newspaper masthead grammar */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>
@@ -832,7 +832,7 @@ export function InstitutionProfile() {
                           <div key={r.level}>
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-1.5">
-                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} />
+                                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.color }} aria-hidden="true" />
                                 <span className="text-xs text-text-secondary">{r.label}</span>
                               </div>
                               <div className="flex items-center gap-2">

@@ -796,7 +796,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
             <div className="flex items-center gap-1.5">
               <EntityIdentityChip type="vendor" id={vendor.id} name={vendor.name} size="sm" />
               {isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" />
+                <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" aria-hidden="true" />
               )}
               <VendorBadge isEfos={vendor.is_efos} efosStage={vendor.efos_stage} isSfp={vendor.is_sfp_sanctioned} />
             </div>

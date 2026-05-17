@@ -175,15 +175,15 @@ export function StoryRacingBar() {
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-salud)', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-salud)', opacity: 0.5 }} aria-hidden="true" />
             {t('racingBar.legend100')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-infraestructura)', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-infraestructura)', opacity: 0.5 }} aria-hidden="true" />
             {t('racingBar.legend60')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-agricultura)', opacity: 0.5 }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-agricultura)', opacity: 0.5 }} aria-hidden="true" />
             {t('racingBar.legendUnder')}
           </span>
           <span className="text-text-muted ml-auto">{t('racingBar.legendSizeNote')}</span>

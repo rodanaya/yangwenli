@@ -43,15 +43,15 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
       {/* legend */}
       <div className="flex items-center gap-5 pb-2 text-xs text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.direct }} />
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.direct }} aria-hidden="true" />
           Direct Award
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.single }} />
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.single }} aria-hidden="true" />
           Single Bid
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.tender }} />
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.tender }} aria-hidden="true" />
           Open Tender
         </span>
       </div>

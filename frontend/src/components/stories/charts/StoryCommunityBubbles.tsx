@@ -203,7 +203,7 @@ export function StoryCommunityBubbles() {
             { label: t('communityBubbles.legendLow'),      color: 'var(--color-sector-hacienda)' },
           ].map(({ label, color }) => (
             <span key={label} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+              <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} aria-hidden="true" />
               {label}
             </span>
           ))}

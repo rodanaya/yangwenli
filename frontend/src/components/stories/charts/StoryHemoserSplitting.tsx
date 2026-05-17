@@ -148,7 +148,7 @@ export function StoryHemoserSplitting() {
       {/* Annotation pills */}
       <div className="mt-4 flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-risk-critical/10 border border-risk-critical/20 text-[10px] text-risk-critical">
-          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           {t('hemoserSplitting.annotationPeak')}
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-background-elevated border border-border text-[10px] text-text-secondary">

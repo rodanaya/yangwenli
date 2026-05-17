@@ -129,7 +129,7 @@ function CaptureRow({ c, rank, lang }: { c: CaptureItem; rank: number; lang: 'en
         <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px] font-mono tracking-wider uppercase text-text-muted">
           {c.institution_sector_name && (
             <span>
-              <span className="inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle" style={{ background: sectorColor }} />
+              <span className="inline-block h-1.5 w-1.5 rounded-full mr-1 align-middle" style={{ background: sectorColor }} aria-hidden="true" />
               {c.institution_sector_name}
             </span>
           )}

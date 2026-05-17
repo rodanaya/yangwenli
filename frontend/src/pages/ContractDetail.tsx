@@ -133,7 +133,7 @@ export default function ContractDetail() {
         {/* Dateline strip */}
         <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
             <span className="text-text-secondary">RUBLI</span>
           </span>
           <span className="text-text-primary">·</span>

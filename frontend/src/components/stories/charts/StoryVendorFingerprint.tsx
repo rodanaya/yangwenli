@@ -47,7 +47,7 @@ export function StoryVendorFingerprint() {
       <div className="flex items-center gap-3 -mt-1">
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
                         bg-risk-critical/10 border border-risk-critical/20 text-xs text-risk-critical">
-          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
           {t('vendorFingerprint.criticalPill')}
         </div>
       </div>

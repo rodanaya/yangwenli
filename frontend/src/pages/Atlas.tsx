@@ -1934,7 +1934,7 @@ export default function Atlas() {
 
           {/* Live T1 count */}
           <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
-            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} />
+            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} aria-hidden="true" />
             <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 299)}</span>
             <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
           </div>
@@ -2022,7 +2022,7 @@ export default function Atlas() {
                 aria-pressed={isActive}
               >
                 {!isActive && (
-                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} />
+                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} aria-hidden="true" />
                 )}
                 {lang === 'en' ? f.en : f.es}
               </button>

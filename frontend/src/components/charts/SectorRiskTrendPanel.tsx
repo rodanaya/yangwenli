@@ -504,7 +504,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
           {/* Data source badge */}
           {isLive ? (
             <span className="flex items-center gap-1 text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
-              <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-risk-low inline-block animate-pulse" aria-hidden="true" />
               Live data
             </span>
           ) : usingFallback ? (

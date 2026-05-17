@@ -992,7 +992,7 @@ export function ConcentrationConstellation({
               >
                 {mode === 'patterns' ? `${meta.code} · ${kickerLabel.short}` : kickerLabel.short}
               </span>
-              <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} />
+              <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} aria-hidden="true" />
             </div>
             <div className="text-sm font-bold text-text-primary mb-0.5">
               {meta.label}
