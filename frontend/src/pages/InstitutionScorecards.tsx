@@ -319,7 +319,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
             {/* Red signal badge */}
             {hasRedSignals && (
               <span
-                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-risk-critical bg-risk-critical/10 border border-red-500/20"
+                className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-risk-critical bg-risk-critical/10 border border-risk-critical/20"
                 aria-label={t('aria.redAlerts', { count: item.signal_count_red })}
               >
                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
@@ -365,8 +365,8 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
         {/* Top risk driver */}
         {item.top_risk_driver && (
           <div className="pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-amber-500/8 border border-amber-500/15 text-[9px] text-risk-high font-mono uppercase tracking-wide">
-              <span className="h-1 w-1 rounded-full bg-amber-400 flex-shrink-0" aria-hidden="true" />
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-risk-high/8 border border-risk-high/15 text-[9px] text-risk-high font-mono uppercase tracking-wide">
+              <span className="h-1 w-1 rounded-full bg-risk-high flex-shrink-0" aria-hidden="true" />
               {item.top_risk_driver}
             </span>
           </div>
@@ -875,7 +875,7 @@ export default function InstitutionScorecards() {
         )}
 
         {/* Footer note — context footnote */}
-        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
+        <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high/70 mb-1">
             {t('footnotes.title')}
           </p>

@@ -591,7 +591,7 @@ function ScoreHistogram({
 
         {/* Median marker line across the chart */}
         <div
-          className="absolute top-5 bottom-14 border-l border-dashed border-amber-500/60 pointer-events-none"
+          className="absolute top-5 bottom-14 border-l border-dashed border-risk-high/60 pointer-events-none"
           style={{ left: `calc(${medianPct}% * 0.9 + 5%)` }}
           aria-hidden="true"
         >

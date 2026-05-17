@@ -640,7 +640,7 @@ export function Contracts() {
       {/* Pre-2010 data quality banner — shown when year filter is ≤2010 or no year filter (includes 2002+ data) */}
       {!pre2010Dismissed && (!filters.year || filters.year <= 2010) && (
         <div
-          className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"
+          className="flex items-start gap-3 rounded-md border border-risk-high/30 bg-risk-high/5 px-4 py-3 text-text-secondary"
           role="alert"
           aria-live="polite"
         >
@@ -652,7 +652,7 @@ export function Contracts() {
               setPre2010Dismissed(true)
             }}
             aria-label="Dismiss data quality notice"
-            className="ml-2 shrink-0 text-amber-600 hover:text-amber-800 transition-colors"
+            className="ml-2 shrink-0 text-risk-high hover:text-risk-critical transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>

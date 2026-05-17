@@ -659,9 +659,9 @@ function ValueConcentrationAlerts() {
                     // Row highlight based on share severity
                     const rowBg =
                       row.value_share_pct >= 75
-                        ? 'bg-red-500/8 hover:bg-red-500/12'
+                        ? 'bg-risk-critical/8 hover:bg-risk-critical/12'
                         : row.value_share_pct >= 50
-                          ? 'bg-amber-500/8 hover:bg-amber-500/12'
+                          ? 'bg-risk-high/8 hover:bg-risk-high/12'
                           : 'hover:bg-accent/[0.04]'
 
                     // Share color

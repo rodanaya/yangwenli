@@ -159,9 +159,9 @@ export function SharedContractsModal({
                 {' '}{lang === 'en' ? 'shared procedures' : 'procedimientos compartidos'}
               </span>
             </div>
-            <div className="h-3 w-px bg-amber-500/20" aria-hidden="true" />
+            <div className="h-3 w-px bg-risk-high/20" aria-hidden="true" />
             <span className="text-xs font-mono text-accent">
-              <span className="font-bold text-amber-200">{formatCompactMXN(summary.total_shared_amount)}</span>
+              <span className="font-bold text-text-primary">{formatCompactMXN(summary.total_shared_amount)}</span>
               {' '}{lang === 'en' ? 'in combined contracts' : 'en contratos combinados'}
             </span>
           </div>
@@ -183,7 +183,7 @@ export function SharedContractsModal({
               <p className="text-xs text-text-muted">{t('errors.couldNotLoad')}</p>
             </div>
           ) : contracts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-amber-900/20">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-border">
               <FileText className="h-6 w-6 text-text-primary" aria-hidden="true" />
               <p className="text-sm font-normal text-text-secondary max-w-sm text-center">
                 {lang === 'en'

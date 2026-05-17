@@ -27,7 +27,7 @@ export function StoryRiskCalendar() {
           <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-amber-400" />
+          <span className="w-3 h-3 rounded-sm bg-risk-high" />
           <span className="text-[10px] text-text-secondary">{t('riskCalendar.legendMedium')}</span>
         </div>
         <div className="flex items-center gap-1.5">

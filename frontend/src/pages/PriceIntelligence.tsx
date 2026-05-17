@@ -2108,7 +2108,7 @@ export default function PriceIntelligence() {
         const avgZ = summary.avg_z_score || 3
         const savings = avgZ > 1 ? summary.total_value_mxn * (1 - 1 / avgZ) : 0
         return (
-          <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4 max-w-3xl">
+          <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-4 max-w-3xl">
             <p className="text-xs font-mono uppercase tracking-wide text-risk-high mb-1">
               HALLAZGO
             </p>

@@ -95,7 +95,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   const exceedsOECD = daPct > 25
   const sbPct = sector.single_bid_pct ?? 0
   // Bible §3.10: no green for low risk. Use zinc neutral for "clean".
-  const sbDotColor = sbPct > 25 ? 'bg-red-500' : sbPct >= 15 ? 'bg-amber-500' : 'bg-zinc-400'
+  const sbDotColor = sbPct > 25 ? 'bg-risk-critical' : sbPct >= 15 ? 'bg-risk-high' : 'bg-zinc-400'
 
   return (
     <Link
@@ -321,8 +321,8 @@ function CategoryTreeView({ orderedSectors, sectorGroups, sectors, lang }: Categ
             {isOpen && cats.map((cat, idx) => {
               const riskLevel = getRiskLevelFromScore(cat.avg_risk)
               const sbDotClass =
-                (cat.single_bid_pct ?? 0) > 25 ? 'bg-red-500'
-                : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-amber-500'
+                (cat.single_bid_pct ?? 0) > 25 ? 'bg-risk-critical'
+                : (cat.single_bid_pct ?? 0) >= 15 ? 'bg-risk-high'
                 : 'bg-zinc-400'
               const barWidth = maxSpend > 0 ? Math.min(100, (cat.total_value / maxSpend) * 100) : 0
 
@@ -1140,8 +1140,8 @@ export function Sectors() {
                   <div className="flex items-center gap-4 mb-5">
                     <div className="flex items-center gap-1.5 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
                       <span
-                        className="inline-block h-2.5 w-4 rounded-sm border border-amber-500"
-                        style={{ background: 'rgba(245,158,11,0.15)' }}
+                        className="inline-block h-2.5 w-4 rounded-sm border border-risk-high"
+                        style={{ background: 'var(--color-risk-high-muted, rgba(245,158,11,0.15))' }}
                         aria-hidden="true"
                       />
                       {t('treemap.oecdViolatorNote')}

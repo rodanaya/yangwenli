@@ -235,11 +235,11 @@ export function StoryRedFantasma() {
           <span>{t('ghostNetwork.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+          <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
           <span>{t('ghostNetwork.legendMid')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+          <div className="w-3 h-3 rounded-full bg-risk-high"></div>
           <span>{t('ghostNetwork.legendLow')}</span>
         </div>
         <div className="flex items-center gap-1.5">

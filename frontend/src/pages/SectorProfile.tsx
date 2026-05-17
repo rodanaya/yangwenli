@@ -815,7 +815,7 @@ function InvestigationCallout({
 
   return (
     <div
-      className="rounded-sm border border-red-500/25 bg-red-500/5 p-4"
+      className="rounded-sm border border-risk-critical/25 bg-risk-critical/5 p-4"
       role="region"
       aria-label={`${cases.length} investigation cases in this sector`}
     >
@@ -1364,7 +1364,7 @@ export function SectorProfile() {
                     component itself owns its right-edge series labels; this
                     block describes the dual-line encoding once. */}
                 <p className="text-[10px] font-mono text-text-muted mt-2 ml-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500 align-middle mr-1" aria-hidden /> avg risk × 100
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-risk-high align-middle mr-1" aria-hidden /> avg risk × 100
                   <span className="mx-2 text-text-muted/40">·</span>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle mr-1" aria-hidden /> high-risk %
                 </p>

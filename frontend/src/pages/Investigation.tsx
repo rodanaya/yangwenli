@@ -117,7 +117,7 @@ function RiskScoreDisclaimer() {
 function VerifyPanel() {
   const { t } = useTranslation('investigation')
   return (
-    <details className="mt-3 border border-amber-500/15 rounded bg-amber-500/[0.03] group/verify">
+    <details className="mt-3 border border-risk-high/15 rounded bg-risk-high/[0.03] group/verify">
       <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[10px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
         <Info className="h-3 w-3 text-risk-high/60 flex-shrink-0" aria-hidden="true" />
         {t('verify.toggle')}

@@ -750,7 +750,7 @@ function WhatThisMeans({
       <h2 className="text-lg font-serif font-bold mb-4 text-text-primary">
         {t('whatThisMeansTitle')}
       </h2>
-      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5">
+      <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-risk-high mb-3">
           HALLAZGO
         </p>
@@ -1199,7 +1199,7 @@ function ReportCard() {
         {/* Page header — NATIONAL SYSTEM HEALTH */}
         <header className="mb-8 pb-5 border-b border-border">
           <div className="flex items-center gap-2 mb-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
             <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-risk-high">
               Salud del Sistema · Índice Nacional de Integridad
             </p>

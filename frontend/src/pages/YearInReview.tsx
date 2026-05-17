@@ -404,7 +404,7 @@ function RiskEvolution({
         <HallazgoStat
           value={`${yearRow.high_risk_pct.toFixed(1)}%`}
           label={`${t('riskEvolution.thisYear')} · ${validYear}`}
-          color={isAboveOECD ? 'border-red-500' : 'border-amber-500'}
+          color={isAboveOECD ? 'border-risk-critical' : 'border-risk-high'}
         />
         <HallazgoStat
           value={`${historicalAvg.toFixed(1)}%`}
@@ -480,7 +480,7 @@ function RiskEvolution({
       <div
         className={cn(
           'mt-4 rounded-sm border px-4 py-3 flex items-start gap-3',
-          isAboveOECD ? 'border-red-500/30 bg-red-500/5' : 'border-border-hover bg-background-elevated',
+          isAboveOECD ? 'border-risk-critical/30 bg-risk-critical/5' : 'border-border-hover bg-background-elevated',
         )}
       >
         <div
@@ -616,7 +616,7 @@ function ProcedureTypeSection({
         </p>
 
         {isAboveOECD && (
-          <div className="mt-3 flex items-start gap-2 rounded border border-red-500/30 bg-red-500/5 px-3 py-2">
+          <div className="mt-3 flex items-start gap-2 rounded border border-risk-critical/30 bg-risk-critical/5 px-3 py-2">
             <AlertTriangle className="h-3.5 w-3.5 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[11px] text-risk-critical/90 leading-relaxed">
               {t('findings.highDirectAward', { pct: directPct.toFixed(1) })}
@@ -1222,7 +1222,7 @@ export default function YearInReview() {
                   value={`${yearRow.high_risk_pct.toFixed(1)}%`}
                   label={t('heroStats.highRiskRate')}
                   annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} ${t('contracts')}`}
-                  color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
+                  color={yearRow.high_risk_pct >= 15 ? 'border-risk-critical' : 'border-risk-high'}
                 />
               </motion.div>
               <motion.div variants={staggerItem}>
@@ -1230,7 +1230,7 @@ export default function YearInReview() {
                   value={topSector?.name ?? '--'}
                   label={t('heroStats.topSector')}
                   annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
-                  color="border-amber-500"
+                  color="border-risk-high"
                   className="[&>div:first-child]:text-2xl"
                 />
               </motion.div>
@@ -1246,7 +1246,7 @@ export default function YearInReview() {
                   color={
                     spendingChangePct == null ? 'border-border'
                       : spendingChangePct > 0 ? 'border-text-muted'
-                        : 'border-red-500'
+                        : 'border-risk-critical'
                   }
                 />
               </motion.div>

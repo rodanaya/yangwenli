@@ -252,7 +252,7 @@ function ReviewPopover({
         <button
           onClick={() => mutation.mutate(status)}
           disabled={mutation.isPending}
-          className="flex-1 py-1.5 rounded text-xs font-medium bg-amber-500 text-text-primary hover:bg-amber-400 disabled:opacity-50 transition-colors"
+          className="flex-1 py-1.5 rounded text-xs font-medium bg-risk-high text-white hover:opacity-90 disabled:opacity-50 transition-colors"
         >
           {mutation.isPending ? t('reviewPopover.saving') : t('reviewPopover.save')}
         </button>

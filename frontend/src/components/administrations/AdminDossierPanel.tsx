@@ -274,13 +274,13 @@ export function AdminDossierPanel({
                       label: t('dossier.keyFiguresLabels.singleBidRate'),
                       value: `${agg.singleBidPct.toFixed(1)}%`,
                       sub: agg.singleBidPct > 20 ? t('dossier.keyFiguresLabels.aboveAvg') : t('dossier.keyFiguresLabels.typical'),
-                      color: agg.singleBidPct > 20 ? '#f87171' : '#fbbf24',
+                      color: agg.singleBidPct > 20 ? 'var(--color-risk-critical)' : 'var(--color-risk-high)',
                     },
                     {
                       label: t('dossier.keyFiguresLabels.directAwardRate'),
                       value: `${agg.directAwardPct.toFixed(1)}%`,
                       sub: agg.directAwardPct > 70 ? t('dossier.keyFiguresLabels.critical') : agg.directAwardPct > 50 ? t('dossier.keyFiguresLabels.elevated') : t('dossier.keyFiguresLabels.moderate'),
-                      color: agg.directAwardPct > 70 ? '#f87171' : agg.directAwardPct > 50 ? '#fb923c' : '#fbbf24',
+                      color: agg.directAwardPct > 70 ? 'var(--color-risk-critical)' : agg.directAwardPct > 50 ? 'var(--color-risk-high)' : 'var(--color-risk-medium)',
                     },
                   ]
                   return figures.map((fig) => (

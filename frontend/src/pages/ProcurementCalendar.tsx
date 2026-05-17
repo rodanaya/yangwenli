@@ -661,7 +661,7 @@ export default function ProcurementCalendar() {
               {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-risk-high">*</span>}
             </button>
           ))}
-          <span className="text-[9px] text-amber-600/70 font-mono ml-1">{t('electionSuffix')}</span>
+          <span className="text-[9px] text-risk-high/70 font-mono ml-1">{t('electionSuffix')}</span>
         </div>
 
         {/* Stats row */}
@@ -680,7 +680,7 @@ export default function ProcurementCalendar() {
           <HallazgoStat
             value={isLoading ? '—' : formatNumber(stats.highRiskContracts)}
             label={t('stats.highRiskContracts')}
-            color="border-red-500"
+            color="border-risk-critical"
             annotation={isLoading ? undefined : t('stats.ofTotal', { pct: (stats.highRiskRate * 100).toFixed(1) })}
           />
           <HallazgoStat
@@ -689,7 +689,7 @@ export default function ProcurementCalendar() {
               : new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' })
             }
             label={t('stats.mostActiveDay')}
-            color="border-amber-500"
+            color="border-risk-high"
             annotation={
               isLoading || !stats.peakDay ? undefined
               : t('stats.contractsCount', { num: formatNumber(stats.peakDay.total_contracts) })
@@ -701,7 +701,7 @@ export default function ProcurementCalendar() {
               : `${stats.decemberJanuaryRatio.toFixed(1)}x`
             }
             label={t('stats.decVsJan')}
-            color="border-orange-500"
+            color="border-risk-high"
             annotation={t('stats.budgetCloseIndicator')}
           />
         </motion.div>
@@ -815,7 +815,7 @@ export default function ProcurementCalendar() {
             )}>
               <div className={cn(
                 'text-[10px] font-mono uppercase tracking-[0.15em] mb-1',
-                isElectionYear ? 'text-amber-600' : 'text-text-muted'
+                isElectionYear ? 'text-risk-high' : 'text-text-muted'
               )}>
                 {t('insights.yearType')}
               </div>
@@ -908,7 +908,7 @@ export default function ProcurementCalendar() {
         )}
 
         {/* Editorial findings callout */}
-        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
+        <div className="rounded-sm border border-risk-high/20 bg-risk-high/5 p-5 mt-6">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-risk-high mb-2">
             {t('finding.label')}
           </p>

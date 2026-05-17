@@ -75,7 +75,7 @@ export default function Privacy() {
         </div>
 
         {/* Summary card */}
-        <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.04] p-4 mb-10">
+        <div className="rounded-lg border border-risk-high/20 bg-risk-high/[0.04] p-4 mb-10">
           <p className="text-sm text-text-primary leading-relaxed">
             <span className="font-semibold text-risk-high/80">TL;DR{isEs ? '' : ':'}:</span>{' '}
             {isEs
