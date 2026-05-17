@@ -123,6 +123,7 @@ export function FolderSidebar({
               if (e.key === 'Escape') setCreating(false)
             }}
             placeholder={t('folderSidebar.namePlaceholder')}
+            aria-label={t('folderSidebar.namePlaceholder')}
             className="w-full rounded bg-background-elevated px-2 py-1 text-xs text-text-primary outline-none focus-visible:ring-1 focus-visible:ring-accent"
             autoFocus
           />

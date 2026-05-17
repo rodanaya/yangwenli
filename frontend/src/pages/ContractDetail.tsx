@@ -114,7 +114,7 @@ export default function ContractDetail() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6 md:py-10">
       {/* ----- Breadcrumb ----- */}
-      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8">
+      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8" aria-label="Breadcrumb">
         <Link
           to="/contracts"
           className="inline-flex items-center gap-1 hover:text-text-secondary transition-colors"
