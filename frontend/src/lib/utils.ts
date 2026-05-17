@@ -93,30 +93,41 @@ export function formatCompactMXN(amount: number): string {
 export function localizeAmount(input: string, lang?: 'en' | 'es'): string {
   const isEs = (lang ?? i18n.language ?? 'en').startsWith('es')
   if (!isEs) return input
-  // Match optional $ prefix, number with optional decimals/commas, optional B/T/M suffix, "MXN"
+
+  function convertOne(numStr: string, suffix: string, dollarPrefix: string): string | null {
+    const n = parseFloat(numStr.replace(',', '.'))
+    if (Number.isNaN(n)) return null
+    const s = suffix.toUpperCase()
+    if (s === 'T') return `${dollarPrefix}${n.toFixed(n < 10 ? 2 : 1)} billones MXN`
+    if (s === 'B') {
+      const mdp = n * 1000
+      const fmt = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(Math.round(mdp))
+      return `${dollarPrefix}${fmt} MDP`
+    }
+    if (s === 'M') return `${dollarPrefix}${n.toFixed(1)} MDP`
+    return null
+  }
+
+  const trimmed = input.trim()
+
+  // Range format: "79-158B MXN" → "79,000-158,000 MDP"
+  const rangeRe = /^(\$\s*)?([0-9]+(?:[.,][0-9]+)?)-([0-9]+(?:[.,][0-9]+)?)\s*(B|T|M)\s*MXN\s*$/i
+  const rm = trimmed.match(rangeRe)
+  if (rm) {
+    const lo = convertOne(rm[2], rm[4], rm[1] ? '$' : '')
+    const hiRaw = convertOne(rm[3], rm[4], '')
+    if (lo && hiRaw) {
+      // strip trailing " MDP" from lo to join with dash: "79,000-158,000 MDP"
+      const loVal = lo.replace(/\s*MDP$/, '').replace(/\s*billones MXN$/, '')
+      return `${loVal}-${hiRaw}`
+    }
+  }
+
+  // Single value: original path
   const re = /^(\$\s*)?([0-9]+(?:[.,][0-9]+)?)\s*(B|T|M)\s*MXN\s*$/i
-  const m = input.trim().match(re)
+  const m = trimmed.match(re)
   if (!m) return input
-  const dollarPrefix = m[1] ? '$' : ''
-  const numStr = m[2].replace(',', '.')
-  const num = parseFloat(numStr)
-  if (Number.isNaN(num)) return input
-  const suffix = m[3].toUpperCase()
-  if (suffix === 'T') {
-    // "X.XT MXN" → "$X.X billones MXN" (billón = trillion in es)
-    return `${dollarPrefix}${num.toFixed(num < 10 ? 2 : 1)} billones MXN`
-  }
-  if (suffix === 'B') {
-    // "X.XB MXN" → "$X,XXX MDP" (English-billion = 10⁹ = mil millones)
-    const mdp = num * 1000
-    const formatted = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(Math.round(mdp))
-    return `${dollarPrefix}${formatted} MDP`
-  }
-  if (suffix === 'M') {
-    // "X.XM MXN" → "$X.X MDP"
-    return `${dollarPrefix}${num.toFixed(1)} MDP`
-  }
-  return input
+  return convertOne(m[2], m[3], m[1] ? '$' : '') ?? input
 }
 
 /**

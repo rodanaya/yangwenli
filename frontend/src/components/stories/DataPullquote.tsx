@@ -580,6 +580,7 @@ export default function DataPullquote({
           borderRight: '1px solid var(--color-border)',
           borderBottom: '1px solid var(--color-border)',
           borderRadius: 2,
+          boxShadow: '0 1px 6px rgba(0,0,0,0.07)',
         }}
         role="figure"
         aria-label="Cita con datos"
