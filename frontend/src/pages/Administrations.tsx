@@ -1630,7 +1630,7 @@ export default function Administrations() {
               <p className="text-xs text-text-muted/70 italic mb-3">
                 {t('documentedCasesNote')}
               </p>
-              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-background-card-hover/20 p-3">
+              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-background-elevated/20 p-3">
                 <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-text-secondary leading-relaxed">
                   {t('groundTruthNote')}
