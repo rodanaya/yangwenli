@@ -178,7 +178,7 @@ export function SectorSledgehammer({
       {/* OECD / platform reference line */}
       <div
         className="font-mono text-[11px] leading-[1.8] uppercase tracking-[0.1em]"
-        style={{ color: '#22d3ee' }}
+        style={{ color: 'var(--color-oecd)' }}
       >
         {isEs ? metric.oecdRefEs : metric.oecdRefEn}
       </div>

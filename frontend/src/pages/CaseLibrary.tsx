@@ -677,7 +677,7 @@ export default function CaseLibrary() {
                     fontStyle: 'italic',
                     fontWeight: 700,
                     fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)',
-                    color: '#22d3ee',
+                    color: 'var(--color-oecd)',
                   }}
                 >
                   {prosecutedCount}

@@ -669,6 +669,7 @@ export function Investigation() {
             {/* Score filter dropdown */}
             <select
               className="text-xs bg-background-elevated border border-border/40 rounded px-2 py-1.5 text-text-secondary font-mono"
+              aria-label={isEs ? 'Filtrar por puntuación' : 'Filter by score'}
               value={minScore ?? ''}
               onChange={(e) => setMinScore(e.target.value ? Number(e.target.value) : undefined)}
             >

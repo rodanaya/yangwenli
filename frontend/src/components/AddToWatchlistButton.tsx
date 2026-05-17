@@ -99,6 +99,7 @@ export function AddToWatchlistButton({
       />
       <select
         className="text-xs bg-background-elevated border border-border/50 rounded px-1.5 py-1.5 text-text-secondary"
+        aria-label="Priority"
         value={priority}
         onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
       >

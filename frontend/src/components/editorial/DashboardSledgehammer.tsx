@@ -83,7 +83,7 @@ export function DashboardSledgehammer({ daRate, lang }: Props) {
       {/* OECD reference lines */}
       <div
         className="font-mono text-[11px] leading-[1.8] uppercase tracking-[0.1em]"
-        style={{ color: '#22d3ee' }}
+        style={{ color: 'var(--color-oecd)' }}
       >
         {lang === 'en'
           ? `OECD recommends ≤ 25%. Mexico is at ${multiplier}× that ceiling.`
