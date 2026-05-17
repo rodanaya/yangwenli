@@ -1180,107 +1180,63 @@ function daFlag(pct: number | null): boolean {
 
 function InstCard({
   inst,
-  sectorAccent,
   totalSectorSpend,
-  lang,
-  isBanner,
+  isTop,
   dispatch,
 }: {
   inst: SpatialInstitution
-  sectorAccent: string
   totalSectorSpend: number
-  lang: 'en' | 'es'
-  isBanner: boolean
+  isTop: boolean
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
   const tier = tierMark(inst.risk)
   const da = inst.direct_award_pct ?? null
   const showDaFlag = daFlag(da)
+  const showHrFlag = (inst.high_risk_pct ?? 0) > 15
   const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
-  const bigNum = da != null ? `${da.toFixed(1)}%` : `${(inst.risk * 100).toFixed(1)}%`
-  const bigNumLabel = da != null
-    ? (lang === 'en' ? 'direct awards' : 'adjudicaciones directas')
-    : (lang === 'en' ? 'avg risk score' : 'indicador de riesgo')
-  const showOecd = da != null && da > OECD_DA_THRESHOLD
 
   return (
     <div
-      className={`cursor-pointer transition-colors ${isBanner ? 'p-4' : 'p-3'}`}
+      className="flex items-center gap-1.5 px-3 py-1.5 cursor-pointer transition-colors"
       style={{
-        borderLeft: `3px solid ${tier.color}`,
-        background: 'var(--color-background-card)',
+        borderLeft: `2px solid ${isTop ? tier.color : `${tier.color}50`}`,
+        background: isTop ? `${tier.color}08` : 'transparent',
       }}
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background)' }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isTop ? `${tier.color}08` : 'transparent' }}
       onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
     >
-      {/* Tier + flags row */}
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="font-mono text-[10px] font-bold" style={{ color: tier.color }}>
-          {tier.glyph} {tier.label}
+      {/* Tier glyph + label */}
+      <span className="font-mono text-[9px] font-bold shrink-0" style={{ color: tier.color }}>
+        {tier.glyph}{tier.label}
+      </span>
+
+      {/* Flag chips */}
+      {showDaFlag && (
+        <span className="font-mono text-[7px] px-0.5 rounded shrink-0" style={{ background: `${tier.color}20`, color: tier.color }}>
+          DA
         </span>
-        {showDaFlag && (
-          <span className="font-mono text-[8px] px-1 py-0.5 rounded" style={{ background: `${tier.color}20`, color: tier.color }}>
-            DA
-          </span>
-        )}
-        {(inst.high_risk_pct ?? 0) > 15 && (
-          <span className="font-mono text-[8px] px-1 py-0.5 rounded" style={{ background: `${RISK_COLORS.critical}20`, color: RISK_COLORS.critical }}>
-            HR
-          </span>
-        )}
-      </div>
-
-      {/* Institution name */}
-      <div
-        className={`font-semibold ${isBanner ? 'text-sm' : 'text-xs'} leading-tight mb-1`}
-        style={{ color: 'var(--color-text-primary)' }}
-      >
-        {inst.name}
-      </div>
-
-      {/* Big number */}
-      <div className="mb-1">
-        <span
-          className={`font-mono font-bold tabular-nums ${isBanner ? 'text-2xl' : 'text-lg'}`}
-          style={{ color: tier.color, fontFamily: 'var(--font-family-serif, serif)', fontStyle: 'italic' }}
-        >
-          {bigNum}
+      )}
+      {showHrFlag && (
+        <span className="font-mono text-[7px] px-0.5 rounded shrink-0" style={{ background: `${RISK_COLORS.critical}20`, color: RISK_COLORS.critical }}>
+          HR
         </span>
-        <span className="font-mono text-[9px] ml-1" style={{ color: 'var(--color-text-muted)' }}>
-          {bigNumLabel}
-        </span>
-        {showOecd && (
-          <span className="font-mono text-[8px] ml-2" style={{ color: '#06b6d4' }}>
-            {lang === 'en' ? 'OECD' : 'OCDE'}: {OECD_DA_THRESHOLD}%
-          </span>
-        )}
-      </div>
-
-      {/* Metrics row */}
-      <div className="font-mono text-[9px] mb-2" style={{ color: 'var(--color-text-muted)' }}>
-        {formatNumber(inst.total_contracts)} {lang === 'en' ? 'contracts' : 'contratos'} · {formatCompactMXN(inst.total_amount_mxn)}
-      </div>
-
-      {/* Sector share bar */}
-      {isBanner && (
-        <div className="mb-2">
-          <div className="h-1.5 rounded-full mb-0.5" style={{ background: 'var(--color-border)' }}>
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${Math.min(shareOfSector, 100)}%`, background: tier.color, opacity: 0.6 }}
-            />
-          </div>
-          <div className="font-mono text-[8px]" style={{ color: 'var(--color-text-muted)' }}>
-            {shareOfSector.toFixed(1)}% {lang === 'en' ? 'of sector spend' : 'del gasto del sector'}
-          </div>
-        </div>
       )}
 
-      {/* CTA */}
-      <div className="font-mono text-[9px] font-bold" style={{ color: sectorAccent }}>
-        {lang === 'en' ? 'SEE INSTITUTION →' : 'VER INSTITUCIÓN →'}
-      </div>
+      {/* Name */}
+      <span className="font-mono text-[10px] flex-1 truncate min-w-0" style={{ color: 'var(--color-text-primary)' }}>
+        {inst.name}
+      </span>
+
+      {/* Amount */}
+      <span className="font-mono text-[9px] font-bold tabular-nums shrink-0" style={{ color: tier.color }}>
+        {formatCompactMXN(inst.total_amount_mxn)}
+      </span>
+
+      {/* Sector share */}
+      <span className="font-mono text-[8px] tabular-nums shrink-0 w-8 text-right" style={{ color: 'var(--color-text-muted)' }}>
+        {shareOfSector.toFixed(1)}%
+      </span>
     </div>
   )
 }
@@ -1296,7 +1252,6 @@ function Z1Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
-  const [tailExpanded, setTailExpanded] = useState(false)
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
     queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId, limit: 60 }),
@@ -1307,10 +1262,6 @@ function Z1Panel({
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
   const institutions = data?.institutions ?? []
   const totalSectorSpend = institutions.reduce((s, i) => s + i.total_amount_mxn, 0)
-
-  const banner   = institutions[0]
-  const features = institutions.slice(1, 4)
-  const tail     = institutions.slice(4)
 
   // Editorial dek: top N institutions' spend share
   const top4Share = institutions.slice(0, 4).reduce((s, i) => s + i.total_amount_mxn, 0)
@@ -1336,8 +1287,8 @@ function Z1Panel({
         {!isLoading && institutions.length > 0 && (
           <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
             {lang === 'en'
-              ? `Top 4 institutions control ${top4Pct}% of sector spend`
-              : `Las 4 principales concentran ${top4Pct}% del gasto del sector`}
+              ? `${institutions.length} institutions · top 4 control ${top4Pct}% of spend`
+              : `${institutions.length} instituciones · las 4 principales concentran ${top4Pct}% del gasto`}
           </div>
         )}
       </div>
@@ -1353,89 +1304,18 @@ function Z1Panel({
         </div>
       )}
 
-      {/* Banner — #1 institution */}
-      {banner && (
-        <div className="p-3">
+      {/* Flat ranked list — all institutions visible */}
+      <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+        {institutions.map((inst, i) => (
           <InstCard
-            inst={banner}
-            sectorAccent={sectorAccent}
+            key={inst.institution_id}
+            inst={inst}
             totalSectorSpend={totalSectorSpend}
-            lang={lang}
-            isBanner={true}
+            isTop={i === 0}
             dispatch={dispatch}
           />
-        </div>
-      )}
-
-      {/* Feature row — #2 / #3 / #4 */}
-      {features.length > 0 && (
-        <>
-          <div
-            className="px-4 py-1 font-mono text-[9px] tracking-widest uppercase border-t border-b"
-            style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border)' }}
-          >
-            {lang === 'en' ? 'NEXT IN LINE' : 'LAS QUE SIGUEN'}
-          </div>
-          <div className="grid grid-cols-1 divide-y" style={{ borderColor: 'var(--color-border)' }}>
-            {features.map((inst) => (
-              <div key={inst.institution_id} className="px-3">
-                <InstCard
-                  inst={inst}
-                  sectorAccent={sectorAccent}
-                  totalSectorSpend={totalSectorSpend}
-                  lang={lang}
-                  isBanner={false}
-                  dispatch={dispatch}
-                />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Long tail — collapsed by default */}
-      {tail.length > 0 && (
-        <>
-          <button
-            type="button"
-            className="w-full px-4 py-2.5 flex items-center justify-between border-t font-mono text-[9px] tracking-widest uppercase"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)', background: 'var(--color-background)' }}
-            onClick={() => setTailExpanded((x) => !x)}
-          >
-            <span>
-              {(() => {
-                const rest = top4Pct !== '—' ? `${(100 - parseFloat(top4Pct)).toFixed(0)}%` : '—'
-                return lang === 'en'
-                  ? `${tail.length} MORE INSTITUTIONS · ${rest} OF SPEND`
-                  : `${tail.length} INSTITUCIONES MÁS · ${rest} DEL GASTO`
-              })()}
-            </span>
-            <span>{tailExpanded ? '↑' : '↓'}</span>
-          </button>
-          {tailExpanded && (
-            <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
-              {tail.map((inst) => {
-                const tier = tierMark(inst.risk)
-                const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend * 100) : 0
-                return (
-                  <div
-                    key={inst.institution_id}
-                    className="flex items-center gap-2 px-4 py-2 cursor-pointer"
-                    style={{ borderLeft: `2px solid ${tier.color}` }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                    onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
-                  >
-                    <span className="font-mono text-[9px]" style={{ color: tier.color }}>{tier.glyph}{tier.label}</span>
-                    <span className="flex-1 font-mono text-[10px] truncate" style={{ color: 'var(--color-text-primary)' }}>{inst.name}</span>
-                    <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shareOfSector.toFixed(1)}%</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </>
-      )}
+        ))}
+      </div>
     </div>
   )
 }

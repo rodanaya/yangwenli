@@ -9,6 +9,7 @@
  */
 import { useState } from 'react'
 import { useExploreState, useExploreDispatch } from './ExploreState'
+import { RISK_COLORS } from '@/lib/constants'
 
 const YEAR_MIN = 2002
 const YEAR_MAX = 2025
@@ -89,6 +90,13 @@ const LENSES: Array<{ value: 'sectors' | 'risk'; labelEn: string; labelEs: strin
   { value: 'risk', labelEn: 'Risk', labelEs: 'Riesgo' },
 ]
 
+const RISK_FLOOR_COLORS: Record<'all' | 'medium' | 'high' | 'critical', string> = {
+  all: 'var(--color-text-muted)',
+  medium: RISK_COLORS.medium,
+  high: RISK_COLORS.high,
+  critical: RISK_COLORS.critical,
+}
+
 export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
   const state = useExploreState()
   const dispatch = useExploreDispatch()
@@ -98,33 +106,27 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
       style={{
         background: 'var(--color-background-card, #fff)',
         border: '1px solid var(--color-border)',
-        borderRadius: 4,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        borderRadius: 2,
         overflow: 'hidden',
       }}
       role="group"
       aria-label={lang === 'en' ? 'Map controls — lens and risk filter' : 'Controles del mapa — lente y filtro de riesgo'}
     >
-      {/* Lens group */}
-      <span
-        className="px-2.5 py-1.5 text-[9px] font-mono uppercase tracking-[0.16em] flex items-center"
-        style={{ color: 'var(--color-text-muted)', borderRight: '1px solid var(--color-border)' }}
-      >
-        {lang === 'en' ? 'Lens' : 'Lente'}
-      </span>
-      {LENSES.map((l, i) => {
+      {/* Lens group — underline-tab style, no filled background */}
+      {LENSES.map((l) => {
         const active = state.lens === l.value
         return (
           <button
             key={l.value}
             type="button"
             onClick={() => dispatch({ type: 'set-lens', lens: l.value })}
-            className="text-[10px] font-mono uppercase tracking-[0.12em] py-1.5 px-3 transition-colors"
+            className="text-[10px] font-mono uppercase tracking-[0.12em] px-2.5 py-1.5 transition-colors"
             style={{
-              background: active ? 'var(--color-accent)' : 'transparent',
-              color: active ? '#fff' : 'var(--color-text-secondary)',
+              background: 'transparent',
+              color: active ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+              fontWeight: active ? 600 : 400,
               border: 'none',
-              borderLeft: i === 0 ? 'none' : '1px solid var(--color-border)',
+              borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
               cursor: 'pointer',
             }}
             aria-pressed={active}
@@ -133,7 +135,7 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
           </button>
         )
       })}
-      {/* Risk floor group — separator then filter buttons */}
+      {/* Group separator */}
       <span
         aria-hidden="true"
         style={{
@@ -141,26 +143,34 @@ export function LensToggle({ lang }: { lang: 'en' | 'es' }) {
           width: 1,
           alignSelf: 'stretch',
           background: 'var(--color-border)',
-          margin: '4px 0',
         }}
       />
+      {/* Risk floor group — colored dot + tinted background on active */}
       {RISK_FLOORS.map((f) => {
         const active = state.riskFloor === f.value
+        const dotColor = RISK_FLOOR_COLORS[f.value]
+        const activeBg = f.value === 'all' ? 'transparent' : `${RISK_COLORS[f.value]}12`
         return (
           <button
             key={f.value}
             type="button"
             onClick={() => dispatch({ type: 'set-risk-floor', floor: f.value })}
-            className="text-[10px] font-mono uppercase tracking-[0.12em] py-1.5 px-2.5 transition-colors"
+            className="text-[10px] font-mono uppercase tracking-[0.12em] px-2 py-1.5 transition-colors flex items-center"
             style={{
-              background: active ? 'var(--color-accent)' : 'transparent',
-              color: active ? '#fff' : 'var(--color-text-secondary)',
+              background: active ? activeBg : 'transparent',
+              color: active ? dotColor : 'var(--color-text-muted)',
               border: 'none',
-              borderLeft: '1px solid var(--color-border)',
               cursor: 'pointer',
             }}
             aria-pressed={active}
           >
+            {active && (
+              <span
+                aria-hidden="true"
+                className="inline-block w-1.5 h-1.5 rounded-full mr-1 shrink-0"
+                style={{ background: dotColor }}
+              />
+            )}
             {lang === 'en' ? f.labelEn : f.labelEs}
           </button>
         )
