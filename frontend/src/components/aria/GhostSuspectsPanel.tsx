@@ -189,13 +189,13 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
 
         {/* Ghost pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <nav aria-label={isEs ? 'Paginación' : 'Pagination'} className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <button
               onClick={() => setGhostPage(Math.max(1, ghostPage - 1))}
               disabled={ghostPage === 1}
               className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >← {isEs ? 'Anterior' : 'Previous'}</button>
-            <span className="text-xs text-text-muted font-mono tabular-nums">
+            <span className="text-xs text-text-muted font-mono tabular-nums" aria-live="polite">
               {ghostPage} / {totalPages}
             </span>
             <button
@@ -203,7 +203,7 @@ export function GhostSuspectsPanel({ isEs }: GhostSuspectsPanelProps) {
               disabled={ghostPage === totalPages}
               className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >{isEs ? 'Siguiente' : 'Next'} →</button>
-          </div>
+          </nav>
         )}
       </div>
     </div>

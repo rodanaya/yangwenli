@@ -648,7 +648,7 @@ function Pagination({
 }) {
   if (!pagination || pagination.total_pages <= 1) return null
   return (
-    <div className="flex items-center justify-between mt-4 text-sm card p-3">
+    <nav aria-label="Pagination" className="flex items-center justify-between mt-4 text-sm card p-3">
       <span className="text-text-muted text-xs font-mono">
         {pagination.total.toLocaleString()} total
       </span>
@@ -659,9 +659,9 @@ function Pagination({
           className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Previous page"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         </button>
-        <span className="px-3 text-text-primary font-mono text-xs font-bold">
+        <span className="px-3 text-text-primary font-mono text-xs font-bold" aria-live="polite">
           {page} / {pagination.total_pages}
         </span>
         <button
@@ -670,9 +670,9 @@ function Pagination({
           className="p-1.5 rounded border border-border/40 hover:bg-background-elevated/50 hover:border-border-hover disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           aria-label="Next page"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </nav>
   )
 }

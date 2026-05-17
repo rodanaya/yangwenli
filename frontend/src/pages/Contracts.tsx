@@ -1160,7 +1160,7 @@ export function Contracts() {
 
       {/* Pagination — Fix 6: use filters.per_page throughout */}
       {data && (data?.pagination?.total ?? 0) > 0 && (
-        <div className="flex items-center justify-between">
+        <nav aria-label="Pagination" className="flex items-center justify-between">
           <p className="text-xs text-text-muted font-mono tabular-nums">
             {(() => {
               const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination?.total ?? 0)
@@ -1192,7 +1192,7 @@ export function Contracts() {
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
-        </div>
+        </nav>
       )}
 
       {isDetailOpen && (
