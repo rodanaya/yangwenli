@@ -21,18 +21,18 @@ export type EntityType =
 
 /**
  * Canonical truncation lengths (chars) per entity type per chip size.
- * xs = 16-char chip · sm = 24-char chip · md = 40-char chip
+ * xs = 16-char chip · sm = 24-char chip · md = 40-char chip · full = no truncation (list rows, panels)
  */
-const TRUNCATE: Record<EntityType, { xs: number; sm: number; md: number }> = {
-  vendor:        { xs: 16, sm: 24, md: 40 },
-  institution:   { xs: 18, sm: 28, md: 48 }, // institution names are wordier
-  sector:        { xs: 12, sm: 18, md: 28 },
-  category:      { xs: 18, sm: 28, md: 48 },
-  case:          { xs: 18, sm: 28, md: 40 },
-  pattern:       { xs: 12, sm: 16, md: 24 },
-  network:       { xs: 16, sm: 24, md: 36 },
-  investigation: { xs: 18, sm: 28, md: 40 },
-  story:         { xs: 20, sm: 32, md: 48 },
+const TRUNCATE: Record<EntityType, { xs: number; sm: number; md: number; full: number }> = {
+  vendor:        { xs: 16, sm: 24, md: 40,  full: 300 },
+  institution:   { xs: 18, sm: 28, md: 48,  full: 300 },
+  sector:        { xs: 12, sm: 18, md: 28,  full: 300 },
+  category:      { xs: 18, sm: 28, md: 48,  full: 300 },
+  case:          { xs: 18, sm: 28, md: 40,  full: 300 },
+  pattern:       { xs: 12, sm: 16, md: 24,  full: 300 },
+  network:       { xs: 16, sm: 24, md: 36,  full: 300 },
+  investigation: { xs: 18, sm: 28, md: 40,  full: 300 },
+  story:         { xs: 20, sm: 32, md: 48,  full: 300 },
 }
 
 /** Strip common Mexican legal-entity suffixes — institution variant. */
@@ -67,7 +67,7 @@ function passthrough(raw: string, max: number): string {
 export function formatEntityName(
   type: EntityType,
   rawName: string | null | undefined,
-  size: 'xs' | 'sm' | 'md' = 'sm',
+  size: 'xs' | 'sm' | 'md' | 'full' = 'sm',
 ): string {
   if (!rawName) return ''
   const max = TRUNCATE[type][size]

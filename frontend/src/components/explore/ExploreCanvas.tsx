@@ -1191,7 +1191,7 @@ function InstCard({
   const hr = inst.high_risk_pct ?? null
   const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
   const riskScore = Math.round(inst.risk * 100)
-  const displayName = formatEntityName('institution', inst.name, 'sm')
+  const displayName = formatEntityName('institution', inst.name, 'full')
 
   return (
     <div
@@ -1486,13 +1486,13 @@ function Z2Panel({
         className="flex flex-col px-3 py-1.5 cursor-pointer"
         onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-        onClick={() => d({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
+        onClick={() => d({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name, 300) })}
       >
         <div className="flex items-start gap-1.5 min-w-0">
           <div className="w-0.5 h-4 flex-shrink-0 rounded-full mt-0.5" style={{ background: accentColor }} />
           <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums pt-0.5" style={{ color: 'var(--color-text-muted)' }}>{rank}</span>
           <span className="font-mono text-[10px] font-medium min-w-0 leading-snug" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-            {formatVendorName(v.vendor_name)}
+            {formatVendorName(v.vendor_name, 300)}
           </span>
         </div>
         <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 pl-7">
