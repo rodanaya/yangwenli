@@ -1010,6 +1010,9 @@ function Z1Layer({
   const [hoveredInstTooltip, setHoveredInstTooltip] = useState<{
     cx: number; cy: number; r: number; inst: SpatialInstitution
   } | null>(null)
+  // Touch / mobile: first tap selects (shows tooltip + name), second tap drills in.
+  // Mouse users get immediate drill-in since hover already shows the name.
+  const [selectedInstId, setSelectedInstId] = useState<number | null>(null)
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
@@ -1112,18 +1115,36 @@ function Z1Layer({
             r={rOf(inst.size)}
             index={i}
             isPinned={isPinned}
-            onClick={() =>
-              triggerDrill(cx, cy, () =>
-                dispatch({
-                  type: 'drill-into-institution',
-                  institutionId: inst.institution_id,
-                  institutionName: inst.name,
-                }),
-              )
-            }
+            isSelected={selectedInstId === inst.institution_id}
+            onClick={() => {
+              const iid = inst.institution_id
+              if (selectedInstId === iid) {
+                // Second tap / confirmed click → drill in
+                setSelectedInstId(null)
+                triggerDrill(cx, cy, () =>
+                  dispatch({ type: 'drill-into-institution', institutionId: iid, institutionName: inst.name })
+                )
+              } else {
+                // First tap → select and show name; mouse users who hovered already get instant drill
+                const alreadyHovered = hoveredInstTooltip?.inst.institution_id === iid
+                if (alreadyHovered) {
+                  // Desktop: hover already showed name, one click is enough
+                  triggerDrill(cx, cy, () =>
+                    dispatch({ type: 'drill-into-institution', institutionId: iid, institutionName: inst.name })
+                  )
+                } else {
+                  // Touch: select first
+                  setSelectedInstId(iid)
+                  setHoveredInstName(inst.name)
+                  setHoveredInstTooltip({ cx, cy, r: rOf(inst.size), inst })
+                  dispatch({ type: 'set-hover', hover: { kind: 'institution', id: iid } })
+                }
+              }
+            }}
             onHover={(hovering) => {
               setHoveredInstName(hovering ? inst.name : null)
               setHoveredInstTooltip(hovering ? { cx, cy, r: rOf(inst.size), inst } : null)
+              if (!hovering && selectedInstId === inst.institution_id) return // keep selected state
               dispatch({
                 type: 'set-hover',
                 hover: hovering ? { kind: 'institution', id: inst.institution_id } : null,
@@ -1180,6 +1201,7 @@ function InstitutionBodyVisual({
   r,
   onClick,
   onHover,
+  isSelected = false,
   isPinned = false,
   index = 0,
 }: {
@@ -1189,26 +1211,26 @@ function InstitutionBodyVisual({
   r: number
   onClick: () => void
   onHover: (hovering: boolean) => void
+  isSelected?: boolean
   isPinned?: boolean
   index?: number
 }) {
   const [hovered, setHovered] = useState(false)
+  const active = hovered || isSelected
   const level = getRiskLevelFromScore(inst.risk)
   const fill = RISK_COLORS[level]
-  const rEffective = hovered ? r * 1.15 : r
+  const rEffective = active ? r * 1.15 : r
   const tooltip = `${inst.name}\n${formatNumber(inst.total_contracts)} contracts · ${formatCompactMXN(inst.total_amount_mxn)}\n${level.toUpperCase()} · ${(inst.risk * 100).toFixed(1)}%`
   const lbl = shortLabel(inst.name)
 
   // Three-tier label strategy:
-  //   large  (r ≥ 16): acronym inside the circle (dark on amber, white on others)
-  //   medium (r ≥  5): pill chip below the circle (always dark text for contrast)
-  //   small  (r <  5): no chip; full name surfaces in hover stat line
+  //   large  (r ≥ 16): acronym inside the circle
+  //   medium (r ≥  5): pill chip below the circle
+  //   small  (r <  5): no chip; name in floating tooltip / bottom bar
   const insideLabel = r >= 16
   const chipLabel   = !insideLabel && r >= 5
-  const chipW = Math.min(lbl.length * 5.8 + 10, 120)
-  const chipH = 15
-  // Inside-label text must be readable on the risk fill. High (amber #f59e0b) has
-  // only 1.7:1 contrast with white — use near-black instead. Same for low zinc.
+  const chipW = Math.min(lbl.length * 6.2 + 14, 130)
+  const chipH = 18  // taller chip → bigger tap target, readable at 11px
   const insideFill = (level === 'high' || level === 'low') ? '#1c1a15' : 'white'
 
   return (
@@ -1220,19 +1242,20 @@ function InstitutionBodyVisual({
       onClick={onClick}
       onMouseEnter={() => { setHovered(true); onHover(true) }}
       onMouseLeave={() => { setHovered(false); onHover(false) }}
+      onTouchStart={() => onHover(true)}
     >
       <title>{tooltip}</title>
-      {hovered && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
+      {active && <circle cx={cx} cy={cy} r={rEffective + 6} fill={fill} fillOpacity={0.18} />}
       {isPinned && <PinRing cx={cx} cy={cy} r={rEffective + 2} color={fill} />}
-      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={hovered ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={3} />
+      <circle cx={cx} cy={cy} r={rEffective} fill={fill} fillOpacity={active ? 0.97 : 0.92} stroke="var(--color-background)" strokeWidth={3} />
 
-      {/* Large: acronym inside the bubble — contrast-aware text color */}
+      {/* Large: acronym inside the bubble */}
       {insideLabel && (
         <text
           x={cx}
-          y={cy + Math.round(Math.max(9, Math.min(13, r * 0.32)) * 0.38)}
+          y={cy + Math.round(Math.max(10, Math.min(14, r * 0.34)) * 0.38)}
           textAnchor="middle"
-          fontSize={Math.max(9, Math.min(13, Math.round(r * 0.32)))}
+          fontSize={Math.max(10, Math.min(14, Math.round(r * 0.34)))}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight={700}
           fill={insideFill}
@@ -1242,27 +1265,26 @@ function InstitutionBodyVisual({
         </text>
       )}
 
-      {/* Medium: pill chip below the bubble — border encodes risk, text is always dark */}
+      {/* Medium: pill chip below the bubble — 11px for mobile readability */}
       {chipLabel && (
         <>
           <rect
             x={cx - chipW / 2}
-            y={cy + r + 4}
+            y={cy + r + 3}
             width={chipW}
             height={chipH}
             rx={chipH / 2}
-            fill="var(--color-background-card)"
-            fillOpacity={0.97}
+            fill={isSelected ? fill : 'var(--color-background-card)'}
+            fillOpacity={isSelected ? 0.20 : 0.97}
             stroke={fill}
-            strokeWidth={1.5}
-            strokeOpacity={1}
+            strokeWidth={isSelected ? 2 : 1.5}
             style={{ pointerEvents: 'none' }}
           />
           <text
             x={cx}
-            y={cy + r + 4 + chipH * 0.72}
+            y={cy + r + 3 + chipH * 0.70}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={11}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={700}
             fill="var(--color-text-primary)"
@@ -1271,22 +1293,6 @@ function InstitutionBodyVisual({
             {lbl}
           </text>
         </>
-      )}
-
-      {/* Hover line: always show full name near the bubble for small/medium;
-          large ones already have the name in the bottom status bar */}
-      {hovered && r < 16 && (
-        <text
-          x={cx}
-          y={cy + rEffective + (chipLabel ? chipH + 12 : 14)}
-          textAnchor="middle"
-          fontSize={9}
-          fontFamily="var(--font-family-mono, monospace)"
-          fill="var(--color-text-muted)"
-          style={{ pointerEvents: 'none' }}
-        >
-          {inst.name.length > 38 ? inst.name.slice(0, 37) + '…' : inst.name}
-        </text>
       )}
     </motion.g>
   )
