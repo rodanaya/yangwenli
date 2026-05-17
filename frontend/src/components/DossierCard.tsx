@@ -56,6 +56,9 @@ export function DossierCard({ dossier, onOpen, onDelete, apiBase = '/api/v1' }: 
       className="rounded-sm border border-border/60 overflow-hidden bg-background-card relative cursor-pointer hover:border-accent/40 transition-colors group"
       style={{ borderLeftWidth: 3, borderLeftColor: dossier.color }}
       onClick={() => onOpen(dossier.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(dossier.id) } }}
     >
       <div className="p-4 bg-background-card">
         <div className="flex items-start justify-between gap-2">

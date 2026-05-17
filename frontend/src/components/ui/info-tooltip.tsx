@@ -42,7 +42,7 @@ export function InfoTooltip({ termKey, label, size = 14, className, side = 'top'
         <button
           type="button"
           className={cn(
-            'text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm',
+            'text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 rounded-sm',
             inline ? 'inline-flex items-center align-middle ml-1' : 'flex items-center gap-1.5',
             className
           )}

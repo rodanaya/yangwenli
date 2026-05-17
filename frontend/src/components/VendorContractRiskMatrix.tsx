@@ -251,7 +251,7 @@ export function VendorContractRiskMatrix({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  className="text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-sm"
+                  className="text-text-muted hover:text-text-secondary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 rounded-sm"
                   aria-label="About this chart"
                 >
                   <AlertTriangle size={13} />

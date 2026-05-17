@@ -266,7 +266,7 @@ export function RiskFactorBadge({ factor, zScore, showExplainer = false, classNa
         'inline-flex items-center gap-1 text-xs font-mono rounded px-1.5 py-0.5 border cursor-help transition-colors',
         isPositive && 'bg-risk-critical/10 border-risk-critical/30 text-risk-critical hover:bg-risk-critical/20',
         isNegative && 'bg-risk-low/10 border-risk-low/30 text-risk-low hover:bg-risk-low/20',
-        !isPositive && !isNegative && 'bg-muted/30 border-border text-text-muted hover:bg-muted/50',
+        !isPositive && !isNegative && 'bg-background-elevated/30 border-border text-text-muted hover:bg-background-elevated/50',
         className
       )}
       aria-label={`${explanation.title}: coefficient ${coeffStr}`}
@@ -433,7 +433,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
             const coeffStr = isPositive ? `+${coeff.toFixed(3)}` : coeff.toFixed(3)
 
             return (
-              <tr key={key} className="border-b border-border/40 hover:bg-muted/20 transition-colors group">
+              <tr key={key} className="border-b border-border/40 hover:bg-background-elevated/20 transition-colors group">
                 <td className="py-2 pr-4">
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>

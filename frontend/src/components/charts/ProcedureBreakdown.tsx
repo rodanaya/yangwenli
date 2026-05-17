@@ -84,6 +84,8 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
               className="flex items-center gap-[2px] flex-1 cursor-pointer"
               onClick={() => onSectorClick?.(sector.sector_code)}
               role={onSectorClick ? 'button' : undefined}
+              tabIndex={onSectorClick ? 0 : undefined}
+              onKeyDown={onSectorClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSectorClick(sector.sector_code) } } : undefined}
               aria-label={
                 onSectorClick
                   ? `${sector.sector_name}: ${sector.direct_award_pct.toFixed(0)}% direct, ${sector.single_bid_pct.toFixed(0)}% single bid, ${sector.open_tender_pct.toFixed(0)}% open`

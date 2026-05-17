@@ -535,8 +535,8 @@ export function Investigation() {
     return (
       <div className="container mx-auto p-6">
         <div className="rounded-sm border border-border/60 overflow-hidden bg-background-card">
-          <div className="flex items-center gap-3 p-6 text-muted-foreground bg-background-card">
-            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+          <div className="flex items-center gap-3 p-6 text-text-muted bg-background-card">
+            <AlertTriangle className="h-5 w-5 text-risk-critical flex-shrink-0" />
             <span>{t('loadingError')}</span>
           </div>
         </div>

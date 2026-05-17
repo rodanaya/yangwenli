@@ -84,7 +84,7 @@ export function CommunityBubbles() {
   if (isLoading) return <Skeleton className="h-80 w-full" />
   if (communities.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center h-48 text-sm text-text-muted">
         No community data available
       </div>
     )
@@ -150,8 +150,8 @@ export function CommunityBubbles() {
 
       {/* Legend */}
       <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px]">
-        <span className="text-muted-foreground">Size = contract value</span>
-        <span className="text-muted-foreground">Color = risk level</span>
+        <span className="text-text-muted">Size = contract value</span>
+        <span className="text-text-muted">Color = risk level</span>
         {(['low','medium','high','critical'] as const).map(l => (
           <span key={l} className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: RISK_COLORS[l] }} />

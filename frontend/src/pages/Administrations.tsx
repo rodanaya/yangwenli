@@ -532,8 +532,8 @@ export default function Administrations() {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-6">
         <div className="text-center max-w-md space-y-4">
-          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-            <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
+          <div className="w-12 h-12 rounded-full bg-risk-critical/10 flex items-center justify-center mx-auto">
+            <AlertTriangle className="h-5 w-5 text-risk-critical" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-bold text-text-primary">{t('loadError', 'Data unavailable')}</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
