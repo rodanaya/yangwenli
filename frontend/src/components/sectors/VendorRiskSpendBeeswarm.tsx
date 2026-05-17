@@ -338,6 +338,7 @@ export function VendorRiskSpendBeeswarm({
                 onMouseEnter={() => setHoveredId(node.item.vendor_id)}
                 onMouseLeave={() => setHoveredId(null)}
                 onClick={() => navigate(`/vendors/${node.item.vendor_id}`)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/vendors/${node.item.vendor_id}`) } }}
               />
             )
           })}

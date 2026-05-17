@@ -1284,6 +1284,7 @@ export function InvestigationCaseDetail() {
                     outline: 'none',
                   }}
                   placeholder={t('caseDetail.sourceUrlPlaceholder')}
+                  aria-label={t('caseDetail.sourceUrlPlaceholder')}
                   value={evidenceUrl}
                   onChange={(e) => setEvidenceUrl(e.target.value)}
                 />
@@ -1333,6 +1334,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Evidence type"
                     value={evidenceType}
                     onChange={(e) => setEvidenceType(e.target.value)}
                   >
@@ -1351,6 +1353,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Evidence credibility"
                     value={credibility}
                     onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
                   >
@@ -1369,6 +1372,7 @@ export function InvestigationCaseDetail() {
                       color: INK_MUTED,
                       outline: 'none',
                     }}
+                    aria-label="Publication date"
                     value={datePublished}
                     onChange={(e) => setDatePublished(e.target.value)}
                   />
@@ -1579,6 +1583,7 @@ export function InvestigationCaseDetail() {
                     color: INK,
                     outline: 'none',
                   }}
+                  aria-label="Case status"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value as InvestigationValidationStatus)}
                 >
