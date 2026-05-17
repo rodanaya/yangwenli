@@ -838,3 +838,47 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions 
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy (environment constraint, not site failure) — consistent with all prior automated runs. No new bilingual gaps introduced since last run. Recommend running checks from VPS (37.60.232.109) or whitelisted host for accurate HTTP/API validation.
+
+---
+## Visual Review — 2026-05-17T12:15:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/atlas | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/aria | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/cases | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/methodology | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | ⚠ |
+
+**Note**: TLS inspection by "Egress Gateway Subordinate CA" confirms requests reach 37.60.232.109 but are rejected at WAF layer. Environment constraint, not a site outage. Consistent with all prior automated runs from this cloud environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?limit=5 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/sectors | blocked (egress proxy, empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions from prior run:
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 16 hits — all false positives (unchanged from prior run):
+- `AriaQueue.tsx:963–969`: bilingual `{es:…, en:…}` label maps — legitimate, not a UI key leak
+- `Executive.tsx:65,84,103`: company proper nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — not i18n keys
+- `InstitutionScorecards.tsx:443`: `TIER_STYLES[tierName as TierKey]` — JS object lookup, not UI string
+- `Methodology.tsx:118`: academic citation `Mahalanobis, P.C.` — not rendered as a key
+- `ExploreCanvas.tsx:1802–1803`: legal suffix array `['S.A.', 'S.C.', ...]` — not UI strings
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story data, not UI text
+- `CaseLibrary.tsx:304`: inside a code comment, not rendered
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy (environment constraint, not site failure) — consistent with all prior automated runs. No new bilingual gaps. Recommend running from VPS (37.60.232.109) or whitelisted host for accurate HTTP/API validation.
