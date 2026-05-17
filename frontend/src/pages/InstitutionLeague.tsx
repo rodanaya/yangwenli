@@ -967,7 +967,7 @@ export default function InstitutionLeague() {
   const highRiskInstitutions = failingCount
 
   return (
-    <div className="min-h-screen bg-background text-text-primary">
+    <div id="main-content" className="min-h-screen bg-background text-text-primary">
       <TabBar activeTab={activeTab} setTab={setTab} />
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
         {/* Utility header — same pattern as /aria, /workspace, /cases,

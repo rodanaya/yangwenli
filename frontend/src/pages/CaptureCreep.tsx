@@ -163,7 +163,7 @@ export default function CaptureCreep() {
     : 0
 
   return (
-    <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-6">
+    <div id="main-content" className="relative max-w-7xl mx-auto px-4 md:px-6 py-6">
       {/* Page paper-grain — scoped to this contemplative analysis surface.
           Pattern from rubli-folio-aesthetic § "Atmosphere — paper-grain
           overlay". */}

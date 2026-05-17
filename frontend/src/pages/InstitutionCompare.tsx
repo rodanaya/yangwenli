@@ -1059,7 +1059,7 @@ export default function InstitutionCompare() {
   const nameB = instB ? toTitleCase(instB.siglas || instB.name).slice(0, 25) : ''
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div id="main-content" className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Navigation */}
       <div className="mb-6">
         <Link

@@ -840,7 +840,7 @@ export default function ModelTransparency() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
+    <div id="main-content" className="max-w-7xl mx-auto px-4 md:px-6 py-6">
       <header className="mb-5 pb-4 border-b border-border">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <div>

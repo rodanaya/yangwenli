@@ -282,7 +282,7 @@ export default function Executive() {
         }
       `}</style>
 
-      <div className="executive-page max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
+      <div id="main-content" className="executive-page max-w-[1100px] mx-auto px-4 sm:px-6 py-6 sm:py-8 relative">
         {/* ─── E0 folio-v1-P1b: page-scoped paper-grain overlay ───────────────
             SVG fractalNoise at opacity 0.045, multiply blend, ochre tint.
             Pointer-events:none so it never blocks interaction. Content sits

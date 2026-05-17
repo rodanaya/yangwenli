@@ -215,6 +215,7 @@ export function InstitutionThread() {
 
   return (
     <motion.div
+      id="main-content"
       variants={staggerContainer}
       initial="hidden"
       animate="visible"

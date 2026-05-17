@@ -1097,7 +1097,7 @@ export default function YearInReview() {
   // =============================================================================
 
   return (
-    <div className="max-w-[1040px] mx-auto px-4 md:px-6 py-6">
+    <div id="main-content" className="max-w-[1040px] mx-auto px-4 md:px-6 py-6">
       <header className="mb-5 pb-4 border-b border-border">
         <div className="flex items-baseline justify-between gap-4 flex-wrap">
           <div>

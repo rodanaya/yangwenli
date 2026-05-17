@@ -467,7 +467,7 @@ export default function Intersection() {
   const totalHighRisk = noveltyCount + confirmedCount
 
   return (
-    <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="main-content" className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Folio kicker — kept consistent with rest of site but lighter than
           Relationships (no paper grain). */}
       <header className="mb-10 pb-6 border-b border-border">

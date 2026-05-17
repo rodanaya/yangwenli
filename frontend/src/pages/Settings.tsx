@@ -114,7 +114,7 @@ export function Settings() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="main-content" className="space-y-6">
       {/* Editorial Page Header */}
       <header className="pb-5 border-b border-border">
         <p

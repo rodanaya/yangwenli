@@ -245,7 +245,7 @@ export default function CategoriesIndex() {
   ]
 
   return (
-    <main className="min-h-screen bg-background" id="main-content">
+    <div className="min-h-screen bg-background">
       {/* ── Editorial header ────────────────────────────────────────────────── */}
       <header className="bg-background-elevated border-b border-border px-6 py-10 md:px-12 lg:px-16">
         {/* Kicker */}
@@ -463,6 +463,6 @@ export default function CategoriesIndex() {
           </div>
         )}
       </section>
-    </main>
+    </div>
   )
 }

@@ -165,7 +165,7 @@ export default function Relationships() {
     : 0
 
   return (
-    <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="main-content" className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Paper-grain overlay — single filter for the unified page */}
       <svg
         aria-hidden="true"

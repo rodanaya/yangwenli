@@ -296,7 +296,7 @@ export default function ContractDetail() {
       {/* ----- Main grid: content left, sidebar right ----- */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 lg:gap-14">
         {/* ================== MAIN COLUMN ================== */}
-        <main id="main-content" className="min-w-0 space-y-12">
+        <div className="min-w-0 space-y-12">
           {/* ----- Risk Assessment ----- */}
           <Section overline="Finding · Risk Assessment" title="What the model sees">
             <div className="space-y-6">
@@ -518,7 +518,7 @@ export default function ContractDetail() {
               </div>
             </Section>
           )}
-        </main>
+        </div>
 
         {/* ================== SIDEBAR ================== */}
         <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">

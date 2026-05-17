@@ -28,7 +28,7 @@ export default function Terms() {
   const isEs = lang === 'es'
 
   return (
-    <div className="min-h-screen bg-background">
+    <div id="main-content" className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-6 py-12">
 
         {/* Header */}
