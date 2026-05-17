@@ -1188,9 +1188,9 @@ function InstCard({
 }) {
   const tier = tierMark(inst.risk)
   const da = inst.direct_award_pct ?? null
+  const hr = inst.high_risk_pct ?? null
   const shareOfSector = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
   const riskScore = Math.round(inst.risk * 100)
-  const contractCount = inst.total_contracts
   const displayName = formatEntityName('institution', inst.name, 'sm')
 
   return (
@@ -1204,34 +1204,39 @@ function InstCard({
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isTop ? `${tier.color}08` : 'transparent' }}
       onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
     >
-      {/* Row 1: tier label · name · amount */}
-      <div className="flex items-center gap-1.5 min-w-0">
-        <span className="font-mono text-[9px] font-bold shrink-0" style={{ color: tier.color }}>
+      {/* Row 1: tier label · name (wraps up to 2 lines) */}
+      <div className="flex items-start gap-1.5 min-w-0">
+        <span className="font-mono text-[9px] font-bold shrink-0 pt-0.5" style={{ color: tier.color }}>
           {tier.glyph}{tier.label}
         </span>
-        <span className="font-mono text-[11px] font-medium flex-1 truncate min-w-0" style={{ color: 'var(--color-text-primary)' }}>
+        <span className="font-mono text-[11px] font-medium min-w-0 leading-snug" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {displayName}
-        </span>
-        <span className="font-mono text-[10px] font-bold tabular-nums shrink-0" style={{ color: tier.color }}>
-          {formatCompactMXN(inst.total_amount_mxn)}
         </span>
       </div>
 
-      {/* Row 2: risk score · DA% · contracts · sector share */}
-      <div className="flex items-center gap-2 mt-0.5 min-w-0">
-        <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: tier.color }}>
+      {/* Row 2: amount · risk · DA% · HR% · contracts · share */}
+      <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-1 pl-5">
+        <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: tier.color }}>
+          {formatCompactMXN(inst.total_amount_mxn)}
+        </span>
+        <span className="font-mono text-[9px] tabular-nums" style={{ color: tier.color }}>
           RS·{riskScore}
         </span>
         {da != null && (
-          <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
             DA·{da.toFixed(0)}%
           </span>
         )}
-        <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-          {formatNumber(contractCount)} {lang === 'en' ? 'contracts' : 'contratos'}
+        {hr != null && hr > 5 && (
+          <span className="font-mono text-[9px] tabular-nums" style={{ color: RISK_COLORS.high }}>
+            HR·{hr.toFixed(0)}%
+          </span>
+        )}
+        <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+          {formatNumber(inst.total_contracts)} {lang === 'en' ? 'ctr' : 'ctr'}
         </span>
-        <span className="font-mono text-[9px] tabular-nums shrink-0 ml-auto" style={{ color: 'var(--color-text-muted)' }}>
-          S·{shareOfSector.toFixed(1)}%
+        <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+          {shareOfSector.toFixed(1)}% {lang === 'en' ? 'of sector' : 'del sector'}
         </span>
       </div>
     </div>
@@ -1270,7 +1275,7 @@ function Z1Panel({
   const shelfHigh     = sorted.filter((inst) => { const r = inst.risk ?? 0; return r >= 0.40 && r < 0.60 })
   const shelfRoutine  = sorted.filter((inst) => (inst.risk ?? 0) < 0.40)
 
-  const [routineOpen, setRoutineOpen] = useState(false)
+  const [routineOpen, setRoutineOpen] = useState(true)
 
   return (
     <div
@@ -1468,7 +1473,49 @@ function Z2Panel({
   const shelfFlagged  = sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.60 })
   const shelfRoutine  = sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25)
 
-  const [routineOpen, setRoutineOpen] = useState(false)
+  const [routineOpen, setRoutineOpen] = useState(true)
+
+  const VendorCard = ({ v, rank, accentColor, dispatch: d }: { v: (typeof sorted)[0]; rank: number; accentColor: string; dispatch: typeof dispatch }) => {
+    const score = v.avg_risk_score ?? 0
+    const riskPct = Math.round(score * 100)
+    const yearRange = (v.first_year && v.last_year && v.first_year !== v.last_year)
+      ? `${v.first_year}–${v.last_year}`
+      : v.last_year ? `${v.last_year}` : null
+    return (
+      <div
+        className="flex flex-col px-3 py-1.5 cursor-pointer"
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
+        onClick={() => d({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
+      >
+        <div className="flex items-start gap-1.5 min-w-0">
+          <div className="w-0.5 h-4 flex-shrink-0 rounded-full mt-0.5" style={{ background: accentColor }} />
+          <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums pt-0.5" style={{ color: 'var(--color-text-muted)' }}>{rank}</span>
+          <span className="font-mono text-[10px] font-medium min-w-0 leading-snug" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+            {formatVendorName(v.vendor_name)}
+          </span>
+        </div>
+        <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5 pl-7">
+          <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: accentColor }}>
+            {formatCompactMXN(v.total_value_mxn ?? 0)}
+          </span>
+          {score > 0 && (
+            <span className="font-mono text-[9px] tabular-nums" style={{ color: accentColor }}>
+              RS·{riskPct}
+            </span>
+          )}
+          <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+            {formatNumber(v.contract_count)} {lang === 'en' ? 'ctr' : 'ctr'}
+          </span>
+          {yearRange && (
+            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+              {yearRange}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -1533,22 +1580,7 @@ function Z2Panel({
                 </span>
               </div>
               {shelfCritical.map((v, i) => (
-                <div
-                  key={v.vendor_id}
-                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
-                >
-                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: RISK_COLORS.critical }} />
-                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{i + 1}</span>
-                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-primary)' }} title={formatVendorName(v.vendor_name)}>
-                    {formatVendorName(v.vendor_name)}
-                  </span>
-                  <span className="font-mono text-[10px] font-bold tabular-nums flex-shrink-0" style={{ color: RISK_COLORS.critical }}>
-                    {formatCompactMXN(v.total_value_mxn ?? 0)}
-                  </span>
-                </div>
+                <VendorCard key={v.vendor_id} v={v} rank={i + 1} accentColor={RISK_COLORS.critical} dispatch={dispatch} />
               ))}
             </div>
           )}
@@ -1571,22 +1603,7 @@ function Z2Panel({
                 </span>
               </div>
               {shelfFlagged.map((v, i) => (
-                <div
-                  key={v.vendor_id}
-                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
-                >
-                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: RISK_COLORS.high }} />
-                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfCritical.length + i + 1}</span>
-                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-primary)' }} title={formatVendorName(v.vendor_name)}>
-                    {formatVendorName(v.vendor_name)}
-                  </span>
-                  <span className="font-mono text-[10px] font-bold tabular-nums flex-shrink-0" style={{ color: RISK_COLORS.high }}>
-                    {formatCompactMXN(v.total_value_mxn ?? 0)}
-                  </span>
-                </div>
+                <VendorCard key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} accentColor={RISK_COLORS.high} dispatch={dispatch} />
               ))}
             </div>
           )}
@@ -1617,22 +1634,7 @@ function Z2Panel({
                 </span>
               </button>
               {routineOpen && shelfRoutine.map((v, i) => (
-                <div
-                  key={v.vendor_id}
-                  className="flex items-center gap-2 px-3 py-1.5 cursor-pointer"
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-                  onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name) })}
-                >
-                  <div className="w-0.5 h-4 flex-shrink-0 rounded-full" style={{ background: 'var(--color-text-muted)' }} />
-                  <span className="font-mono text-[9px] w-4 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfCritical.length + shelfFlagged.length + i + 1}</span>
-                  <span className="flex-1 font-mono text-[10px] truncate min-w-0" style={{ color: 'var(--color-text-secondary)' }} title={formatVendorName(v.vendor_name)}>
-                    {formatVendorName(v.vendor_name)}
-                  </span>
-                  <span className="font-mono text-[10px] tabular-nums flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-                    {formatCompactMXN(v.total_value_mxn ?? 0)}
-                  </span>
-                </div>
+                <VendorCard key={v.vendor_id} v={v} rank={shelfCritical.length + shelfFlagged.length + i + 1} accentColor="var(--color-text-muted)" dispatch={dispatch} />
               ))}
             </div>
           )}
@@ -1701,7 +1703,7 @@ function Z3Panel({
   // Full list sorted by amount for the collapsed section
   const byAmount = [...contracts].sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
 
-  const [listOpen, setListOpen] = useState(false)
+  const [listOpen, setListOpen] = useState(true)
 
   return (
     <div
