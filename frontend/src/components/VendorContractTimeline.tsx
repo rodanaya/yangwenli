@@ -344,6 +344,7 @@ function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count:
         viewBox={`0 0 ${chartW} ${chartH}`}
         className="w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
+        aria-hidden="true"
       >
         {barData.map((item, colIdx) => {
           const filled = Math.max(1, Math.round((item.count / maxCount) * YC_ROWS))

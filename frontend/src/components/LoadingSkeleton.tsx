@@ -27,7 +27,7 @@ export function ChartSkeleton({ height = 250, type = 'bar' }: { height?: number;
     return (
       <div className="relative" style={{ height }}>
         <div className="absolute bottom-8 left-8 right-4 top-4">
-          <svg className="w-full h-full" preserveAspectRatio="none">
+          <svg className="w-full h-full" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" className="animate-pulse" style={{ stopColor: 'var(--color-accent)', stopOpacity: 0.3 }} />
