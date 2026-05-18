@@ -19,9 +19,10 @@
  *
  * Gap 2 of docs/SCAFFOLDING_OF_THE_UNIVERSE.md.
  */
-import { Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import type { AxiosError } from 'axios'
 import { vendorApi, institutionApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 
@@ -61,6 +62,33 @@ function RedirectLoading({ kind }: { kind: 'vendor' | 'institution' }) {
   )
 }
 
+function NotFoundState({ kind, id }: { kind: 'vendor' | 'institution'; id: number }) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language?.startsWith('es')
+  const label = isEs
+    ? kind === 'vendor'
+      ? `Proveedor ${id} no encontrado`
+      : `Institución ${id} no encontrada`
+    : kind === 'vendor'
+      ? `Vendor ${id} not found`
+      : `Institution ${id} not found`
+  const cta = isEs ? 'Explorar el universo' : 'Explore the universe'
+  return (
+    <div className="flex items-center justify-center min-h-[40vh] px-6">
+      <div className="text-center max-w-md">
+        <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">404</div>
+        <div className="text-sm text-text-secondary mb-4">{label}</div>
+        <Link
+          to="/explore"
+          className="text-xs font-mono uppercase tracking-wider text-accent hover:underline"
+        >
+          {cta}
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // VendorDeepLinkRedirect — /vendors/:id → /explore?s=&i=&v=
 // ──────────────────────────────────────────────────────────────────────
@@ -74,7 +102,7 @@ export function VendorDeepLinkRedirect() {
   // Useful when journalists explicitly want the printable surface.
   const wantsPrint = searchParams.get('print') === '1'
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['vendor-deep-link', vendorId],
     queryFn: () => vendorApi.getById(vendorId),
     enabled: !wantsPrint && Number.isFinite(vendorId) && vendorId > 0,
@@ -94,9 +122,9 @@ export function VendorDeepLinkRedirect() {
     return <RedirectLoading kind="vendor" />
   }
 
-  // On error, fall through to the printable dossier so the user still
-  // gets the data they asked for — better than dumping them at Z0.
   if (isError || !data) {
+    const status = (error as AxiosError)?.response?.status
+    if (status === 404) return <NotFoundState kind="vendor" id={vendorId} />
     return <Navigate to={`/print/vendors/${vendorId}`} replace />
   }
 
@@ -156,7 +184,7 @@ export function InstitutionDeepLinkRedirect() {
 
   const wantsPrint = searchParams.get('print') === '1'
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['institution-deep-link', institutionId],
     queryFn: () => institutionApi.getById(institutionId),
     enabled: !wantsPrint && Number.isFinite(institutionId) && institutionId > 0,
@@ -177,6 +205,8 @@ export function InstitutionDeepLinkRedirect() {
   }
 
   if (isError || !data) {
+    const status = (error as AxiosError)?.response?.status
+    if (status === 404) return <NotFoundState kind="institution" id={institutionId} />
     return <Navigate to={`/print/institutions/${institutionId}`} replace />
   }
 
