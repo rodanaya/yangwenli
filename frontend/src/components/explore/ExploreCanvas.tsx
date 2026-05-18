@@ -680,7 +680,6 @@ function Z0Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
-  const [mode, setMode] = useState<'spend' | 'risk'>('spend')
   const [hoverId, setHoverId] = useState<number | null>(null)
 
   const { data: sectorStats, isLoading } = useQuery({
@@ -692,18 +691,12 @@ function Z0Panel({
   const stats = sectorStats?.data ?? []
   const totalSpend = sectorStats?.total_value_mxn ?? 0
 
-  const sorted = useMemo(() => {
-    const withMetric = stats.map((s) => ({
-      ...s,
-      metric:
-        mode === 'spend'
-          ? s.total_value_mxn
-          : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
-    }))
-    return [...withMetric].sort((a, b) => b.metric - a.metric)
-  }, [stats, mode])
+  const sorted = useMemo(
+    () => [...stats].sort((a, b) => b.total_value_mxn - a.total_value_mxn),
+    [stats],
+  )
 
-  const maxMetric = sorted.length > 0 ? sorted[0].metric : 1
+  const maxSpend = sorted.length > 0 ? sorted[0].total_value_mxn : 1
 
   return (
     <div
@@ -734,8 +727,8 @@ function Z0Panel({
         >
           {sorted.map((s) => {
             const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-            const bgOpacity = 0.05 + (s.metric / maxMetric) * 0.20
-            const barPct = (s.metric / maxMetric) * 100
+            const bgOpacity = 0.05 + (s.total_value_mxn / maxSpend) * 0.20
+            const barPct = (s.total_value_mxn / maxSpend) * 100
             const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
             const hovered = hoverId === s.sector_id
             const sectorLabel = getSectorName(s.sector_code, lang)
@@ -872,52 +865,6 @@ function Z0Panel({
         </div>
       )}
 
-      {/* SPEND / RISK mode toggle */}
-      {!isLoading && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 52,
-            right: 14,
-            zIndex: 10,
-            display: 'flex',
-            gap: 3,
-            padding: 4,
-            background: 'var(--color-background)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 5,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-          }}
-        >
-          {(['spend', 'risk'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                setMode(m)
-              }}
-              style={{
-                fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase' as const,
-                padding: '5px 14px',
-                background: mode === m ? 'var(--color-accent)' : 'transparent',
-                color: mode === m ? '#fff' : 'var(--color-text-muted)',
-                border: 'none',
-                borderRadius: 3,
-                cursor: 'pointer',
-              }}
-            >
-              {m === 'spend'
-                ? lang === 'en' ? 'SPEND' : 'GASTO'
-                : lang === 'en' ? 'RISK' : 'RIESGO'}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

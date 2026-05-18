@@ -88,9 +88,9 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       {/* The map — fills available space */}
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
-        <SearchOverlay lang={lang} />
+        {isPanelOpen && <SearchOverlay lang={lang} />}
         {isPanelOpen && <LensToggle lang={lang} />}
-        <ShareViewButton lang={lang} />
+        {isPanelOpen && <ShareViewButton lang={lang} />}
         {isPanelOpen && <YearScrubber lang={lang} />}
         {showHint && (
           <button
