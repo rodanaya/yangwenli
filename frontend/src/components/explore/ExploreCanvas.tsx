@@ -659,79 +659,12 @@ function InstRow({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z0Panel — El Panorama: territory map
-// Full-bleed squarified treemap. Rectangle area ∝ sector spend (GASTO mode)
-// or weighted-risk contract count (RIESGO mode). No scroll, no header —
-// the map is the interface. Click any territory to drill into Z1 institutions.
-// Squarify algorithm: Bruls, Huizing, van Wijk (2000).
+// Z0Panel — El Panorama: intensity grid
+// 12 equal-size cards in a 4×3 CSS grid. Visual weight (bg opacity) ∝ sector
+// spend (GASTO) or weighted-risk score (RIESGO). Every sector equally legible
+// regardless of budget size. Cards sorted by metric so Health leads, Otros
+// trails — but never shrunk to illegibility. Click any card → Z1.
 // ────────────────────────────────────────────────────────────────────────────
-
-interface TmItem { id: number; code: string; value: number }
-interface TmCell extends TmItem { x: number; y: number; w: number; h: number }
-
-function tmAspect(row: TmItem[], cw: number, ch: number, total: number): number {
-  const rowTotal = row.reduce((s, i) => s + i.value, 0)
-  let worst = 0
-  if (cw >= ch) {
-    const sh = (rowTotal / total) * ch
-    for (const item of row) {
-      const iw = (item.value / rowTotal) * cw
-      worst = Math.max(worst, iw > 0 && sh > 0 ? Math.max(iw / sh, sh / iw) : Infinity)
-    }
-  } else {
-    const sw = (rowTotal / total) * cw
-    for (const item of row) {
-      const ih = (item.value / rowTotal) * ch
-      worst = Math.max(worst, sw > 0 && ih > 0 ? Math.max(sw / ih, ih / sw) : Infinity)
-    }
-  }
-  return worst
-}
-
-function squarifyLayout(
-  items: TmItem[], x: number, y: number, w: number, h: number, total: number,
-): TmCell[] {
-  if (items.length === 0) return []
-  if (items.length === 1) return [{ ...items[0], x, y, w, h }]
-  let row: TmItem[] = []
-  let prevWorst = Infinity
-  let splitIdx = 0
-  for (let i = 0; i < items.length; i++) {
-    const next = [...row, items[i]]
-    const worst = tmAspect(next, w, h, total)
-    if (worst <= prevWorst || row.length === 0) { row = next; prevWorst = worst; splitIdx = i + 1 }
-    else break
-  }
-  const rowTotal = row.reduce((s, i) => s + i.value, 0)
-  const results: TmCell[] = []
-  if (w >= h) {
-    const sh = (rowTotal / total) * h
-    let cx = x
-    for (const item of row) {
-      const iw = (item.value / rowTotal) * w
-      results.push({ ...item, x: cx, y, w: iw, h: sh }); cx += iw
-    }
-    const rest = items.slice(splitIdx)
-    if (rest.length > 0) results.push(...squarifyLayout(rest, x, y + sh, w, h - sh, total - rowTotal))
-  } else {
-    const sw = (rowTotal / total) * w
-    let cy = y
-    for (const item of row) {
-      const ih = (item.value / rowTotal) * h
-      results.push({ ...item, x, y: cy, w: sw, h: ih }); cy += ih
-    }
-    const rest = items.slice(splitIdx)
-    if (rest.length > 0) results.push(...squarifyLayout(rest, x + sw, y, w - sw, h, total - rowTotal))
-  }
-  return results
-}
-
-function squarify(items: TmItem[], w: number, h: number): TmCell[] {
-  if (!items.length || w < 1 || h < 1) return []
-  const sorted = [...items].sort((a, b) => b.value - a.value)
-  const total = sorted.reduce((s, i) => s + i.value, 0)
-  return total > 0 ? squarifyLayout(sorted, 0, 0, w, h, total) : []
-}
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -747,8 +680,6 @@ function Z0Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [dims, setDims] = useState({ w: 0, h: 0 })
   const [mode, setMode] = useState<'spend' | 'risk'>('spend')
   const [hoverId, setHoverId] = useState<number | null>(null)
 
@@ -758,43 +689,26 @@ function Z0Panel({
     staleTime: 30 * 60 * 1000,
   })
 
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const obs = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect
-      setDims({ w: Math.floor(width), h: Math.floor(height) })
-    })
-    obs.observe(el)
-    setDims({ w: Math.floor(el.offsetWidth), h: Math.floor(el.offsetHeight) })
-    return () => obs.disconnect()
-  }, [])
-
   const stats = sectorStats?.data ?? []
   const totalSpend = sectorStats?.total_value_mxn ?? 0
 
-  const tmItems = useMemo(
-    (): TmItem[] => stats.map((s) => ({
-      id: s.sector_id,
-      code: s.sector_code,
-      // ∛spend so area ∝ ∛value — top-3 drop from 75% → 41%, small sectors readable.
-      value: Math.cbrt(
+  const sorted = useMemo(() => {
+    const withMetric = stats.map((s) => ({
+      ...s,
+      metric:
         mode === 'spend'
           ? s.total_value_mxn
           : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
-      ),
-    })),
-    [stats, mode],
-  )
+    }))
+    return [...withMetric].sort((a, b) => b.metric - a.metric)
+  }, [stats, mode])
 
-  const cells = useMemo(() => squarify(tmItems, dims.w, dims.h), [tmItems, dims])
+  const maxMetric = sorted.length > 0 ? sorted[0].metric : 1
 
   return (
     <div
-      ref={containerRef}
       className="absolute inset-0 z-[5]"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       {isLoading && (
         <div
@@ -805,107 +719,160 @@ function Z0Panel({
         </div>
       )}
 
-      {!isLoading && cells.map((cell) => {
-        const s = stats.find((x) => x.sector_id === cell.id)
-        if (!s) return null
-        const hovered = hoverId === cell.id
-        const color = SECTOR_COLORS[cell.code] ?? '#64748b'
-        const minDim = Math.min(cell.w, cell.h)
-        const pad = minDim > 80 ? 10 : 6
-        const nameFontSize = Math.min(18, Math.max(11, minDim * 0.08))
-        const codeFontSize = Math.min(9, Math.max(7, minDim * 0.038))
-        const spendFontSize = Math.max(8, Math.min(10, minDim * 0.042))
-        const sectorLabel = getSectorName(cell.code, lang)
-        const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
+      {!isLoading && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridTemplateRows: 'repeat(3, 1fr)',
+            width: '100%',
+            height: '100%',
+            gap: 3,
+            padding: 6,
+            boxSizing: 'border-box',
+          }}
+        >
+          {sorted.map((s) => {
+            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+            const bgOpacity = 0.05 + (s.metric / maxMetric) * 0.20
+            const barPct = (s.metric / maxMetric) * 100
+            const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
+            const hovered = hoverId === s.sector_id
+            const sectorLabel = getSectorName(s.sector_code, lang)
 
-        return (
-          <div
-            key={cell.id}
-            role="button"
-            tabIndex={0}
-            aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
-            style={{
-              position: 'absolute',
-              left: cell.x + 1,
-              top: cell.y + 1,
-              width: cell.w - 2,
-              height: cell.h - 2,
-              background: hexToRgba(color, 0.06),
-              borderLeft: `4px solid ${color}`,
-              boxSizing: 'border-box',
-              cursor: 'pointer',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: pad,
-              transition: 'filter 0.12s',
-              filter: hovered ? 'brightness(1.08)' : undefined,
-            }}
-            onClick={() => dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })}
-            onKeyDown={(e) => { if (e.key === 'Enter') dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code }) }}
-            onMouseEnter={() => setHoverId(cell.id)}
-            onMouseLeave={() => setHoverId(null)}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
-              <span style={{
-                fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: codeFontSize,
-                fontWeight: 700,
-                color,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.18em',
-                lineHeight: 1,
-              }}>
-                {cell.code}
-              </span>
-              {s.critical_risk_count > 0 && minDim > 40 && (
-                <span style={{
-                  fontFamily: 'var(--font-family-mono, monospace)',
-                  fontSize: codeFontSize,
-                  fontWeight: 700,
-                  color: RISK_COLORS.critical,
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap' as const,
-                }}>
-                  ◆{s.critical_risk_count}
-                </span>
-              )}
-            </div>
-            {minDim > 48 && (
-              <div style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontWeight: 800,
-                fontStyle: 'italic',
-                fontSize: nameFontSize,
-                color,
-                lineHeight: 1.15,
-                overflow: 'hidden',
-                flexGrow: 1,
-                display: 'flex',
-                alignItems: 'center',
-              }}>
-                <span style={{ overflow: 'hidden' }}>{sectorLabel}</span>
-              </div>
-            )}
-            {minDim > 56 && (
-              <div style={{
-                fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: spendFontSize,
-                color: 'var(--color-text-muted)',
-                lineHeight: 1,
-                flexShrink: 0,
-              }}>
-                {formatCompactMXN(s.total_value_mxn)}
-                {minDim > 100 && (
-                  <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
-                )}
-              </div>
-            )}
-          </div>
-        )
-      })}
+            return (
+              <div
+                key={s.sector_id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
+                style={{
+                  background: hexToRgba(color, bgOpacity),
+                  border: `1px solid ${hexToRgba(color, hovered ? 0.55 : 0.22)}`,
+                  borderLeft: `3px solid ${color}`,
+                  borderRadius: 4,
+                  padding: '10px 12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 5,
+                  overflow: 'hidden',
+                  boxSizing: 'border-box',
+                  transition: 'filter 0.12s, border-color 0.12s',
+                  filter: hovered ? 'brightness(1.1)' : 'none',
+                }}
+                onClick={() =>
+                  dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter')
+                    dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
+                }}
+                onMouseEnter={() => setHoverId(s.sector_id)}
+                onMouseLeave={() => setHoverId(null)}
+              >
+                {/* sector code + critical badge */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-family-mono, monospace)',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color,
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '0.18em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {s.sector_code}
+                  </span>
+                  {s.critical_risk_count > 0 && (
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-family-mono, monospace)',
+                        fontSize: 8,
+                        fontWeight: 700,
+                        color: RISK_COLORS.critical,
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap' as const,
+                      }}
+                    >
+                      ◆{s.critical_risk_count}
+                    </span>
+                  )}
+                </div>
 
+                {/* Playfair sector name */}
+                <div
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontWeight: 800,
+                    fontStyle: 'italic',
+                    fontSize: 17,
+                    color,
+                    lineHeight: 1.15,
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <span
+                    style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap' as const,
+                    }}
+                  >
+                    {sectorLabel}
+                  </span>
+                </div>
+
+                {/* intensity bar */}
+                <div
+                  style={{
+                    height: 3,
+                    background: hexToRgba(color, 0.15),
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${barPct}%`,
+                      background: color,
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
+
+                {/* spend + share */}
+                <div
+                  style={{
+                    fontFamily: 'var(--font-family-mono, monospace)',
+                    fontSize: 9,
+                    color: 'var(--color-text-muted)',
+                    lineHeight: 1,
+                    flexShrink: 0,
+                    whiteSpace: 'nowrap' as const,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {formatCompactMXN(s.total_value_mxn)}
+                  {totalSpend > 0 && (
+                    <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* SPEND / RISK mode toggle */}
       {!isLoading && (
         <div
           style={{
@@ -926,7 +893,10 @@ function Z0Panel({
             <button
               key={m}
               type="button"
-              onClick={(e) => { e.stopPropagation(); setMode(m) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setMode(m)
+              }}
               style={{
                 fontFamily: 'var(--font-family-mono, monospace)',
                 fontSize: 10,
@@ -941,7 +911,9 @@ function Z0Panel({
                 cursor: 'pointer',
               }}
             >
-              {m === 'spend' ? (lang === 'en' ? 'SPEND' : 'GASTO') : (lang === 'en' ? 'RISK' : 'RIESGO')}
+              {m === 'spend'
+                ? lang === 'en' ? 'SPEND' : 'GASTO'
+                : lang === 'en' ? 'RISK' : 'RIESGO'}
             </button>
           ))}
         </div>
