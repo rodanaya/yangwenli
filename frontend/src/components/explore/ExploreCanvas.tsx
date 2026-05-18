@@ -646,11 +646,9 @@ function InstRow({
       <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
         {displayName}
       </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: tier.color }}>
-        {formatCompactMXN(inst.total_amount_mxn)}
-      </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
-        {formatCompactUSD(inst.total_amount_mxn)}
+      <td className="px-1 py-1.5 text-right whitespace-nowrap">
+        <div className="font-mono text-[9px] tabular-nums" style={{ color: tier.color }}>{formatCompactMXN(inst.total_amount_mxn)}</div>
+        <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(inst.total_amount_mxn)}</div>
       </td>
       <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: tier.color }}>
         {riskScore}
@@ -693,7 +691,22 @@ function Z0Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [cols, setCols] = useState(4)
   const [hoverId, setHoverId] = useState<number | null>(null)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const obs = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width
+      setCols(w < 480 ? 2 : w < 768 ? 3 : 4)
+    })
+    obs.observe(el)
+    const w = el.offsetWidth
+    setCols(w < 480 ? 2 : w < 768 ? 3 : 4)
+    return () => obs.disconnect()
+  }, [])
 
   const { data: sectorStats, isLoading } = useQuery({
     queryKey: ['explore', 'z0-sector-stats'],
@@ -710,9 +723,11 @@ function Z0Panel({
   )
 
   const maxSpend = sorted.length > 0 ? sorted[0].total_value_mxn : 1
+  const rows = Math.ceil(12 / cols)
 
   return (
     <div
+      ref={containerRef}
       className="absolute inset-0 z-[5]"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
     >
@@ -729,8 +744,8 @@ function Z0Panel({
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gridTemplateRows: 'repeat(3, 1fr)',
+            gridTemplateColumns: `repeat(${cols}, 1fr)`,
+            gridTemplateRows: `repeat(${rows}, 1fr)`,
             width: '100%',
             height: '100%',
             gap: 3,
@@ -994,8 +1009,7 @@ function Z1Panel({
                 <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
                   {lang === 'en' ? 'INSTITUTION' : 'INSTITUCIÓN'}
                 </th>
-                <SortHeaderTh<Z1SortKey> field="spend" label={lang === 'en' ? 'SPEND' : 'GASTO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
-                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-right" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>USD</th>
+                <SortHeaderTh<Z1SortKey> field="spend" label={lang === 'en' ? 'SPEND / USD' : 'GASTO / USD'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
                 <SortHeaderTh<Z1SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
                 <SortHeaderTh<Z1SortKey> field="da_pct" label="DA%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
                 <SortHeaderTh<Z1SortKey> field="hr_pct" label="HR%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
@@ -1009,7 +1023,7 @@ function Z1Panel({
                   {shelfCritical.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={9} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
+                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
                           {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
                           <span className="float-right tabular-nums">{shelfCritical.length}</span>
                         </td>
@@ -1022,7 +1036,7 @@ function Z1Panel({
                   {shelfHigh.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={9} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
+                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
                           {lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
                           <span className="float-right tabular-nums">{shelfHigh.length}</span>
                         </td>
@@ -1035,7 +1049,7 @@ function Z1Panel({
                   {shelfRoutine.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={9} style={{ padding: 0 }}>
+                        <td colSpan={8} style={{ padding: 0 }}>
                           <button
                             type="button"
                             className="w-full flex items-center gap-2 px-3 py-1 text-left"
@@ -1152,11 +1166,9 @@ function Z2Panel({
         <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
           {formatVendorName(v.vendor_name, 300)}
         </td>
-        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: accentColor }}>
-          {formatCompactMXN(v.total_value_mxn ?? 0)}
-        </td>
-        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
-          {formatCompactUSD(v.total_value_mxn ?? 0)}
+        <td className="px-1 py-1.5 text-right whitespace-nowrap">
+          <div className="font-mono text-[9px] tabular-nums" style={{ color: accentColor }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</div>
+          <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(v.total_value_mxn ?? 0)}</div>
         </td>
         <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: score > 0 ? accentColor : 'var(--color-text-muted)' }}>
           {score > 0 ? riskPct : '—'}
@@ -1222,8 +1234,7 @@ function Z2Panel({
                 <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
                   {lang === 'en' ? 'VENDOR' : 'PROVEEDOR'}
                 </th>
-                <SortHeaderTh<Z2SortKey> field="spend" label={lang === 'en' ? 'SPEND' : 'GASTO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
-                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-right" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>USD</th>
+                <SortHeaderTh<Z2SortKey> field="spend" label={lang === 'en' ? 'SPEND / USD' : 'GASTO / USD'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
                 <SortHeaderTh<Z2SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
                 <SortHeaderTh<Z2SortKey> field="contracts" label="CTR" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
                 <SortHeaderTh<Z2SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="pr-3 pl-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
@@ -1235,7 +1246,7 @@ function Z2Panel({
                   {shelfCritical.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={7} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
+                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
                           {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
                           <span className="float-right tabular-nums">{shelfCritical.length}</span>
                         </td>
@@ -1246,7 +1257,7 @@ function Z2Panel({
                   {shelfFlagged.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={7} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
+                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
                           {lang === 'en' ? 'FLAGGED · HIGH RISK' : 'SEÑALADO · RIESGO ALTO'}
                           <span className="float-right tabular-nums">{shelfFlagged.length}</span>
                         </td>
@@ -1257,7 +1268,7 @@ function Z2Panel({
                   {shelfRoutine.length > 0 && (
                     <>
                       <tr>
-                        <td colSpan={7} style={{ padding: 0 }}>
+                        <td colSpan={6} style={{ padding: 0 }}>
                           <button type="button" className="w-full flex items-center gap-2 px-3 py-1 text-left" style={{ background: 'var(--color-background-card)', borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }} onClick={() => setRoutineOpen((o) => !o)}>
                             <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
                               {lang === 'en' ? 'ROUTINE · LOW RISK' : 'RUTINARIO · RIESGO BAJO'}
@@ -1523,8 +1534,7 @@ function Z3Panel({
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <SortHeaderTh<Z3SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="pr-2 pb-1 pt-1 font-mono text-[8px] text-left" />
-                    <SortHeaderTh<Z3SortKey> field="amount" label={lang === 'en' ? 'AMOUNT' : 'MONTO'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
-                    <th className="px-2 pb-1 pt-1 font-mono text-[8px] uppercase tracking-wider text-right" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>USD</th>
+                    <SortHeaderTh<Z3SortKey> field="amount" label={lang === 'en' ? 'AMOUNT / USD' : 'MONTO / USD'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
                     <SortHeaderTh<Z3SortKey> field="risk" label="RS" activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
                     <th className="px-2 pb-1 pt-1 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
                       {lang === 'en' ? 'DESCRIPTION' : 'DESCRIPCIÓN'}
@@ -1549,11 +1559,9 @@ function Z3Panel({
                         onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
                       >
                         <td className="pr-2 py-1.5 font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{c.contract_year}</td>
-                        <td className="px-2 py-1.5 font-mono text-[10px] font-bold tabular-nums text-right whitespace-nowrap" style={{ color: fill }}>
-                          {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-                        </td>
-                        <td className="px-2 py-1.5 font-mono text-[9px] tabular-nums text-right whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
-                          {formatCompactUSD(Number(c.amount_mxn ?? 0))}
+                        <td className="px-2 py-1.5 text-right whitespace-nowrap">
+                          <div className="font-mono text-[10px] font-bold tabular-nums" style={{ color: fill }}>{formatCompactMXN(Number(c.amount_mxn ?? 0))}</div>
+                          <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(Number(c.amount_mxn ?? 0))}</div>
                         </td>
                         <td className="px-2 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: fill }}>
                           {Number(c.risk_score ?? 0) > 0 ? Math.round(Number(c.risk_score) * 100) : '—'}
