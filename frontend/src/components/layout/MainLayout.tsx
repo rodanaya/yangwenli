@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
-import { AppBanner } from './AppBanner'
 import { MobileBottomNav } from './MobileBottomNav'
 import { pageVariants } from '@/lib/animations'
 
@@ -94,9 +93,6 @@ export function MainLayout() {
       >
         {/* Header */}
         <Header onMenuClick={() => setMobileSidebarOpen(true)} />
-
-        {/* Version announcement banner */}
-        <AppBanner />
 
         {/* Page content — extra bottom padding on mobile so bottom nav doesn't cover content.
             2026-05-11 (Audit F184/F186/F187): mobile horizontal overflow on /aria,
