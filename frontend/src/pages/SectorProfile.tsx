@@ -578,7 +578,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
               }}
               aria-label={`Governance tier: ${tierKey}`}
             >
-              {tierKey}
+              {t(`tiers.${tierKey}`, { defaultValue: tierKey })}
             </span>
           ) : (
             <span className="text-[13px] font-mono text-text-muted">—</span>

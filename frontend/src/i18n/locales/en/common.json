@@ -438,7 +438,7 @@
       "subtitle": "% of contracts awarded to the top-3 vendors per sector",
       "skeletonAriaLabel": "Loading market concentration",
       "noData": "No data",
-      "footnote": "Source: RUBLI v0.8.5 · 3.06M contracts · 2002-2025",
+      "footnote": "Source: RUBLI v0.8.5 · 3.05M contracts · 2002-2025",
       "ariaList": "Market concentration by sector",
       "levelHigh": "HIGH",
       "levelModerate": "MODERATE",

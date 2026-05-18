@@ -339,5 +339,12 @@
     "investigar": "Investigate →",
     "agriculturaNote": "Score inflated by Segalmex (GT case) — see /thread/segalmex",
     "keyboardHint": "↑ ↓ navigate sectors · Enter to open · click circle"
+  },
+  "tiers": {
+    "Excelente": "Excellent",
+    "Satisfactorio": "Satisfactory",
+    "Regular": "Adequate",
+    "Deficiente": "Deficient",
+    "Critico": "Critical"
   }
 }

@@ -27,13 +27,16 @@ type Era = 'pena' | 'amlo' | 'cross'
 interface Investigation {
   slug: string
   headline: string
+  headline_es?: string
   sub: string
+  sub_es?: string
   type: FraudType
   status: StatusKind
   amount: number // MXN billions — kept for featured card stats panel
   era: Era
   contracts: number // kept for featured card stats panel
   brief: string // 2-sentence abstract shown on the grid card
+  brief_es?: string
   yearSpan?: string // explicit time span for featured card (e.g. '2018–2024')
 }
 
@@ -149,7 +152,9 @@ const INVESTIGATIONS: Investigation[] = [
   {
     slug: 'volatilidad-el-precio-del-riesgo',
     headline: "Price Volatility: The Algorithm's Smoking Gun",
+    headline_es: 'Volatilidad de Precio: La Huella Forense del Algoritmo',
     sub: 'Strongest predictor in v0.8.5 model · coefficient +0.558 across 3M contracts',
+    sub_es: 'Predictor más fuerte en modelo v0.8.5 · coeficiente +0.558 en 3M contratos',
     type: 'overpricing',
     status: 'solo_datos',
     amount: 0,
@@ -157,11 +162,14 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 3051294,
     yearSpan: '2002–2025',
     brief: 'Price volatility is the single strongest predictor in RUBLI\'s v0.8.5 risk model, outperforming 17 other features by 43%. It captures the forensic fingerprint of negotiated — not competed — prices.',
+    brief_es: 'La volatilidad de precios es el predictor más fuerte del modelo v0.8.5 de RUBLI, superando a los otros 17 factores en un 43%. Captura la huella forense de precios negociados, no competidos.',
   },
   {
     slug: 'el-ano-de-la-emergencia',
     headline: '2020: The Year Competition Stopped',
+    headline_es: '2020: El Año en que la Competencia se Detuvo',
     sub: '87% direct-award rate · COVID decree · HEMOSER MX$17.2B same-day awards',
+    sub_es: '87% adjudicación directa · decreto COVID · HEMOSER MX$17,200 MDP en mismo día',
     type: 'procurement_fraud',
     status: 'reporteado',
     amount: 17.2,
@@ -169,11 +177,14 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 215000,
     yearSpan: '2020–2021',
     brief: "Mexico's COVID emergency decree suspended competitive bidding rules overnight. The direct-award rate hit 87% — and ghost-company vendors like HEMOSER collected MX$17.2 billion in same-day awards from IMSS.",
+    brief_es: 'El decreto de emergencia COVID de México suspendió de un día para otro las reglas de licitación competitiva. La tasa de adjudicación directa llegó al 87% — y proveedores fantasma como HEMOSER recibieron 17,200 MDP en adjudicaciones del mismo día del IMSS.',
   },
   {
     slug: 'el-cartel-de-los-vales',
     headline: 'The Voucher Cartel: 240 Billion in a Closed Market',
+    headline_es: 'El Cártel de los Vales: 240,000 MDP en un Mercado Cerrado',
     sub: 'Edenred 96.7% DA · Efectivale 2,210 single-bid wins · 3 vendors · 5 administrations',
+    sub_es: 'Edenred 96.7% DA · Efectivale 2,210 licitaciones monopropuesta · 3 proveedores · 5 administraciones',
     type: 'monopoly',
     status: 'auditado',
     amount: 240,
@@ -181,6 +192,7 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 3000,
     yearSpan: '2002–2025',
     brief: "Three multinational voucher companies have divided Mexico's federal payment-card market across five administrations with a 96.7% direct-award rate and 2,868 single-bid wins. A market-structure problem, not just procurement.",
+    brief_es: 'Tres empresas multinacionales de vales han dividido el mercado federal de tarjetas de pago de México a lo largo de cinco administraciones con una tasa de adjudicación directa del 96.7% y 2,868 licitaciones ganadas por única oferta. Un problema de estructura de mercado, no solo de contratación.',
   },
 ]
 
@@ -393,9 +405,9 @@ function LeadStoryCard({ item }: { item: Investigation }) {
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
-  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: lang === 'es' ? (item.sub_es ?? item.sub) : item.sub })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
   const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
   return (
     <article
@@ -532,8 +544,8 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
   const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
   return (
     <Link
@@ -637,12 +649,13 @@ function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'g
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DataLeadsList({ items }: { items: Investigation[] }) {
-  const { t } = useTranslation('journalists')
+  const { t, i18n } = useTranslation('journalists')
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   return (
     <div className="space-y-1.5">
       {items.map((item, idx) => {
         const accent = FRAUD_COLOR[item.type]
-        const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+        const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
         return (
           <Link
             key={item.slug}
@@ -896,8 +909,8 @@ export function FeaturedCard({ item }: { item: Investigation }) {
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
 
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
-  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: lang === 'es' ? (item.sub_es ?? item.sub) : item.sub })
 
   return (
     <button
@@ -1029,8 +1042,8 @@ function GridCard({ item }: { item: Investigation }) {
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: item.brief })
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
   const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
 
   return (
