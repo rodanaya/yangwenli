@@ -907,15 +907,16 @@ function Z0Panel({
         <div
           style={{
             position: 'absolute',
-            bottom: 14,
-            right: 14,
+            bottom: 18,
+            right: 18,
             zIndex: 10,
             display: 'flex',
-            gap: 2,
-            padding: 3,
+            gap: 3,
+            padding: 4,
             background: 'var(--color-background)',
             border: '1px solid var(--color-border)',
-            borderRadius: 4,
+            borderRadius: 5,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
           }}
         >
           {(['spend', 'risk'] as const).map((m) => (
@@ -925,15 +926,15 @@ function Z0Panel({
               onClick={(e) => { e.stopPropagation(); setMode(m) }}
               style={{
                 fontFamily: 'var(--font-family-mono, monospace)',
-                fontSize: 8,
+                fontSize: 10,
                 fontWeight: 700,
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase' as const,
-                padding: '3px 8px',
+                padding: '5px 14px',
                 background: mode === m ? 'var(--color-accent)' : 'transparent',
                 color: mode === m ? '#fff' : 'var(--color-text-muted)',
                 border: 'none',
-                borderRadius: 2,
+                borderRadius: 3,
                 cursor: 'pointer',
               }}
             >

@@ -80,7 +80,7 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
     <div
       className="grid grid-cols-1 lg:grid-cols-[1fr_280px] -mt-5 -mb-20 md:-mb-5 -mx-3 sm:-mx-5"
       style={{
-        height: 'calc(100vh - var(--topbar-h, 64px))',
+        height: 'calc(100vh - var(--topbar-h, 64px) - var(--footer-h, 56px))',
         gridTemplateRows: '1fr',
         background: 'var(--color-background, #faf9f6)',
       }}
