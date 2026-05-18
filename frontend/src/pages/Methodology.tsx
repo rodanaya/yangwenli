@@ -1,5 +1,7 @@
 import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { analysisApi } from '@/api/client'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 // Card components replaced by fern-card editorial utility class
@@ -66,16 +68,15 @@ const V33_WEIGHTS = [
   { nameKey: 'thresholdSplitting', weight: 7 },
 ] as const
 
-// Colors routed through canonical RISK_COLORS instead of three local hex
-// duplicates that drifted from the rest of the platform.
-// v0.8.5 distribution (3,051,294 scored contracts, HR=11.01%)
-// `meaningKey` is resolved at render time via t() — see render section.
-const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaningKey: 'Critical', pct: '5.2%', count: '158,667', color: RISK_COLORS.critical },
-  { level: 'High',     threshold: '>= 0.40', meaningKey: 'High',     pct: '5.9%', count: '179,026', color: RISK_COLORS.high },
-  { level: 'Medium',   threshold: '>= 0.25', meaningKey: 'Medium',   pct: '16.2%', count: '494,310', color: RISK_COLORS.medium },
-  { level: 'Low',      threshold: '< 0.25',  meaningKey: 'Low',      pct: '72.8%', count: '2,219,291', color: RISK_COLORS.low },
-] as const
+// Static config — thresholds and labels only. Counts/pcts come from the
+// live executive summary API inside the Methodology component so the
+// distribution table always reflects the current scored corpus.
+const RISK_LEVELS_BASE = [
+  { level: 'Critical', threshold: '>= 0.60', meaningKey: 'Critical', color: RISK_COLORS.critical, riskKey: 'critical' as const, fallbackPct: '5.2%',  fallbackCount: '158,667'   },
+  { level: 'High',     threshold: '>= 0.40', meaningKey: 'High',     color: RISK_COLORS.high,     riskKey: 'high'     as const, fallbackPct: '5.9%',  fallbackCount: '179,026'   },
+  { level: 'Medium',   threshold: '>= 0.25', meaningKey: 'Medium',   color: RISK_COLORS.medium,   riskKey: 'medium'   as const, fallbackPct: '16.2%', fallbackCount: '494,310'   },
+  { level: 'Low',      threshold: '< 0.25',  meaningKey: 'Low',      color: RISK_COLORS.low,      riskKey: 'low'      as const, fallbackPct: '72.8%', fallbackCount: '2,219,291' },
+]
 
 const CORRUPTION_CASES = [
   { name: 'IMSS Ghost Company Network', type: 'Ghost companies', contracts: '9,366', detection: '99.9%', highPlus: '99.0%', avgScore: '0.977' },
@@ -697,6 +698,24 @@ function TableOfContents() {
 
 export function Methodology() {
   const { t } = useTranslation('methodology')
+
+  const { data: summary } = useQuery({
+    queryKey: ['executive-summary-methodology'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const riskLevels = useMemo(() => {
+    const risk = summary?.risk
+    if (!risk) return RISK_LEVELS_BASE.map(r => ({ ...r, pct: r.fallbackPct, count: r.fallbackCount }))
+    return [
+      { ...RISK_LEVELS_BASE[0], pct: `${risk.critical_pct.toFixed(1)}%`, count: risk.critical_count.toLocaleString('en-US') },
+      { ...RISK_LEVELS_BASE[1], pct: `${risk.high_pct.toFixed(1)}%`,     count: risk.high_count.toLocaleString('en-US')     },
+      { ...RISK_LEVELS_BASE[2], pct: `${risk.medium_pct.toFixed(1)}%`,   count: risk.medium_count.toLocaleString('en-US')   },
+      { ...RISK_LEVELS_BASE[3], pct: `${risk.low_pct.toFixed(1)}%`,      count: risk.low_count.toLocaleString('en-US')      },
+    ]
+  }, [summary])
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -985,7 +1004,7 @@ export function Methodology() {
                       </tr>
                     </thead>
                     <tbody>
-                      {RISK_LEVELS_V6.map((r) => (
+                      {riskLevels.map((r) => (
                         <tr key={r.level} className="border-b border-border/20">
                           <td className="py-2 pr-3">
                             <div className="flex items-center gap-2">
