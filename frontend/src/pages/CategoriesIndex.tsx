@@ -20,6 +20,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorName } from '@/lib/constants'
 import { CategoryTreemap } from '@/components/categories/CategoryTreemap'
+import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -330,11 +331,29 @@ export default function CategoriesIndex() {
 
       {/* ── Treemap ─────────────────────────────────────────────────────────── */}
       <div className="px-4 md:px-12 lg:px-16 pb-4">
-        <CategoryTreemap
-          categories={data?.data ?? []}
-          lang={lang}
-          activeSector={activeSector}
-        />
+        <EditorialChartFrame
+          kicker={
+            lang === 'es'
+              ? '72 CATEGORÍAS DE GASTO · COMPRANET 2002–2025'
+              : '72 SPENDING CATEGORIES · COMPRANET 2002–2025'
+          }
+          headline={
+            lang === 'es'
+              ? 'Dónde va el dinero público: nueve billones en 72 categorías'
+              : 'Where public money flows: nine trillion pesos across 72 categories'
+          }
+          footer={
+            lang === 'es'
+              ? 'Datos de contratos federales COMPRANET · RUBLI v0.8.5 · Gasto validado: 9.97T MXN'
+              : 'COMPRANET federal contract data · RUBLI v0.8.5 · Validated spend: 9.97T MXN'
+          }
+        >
+          <CategoryTreemap
+            categories={data?.data ?? []}
+            lang={lang}
+            activeSector={activeSector}
+          />
+        </EditorialChartFrame>
       </div>
 
       {/* ── Controls ────────────────────────────────────────────────────────── */}

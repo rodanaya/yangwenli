@@ -1963,10 +1963,10 @@ export default function AriaPage() {
               </span>
               {(
                 [
-                  { key: 'ips',     labelEs: 'Riesgo ↕',    labelEn: 'Risk ↕' },
-                  { key: 'value',   labelEs: 'MXN ↕',       labelEn: 'MXN ↕' },
-                  { key: 'recency', labelEs: 'T1 Reciente ↕',labelEn: 'T1 Count ↕' },
-                  { key: 'pattern', labelEs: 'Patrón ↕',    labelEn: 'Pattern ↕' },
+                  { key: 'ips',     labelEs: 'Indicador de Riesgo ↕', labelEn: 'Risk Score ↕' },
+                  { key: 'value',   labelEs: 'Valor MXN ↕',           labelEn: 'MXN Value ↕' },
+                  { key: 'recency', labelEs: 'T1 Reciente ↕',         labelEn: 'T1 Count ↕' },
+                  { key: 'pattern', labelEs: 'Patrón ↕',              labelEn: 'Pattern ↕' },
                 ] as const
               ).map(({ key, labelEs, labelEn }) => (
                 <button

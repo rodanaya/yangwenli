@@ -14,7 +14,7 @@
  */
 
 import { useRef, useState, useCallback, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +33,8 @@ import {
   DollarSign,
   Gavel,
   Clock,
+  ChevronRight,
+  Share2,
 } from 'lucide-react'
 // Extracted to components/thread/
 import { ChapterSubject } from '@/components/thread/ChapterSubject'
@@ -733,12 +735,32 @@ function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id
 
 // ─── Loading State ──────────────────────────────────────────────────────────
 
-function ThreadSkeleton({ label }: { label: string }) {
+function ThreadSkeleton({ label: _label, vendorName }: { label: string; vendorName?: string }) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="w-1 h-16 bg-risk-critical mx-auto mb-6 animate-pulse rounded-full" />
-        <p className="text-text-muted text-sm animate-pulse">{label}</p>
+    <div className="min-h-screen bg-background">
+      {/* Skeleton header strip */}
+      <div className="sticky top-0 z-40 border-b border-border bg-background/95 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-8 bg-risk-critical rounded-full animate-pulse" />
+          <div className="space-y-1">
+            {vendorName
+              ? <p className="text-sm font-mono text-text-primary">{vendorName}</p>
+              : <div className="h-4 w-48 bg-border animate-pulse rounded" />
+            }
+            <div className="h-3 w-32 bg-border/60 animate-pulse rounded" />
+          </div>
+        </div>
+      </div>
+      {/* Chapter skeleton rows */}
+      <div className="max-w-4xl mx-auto px-5 pt-8 space-y-8">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-3 w-20 bg-border/50 animate-pulse rounded" />
+            <div className="h-6 w-64 bg-border animate-pulse rounded" />
+            <div className="h-4 w-full bg-border/40 animate-pulse rounded" />
+            <div className="h-4 w-3/4 bg-border/40 animate-pulse rounded" />
+          </div>
+        ))}
       </div>
     </div>
   )
@@ -749,6 +771,7 @@ function ThreadSkeleton({ label }: { label: string }) {
 export default function RedThread() {
   const { vendorId } = useParams<{ vendorId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t, i18n } = useTranslation('redThread')
   const id = Number(vendorId)
 
@@ -872,7 +895,7 @@ export default function RedThread() {
     )
   }
 
-  if (vendorLoading) return <ThreadSkeleton label={t('loading')} />
+  if (vendorLoading) return <ThreadSkeleton label={t('loading')} vendorName={location.state?.vendorName as string | undefined} />
 
   // 404 — vendor genuinely does not exist. Distinct UI from network failure
   // so the reader knows retrying won't help and they should pick a different

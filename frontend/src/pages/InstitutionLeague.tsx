@@ -25,7 +25,7 @@ import {
   type TierKey,
   type TierStyle,
 } from '@/lib/tiers'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Act } from '@/components/layout/Act'
 import {
@@ -42,6 +42,7 @@ import {
   ChevronDown,
   Trophy,
   Flag,
+  ExternalLink,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -1474,6 +1475,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
+                    <th scope="col" className="px-2 py-2 w-8" aria-label="Dossier" />
                   </tr>
                 </thead>
                 <tbody>
@@ -1647,6 +1649,19 @@ export default function InstitutionLeague() {
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
                           </span>
+                        </td>
+
+                        {/* Dossier icon link */}
+                        <td className="px-1 py-0 align-middle">
+                          <Link
+                            to={`/print/institutions/${item.institution_id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0 p-1 rounded text-text-muted hover:text-accent hover:bg-accent/10 transition-colors inline-flex"
+                            title="Open full dossier"
+                            aria-label="Open full institution dossier"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                          </Link>
                         </td>
                       </tr>
                       {isExpanded && (

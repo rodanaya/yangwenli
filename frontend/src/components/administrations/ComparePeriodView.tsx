@@ -259,12 +259,23 @@ export function ComparePeriodView() {
 
       {/* Loading skeleton */}
       {isLoading && (
-        <div className="card">
-          <div className="pt-5 space-y-3 px-4 pb-3 bg-background-card">
-            {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-6">
+          {[0, 1].map((col) => (
+            <div key={col} className="card">
+              <div className="px-4 py-3 border-b border-border/60 bg-background-card">
+                <Skeleton className="h-3 w-16 mb-1" />
+                <Skeleton className="h-5 w-32" />
+              </div>
+              <div className="px-4 py-3 bg-background-card space-y-2">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

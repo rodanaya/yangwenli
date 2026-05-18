@@ -182,8 +182,7 @@ export function CompetitionSlopeChart() {
     })),
   })
 
-  const isLoading = queries.some((q) => q.isLoading)
-  const hasData = queries.some((q) => q.data)
+  const allLoading = queries.every((q) => q.isLoading)
 
   // ── Build per-sector lines ────────────────────────────────────────────────────
   const lines: SectorLine[] = useMemo(() => {
@@ -268,10 +267,16 @@ export function CompetitionSlopeChart() {
 
   const isEs = i18n.language === 'es'
 
-  if (isLoading && !hasData) {
+  if (allLoading) {
     return (
-      <div className="w-full" style={{ height: CHART_HEIGHT }}>
-        <Skeleton className="w-full h-full rounded-sm" />
+      <div className="space-y-2 py-4">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-4 flex-1" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        ))}
       </div>
     )
   }
