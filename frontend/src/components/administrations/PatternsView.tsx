@@ -17,6 +17,7 @@ import {
 } from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
+import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 
 export interface PatternsViewProps {
   yoyData: YearOverYearChange[]
@@ -33,7 +34,8 @@ const adminLabels: Record<number, string> = {
 }
 
 export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
-  const { t } = useTranslation('administrations')
+  const { t, i18n } = useTranslation('administrations')
+  const isEs = i18n.language?.startsWith('es') ?? false
   const systemicChartRef = useRef<HTMLDivElement>(null)
   const { data: breaksData } = useQuery({
     queryKey: ['analysis', 'structural-breaks'],
@@ -125,18 +127,23 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
         </ScrollReveal>
       </div>
 
-      {/* 23-year trend chart */}
+      {/* 25-year trend chart - EditorialChartFrame (M7) */}
       <ScrollReveal direction="fade">
-      <div className="card">
-        <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-mono text-text-primary">
-              {t('patternsView.chartTitle')}
-            </h3>
-            <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-23yr" />
+      <EditorialChartFrame
+        kicker={isEs ? '§ TENDENCIAS 25 AÑOS' : '§ 25-YEAR SYSTEMIC TRENDS'}
+        headline={isEs
+          ? '65.3% de contratos federales adjudicados sin competencia — en cada administración'
+          : '65.3% of federal contracts awarded without open competition — every administration'}
+        footer={
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              COMPRANET 2000-2025 · RUBLI v0.8.5
+            </span>
+            <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-25yr" />
           </div>
-        </div>
-        <div className="px-4 py-3 bg-background-card">
+        }
+        tone="card"
+      >
           {yoyData.length > 0 ? (
             <div ref={systemicChartRef}>
               {(() => {
@@ -146,7 +153,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                   { kind: 'band', x1: 2012, x2: 2018, label: 'EPN · PRI', tone: 'admin' },
                   { kind: 'band', x1: 2018, x2: 2024, label: 'AMLO · MORENA', tone: 'admin' },
                   { kind: 'band', x1: 2024, x2: 2026, label: 'Sheinbaum · MORENA', tone: 'admin' },
-                  { kind: 'hrule', y: 78, label: t('patternsView.nationalAvgLabel'), tone: 'oecd' },
+                  { kind: 'hrule', y: 65.3, label: t('patternsView.nationalAvgLabel'), tone: 'oecd' },
                   ...transitionYears.map<ChartAnnotation>((year) => ({
                     kind: 'vrule', x: year, label: adminLabels[year] ?? '', tone: 'info',
                   })),
@@ -161,10 +168,9 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                   avg_risk_x100: (r.avg_risk ?? 0) * 100,
                 }))
                 const series: LineSeries<typeof seriesData[number]>[] = [
-                  { key: 'direct_award_pct', label: 'Direct Award %', colorToken: 'accent-data' },
-                  { key: 'single_bid_pct', label: 'Single Bid %', colorToken: 'risk-high' },
-                  { key: 'high_risk_pct', label: 'High Risk %', colorToken: 'risk-critical' },
-                  { key: 'avg_risk_x100', label: 'Avg Risk ×100', colorToken: 'sector-tecnologia', style: 'dashed', emphasis: 'secondary' },
+                  { key: 'direct_award_pct', label: isEs ? 'Adj. Directa %' : 'Direct Award %', colorToken: 'risk-critical' },
+                  { key: 'single_bid_pct', label: isEs ? 'Licitación Única %' : 'Single Bid %', colorToken: 'text-muted' },
+                  { key: 'high_risk_pct', label: isEs ? 'Alto Riesgo %' : 'High Risk %', colorToken: 'risk-medium' },
                 ]
                 return (
                   <EditorialLineChart
@@ -172,7 +178,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
                     xKey="year"
                     series={series}
                     yFormat="pct"
-                    yDomain={[0, 100]}
+                    yDomain={[35, 90]}
                     annotations={annotations}
                     height={360}
                   />
@@ -192,8 +198,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
               <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" aria-hidden="true" /> {t('patternsView.regimeShiftNote')}
             </p>
           )}
-        </div>
-      </div>
+      </EditorialChartFrame>
       </ScrollReveal>
 
       {/* Political Budget Cycle — sexenio-year breakdown */}
@@ -244,19 +249,7 @@ export function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewPro
               />
               <p className="text-[10px] text-text-muted font-mono mt-1">High Risk % por año del sexenio</p>
             </div>
-            {politicalData.election_year_effect?.risk_delta !== undefined && (
-              <p className="mt-2 text-[11px] text-text-muted font-mono">
-                {t('patternsView.electionYearAvgNote', {
-                  election: ((politicalData.election_year_effect?.election_year?.avg_risk ?? 0) * 100).toFixed(2),
-                  nonElection: ((politicalData.election_year_effect?.non_election_year?.avg_risk ?? 0) * 100).toFixed(2),
-                })}
-                {' ('}
-                <span className={(politicalData.election_year_effect?.risk_delta ?? 0) > 0 ? 'text-risk-high' : 'text-risk-low'}>
-                  {(politicalData.election_year_effect?.risk_delta ?? 0) > 0 ? '+' : ''}{((politicalData.election_year_effect?.risk_delta ?? 0) * 100).toFixed(3)}pp
-                </span>
-                {')'}
-              </p>
-            )}
+            {/* Election Year Effect note removed (M7): null finding 23.34% vs 23.46% */}
           </div>
         </div>
         </ScrollReveal>

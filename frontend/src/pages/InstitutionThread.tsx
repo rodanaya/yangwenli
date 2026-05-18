@@ -19,8 +19,8 @@
  * once the user signs off; both routes can coexist behind a feature
  * flag during preview).
  */
-import { useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useParams, Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -28,6 +28,7 @@ import { Building2, ChevronRight } from 'lucide-react'
 import { institutionApi } from '@/api/client'
 import {
   RISK_COLORS,
+  RISK_THRESHOLDS,
   getRiskLevelFromScore,
   getSectorName,
   SECTORS,
@@ -102,11 +103,14 @@ function ChapterHeading({
 
 export function InstitutionThread() {
   const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const { i18n } = useTranslation('institutions')
   const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
   const isEs = lang === 'es'
   const institutionId = Number(id)
   const validId = Number.isFinite(institutionId) && institutionId > 0
+  const seedName = (location.state as Record<string, unknown> | null)?.institutionName as string | undefined
+  const [vendorFilter, setVendorFilter] = useState<'all' | 'med' | 'high' | 'crit'>('all')
 
   // Three primary queries — one per chapter. The old page fired 14;
   // this one waits on 4 (institution + risk profile + vendors + timeline)
@@ -127,8 +131,8 @@ export function InstitutionThread() {
   })
 
   const { data: vendors } = useQuery({
-    queryKey: ['institution-thread', institutionId, 'vendors', 10],
-    queryFn: () => institutionApi.getVendors(institutionId, 10),
+    queryKey: ['institution-thread', institutionId, 'vendors', 50],
+    queryFn: () => institutionApi.getVendors(institutionId, 50),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
   })
@@ -158,10 +162,18 @@ export function InstitutionThread() {
 
   if (instLoading) {
     return (
-      <div className="max-w-3xl mx-auto p-6 animate-pulse">
-        <div className="h-4 w-24 bg-background-elevated rounded mb-4" />
-        <div className="h-10 w-3/4 bg-background-elevated rounded mb-2" />
-        <div className="h-6 w-1/2 bg-background-elevated rounded" />
+      <div className="max-w-3xl mx-auto p-6">
+        <h1
+          className="text-text-primary mb-6"
+          style={{ fontFamily: '"EB Garamond", serif', fontStyle: 'italic', fontSize: 'clamp(36px, 6vw, 60px)', lineHeight: 1.0, letterSpacing: '-0.018em' }}
+        >
+          {seedName ?? '...'}
+        </h1>
+        <div className="flex flex-wrap gap-8">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-8 w-24 bg-background-elevated rounded animate-pulse" />
+          ))}
+        </div>
       </div>
     )
   }
@@ -212,6 +224,16 @@ export function InstitutionThread() {
   }, [timelineArray])
   // Title-case the institution name (DB stores ALL CAPS).
   const displayName = useMemo(() => toTitleCase(institution.name), [institution.name])
+
+  // Filtered vendor list for Chapter II risk chips
+  const filteredVendors = useMemo(() => {
+    if (!vendors?.data) return []
+    if (vendorFilter === 'all') return vendors.data
+    const threshold = vendorFilter === 'med' ? RISK_THRESHOLDS.medium
+      : vendorFilter === 'high' ? RISK_THRESHOLDS.high
+      : RISK_THRESHOLDS.critical
+    return vendors.data.filter(v => (v.avg_risk_score ?? 0) >= threshold)
+  }, [vendors, vendorFilter])
 
   return (
     <motion.div
@@ -283,7 +305,7 @@ export function InstitutionThread() {
         {/* Hero KPIs — 4 stats in a clean strip. "—" when the backend
             doesn't have the metric (vendor_count and direct_award_pct
             are nullable on InstitutionDetailResponse). */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 sm:gap-x-6 gap-y-4 mb-2">
+        <div className="flex flex-wrap gap-8 mb-6">
           {[
             { label: isEs ? 'Contratos' : 'Contracts', value: formatNumber(totalContracts) },
             { label: isEs ? 'Valor total' : 'Total value', value: formatCompactMXN(totalSpend) },
@@ -294,7 +316,7 @@ export function InstitutionThread() {
               <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
                 {s.label}
               </div>
-              <div className="text-lg sm:text-2xl font-bold font-mono tabular-nums text-text-primary leading-tight mt-1 truncate">
+              <div className="font-mono text-xl tabular-nums font-semibold text-text-primary leading-tight mt-1">
                 {s.value}
               </div>
             </div>
@@ -336,10 +358,34 @@ export function InstitutionThread() {
           <>
             <p className="text-text-secondary max-w-3xl mb-6 text-sm leading-relaxed">
               {isEs
-                ? `Los 10 proveedores más grandes concentran la mayor parte del gasto. La barra muestra el valor relativo dentro del top 10; el porcentaje, su participación en el gasto total de la institución.`
-                : `The 10 largest vendors absorb most of the spend. The bar shows relative value within the top 10; the percentage shows their share of total institutional spending.`}
+                ? `Los proveedores más grandes concentran la mayor parte del gasto. La barra muestra el valor relativo dentro del top; el porcentaje, su participación en el gasto total de la institución.`
+                : `The largest vendors absorb most of the spend. The bar shows relative value within the top; the percentage shows their share of total institutional spending.`}
             </p>
-            <TopVendorsList vendors={vendors.data} totalSpend={totalSpend} lang={lang} />
+            {/* Risk filter chips */}
+            <div className="flex gap-2 flex-wrap mb-4" role="group" aria-label={isEs ? 'Filtrar por riesgo' : 'Filter by risk'}>
+              {([
+                { key: 'all' as const, label: isEs ? 'Todos' : 'All', color: 'var(--color-text-secondary)' },
+                { key: 'med' as const, label: isEs ? 'Med+' : 'Med+', color: RISK_COLORS.medium },
+                { key: 'high' as const, label: isEs ? 'Alto+' : 'High+', color: RISK_COLORS.high },
+                { key: 'crit' as const, label: isEs ? 'Crítico' : 'Crit', color: RISK_COLORS.critical },
+              ]).map(({ key, label, color }) => {
+                const active = vendorFilter === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setVendorFilter(key)}
+                    aria-pressed={active}
+                    className="font-mono text-[10px] uppercase tracking-wide px-2.5 py-1 rounded-full border transition-colors"
+                    style={active
+                      ? { background: color, borderColor: color, color: '#fff' }
+                      : { background: 'transparent', borderColor: color, color }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+            <TopVendorsList vendors={filteredVendors} totalSpend={totalSpend} lang={lang} />
             {riskProfile?.effective_risk != null && (
               <div className="mt-8 flex items-baseline gap-3 flex-wrap">
                 <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">

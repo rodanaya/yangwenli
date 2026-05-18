@@ -32,10 +32,9 @@ const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
 const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
-const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
-// 2026-05-09 Day 3: new editorial 3-chapter dossier replacing the
-// 2,312-LOC card grid. Old page kept on /institutions/:id/legacy for
-// quick revert if the new shape needs more work.
+// InstitutionProfile import removed M5 2026-05-18: route replaced by InstitutionThread.
+// File preserved on disk at pages/InstitutionProfile.tsx for reference.
+// const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
 // 2026-05-09: spatial-nav rebuild — the Star Fox map. Lives at /explore
 // while it iterates; will be promoted to / when stable.
@@ -441,28 +440,19 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* M5 2026-05-18: InstitutionThread promoted to canonical dossier.
+                  InstitutionProfile (2,312-line card grid) retired from this
+                  route; file preserved on disk for reference only. */}
               <Route
                 path="print/institutions/:id"
-                element={
-                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InstitutionProfile />
-                  </SuspenseBoundary>
-                }
-              />
-              {/* 2026-05-09: InstitutionThread reverted off the canonical
-                  route after user feedback. The page-shaped editorial
-                  dossier was the wrong concept — the platform is a
-                  spatial-exploration map (Star Fox-style zoom hierarchy),
-                  not a CMS of pages. See docs/SPATIAL_NAV_PLAN.md. The
-                  draft remains addressable here for reference only. */}
-              <Route
-                path="institutions/:id/thread-draft"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <InstitutionThread />
                   </SuspenseBoundary>
                 }
               />
+              {/* thread-draft route removed — InstitutionThread now lives at
+                  print/institutions/:id (canonical). Old draft URL no longer needed. */}
               <Route
                 path="explore"
                 element={

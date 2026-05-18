@@ -17,8 +17,8 @@ import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
 import { AdminSectorMatrix, MATRIX_SECTORS } from '@/components/administrations/AdminSectorMatrix'
 import { PatternsView } from '@/components/administrations/PatternsView'
-import { PoliticalCycleView } from '@/components/administrations/PoliticalCycleView'
 import { ComparePeriodView } from '@/components/administrations/ComparePeriodView'
+import { AdminCycleSmallMultiples } from '@/components/administrations/AdminCycleSmallMultiples'
 import {
   ADMINISTRATIONS,
   PARTY_COLORS,
@@ -59,12 +59,12 @@ import {
 } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-// AdminVendorBreakdown is used in the default 'overview' tab — keep eager.
+// AdminVendorBreakdown is used in the default 'profile' tab — keep eager.
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 // All other charts only render when user navigates within the page —
 // lazy-load so initial /administrations page-load doesn't pay for them.
 const AdministrationFingerprints = lazy(() => import('@/components/charts/AdministrationFingerprints'))
-const AdminRiskTrajectory = lazy(() => import('@/components/charts/AdminRiskTrajectory').then(m => ({ default: m.AdminRiskTrajectory })))
+// AdminRiskTrajectory replaced by AdminCycleSmallMultiples (M7)
 import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -236,9 +236,8 @@ export default function Administrations() {
   const { t, i18n } = useTranslation('administrations')
   const { t: ts } = useTranslation('sectors')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
-  const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
+  const [activeTab, setActiveTab] = useState<'profile' | 'patterns' | 'compare'>('profile')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
-  const [trajectoryMetric, setTrajectoryMetric] = useState<'avg_risk' | 'direct_award_pct' | 'high_risk_pct'>('avg_risk')
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading, isError: yoyError } = useQuery({
@@ -296,21 +295,19 @@ export default function Administrations() {
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
   const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin) ?? ADMINISTRATIONS[0]
 
-  // Build AdminRiskTrajectory lines — one per administration, aligned to term year
-  const adminTrajectoryLines = useMemo(() =>
+  // Build AdminCycleSmallMultiples data — one per administration, term year 1–6
+  const adminCycleData = useMemo(() =>
     ADMINISTRATIONS.map((a) => {
       const agg = adminAggs.find((x) => x.name === a.name)
+      const displayName = ADMIN_DISPLAY_NAMES[a.name] ?? a.name
       return {
         name: a.name,
+        displayName,
         color: a.color,
-        startYear: a.dataStart,
-        points: (agg?.years ?? []).map((y) => ({
-          year: y.year,
-          avg_risk: y.avg_risk,
-          direct_award_pct: y.direct_award_pct,
-          high_risk_pct: y.high_risk_pct,
-          contracts: y.contracts,
-        })),
+        yearData: (agg?.years ?? []).map((y) => ({
+          termYear: y.year - a.dataStart + 1,
+          risk: y.avg_risk * 100,
+        })).filter((d) => d.termYear >= 1 && d.termYear <= 6),
       }
     }),
     [adminAggs],
@@ -700,15 +697,15 @@ export default function Administrations() {
       {/* Tab Switcher — standalone row */}
       <div className="flex flex-wrap items-center gap-1 rounded-sm border border-border/50 p-0.5 bg-background-elevated/30 w-fit">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => setActiveTab('profile')}
             className={cn(
               'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
-              activeTab === 'overview'
+              activeTab === 'profile'
                 ? 'bg-accent/20 text-accent'
                 : 'text-text-muted hover:text-text-primary'
             )}
           >
-            {t('tabs.overview')}
+            {t('tabs.profile')}
           </button>
           <button
             onClick={() => setActiveTab('patterns')}
@@ -720,17 +717,6 @@ export default function Administrations() {
             )}
           >
             {t('tabs.patterns')}
-          </button>
-          <button
-            onClick={() => setActiveTab('political')}
-            className={cn(
-              'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
-              activeTab === 'political'
-                ? 'bg-accent/20 text-accent'
-                : 'text-text-muted hover:text-text-primary'
-            )}
-          >
-            {t('tabs.political')}
           </button>
           <button
             onClick={() => setActiveTab('compare')}
@@ -749,53 +735,17 @@ export default function Administrations() {
         <>
           <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
 
-          {/* Risk Trajectory by Term Year — all 5 administrations overlaid */}
-          <div className="card mt-6">
-            <div className="px-4 py-3 border-b border-border/60 bg-background-card">
-              <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
-                {t('trajectoryChart.title')}
-              </div>
-              <h3 className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
-                {t('trajectoryChart.title')}
-                <div className="flex gap-1">
-                  {(['avg_risk', 'direct_award_pct', 'high_risk_pct'] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setTrajectoryMetric(m)}
-                      className={cn(
-                        'text-[10px] px-2 py-0.5 rounded border font-mono transition-colors',
-                        trajectoryMetric === m
-                          ? 'border-accent bg-accent/10 text-accent'
-                          : 'border-border text-text-muted hover:border-accent/50',
-                      )}
-                    >
-                      {m === 'avg_risk' ? t('trajectoryChart.metricRisk') : m === 'direct_award_pct' ? t('trajectoryChart.metricDA') : t('trajectoryChart.metricHR')}
-                    </button>
-                  ))}
-                </div>
-              </h3>
-              <p className="text-xs text-text-muted mt-1">
-                {t('trajectoryChart.subtitle')}
-              </p>
-            </div>
-            <div className="px-4 py-3 bg-background-card">
-              <Suspense fallback={<div className="h-[300px] bg-background-card animate-pulse rounded-sm" />}>
-                <AdminRiskTrajectory
-                  administrations={adminTrajectoryLines}
-                  metric={trajectoryMetric}
-                  loading={yoyLoading}
-                />
-              </Suspense>
-            </div>
-          </div>
+          {/* Administration Cycle Small Multiples — Year 1–6 risk trajectory (M7) */}
+          <AdminCycleSmallMultiples
+            administrations={adminCycleData}
+            isEs={isEs}
+          />
         </>
       )}
 
-      {activeTab === 'political' && <PoliticalCycleView />}
-
       {activeTab === 'compare' && <ComparePeriodView />}
 
-      {activeTab === 'overview' && (
+      {activeTab === 'profile' && (
       <>
 
       {/* Editorial lede — biggest cross-sexenio swing in direct-award share */}
@@ -1668,7 +1618,7 @@ export default function Administrations() {
         </div>
       </div>
 
-      </> /* end overview tab */
+      </> /* end profile tab */
       )}
     </div>
       </div>

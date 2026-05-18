@@ -1220,7 +1220,7 @@ export default function InstitutionLeague() {
                   key={item.institution_id}
                   rank={idx + 1}
                   item={item}
-                  onNavigate={(id) => navigate(`/institutions/${id}`)}
+                  onNavigate={(id) => navigate(`/institutions/${id}`, { state: { institutionName: item.institution_name } })}
                 />
               ))}
             </div>
@@ -1254,7 +1254,7 @@ export default function InstitutionLeague() {
                   key={item.institution_id}
                   rank={idx + 1}
                   item={item}
-                  onNavigate={(id) => navigate(`/institutions/${id}`)}
+                  onNavigate={(id) => navigate(`/institutions/${id}`, { state: { institutionName: item.institution_name } })}
                 />
               ))}
             </div>
@@ -1505,11 +1505,11 @@ export default function InstitutionLeague() {
                         className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
                           isWorstPerformer || isCritico ? 'bg-risk-critical/10' : ''
                         } ${isExpanded ? 'bg-background-elevated' : ''}`}
-                        onClick={() => navigate(`/institutions/${item.institution_id}`)}
+                        onClick={() => navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault()
-                            navigate(`/institutions/${item.institution_id}`)
+                            navigate(`/institutions/${item.institution_id}`, { state: { institutionName: item.institution_name } })
                           }
                         }}
                         tabIndex={0}

@@ -76,9 +76,8 @@
     "vsAvg": "vs avg"
   },
   "tabs": {
-    "overview": "Administration Overview",
+    "profile": "Administration Profile",
     "patterns": "Systemic Patterns",
-    "political": "Political Cycle",
     "compare": "Period Comparison"
   },
   "contracts": "contracts",

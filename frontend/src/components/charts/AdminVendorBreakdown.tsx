@@ -1,4 +1,4 @@
-import { cn, formatCompactMXN } from '@/lib/utils'
+import { cn, formatCompactMXN, toTitleCase } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTranslation } from 'react-i18next'
 import { DotBar } from '@/components/ui/DotBar'
@@ -38,19 +38,23 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
   }
 
   const maxTotal = vendors[0]?.total_mxn ?? 1
+  const displayList = vendors.slice(0, 10)
 
   return (
     <div className="space-y-2">
-      {vendors.map((v, i) => {
+      {displayList.map((v, i) => {
         const pct = Math.min(100, (v.total_mxn / maxTotal) * 100)
+        const titleCaseName = toTitleCase(v.name)
+        const isLong = titleCaseName.length > 45
         return (
           <div key={i} className="group">
             <div className="flex items-center justify-between text-xs mb-0.5">
               <span
-                className={cn('font-medium text-text-primary truncate max-w-[60%]')}
-                title={v.name}
+                className={cn('font-medium text-text-primary')}
+                title={isLong ? v.name : undefined}
+                style={isLong ? { cursor: 'help' } : undefined}
               >
-                {v.name}
+                {titleCaseName}
               </span>
               <span className="font-mono tabular-nums text-text-muted ml-2 shrink-0">
                 {formatCompactMXN(v.total_mxn)}

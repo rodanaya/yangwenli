@@ -76,9 +76,8 @@
     "vsAvg": "vs promedio"
   },
   "tabs": {
-    "overview": "Resumen de Administración",
+    "profile": "Perfil de Administración",
     "patterns": "Patrones Sistémicos",
-    "political": "Ciclo Político",
     "compare": "Comparación de Períodos"
   },
   "contracts": "contratos",

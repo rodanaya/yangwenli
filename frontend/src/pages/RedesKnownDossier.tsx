@@ -1233,7 +1233,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
 // Header stats derived from live ARIA queue for context
 // ---------------------------------------------------------------------------
 
-function HeaderStats({ communities, isEs }: { communities: Community[]; isEs: boolean }) {
+function HeaderStats({ communities, isEs, spotlightByCode }: { communities: Community[]; isEs: boolean; spotlightByCode: Record<string, PatternSpotlight> }) {
   const { data: stats } = useQuery({
     queryKey: ['aria-stats-red'],
     queryFn: () => ariaApi.getStats(),
@@ -1279,9 +1279,10 @@ function HeaderStats({ communities, isEs }: { communities: Community[]; isEs: bo
         />
       ) : (
         <HeaderStat
-          label={isEs ? 'Valor capturado' : 'Value captured'}
-          value="—"
-          sublabel={isEs ? 'pendiente análisis de grafo' : 'pending graph analysis'}
+          label={isEs ? 'Investigados T1' : 'T1 Investigations'}
+          value={formatNumber(communities.reduce((s, c) => s + (spotlightByCode[c.id]?.t1_count ?? 0), 0))}
+          sublabel={isEs ? 'proveedores bajo revisión activa' : 'vendors under active review'}
+          accent="#f59e0b"
         />
       )}
       <HeaderStat
@@ -1591,7 +1592,7 @@ export default function RedesKnownDossier() {
       </div>
 
       {/* Context stats */}
-      <HeaderStats communities={communities} isEs={isEs} />
+      <HeaderStats communities={communities} isEs={isEs} spotlightByCode={spotlightByCode} />
 
       {/* Former Act 0 — "Circuit Board" SVG network — removed per 5-agent
           editorial review (data-viz, UX, investigative editor all flagged
