@@ -1,4 +1,47 @@
 ---
+## Visual Review — 2026-05-18T12:06:04Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | ⚠ |
+| https://rubli.xyz/atlas | 403 | ⚠ |
+| https://rubli.xyz/aria | 403 | ⚠ |
+| https://rubli.xyz/sectors | 403 | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 | ⚠ |
+| https://rubli.xyz/cases | 403 | ⚠ |
+| https://rubli.xyz/methodology | 403 | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | ⚠ |
+
+Note: All 403s are egress-proxy interception (`x-deny-reason: host_not_allowed`). Persistent infrastructure limitation — not a site regression. To validate true HTTP status, run from VPS or an unrestricted host.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?limit=5 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 (egress proxy blocked — empty body) | ⚠ |
+| /api/v1/sectors | 403 (egress proxy blocked — empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key leaks and hardcoded strings.
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 14 hits — all false positives (unchanged from 06:09Z run):
+- Company names in `Executive.tsx:65,84,103` (`GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.`, `LICONSA S.A. DE C.V.`, `HEMOSER, S.A. DE C.V.`)
+- Type/tier key lookup `TIER_STYLES[tierName as TierKey]` — `InstitutionScorecards.tsx:441`
+- Academic citation `Mahalanobis, P.C.` — `Methodology.tsx:119`
+- Pattern bilingual objects `P1..P7 {es:..., en:...}` — `AriaQueue.tsx:801–807`
+- Sankey mock vendor names `Maypo S.A.` — `StoryMoneySankeyChart.tsx:22,37`
+- Comment string — `CaseLibrary.tsx:219` (not rendered in UI)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+Egress proxy blocks all outbound HTTPS from this sandbox — HTTP and API checks cannot be validated from this environment. Persistent infrastructure limitation, not a site failure. Bilingual gap scan: no genuine i18n leaks or new hardcoded English-only strings. No new regressions since 06:09Z run.
+
+---
 ## Visual Review — 2026-05-18T06:09:20Z
 
 ### HTTP Status
