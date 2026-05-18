@@ -316,24 +316,18 @@ export function AdminDossierPanel({
                 {t('dossier.procurementFingerprint')}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {fingerprintItems.map(({ labelKey, value, icon: Icon }) => (
-                <div
-                  key={labelKey}
-                  className="rounded-sm border border-border/30 bg-background-elevated/30 px-3 py-2"
-                >
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <Icon className="h-3 w-3 text-text-muted flex-shrink-0" />
-                    <span className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
-                      {t(labelKey)}
-                    </span>
-                  </div>
-                  <div
-                    className="text-sm font-bold font-mono"
+            <div className="flex flex-wrap gap-6">
+              {fingerprintItems.map(({ labelKey, value }) => (
+                <div key={labelKey} className="flex flex-col gap-0.5">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-text-muted">
+                    {t(labelKey)}
+                  </span>
+                  <span
+                    className="font-mono text-xl tabular-nums font-semibold"
                     style={{ color: adminMeta.color }}
                   >
                     {value}
-                  </div>
+                  </span>
                 </div>
               ))}
             </div>
@@ -353,7 +347,7 @@ export function AdminDossierPanel({
               </span>
             </div>
             <AdminVendorBreakdown
-              vendors={vendors.slice(0, 5)}
+              vendors={vendors.slice(0, 10)}
               eraColor={adminMeta.color}
               loading={vendorsLoading}
             />
