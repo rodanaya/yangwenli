@@ -643,8 +643,11 @@ function InstRow({
       <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] font-bold whitespace-nowrap" style={{ color: tier.color }}>
         {tier.glyph}{tier.label}
       </td>
-      <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-        {displayName}
+      <td className="px-1 py-1.5" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+        <div className="font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{displayName}</div>
+        <div style={{ marginTop: 3, height: 2, borderRadius: 1, background: 'var(--color-border)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.min(sectorShare, 100)}%`, background: tier.color, borderRadius: 1, opacity: 0.7 }} />
+        </div>
       </td>
       <td className="px-1 py-1.5 text-right whitespace-nowrap">
         <div className="font-mono text-[9px] tabular-nums" style={{ color: tier.color }}>{formatCompactMXN(inst.total_amount_mxn)}</div>
@@ -721,6 +724,7 @@ function Z0Panel({
 
   const maxSpend = stats.length > 0 ? Math.max(...stats.map((s) => s.total_value_mxn), 1) : 1
   const maxCritical = stats.length > 0 ? Math.max(...stats.map((s) => s.critical_risk_count ?? 0), 1) : 1
+  const criticalSectorCount = stats.filter((s) => (s.critical_risk_count ?? 0) > 0).length
 
   const sorted = useMemo(() => {
     const list = filter === 'critical' ? stats.filter((s) => (s.critical_risk_count ?? 0) > 0) : stats
@@ -755,6 +759,13 @@ function Z0Panel({
             </button>
           ))}
         </div>
+        {!isLoading && (
+          <div className="ml-auto font-mono text-[8px] text-right flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+            <span style={{ color: RISK_COLORS.critical }}>{criticalSectorCount}</span>
+            {lang === 'en' ? ' critical · ' : ' crítico · '}
+            {formatCompactMXN(totalSpend)}
+          </div>
+        )}
       </div>
 
       {isLoading && (
@@ -898,7 +909,7 @@ function Z0Panel({
                     style={{
                       height: '100%',
                       width: `${barPct}%`,
-                      background: color,
+                      background: mode === 'risk' && (s.critical_risk_count ?? 0) > 0 ? RISK_COLORS.critical : color,
                       borderRadius: 2,
                     }}
                   />
@@ -1193,6 +1204,9 @@ function Z2Panel({
   const shelfHigh     = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.40 && s < 0.60 }) : []
   const shelfMedium   = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.40 }) : []
   const shelfRoutine  = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sorted
+  const shelfCriticalSpend = shelfCritical.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+  const shelfHighSpend     = shelfHigh.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+  const shelfMediumSpend   = shelfMedium.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
 
   const VendorRow = ({ v, rank }: { v: (typeof sorted)[0]; rank: number }) => {
     const score = v.avg_risk_score ?? 0
@@ -1296,8 +1310,10 @@ function Z2Panel({
                     <>
                       <tr>
                         <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
-                          {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
-                          <span className="float-right tabular-nums">{shelfCritical.length}</span>
+                          <div className="flex items-center justify-between">
+                            <span>{lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}</span>
+                            <span className="tabular-nums normal-case">{shelfCritical.length} · {formatCompactMXN(shelfCriticalSpend)}</span>
+                          </div>
                         </td>
                       </tr>
                       {shelfCritical.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)}
@@ -1307,8 +1323,10 @@ function Z2Panel({
                     <>
                       <tr>
                         <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
-                          {lang === 'en' ? 'HIGH RISK · REVIEW URGENTLY' : 'RIESGO ALTO · REVISAR URGENTE'}
-                          <span className="float-right tabular-nums">{shelfHigh.length}</span>
+                          <div className="flex items-center justify-between">
+                            <span>{lang === 'en' ? 'HIGH RISK · REVIEW URGENTLY' : 'RIESGO ALTO · REVISAR URGENTE'}</span>
+                            <span className="tabular-nums normal-case">{shelfHigh.length} · {formatCompactMXN(shelfHighSpend)}</span>
+                          </div>
                         </td>
                       </tr>
                       {shelfHigh.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} />)}
@@ -1318,8 +1336,10 @@ function Z2Panel({
                     <>
                       <tr>
                         <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.medium}12`, color: RISK_COLORS.medium, borderBottom: `1px solid ${RISK_COLORS.medium}25` }}>
-                          {lang === 'en' ? 'MEDIUM RISK · MONITOR' : 'RIESGO MEDIO · MONITOREAR'}
-                          <span className="float-right tabular-nums">{shelfMedium.length}</span>
+                          <div className="flex items-center justify-between">
+                            <span>{lang === 'en' ? 'MEDIUM RISK · MONITOR' : 'RIESGO MEDIO · MONITOREAR'}</span>
+                            <span className="tabular-nums normal-case">{shelfMedium.length} · {formatCompactMXN(shelfMediumSpend)}</span>
+                          </div>
                         </td>
                       </tr>
                       {shelfMedium.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfHigh.length + i + 1} />)}
@@ -1391,6 +1411,12 @@ function Z3Panel({
 
   const contracts = data?.data ?? []
   const totalContractSpend = contracts.reduce((s, c) => s + (Number(c.amount_mxn) || 0), 0)
+  const riskDist = {
+    critical: contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'critical').length,
+    high:     contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'high').length,
+    medium:   contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'medium').length,
+    low:      contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'low').length,
+  }
 
   // Top 3 by risk score — "the ones that matter"
   const top3 = [...contracts]
@@ -1454,6 +1480,14 @@ function Z3Panel({
               ? `${contracts.length} contracts · ${formatCompactMXN(totalContractSpend)} lifetime`
               : `${contracts.length} contratos · ${formatCompactMXN(totalContractSpend)} total`}
         </div>
+        {!isLoading && contracts.length > 0 && (
+          <div className="font-mono text-[8px] mt-1 flex gap-2 flex-wrap">
+            {riskDist.critical > 0 && <span style={{ color: RISK_COLORS.critical }}>{riskDist.critical} critical</span>}
+            {riskDist.high > 0 && <span style={{ color: RISK_COLORS.high }}>{riskDist.high} high</span>}
+            {riskDist.medium > 0 && <span style={{ color: RISK_COLORS.medium }}>{riskDist.medium} medium</span>}
+            {riskDist.low > 0 && <span style={{ color: 'var(--color-text-muted)' }}>{riskDist.low} low</span>}
+          </div>
+        )}
       </div>
 
       {isLoading && (
