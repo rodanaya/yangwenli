@@ -51,8 +51,8 @@ export function buildLensTiers(t1Count: number, gtCount: number, hcCount: number
       href: '/contracts?risk_level=high',
     },
     {
-      count: 6_250,
-      display: '6.2k',
+      count: 7_068,
+      display: '7.1k',
       label: { en: 'ARIA priority watch list', es: 'lista de vigilancia ARIA' },
       sublabel: { en: 'Tier 2 + Tier 3 vendors', es: 'proveedores Tier 2 + Tier 3' },
       ringR: 50,

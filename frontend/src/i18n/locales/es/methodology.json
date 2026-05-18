@@ -380,7 +380,7 @@
     "row11_i": "Sobrecostos de infraestructura no rastreados",
     "row11_f": "Requiere datos de auditoría ASF (Fase 6)",
     "row12_l": "Supuesto SCAR de aprendizaje PU",
-    "row12_i": "c=0.3000 solo cubre corrupción similar a escándalos conocidos",
+    "row12_i": "c=0.32 solo cubre corrupción similar a escándalos conocidos",
     "row12_f": "Mejor data etiquetada de SAT, ASF",
     "row13_l": "Fuga temporal de características",
     "row13_i": "Agregados de proveedor usan historial completo; mitigado por split temporal v0.8.5",
