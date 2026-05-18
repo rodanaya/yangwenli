@@ -1123,6 +1123,18 @@ export default function RedThread() {
         </div>
       </div>
 
+      {/* Breadcrumb — gives journalists arriving via search a sense of where they are */}
+      <nav aria-label="breadcrumb" className="flex items-center gap-1.5 px-4 sm:px-8 pt-4 pb-1 text-[11px] text-text-muted/60 font-mono">
+        <Link to="/aria" className="hover:text-text-muted transition-colors">
+          {i18n.language.startsWith('es') ? 'Cola de Riesgo' : 'Risk Queue'}
+        </Link>
+        <ChevronRight className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+        <span className="truncate max-w-[240px]">{formatVendorName(vendor.name, 40)}</span>
+        <span className="text-text-muted/40 ml-0.5">
+          {i18n.language.startsWith('es') ? '· Hilo' : '· Thread'}
+        </span>
+      </nav>
+
       {/* Chapters — order: Subject → Timeline → Network → Money → Pattern → Verdict.
           Pattern (algorithmic diagnosis) sits immediately before Verdict
           since the verdict cites it as evidence. Network moves up so

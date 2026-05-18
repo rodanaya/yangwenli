@@ -6,7 +6,8 @@ import { caseLibraryApi, ariaApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { ArrowLeft, ExternalLink, ArrowUpRight } from 'lucide-react'
-import { RISK_COLORS, getRiskLevelFromScore, SECTORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { useGroundTruthCount } from '@/hooks/useGroundTruthCount'
 import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
@@ -1424,6 +1425,7 @@ export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { i18n } = useTranslation('cases')
   const navigate = useNavigate()
+  const gtCount = useGroundTruthCount()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['cases', 'detail', slug],
@@ -1886,7 +1888,7 @@ function CaseBody({
                   Across {riskDist.totalVendors} {riskDist.totalVendors === 1 ? 'vendor' : 'vendors'}{' '}
                   with COMPRANET contracts. The v0.8.5 model uses 18 features — price volatility,
                   vendor concentration, institution diversity — calibrated against{' '}
-                  {GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} confirmed corruption cases.
+                  {gtCount.cases.toLocaleString()} confirmed corruption cases.
                   {avgRiskScore < 0.3 && (
                     <span style={{ color: AMBER, display: 'block', marginTop: 6, fontSize: 11 }}>
                       Low score flag: this pattern is structurally different from the training set.

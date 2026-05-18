@@ -10,7 +10,8 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { analysisApi } from '@/api/client'
-import { CURRENT_MODEL_VERSION, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
+import { CURRENT_MODEL_VERSION, RISK_COLORS } from '@/lib/constants'
+import { useGroundTruthCount } from '@/hooks/useGroundTruthCount'
 import { formatNumber } from '@/lib/utils'
 import { FileText, BarChart3, History } from 'lucide-react'
 
@@ -192,6 +193,7 @@ function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headlin
 // ============================================================================
 
 function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
+  const gtCount = useGroundTruthCount()
   return (
     <div className="space-y-14">
       {/* Key Facts — editorial stat row */}
@@ -214,7 +216,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             sub="All v0.8.5-tagged records, 2002–2025."
           />
           <StatCard
-            value={GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}
+            value={gtCount.cases.toLocaleString()}
             label="Ground-truth cases"
             sub="1,554 vendors · 288K scoped contracts."
           />
@@ -226,7 +228,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
         <SectionHeadline
           eyebrow="How the model works"
           headline="Similarity to documented corruption — not literal probability"
-          deck={`A calibrated logistic regression trained on ${GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()} ground-truth cases produces a 0–1 score for every federal procurement contract since 2002.`}
+          deck={`A calibrated logistic regression trained on ${gtCount.cases.toLocaleString()} ground-truth cases produces a 0–1 score for every federal procurement contract since 2002.`}
         />
 
         <div className="max-w-3xl space-y-5">
@@ -251,7 +253,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
               R
             </span>
             UBLI scores every Mexican federal procurement contract on a 0–1 scale
-            by comparing it against patterns from {GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}{' '}
+            by comparing it against patterns from {gtCount.cases.toLocaleString()}{' '}
             documented corruption cases — ghost companies, bid rigging, captured institutions,
             inflated contracts.
           </p>
@@ -743,6 +745,7 @@ function AuditTrailTab() {
 
 export default function ModelTransparency() {
   const { t } = useTranslation('methodology')
+  const gtCount = useGroundTruthCount()
   // Live metadata (AUC + freshness)
   const { data: modelMeta, isError: metaIsError } = useQuery({
     queryKey: ['model', 'metadata'],
@@ -853,7 +856,7 @@ export default function ModelTransparency() {
           </div>
           <div className="flex items-baseline gap-5">
             <div className="text-right">
-              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{GROUND_TRUTH_CASE_COUNT_FALLBACK.toLocaleString()}</div>
+              <div className="font-mono tabular-nums text-base font-semibold text-text-primary">{gtCount.cases.toLocaleString()}</div>
               <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-0.5">GT cases</div>
             </div>
             <div className="text-right">
