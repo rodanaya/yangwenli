@@ -1675,23 +1675,23 @@ export default function Journalists() {
         <footer className="mt-16 pt-8 pb-16 border-t border-border">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
             <span>
-              {i18n.language.startsWith('es') ? 'Fuente' : 'Source'}:{' '}
+              {t('footer.source')}:{' '}
               <span className="text-text-secondary">COMPRANET / SHCP</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              {i18n.language.startsWith('es') ? 'Modelo de riesgo' : 'Risk model'}{' '}
+              {t('footer.riskModel')}{' '}
               <span className="text-text-secondary tabular-nums">v0.8.5</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              {i18n.language.startsWith('es') ? 'AUC de prueba' : 'Test AUC'}{' '}
+              {t('footer.testAuc')}{' '}
               <span className="text-text-secondary tabular-nums">0.785</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
               <span className="text-text-secondary tabular-nums">3,051,294</span>{' '}
-              {i18n.language.startsWith('es') ? 'contratos analizados' : 'contracts analyzed'}
+              {t('footer.contractsAnalyzed')}
             </span>
           </div>
         </footer>

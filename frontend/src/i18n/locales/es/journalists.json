@@ -130,5 +130,11 @@
       "sub": "Predictor más fuerte del modelo v0.8.5 · coeficiente +0.558 en 3M de contratos",
       "brief": "La volatilidad de precios es el predictor más fuerte del modelo v0.8.5 de RUBLI, superando a las otras 17 variables por un margen del 43%. Captura la huella forense de precios negociados — no competidos."
     }
+  },
+  "footer": {
+    "source": "Fuente",
+    "riskModel": "Modelo de riesgo",
+    "testAuc": "AUC de prueba",
+    "contractsAnalyzed": "contratos analizados"
   }
 }

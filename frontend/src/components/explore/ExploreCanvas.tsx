@@ -694,6 +694,8 @@ function Z0Panel({
   const containerRef = useRef<HTMLDivElement>(null)
   const [cols, setCols] = useState(4)
   const [hoverId, setHoverId] = useState<number | null>(null)
+  const [mode, setMode] = useState<'spend' | 'risk'>('spend')
+  const [filter, setFilter] = useState<'all' | 'critical'>('all')
 
   useEffect(() => {
     const el = containerRef.current
@@ -717,37 +719,68 @@ function Z0Panel({
   const stats = sectorStats?.data ?? []
   const totalSpend = sectorStats?.total_value_mxn ?? 0
 
-  const sorted = useMemo(
-    () => [...stats].sort((a, b) => b.total_value_mxn - a.total_value_mxn),
-    [stats],
-  )
+  const maxSpend = stats.length > 0 ? Math.max(...stats.map((s) => s.total_value_mxn), 1) : 1
+  const maxCritical = stats.length > 0 ? Math.max(...stats.map((s) => s.critical_risk_count ?? 0), 1) : 1
 
-  const maxSpend = sorted.length > 0 ? sorted[0].total_value_mxn : 1
-  const rows = Math.ceil(12 / cols)
+  const sorted = useMemo(() => {
+    const list = filter === 'critical' ? stats.filter((s) => (s.critical_risk_count ?? 0) > 0) : stats
+    return [...list].sort((a, b) =>
+      mode === 'risk'
+        ? (b.critical_risk_count ?? 0) - (a.critical_risk_count ?? 0)
+        : b.total_value_mxn - a.total_value_mxn
+    )
+  }, [stats, mode, filter])
+
+  const rows = Math.ceil(Math.max(sorted.length, 1) / cols)
 
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 z-[5]"
+      className="absolute inset-0 z-[5] flex flex-col"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
     >
+      {/* Controls: sort mode + filter */}
+      <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <div className="flex rounded overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+          {(['spend', 'risk'] as const).map((m) => (
+            <button key={m} type="button" onClick={() => setMode(m)} className="font-mono text-[8px] uppercase tracking-wider px-2 py-1" style={{ background: mode === m ? 'var(--color-accent)' : 'transparent', color: mode === m ? '#fff' : 'var(--color-text-muted)', cursor: 'pointer', border: 'none' }}>
+              {m === 'spend' ? (lang === 'en' ? 'SPEND' : 'GASTO') : (lang === 'en' ? 'RISK' : 'RIESGO')}
+            </button>
+          ))}
+        </div>
+        <div className="flex rounded overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+          {(['all', 'critical'] as const).map((f) => (
+            <button key={f} type="button" onClick={() => setFilter(f)} className="font-mono text-[8px] uppercase tracking-wider px-2 py-1" style={{ background: filter === f ? (f === 'critical' ? RISK_COLORS.critical : 'var(--color-accent)') : 'transparent', color: filter === f ? '#fff' : 'var(--color-text-muted)', cursor: 'pointer', border: 'none' }}>
+              {f === 'all' ? (lang === 'en' ? 'ALL' : 'TODOS') : (lang === 'en' ? 'CRITICAL ONLY' : 'SOLO CRÍTICO')}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {isLoading && (
         <div
-          className="flex h-full items-center justify-center font-mono text-[10px]"
+          className="flex flex-1 items-center justify-center font-mono text-[10px]"
           style={{ color: 'var(--color-text-muted)' }}
         >
           {lang === 'en' ? 'loading…' : 'cargando…'}
         </div>
       )}
 
-      {!isLoading && (
+      {!isLoading && sorted.length === 0 && (
+        <div className="flex flex-1 items-center justify-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'No critical sectors.' : 'Sin sectores críticos.'}
+        </div>
+      )}
+
+      {!isLoading && sorted.length > 0 && (
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: `repeat(${cols}, 1fr)`,
             gridTemplateRows: `repeat(${rows}, 1fr)`,
             width: '100%',
-            height: '100%',
+            flex: 1,
+            minHeight: 0,
             gap: 3,
             padding: 6,
             boxSizing: 'border-box',
@@ -755,8 +788,10 @@ function Z0Panel({
         >
           {sorted.map((s) => {
             const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-            const bgOpacity = 0.05 + (s.total_value_mxn / maxSpend) * 0.20
-            const barPct = (s.total_value_mxn / maxSpend) * 100
+            const metricMax = mode === 'risk' ? maxCritical : maxSpend
+            const metricVal = mode === 'risk' ? (s.critical_risk_count ?? 0) : s.total_value_mxn
+            const bgOpacity = 0.05 + (metricVal / metricMax) * 0.20
+            const barPct = (metricVal / metricMax) * 100
             const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
             const hovered = hoverId === s.sector_id
             const sectorLabel = getSectorName(s.sector_code, lang)
@@ -869,12 +904,12 @@ function Z0Panel({
                   />
                 </div>
 
-                {/* spend + share */}
+                {/* metric label (spend or critical risk count) */}
                 <div
                   style={{
                     fontFamily: 'var(--font-family-mono, monospace)',
                     fontSize: 9,
-                    color: 'var(--color-text-muted)',
+                    color: mode === 'risk' && (s.critical_risk_count ?? 0) > 0 ? RISK_COLORS.critical : 'var(--color-text-muted)',
                     lineHeight: 1,
                     flexShrink: 0,
                     whiteSpace: 'nowrap' as const,
@@ -882,10 +917,18 @@ function Z0Panel({
                     textOverflow: 'ellipsis',
                   }}
                 >
-                  {formatCompactMXN(s.total_value_mxn)}
-                  {totalSpend > 0 && (
-                    <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
-                  )}
+                  {mode === 'risk'
+                    ? ((s.critical_risk_count ?? 0) > 0
+                        ? `◆${s.critical_risk_count} critical`
+                        : (lang === 'en' ? 'no critical vendors' : 'sin críticos'))
+                    : (
+                      <>
+                        {formatCompactMXN(s.total_value_mxn)}
+                        {totalSpend > 0 && (
+                          <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
+                        )}
+                      </>
+                    )}
                 </div>
               </div>
             )
@@ -976,9 +1019,14 @@ function Z1Panel({
           {isLoading
             ? '…'
             : lang === 'en'
-              ? `${institutions.length} institutions · top 4 control ${top4Pct}% of spend`
-              : `${institutions.length} instituciones · las 4 principales concentran ${top4Pct}% del gasto`}
+              ? `${institutions.length} institutions · ${formatCompactMXN(totalSectorSpend)} · top 4 at ${top4Pct}%`
+              : `${institutions.length} instituciones · ${formatCompactMXN(totalSectorSpend)} · top 4 al ${top4Pct}%`}
         </div>
+        {!isLoading && sortKey !== 'risk' && (
+          <div className="font-mono text-[8px] mt-0.5" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
+            {lang === 'en' ? `sorted by ${sortKey} · risk triage disabled` : `orden: ${sortKey} · análisis de riesgo desactivado`}
+          </div>
+        )}
       </div>
 
       {isLoading && (
@@ -1142,7 +1190,8 @@ function Z2Panel({
   })
   const useShelf = sortKey === 'risk'
   const shelfCritical = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) >= 0.60) : []
-  const shelfFlagged  = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.60 }) : []
+  const shelfHigh     = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.40 && s < 0.60 }) : []
+  const shelfMedium   = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.40 }) : []
   const shelfRoutine  = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sorted
 
   const VendorRow = ({ v, rank }: { v: (typeof sorted)[0]; rank: number }) => {
@@ -1254,15 +1303,26 @@ function Z2Panel({
                       {shelfCritical.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)}
                     </>
                   )}
-                  {shelfFlagged.length > 0 && (
+                  {shelfHigh.length > 0 && (
                     <>
                       <tr>
                         <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
-                          {lang === 'en' ? 'FLAGGED · HIGH RISK' : 'SEÑALADO · RIESGO ALTO'}
-                          <span className="float-right tabular-nums">{shelfFlagged.length}</span>
+                          {lang === 'en' ? 'HIGH RISK · REVIEW URGENTLY' : 'RIESGO ALTO · REVISAR URGENTE'}
+                          <span className="float-right tabular-nums">{shelfHigh.length}</span>
                         </td>
                       </tr>
-                      {shelfFlagged.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} />)}
+                      {shelfHigh.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} />)}
+                    </>
+                  )}
+                  {shelfMedium.length > 0 && (
+                    <>
+                      <tr>
+                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.medium}12`, color: RISK_COLORS.medium, borderBottom: `1px solid ${RISK_COLORS.medium}25` }}>
+                          {lang === 'en' ? 'MEDIUM RISK · MONITOR' : 'RIESGO MEDIO · MONITOREAR'}
+                          <span className="float-right tabular-nums">{shelfMedium.length}</span>
+                        </td>
+                      </tr>
+                      {shelfMedium.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfHigh.length + i + 1} />)}
                     </>
                   )}
                   {shelfRoutine.length > 0 && (
@@ -1278,7 +1338,7 @@ function Z2Panel({
                           </button>
                         </td>
                       </tr>
-                      {routineOpen && shelfRoutine.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfFlagged.length + i + 1} />)}
+                      {routineOpen && shelfRoutine.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfHigh.length + shelfMedium.length + i + 1} />)}
                     </>
                   )}
                 </>
@@ -1294,8 +1354,8 @@ function Z2Panel({
       {!isLoading && !isError && vendors.length > 0 && (
         <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
           {lang === 'en'
-            ? 'tap → Red Thread · full investigation profile'
-            : 'toca → Hilo Rojo · perfil completo de investigación'}
+            ? 'tap → contract list · drill into full vendor history'
+            : 'toca → lista de contratos · historial completo del proveedor'}
         </div>
       )}
     </div>
@@ -1330,6 +1390,7 @@ function Z3Panel({
   })
 
   const contracts = data?.data ?? []
+  const totalContractSpend = contracts.reduce((s, c) => s + (Number(c.amount_mxn) || 0), 0)
 
   // Top 3 by risk score — "the ones that matter"
   const top3 = [...contracts]
@@ -1387,7 +1448,11 @@ function Z3Panel({
           {vendorName}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-          {isLoading ? '…' : `${contracts.length} ${lang === 'en' ? 'contracts' : 'contratos'}`}
+          {isLoading
+            ? '…'
+            : lang === 'en'
+              ? `${contracts.length} contracts · ${formatCompactMXN(totalContractSpend)} lifetime`
+              : `${contracts.length} contratos · ${formatCompactMXN(totalContractSpend)} total`}
         </div>
       </div>
 
