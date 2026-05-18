@@ -504,8 +504,8 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
         >
           {isEs
-            ? `${communities.length} clústeres de patrones ARIA`
-            : `${communities.length} ARIA pattern clusters`}
+            ? `${communities.length} arquitecturas de captura detectadas en 3.1M contratos`
+            : `${communities.length} capture architectures detected across 3.1M contracts`}
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
           {isEs
@@ -823,7 +823,7 @@ function CommunityDossier({
         borderLeftColor: fill,
       }}
     >
-      <div className="p-5 space-y-3.5">
+      <div className="p-4 space-y-3">
         {/* Header row: pattern badge + institution + expand chevron */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -947,46 +947,52 @@ function CommunityDossier({
           )}
         </div>
 
-        {/* Network signature — only shown when per-community rates are known */}
-        {(c.daRate > 0 || c.sbRate > 0 || c.paRate > 0) ? (
-          <div className="pt-3 mt-1 border-t border-border">
-            <div
-              className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
-            >
-              {isEs ? 'Firma de red' : 'Network signature'}
+        {/* Network signature — uses patternSpotlight rates when community rates are zero */}
+        {(() => {
+          const effectiveDaRate = c.daRate > 0 ? c.daRate : (patternSpotlight?.avg_da_rate ?? 0)
+          const effectiveSbRate = c.sbRate > 0 ? c.sbRate : (patternSpotlight?.avg_sb_rate ?? 0)
+          const effectivePaRate = c.paRate > 0 ? c.paRate : 0
+          const hasRates = effectiveDaRate > 0 || effectiveSbRate > 0 || effectivePaRate > 0
+          return hasRates ? (
+            <div className="pt-3 mt-1 border-t border-border">
+              <div
+                className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
+              >
+                {isEs ? 'Firma de red' : 'Network signature'}
+              </div>
+              <div className="space-y-1.5">
+                <SignatureRow
+                  label={isEs ? 'Adjudicación Directa' : 'Direct Award'}
+                  value={effectiveDaRate}
+                  color="#ef4444"
+                  benchmark={0.25}
+                  benchmarkLabel={isEs ? 'OCDE 25%' : 'OECD 25%'}
+                />
+                <SignatureRow
+                  label={isEs ? 'Propuesta Única' : 'Single Bid'}
+                  value={effectiveSbRate}
+                  color="#f59e0b"
+                />
+                <SignatureRow
+                  label={isEs ? 'Precio Anómalo' : 'Price Anomaly'}
+                  value={effectivePaRate}
+                  color="#eab308"
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <SignatureRow
-                label={isEs ? 'Adjudicación Directa' : 'Direct Award'}
-                value={c.daRate}
-                color="#ef4444"
-                benchmark={0.25}
-                benchmarkLabel={isEs ? 'OCDE 25%' : 'OECD 25%'}
-              />
-              <SignatureRow
-                label={isEs ? 'Propuesta Única' : 'Single Bid'}
-                value={c.sbRate}
-                color="#f59e0b"
-              />
-              <SignatureRow
-                label={isEs ? 'Precio Anómalo' : 'Price Anomaly'}
-                value={c.paRate}
-                color="#eab308"
-              />
+          ) : (
+            <div className="pt-3 mt-1 border-t border-border">
+              <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1">
+                {isEs ? 'Firma de red' : 'Network signature'}
+              </div>
+              <p className="text-[10px] text-text-muted/50 font-mono italic">
+                {isEs
+                  ? 'Tasas por comunidad pendientes de análisis de grafo'
+                  : 'Per-community rates pending graph analysis'}
+              </p>
             </div>
-          </div>
-        ) : (
-          <div className="pt-3 mt-1 border-t border-border">
-            <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1">
-              {isEs ? 'Firma de red' : 'Network signature'}
-            </div>
-            <p className="text-[10px] text-text-muted/50 font-mono italic">
-              {isEs
-                ? 'Tasas por comunidad pendientes de análisis de grafo'
-                : 'Per-community rates pending graph analysis'}
-            </p>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Verdict */}
         <div className="pt-3 border-t border-border">
@@ -1610,8 +1616,8 @@ export default function RedesKnownDossier() {
         contextLabel={{ en: 'Network atlas', es: 'Atlas de redes' }}
         caption={
           isEs
-            ? 'Lámina — Clústeres de patrones ARIA. El tamaño del círculo es proporcional al número de proveedores; el color codifica el patrón dominante.'
-            : 'Plate — ARIA pattern clusters. Circle size is proportional to vendor count; color encodes the dominant pattern.'
+            ? 'Lámina — Redes de captura. P2 (Empresas Fantasma) y P6 (Captura Institucional) concentran los clústeres más pesados por valor contratado.'
+            : 'Plate — Capture networks. P2 (Ghost Companies) and P6 (Institutional Capture) concentrate the heaviest clusters by contracted value.'
         }
       >
         <Nucleos
@@ -1649,8 +1655,8 @@ export default function RedesKnownDossier() {
         </h2>
         <p className="text-sm text-text-muted/70 max-w-3xl leading-relaxed">
           {isEs
-            ? 'Debajo, cada clúster de patrón ARIA muestra el número real de proveedores, casos documentados e indicador de riesgo promedio. Cuando esté disponible el análisis de comunidades Louvain, se añadirán tasas de adjudicación directa, propuesta única y anomalía de precio por comunidad.'
-            : 'Below, each ARIA pattern cluster shows the real vendor count, documented cases, and average risk indicator. When Louvain community analysis is available, per-community direct-award, single-bid, and price-anomaly rates will be added.'}
+            ? 'Cada clúster ARIA agrupa proveedores por patología compartida: adjudicación directa sistemática, propuesta única, o anomalía de precio. La firma de red revela qué mecanismo domina cada red y cuánto se desvía del techo OCDE.'
+            : 'Each ARIA cluster groups vendors by shared pathology: systematic direct award, single-bid dominance, or price anomaly. The network signature reveals which mechanism drives each network and how far it deviates from the OECD ceiling.'}
         </p>
       </div>
 
@@ -1713,7 +1719,7 @@ export default function RedesKnownDossier() {
       </div>
 
       {/* ACT II — Dossier grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {filteredCommunities.map((c) => (
           <CommunityDossier
             key={c.id}
