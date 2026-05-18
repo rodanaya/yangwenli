@@ -83,6 +83,22 @@ function hex(color: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`
 }
 
+// ── administration color palette ─────────────────────────────────────────────
+
+const ADMIN_COLORS: Record<string, string> = {
+  fox:       '#3b82f6',
+  calderon:  '#22c55e',
+  epn:       '#ef4444',
+  amlo:      '#a16207',
+  sheinbaum: '#14b8a6',
+}
+
+function getAdminColor(key: string, fallback: string): string {
+  return ADMIN_COLORS[key] ?? fallback
+}
+
+// ── procurement flag labels ───────────────────────────────────────────────────
+
 const FACTOR_LABELS: Record<string, string> = {
   direct_award: 'Direct Award',
   single_bid: 'Single Bid',
@@ -204,7 +220,7 @@ function InstitutionList({
                   type="institution"
                   id={f.source_id}
                   name={f.source_name}
-                  size="sm"
+                  size="md"
                 />
               </div>
             </div>
@@ -307,7 +323,7 @@ function VendorTable({
                   </td>
                   <td className="py-2.5 px-3">
                     <div>
-                      <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name ?? vendor.name ?? ''} size="sm" />
+                      <EntityIdentityChip type="vendor" id={vendor.vendor_id} name={vendor.vendor_name ?? vendor.name ?? ''} size="md" />
                       <DotBar
                         value={barPct}
                         max={100}
@@ -444,7 +460,7 @@ function FactorRankList({
                 <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
                   #{i + 1}
                 </span>
-                <span className="text-xs font-semibold text-text-primary truncate">{label}</span>
+                <span className="text-xs font-semibold text-text-primary truncate" title={label}>{label}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="text-[10px] font-mono text-text-secondary tabular-nums">
@@ -2033,7 +2049,7 @@ export function SectorProfile() {
                         <div className="h-1.5 rounded-full bg-border/60 overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${barPct}%`, backgroundColor: sectorColor, opacity: 0.65 }}
+                            style={{ width: `${barPct}%`, backgroundColor: getAdminColor(row.key, sectorColor), opacity: 0.65 }}
                           />
                         </div>
                       </div>

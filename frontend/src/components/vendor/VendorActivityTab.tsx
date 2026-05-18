@@ -30,6 +30,7 @@ import {
   formatCompactMXN,
   formatDate,
   getRiskLevel,
+  shortenContractName,
 } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -418,8 +419,8 @@ export function VendorActivityTab({
                       }
                       className="border-t border-border/30 hover:bg-background-elevated/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]"
                     >
-                      <td className="px-3 py-2 max-w-[280px] truncate text-text-primary">
-                        {c.title ?? '—'}
+                      <td className="px-3 py-2 max-w-[280px] truncate text-text-primary" title={c.title ?? undefined}>
+                        {c.title ? shortenContractName(c.title) : '—'}
                       </td>
                       <td className="px-3 py-2 max-w-[220px] truncate text-text-secondary">
                         {c.institution_name ?? '—'}

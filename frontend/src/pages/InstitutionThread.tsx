@@ -144,6 +144,45 @@ export function InstitutionThread() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // ── Derived values — MUST come before any conditional return to satisfy
+  // React's Rules of Hooks. Null guards make them safe when institution is
+  // undefined (i.e. still loading or invalid).
+  const avgRisk = institution?.avg_risk_score ?? 0
+  const riskLevel = getRiskLevelFromScore(avgRisk)
+  const riskColor = RISK_COLORS[riskLevel]
+
+  const sectorCode = useMemo(() => {
+    const sid = institution?.sector_id
+    if (sid == null) return 'otros'
+    return SECTORS.find((s) => s.id === sid)?.code ?? 'otros'
+  }, [institution?.sector_id])
+  const sectorColor = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const totalSpend = institution?.total_amount_mxn ?? 0
+  const totalContracts = institution?.total_contracts ?? 0
+  const vendorCount = institution?.vendor_count
+  const directAwardPct = institution?.direct_award_pct ?? institution?.direct_award_rate ?? null
+
+  const timelineArray = useMemo(
+    () => (timeline && Array.isArray(timeline.timeline) ? timeline.timeline : []),
+    [timeline],
+  )
+  const yearSpan = useMemo(() => {
+    if (timelineArray.length === 0) return null
+    const years = timelineArray.map((t) => t.year).filter((y) => typeof y === 'number')
+    if (years.length === 0) return null
+    return Math.max(...years) - Math.min(...years) + 1
+  }, [timelineArray])
+  const displayName = useMemo(() => institution ? toTitleCase(institution.name) : '...', [institution?.name])
+
+  const filteredVendors = useMemo(() => {
+    if (!vendors?.data) return []
+    if (vendorFilter === 'all') return vendors.data
+    const threshold = vendorFilter === 'med' ? RISK_THRESHOLDS.medium
+      : vendorFilter === 'high' ? RISK_THRESHOLDS.high
+      : RISK_THRESHOLDS.critical
+    return vendors.data.filter(v => (v.avg_risk_score ?? 0) >= threshold)
+  }, [vendors, vendorFilter])
+
   if (!validId) {
     return (
       <div className="max-w-3xl mx-auto p-6 text-center">
@@ -193,47 +232,6 @@ export function InstitutionThread() {
       </div>
     )
   }
-
-  const avgRisk = institution.avg_risk_score ?? 0
-  const riskLevel = getRiskLevelFromScore(avgRisk)
-  const riskColor = RISK_COLORS[riskLevel]
-  // Map sector_id to canonical code via the SECTORS lookup table
-  const sectorCode = useMemo(() => {
-    const id = institution.sector_id
-    if (id == null) return 'otros'
-    return SECTORS.find((s) => s.id === id)?.code ?? 'otros'
-  }, [institution.sector_id])
-  const sectorColor = SECTOR_COLORS[sectorCode] ?? '#64748b'
-  const totalSpend = institution.total_amount_mxn ?? 0
-  const totalContracts = institution.total_contracts ?? 0
-  const vendorCount = institution.vendor_count
-  const directAwardPct = institution.direct_award_pct ?? institution.direct_award_rate ?? null
-  // 2026-05-09 review fix: backend returns the timeline wrapped in an
-  // envelope `{ institution_id, institution_name, timeline: [...] }`, not
-  // a flat array. Extract the array from the wrapper.
-  const timelineArray = useMemo(
-    () => (timeline && Array.isArray(timeline.timeline) ? timeline.timeline : []),
-    [timeline],
-  )
-  // Year span derived from the timeline payload (min/max year in the array).
-  const yearSpan = useMemo(() => {
-    if (timelineArray.length === 0) return null
-    const years = timelineArray.map((t) => t.year).filter((y) => typeof y === 'number')
-    if (years.length === 0) return null
-    return Math.max(...years) - Math.min(...years) + 1
-  }, [timelineArray])
-  // Title-case the institution name (DB stores ALL CAPS).
-  const displayName = useMemo(() => toTitleCase(institution.name), [institution.name])
-
-  // Filtered vendor list for Chapter II risk chips
-  const filteredVendors = useMemo(() => {
-    if (!vendors?.data) return []
-    if (vendorFilter === 'all') return vendors.data
-    const threshold = vendorFilter === 'med' ? RISK_THRESHOLDS.medium
-      : vendorFilter === 'high' ? RISK_THRESHOLDS.high
-      : RISK_THRESHOLDS.critical
-    return vendors.data.filter(v => (v.avg_risk_score ?? 0) >= threshold)
-  }, [vendors, vendorFilter])
 
   return (
     <motion.div

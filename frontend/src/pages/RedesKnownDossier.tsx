@@ -1496,7 +1496,7 @@ export default function RedesKnownDossier() {
             <span style={{ color: 'var(--color-accent)', fontWeight: 500 }}>Folio·XIV</span>
             <span style={{ margin: '0 8px', opacity: 0.5 }}>·</span>
             <span>
-              {isEs ? 'Inteligencia de red · ARIA + Louvain' : 'Network intelligence · ARIA + Louvain'}
+              {isEs ? 'Inteligencia de red · ARIA' : 'Network intelligence · ARIA'}
             </span>
           </span>
         </div>
@@ -1563,8 +1563,8 @@ export default function RedesKnownDossier() {
           <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60">
             {usingLouvain
               ? (isEs
-                  ? `Comunidades detectadas por Louvain · ${communitiesData!.total_communities.toLocaleString(isEs ? 'es-MX' : 'en-US')} nodos`
-                  : `Louvain-detected communities · ${communitiesData!.total_communities.toLocaleString()} nodes`)
+                  ? `Comunidades ARIA · ${communitiesData!.total_communities.toLocaleString(isEs ? 'es-MX' : 'en-US')} nodos`
+                  : `ARIA communities · ${communitiesData!.total_communities.toLocaleString()} nodes`)
               : (isEs
                   ? 'Vista por patrones ARIA · datos en tiempo real'
                   : 'ARIA pattern view · live data')}
@@ -1764,22 +1764,21 @@ export default function RedesKnownDossier() {
             <p className="text-[12px] text-text-secondary leading-relaxed max-w-3xl">
               {isEs ? (
                 <>
-                  Las comunidades se detectan con el algoritmo de Louvain sobre la red de
-                  co-contratación (vendedores que aparecen juntos en procedimientos,
-                  operan en la misma institución en ventanas de tiempo solapadas, o
-                  comparten patrones de adjudicación). Las firmas de red provienen del
-                  motor ARIA v1.1 (Run{' '}
+                  Las comunidades se detectan sobre la red de co-contratación
+                  (vendedores que aparecen juntos en procedimientos, operan en la misma
+                  institución en ventanas de tiempo solapadas, o comparten patrones de
+                  adjudicación). Las firmas de red provienen del motor ARIA v1.1 (Run{' '}
                   <span className="font-mono text-text-primary/80">28d5c453</span>) combinado con
                   el modelo de riesgo v0.8.5 (AUC test 0.785). Los veredictos son
                   editoriales; las métricas son del motor.
                 </>
               ) : (
                 <>
-                  Communities are detected with the Louvain algorithm over the
-                  co-contracting network (vendors that appear together in procedures,
-                  operate at the same institution in overlapping time windows, or share
-                  award patterns). Network signatures come from the ARIA v1.1 engine
-                  (Run <span className="font-mono text-text-primary/80">28d5c453</span>)
+                  Communities are detected over the co-contracting network (vendors
+                  that appear together in procedures, operate at the same institution in
+                  overlapping time windows, or share award patterns). Network signatures
+                  come from the ARIA v1.1 engine (Run{' '}
+                  <span className="font-mono text-text-primary/80">28d5c453</span>)
                   combined with risk model v0.8.5 (test AUC 0.785). Verdicts are
                   editorial; metrics come from the engine.
                 </>

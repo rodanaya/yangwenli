@@ -1391,7 +1391,7 @@ export default function InstitutionLeague() {
               {t('tableKicker')}
             </p>
             <h2 id="league-table-heading" className="text-lg font-serif font-bold text-text-primary leading-tight">
-              {t('tableHeadline', { total: formatNumber(total) })}
+              {isLoading ? t('tableKicker') : t('tableHeadline', { total: formatNumber(total) })}
             </h2>
           </div>
 
