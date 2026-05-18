@@ -382,12 +382,10 @@ export function AtlasZoomLayer({
           }
           /* Dim the constellation lattice when zoomed so the vendor-level
              dots overlay (which IS more granular detail) dominates the view.
-             User report: "instead of giving me a closer look and seeing
-             more dots it just zooms in." Vendor overlay r-values bumped
-             3-4× alongside this rule. Named vendor circles are exempted
-             so the large outlier dots remain identifiable anchors. */
+             Named vendor circles are exempted so the large outlier dots
+             remain identifiable anchors. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle {
-            opacity: 0.18;
+            opacity: 0.25;
           }
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle[data-named-vendor="true"] {
             opacity: 1 !important;
@@ -408,42 +406,18 @@ export function AtlasZoomLayer({
         onClick={handleFieldClick}
         onMouseDown={handlePanMouseDown}
       >
-        {/* ── BUG-3 fix (2026-05-17): static background dot field ──
-            The low-risk "cosmic gas" lattice renders here as a
-            position:absolute layer that NEVER transforms. Panning a zoomed
-            cluster no longer drags the background galaxy with it.
-            The transform layer below carries cluster data only. */}
-        <div
-          style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-          aria-hidden="true"
-        >
-          <ConcentrationConstellation
-            backgroundLayer
-            mode={mode}
-            rows={rows}
-            totalContracts={totalContracts}
-            metaOverride={metaOverride}
-            seedOverride={seedOverride}
-          />
-        </div>
-
-        {/* Transform layer — cluster data only (edges, halos, rings,
-            labels, named vendors). The low-risk dots are skipped here
-            (noBackground) because the static background layer above
-            already paints them. */}
+        {/* Single transform layer — full constellation pans together with drag.
+            This gives natural map-pan feel: the whole star field moves as a unit. */}
         <div
           style={{
             transform: transformStr,
             transformOrigin: '0 0',
             transition: transitionStr,
-            // Keep pointer events on during animation (Mapbox flyTo model)
             pointerEvents: 'auto',
           }}
-          // Stop click-outside propagation from cluster click events
           onClick={(e) => e.stopPropagation()}
         >
           <ConcentrationConstellation
-            noBackground
             mode={mode}
             rows={rows}
             totalContracts={totalContracts}

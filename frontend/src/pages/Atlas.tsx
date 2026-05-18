@@ -40,8 +40,10 @@ import {
   type ConstellationMode,
   type ConstellationRiskRow,
   type ClusterMeta,
+  type NamedVendorDot,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, cn } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 // atlas-C-P1: three-pane investigator console shell
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
@@ -50,7 +52,7 @@ import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
@@ -284,15 +286,16 @@ interface ClusterDetailPanelProps {
   pinnedCode: string | null
   note: string
   yearLabel?: number
-  yearDeltaT1?: number   // change in cluster T1 vs previous year (illustrative)
-  yearDeltaPct?: number  // change in high-risk % vs previous year
+  yearDeltaT1?: number
+  yearDeltaPct?: number
+  topVendors?: NamedVendorDot[]
   onNoteChange: (text: string) => void
   onTogglePin: () => void
   onClose: () => void
   lang: 'en' | 'es'
 }
 
-function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
+function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, topVendors, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
   const navigate = useNavigate()
   const isPinned = !!meta && pinnedCode === meta.code
 
@@ -326,7 +329,7 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
                 {mode === 'categories' && (lang === 'en' ? 'SPENDING CATEGORY'           : 'CATEGORÍA DE GASTO')}
                 {mode === 'sexenios'   && (lang === 'en' ? 'PRESIDENTIAL TERM'           : 'SEXENIO')}
               </div>
-              <h2 className="font-serif font-extrabold text-[24px] leading-[1.05] tracking-[-0.01em] text-text-primary"
+              <h2 className="font-serif font-extrabold text-[16px] leading-[1.15] tracking-[-0.01em] text-text-primary"
                 style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 {meta.label}
               </h2>
@@ -406,6 +409,36 @@ function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDelta
                 />
               </div>
             </div>
+
+            {/* Top vendor list — shows top 3 critical vendors for this cluster */}
+            {topVendors && topVendors.length > 0 && (
+              <div>
+                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-2">
+                  {lang === 'en' ? 'TOP RISK VENDORS' : 'PROVEEDORES DE MAYOR RIESGO'}
+                </div>
+                <div className="space-y-0.5">
+                  {topVendors.map((v) => {
+                    const level = getRiskLevelFromScore(v.riskScore)
+                    return (
+                      <Link
+                        key={v.vendorId}
+                        to={`/thread/${v.vendorId}`}
+                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-sm transition-colors group"
+                        style={{ background: 'var(--color-background)' }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary truncate transition-colors">
+                          {formatVendorName(v.name)}
+                        </span>
+                        <span className="text-[10px] font-mono font-bold tabular-nums shrink-0" style={{ color: RISK_COLORS[level] }}>
+                          {(v.riskScore * 100).toFixed(0)}
+                        </span>
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Year-delta indicator (V5) — shown when scrubbing years */}
             {yearLabel !== undefined && (yearDeltaT1 !== undefined || yearDeltaPct !== undefined) && (
@@ -2492,6 +2525,7 @@ export default function Atlas() {
                     yearLabel={snapshot.year}
                     yearDeltaT1={deltaT1}
                     yearDeltaPct={deltaPct}
+                    topVendors={namedVendors}
                     onNoteChange={(text) => setNote(selectedMeta.code, text)}
                     onTogglePin={() => setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))}
                     onClose={() => setSelectedClusterCode(null)}
