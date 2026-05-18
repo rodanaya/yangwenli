@@ -36,11 +36,13 @@ import type {
 import {
   ArrowLeft,
   CheckCircle2,
+  ChevronRight,
   Clock,
   XCircle,
   HelpCircle,
   ExternalLink,
   Newspaper,
+  Share2,
   Shield,
   ArrowUpRight,
   Loader2,
@@ -350,39 +352,30 @@ export function InvestigationCaseDetail() {
             ═══════════════════════════════════════════════════════════════════ */}
 
         <header className="space-y-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24 }}>
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-3">
+          {/* Breadcrumb + Share */}
+          <div className="flex items-center justify-between gap-3">
+            <nav aria-label="breadcrumb" className="flex items-center gap-1 text-[11px] font-mono text-text-muted/60">
+              <Link
+                to="/investigation"
+                className="inline-flex items-center gap-1 hover:text-text-muted transition-colors"
+              >
+                <ArrowLeft className="h-3 w-3" aria-hidden="true" />
+                {t('caseDetail.breadcrumb')}
+              </Link>
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              <span className="font-semibold text-text-secondary uppercase tracking-wider">{detail.case_id}</span>
+            </nav>
             <button
-              onClick={() => navigate('/investigation')}
-              className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
-              style={{
-                fontSize: 10,
-                fontFamily: 'monospace',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                color: INK_DIM,
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
+              onClick={() => {
+                const text = `RUBLI · ${detail.title ?? detail.case_id} — ${window.location.href}`
+                navigator.clipboard?.writeText(text).catch(() => {})
               }}
+              className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-accent transition-colors px-2 py-1 rounded border border-border/40 hover:border-accent/40 shrink-0"
+              title={i18n.language.startsWith('es') ? 'Copiar enlace del caso' : 'Copy case link'}
             >
-              <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-              {t('caseDetail.breadcrumb')}
+              <Share2 className="h-3 w-3" aria-hidden="true" />
+              {i18n.language.startsWith('es') ? 'Citar' : 'Cite'}
             </button>
-            <span style={{ color: INK_FAINT, fontSize: 10 }}>/</span>
-            <span
-              style={{
-                fontSize: 10,
-                fontFamily: 'monospace',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-                color: INK_MUTED,
-                fontWeight: 700,
-              }}
-            >
-              {detail.case_id}
-            </span>
           </div>
 
           {/* Title block */}

@@ -23,6 +23,7 @@ import {
 } from '@/components/charts/editorial'
 import {
   ArrowLeft,
+  ChevronRight,
   ExternalLink,
   Building2,
   User,
@@ -430,13 +431,16 @@ export default function CategoryProfile() {
       {/* HEADER — Folio identity · Playfair Italic headline · hero triptych */}
       {/* ================================================================= */}
       <header className="border-b border-border pb-4">
-        <Link
-          to="/categories"
-          className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted hover:text-accent transition-colors mb-3"
-        >
-          <ArrowLeft className="h-3 w-3" aria-hidden="true" />
-          {t('profile.breadcrumb')}
-        </Link>
+        <nav aria-label="breadcrumb" className="flex items-center gap-1 mb-3 text-[11px] font-mono text-text-muted/60">
+          <Link to="/categories" className="hover:text-text-muted transition-colors flex items-center gap-1">
+            <ArrowLeft className="h-3 w-3" aria-hidden="true" />
+            {t('profile.breadcrumb')}
+          </Link>
+          <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          <span className="truncate max-w-[220px] text-text-secondary">
+            {isEs ? (category?.name_es || category?.name_en) : (category?.name_en || category?.name_es)}
+          </span>
+        </nav>
 
         {summaryLoading ? (
           <div className="space-y-3">

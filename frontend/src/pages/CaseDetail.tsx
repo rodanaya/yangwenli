@@ -1425,7 +1425,6 @@ export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>()
   const { i18n } = useTranslation('cases')
   const navigate = useNavigate()
-  const gtCount = useGroundTruthCount()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['cases', 'detail', slug],
@@ -1529,6 +1528,7 @@ function CaseBody({
   lang: string
   navigate: ReturnType<typeof useNavigate>
 }) {
+  const gtCount = useGroundTruthCount()
   const name = lang === 'es' && data.name_es ? data.name_es : data.name_en
   const summary = lang === 'es' && data.summary_es ? data.summary_es : data.summary_en
   const fraudLabel = FRAUD_LABEL_EN[data.fraud_type] ?? titleCase(data.fraud_type)
