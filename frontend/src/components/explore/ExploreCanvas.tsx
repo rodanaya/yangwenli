@@ -28,6 +28,7 @@ import {
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { getAdministrationByYear } from '@/lib/administrations'
 import { formatEntityName } from '@/lib/entity/format'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
@@ -1182,7 +1183,7 @@ function Z2Panel({
 
   const [sortKey, setSortKey] = useState<Z2SortKey>('risk')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [routineOpen, setRoutineOpen] = useState(true)
+  const [routineOpen, setRoutineOpen] = useState(false)
 
   const handleSort = (key: Z2SortKey) => {
     if (sortKey === key) setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
@@ -1579,7 +1580,7 @@ function Z3Panel({
         </div>
       )}
 
-      {/* Activity by year */}
+      {/* Activity by year — bars colored by administration */}
       {yearEntries.length > 0 && (
         <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
           <div
@@ -1588,26 +1589,42 @@ function Z3Panel({
           >
             {lang === 'en' ? 'ACTIVITY BY YEAR' : 'ACTIVIDAD POR AÑO'}
           </div>
-          <div className="space-y-1">
-            {yearEntries.map(([yr, { count, amount }]) => (
-              <div key={yr} className="flex items-center gap-2">
-                <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {yr}
-                </span>
-                <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--color-border)' }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${(amount / maxYearAmt) * 100}%`, background: 'var(--color-accent)', opacity: 0.55 }}
-                  />
+          <div className="space-y-0.5">
+            {yearEntries.map(([yr, { count, amount }], idx) => {
+              const admin = getAdministrationByYear(yr)
+              const adminColors: Record<string, string> = {
+                fox: '#64748b', calderon: '#1d4ed8', epn: '#7c3aed', amlo: '#b45309', sheinbaum: '#0d9488',
+              }
+              const barColor = admin ? (adminColors[admin.key] ?? 'var(--color-accent)') : 'var(--color-accent)'
+              const prevAdmin = idx > 0 ? getAdministrationByYear(yearEntries[idx - 1][0]) : null
+              const adminChanged = !prevAdmin || prevAdmin.key !== admin?.key
+              return (
+                <div key={yr}>
+                  {adminChanged && admin && (
+                    <div className="font-mono text-[7px] uppercase tracking-widest pt-1.5 pb-0.5" style={{ color: barColor, opacity: 0.8 }}>
+                      {admin.short}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                      {yr}
+                    </span>
+                    <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--color-border)' }}>
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${(amount / maxYearAmt) * 100}%`, background: barColor, opacity: 0.7 }}
+                      />
+                    </div>
+                    <span className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                      {formatCompactMXN(amount)}
+                    </span>
+                    <span className="font-mono text-[9px] w-5 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                      {count}
+                    </span>
+                  </div>
                 </div>
-                <span className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {formatCompactMXN(amount)}
-                </span>
-                <span className="font-mono text-[9px] w-5 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                  {count}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
