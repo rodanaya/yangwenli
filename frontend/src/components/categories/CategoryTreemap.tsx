@@ -68,17 +68,19 @@ export function CategoryTreemap({ categories, lang, activeSector }: CategoryTree
     .paddingOuter(3)
     .paddingTop(18)(root)
 
-  // risk fill
+  // risk fill — thresholds calibrated for category-level avg_risk (aggregate scores,
+  // not individual contracts; data tops out ~0.45 in v0.8.5 so contract-level
+  // thresholds of 0.60/0.40/0.25 produce a monochrome neutral treemap)
   function riskFill(avgRisk: number): string {
-    if (avgRisk >= 0.60) return RISK_COLORS.critical
-    if (avgRisk >= 0.40) return RISK_COLORS.high
-    if (avgRisk >= 0.25) return RISK_COLORS.medium
+    if (avgRisk >= 0.35) return RISK_COLORS.critical
+    if (avgRisk >= 0.25) return RISK_COLORS.high
+    if (avgRisk >= 0.18) return RISK_COLORS.medium
     return 'var(--color-background-elevated)'
   }
   function riskOpacity(avgRisk: number): number {
-    if (avgRisk >= 0.60) return 0.70
-    if (avgRisk >= 0.40) return 0.65
-    if (avgRisk >= 0.25) return 0.60
+    if (avgRisk >= 0.35) return 0.70
+    if (avgRisk >= 0.25) return 0.65
+    if (avgRisk >= 0.18) return 0.60
     return 1
   }
 
@@ -108,10 +110,12 @@ export function CategoryTreemap({ categories, lang, activeSector }: CategoryTree
 
         {leaves.map((leaf: any) => {
           const d = leaf.data as CategorySummaryItem & { value: number }
+          // Guard: skip sector-group nodes that lack category fields
+          if (!d.category_id) return null
           const w = leaf.x1 - leaf.x0
           const h = leaf.y1 - leaf.y0
           const isActive = !activeSector || activeSector === d.sector_code
-          const name = lang === 'es' ? d.name_es : d.name_en
+          const name = (lang === 'es' ? d.name_es : d.name_en) ?? ''
 
           return (
             <g

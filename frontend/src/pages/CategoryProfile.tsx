@@ -709,6 +709,13 @@ export default function CategoryProfile() {
                     AMLO: '#a16207',
                     Sheinbaum: '#14b8a6',
                   }
+                  const ADMIN_LABELS: Record<string, string> = {
+                    Fox: 'Fox',
+                    Calderon: 'Calderón',
+                    'Pena Nieto': 'Peña Nieto',
+                    AMLO: 'AMLO',
+                    Sheinbaum: 'Sheinbaum',
+                  }
                   const color = ADMIN_COLORS[row.admin] ?? '#64748b'
                   return (
                     <div key={row.admin} className="flex items-center justify-between py-2 px-1">
@@ -716,7 +723,7 @@ export default function CategoryProfile() {
                         className="font-mono text-xs font-semibold"
                         style={{ color }}
                       >
-                        {row.admin}
+                        {ADMIN_LABELS[row.admin] ?? row.admin}
                       </span>
                       <span
                         className="font-mono text-xs tabular-nums text-text-primary"
