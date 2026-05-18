@@ -257,6 +257,132 @@ function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
   )
 }
 
+// ─── Chapter 5.5: Press & Registry Mentions ────────────────────────────────
+
+type WebEvidenceArticle = {
+  query_type: string
+  verdict: string
+  confidence: number
+  snippet: string
+  source_url: string | null
+  source_name: string | null
+  published_date: string | null
+  reasoning: string
+}
+
+const WEB_VERDICT_META: Record<string, { label: string; bg: string; color: string }> = {
+  CORRUPTION_MENTION: { label: 'CORRUPCIÓN', bg: 'rgba(239,68,68,0.10)',   color: 'var(--color-risk-critical)' },
+  RISK_MENTION:       { label: 'RIESGO',     bg: 'rgba(245,158,11,0.10)',  color: 'var(--color-risk-high)' },
+  EXCULPATORY:        { label: 'EXCULP.',    bg: 'rgba(34,197,94,0.10)',   color: '#16a34a' },
+  NEUTRAL:            { label: 'NEUTRAL',    bg: 'rgba(100,116,139,0.08)', color: 'var(--color-text-muted)' },
+}
+
+function ChapterPress({ vendorId, webEvidenceScore, t }: {
+  vendorId: number
+  webEvidenceScore: number | null
+  t: TFunction
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['vendor-web-evidence', vendorId],
+    queryFn: () => ariaApi.getWebEvidence(vendorId),
+    staleTime: 10 * 60_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  const articles: WebEvidenceArticle[] = data?.articles ?? []
+  const notable = articles.filter((a) => a.verdict !== 'NEUTRAL')
+
+  // Only render the chapter if the vendor has a web evidence score or any results
+  const hasEvidence = webEvidenceScore !== null || articles.length > 0
+  if (!isLoading && !hasEvidence) return null
+
+  return (
+    <ChapterShell id="chapter-press">
+      <RedThreadChapter
+        label={t('chapters.headings.press', { defaultValue: '§ PRENSA · REGISTROS' })}
+        title={t('press.heading', { defaultValue: 'External Press & Registry Mentions' })}
+      />
+      <p className="text-text-muted mb-4 max-w-xl text-sm">
+        {t('press.description', { defaultValue: 'CENTINELA web evidence — press mentions retrieved from public news sources and government registries.' })}
+      </p>
+
+      {isLoading && (
+        <div className="space-y-2" role="status" aria-live="polite">
+          <div className="h-7 w-full bg-background-elevated animate-pulse rounded-sm" />
+          <div className="h-7 w-5/6 bg-background-elevated animate-pulse rounded-sm" />
+          <div className="h-7 w-4/6 bg-background-elevated animate-pulse rounded-sm" />
+        </div>
+      )}
+
+      {!isLoading && articles.length === 0 && (
+        <p className="text-text-secondary text-xs italic">
+          {t('press.noResults', { defaultValue: 'No external press coverage found for this vendor.' })}
+        </p>
+      )}
+
+      {!isLoading && articles.length > 0 && (
+        <div className="space-y-1.5" role="list" aria-label={t('press.listLabel', { defaultValue: 'Press mentions' })}>
+          {(notable.length > 0 ? notable : articles).slice(0, 12).map((article, idx) => {
+            const meta = WEB_VERDICT_META[article.verdict] ?? WEB_VERDICT_META.NEUTRAL
+            const dateStr = article.published_date
+              ? new Date(article.published_date).getFullYear()
+              : null
+            return (
+              <div
+                key={idx}
+                role="listitem"
+                className="flex items-start gap-2.5 py-2 px-3 rounded-sm border border-border/50 bg-background-card"
+              >
+                {/* Verdict badge */}
+                <span
+                  className="flex-shrink-0 mt-0.5 text-[9px] font-mono font-semibold tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                  style={{ backgroundColor: meta.bg, color: meta.color }}
+                >
+                  {meta.label}
+                </span>
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  {article.source_url ? (
+                    <a
+                      href={article.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-text-primary hover:text-accent transition-colors line-clamp-1 inline-flex items-center gap-1"
+                    >
+                      <span className="truncate">{article.snippet.slice(0, 120)}</span>
+                      <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-60" aria-hidden="true" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-text-primary line-clamp-1">{article.snippet.slice(0, 120)}</p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {article.source_name && (
+                      <span className="text-[10px] font-mono text-text-muted">{article.source_name}</span>
+                    )}
+                    {dateStr && (
+                      <>
+                        <span className="text-text-muted/40">·</span>
+                        <span className="text-[10px] font-mono text-text-muted">{dateStr}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!isLoading && notable.length === 0 && articles.length > 0 && (
+        <p className="text-[10px] text-text-muted italic mt-2">
+          {t('press.allNeutral', { defaultValue: 'All retrieved articles were classified as neutral — no corruption or risk language detected.' })}
+        </p>
+      )}
+    </ChapterShell>
+  )
+}
+
 /**
  * PatternDiagnostic — medical lab-report layout for SHAP-style risk
  * decomposition. Each row is one feature ("test"), rendered as:
@@ -981,7 +1107,20 @@ export default function RedThread() {
           <span className="text-xs text-text-muted">·</span>
           <span className="text-xs text-text-muted max-w-[160px] md:max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>
         </div>
-        <EntityIdentityChip type="vendor" id={id} name={vendor.name} size="xs" />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => {
+              const text = `RUBLI Investigation: ${vendor.name} — ${window.location.href}`
+              navigator.clipboard?.writeText(text).catch(() => {})
+            }}
+            className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-accent transition-colors px-2 py-1 rounded border border-border/40 hover:border-accent/40"
+            title={i18n.language.startsWith('es') ? 'Copiar enlace de investigación' : 'Copy investigation link'}
+          >
+            <Share2 className="h-3 w-3" aria-hidden="true" />
+            {i18n.language.startsWith('es') ? 'Citar' : 'Cite'}
+          </button>
+          <EntityIdentityChip type="vendor" id={id} name={vendor.name} size="xs" />
+        </div>
       </div>
 
       {/* Chapters — order: Subject → Timeline → Network → Money → Pattern → Verdict.
@@ -1041,6 +1180,14 @@ export default function RedThread() {
           waterfall={waterfall ?? []}
           ariaPattern={aria?.primary_pattern ?? null}
           isLoading={waterfallLoading}
+          t={t}
+        />
+
+        <ChapterDivider />
+
+        <ChapterPress
+          vendorId={id}
+          webEvidenceScore={aria?.web_evidence_score ?? null}
           t={t}
         />
 
