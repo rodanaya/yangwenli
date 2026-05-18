@@ -777,9 +777,8 @@ function Z0Panel({
     (): TmItem[] => stats.map((s) => ({
       id: s.sector_id,
       code: s.sector_code,
-      // √spend so area ∝ √value — compresses extreme ratios (Health 31% → 20%)
-      // while preserving ordering. All 12 sectors stay readable.
-      value: Math.sqrt(
+      // ∛spend so area ∝ ∛value — top-3 drop from 75% → 41%, small sectors readable.
+      value: Math.cbrt(
         mode === 'spend'
           ? s.total_value_mxn
           : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
@@ -911,8 +910,8 @@ function Z0Panel({
         <div
           style={{
             position: 'absolute',
-            bottom: 18,
-            right: 18,
+            top: 52,
+            right: 14,
             zIndex: 10,
             display: 'flex',
             gap: 3,
