@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
-import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
+import { cn, formatNumber, formatCompactMXN, shortenContractName } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
 import {
@@ -31,6 +31,7 @@ import { FuentePill } from '@/components/ui/FuentePill'
 import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { getLedeForCategory } from '@/lib/entity/lede'
+import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
 
 // =============================================================================
@@ -98,124 +99,6 @@ function getConcentrationBadge(label: string, t: (key: string) => string) {
 // Dot-matrix chart primitives
 // =============================================================================
 
-interface SexenioBarDatum {
-  admin: string
-  value: number
-  contracts: number
-  avg_risk: number
-}
-
-/**
- * SexenioDotColumns — vertical dot-matrix columns, one per administration.
- * Replaces a stacked vertical bar chart. Dots stack bottom-up; filled count
- * is proportional to admin value / max value.
- */
-function SexenioDotColumns({
-  data,
-  color,
-  t,
-}: {
-  data: SexenioBarDatum[]
-  color: string
-  t: (key: string) => string
-}) {
-  // 2026-05-04 fix: column gap was 24px but admin labels like "Peña Nieto"
-  // are ~70px wide at fontSize 11 — neighbors overlapped into "CalderónPeña".
-  // Bumped gap 24 → 56 so even longest label fits cleanly between columns.
-  const ROWS = 40
-  const COL_W = 28
-  const COL_GAP = 56
-  const DOT_GAP = 7
-  const DOT_R = 2.5
-  const LABEL_H = 28
-  const TOOLTIP_H = 18
-
-  const maxValue = Math.max(...data.map(d => d.value), 1)
-  const width = Math.max(380, data.length * (COL_W + COL_GAP) + 40)
-  const height = ROWS * DOT_GAP + LABEL_H + TOOLTIP_H + 16
-  const colsTotalWidth = data.length * COL_W + (data.length - 1) * COL_GAP
-  const offsetX = (width - colsTotalWidth) / 2
-
-  return (
-    <div
-      style={{ height: 280 }}
-      role="img"
-      aria-label="Dot matrix chart showing contract value by presidential administration"
-      className="flex items-center justify-center"
-    >
-      <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
-        {data.map((d, colIdx) => {
-          const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * ROWS)) : 0
-          const cx = offsetX + colIdx * (COL_W + COL_GAP) + COL_W / 2
-          const opacity = 0.3 + (colIdx / Math.max(1, data.length - 1)) * 0.6
-
-          return (
-            <g key={`admin-${colIdx}`}>
-              {/* Stats above column */}
-              <text
-                x={cx}
-                y={10}
-                textAnchor="middle"
-                fontSize="10"
-                fill="var(--color-text-muted)"
-                fontFamily="var(--font-family-mono)"
-              >
-                {formatCompactMXN(d.value)}
-              </text>
-              {/* Dot column (bottom-up) */}
-              {Array.from({ length: ROWS }).map((_, i) => {
-                // i=0 at bottom → top when index is highest
-                const dotIdx = ROWS - 1 - i
-                const isFilled = dotIdx < filled
-                const cy = TOOLTIP_H + (ROWS - 1 - dotIdx) * DOT_GAP + DOT_GAP / 2
-                return (
-                  <motion.circle
-                    key={`d-${colIdx}-${i}`}
-                    cx={cx}
-                    cy={cy}
-                    r={DOT_R}
-                    fill={isFilled ? color : 'var(--color-background-elevated)'}
-                    fillOpacity={isFilled ? opacity : 1}
-                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
-                    strokeWidth={isFilled ? 0 : 1}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}
-                  />
-                )
-              })}
-              {/* Admin label */}
-              <text
-                x={cx}
-                y={TOOLTIP_H + ROWS * DOT_GAP + 14}
-                textAnchor="middle"
-                fontSize="11"
-                fill="var(--color-text-secondary)"
-                fontFamily="var(--font-family-mono)"
-              >
-                {d.admin.length > 10 ? d.admin.slice(0, 10) + '…' : d.admin}
-              </text>
-              {/* Risk / contracts secondary label */}
-              <text
-                x={cx}
-                y={TOOLTIP_H + ROWS * DOT_GAP + 26}
-                textAnchor="middle"
-                fontSize="10"
-                fill={getRiskColor(d.avg_risk)}
-                fontFamily="var(--font-family-mono)"
-              >
-                {(d.avg_risk * 100).toFixed(0)}% · {formatNumber(d.contracts)}
-              </text>
-            </g>
-          )
-        })}
-      </svg>
-      <span className="sr-only">
-        {data.map(d => `${d.admin}: ${formatCompactMXN(d.value)}, ${t('profile.adminTooltip.risk')} ${(d.avg_risk * 100).toFixed(1)}%`).join('. ')}
-      </span>
-    </div>
-  )
-}
 
 interface SubcatDotDatum {
   name: string
@@ -743,67 +626,53 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       {/* §4 — Historical Timeline                                          */}
       {/* ================================================================= */}
-      <section>
-        <div className="mb-2 flex items-baseline justify-between gap-3 flex-wrap">
-          <div>
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-0.5">
-              §4 · {t('profile.sections.timeline')}
-            </p>
-            <h2
-              className="text-text-primary leading-tight"
-              style={{
-                fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                fontStyle: 'italic',
-                fontWeight: 500,
-                fontSize: '17px',
-                letterSpacing: '-0.005em',
-              }}
-            >
-              {t('profile.sections.timelineSubtitle')}
-            </h2>
+      <EditorialChartFrame
+        kicker={isEs ? '§4 · TENDENCIA ANUAL' : '§4 · ANNUAL TREND'}
+        headline={isEs
+          ? `Gasto e indicador de riesgo — ${category?.name_es || category?.name_en}`
+          : `Spend and risk indicator — ${category?.name_en || category?.name_es}`}
+        footer={<span className="font-mono text-xs text-text-muted">COMPRANET · {isEs ? 'valores en MXN' : 'values in MXN'}</span>}
+        tone="card"
+      >
+        {trendsLoading ? (
+          <ChartSkeleton height={320} type="area" />
+        ) : timelineData.length > 0 ? (
+          <div role="img" aria-label="Area chart showing contract value and risk score trends over time">
+            {(() => {
+              // Pre-multiply risk to display as 0-100% via 'pct' format on right axis.
+              const data = timelineData.map((r) => ({
+                ...r,
+                avg_risk_pct: (Number(r.avg_risk) || 0) * 100,
+              }))
+              const sectorToken: ColorToken = category?.sector_code
+                ? (`sector-${category.sector_code}` as ColorToken)
+                : 'neutral'
+              const layers: ComposedLayer<typeof data[number]>[] = [
+                { kind: 'area', key: 'value', label: t('profile.tooltip.spend'), colorToken: sectorToken, axis: 'left' },
+                { kind: 'line', key: 'avg_risk_pct', label: t('profile.tooltip.risk'), colorToken: 'risk-high', style: 'dashed', axis: 'right' },
+              ]
+              return (
+                <EditorialComposedChart
+                  data={data}
+                  xKey="year"
+                  layers={layers}
+                  yFormat="mxn-compact"
+                  rightYFormat="pct"
+                  rightYDomain={[0, 60]}
+                  height={320}
+                />
+              )
+            })()}
           </div>
-        </div>
-        <div className="border border-border/60 rounded-sm bg-background-card p-3">
-            {trendsLoading ? (
-              <ChartSkeleton height={320} type="area" />
-            ) : timelineData.length > 0 ? (
-              <div role="img" aria-label="Area chart showing contract value and risk score trends over time">
-                {(() => {
-                  // Pre-multiply risk to display as 0-100% via 'pct' format on right axis.
-                  const data = timelineData.map((r) => ({
-                    ...r,
-                    avg_risk_pct: (Number(r.avg_risk) || 0) * 100,
-                  }))
-                  const sectorToken: ColorToken = category?.sector_code
-                    ? (`sector-${category.sector_code}` as ColorToken)
-                    : 'neutral'
-                  const layers: ComposedLayer<typeof data[number]>[] = [
-                    { kind: 'area', key: 'value', label: t('profile.tooltip.spend'), colorToken: sectorToken, axis: 'left' },
-                    { kind: 'line', key: 'avg_risk_pct', label: t('profile.tooltip.risk'), colorToken: 'risk-high', style: 'dashed', axis: 'right' },
-                  ]
-                  return (
-                    <EditorialComposedChart
-                      data={data}
-                      xKey="year"
-                      layers={layers}
-                      yFormat="mxn-compact"
-                      rightYFormat="pct"
-                      rightYDomain={[0, 60]}
-                      height={320}
-                    />
-                  )
-                })()}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-                {t('profile.empty.noTrend')}
-              </div>
-            )}
-        </div>
-      </section>
+        ) : (
+          <div className="flex items-center justify-center h-48 text-text-muted text-sm">
+            {t('profile.empty.noTrend')}
+          </div>
+        )}
+      </EditorialChartFrame>
 
       {/* ================================================================= */}
-      {/* §5 — Sexenio Comparison                                           */}
+      {/* §5 — By Administration                                            */}
       {/* ================================================================= */}
       <section>
         <div className="mb-2">
@@ -824,22 +693,48 @@ export default function CategoryProfile() {
           </h2>
         </div>
         <div className="border border-border/60 rounded-sm bg-background-card p-3">
-            {sexenioLoading ? (
-              <ChartSkeleton height={280} />
-            ) : sexenioBarData.length > 0 && sexenioBarData.some(d => d.value > 0) ? (
-              <SexenioDotColumns
-                data={sexenioBarData}
-                color={sectorColor}
-                t={t}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-                {t('profile.empty.noAdmin')}
+          {sexenioLoading ? (
+            <ChartSkeleton height={120} />
+          ) : (
+            <section className="mb-6">
+              <p className="font-mono text-[10px] uppercase tracking-wider text-text-muted mb-3">
+                {isEs ? 'COMPARATIVO POR ADMINISTRACIÓN' : 'BY ADMINISTRATION'}
+              </p>
+              <div className="divide-y divide-border/20">
+                {sexenioBarData.length > 0 ? sexenioBarData.map((row: any) => {
+                  const ADMIN_COLORS: Record<string, string> = {
+                    Fox: '#3b82f6',
+                    Calderon: '#22c55e',
+                    'Pena Nieto': '#ef4444',
+                    AMLO: '#a16207',
+                    Sheinbaum: '#14b8a6',
+                  }
+                  const color = ADMIN_COLORS[row.admin] ?? '#64748b'
+                  return (
+                    <div key={row.admin} className="flex items-center justify-between py-2 px-1">
+                      <span
+                        className="font-mono text-xs font-semibold"
+                        style={{ color }}
+                      >
+                        {row.admin}
+                      </span>
+                      <span
+                        className="font-mono text-xs tabular-nums text-text-primary"
+                        style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 800 }}
+                      >
+                        {formatCompactMXN(row.value)}
+                      </span>
+                    </div>
+                  )
+                }) : (
+                  <p className="text-xs text-text-muted py-2">{isEs ? 'Sin datos por administración' : 'No administration data'}</p>
+                )}
               </div>
-            )}
-            <p className="text-[10px] text-text-muted/50 mt-2 font-mono">
-              {t('profile.footnote')}
-            </p>
+              <p className="text-[10px] text-text-muted/70 font-mono mt-2">
+                {isEs ? 'Fuente: COMPRANET · valores nominales en MXN' : 'Source: COMPRANET · nominal values in MXN'}
+              </p>
+            </section>
+          )}
         </div>
       </section>
 
@@ -1114,9 +1009,13 @@ export default function CategoryProfile() {
                       >
                         <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-text-secondary truncate">{truncate(c.title ?? t('profile.actions.noTitle'), 60)}</p>
+                          <p className="text-xs text-text-secondary truncate" title={c.title ?? ''}>
+                            {c.title ? shortenContractName(c.title, 72) : t('profile.actions.noTitle')}
+                          </p>
                           {c.institution_name && (
-                            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 truncate">{truncate(c.institution_name, 40)}</p>
+                            <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 truncate" title={c.institution_name ?? ''}>
+                              {c.institution_name}
+                            </p>
                           )}
                         </div>
                         <span className="w-20 text-right text-xs font-mono font-bold text-text-primary tabular-nums flex-shrink-0">

@@ -20,7 +20,9 @@
     "topVendor": "Top Vendor",
     "directAwardBadge": "{{pct}}% DA",
     "errorMessage": "Unable to load categories. Please try again.",
-    "noResults": "No categories match the selected filter."
+    "noResults": "No categories match the selected filter.",
+    "treemapKicker": "Spending Geography · 72 Categories",
+    "treemapMobileNote": "Top 20 by spend — use filters to explore all 72"
   },
   "dumbbell": {
     "kicker": "THE GAP · #1 VS #2",

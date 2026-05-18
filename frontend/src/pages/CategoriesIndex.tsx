@@ -19,6 +19,7 @@ import { DotBar } from '@/components/ui/DotBar'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS, getSectorName } from '@/lib/constants'
+import { CategoryTreemap } from '@/components/categories/CategoryTreemap'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ function sortCategories(
 
 function LoadingGrid() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 12 }).map((_, i) => (
         <Skeleton key={i} className="h-40 rounded-none" />
       ))}
@@ -110,7 +111,7 @@ function CategoryCard({ item, lang }: CategoryCardProps) {
         className="h-full bg-background-card border border-border hover:border-border-hover transition-colors duration-150 pl-0"
         style={{ borderLeftColor: sectorColor, borderLeftWidth: 3 }}
       >
-        <div className="p-4 flex flex-col gap-3 h-full">
+        <div className="p-3 flex flex-col gap-2 h-full">
           {/* Category name */}
           <div className="flex-1">
             <h3
@@ -327,6 +328,15 @@ export default function CategoriesIndex() {
         </div>
       </header>
 
+      {/* ── Treemap ─────────────────────────────────────────────────────────── */}
+      <div className="px-4 md:px-12 lg:px-16 pb-4">
+        <CategoryTreemap
+          categories={data?.data ?? []}
+          lang={lang}
+          activeSector={activeSector}
+        />
+      </div>
+
       {/* ── Controls ────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-10 bg-background border-b border-border px-6 py-3 md:px-12 lg:px-16">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -432,7 +442,7 @@ export default function CategoriesIndex() {
 
       {/* ── Grid ────────────────────────────────────────────────────────────── */}
       <section
-        className="px-6 py-8 md:px-12 lg:px-16"
+        className="px-6 py-4 md:px-12 lg:px-16"
         aria-label={t('index.gridAriaLabel')}
       >
         {isLoading && <LoadingGrid />}
@@ -457,7 +467,7 @@ export default function CategoriesIndex() {
         )}
 
         {!isLoading && !isError && displayed.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {displayed.map((item) => (
               <CategoryCard key={item.category_id} item={item} lang={lang} />
             ))}

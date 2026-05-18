@@ -20,7 +20,9 @@
     "topVendor": "Principal Proveedor",
     "directAwardBadge": "{{pct}}% AD",
     "errorMessage": "No se pudieron cargar las categorías. Intente de nuevo.",
-    "noResults": "Ninguna categoría coincide con el filtro seleccionado."
+    "noResults": "Ninguna categoría coincide con el filtro seleccionado.",
+    "treemapKicker": "Cartografía del Gasto · 72 Categorías",
+    "treemapMobileNote": "Top 20 por gasto — usa filtros para ver las 72"
   },
   "dumbbell": {
     "kicker": "LA BRECHA · #1 VS #2",
