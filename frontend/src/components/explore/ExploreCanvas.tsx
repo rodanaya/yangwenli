@@ -645,7 +645,7 @@ function InstRow({
         {tier.glyph}{tier.label}
       </td>
       <td className="px-1 py-1.5" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-        <div className="font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)' }}>{displayName}</div>
+        <div className="font-mono text-[10px] font-medium" title={displayName} style={{ color: 'var(--color-text-primary)' }}>{displayName}</div>
         <div style={{ marginTop: 3, height: 2, borderRadius: 1, background: 'var(--color-border)', overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${Math.min(sectorShare, 100)}%`, background: tier.color, borderRadius: 1, opacity: 0.7 }} />
         </div>
@@ -1262,7 +1262,7 @@ function Z2Panel({
         <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z2 · VENDORS' : 'Z2 · PROVEEDORES'}
         </div>
-        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
+        <div className="text-sm font-semibold mt-0.5 truncate" title={institutionName} style={{ color: 'var(--color-text-primary)' }}>
           {institutionName}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -1471,7 +1471,7 @@ function Z3Panel({
         <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z3 · CONTRACTS' : 'Z3 · CONTRATOS'}
         </div>
-        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
+        <div className="text-sm font-semibold mt-0.5 truncate" title={vendorName} style={{ color: 'var(--color-text-primary)' }}>
           {vendorName}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>

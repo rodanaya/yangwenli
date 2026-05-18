@@ -482,7 +482,7 @@ function SectorBriefing({
                   style={{ borderColor: riskColor }}
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-xs text-text-primary truncate min-w-0">
+                    <span className="text-xs text-text-primary truncate min-w-0" title={toTitleCase(inst.name)}>
                       {toTitleCase(inst.name)}
                     </span>
                     <span
