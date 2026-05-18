@@ -1444,7 +1444,7 @@ export default function Journalists() {
   const activeLeadsCount = INVESTIGATIONS.filter(
     (i) => i.status === 'reporteado' || i.status === 'solo_datos'
   ).length
-  const updatedDate = new Date().toLocaleDateString('en-US', {
+  const updatedDate = new Date().toLocaleDateString(i18n.language.startsWith('es') ? 'es-MX' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -1675,22 +1675,23 @@ export default function Journalists() {
         <footer className="mt-16 pt-8 pb-16 border-t border-border">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
             <span>
-              Source:{' '}
+              {i18n.language.startsWith('es') ? 'Fuente' : 'Source'}:{' '}
               <span className="text-text-secondary">COMPRANET / SHCP</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              Risk model{' '}
+              {i18n.language.startsWith('es') ? 'Modelo de riesgo' : 'Risk model'}{' '}
               <span className="text-text-secondary tabular-nums">v0.8.5</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
-              Test AUC <span className="text-text-secondary tabular-nums">0.785</span>
+              {i18n.language.startsWith('es') ? 'AUC de prueba' : 'Test AUC'}{' '}
+              <span className="text-text-secondary tabular-nums">0.785</span>
             </span>
             <span className="text-text-primary">·</span>
             <span>
               <span className="text-text-secondary tabular-nums">3,051,294</span>{' '}
-              contracts analyzed
+              {i18n.language.startsWith('es') ? 'contratos analizados' : 'contracts analyzed'}
             </span>
           </div>
         </footer>
