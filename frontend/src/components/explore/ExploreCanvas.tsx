@@ -777,9 +777,13 @@ function Z0Panel({
     (): TmItem[] => stats.map((s) => ({
       id: s.sector_id,
       code: s.sector_code,
-      value: mode === 'spend'
-        ? s.total_value_mxn
-        : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
+      // √spend so area ∝ √value — compresses extreme ratios (Health 31% → 20%)
+      // while preserving ordering. All 12 sectors stay readable.
+      value: Math.sqrt(
+        mode === 'spend'
+          ? s.total_value_mxn
+          : Math.max(1, s.critical_risk_count * 4 + s.high_risk_count * 2 + s.medium_risk_count),
+      ),
     })),
     [stats, mode],
   )
@@ -809,9 +813,9 @@ function Z0Panel({
         const color = SECTOR_COLORS[cell.code] ?? '#64748b'
         const minDim = Math.min(cell.w, cell.h)
         const pad = minDim > 80 ? 10 : 6
-        const nameFontSize = Math.min(26, Math.max(10, minDim * 0.12))
-        const codeFontSize = Math.min(10, Math.max(7, minDim * 0.044))
-        const spendFontSize = Math.max(8, Math.min(11, minDim * 0.048))
+        const nameFontSize = Math.min(18, Math.max(11, minDim * 0.08))
+        const codeFontSize = Math.min(9, Math.max(7, minDim * 0.038))
+        const spendFontSize = Math.max(8, Math.min(10, minDim * 0.042))
         const sectorLabel = getSectorName(cell.code, lang)
         const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
 
