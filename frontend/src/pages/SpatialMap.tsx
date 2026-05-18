@@ -27,8 +27,7 @@ import {
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
 import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
-import { YearScrubber, ShareViewButton, LensToggle } from '@/components/explore/CanvasControls'
-import { SearchOverlay } from '@/components/explore/SearchOverlay'
+import { YearScrubber } from '@/components/explore/CanvasControls'
 
 const FIRST_VISIT_KEY = 'rubli_explore_visited_v1'
 
@@ -88,9 +87,6 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
       {/* The map — fills available space */}
       <div className="relative overflow-hidden">
         <ExploreCanvas lang={lang} />
-        {isPanelOpen && <SearchOverlay lang={lang} />}
-        {isPanelOpen && <LensToggle lang={lang} />}
-        {isPanelOpen && <ShareViewButton lang={lang} />}
         {isPanelOpen && <YearScrubber lang={lang} />}
         {showHint && (
           <button
