@@ -85,13 +85,16 @@ interface SlopeLineProps {
   scaleY: (pct: number) => number
   isHovered: boolean
   anyHovered: boolean
+  isTopFive: boolean
   onHover: (id: number | null, tooltip: TooltipState | null) => void
   onClick: () => void
 }
 
-function SlopeLine({ line, scaleX, scaleY, isHovered, anyHovered, onClick, onHover }: SlopeLineProps) {
-  const stroke = line.crossesCeiling ? line.color : MUTED_GRAY
-  const opacity = anyHovered ? (isHovered ? 1 : 0.18) : 0.85
+function SlopeLine({ line, scaleX, scaleY, isHovered, anyHovered, isTopFive, onClick, onHover }: SlopeLineProps) {
+  const stroke = line.crossesCeiling && isTopFive ? line.color : MUTED_GRAY
+  const opacity = anyHovered
+    ? (isHovered ? 1 : 0.18)
+    : (line.crossesCeiling && isTopFive ? 0.85 : 0.35)
   const strokeWidth = isHovered ? 2.5 : 1.5
   const pts = line.points.map((p) => ({ x: scaleX(p.year), y: scaleY(p.da) }))
   const pathD = pointsToPath(pts)
@@ -209,6 +212,12 @@ export function CompetitionSlopeChart() {
 
   const crossers = lines.filter((l) => l.crossesCeiling)
   const belowCount = lines.filter((l) => !l.crossesCeiling).length
+  const top5Ids = new Set(
+    [...crossers]
+      .sort((a, b) => b.endDa - a.endDa)
+      .slice(0, 5)
+      .map((l) => l.sectorId)
+  )
 
   // Filtered lines for "show all" toggle
   const visibleLines = showAll ? lines : lines
@@ -382,6 +391,7 @@ export function CompetitionSlopeChart() {
               scaleY={scaleY}
               isHovered={hoveredId === line.sectorId}
               anyHovered={hoveredId !== null}
+              isTopFive={top5Ids.has(line.sectorId)}
               onHover={handleHover}
               onClick={() => navigate(`/sectors/${line.sectorId}`)}
             />
@@ -396,6 +406,7 @@ export function CompetitionSlopeChart() {
               scaleY={scaleY}
               isHovered={hoveredId === line.sectorId}
               anyHovered={hoveredId !== null}
+              isTopFive={top5Ids.has(line.sectorId)}
               onHover={handleHover}
               onClick={() => navigate(`/sectors/${line.sectorId}`)}
             />
@@ -412,7 +423,8 @@ export function CompetitionSlopeChart() {
           const MIN_GAP = 12
           // Compute initial label positions
           type LabelPos = { line: typeof crossers[0]; x: number; y: number }
-          const labels: LabelPos[] = crossers
+          const top5Crossers = crossers.filter((l) => top5Ids.has(l.sectorId))
+          const labels: LabelPos[] = top5Crossers
             .map((line) => {
               const lastPt = line.points[line.points.length - 1]
               if (!lastPt) return null
@@ -468,6 +480,22 @@ export function CompetitionSlopeChart() {
             opacity={0.7}
           >
             {isEs ? `+ ${belowCount} bajo el techo` : `+ ${belowCount} below ceiling`}
+          </text>
+        )}
+
+        {/* "N more above ceiling" annotation for non-highlighted sectors */}
+        {crossers.length > 5 && hoveredId === null && (
+          <text
+            x={MARGIN.left + innerW + 10}
+            y={MARGIN.top + innerH - 10}
+            fill={MUTED_GRAY}
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            opacity={0.6}
+          >
+            {isEs
+              ? `+ ${crossers.length - 5} más sobre el techo`
+              : `+ ${crossers.length - 5} more above ceiling`}
           </text>
         )}
       </svg>

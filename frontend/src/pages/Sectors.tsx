@@ -90,8 +90,9 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   // so the badge doesn't mislead readers skimming sector cards.
   const total = sector.total_contracts || 1
   const highCritPct = total > 0 ? (highPlusCritical / total) * 100 : 0
-  const effectiveLevel = (riskLevel === 'low' && highPlusCritical / total >= 0.05) ? 'medium' as const : riskLevel
   const daPct = sector.direct_award_pct ?? 0
+  const effectiveLevelBase = (riskLevel === 'low' && highCritPct >= 5) ? 'medium' as const : riskLevel
+  const effectiveLevel = (effectiveLevelBase === 'medium' && daPct > 50) ? 'high' as const : effectiveLevelBase
   const exceedsOECD = daPct > 25
   const sbPct = sector.single_bid_pct ?? 0
   // Bible §3.10: no green for low risk. Use zinc neutral for "clean".

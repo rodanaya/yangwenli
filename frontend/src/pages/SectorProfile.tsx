@@ -67,9 +67,7 @@ import {
 import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { gradeToTierKey, TIER_STYLES } from '@/lib/tiers'
-import { SectorSledgehammer } from '@/components/sectors/SectorSledgehammer'
 import { BenchmarkRow, type BenchmarkRowProps } from '@/components/editorial/BenchmarkRow'
-import { VendorRiskSpendBeeswarm, type VendorBeeItem } from '@/components/sectors/VendorRiskSpendBeeswarm'
 
 // ── constants ────────────────────────────────────────────────────────────────
 
@@ -191,7 +189,7 @@ function InstitutionList({
         return (
           <div
             key={i}
-            className="rounded-lg px-3 py-2 hover:bg-background-elevated transition-all"
+            className="px-3 py-1.5 border-b border-border/10 hover:bg-background-elevated/60 transition-colors"
           >
             {/* Two-row layout: name on its own row (full width, no truncation
                 competing with the money pill) + KPIs on row 2. Previous
@@ -1240,13 +1238,38 @@ export function SectorProfile() {
           </div>
         </div>
 
-        {/* sp-P1 — SectorSledgehammer: picks WORST metric, renders Pudding-style */}
-        <SectorSledgehammer
-          sectorCode={sector.code ?? ''}
-          sectorFill={sectorColor}
-          sectorName={sector.name ?? ''}
-          stats={stats ?? null}
-        />
+        {/* M3 — compact DA stat row: replaces SectorSledgehammer full-viewport block */}
+        {stats && (
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 mb-1 py-2 border-t border-border/30">
+            <span
+              className="tabular-nums"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontStyle: 'italic',
+                fontWeight: 800,
+                fontSize: 'clamp(20px, 3vw, 28px)',
+                color: sectorColor,
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {stats.direct_award_pct.toFixed(1)}%
+            </span>
+            <span className="text-sm text-text-secondary">
+              {isEs ? 'sin competencia' : 'direct award'}
+            </span>
+            <span className="text-text-muted mx-1">·</span>
+            <span className="font-mono text-xs text-text-muted">vs OECD ≤25%</span>
+            {stats.direct_award_pct > 25 && (
+              <span
+                className="font-mono text-xs font-bold"
+                style={{ color: RISK_COLORS.critical }}
+              >
+                {(stats.direct_award_pct / 25).toFixed(1)}×{' '}
+                {isEs ? 'ese techo' : 'that ceiling'}
+              </span>
+            )}
+          </div>
+        )}
       </header>
 
       {/* ── TABS ────────────────────────────────────────────────────────────── */}
@@ -1288,7 +1311,7 @@ export function SectorProfile() {
           role="tabpanel"
           aria-labelledby="tab-overview"
           hidden={activeTab !== 'overview'}
-          className="space-y-6"
+          className="space-y-4"
         >
           {/* Enhancement 1: PHI Governance Grade panel */}
           {phiDetail && (
@@ -1535,16 +1558,36 @@ export function SectorProfile() {
             </div>
           </div>
 
-          {/* sp-P4 — VendorRiskSpendBeeswarm: risk × log(spend) plane above the table */}
-          {!vendorsLoading && topVendors?.data?.length ? (
-            <div className="rounded-sm border border-border bg-background/40 p-4 mb-2">
-              <VendorRiskSpendBeeswarm
-                vendors={topVendors.data as VendorBeeItem[]}
-                sectorFill={sectorColor}
-                sectorTextColor={SECTOR_TEXT_COLORS[sector.code ?? ''] ?? sectorColor}
-              />
-            </div>
-          ) : null}
+          {/* M3 — vendor concentration hook: replaces sparse beeswarm */}
+          {!vendorsLoading && topVendors?.data?.length && stats ? (() => {
+            const top3Vendors = (topVendors.data as VendorRow[]).slice(0, 3)
+            const top3Sum = top3Vendors.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+            const top3Share = stats.total_value_mxn > 0 ? top3Sum / stats.total_value_mxn : 0
+            return (
+              <div className="flex items-center gap-3 px-3 py-2 mb-2 rounded-sm border border-border bg-background/40">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
+                  {isEs ? 'Concentración' : 'Concentration'}
+                </span>
+                <span className="text-sm font-bold text-text-primary tabular-nums">
+                  {(top3Share * 100).toFixed(0)}%
+                </span>
+                <span className="text-xs text-text-secondary">
+                  {isEs
+                    ? `top ${top3Vendors.length} proveedores del gasto sectorial`
+                    : `top ${top3Vendors.length} vendors of sector spend`}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <DotBar
+                    value={top3Share}
+                    max={1}
+                    color={RISK_COLORS.high}
+                    emptyColor="var(--color-background-elevated)"
+                    emptyStroke="var(--color-border-hover)"
+                  />
+                </div>
+              </div>
+            )
+          })() : null}
 
           <div className="rounded-sm border border-border bg-background/40 overflow-hidden">
             {vendorsLoading ? (
