@@ -48,7 +48,6 @@ import { formatVendorName } from '@/lib/vendor/formatName'
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
-import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
@@ -280,9 +279,12 @@ function snapshotToRows(s: YearSnapshot): ConstellationRiskRow[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ClusterDetailPanel — slides in from the right when a cluster is clicked.
+// ClusterDetailPanel — REMOVED in M-OBS Phase 2.
+// Replaced by <ClusterFloatingCard> (mounted inside the canvas via
+// AtlasZoomLayer) and a future bottom drawer (<AtlasVendorDrawer>).
+// The notes state (useClusterNotes hook) is preserved for reuse.
 // ─────────────────────────────────────────────────────────────────────────────
-interface ClusterDetailPanelProps {
+function _ClusterDetailPanel_REMOVED({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, topVendors, onNoteChange, onTogglePin, onClose, lang }: {
   meta: ClusterMeta | null
   mode: ConstellationMode
   pinnedCode: string | null
@@ -295,9 +297,7 @@ interface ClusterDetailPanelProps {
   onTogglePin: () => void
   onClose: () => void
   lang: 'en' | 'es'
-}
-
-function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, topVendors, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
+}) {
   const navigate = useNavigate()
   const isPinned = !!meta && pinnedCode === meta.code
 
@@ -1493,24 +1493,6 @@ export default function Atlas() {
   // click via the existing handleClusterClick path.
   const namedVendors = useTopVendorsForCluster(mode, selectedClusterCode)
 
-  // Resolve selected cluster meta from the active meta set — uses the same
-  // builders as the constellation so vendor/T1/risk numbers render correctly.
-  const selectedMeta: ClusterMeta | null = useMemo(() => {
-    if (!selectedClusterCode) return null
-    const isEs = lang === 'es'
-    let metas: ClusterMeta[]
-    if (mode === 'categories') {
-      metas = atlasMeta ?? buildAtlasCategoriesMeta(isEs)
-    } else if (mode === 'sectors') {
-      metas = buildSectorMeta(isEs)
-    } else if (mode === 'sexenios') {
-      metas = buildSexenioMeta(isEs)
-    } else {
-      metas = buildPatternMeta(isEs)
-    }
-    return metas.find((m) => m.code === selectedClusterCode) ?? null
-  }, [selectedClusterCode, mode, atlasMeta, lang])
-
   const handleClusterClick = (clusterCode: string) => {
     setSelectedClusterCode(clusterCode)
   }
@@ -2199,45 +2181,6 @@ export default function Atlas() {
           </div>{/* /folio-skin content wrapper */}
           </div>
         }
-        rightPanel={
-          // When a cluster is selected (and not in z1+sectors suppression mode),
-          // show the ClusterDetailPanel in the right rail instead of the generic
-          // AtlasRightPanel. Year-delta is computed here so it can be passed down.
-          selectedMeta && !(z1Enabled && mode === 'sectors')
-            ? (() => {
-                let deltaT1: number | undefined = undefined
-                let deltaPct: number | undefined = undefined
-                if (yearIndex > 0) {
-                  const prevSnap = effectiveSnapshot(yearIndex - 1)
-                  const curSnap = snapshot
-                  const BASELINE = 11.01
-                  const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
-                  const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
-                  const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
-                  const t1Prev = Math.round(selectedMeta.t1 * ratioPrev)
-                  deltaT1 = t1Cur - t1Prev
-                  deltaPct = (curSnap.criticalPct + curSnap.highPct) - (prevSnap.criticalPct + prevSnap.highPct)
-                }
-                return (
-                  <ClusterDetailPanel
-                    meta={selectedMeta}
-                    mode={mode}
-                    pinnedCode={pinnedCode}
-                    note={notes[selectedMeta.code] ?? ''}
-                    yearLabel={snapshot.year}
-                    yearDeltaT1={deltaT1}
-                    yearDeltaPct={deltaPct}
-                    topVendors={namedVendors}
-                    onNoteChange={(text) => setNote(selectedMeta.code, text)}
-                    onTogglePin={() => setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))}
-                    onClose={() => setSelectedClusterCode(null)}
-                    lang={lang}
-                  />
-                )
-              })()
-            : <AtlasRightPanel lang={lang} />
-        }
-        forceRightPanel={!!(selectedMeta && !(z1Enabled && mode === 'sectors'))}
       />
     </AtlasContextProvider>
   )

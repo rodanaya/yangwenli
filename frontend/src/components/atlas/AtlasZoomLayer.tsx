@@ -39,6 +39,8 @@ import type { AtlasAction } from './AtlasContext'
 import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
 import { useAtlasLOD, atlasLODBandLabel, type AtlasLOD } from '@/lib/atlas/useAtlasLOD'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
+import { AtlasBreadcrumb } from './AtlasBreadcrumb'
+import { ClusterFloatingCard } from './ClusterFloatingCard'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
 // 2026-05-09: SVG_H bumped 220 → 540 to give the constellation real
@@ -347,6 +349,63 @@ export function AtlasZoomLayer({
     return () => window.removeEventListener('wheel', onWheel)
   }, [isZoomed, transform])
 
+  // ── Keyboard-driven zoom/pan (M-OBS Phase 2) ──────────────────────────────
+  // AtlasShell broadcasts `atlas:zoom-in`, `atlas:zoom-out`, `atlas:zoom-reset`
+  // and `atlas:pan-{up|down|left|right}` window events when the user presses
+  // +/-/0 or the arrow keys. Mirror the wheel-zoom math so + and wheel feel
+  // identical; pan in SVG-units steps of ±40.
+  useEffect(() => {
+    if (!isZoomed) return
+    const PAN_STEP = 40
+    const onZoomIn = () => {
+      const next = Math.min(USER_ZOOM_MAX, userZoomRef.current * 1.2)
+      if (next === userZoomRef.current) return
+      userZoomRef.current = next
+      setUserZoom(next)
+    }
+    const onZoomOut = () => {
+      const next = Math.max(USER_ZOOM_MIN, userZoomRef.current * 0.83)
+      if (next === userZoomRef.current) return
+      userZoomRef.current = next
+      setUserZoom(next)
+    }
+    const onZoomReset = () => {
+      userZoomRef.current = 1
+      panOffsetRef.current = { x: 0, y: 0 }
+      setUserZoom(1)
+      setPanOffset({ x: 0, y: 0 })
+    }
+    const pan = (dx: number, dy: number) => {
+      const next = {
+        x: panOffsetRef.current.x + dx,
+        y: panOffsetRef.current.y + dy,
+      }
+      panOffsetRef.current = next
+      setPanOffset(next)
+    }
+    const onPanUp    = () => pan(0,  PAN_STEP)
+    const onPanDown  = () => pan(0, -PAN_STEP)
+    const onPanLeft  = () => pan(PAN_STEP, 0)
+    const onPanRight = () => pan(-PAN_STEP, 0)
+
+    window.addEventListener('atlas:zoom-in', onZoomIn)
+    window.addEventListener('atlas:zoom-out', onZoomOut)
+    window.addEventListener('atlas:zoom-reset', onZoomReset)
+    window.addEventListener('atlas:pan-up', onPanUp)
+    window.addEventListener('atlas:pan-down', onPanDown)
+    window.addEventListener('atlas:pan-left', onPanLeft)
+    window.addEventListener('atlas:pan-right', onPanRight)
+    return () => {
+      window.removeEventListener('atlas:zoom-in', onZoomIn)
+      window.removeEventListener('atlas:zoom-out', onZoomOut)
+      window.removeEventListener('atlas:zoom-reset', onZoomReset)
+      window.removeEventListener('atlas:pan-up', onPanUp)
+      window.removeEventListener('atlas:pan-down', onPanDown)
+      window.removeEventListener('atlas:pan-left', onPanLeft)
+      window.removeEventListener('atlas:pan-right', onPanRight)
+    }
+  }, [isZoomed])
+
   // Cluster click handler — dispatches zoom-into-cluster (legacy) OR
   // drill-into-sector (spatial nav Z1) depending on `z1Enabled` + lens.
   const handleClusterClick = (clusterCode: string) => {
@@ -414,11 +473,37 @@ export function AtlasZoomLayer({
   // The 600ms ease only runs on the initial zoom-in animation.
   const transitionStr = isDragging || (isZoomed && userZoom !== 1) ? 'none' : ZOOM_TRANSITION
 
+  // ── M-OBS Phase 2 chrome — breadcrumb + floating cluster card ──────────────
+  // Mounted inside the canvas wrapper so they share the constellation's
+  // stacking context. They appear ONLY while zoomed; on escape-zoom the
+  // canvas returns to the unchromed galaxy state.
+  const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
+    patterns:   { en: 'Patterns',   es: 'Patrones' },
+    sectors:    { en: 'Sectors',    es: 'Sectores' },
+    categories: { en: 'Categories', es: 'Categorías' },
+    sexenios:   { en: 'Terms',      es: 'Sexenios' },
+  }
+  const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
+  const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+  const topVendors = (zoomedCode && namedVendors)
+    ? namedVendors.filter((n) => n.clusterCode === zoomedCode).slice(0, 3)
+    : []
+
   return (
     <div
       className="relative"
       style={{ position: 'relative' }}
     >
+      {/* ── M-OBS P2 breadcrumb — context strip at top of canvas ─────────────── */}
+      {isZoomed && zoomedMeta && (
+        <AtlasBreadcrumb
+          lang={lang}
+          lensLabel={lensLabel}
+          clusterLabel={clusterLabel}
+          onGoHome={() => dispatch({ type: 'escape-zoom' })}
+        />
+      )}
+
       {/* ── SVG overlay container — wraps the constellation in a transform layer ── */}
       {/*
         We can't wrap the constellation's internal <svg> in another <g> because
@@ -548,6 +633,26 @@ export function AtlasZoomLayer({
           style={{ color: 'var(--color-text-muted)', letterSpacing: '0.14em' }}
         >
           click a cluster · then drag to pan · scroll to zoom
+        </div>
+      )}
+
+      {/* ── M-OBS P2 floating cluster card — top-right of canvas ───────────── */}
+      {isZoomed && zoomedMeta && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            zIndex: 20,
+            pointerEvents: 'auto',
+          }}
+        >
+          <ClusterFloatingCard
+            meta={zoomedMeta}
+            topVendors={topVendors}
+            onClose={() => dispatch({ type: 'escape-zoom' })}
+            lang={lang}
+          />
         </div>
       )}
 

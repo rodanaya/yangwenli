@@ -1,98 +1,106 @@
 /**
- * AtlasShell — three-pane Bloomberg Terminal grid container.
+ * AtlasShell — two-pane shell for the investigator console (M-OBS Phase 2).
  *
  * Plan: docs/ATLAS_C_CONSOLE_PLAN.md § 1.1, § 2.5
- * Build: atlas-C-P1 (layout), atlas-C-P2 (ESC handler)
+ * Build: atlas-C-P1 (layout), atlas-C-P2 (ESC handler),
+ *        M-OBS-P2 (right rail removed, keyboard handler extended)
  *
- * Grid: [240px left rail] [1fr center] [320px right panel]
- * At <1024px collapses to single column (mobile fallback per § 8).
+ * Grid: [240px left rail] [1fr center]. At <1024px collapses to single column.
  *
- * P2 adds: global ESC handler that dispatches escape-zoom when
- * the view is zoomed or selecting, per the VS Code / Figma convention.
- * ESC does NOT fire when focus is inside an input or textarea.
+ * The 320px right rail is gone — its job is now done by ClusterFloatingCard
+ * (mounted INSIDE the canvas via AtlasZoomLayer) and a future bottom drawer.
+ * That frees ~320px of horizontal canvas room — the canvas becomes the page.
  *
- * P1: purely structural shell. The existing ClusterDetailPanel modal
- * still slides over this layout — it stays until P3 replaces it with
- * the contextual right panel states.
+ * Global keyboard handler:
+ *   ESC          → pop zoom (zoomed-* / selecting → idle)
+ *   + / =        → emit `atlas:zoom-in` (AtlasZoomLayer applies userZoom × 1.2)
+ *   -            → emit `atlas:zoom-out` (userZoom × 0.83)
+ *   0            → emit `atlas:zoom-reset` (userZoom = 1, panOffset reset)
+ *   Arrow keys   → emit `atlas:pan-{up|down|left|right}` (±40 SVG units)
+ *   H / h        → escape-zoom (return to galaxy)
+ *   Enter        → click the focused element (default browser behavior, no-op)
+ *
+ * Handlers are skipped when focus is inside an INPUT/TEXTAREA so vendor search
+ * and personal notes are not interrupted.
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 
 interface AtlasShellProps {
   leftRail: React.ReactNode
   center: React.ReactNode
-  rightPanel: React.ReactNode
-  /** When true, the right panel is always visible (e.g. a cluster is selected).
-   *  Overrides the user's localStorage toggle so the panel shows without the
-   *  user having to manually open it. The floating toggle is hidden while
-   *  forceRightPanel is true to avoid fighting the forced state. */
-  forceRightPanel?: boolean
 }
 
-const RIGHT_PANEL_OPEN_KEY = 'rubli_atlas_right_panel_open_v1'
-
-export function AtlasShell({ leftRail, center, rightPanel, forceRightPanel = false }: AtlasShellProps) {
+export function AtlasShell({ leftRail, center }: AtlasShellProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
 
-  // 2026-05-09: right panel now collapsible. Default OFF so the map
-  // gets ~1300px of viewport width on a 1700px screen instead of being
-  // squeezed to ~870px. User can re-open via the floating toggle when
-  // they want the meta stats. Persisted in localStorage so the choice
-  // sticks across sessions.
-  const [rightPanelOpen, setRightPanelOpen] = useState<boolean>(() => {
-    try {
-      const stored = window.localStorage.getItem(RIGHT_PANEL_OPEN_KEY)
-      return stored === '1'
-    } catch {
-      return false
-    }
-  })
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(RIGHT_PANEL_OPEN_KEY, rightPanelOpen ? '1' : '0')
-    } catch {
-      /* localStorage unavailable */
-    }
-  }, [rightPanelOpen])
-
-  // ── ESC key handler (§ 2.5) ──────────────────────────────────────────────
-  // Global keydown that dispatches escape-zoom when zoomed or selecting.
-  // Skips when focus is inside an input or textarea so vendor search and
-  // personal notes are not interrupted.
+  // ── Global keyboard handler ──────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      // Don't fire when focus is inside a text input
       const tag = (e.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
 
-      // 2026-05-09 spatial-nav: also pop zoomed-sector and zoomed-institution
       const kind = state.view.kind
-      if (
+      const isZoomedKind =
         kind === 'zoomed-cluster' ||
         kind === 'zoomed-sector' ||
         kind === 'zoomed-institution' ||
         kind === 'selecting'
-      ) {
-        dispatch({ type: 'escape-zoom' })
+
+      // ESC — pop one zoom level
+      if (e.key === 'Escape') {
+        if (isZoomedKind) dispatch({ type: 'escape-zoom' })
+        return
       }
+
+      // H / h — go home (galaxy)
+      if (e.key === 'h' || e.key === 'H') {
+        if (isZoomedKind) {
+          e.preventDefault()
+          dispatch({ type: 'escape-zoom' })
+        }
+        return
+      }
+
+      // The remaining shortcuts only operate inside a zoomed state — they
+      // drive AtlasZoomLayer's pan + wheel-zoom which only exist while zoomed.
+      if (!isZoomedKind) return
+
+      // + / = → zoom in
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:zoom-in'))
+        return
+      }
+      // - → zoom out
+      if (e.key === '-' || e.key === '_') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:zoom-out'))
+        return
+      }
+      // 0 → reset wheel zoom + pan
+      if (e.key === '0') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:zoom-reset'))
+        return
+      }
+      // Arrow keys — pan ±40 SVG units
+      if (e.key === 'ArrowUp')    { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-up'));    return }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-down'));  return }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-left'));  return }
+      if (e.key === 'ArrowRight') { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-right')); return }
+      // Enter — no-op (lets default browser behavior click the focused element)
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.view, dispatch])
 
-  // rightPanelOpen = forceRightPanel (cluster selected) OR user toggled it on.
-  const isRightPanelVisible = forceRightPanel || rightPanelOpen
-
-  // Grid columns flip between 2 and 3 based on isRightPanelVisible.
-  const gridCols = isRightPanelVisible ? 'lg:grid-cols-[240px_1fr_320px]' : 'lg:grid-cols-[240px_1fr]'
-
   return (
     <div
-      className={`grid grid-cols-1 ${gridCols} gap-0 relative`}
+      className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0 relative"
       style={{ minHeight: 'calc(100vh - var(--topbar-h, 64px))' }}
     >
       {/* ── Left rail ──────────────────────────────────────────────── */}
@@ -108,44 +116,9 @@ export function AtlasShell({ leftRail, center, rightPanel, forceRightPanel = fal
       </aside>
 
       {/* ── Center pane — the constellation lives here ─────────────── */}
-      <main
-        className="overflow-hidden min-w-0"
-        style={{ borderRight: isRightPanelVisible ? '1px solid var(--color-border)' : 'none' }}
-      >
+      <main className="overflow-hidden min-w-0">
         {center}
       </main>
-
-      {/* ── Right panel — collapsible or forced open when a cluster is selected ── */}
-      {isRightPanelVisible && (
-        <aside
-          className="hidden lg:flex flex-col border-l border-border overflow-y-auto"
-          style={{
-            position: 'sticky',
-            top: 'var(--topbar-h, 64px)',
-            height: 'calc(100vh - var(--topbar-h, 64px))',
-          }}
-        >
-          {rightPanel}
-        </aside>
-      )}
-
-      {/* Floating toggle — hidden on mobile and when panel is forced open by a cluster selection */}
-      {!forceRightPanel && (
-        <button
-          type="button"
-          onClick={() => setRightPanelOpen((v) => !v)}
-          className="hidden lg:flex items-center justify-center fixed top-[80px] right-3 z-30 h-8 w-8 rounded-sm hover:bg-background-elevated transition-colors"
-          style={{
-            background: 'var(--color-background-card)',
-            border: '1px solid var(--color-border)',
-            color: 'var(--color-text-secondary)',
-          }}
-          aria-label={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
-          title={rightPanelOpen ? 'Hide stats panel' : 'Show stats panel'}
-        >
-          <span className="text-[14px] leading-none font-mono">{rightPanelOpen ? '›' : '‹'}</span>
-        </button>
-      )}
     </div>
   )
 }
