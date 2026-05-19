@@ -12,7 +12,7 @@
  * Credo: "evenflow" — ONE obvious action per element.
  */
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Fragment } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -25,8 +25,8 @@ import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorName, SECTORS, RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
+import { cn, formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
+import { getSectorName, SECTORS } from '@/lib/constants'
 import {
   Search,
   FileText,
@@ -296,55 +296,6 @@ function ReviewPopover({
 // to components/aria/GhostSuspectsPanel.tsx (167 LOC removed from this file).
 
 /**
- * TenureRibbon — horizontal mini-strip mapping a vendor's active years
- * to the full COMPRANET 2002-2025 axis. Replaces the useless 12px IPS
- * bar that was always 80-90% full for every T1 vendor.
- *
- * The visual difference between vendors is now SHAPE: a vendor active
- * 2008-2025 has a wide bar; one active only 2024-2025 has a tiny bar
- * pinned to the right. Position + width = trajectory at a glance.
- */
-function TenureRibbon({
-  firstYear,
-  lastYear,
-  riskColor,
-}: {
-  firstYear: number
-  lastYear: number
-  riskColor: string
-}) {
-  const AXIS_MIN = 2002
-  const AXIS_MAX = 2025
-  const span = AXIS_MAX - AXIS_MIN
-  const startPct = ((firstYear - AXIS_MIN) / span) * 100
-  const widthPct = Math.max(2, ((lastYear - firstYear + 1) / span) * 100)
-  const isRecent = lastYear >= 2024
-  return (
-    <div className="relative w-[88px] h-2 rounded-sm bg-background-elevated/60 border border-border/50 overflow-hidden flex-shrink-0" aria-hidden>
-      {/* 2010 / 2018 reference ticks — faint vertical guide lines for orientation */}
-      {[2010, 2018].map((y) => (
-        <div
-          key={y}
-          className="absolute top-0 bottom-0 w-px bg-border/40"
-          style={{ left: `${((y - AXIS_MIN) / span) * 100}%` }}
-        />
-      ))}
-      {/* The ribbon itself */}
-      <div
-        className="absolute top-0.5 bottom-0.5 rounded-sm"
-        style={{
-          left: `${startPct}%`,
-          width: `${widthPct}%`,
-          backgroundColor: riskColor,
-          opacity: 0.85,
-          boxShadow: isRecent ? `0 0 4px ${riskColor}` : undefined,
-        }}
-      />
-    </div>
-  )
-}
-
-/**
  * FilterChip — small removable pill for the Active-filter summary bar.
  * Shows the filter label + an X to clear that one filter without
  * resetting the rest of the active combination.
@@ -382,83 +333,37 @@ function FilterChip({
   )
 }
 
-// ============================================================================
-// LollipopScore — FT Visual Vocabulary "lollipop" ranking pattern.
-//
-// One row. Thin baseline rule from x=0 to score-x. Vertical tick at the
-// T2/T3 boundary (avg ≈ 0.50, the high-risk threshold) to anchor scale.
-// Filled dot at score-x, colored by tier. Score label sits right of dot.
-//
-// Reads magnitude AND deviation-from-baseline at a glance — the two
-// pieces of information a journalist needs from a queue ranking.
-// ============================================================================
-
-const TIER_DOT_COLOR: Record<1 | 2 | 3 | 4, string> = {
-  1: '#c41e3a', // T1 critical
-  2: '#ea580c', // T2 high
-  3: '#f59e0b', // T3 medium
-  4: '#71717a', // T4 low — warm zinc, never green
-}
-
-function LollipopScore({ ips, tier }: { ips: number; tier: 1 | 2 | 3 | 4 }) {
-  // ips is in [0, 1]. Map to a 0..130 px track inside a 140-wide SVG.
-  const trackW = 130
-  const clamped = Math.max(0, Math.min(1, ips))
-  const dotX = clamped * trackW
-  const avgX = 0.5 * trackW // T2/T3 boundary baseline tick
-  const dotColor = TIER_DOT_COLOR[tier]
-  const label = Math.round(clamped * 100)
-
-  return (
-    <svg
-      width={140}
-      height={20}
-      viewBox="0 0 140 20"
-      role="img"
-      aria-label={`IPS ${label} of 100, tier ${tier}`}
-      className="shrink-0 overflow-visible"
-    >
-      {/* Stick: thin line from origin to dot */}
-      <line
-        x1={0}
-        y1={10}
-        x2={dotX}
-        y2={10}
-        stroke="#3f3f46"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-      />
-      {/* Baseline tick at avg — small vertical mark */}
-      <line
-        x1={avgX}
-        y1={6}
-        x2={avgX}
-        y2={14}
-        stroke="#52525b"
-        strokeWidth={1}
-      />
-      {/* Lollipop head */}
-      <circle cx={dotX} cy={10} r={5} fill={dotColor} />
-      {/* IPS readout right of dot */}
-      <text
-        x={Math.min(dotX + 9, trackW + 1)}
-        y={13}
-        fontSize={9}
-        fill="#a1a1aa"
-        className="font-mono tabular-nums"
-      >
-        {label}
-      </text>
-    </svg>
-  )
-}
-
 // 2026-05-08 audit fix: title was monolingual EN — now picks ES on `es` locale.
 const REVIEW_GLYPH: Record<ReviewStatus, { char: string; color: string; titleEn: string; titleEs: string }> = {
   pending:    { char: '○', color: 'var(--color-text-muted)',     titleEn: 'Pending review',      titleEs: 'Revisión pendiente' },
   reviewing:  { char: '◐', color: 'var(--color-risk-high)',      titleEn: 'Under review',         titleEs: 'En revisión' },
   confirmed:  { char: '✓', color: 'var(--color-risk-critical)',  titleEn: 'Confirmed corrupt',    titleEs: 'Corrupción confirmada' },
   dismissed:  { char: '⊘', color: 'var(--color-text-muted)',     titleEn: 'Dismissed',            titleEs: 'Descartado' },
+}
+
+function getTopBadges(item: AriaQueueItem, isEs: boolean): Array<{ code: string; cls: string; title: string }> {
+  const badges: Array<{ code: string; cls: string; title: string }> = []
+  if (item.in_ground_truth) {
+    badges.push({ code: 'GT', cls: 'bg-accent/10 text-accent border-accent/30', title: isEs ? 'Caso documentado de corrupción' : 'Documented corruption case' })
+  }
+  if (item.is_efos_definitivo) {
+    badges.push({ code: 'EFOS', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', title: 'SAT EFOS Definitivo' })
+  }
+  if (item.is_sfp_sanctioned) {
+    badges.push({ code: 'SFP', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', title: isEs ? 'Sancionado por la SFP' : 'Sanctioned by SFP' })
+  }
+  if (item.web_evidence_verdict === 'SANCTION') {
+    badges.push({ code: 'SANC', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', title: 'CENTINELA — Sanction' })
+  } else if (item.web_evidence_verdict === 'CORRUPTION_MENTION') {
+    badges.push({ code: 'CORR', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', title: 'CENTINELA — Corruption mention' })
+  }
+  if (item.memo_provenance === 'llm_narrative') {
+    badges.push({ code: 'LLM', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', title: isEs ? 'Memo investigativo IA' : 'AI investigation memo' })
+  }
+  if (!item.in_ground_truth && item.ips_tier === 1) {
+    badges.push({ code: 'DISC', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', title: isEs ? 'Descubrimiento del modelo' : 'Model discovery' })
+  }
+  return badges
 }
 
 function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }) {
@@ -477,8 +382,6 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
   const contracts = item.total_contracts ?? 0
   const sector = item.primary_sector_name ?? null
 
-  // Recency / tenure — prefer direct year columns (from vendor_stats JOIN),
-  // fall back to years_active derivation for older API deploys.
   const lastYear = item.last_contract_year ?? null
   const yearsActive = item.years_active ?? null
   const firstYear =
@@ -491,17 +394,16 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
 
   const reviewStatus = (item.review_status as ReviewStatus | undefined) ?? 'pending'
   const reviewGlyph = REVIEW_GLYPH[reviewStatus] ?? REVIEW_GLYPH.pending
-  const flagsCount =
-    (item.in_ground_truth ? 1 : 0) +
-    (item.is_efos_definitivo ? 1 : 0) +
-    (item.is_sfp_sanctioned ? 1 : 0)
 
-  // IPS color for both score and tenure ribbon (consistent across the row)
   const riskColor =
     ips >= 0.75 ? 'var(--color-risk-critical)'
     : ips >= 0.50 ? 'var(--color-risk-high)'
     : ips >= 0.30 ? 'var(--color-risk-medium)'
     : 'var(--color-text-muted)'
+
+  const allBadges = getTopBadges(item, isEs)
+  const shownBadges = allBadges.slice(0, 2)
+  const overflowCount = allBadges.length - 2
 
   const handleClick = () => {
     navigate(`/thread/${item.vendor_id}`)
@@ -520,70 +422,75 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           }
         }}
         className={cn(
-          'group relative grid items-center gap-x-3 gap-y-1 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
-          'grid-cols-[1fr_auto_auto_auto] sm:grid-cols-[1fr_auto_auto_auto_auto]',
+          'group relative grid items-center gap-x-3 gap-y-0.5 px-3 py-2 border-b border-border/50 border-l-2 bg-background-card hover:bg-background-elevated/40 transition-colors cursor-pointer',
+          'grid-cols-[1fr_auto_auto_auto_auto] sm:grid-cols-[1fr_auto_auto_auto_auto_auto]',
           tierCfg.accent
         )}
       >
-        {/* ─── LINE 1 ─────────────────────────────────────────────────── */}
-
-        {/* Vendor name — EntityIdentityChip with narrative=true so the chip
-            link target (/thread/:id) matches the row's onClick. Without
-            this the chip routes to /vendors/:id and the user's first
-            instinct (click the name) lands on the vendor profile instead
-            of the Red Thread, contradicting the row's affordance.
-            stopPropagation still prevents double-navigation if the chip
-            and row both fire. */}
+        {/* ─── LINE 1: Name + pattern + sector + score + badges + review + arrow ── */}
         <div className="min-w-0 flex items-center gap-2">
-          <div onClick={(e) => e.stopPropagation()} className="min-w-0 max-w-full overflow-hidden">
+          <div onClick={(e) => e.stopPropagation()} className="min-w-0">
             <EntityIdentityChip
               type="vendor"
               id={item.vendor_id}
               name={item.vendor_name}
-              size="sm"
+              size="md"
               riskScore={item.avg_risk_score}
               sectorCode={item.primary_sector_name ?? null}
               ariaTier={item.ips_tier}
               narrative
               hideIcon
-              className="max-w-full"
             />
           </div>
-          {item.new_vendor_risk && (
-            <span className="shrink-0 font-mono text-[8px] font-bold tracking-widest uppercase text-risk-high bg-risk-high/10 border border-risk-high/30 px-1 py-0.5 rounded-sm">
-              {isEs ? 'NUEVO' : 'NEW'}
+          {patternKey && patternMeta && (
+            <span
+              className={cn('shrink-0 font-mono text-[9px] font-bold px-1 py-0.5 rounded-sm leading-none border', patternMeta.bg, patternMeta.text, patternMeta.border)}
+            >
+              {patternKey}
+            </span>
+          )}
+          {sector && (
+            <span className="shrink-0 text-[10px] font-mono uppercase tracking-[0.06em] text-text-muted hidden sm:inline" title={getSectorName(sector, isEs ? 'es' : 'en')}>
+              {getSectorName(sector, isEs ? 'es' : 'en')}
             </span>
           )}
         </div>
 
-        {/* Total value — line 1, right-aligned */}
-        <div className="text-right shrink-0">
-          {value > 0 && (
-            <span className="text-sm font-bold font-mono tabular-nums text-text-primary">
-              {formatCompactMXN(value)}
-            </span>
-          )}
-        </div>
-
-        {/* IPS score — lollipop on sm+, compact badge on xs */}
+        {/* IPS score — compact number badge */}
         <div
           className="shrink-0 flex items-center justify-end"
-          title={`IPS ${ipsPct} · T${tier} (baseline tick = high-risk threshold 50)`}
+          title={`IPS ${ipsPct} · T${tier}`}
         >
-          {/* Compact badge — xs only */}
           <span
-            className="sm:hidden font-mono tabular-nums text-xs font-bold px-1.5 py-0.5 rounded-sm"
+            className="font-mono tabular-nums text-xs font-bold px-1.5 py-0.5 rounded-sm"
             style={{ color: riskColor, background: `${riskColor}18`, border: `1px solid ${riskColor}33` }}
           >
             {ipsPct}
           </span>
-          {/* Lollipop — sm and above */}
-          <span className="hidden sm:flex items-center">
-            <LollipopScore ips={ips} tier={tier} />
-          </span>
         </div>
 
-        {/* Review status glyph — visible inline, replaces the buried popover icon */}
+        {/* Badges — max 2 + overflow */}
+        <div className="shrink-0 flex items-center gap-1">
+          {shownBadges.map((b) => (
+            <span
+              key={b.code}
+              className={cn('inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border', b.cls)}
+              title={b.title}
+            >
+              {b.code}
+            </span>
+          ))}
+          {overflowCount > 0 && (
+            <span
+              className="text-[8px] font-mono text-text-muted bg-background-elevated rounded px-1 py-0.5"
+              title={allBadges.slice(2).map(b => b.code).join(', ')}
+            >
+              +{overflowCount}
+            </span>
+          )}
+        </div>
+
+        {/* Review glyph */}
         <div className="shrink-0 flex items-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setReviewOpen((v) => !v)}
@@ -605,69 +512,32 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
           )}
         </div>
 
-        {/* Open arrow */}
+        {/* Arrow */}
         <ArrowRight className="hidden sm:block h-3.5 w-3.5 text-text-muted group-hover:text-risk-high group-hover:translate-x-0.5 transition-all shrink-0" aria-hidden="true" />
 
-        {/* ─── LINE 2 ─────────────────────────────────────────────────── */}
-
-        {/* Meta row spans the full width */}
+        {/* ─── LINE 2: Financials + timeline ─────────────────────────── */}
         <div className="col-span-full flex items-center gap-2.5 text-[10px] font-mono text-text-muted flex-wrap">
-          {/* Sector chip with sector-color dot */}
-          {sector && (
-            <span className="inline-flex items-center gap-1 max-w-[160px]">
-              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" aria-hidden="true" />
-              {/* 2026-05-08 audit fix: sector chips were force-EN; now follow lang */}
-              <span className="uppercase tracking-[0.06em] truncate" title={getSectorName(sector, isEs ? 'es' : 'en')}>
-                {getSectorName(sector, isEs ? 'es' : 'en')}
+          {value > 0 && (
+            <>
+              <span className="text-[11px] font-bold tabular-nums text-text-primary">
+                {formatCompactMXN(value)}
               </span>
-            </span>
+              <span className="tabular-nums text-text-muted/70">
+                ~{formatCompactUSD(value)}
+              </span>
+            </>
           )}
-
-          {/* Contract count — pluralized so it never reads "1 contratos" */}
           {contracts > 0 && (
             <span className="tabular-nums">
               {formatNumber(contracts)}{' '}
-              {isEs
-                ? (contracts === 1 ? 'contrato' : 'contratos')
-                : (contracts === 1 ? 'contract' : 'contracts')}
+              {isEs ? (contracts === 1 ? 'contrato' : 'contratos') : (contracts === 1 ? 'contract' : 'contracts')}
             </span>
           )}
-
-          {/* Top institution — institutional capture indicator (S.1 backfill) */}
-          {item.top_institution && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1',
-                (item.top_institution_ratio ?? 0) >= 0.6
-                  ? 'text-risk-high'
-                  : 'text-text-muted'
-              )}
-              title={
-                item.top_institution_ratio != null
-                  ? `${isEs ? 'Institución principal' : 'Top institution'}: ${item.top_institution} · ${(item.top_institution_ratio * 100).toFixed(0)}%`
-                  : item.top_institution
-              }
-            >
-              <span className="text-text-muted/50">▸</span>
-              <span className="uppercase tracking-[0.04em] truncate max-w-[100px]">{item.top_institution}</span>
-              {item.top_institution_ratio != null && item.top_institution_ratio >= 0.3 && (
-                <span className="tabular-nums opacity-70">
-                  {(item.top_institution_ratio * 100).toFixed(0)}%
-                </span>
-              )}
+          {firstYear != null && lastYear != null && (
+            <span className="tabular-nums">
+              '{String(firstYear).slice(2)}–'{String(lastYear).slice(2)}
             </span>
           )}
-
-          {/* Pattern — full label inline (was: just "P5") */}
-          {patternKey && patternMeta && (
-            <span className={cn('inline-flex items-center gap-1', patternMeta.text)}>
-              <span className={cn('h-1 w-1 rounded-full', patternMeta.dot)} aria-hidden="true" />
-              <span className="font-mono font-bold">{patternKey}</span>
-              <span className="text-text-secondary normal-case">{t(`patterns.${patternKey}`)}</span>
-            </span>
-          )}
-
-          {/* Recency badge — derived from last_contract_year */}
           {isActive ? (
             <span className="inline-flex items-center gap-1 text-risk-high">
               <span className="h-1.5 w-1.5 rounded-full bg-risk-high animate-pulse" aria-hidden="true" />
@@ -679,96 +549,13 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
             <span className="text-text-muted/70">
               {isEs ? `Inactivo desde ${lastYear}` : `Dormant since ${lastYear}`}
             </span>
-          ) : lastYear ? (
-            <span className="text-text-muted/70">
-              {isEs ? `Última: ${lastYear}` : `Last: ${lastYear}`}
-            </span>
           ) : null}
-
-          {/* External flag glyphs — inline, not buried */}
-          {flagsCount > 0 && (
-            <span className="inline-flex items-center gap-1">
-              {item.in_ground_truth && (
-                <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent/10 text-accent border border-accent/30"
-                  title={isEs
-                    ? 'Anclado en corpus GT — ya documentado como corrupción. IPS elevado refleja el anclaje, no solo señal del modelo.'
-                    : 'GT-anchored — already documented corruption. High IPS reflects GT boost, not model-only signal.'}
-                >
-                  GT
-                </span>
-              )}
-              {!item.in_ground_truth && item.ips_tier === 1 && (
-                <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
-                  title={isEs
-                    ? 'Descubrimiento del modelo — T1 sin anclaje GT. Señal pura del modelo de riesgo.'
-                    : 'Model discovery — T1 without GT anchor. Pure risk model signal.'}
-                >
-                  {isEs ? 'DESCUBRIMIENTO' : 'DISCOVERY'}
-                </span>
-              )}
-              {item.is_efos_definitivo && (
-                <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-critical/10 text-risk-critical border border-risk-critical/30"
-                  title="SAT EFOS Definitivo"
-                >
-                  EFOS
-                </span>
-              )}
-              {item.is_sfp_sanctioned && (
-                <span
-                  className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-risk-high/10 text-risk-high border border-risk-high/30"
-                  title={isEs ? 'Sancionado por la SFP' : 'Sanctioned by SFP'}
-                >
-                  SFP
-                </span>
-              )}
-            </span>
-          )}
-
-          {/* Memo quality glyph — LLM narrative available */}
-          {item.memo_provenance === 'llm_narrative' && (
-            <span
-              className="inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-accent-data/10 text-accent-data border border-accent-data/20"
-              title={isEs ? 'Memo investigativo LLM disponible' : 'LLM investigation memo available'}
-            >
-              LLM
-            </span>
-          )}
-
-          {/* Web evidence badge (CENTINELA) */}
-          {item.web_evidence_verdict && item.web_evidence_verdict !== 'NEGATIVE' && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border',
-                item.web_evidence_verdict === 'SANCTION'
-                  ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                  : item.web_evidence_verdict === 'CORRUPTION_MENTION'
-                    ? 'bg-risk-high/10 text-risk-high border-risk-high/30'
-                    : item.web_evidence_verdict === 'SHELL_SIGNAL'
-                      ? 'bg-risk-medium/10 text-risk-medium border-risk-medium/30'
-                      : 'bg-background-elevated text-text-secondary border-border'
-              )}
-              title={`Evidencia web CENTINELA — ${item.web_evidence_verdict} (score ${((item.web_evidence_score ?? 0) * 100).toFixed(0)})`}
-            >
-              {item.web_evidence_verdict === 'SANCTION'
-                ? 'SANC·WEB'
-                : item.web_evidence_verdict === 'CORRUPTION_MENTION'
-                  ? 'CORR·WEB'
-                  : item.web_evidence_verdict === 'SHELL_SIGNAL'
-                    ? (isEs ? 'FANTASMA·WEB' : 'SHELL·WEB')
-                    : (isEs ? 'PRENSA' : 'PRESS')}
-            </span>
-          )}
-
-          {/* Tenure ribbon — pushed to the right */}
-          {firstYear != null && lastYear != null && (
-            <span className="ml-auto inline-flex items-center gap-1.5">
-              <span className="font-mono tabular-nums text-text-muted/70">
-                '{String(firstYear).slice(2)}–'{String(lastYear).slice(2)}
+          {sector && (
+            <span className="sm:hidden inline-flex items-center gap-1">
+              <span className="h-1 w-1 rounded-full bg-text-muted/60 shrink-0" aria-hidden="true" />
+              <span className="uppercase tracking-[0.06em]">
+                {getSectorName(sector, isEs ? 'es' : 'en')}
               </span>
-              <TenureRibbon firstYear={firstYear} lastYear={lastYear} riskColor={riskColor} />
             </span>
           )}
         </div>
@@ -795,119 +582,6 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
 
 // 2026-05-16 (Audit F060/F169/F170): pattern names aligned to backend canon.
 //   P1 Concentrated Monopoly  P2 Ghost Company  P3 Single-Use Intermediary
-//   P4 Bid Rigging            P5 Overpricing    P6 Institution Capture
-//   P7 Conflict of Interest
-const PATTERN_LABELS: Record<string, { es: string; en: string; color: string }> = {
-  P1: { es: 'Monopolio Concentrado',     en: 'Concentrated Monopoly',  color: PATTERN_COLORS.P1 ?? RISK_COLORS.critical },
-  P2: { es: 'Empresa Fantasma',          en: 'Ghost Company',           color: PATTERN_COLORS.P2 ?? RISK_COLORS.high },
-  P3: { es: 'Intermediario de Contrato',  en: 'Contract Intermediary',   color: PATTERN_COLORS.P3 ?? RISK_COLORS.high },
-  P4: { es: 'Manipulación de Licitación',en: 'Bid Rigging',             color: PATTERN_COLORS.P4 ?? RISK_COLORS.medium },
-  P5: { es: 'Sobreprecio',               en: 'Overpricing',             color: PATTERN_COLORS.P5 ?? RISK_COLORS.medium },
-  P6: { es: 'Captura Institucional',     en: 'Institutional Capture',   color: PATTERN_COLORS.P6 ?? RISK_COLORS.critical },
-  P7: { es: 'Conflicto de Interés',      en: 'Conflict of Interest',    color: PATTERN_COLORS.P7 ?? RISK_COLORS.high },
-}
-
-/**
- * PatternEditorialBars — compact clickable bar chart for P1–P7 pattern breakdown.
- * Each row is a tappable shortcut that sets the pattern filter.
- * Replaces the DotStrip approach with a more editorial inline bar design.
- */
-function PatternEditorialBars({
-  patternCounts,
-  isEs,
-  total,
-  onPatternClick,
-}: {
-  patternCounts: Record<string, number>
-  isEs: boolean
-  total?: number
-  onPatternClick?: (key: string) => void
-}) {
-  const entries = Object.entries(patternCounts).sort(([, a], [, b]) => b - a)
-  if (entries.length === 0) return null
-
-  const maxCount = entries[0][1]
-  const totalVendors = Object.values(patternCounts).reduce((s, n) => s + n, 0)
-
-  return (
-    <div className="mb-5">
-      <div className="flex items-baseline justify-between mb-2">
-        <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
-          {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
-        </p>
-        <p className="font-mono text-[10px] text-text-muted">
-          {formatNumber(totalVendors)}{' '}
-          {total != null && total > totalVendors
-            ? (isEs ? `coincidencias · ${formatNumber(total)} procesados` : `matches · ${formatNumber(total)} processed`)
-            : (isEs ? 'coincidencias' : 'matches')}
-        </p>
-      </div>
-      <div className="rounded-sm border border-border/60 bg-background-card overflow-hidden">
-        {entries.map(([key, count], i) => {
-          const meta = PATTERN_LABELS[key]
-          if (!meta) return null
-          const barFrac = maxCount > 0 ? count / maxCount : 0
-          const pct = totalVendors > 0 ? ((count / totalVendors) * 100).toFixed(1) : '0.0'
-          const name = isEs ? meta.es : meta.en
-          const isClickable = !!onPatternClick
-          return (
-            <div
-              key={key}
-              role={isClickable ? 'button' : undefined}
-              tabIndex={isClickable ? 0 : undefined}
-              onClick={() => onPatternClick?.(key)}
-              onKeyDown={(e) => e.key === 'Enter' && onPatternClick?.(key)}
-              className={cn(
-                'flex items-center gap-2 sm:gap-3 px-3 py-2.5',
-                i > 0 && 'border-t border-border/40',
-                isClickable && 'cursor-pointer hover:bg-background-elevated/70 transition-colors',
-              )}
-            >
-              {/* Pattern code badge */}
-              <span
-                className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none tabular-nums"
-                style={{
-                  background: `${meta.color}18`,
-                  color: meta.color,
-                  border: `1px solid ${meta.color}50`,
-                }}
-              >
-                {key}
-              </span>
-
-              {/* Pattern name */}
-              <span className="min-w-0 flex-1 text-[11px] text-text-secondary truncate">
-                {name}
-              </span>
-
-              {/* Proportion bar — visible on all breakpoints */}
-              <div className="flex items-center gap-1.5 w-20 sm:w-28 shrink-0">
-                <div className="block flex-1 h-1 rounded-full bg-background-elevated overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${barFrac * 100}%`, background: meta.color, opacity: 0.85 }}
-                  />
-                </div>
-                <span className="font-mono text-[9px] text-text-muted tabular-nums shrink-0 sm:w-8 sm:text-right">
-                  {pct}%
-                </span>
-              </div>
-
-              {/* Count */}
-              <span
-                className="font-mono text-[11px] font-bold tabular-nums shrink-0"
-                style={{ color: meta.color }}
-              >
-                {formatNumber(count)}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 // ============================================================================
 // Main Page
 // ============================================================================
@@ -1062,12 +736,6 @@ export default function AriaPage() {
   }
 
   const isEs = i18n.language.startsWith('es')
-  const locale = isEs ? 'es-MX' : 'en-US'
-  const lastRunAt = stats?.latest_run?.completed_at
-    ? new Intl.DateTimeFormat(locale, {
-        month: 'short', day: 'numeric', year: 'numeric',
-      }).format(new Date(stats.latest_run.completed_at))
-    : null
 
   const clearAll = () => {
     setPatternFilter(null)
@@ -1201,180 +869,9 @@ export default function AriaPage() {
           )}
         </header>
 
-        {/* ════════════════════════════════════════════════════════════════
-            UNIFIED FILTER BAR
-            Patterns first (most discriminative), then tiers, then sector
-            + flag toggles + search. Replaces three separate sections
-            (TierNavigationRow stack, pattern chips, EditorialPageShell
-            actions slot) that fought for vertical space.
-           ════════════════════════════════════════════════════════════════ */}
+        {/* ═══ FILTER BAR — Tier + Search (row 1), Patterns (row 2), VIEW presets (row 3) ═══ */}
         <div className="mb-4 space-y-2">
-          {/* Quick-select preset row — most-used investigative views as
-              one-click chips. 90% of users never touch raw filters; the
-              presets give them the curated view they actually want. */}
-          {(() => {
-            const presets: Array<{
-              id: string
-              label: string
-              icon: string
-              isActive: boolean
-              onClick: () => void
-            }> = [
-              {
-                id: 'all-t1',
-                label: isEs ? 'Cola T1' : 'All T1',
-                icon: '◆',
-                isActive: tierFilter === 1 && !patternFilter && !adminFilter && !gtOnly && !efosOnly && !sfpOnly && !newVendorOnly && !novelOnly && !sectorFilter,
-                onClick: () => {
-                  setTierFilter(1); setPatternFilter(null); setAdminFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setNewVendorOnly(false); setNovelOnly(false); setSectorFilter(null)
-                  setReviewStatusFilter(null); setSearch(''); setPage(1)
-                },
-              },
-              {
-                id: 'active',
-                label: isEs ? 'Activos 2024+' : 'Active 2024+',
-                icon: '●',
-                isActive: adminFilter === 'sheinbaum' && tierFilter === 1,
-                onClick: () => {
-                  setTierFilter(1); setAdminFilter('sheinbaum'); setPatternFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setSortKey('recency'); setPage(1)
-                },
-              },
-              {
-                id: 'flagged',
-                label: isEs ? 'Validados externamente' : 'External-flagged',
-                icon: '⚑',
-                isActive: (gtOnly || efosOnly || sfpOnly) && tierFilter === 1,
-                onClick: () => {
-                  setTierFilter(1); setGtOnly(true); setEfosOnly(false); setSfpOnly(false)
-                  setAdminFilter(null); setPatternFilter(null)
-                  setNewVendorOnly(false); setNovelOnly(false); setPage(1)
-                },
-              },
-              {
-                id: 'long-running',
-                label: isEs ? 'Histórico (10+ años)' : 'Long-running',
-                icon: '↗',
-                isActive: sortKey === 'tenure' && tierFilter === 1 && !adminFilter && !gtOnly,
-                onClick: () => {
-                  setTierFilter(1); setSortKey('tenure'); setAdminFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setPatternFilter(null); setPage(1)
-                },
-              },
-              {
-                id: 'biggest-bets',
-                label: isEs ? 'Mayor valor' : 'Biggest bets',
-                icon: '$',
-                isActive: sortKey === 'value' && tierFilter === 1 && !adminFilter && !gtOnly,
-                onClick: () => {
-                  setTierFilter(1); setSortKey('value'); setAdminFilter(null)
-                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
-                  setPatternFilter(null); setPage(1)
-                },
-              },
-            ]
-            return (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-                  {isEs ? 'Vista' : 'View'}
-                </span>
-                {presets.map((preset) => (
-                  <button
-                    key={preset.id}
-                    onClick={preset.onClick}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
-                      preset.isActive
-                        ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
-                        : 'bg-background-card text-text-secondary border-border hover:border-border-hover'
-                    )}
-                  >
-                    <span aria-hidden className="font-mono opacity-70">{preset.icon}</span>
-                    {preset.label}
-                  </button>
-                ))}
-                {(() => {
-                  // U-061: count secondary filters that are active so the
-                  // button surfaces hidden state. Primary slicers (tier,
-                  // pattern, search) live in the always-visible row and
-                  // are excluded here.
-                  const secondaryActiveCount =
-                    (sectorFilter != null ? 1 : 0) +
-                    (newVendorOnly ? 1 : 0) +
-                    (novelOnly ? 1 : 0) +
-                    (adminFilter != null ? 1 : 0) +
-                    (gtOnly ? 1 : 0) +
-                    (efosOnly ? 1 : 0) +
-                    (sfpOnly ? 1 : 0) +
-                    (webEvidenceOnly ? 1 : 0) +
-                    (llmMemoOnly ? 1 : 0) +
-                    (reviewStatusFilter != null ? 1 : 0)
-                  return (
-                    <button
-                      onClick={() => setMoreFiltersOpen((v) => !v)}
-                      className={cn(
-                        'ml-auto inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
-                        moreFiltersOpen
-                          ? 'bg-background-elevated text-text-primary'
-                          : secondaryActiveCount > 0
-                            ? 'text-accent hover:text-text-primary'
-                            : 'text-text-muted hover:text-text-primary'
-                      )}
-                      aria-expanded={moreFiltersOpen}
-                      aria-label={
-                        secondaryActiveCount > 0
-                          ? (isEs
-                              ? `Más filtros, ${secondaryActiveCount} activos`
-                              : `More filters, ${secondaryActiveCount} active`)
-                          : (isEs ? 'Más filtros' : 'More filters')
-                      }
-                    >
-                      {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
-                      {secondaryActiveCount > 0 && (
-                        <span
-                          className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent/15 text-accent text-[10px] font-mono tabular-nums font-bold"
-                          aria-hidden
-                        >
-                          {secondaryActiveCount}
-                        </span>
-                      )}
-                    </button>
-                  )
-                })()}
-              </div>
-            )
-          })()}
-
-          {/* Pattern chips — kept always-visible. The chip counts
-              ("Institutional Capture 15,923") are a useful at-a-glance
-              signal that a dropdown would hide. Single horizontal-scroll row. */}
-          {Object.keys(patternCounts).length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
-              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0 inline-flex items-center gap-1">
-                {isEs ? 'Patrón' : 'Pattern'}
-              </span>
-              {Object.entries(patternCounts)
-                .sort(([, a], [, b]) => b - a)
-                .map(([pattern, count]) => (
-                  <PatternChip
-                    key={pattern}
-                    pattern={pattern}
-                    count={count}
-                    isActive={patternFilter === pattern}
-                    onClick={() => {
-                      setPatternFilter(patternFilter === pattern ? null : pattern)
-                      setPage(1)
-                    }}
-                  />
-                ))}
-            </div>
-          )}
-
-          {/* Tier pills + Search — primary slicer always-visible row. */}
+          {/* ROW 1: Tier pills + Search — primary slicer */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
               {isEs ? 'Nivel' : 'Tier'}
@@ -1417,10 +914,120 @@ export default function AriaPage() {
             </div>
           </div>
 
-          {/* "+ More filters" disclosure — secondary filters hidden by
-              default. Most users (~90%) never touch these. Power users
-              get the same control with one click. Drops the chrome from
-              ~9 default rows to 3-4. */}
+          {/* ROW 2: Pattern summary — compact clickable chips with counts */}
+          {Object.keys(patternCounts).length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-thin">
+              <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                {isEs ? 'Patrón' : 'Pattern'}
+              </span>
+              {Object.entries(patternCounts)
+                .sort(([, a], [, b]) => b - a)
+                .map(([pattern, count]) => (
+                  <PatternChip
+                    key={pattern}
+                    pattern={pattern}
+                    count={count}
+                    isActive={patternFilter === pattern}
+                    onClick={() => {
+                      setPatternFilter(patternFilter === pattern ? null : pattern)
+                      setPage(1)
+                    }}
+                  />
+                ))}
+            </div>
+          )}
+
+          {/* ROW 3: VIEW presets + More filters toggle */}
+          {(() => {
+            const presets: Array<{ id: string; label: string; isActive: boolean; onClick: () => void }> = [
+              {
+                id: 'active',
+                label: isEs ? 'Activos 2024+' : 'Active 2024+',
+                isActive: adminFilter === 'sheinbaum' && tierFilter === 1,
+                onClick: () => {
+                  setTierFilter(1); setAdminFilter('sheinbaum'); setPatternFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setSortKey('recency'); setPage(1)
+                },
+              },
+              {
+                id: 'flagged',
+                label: isEs ? 'Validados extern.' : 'External-flagged',
+                isActive: (gtOnly || efosOnly || sfpOnly) && tierFilter === 1,
+                onClick: () => {
+                  setTierFilter(1); setGtOnly(true); setEfosOnly(false); setSfpOnly(false)
+                  setAdminFilter(null); setPatternFilter(null)
+                  setNewVendorOnly(false); setNovelOnly(false); setPage(1)
+                },
+              },
+              {
+                id: 'biggest-bets',
+                label: isEs ? 'Mayor valor' : 'Biggest bets',
+                isActive: sortKey === 'value' && tierFilter === 1 && !adminFilter && !gtOnly,
+                onClick: () => {
+                  setTierFilter(1); setSortKey('value'); setAdminFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setPatternFilter(null); setPage(1)
+                },
+              },
+              {
+                id: 'long-running',
+                label: isEs ? 'Histórico 10+' : 'Long-running',
+                isActive: sortKey === 'tenure' && tierFilter === 1 && !adminFilter && !gtOnly,
+                onClick: () => {
+                  setTierFilter(1); setSortKey('tenure'); setAdminFilter(null)
+                  setGtOnly(false); setEfosOnly(false); setSfpOnly(false)
+                  setPatternFilter(null); setPage(1)
+                },
+              },
+            ]
+            const secondaryActiveCount =
+              (sectorFilter != null ? 1 : 0) + (newVendorOnly ? 1 : 0) + (novelOnly ? 1 : 0) +
+              (adminFilter != null ? 1 : 0) + (gtOnly ? 1 : 0) + (efosOnly ? 1 : 0) +
+              (sfpOnly ? 1 : 0) + (webEvidenceOnly ? 1 : 0) + (llmMemoOnly ? 1 : 0) +
+              (reviewStatusFilter != null ? 1 : 0)
+            return (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
+                  {isEs ? 'Vista' : 'View'}
+                </span>
+                {presets.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={p.onClick}
+                    className={cn(
+                      'inline-flex items-center px-2 py-0.5 rounded-sm border text-[10px] font-mono transition-colors',
+                      p.isActive
+                        ? 'bg-risk-critical/10 text-risk-critical border-risk-critical/30'
+                        : 'bg-background-card text-text-muted border-border hover:border-border-hover'
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setMoreFiltersOpen((v) => !v)}
+                  className={cn(
+                    'ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.12em] transition-colors shrink-0',
+                    moreFiltersOpen ? 'bg-background-elevated text-text-primary'
+                      : secondaryActiveCount > 0 ? 'text-accent hover:text-text-primary'
+                      : 'text-text-muted hover:text-text-primary'
+                  )}
+                  aria-expanded={moreFiltersOpen}
+                  aria-label={isEs ? 'Más filtros' : 'More filters'}
+                >
+                  {moreFiltersOpen ? '−' : '+'} {isEs ? 'Más filtros' : 'More filters'}
+                  {secondaryActiveCount > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-accent/15 text-accent text-[10px] font-mono tabular-nums font-bold" aria-hidden>
+                      {secondaryActiveCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )
+          })()}
+
+          {/* "+ More filters" disclosure — secondary filters */}
           {moreFiltersOpen && (
             <div className="space-y-2 pt-2 mt-1 border-t border-border/60">
               {/* Sector + New / Novel toggles */}
@@ -1820,6 +1427,33 @@ export default function AriaPage() {
             </div>
           )}
         </section>
+
+        {/* ═══ BADGE LEGEND ═══ */}
+        <div className="rounded-sm border border-border bg-background-card p-4 mt-4">
+          <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted font-bold mb-3">
+            {isEs ? '§ LEYENDA DE INDICADORES' : '§ BADGE LEGEND'}
+          </p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 items-center">
+            {([
+              { code: 'GT', cls: 'bg-accent/10 text-accent border-accent/30', es: 'Caso documentado de corrupción (corpus de referencia)', en: 'Documented corruption case (ground-truth corpus)' },
+              { code: 'EFOS', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', es: 'Lista SAT de empresas que facturan operaciones simuladas', en: 'SAT invoice fraud list (definitive)' },
+              { code: 'SFP', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', es: 'Sancionado por la Secretaría de la Función Pública', en: 'Sanctioned by public audit authority' },
+              { code: 'LLM', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', es: 'Memo investigativo generado por IA disponible', en: 'AI-generated investigation memo available' },
+              { code: 'SANC', cls: 'bg-risk-critical/10 text-risk-critical border-risk-critical/30', es: 'Sanción oficial encontrada en medios digitales', en: 'Official sanction found in digital media' },
+              { code: 'CORR', cls: 'bg-risk-high/10 text-risk-high border-risk-high/30', es: 'Mención de corrupción en medios digitales', en: 'Corruption mention in digital media' },
+              { code: 'DISC', cls: 'bg-accent-data/10 text-accent-data border-accent-data/20', es: 'Descubrimiento del modelo — T1 sin anclaje GT, señal pura', en: 'Model discovery — T1 without GT anchor, pure signal' },
+            ] as const).map((b) => (
+              <Fragment key={b.code}>
+                <span className={cn('inline-flex items-center px-1 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border', b.cls)}>
+                  {b.code}
+                </span>
+                <span className="text-[11px] text-text-muted leading-relaxed">
+                  {isEs ? b.es : b.en}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+        </div>
 
         {/* ============================================================== */}
         {/* 6. METHODOLOGY FOOTER — minimal                                */}

@@ -220,7 +220,7 @@ function InstitutionList({
                   type="institution"
                   id={f.source_id}
                   name={f.source_name}
-                  size="full"
+                  size="md"
                 />
               </div>
             </div>
