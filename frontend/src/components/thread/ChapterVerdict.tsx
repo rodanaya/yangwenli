@@ -94,8 +94,7 @@ export function ChapterVerdict({
   coBidderCount,
   aria,
 }: ChapterVerdictProps) {
-  const { t, i18n } = useTranslation('redThread')
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+  const { t } = useTranslation('redThread')
   const navigate = useNavigate()
 
   const { data: webEvidence } = useQuery({
@@ -158,19 +157,19 @@ export function ChapterVerdict({
     if (webVerdict && webVerdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
       const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
       const webLabel = webVerdict === 'SANCTION'
-        ? (lang === 'en' ? 'Documented sanction' : 'Sanción documentada')
+        ? t('verdict.documentedSanction', { defaultValue: 'Documented sanction' })
         : webVerdict === 'CORRUPTION_MENTION'
-        ? (lang === 'en' ? 'News mention' : 'Mención en noticias')
-        : (lang === 'en' ? 'Press coverage' : 'Cobertura periodística')
+        ? t('verdict.newsMention', { defaultValue: 'News mention' })
+        : t('verdict.pressCoverage', { defaultValue: 'Press coverage' })
       evidence.push({
-        label: lang === 'en' ? 'Web evidence' : 'Evidencia web',
+        label: t('verdict.webEvidence', { defaultValue: 'Web evidence' }),
         value: <span style={{ color: webColor }}>{webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%</span>,
         weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
       })
     } else {
       evidence.push({
-        label: lang === 'en' ? 'Web evidence' : 'Evidencia web',
-        value: <span className="text-text-muted">{lang === 'en' ? 'No coverage found' : 'Sin cobertura encontrada'}</span>,
+        label: t('verdict.webEvidence', { defaultValue: 'Web evidence' }),
+        value: <span className="text-text-muted">{t('verdict.noCoverageFound', { defaultValue: 'No coverage found' })}</span>,
         weight: 'low',
       })
     }
@@ -255,17 +254,17 @@ export function ChapterVerdict({
       {aria?.memo_text && (
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
-              {t('verdict.ariaMemoTitle', { defaultValue: 'ARIA Intelligence Memo' })}
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+                {t('verdict.ariaMemoTitle', { defaultValue: 'ARIA Intelligence Memo' })}
+              </p>
+              <span className="text-[9px] font-mono bg-background-elevated px-1.5 py-0.5 rounded-sm text-text-muted">ES</span>
+            </div>
             <button
               onClick={() => setMemoExpanded((v) => !v)}
               className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
             >
-              {memoExpanded
-                ? (lang === 'en' ? '— Collapse' : '— Contraer')
-                : (lang === 'en' ? '+ Read full memo' : '+ Leer memo completo')
-              }
+              {memoExpanded ? t('verdict.collapseMemo') : t('verdict.readFullMemo')}
             </button>
           </div>
           <div className="border-l-2 border-[var(--color-accent)] pl-3">
@@ -299,7 +298,20 @@ export function ChapterVerdict({
                   )
                 })
               ) : (
-                aria.memo_text.replace(/[#*]/g, '').slice(0, 380)
+                (() => {
+                  const lines = aria.memo_text.split('\n')
+                  const meaningful = lines.filter(l => {
+                    const s = l.trim()
+                    if (!s) return false
+                    if (s.startsWith('#')) return false
+                    if (/^[=\-]{3,}$/.test(s)) return false
+                    if (s.startsWith('|') && s.endsWith('|')) return false
+                    if (/^MEMO DE INVESTIGACI[OÓ]N/i.test(s)) return false
+                    if (/^RESUMEN EJECUTIVO/i.test(s)) return false
+                    return true
+                  })
+                  return meaningful.slice(0, 3).join(' ').replace(/\*\*/g, '').slice(0, 350)
+                })()
               )}
             </div>
           </div>
@@ -310,7 +322,7 @@ export function ChapterVerdict({
       {webEvidence && webEvidence.articles.length > 0 && (
         <div className="mb-5">
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-            {lang === 'en' ? 'Web Evidence · CENTINELA' : 'Evidencia Web · CENTINELA'}
+            {t('verdict.webEvidenceCentinela', { defaultValue: 'Web Evidence · CENTINELA' })}
           </p>
           <div className="flex flex-col gap-1.5">
             {webEvidence.articles.slice(0, 5).map((art, i) => {
@@ -342,7 +354,7 @@ export function ChapterVerdict({
                       onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
                     >
-                      Ver artículo →
+                      {t('verdict.viewArticle', { defaultValue: 'View article →' })}
                     <span className="sr-only"> (opens in new tab)</span></a>
                   )}
                 </div>

@@ -75,13 +75,14 @@ function ChapterShell({ id, children }: { id: string; children: React.ReactNode 
   )
 }
 
-// ─── TimelineHourglass SVG ───────────────────────────────────────────────────
+// ─── TimelineColumns SVG ─────────────────────────────────────────────────────
+// Single-channel column chart. Bars grow up from baseline; height = log(value),
+// color = avg risk bucket. Below the axis: tiny count dots (gray). Annotation
+// pins (admin transitions, key events) sit in their own row at the bottom.
+// No floating callout — the detail panel below the SVG covers spotlight info.
 
-interface TimelineHourglassProps {
+interface TimelineColumnsProps {
   timeline: TimelineItem[]
-  eraLabels: { stable: string; watch: string; alert: string }
-  countLabel: string
-  valueLabel: string
   selectedYear: number | null
   hoverYear: number | null
   eraFilter: EraBucket | null
@@ -90,18 +91,15 @@ interface TimelineHourglassProps {
   className?: string
 }
 
-function TimelineHourglassSvg({
+function TimelineColumnsSvg({
   timeline,
-  eraLabels,
-  countLabel,
-  valueLabel,
   selectedYear,
   hoverYear,
   eraFilter,
   onHoverYear,
   onSelectYear,
   className,
-}: TimelineHourglassProps) {
+}: TimelineColumnsProps) {
   if (timeline.length === 0) return null
 
   const sorted = [...timeline].sort((a, b) => a.year - b.year)
@@ -131,20 +129,22 @@ function TimelineHourglassSvg({
     }
   }
 
+  // Layout: each visual element has its own Y zone — no overlap possible.
   const W = 720
-  const H = 240
-  const PAD = { left: 8, right: 8 }
-  const COUNT_AREA = 76
-  const VALUE_AREA = 124
-  const CENTER_BAND = 18
-  const Y_TOP = 8
-  const Y_CENTER = Y_TOP + COUNT_AREA + CENTER_BAND / 2
-  const Y_BASE_VALUE = Y_CENTER + CENTER_BAND / 2
+  const H = 200
+  const PAD = { left: 12, right: 12 }
+  const BAR_TOP = 12
+  const BAR_BASELINE = 140         // bars grow up from here to BAR_TOP
+  const AXIS_Y = 145               // thin baseline rule
+  const COUNT_DOT_Y = 160          // count dots in their own row
+  const YEAR_LABEL_Y = 178         // year labels
+  const ANNOTATION_Y = 192         // admin/event pins at the very bottom
+  const BAR_MAX_H = BAR_BASELINE - BAR_TOP
   const innerW = W - PAD.left - PAD.right
 
   const xOf = (year: number) => PAD.left + ((year - minYear) / yearSpan) * innerW
-  const countH = (n: number) => Math.max(2, (Math.log(n + 1) / logMaxCount) * (COUNT_AREA - 12))
-  const valueH = (v: number) => Math.max(2, (Math.log(v + 1) / logMaxValue) * (VALUE_AREA - 12))
+  const valueH = (v: number) => Math.max(2, (Math.log(v + 1) / logMaxValue) * (BAR_MAX_H - 4))
+  const countR = (n: number) => 1.5 + (Math.log(n + 1) / logMaxCount) * 4
   const colorOf = (risk: number) => RISK_DOT_COLORS[getRiskLevel(risk)]
 
   const halfStep = innerW / yearSpan / 2
@@ -156,150 +156,146 @@ function TimelineHourglassSvg({
   const axisYears = Array.from(new Set([minYear, hero.year, maxYear])).sort((a, b) => a - b)
   const activeYear = hoverYear ?? selectedYear
 
+  // Dynamic bar width: scale to year count, clamp to [4, 14].
+  const slotW = innerW / Math.max(1, sorted.length)
+  const barW = Math.max(4, Math.min(14, slotW * 0.62))
+
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className={className ?? 'w-full h-auto cursor-crosshair'}
       role="img"
-      aria-label="Timeline hourglass — count and value channels"
+      aria-label="Annual contract value timeline"
       onMouseLeave={() => onHoverYear(null)}
     >
-      {/* Era background bands */}
+      {/* Era background bands — visual grouping of consecutive same-risk years */}
       {eras.map((era, i) => {
         const isFirst = i === 0
         const isLast = i === eras.length - 1
         const x1 = isFirst ? 0 : xOf(era.startYear) - halfStep
         const x2 = isLast ? W : xOf(era.endYear) + halfStep
         return (
-          <rect key={`era-bg-${i}`} x={x1} y={Y_TOP - 4} width={x2 - x1} height={H - Y_TOP} fill={ERA_BG[era.bucket]} />
+          <rect
+            key={`era-bg-${i}`}
+            x={x1}
+            y={BAR_TOP - 6}
+            width={x2 - x1}
+            height={AXIS_Y - BAR_TOP + 8}
+            fill={ERA_BG[era.bucket]}
+          />
         )
       })}
 
       {/* Active-year highlight column */}
       {activeYear != null && (
         <rect
-          x={xOf(activeYear) - 12} y={Y_TOP - 4} width={24} height={H - Y_TOP}
-          fill="var(--color-text-primary)" fillOpacity={0.05}
-          stroke="var(--color-text-primary)" strokeOpacity={0.2} strokeWidth={0.6}
+          x={xOf(activeYear) - slotW / 2}
+          y={BAR_TOP - 6}
+          width={slotW}
+          height={AXIS_Y - BAR_TOP + 8}
+          fill="var(--color-text-primary)"
+          fillOpacity={0.06}
+          stroke="var(--color-text-primary)"
+          strokeOpacity={0.22}
+          strokeWidth={0.6}
         />
       )}
 
-      {/* Channel labels */}
-      <text x={PAD.left + 4} y={Y_TOP + 10} fontSize={8.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.7} letterSpacing={0.5}>
-        ▲ {countLabel.toUpperCase()}
-      </text>
-      <text x={PAD.left + 4} y={Y_BASE_VALUE + 10} fontSize={8.5} fontFamily="var(--font-family-mono)" fill="var(--color-text-muted)" opacity={0.7} letterSpacing={0.5}>
-        ▼ {valueLabel.toUpperCase()}
-      </text>
+      {/* Baseline axis */}
+      <line
+        x1={PAD.left}
+        x2={W - PAD.right}
+        y1={AXIS_Y}
+        y2={AXIS_Y}
+        stroke="var(--color-border)"
+        strokeWidth={0.8}
+      />
 
-      {/* Era ticks at top edge */}
-      {eras.filter((e) => e.endYear - e.startYear >= 1 || eras.length <= 3).map((era, i) => {
-        const cx = (xOf(era.startYear) + xOf(era.endYear)) / 2
-        return (
-          <text key={`era-lbl-${i}`} x={cx} y={Y_TOP - 1} textAnchor="middle" fontSize={8} fontFamily="var(--font-family-mono)" fill={ERA_LABEL_COLOR[era.bucket]} fontWeight={600} opacity={0.85}>
-            {eraLabels[era.bucket].toUpperCase()}
-          </text>
-        )
-      })}
-
-      <line x1={0} x2={W} y1={Y_CENTER} y2={Y_CENTER} stroke="var(--color-border)" strokeWidth={0.7} />
-
-      {/* Bars */}
+      {/* Value bars — primary signal */}
       {sorted.map((item) => {
         const x = xOf(item.year)
         const isHero = item.year === hero.year
         const isActive = item.year === activeYear
         const isPinned = item.year === selectedYear
         const dimmed = !matchesEraFilter(item)
-        const barW = isHero || isActive ? 8 : 5
-        const cH = countH(item.contract_count)
         const vH = valueH(item.total_value)
         const risk = item.avg_risk_score ?? 0
         const valueColor = colorOf(risk)
-        const hitW = Math.max(14, (innerW / Math.max(1, sorted.length)) * 0.85)
+        const hitW = Math.max(14, slotW * 0.9)
         return (
           <g key={item.year}>
+            {/* Wide invisible hit area covers bar + count dot for easy hover */}
             <rect
-              x={x - hitW / 2} y={Y_TOP} width={hitW} height={H - Y_TOP - 4}
-              fill="transparent" style={{ cursor: 'pointer' }}
+              x={x - hitW / 2}
+              y={BAR_TOP - 6}
+              width={hitW}
+              height={COUNT_DOT_Y - BAR_TOP + 10}
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
               onMouseEnter={() => onHoverYear(item.year)}
               onClick={() => onSelectYear(item.year === selectedYear ? null : item.year)}
             />
+            {/* Value bar */}
             <rect
-              x={x - barW / 2} y={Y_CENTER - CENTER_BAND / 2 - cH} width={barW} height={cH} rx={1}
-              fill="var(--color-text-muted)"
-              opacity={dimmed ? 0.18 : (isActive ? 1 : isHero ? 0.85 : 0.55)}
-              style={{ pointerEvents: 'none', transition: 'opacity 120ms ease' }}
-            />
-            <rect
-              x={x - barW / 2} y={Y_BASE_VALUE} width={barW} height={vH} rx={1}
+              x={x - barW / 2}
+              y={AXIS_Y - vH}
+              width={barW}
+              height={vH}
+              rx={1}
               fill={valueColor}
-              opacity={dimmed ? 0.20 : (isActive ? 1 : isHero ? 1 : 0.82)}
+              opacity={dimmed ? 0.22 : isActive ? 1 : isHero ? 1 : 0.82}
               style={{
                 pointerEvents: 'none',
-                filter: isActive || isHero ? `drop-shadow(0 0 5px ${valueColor}aa)` : undefined,
+                filter: isActive || isHero ? `drop-shadow(0 0 4px ${valueColor}aa)` : undefined,
                 transition: 'opacity 120ms ease',
               }}
             />
+            {/* Count dot below the axis */}
+            <circle
+              cx={x}
+              cy={COUNT_DOT_Y}
+              r={countR(item.contract_count)}
+              fill="var(--color-text-muted)"
+              opacity={dimmed ? 0.25 : isActive || isHero ? 0.9 : 0.55}
+              style={{ pointerEvents: 'none', transition: 'opacity 120ms ease' }}
+            />
+            {/* Pinned marker — small dot just above the bar */}
             {isPinned && (
-              <circle cx={x} cy={Y_TOP + 2} r={2.6} fill="var(--color-text-primary)" style={{ pointerEvents: 'none' }} />
+              <circle
+                cx={x}
+                cy={BAR_TOP - 2}
+                r={2.4}
+                fill="var(--color-text-primary)"
+                style={{ pointerEvents: 'none' }}
+              />
             )}
           </g>
         )
       })}
 
-      {/* Hero callout flag */}
-      {(() => {
-        const x = xOf(hero.year)
-        const vH = valueH(hero.total_value)
-        const flagW = 156
-        const flagH = 34
-        const flagX = Math.min(W - flagW - 4, Math.max(4, x - flagW / 2))
-        const flagY = Y_BASE_VALUE + vH + 6
-        const heroColor = colorOf(hero.avg_risk_score ?? 0)
-        if (flagY + flagH > H - 4) {
-          const cH = countH(hero.contract_count)
-          const altY = Y_CENTER - CENTER_BAND / 2 - cH - flagH - 6
-          return (
-            <g>
-              <line x1={x} y1={Y_CENTER - CENTER_BAND / 2 - cH} x2={x} y2={altY + flagH} stroke={heroColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.55} />
-              <rect x={flagX} y={altY} width={flagW} height={flagH} rx={2} fill="var(--color-background-card)" stroke={heroColor} strokeWidth={1} />
-              <text x={flagX + 8} y={altY + 14} fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
-                {hero.year} · {formatCompactMXN(hero.total_value)}
-              </text>
-              <text x={flagX + 8} y={altY + 26} fontSize={9} fontFamily="var(--font-family-mono)" fill={heroColor}>
-                {Math.round((hero.avg_risk_score ?? 0) * 100)}% risk · {hero.contract_count} contract{hero.contract_count !== 1 ? 's' : ''}
-              </text>
-            </g>
-          )
-        }
-        return (
-          <g>
-            <line x1={x} y1={Y_BASE_VALUE + vH} x2={x} y2={flagY} stroke={heroColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.55} />
-            <rect x={flagX} y={flagY} width={flagW} height={flagH} rx={2} fill="var(--color-background-card)" stroke={heroColor} strokeWidth={1} />
-            <text x={flagX + 8} y={flagY + 14} fontSize={11} fontFamily="var(--font-family-mono)" fontWeight={700} fill="var(--color-text-primary)">
-              {hero.year} · {formatCompactMXN(hero.total_value)}
-            </text>
-            <text x={flagX + 8} y={flagY + 26} fontSize={9} fontFamily="var(--font-family-mono)" fill={heroColor}>
-              {Math.round((hero.avg_risk_score ?? 0) * 100)}% risk · {hero.contract_count} contract{hero.contract_count !== 1 ? 's' : ''}
-            </text>
-          </g>
-        )
-      })()}
-
-      {/* Year axis labels */}
+      {/* Year labels — only min, hero, max for clarity */}
       {axisYears.map((y, i) => {
         const cx = xOf(y)
-        const anchor: 'start' | 'middle' | 'end' = i === 0 ? 'start' : i === axisYears.length - 1 ? 'end' : 'middle'
+        const anchor: 'start' | 'middle' | 'end' =
+          i === 0 ? 'start' : i === axisYears.length - 1 ? 'end' : 'middle'
         const isHero = y === hero.year
         return (
-          <text key={y} x={cx} y={Y_CENTER + 4} textAnchor={anchor} fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={isHero ? 700 : 400} fill={isHero ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}>
+          <text
+            key={y}
+            x={cx}
+            y={YEAR_LABEL_Y}
+            textAnchor={anchor}
+            fontSize={10}
+            fontFamily="var(--font-family-mono)"
+            fontWeight={isHero ? 700 : 400}
+            fill={isHero ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}
+          >
             {y}
           </text>
         )
       })}
 
-      {/* Procurement-context annotation pins */}
+      {/* Annotation pins — bottom row, isolated from chart */}
       {TIMELINE_ANNOTATIONS.filter((a) => a.year >= minYear && a.year <= maxYear).map((a) => {
         const cx = xOf(a.year)
         const isEvent = a.kind === 'event'
@@ -307,9 +303,25 @@ function TimelineHourglassSvg({
         return (
           <g key={`anno-${a.year}-${a.kind}`} className="cursor-help">
             <title>{a.year} · {a.label}</title>
-            <line x1={cx} x2={cx} y1={Y_TOP - 4} y2={H - 4} stroke={pinColor} strokeWidth={0.5} strokeDasharray={isEvent ? '0' : '1 3'} opacity={isEvent ? 0.35 : 0.2} />
-            <polygon points={`${cx},${Y_TOP - 4} ${cx - 3},${Y_TOP - 9} ${cx + 3},${Y_TOP - 9}`} fill={pinColor} opacity={isEvent ? 1 : 0.6} />
-            <circle cx={cx} cy={Y_TOP - 6} r={6} fill="transparent" />
+            {/* Subtle vertical guide line from baseline down to annotation pin */}
+            <line
+              x1={cx}
+              x2={cx}
+              y1={AXIS_Y + 1}
+              y2={ANNOTATION_Y - 3}
+              stroke={pinColor}
+              strokeWidth={0.5}
+              strokeDasharray={isEvent ? '0' : '1 3'}
+              opacity={isEvent ? 0.3 : 0.18}
+            />
+            {/* Pin triangle */}
+            <polygon
+              points={`${cx},${ANNOTATION_Y - 3} ${cx - 3},${ANNOTATION_Y + 3} ${cx + 3},${ANNOTATION_Y + 3}`}
+              fill={pinColor}
+              opacity={isEvent ? 1 : 0.55}
+            />
+            {/* Larger transparent hit target for hover */}
+            <circle cx={cx} cy={ANNOTATION_Y} r={7} fill="transparent" />
           </g>
         )
       })}
@@ -431,15 +443,8 @@ export function TimelineHourglass({
         )}
       </div>
 
-      <TimelineHourglassSvg
+      <TimelineColumnsSvg
         timeline={sortedTimeline}
-        eraLabels={{
-          stable: t('timeline.era.stable'),
-          watch:  t('timeline.era.watch'),
-          alert:  t('timeline.era.alert'),
-        }}
-        countLabel={t('timeline.countAxis')}
-        valueLabel={t('timeline.valueAxis')}
         selectedYear={selectedYear}
         hoverYear={hoverYear}
         eraFilter={eraFilter}

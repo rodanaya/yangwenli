@@ -65,8 +65,8 @@
   "timeline": {
     "heading": "{{total}} Contratos, {{minYear}}–{{maxYear}}",
     "dotDescription": "Cada punto es un año. El tamaño refleja el valor total. El color refleja el riesgo promedio. Pasa el cursor para más detalles.",
-    "hourglassDescription": "Una lectura en dos canales. Sobre el eje del año: cuántos contratos produjo cada año. Debajo: cuánto dinero fluyó. Cuando un canal diverge del otro — un solo contrato por miles de millones, o un enjambre de contratos pequeños que suman poco — la disparidad es la señal.",
-    "hourglassLegend": "▲ ARRIBA = NÚMERO DE CONTRATOS · ▼ ABAJO = LOG(VALOR) · COLOR = RIESGO PROMEDIO",
+    "hourglassDescription": "Una barra por año. La altura refleja el valor total de contratos (escala logarítmica); el color refleja el riesgo promedio. El punto pequeño debajo de cada barra muestra el número relativo de contratos — una barra alta sobre un punto pequeño significa que el dinero se concentró en pocos contratos; una barra corta sobre un punto grande significa muchos contratos pequeños.",
+    "hourglassLegend": "BARRA = VALOR TOTAL · COLOR = RIESGO PROMEDIO · PUNTO BAJO EL EJE = NÚMERO DE CONTRATOS",
     "countAxis": "contratos",
     "valueAxis": "log(valor)",
     "era": {
@@ -214,7 +214,47 @@
     "exportPdf": "Exportar Informe PDF",
     "addToWorkspace": "Agregar al Espacio de Trabajo",
     "methodologyNote": "Las puntuaciones de riesgo miden la similitud con patrones de corrupción documentados en 3.05M contratos federales mexicanos (2002–2025). Las puntuaciones son indicadores estadísticos para la clasificación de investigaciones — no son prueba de irregularidades. Modelo v0.8.5, validación estratificada por proveedor, AUC 0.797 (entrenamiento) / 0.785 (prueba). Ver",
-    "methodologyLink": "metodología completa"
+    "methodologyLink": "metodología completa",
+    "viewArticle": "Ver artículo →",
+    "webEvidence": "Evidencia web",
+    "webEvidenceCentinela": "Evidencia Web · CENTINELA",
+    "webVerdictSanction": "SANCIÓN",
+    "webVerdictCorruption": "CORRUPCIÓN",
+    "webVerdictRisk": "RIESGO",
+    "webVerdictExculpatory": "EXCULP.",
+    "webVerdictNeutral": "NEUTRAL",
+    "documentedSanction": "Sanción documentada",
+    "newsMention": "Mención en noticias",
+    "pressCoverage": "Cobertura periodística",
+    "noCoverageFound": "Sin cobertura encontrada",
+    "riskIndicatorLabel": "Indicador de riesgo",
+    "riskLevelLabel": "Nivel de riesgo",
+    "assessmentLabel": "Evaluación"
+  },
+  "press": {
+    "heading": "Menciones en Prensa y Registros Externos",
+    "description": "Evidencia web CENTINELA — menciones en prensa obtenidas de fuentes de noticias públicas y registros gubernamentales.",
+    "noResults": "No se encontró cobertura de prensa externa para este proveedor.",
+    "listLabel": "Menciones en prensa",
+    "allNeutral": "Todos los artículos recuperados fueron clasificados como neutrales — no se detectó lenguaje de corrupción o riesgo.",
+    "chapterLabel": "§ PRENSA · REGISTROS"
+  },
+  "institutional": {
+    "label": "Institución",
+    "valueContracts": "Valor · contratos",
+    "concentration": "Concentración",
+    "likelyCapture": "(captura institucional probable)",
+    "footprintLabel": "§ HUELLA INSTITUCIONAL",
+    "totalMxn": "MXN Total",
+    "numContracts": "# Contratos",
+    "yearRange": "Período"
+  },
+  "diagnostic": {
+    "diagnosisLabel": "Diagnóstico",
+    "featureLabel": "Característica",
+    "shapLabel": "SHAP",
+    "tailRaisesRisk": "cola (|z| ≥ 1) aumenta riesgo",
+    "withinRange": "dentro del rango o protector"
   },
   "disclosure": {
     "label": "Lo que este hilo no puede decirle",

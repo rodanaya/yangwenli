@@ -155,7 +155,7 @@ export function MoneyStaircase({
         const x = xOf(p.year)
         const yTop = yOf(p.end)
         const stepColor = colorOfRisk(p.risk)
-        const pinY = Math.max(PAD.top + 6, yTop - 18 - idx * 4)
+        const pinY = Math.max(PAD.top + 6, yTop - 22 - idx * 22)
         return (
           <g key={`pin-${p.year}`} style={{ pointerEvents: 'none' }}>
             <line x1={x} y1={yTop} x2={x} y2={pinY + 6} stroke={stepColor} strokeWidth={0.6} strokeDasharray="2 2" opacity={0.6} />

@@ -17,6 +17,11 @@ interface PatternDiagnosticProps {
   lowersLabel: string
   referenceLabel: string
   diagnosisLabel: string
+  headerDiagnosis?: string
+  headerFeature?: string
+  headerShap?: string
+  legendTail?: string
+  legendWithin?: string
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -28,6 +33,11 @@ export function PatternDiagnostic({
   lowersLabel,
   referenceLabel,
   diagnosisLabel,
+  headerDiagnosis = 'Diagnosis',
+  headerFeature = 'Feature',
+  headerShap = 'SHAP',
+  legendTail = 'tail (|z| ≥ 1) raises risk',
+  legendWithin = 'within range or protective',
 }: PatternDiagnosticProps) {
   const SCALE_W = 380
   const ROW_H = 24
@@ -42,19 +52,19 @@ export function PatternDiagnostic({
     <div>
       {/* Diagnosis line — auto-summarizes the panel */}
       <div className="flex items-baseline gap-2 mb-3 pb-2 border-b border-border">
-        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">Diagnosis</span>
+        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">{headerDiagnosis}</span>
         <span className="text-xs text-text-secondary">{diagnosisLabel}</span>
       </div>
 
       {/* Header row */}
       <div className="grid grid-cols-[140px_1fr_64px] gap-3 items-center mb-1.5 pb-1 text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted opacity-70">
-        <div>Feature</div>
+        <div>{headerFeature}</div>
         <div className="flex items-center justify-between">
           <span>−3σ</span>
           <span className="opacity-50">sector mean</span>
           <span>+3σ</span>
         </div>
-        <div className="text-right">SHAP</div>
+        <div className="text-right">{headerShap}</div>
       </div>
 
       {/* Lab rows */}
@@ -192,11 +202,11 @@ export function PatternDiagnostic({
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-risk-critical)' }} aria-hidden="true" />
-          tail (|z| ≥ 1) raises risk
+          {legendTail}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--color-text-muted)' }} aria-hidden="true" />
-          within range or protective
+          {legendWithin}
         </span>
       </div>
     </div>

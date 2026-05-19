@@ -46,7 +46,7 @@ export function InstitutionalRibbon({
   vendorFirstYear,
   vendorLastYear,
 }: InstitutionalRibbonProps) {
-  const { i18n } = useTranslation('redThread')
+  const { t } = useTranslation('redThread')
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
 
   const sorted = [...institutions]
@@ -80,9 +80,9 @@ export function InstitutionalRibbon({
     <div>
       {/* Year axis at top */}
       <div className="relative pb-2 border-b border-border mb-2">
-        <div className="grid items-end" style={{ gridTemplateColumns: '200px 1fr 110px', gap: '12px' }}>
+        <div className="grid items-end" style={{ gridTemplateColumns: 'minmax(180px, 280px) 1fr 110px', gap: '12px' }}>
           <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {i18n.language.startsWith('es') ? 'Institución' : 'Institution'}
+            {t('institutional.label')}
           </span>
           <div className="relative h-3">
             {uniqueAxisYears.map((y) => {
@@ -99,7 +99,7 @@ export function InstitutionalRibbon({
             })}
           </div>
           <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted text-right">
-            {i18n.language.startsWith('es') ? 'Valor · contratos' : 'Value · contracts'}
+            {t('institutional.valueContracts')}
           </span>
         </div>
       </div>
@@ -130,7 +130,7 @@ export function InstitutionalRibbon({
                   'grid items-center py-1 px-1 rounded-sm transition-colors',
                   isHover ? 'bg-background-elevated' : ''
                 )}
-                style={{ gridTemplateColumns: '200px 1fr 110px', gap: '12px' }}
+                style={{ gridTemplateColumns: 'minmax(180px, 280px) 1fr 110px', gap: '12px' }}
               >
                 {/* Institution name */}
                 <div className="min-w-0">
@@ -191,23 +191,11 @@ export function InstitutionalRibbon({
       {/* Concentration callout */}
       <p className="mt-3 text-xs text-text-secondary leading-relaxed">
         <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">
-          {i18n.language.startsWith('es') ? 'Concentración' : 'Concentration'}
+          {t('institutional.concentration')}
         </span>
-        {' '}— {i18n.language.startsWith('es') ? (
-          <>
-            {topShare.toFixed(0)}% del valor fluyó a {' '}
-            <EntityIdentityChip type="institution" id={sorted[0].institution_id} name={sorted[0].institution_name} size="xs" className="inline-flex align-middle" />
-            {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (captura institucional probable)</span>}
-            .
-          </>
-        ) : (
-          <>
-            {topShare.toFixed(0)}% of value flowed to {' '}
-            <EntityIdentityChip type="institution" id={sorted[0].institution_id} name={sorted[0].institution_name} size="xs" className="inline-flex align-middle" />
-            {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> (likely institutional capture)</span>}
-            .
-          </>
-        )}
+        {' '}— {topShare.toFixed(0)}% →{' '}
+        <EntityIdentityChip type="institution" id={sorted[0].institution_id} name={sorted[0].institution_name} size="xs" className="inline-flex align-middle" />
+        {topShare > 50 && <span className="text-[var(--color-risk-critical)] font-medium"> {t('institutional.likelyCapture')}</span>}
       </p>
     </div>
   )

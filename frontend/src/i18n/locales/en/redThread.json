@@ -65,8 +65,8 @@
   "timeline": {
     "heading": "{{total}} Contracts, {{minYear}}–{{maxYear}}",
     "dotDescription": "Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.",
-    "hourglassDescription": "A two-channel reading. Above the year axis: how many contracts each year produced. Below: how much money flowed. When one channel diverges from the other — a single contract worth billions, or a swarm of small contracts adding to nothing — the mismatch is the signal.",
-    "hourglassLegend": "▲ ABOVE = CONTRACT COUNT · ▼ BELOW = LOG(VALUE) · COLOR = AVG RISK",
+    "hourglassDescription": "One bar per year. Height reflects total contract value (log scale); color reflects average risk. The small dot below each bar shows relative contract count — a tall bar above a tiny dot means money concentrated in a few contracts; a short bar over a fat dot means many small awards.",
+    "hourglassLegend": "BAR = TOTAL VALUE · COLOR = AVG RISK · DOT BELOW AXIS = CONTRACT COUNT",
     "countAxis": "contracts",
     "valueAxis": "log(value)",
     "era": {
@@ -214,7 +214,47 @@
     "exportPdf": "Export PDF Briefing",
     "addToWorkspace": "Add to Workspace",
     "methodologyNote": "Risk scores measure similarity to documented corruption patterns in 3.05M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v0.8.5, vendor-stratified validation, AUC 0.797 (train) / 0.785 (test). See",
-    "methodologyLink": "full methodology"
+    "methodologyLink": "full methodology",
+    "viewArticle": "View article →",
+    "webEvidence": "Web evidence",
+    "webEvidenceCentinela": "Web Evidence · CENTINELA",
+    "webVerdictSanction": "SANCTION",
+    "webVerdictCorruption": "CORRUPTION",
+    "webVerdictRisk": "RISK",
+    "webVerdictExculpatory": "EXCULP.",
+    "webVerdictNeutral": "NEUTRAL",
+    "documentedSanction": "Documented sanction",
+    "newsMention": "News mention",
+    "pressCoverage": "Press coverage",
+    "noCoverageFound": "No coverage found",
+    "riskIndicatorLabel": "Risk indicator",
+    "riskLevelLabel": "Risk level",
+    "assessmentLabel": "Assessment"
+  },
+  "press": {
+    "heading": "External Press & Registry Mentions",
+    "description": "CENTINELA web evidence — press mentions retrieved from public news sources and government registries.",
+    "noResults": "No external press coverage found for this vendor.",
+    "listLabel": "Press mentions",
+    "allNeutral": "All retrieved articles were classified as neutral — no corruption or risk language detected.",
+    "chapterLabel": "§ PRESS · REGISTRIES"
+  },
+  "institutional": {
+    "label": "Institution",
+    "valueContracts": "Value · contracts",
+    "concentration": "Concentration",
+    "likelyCapture": "(likely institutional capture)",
+    "footprintLabel": "§ INSTITUTIONAL FOOTPRINT",
+    "totalMxn": "Total MXN",
+    "numContracts": "# Contracts",
+    "yearRange": "Year Range"
+  },
+  "diagnostic": {
+    "diagnosisLabel": "Diagnosis",
+    "featureLabel": "Feature",
+    "shapLabel": "SHAP",
+    "tailRaisesRisk": "tail (|z| ≥ 1) raises risk",
+    "withinRange": "within range or protective"
   },
   "disclosure": {
     "label": "What this thread can't tell you",

@@ -242,6 +242,11 @@ function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
               anomalous: sortedSix.filter((f) => Math.abs(f.z_score) >= 1).length,
               total: sortedSix.length,
             })}
+            headerDiagnosis={t('diagnostic.diagnosisLabel', { defaultValue: 'Diagnosis' })}
+            headerFeature={t('diagnostic.featureLabel', { defaultValue: 'Feature' })}
+            headerShap={t('diagnostic.shapLabel', { defaultValue: 'SHAP' })}
+            legendTail={t('diagnostic.tailRaisesRisk', { defaultValue: 'tail (|z| ≥ 1) raises risk' })}
+            legendWithin={t('diagnostic.withinRange', { defaultValue: 'within range or protective' })}
           />
         )}
       </div>
@@ -270,11 +275,18 @@ type WebEvidenceArticle = {
   reasoning: string
 }
 
-const WEB_VERDICT_META: Record<string, { label: string; bg: string; color: string }> = {
-  CORRUPTION_MENTION: { label: 'CORRUPCIÓN', bg: 'rgba(239,68,68,0.10)',   color: 'var(--color-risk-critical)' },
-  RISK_MENTION:       { label: 'RIESGO',     bg: 'rgba(245,158,11,0.10)',  color: 'var(--color-risk-high)' },
-  EXCULPATORY:        { label: 'EXCULP.',    bg: 'rgba(34,197,94,0.10)',   color: '#16a34a' },
-  NEUTRAL:            { label: 'NEUTRAL',    bg: 'rgba(100,116,139,0.08)', color: 'var(--color-text-muted)' },
+const WEB_VERDICT_STYLE: Record<string, { bg: string; color: string }> = {
+  CORRUPTION_MENTION: { bg: 'rgba(239,68,68,0.10)',   color: 'var(--color-risk-critical)' },
+  RISK_MENTION:       { bg: 'rgba(245,158,11,0.10)',  color: 'var(--color-risk-high)' },
+  EXCULPATORY:        { bg: 'rgba(34,197,94,0.10)',   color: '#16a34a' },
+  NEUTRAL:            { bg: 'rgba(100,116,139,0.08)', color: 'var(--color-text-muted)' },
+}
+
+const WEB_VERDICT_KEYS: Record<string, string> = {
+  CORRUPTION_MENTION: 'verdict.webVerdictCorruption',
+  RISK_MENTION: 'verdict.webVerdictRisk',
+  EXCULPATORY: 'verdict.webVerdictExculpatory',
+  NEUTRAL: 'verdict.webVerdictNeutral',
 }
 
 function ChapterPress({ vendorId, webEvidenceScore, t }: {
@@ -324,7 +336,9 @@ function ChapterPress({ vendorId, webEvidenceScore, t }: {
       {!isLoading && articles.length > 0 && (
         <div className="space-y-1.5" role="list" aria-label={t('press.listLabel', { defaultValue: 'Press mentions' })}>
           {(notable.length > 0 ? notable : articles).slice(0, 12).map((article, idx) => {
-            const meta = WEB_VERDICT_META[article.verdict] ?? WEB_VERDICT_META.NEUTRAL
+            const style = WEB_VERDICT_STYLE[article.verdict] ?? WEB_VERDICT_STYLE.NEUTRAL
+            const verdictKey = WEB_VERDICT_KEYS[article.verdict] ?? WEB_VERDICT_KEYS.NEUTRAL
+            const verdictLabel = t(verdictKey, { defaultValue: article.verdict })
             const dateStr = article.published_date
               ? new Date(article.published_date).getFullYear()
               : null
@@ -337,9 +351,9 @@ function ChapterPress({ vendorId, webEvidenceScore, t }: {
                 {/* Verdict badge */}
                 <span
                   className="flex-shrink-0 mt-0.5 text-[9px] font-mono font-semibold tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
-                  style={{ backgroundColor: meta.bg, color: meta.color }}
+                  style={{ backgroundColor: style.bg, color: style.color }}
                 >
-                  {meta.label}
+                  {verdictLabel}
                 </span>
                 {/* Content */}
                 <div className="flex-1 min-w-0">
@@ -418,7 +432,8 @@ type InstitutionRow = {
 
 type InstSortKey = 'name' | 'value' | 'contracts' | 'years'
 
-function InstitutionalFootprintTable({ institutions, isEs }: { institutions: InstitutionRow[]; isEs: boolean }) {
+function InstitutionalFootprintTable({ institutions }: { institutions: InstitutionRow[] }) {
+  const { t } = useTranslation('redThread')
   const [instSortKey, setInstSortKey] = useState<InstSortKey>('value')
   const [instSortDir, setInstSortDir] = useState<'asc' | 'desc'>('desc')
 
@@ -446,7 +461,7 @@ function InstitutionalFootprintTable({ institutions, isEs }: { institutions: Ins
   return (
     <div className="mt-5 pt-4 border-t border-border">
       <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-        {isEs ? '§ HUELLA INSTITUCIONAL' : '§ INSTITUTIONAL FOOTPRINT'}
+        {t('institutional.footprintLabel')}
       </p>
       <div className="overflow-x-auto rounded-sm border border-border/60 bg-background-card">
         <table className="w-full text-xs">
@@ -454,12 +469,12 @@ function InstitutionalFootprintTable({ institutions, isEs }: { institutions: Ins
             <tr className="border-b border-border/60">
               {(
                 [
-                  { key: 'name' as InstSortKey, labelEs: 'Institución', labelEn: 'Institution', align: 'left' },
-                  { key: 'value' as InstSortKey, labelEs: 'MXN Total', labelEn: 'Total MXN', align: 'right' },
-                  { key: 'contracts' as InstSortKey, labelEs: '# Contratos', labelEn: '# Contracts', align: 'right' },
-                  { key: 'years' as InstSortKey, labelEs: 'Período', labelEn: 'Year Range', align: 'right' },
+                  { key: 'name' as InstSortKey, label: t('institutional.label'), align: 'left' },
+                  { key: 'value' as InstSortKey, label: t('institutional.totalMxn'), align: 'right' },
+                  { key: 'contracts' as InstSortKey, label: t('institutional.numContracts'), align: 'right' },
+                  { key: 'years' as InstSortKey, label: t('institutional.yearRange'), align: 'right' },
                 ]
-              ).map(({ key, labelEs, labelEn, align }) => (
+              ).map(({ key, label, align }) => (
                 <th
                   key={key}
                   className="px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted cursor-pointer hover:text-text-primary transition-colors select-none whitespace-nowrap"
@@ -467,7 +482,7 @@ function InstitutionalFootprintTable({ institutions, isEs }: { institutions: Ins
                   onClick={() => toggleSort(key)}
                   aria-sort={instSortKey === key ? (instSortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
                 >
-                  {(isEs ? labelEs : labelEn) + arrow(key)}
+                  {label + arrow(key)}
                 </th>
               ))}
             </tr>
@@ -479,8 +494,8 @@ function InstitutionalFootprintTable({ institutions, isEs }: { institutions: Ins
                 : '—'
               return (
                 <tr key={inst.institution_id} className={i > 0 ? 'border-t border-border/40' : ''}>
-                  <td className="px-3 py-1.5 min-w-0 max-w-[220px]">
-                    <span className="truncate block" title={inst.institution_name} style={{ color: 'var(--color-text-primary)' }}>
+                  <td className="px-3 py-1.5 min-w-0">
+                    <span className="block" title={inst.institution_name} style={{ color: 'var(--color-text-primary)' }}>
                       {inst.institution_name}
                     </span>
                   </td>
@@ -604,7 +619,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
 
       {/* Institutional footprint — sortable compact table */}
       {institutions && institutions.length > 0 && (
-        <InstitutionalFootprintTable institutions={institutions} isEs={i18n.language.startsWith('es')} />
+        <InstitutionalFootprintTable institutions={institutions} />
       )}
 
       {/* CTA */}
