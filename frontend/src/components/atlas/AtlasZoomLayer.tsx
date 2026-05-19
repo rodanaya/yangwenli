@@ -462,6 +462,15 @@ export function AtlasZoomLayer({
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle[data-named-vendor="true"] {
             opacity: 0.35;
           }
+          /* Replacement 5 (M-OBS Phase 1, PEPPY 2026-05-19): cross-cluster bleed
+             — when zoomed into a single cluster, hide all OTHER cluster <g>
+             groups so their attractor rings, labels, and dots don't bleed into
+             the active cluster's view. The active cluster (matching zoomedCode)
+             stays fully opaque. */
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] g[data-cluster-code]:not([data-cluster-code="${zoomedCode ?? ''}"]) {
+            opacity: 0;
+            pointer-events: none;
+          }
         `}</style>
       )}
       <div
