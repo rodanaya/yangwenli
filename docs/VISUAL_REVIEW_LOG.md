@@ -884,6 +884,7 @@ Egress proxy blocks all outbound HTTPS from this environment — HTTP and API ch
 
 ---
 ## Visual Review — 2026-05-15T18:09:50Z
+## Visual Review — 2026-05-19T06:10:27Z
 
 ### HTTP Status
 | Route | Status | Pass? |
@@ -898,6 +899,16 @@ Egress proxy blocks all outbound HTTPS from this environment — HTTP and API ch
 | https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | ⚠ |
 
 **Note**: All 403 responses carry `x-deny-reason: host_not_allowed` — this is the remote execution environment's egress network policy blocking outbound HTTPS to rubli.xyz, not a site-side error. Site availability cannot be confirmed from this sandbox.
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+**Note:** All 403s carry `x-deny-reason: host_not_allowed` — the remote execution environment IP is not in the site's allowlist. This is an environment constraint, not a site failure.
 
 ### API Health
 | Endpoint | Result | Pass? |
@@ -1127,6 +1138,10 @@ HTTP and API checks blocked by egress proxy (environment constraint, not site fa
 | /api/v1/sectors | blocked (egress proxy, empty body) | ⚠ |
 
 > All API checks blocked by same egress restriction. Run from VPS (37.60.232.109) or whitelisted host for accurate validation.
+| /api/v1/executive/summary | BLOCKED (host_not_allowed) | N/A |
+| /api/v1/cases?limit=5 | BLOCKED (host_not_allowed) | N/A |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (host_not_allowed) | N/A |
+| /api/v1/sectors | BLOCKED (host_not_allowed) | N/A |
 
 ### Bilingual Gaps
 Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions detected:
@@ -1138,6 +1153,14 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions 
 - `Methodology.tsx:118`: academic citation `Mahalanobis, P.C.` — not rendered as a key
 - `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story chart data
 - `CaseLibrary.tsx:304`: inside a code comment, never rendered
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 15 hits — all confirmed false positives (unchanged from prior run):
+- `AriaQueue.tsx:801–807`: bilingual `{es:…, en:…}` pattern label maps — legitimate data, not UI key leaks
+- `Executive.tsx:65,84,103`: company proper nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — not i18n keys
+- `InstitutionScorecards.tsx:441`: `TIER_STYLES[tierName as TierKey]` — JS object lookup, not a UI string
+- `Methodology.tsx:119`: academic citation `Mahalanobis, P.C.` — not rendered as a key
+- `RedThread.tsx:327`: `WEB_VERDICT_META[article.verdict]` — JS object lookup, not a UI string
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story chart data
+- `CaseLibrary.tsx:219`: inside a code comment, never rendered
 
 **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
 
@@ -1145,3 +1168,4 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions 
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy (environment constraint, not site failure). No new bilingual gaps found. Recommend running checks from VPS (37.60.232.109) or a whitelisted IP for accurate HTTP/API validation.
+HTTP and API checks blocked by egress proxy (`x-deny-reason: host_not_allowed` — environment constraint, not site failure). No new bilingual gaps detected. Recommend running checks from VPS (37.60.232.109) or a whitelisted IP for accurate HTTP/API validation.
