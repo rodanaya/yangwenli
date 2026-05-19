@@ -1215,21 +1215,46 @@ type CellItem = {
 }
 
 // Short institution label: siglas if present, else extract a 12-char
-// editorial shorthand from the full name (first 2-3 significant words
-// or a smart abbreviation). Stops the "INSTITUTO MEXICANO DEL SEGURO
-// SOCIAL" string-of-doom from bunching up the XL cell list.
+// editorial shorthand from the full name. Stops "INSTITUTO MEXICANO DEL
+// SEGURO SOCIAL" string-of-doom from bunching up the XL cell list.
 function shortInstitutionLabel(name: string, siglas?: string | null): string {
   if (siglas && siglas.trim()) return siglas.trim().toUpperCase()
-  // Fallback: take the first noun word after the institutional prefix
-  // (Secretaría, Instituto, Comisión, etc.) and trim
   const cleaned = name
     .replace(/^(SECRETAR[IÍ]A DE|INSTITUTO (NACIONAL )?DE|COMISI[OÓ]N (NACIONAL )?DE|HOSPITAL|FONDO (NACIONAL )?DE|CENTRO (NACIONAL )?(DE|PARA)|SERVICIOS? DE|UNIVERSIDAD|DIRECCI[OÓ]N (GENERAL )?DE)\s*/i, '')
     .trim()
-  // Truncate to ~14 chars at a word boundary
   if (cleaned.length <= 14) return cleaned
   const cut = cleaned.slice(0, 14)
   const lastSpace = cut.lastIndexOf(' ')
   return (lastSpace > 6 ? cut.slice(0, lastSpace) : cut) + '…'
+}
+
+// Logos that exist in frontend/public/logos/. Add a siglas here (and
+// drop the SVG file in /public/logos/) to have it auto-render. The
+// frontend assumes /logos/<key>.svg where <key> is the lowercased
+// siglas. Aliases let us map old siglas to renamed agencies (e.g.
+// SCT → sict after the 2021 rename).
+const LOGO_FILE_MAP: Record<string, string> = {
+  IMSS: 'imss',
+  ISSSTE: 'issste',
+  PEMEX: 'pemex',
+  CFE: 'cfe',
+  CONAGUA: 'conagua',
+  SEDENA: 'sedena',
+  SEMAR: 'semar',
+  SEP: 'sep',
+  SHCP: 'shcp',
+  IPN: 'ipn',
+  SSA: 'ssa',
+  SCT: 'sict',        // renamed to SICT in 2021
+  SICT: 'sict',
+  SALUD: 'ssa',
+}
+
+function logoSrcForSiglas(siglas: string | null | undefined): string | null {
+  if (!siglas) return null
+  const key = siglas.trim().toUpperCase()
+  const file = LOGO_FILE_MAP[key]
+  return file ? `/logos/${file}.svg` : null
 }
 
 type CellProps = {
@@ -1239,6 +1264,63 @@ type CellProps = {
   subTextColor: string
   editorial: string | null
   isEs: boolean
+}
+
+// 22×22 institution logo. Shows the actual SVG from /logos/<file>.svg
+// if mapped via LOGO_FILE_MAP, otherwise renders a 22×22 acronym chip
+// (sector-color faded background, white bold text — up to 5 chars,
+// auto-shrinks for longer acronyms like ISSSTE / IMSSBIENESTAR).
+function InstitutionLogo({
+  logoSrc,
+  acronym,
+  fallbackBg,
+  fallbackColor,
+}: {
+  logoSrc: string | null
+  acronym: string
+  fallbackBg: string
+  fallbackColor: string
+}) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const showImg = logoSrc && !imgFailed
+  // Trim acronym to chip-friendly length
+  const chipText = acronym.length > 5 ? acronym.slice(0, 4) : acronym
+  const fontSize = chipText.length >= 5 ? 7 : chipText.length === 4 ? 8 : 9
+  return (
+    <span
+      className="flex-shrink-0 inline-flex items-center justify-center rounded-sm overflow-hidden"
+      style={{
+        width: 22,
+        height: 22,
+        background: showImg ? '#ffffff' : fallbackBg,
+        padding: showImg ? 2 : 0,
+      }}
+      aria-hidden="true"
+    >
+      {showImg ? (
+        <img
+          src={logoSrc}
+          alt=""
+          onError={() => setImgFailed(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          loading="lazy"
+        />
+      ) : (
+        <span
+          className="font-mono"
+          style={{
+            fontSize,
+            fontWeight: 800,
+            color: fallbackColor,
+            letterSpacing: '0.04em',
+            lineHeight: 1,
+          }}
+        >
+          {chipText}
+        </span>
+      )}
+    </span>
+  )
 }
 
 function CellKicker({ code, color }: { code: string; color: string }) {
@@ -1322,26 +1404,25 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
         >
           {isEs ? 'PRINCIPALES INSTITUCIONES' : 'TOP INSTITUTIONS'}
         </div>
-        <ul className="space-y-0.5">
+        <ul className="space-y-1.5">
           {item.topInstitutions.slice(0, 3).map((inst) => {
             const short = shortInstitutionLabel(inst.name, inst.siglas)
+            const logoSrc = logoSrcForSiglas(inst.siglas)
             return (
-              <li key={inst.institution_id} className="flex items-baseline gap-2 min-w-0">
+              <li key={inst.institution_id} className="flex items-center gap-2 min-w-0" title={inst.name}>
+                <InstitutionLogo
+                  logoSrc={logoSrc}
+                  acronym={short}
+                  fallbackBg="rgba(255,255,255,0.22)"
+                  fallbackColor="#ffffff"
+                />
                 <span
-                  className="font-mono text-[12px] tracking-[0.04em]"
-                  style={{ color: textColor, fontWeight: 700 }}
-                  title={inst.name}
+                  className="font-mono tracking-[0.04em] flex-1"
+                  style={{ color: textColor, fontWeight: 700, fontSize: 13 }}
                 >
                   {short}
                 </span>
-                <span
-                  className="flex-1 truncate text-[10px]"
-                  style={{ color: subTextColor, fontWeight: 400, opacity: 0.8 }}
-                  title={inst.name}
-                >
-                  {inst.name}
-                </span>
-                <span className="font-mono tabular-nums text-[11px] whitespace-nowrap" style={{ color: textColor, fontWeight: 700 }}>
+                <span className="font-mono tabular-nums text-[12px] whitespace-nowrap" style={{ color: textColor, fontWeight: 700 }}>
                   {inst.share_pct.toFixed(1)}%
                 </span>
               </li>
@@ -1419,25 +1500,23 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
       )}
       {topInst && (
         <div className="flex-1 min-h-0">
-          <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-0.5" style={{ color: subTextColor, opacity: 0.85 }}>
+          <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: subTextColor, opacity: 0.85 }}>
             {isEs ? 'TOP' : 'TOP'}
           </div>
-          <div className="flex items-baseline gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0" title={topInst.name}>
+            <InstitutionLogo
+              logoSrc={logoSrcForSiglas(topInst.siglas)}
+              acronym={shortInstitutionLabel(topInst.name, topInst.siglas)}
+              fallbackBg="rgba(255,255,255,0.22)"
+              fallbackColor="#ffffff"
+            />
             <span
-              className="font-mono text-[11px] tracking-[0.04em]"
-              style={{ color: textColor, fontWeight: 700 }}
-              title={topInst.name}
+              className="font-mono tracking-[0.04em] flex-1"
+              style={{ color: textColor, fontWeight: 700, fontSize: 12 }}
             >
               {shortInstitutionLabel(topInst.name, topInst.siglas)}
             </span>
-            <span
-              className="flex-1 truncate text-[10px]"
-              style={{ color: subTextColor, fontWeight: 400, opacity: 0.8 }}
-              title={topInst.name}
-            >
-              {topInst.name}
-            </span>
-            <span className="font-mono tabular-nums text-[10px] font-bold" style={{ color: textColor }}>
+            <span className="font-mono tabular-nums text-[11px] font-bold" style={{ color: textColor }}>
               {topInst.share_pct.toFixed(1)}%
             </span>
           </div>
