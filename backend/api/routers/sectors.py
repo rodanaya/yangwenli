@@ -330,6 +330,7 @@ def get_sectors_treemap():
                     top_institutions.append({
                         "institution_id": inst["institution_id"],
                         "name": inst["name"],
+                        "siglas": inst.get("siglas"),
                         "value_mxn": inst["value_mxn"],
                         "share_pct": share_pct,
                     })

@@ -89,6 +89,7 @@ export interface TreemapSectorItem {
   top_institutions: Array<{
     institution_id: number
     name: string
+    siglas?: string | null
     value_mxn: number
     share_pct: number
   }>

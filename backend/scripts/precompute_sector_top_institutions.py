@@ -61,7 +61,7 @@ def main() -> None:
                 ) AS rn
             FROM agg
         )
-        SELECT r.sector_id, r.institution_id, i.name, r.spend
+        SELECT r.sector_id, r.institution_id, i.name, i.siglas, r.spend
         FROM ranked r
         JOIN institutions i ON i.id = r.institution_id
         WHERE r.rn <= 3
@@ -79,6 +79,7 @@ def main() -> None:
         by_sector.setdefault(sid, []).append({
             "institution_id": r["institution_id"],
             "name": r["name"],
+            "siglas": r["siglas"],
             "value_mxn": float(r["spend"] or 0),
         })
 

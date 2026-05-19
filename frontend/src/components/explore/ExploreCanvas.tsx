@@ -1211,7 +1211,25 @@ type CellItem = {
   spendPct: number
   critical: number
   criticalSharePct: number
-  topInstitutions: Array<{ institution_id: number; name: string; value_mxn: number; share_pct: number }>
+  topInstitutions: Array<{ institution_id: number; name: string; siglas?: string | null; value_mxn: number; share_pct: number }>
+}
+
+// Short institution label: siglas if present, else extract a 12-char
+// editorial shorthand from the full name (first 2-3 significant words
+// or a smart abbreviation). Stops the "INSTITUTO MEXICANO DEL SEGURO
+// SOCIAL" string-of-doom from bunching up the XL cell list.
+function shortInstitutionLabel(name: string, siglas?: string | null): string {
+  if (siglas && siglas.trim()) return siglas.trim().toUpperCase()
+  // Fallback: take the first noun word after the institutional prefix
+  // (Secretaría, Instituto, Comisión, etc.) and trim
+  const cleaned = name
+    .replace(/^(SECRETAR[IÍ]A DE|INSTITUTO (NACIONAL )?DE|COMISI[OÓ]N (NACIONAL )?DE|HOSPITAL|FONDO (NACIONAL )?DE|CENTRO (NACIONAL )?(DE|PARA)|SERVICIOS? DE|UNIVERSIDAD|DIRECCI[OÓ]N (GENERAL )?DE)\s*/i, '')
+    .trim()
+  // Truncate to ~14 chars at a word boundary
+  if (cleaned.length <= 14) return cleaned
+  const cut = cleaned.slice(0, 14)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 6 ? cut.slice(0, lastSpace) : cut) + '…'
 }
 
 type CellProps = {
@@ -1305,20 +1323,30 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
           {isEs ? 'PRINCIPALES INSTITUCIONES' : 'TOP INSTITUTIONS'}
         </div>
         <ul className="space-y-0.5">
-          {item.topInstitutions.slice(0, 3).map((inst) => (
-            <li key={inst.institution_id} className="flex items-baseline gap-2 min-w-0">
-              <span
-                className="flex-1 truncate text-[12px]"
-                style={{ color: textColor, fontWeight: 500 }}
-                title={inst.name}
-              >
-                {inst.name}
-              </span>
-              <span className="font-mono tabular-nums text-[11px] whitespace-nowrap" style={{ color: textColor, fontWeight: 700 }}>
-                {inst.share_pct.toFixed(1)}%
-              </span>
-            </li>
-          ))}
+          {item.topInstitutions.slice(0, 3).map((inst) => {
+            const short = shortInstitutionLabel(inst.name, inst.siglas)
+            return (
+              <li key={inst.institution_id} className="flex items-baseline gap-2 min-w-0">
+                <span
+                  className="font-mono text-[12px] tracking-[0.04em]"
+                  style={{ color: textColor, fontWeight: 700 }}
+                  title={inst.name}
+                >
+                  {short}
+                </span>
+                <span
+                  className="flex-1 truncate text-[10px]"
+                  style={{ color: subTextColor, fontWeight: 400, opacity: 0.8 }}
+                  title={inst.name}
+                >
+                  {inst.name}
+                </span>
+                <span className="font-mono tabular-nums text-[11px] whitespace-nowrap" style={{ color: textColor, fontWeight: 700 }}>
+                  {inst.share_pct.toFixed(1)}%
+                </span>
+              </li>
+            )
+          })}
         </ul>
       </div>
       {/* Footer rail: critical share + contracts */}
@@ -1396,8 +1424,15 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
           </div>
           <div className="flex items-baseline gap-2 min-w-0">
             <span
-              className="flex-1 truncate text-[11px]"
-              style={{ color: textColor, fontWeight: 500 }}
+              className="font-mono text-[11px] tracking-[0.04em]"
+              style={{ color: textColor, fontWeight: 700 }}
+              title={topInst.name}
+            >
+              {shortInstitutionLabel(topInst.name, topInst.siglas)}
+            </span>
+            <span
+              className="flex-1 truncate text-[10px]"
+              style={{ color: subTextColor, fontWeight: 400, opacity: 0.8 }}
               title={topInst.name}
             >
               {topInst.name}
