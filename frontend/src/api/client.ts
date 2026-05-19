@@ -36,6 +36,7 @@ import type {
   InstitutionVendorListResponse,
   InstitutionFilterParams,
   SectorListResponse,
+  TreemapResponse,
   SectorDetailResponse,
   AnalysisOverview,
   RiskDistribution,
@@ -307,6 +308,15 @@ export const sectorApi = {
    */
   async getById(sectorId: number): Promise<SectorDetailResponse> {
     const { data } = await api.get<SectorDetailResponse>(`/sectors/${sectorId}`)
+    return data
+  },
+
+  /**
+   * Get the bundled treemap payload for the El Reparto Z0 entry.
+   * Returns all 12 sectors with top-3 institutions per sector + critical-share.
+   */
+  async getTreemap(): Promise<TreemapResponse> {
+    const { data } = await api.get<TreemapResponse>('/sectors/treemap')
     return data
   },
 

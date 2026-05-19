@@ -245,6 +245,122 @@ def get_sectors_statistics():
     return list_sectors(year=None)
 
 
+@router.get("/sectors/treemap")
+def get_sectors_treemap():
+    """
+    Bundled payload for the El Reparto Z0 entry treemap.
+
+    Returns all 12 sectors with:
+      - total_value_mxn, total_contracts, critical_risk_count
+      - critical_share_pct: critical vendors / total vendors in sector
+      - top_institutions: top 3 buying institutions per sector (name, value, share_pct)
+
+    Single endpoint to avoid N+1 fan-out from 12 per-sector requests.
+    Cached 1h.
+    """
+    cache_key = "sectors_treemap_v1"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            # Pull sector totals from precomputed_stats (same source as /sectors)
+            sectors_data = []
+            ps_row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
+            ).fetchone()
+
+            if not ps_row:
+                raise HTTPException(status_code=503, detail="Precomputed sector stats unavailable")
+
+            sector_items = json.loads(ps_row[0])
+            total_value_mxn = sum((item.get("total_value_mxn") or 0) for item in sector_items)
+            total_critical = sum((item.get("critical_risk_count") or 0) for item in sector_items)
+
+            # Sector codes from sectors table (for name_es/name_en lookup)
+            sector_meta_rows = cursor.execute(
+                "SELECT id, code, name_es, COALESCE(name_en, name_es) FROM sectors"
+            ).fetchall()
+            sector_meta = {row[0]: {"code": row[1], "name_es": row[2], "name_en": row[3]} for row in sector_meta_rows}
+
+            for item in sector_items:
+                sid = item.get("id") or item.get("sector_id")
+                if sid is None or sid not in sector_meta:
+                    continue
+
+                total_contracts = item.get("total_contracts", 0) or 0
+                total_vendors = item.get("total_vendors", 0) or 0
+                # critical_risk_count from precomputed_stats counts CONTRACTS
+                # (not vendors) — so share is computed against contract total.
+                critical_count = item.get("critical_risk_count", 0) or 0
+                critical_share_pct = (
+                    round((critical_count / total_contracts) * 100, 2)
+                    if total_contracts > 0 else 0.0
+                )
+
+                # Top 3 institutions in this sector by total spend
+                top_inst_rows = cursor.execute(
+                    """
+                    SELECT i.id, i.name, COALESCE(SUM(c.amount_mxn), 0) AS spend
+                    FROM contracts c
+                    JOIN institutions i ON i.id = c.institution_id
+                    WHERE c.sector_id = ?
+                      AND c.amount_mxn IS NOT NULL
+                      AND c.amount_mxn > 0
+                      AND c.amount_mxn < ?
+                    GROUP BY i.id, i.name
+                    ORDER BY spend DESC
+                    LIMIT 3
+                    """,
+                    (sid, MAX_CONTRACT_VALUE),
+                ).fetchall()
+
+                sector_total = item.get("total_value_mxn", 0) or 0
+                top_institutions = []
+                for inst_id, inst_name, inst_spend in top_inst_rows:
+                    share_pct = (
+                        round((inst_spend / sector_total) * 100, 2)
+                        if sector_total > 0 else 0.0
+                    )
+                    top_institutions.append({
+                        "institution_id": inst_id,
+                        "name": inst_name,
+                        "value_mxn": inst_spend,
+                        "share_pct": share_pct,
+                    })
+
+                sectors_data.append({
+                    "sector_id": sid,
+                    "sector_code": sector_meta[sid]["code"],
+                    "sector_name_es": sector_meta[sid]["name_es"],
+                    "sector_name_en": sector_meta[sid]["name_en"],
+                    "color": SECTOR_COLORS.get(sid, "#64748b"),
+                    "total_value_mxn": sector_total,
+                    "total_contracts": total_contracts,
+                    "total_vendors": total_vendors,
+                    "critical_risk_count": critical_count,
+                    "critical_share_pct": critical_share_pct,
+                    "top_institutions": top_institutions,
+                })
+
+            response = {
+                "sectors": sectors_data,
+                "total_value_mxn": total_value_mxn,
+                "total_critical_count": total_critical,
+                "generated_at": datetime.utcnow().isoformat(),
+            }
+
+            _cache.set(cache_key, response, 3600)  # 1h cache
+            return response
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sectors_treemap: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
 @router.get("/sectors/{sector_id}", response_model=SectorDetailResponse)
 def get_sector(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),

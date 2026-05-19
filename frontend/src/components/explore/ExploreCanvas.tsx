@@ -23,7 +23,6 @@ import type { ContractListItem } from '@/api/types'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
-  getSectorName,
   SECTOR_COLORS,
 } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -794,6 +793,52 @@ function worstAspectRatio(row: number[], shortSide: number): number {
   return max
 }
 
+// ── Editorial findings — short, story-anchored lines for sectors with a
+//    confirmed narrative. Anything not listed here gets a 4-word tag below
+//    (DESCRIPTIVE_TAGS) — no invented stories.
+const EDITORIAL_FINDINGS: Record<string, { es: string; en: string }> = {
+  salud: {
+    es: 'Donde se concentra el riesgo crítico del país.',
+    en: 'Where the country\'s critical-risk vendors concentrate.',
+  },
+  educacion: {
+    es: 'La Estafa Maestra desvió 7.6 mil millones aquí.',
+    en: 'Estafa Maestra diverted 7.6B MXN through this sector.',
+  },
+  energia: {
+    es: 'Mayor gasto. Menor riesgo. La paradoja energética.',
+    en: 'Biggest budget. Lowest risk. The energy paradox.',
+  },
+  defensa: {
+    es: 'Opaca por diseño: SEDENA y SEMAR adjudican directo.',
+    en: 'Opaque by design: SEDENA and SEMAR award directly.',
+  },
+  tecnologia: {
+    es: 'Pocos contratos, captura institucional profunda.',
+    en: 'Few contracts, deep institutional capture.',
+  },
+}
+
+const DESCRIPTIVE_TAGS: Record<string, { es: string; en: string }> = {
+  infraestructura: { es: 'Obra pública · SCT · CAPUFE', en: 'Public works · SCT · CAPUFE' },
+  hacienda:        { es: 'SHCP · SAT · admin. fiscal',  en: 'Treasury · SAT · fiscal admin' },
+  gobernacion:     { es: 'SEGOB · seguridad · servicios', en: 'SEGOB · security · services' },
+  agricultura:     { es: 'SADER · subsidios al campo',  en: 'SADER · rural subsidies' },
+  ambiente:        { es: 'SEMARNAT · CONAGUA · parques', en: 'SEMARNAT · water · parks' },
+  trabajo:         { es: 'STPS · justicia laboral',     en: 'STPS · labor justice' },
+  otros:           { es: 'Sin clasificar · misceláneos', en: 'Unclassified · miscellaneous' },
+}
+
+// Color encoding for the new design — fill = sector color always, opacity
+// is driven by critical_share_pct. Maps 0% → dim wash (0.18), 7%+ → bright
+// (0.95). The eye lands on Salud red and Tecnología purple because they're
+// bright BECAUSE they're dangerous, not muted because they're "safe".
+function fillOpacityFromCriticalShare(critSharePct: number, hovered: boolean): number {
+  const normalized = Math.min(1, Math.max(0, critSharePct / 7))
+  const base = 0.22 + normalized * 0.73   // 0.22 .. 0.95
+  return hovered ? Math.min(1, base + 0.05) : base
+}
+
 function Z0Panel({
   lang,
   dispatch,
@@ -808,7 +853,7 @@ function Z0Panel({
   const [size, setSize] = useState({ w: 1040, h: 520 })
   const [isMobile, setIsMobile] = useState(false)
 
-  // Track the treemap container dimensions for accurate layout
+  // Track container dimensions for accurate layout
   useEffect(() => {
     const el = treemapRef.current
     const outer = containerRef.current
@@ -824,73 +869,59 @@ function Z0Panel({
     return () => obs.disconnect()
   }, [])
 
-  const { data: sectorStats, isLoading } = useQuery({
-    queryKey: ['explore', 'z0-sector-stats'],
-    queryFn: () => sectorApi.getAll(),
+  const { data: treemapData, isLoading } = useQuery({
+    queryKey: ['explore', 'z0-treemap'],
+    queryFn: () => sectorApi.getTreemap(),
     staleTime: 30 * 60 * 1000,
   })
 
-  const stats = sectorStats?.data ?? []
-  const totalSpend = sectorStats?.total_value_mxn ?? 0
-  const totalCritical = stats.reduce((sum, s) => sum + (s.critical_risk_count ?? 0), 0)
-  const criticalSectorCount = stats.filter((s) => (s.critical_risk_count ?? 0) > 0).length
+  const sectors = treemapData?.sectors ?? []
+  const totalSpend = treemapData?.total_value_mxn ?? 0
+  const totalCritical = treemapData?.total_critical_count ?? 0
 
-  // Compute the dominant-sector finding for the editorial pull-line.
-  // We surface the sector where critical-vendor share is HIGHEST relative
-  // to its spend share — the spend/risk mismatch.
-  const mismatch = useMemo(() => {
-    if (!stats.length || totalSpend === 0 || totalCritical === 0) return null
-    let best: { code: string; label: string; criticalShare: number; spendShare: number } | null = null
-    let bestRatio = 0
-    for (const s of stats) {
-      const critShare = totalCritical > 0 ? (s.critical_risk_count ?? 0) / totalCritical : 0
-      const spendShare = s.total_value_mxn / totalSpend
-      if (critShare === 0 || spendShare === 0) continue
-      const ratio = critShare / spendShare
-      if (ratio > bestRatio && critShare >= 0.08) {
-        bestRatio = ratio
-        best = {
-          code: s.sector_code,
-          label: getSectorName(s.sector_code, lang),
-          criticalShare: critShare,
-          spendShare,
-        }
-      }
-    }
-    return best
-  }, [stats, totalSpend, totalCritical, lang])
-
-  // Build the items list for the treemap. In SPEND mode, area = spend.
-  // In RISK mode, area = critical_risk_count (sectors with zero get a
-  // tiny minimum slot so they still render as labelled cells).
+  // Build the items list for the treemap.
+  // Min-area floor: 2.5% of total area per cell — keeps the smallest sectors
+  // readable while preserving the visual hierarchy.
+  const MIN_AREA_FRACTION = 0.025
   const treeItems = useMemo(() => {
-    return stats.map((s) => {
-      const spendVal = Math.max(0, s.total_value_mxn)
-      const riskVal = Math.max(0, s.critical_risk_count ?? 0)
-      const value = mode === 'risk'
-        ? (riskVal > 0 ? riskVal : 0.5)  // tiny floor so empty sectors still render
-        : spendVal
+    if (sectors.length === 0) return []
+    const rawValues = sectors.map((s) =>
+      mode === 'risk'
+        ? Math.max(0, s.critical_risk_count)
+        : Math.max(0, s.total_value_mxn)
+    )
+    const rawTotal = rawValues.reduce((a, b) => a + b, 0) || 1
+    const floor = rawTotal * MIN_AREA_FRACTION
+    return sectors.map((s, i) => {
+      const raw = rawValues[i]
+      const flooredValue = Math.max(raw, floor)
+      const label = lang === 'es' ? s.sector_name_es : s.sector_name_en
       return {
         sectorId: s.sector_id,
         sectorCode: s.sector_code,
-        label: getSectorName(s.sector_code, lang),
-        value,
-        critical: s.critical_risk_count ?? 0,
+        label,
+        value: flooredValue,
+        critical: s.critical_risk_count,
+        criticalSharePct: s.critical_share_pct,
+        spendValue: s.total_value_mxn,
+        spendPct: totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0,
+        topInstitutions: s.top_institutions,
       }
     })
-  }, [stats, mode, lang])
+  }, [sectors, mode, lang, totalSpend])
 
   const cells = useMemo(
     () => (treeItems.length > 0 ? layoutTreemap(treeItems, size.w, Math.max(200, size.h)) : []),
     [treeItems, size.w, size.h]
   )
 
-  // Lookup sector spend so we can show both metrics in cell label even in RISK mode
-  const spendBySector = useMemo(() => {
-    const m = new Map<number, { spend: number; critical: number }>()
-    for (const s of stats) m.set(s.sector_id, { spend: s.total_value_mxn, critical: s.critical_risk_count ?? 0 })
+  // Map from sectorId back to the full sector item so cell renders can
+  // access institutions, critical share, spend, etc.
+  const itemBySectorId = useMemo(() => {
+    const m = new Map<number, typeof treeItems[number]>()
+    for (const it of treeItems) m.set(it.sectorId, it)
     return m
-  }, [stats])
+  }, [treeItems])
 
   const handleDrill = (sectorId: number, sectorCode: string) => {
     dispatch({ type: 'drill-into-sector', sectorId, sectorCode })
@@ -905,36 +936,13 @@ function Z0Panel({
   const spendLabel = isEs ? 'GASTO' : 'SPEND'
   const riskLabel = isEs ? 'RIESGO' : 'RISK'
 
-  // Pull-line: the editorial finding
-  const pullLine: React.ReactNode = (() => {
-    if (!mismatch) return null
-    const critPct = Math.round(mismatch.criticalShare * 100)
-    const spendPct = Math.round(mismatch.spendShare * 100)
-    if (isEs) {
-      return (
-        <>
-          <strong className="font-semibold text-text-primary">{mismatch.label}</strong>{' '}
-          concentra <strong className="font-semibold">{critPct}%</strong> de los proveedores
-          en crítico con apenas <strong className="font-semibold">{spendPct}%</strong> del gasto.
-        </>
-      )
-    }
-    return (
-      <>
-        <strong className="font-semibold text-text-primary">{mismatch.label}</strong>{' '}
-        holds <strong className="font-semibold">{critPct}%</strong> of critical vendors on
-        only <strong className="font-semibold">{spendPct}%</strong> of spend.
-      </>
-    )
-  })()
-
   return (
     <div
       ref={containerRef}
       className="absolute inset-0 z-[5] flex flex-col"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
     >
-      {/* Editorial header — lives above the treemap; collapses on mobile */}
+      {/* Editorial header */}
       <div
         className="flex items-end justify-between gap-4 px-4 sm:px-6 pt-4 pb-3 flex-shrink-0 flex-wrap"
         style={{ borderBottom: '1px solid var(--color-border)' }}
@@ -973,7 +981,7 @@ function Z0Panel({
             </div>
           </div>
 
-          {/* Critical count */}
+          {/* Critical contracts */}
           <div className="text-right">
             <div
               className="font-mono tabular-nums leading-tight"
@@ -986,7 +994,7 @@ function Z0Panel({
               {formatNumber(totalCritical)}
             </div>
             <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
-              {isEs ? 'en crítico' : 'in critical'}
+              {isEs ? 'contratos críticos' : 'critical contracts'}
             </div>
           </div>
 
@@ -1032,37 +1040,44 @@ function Z0Panel({
           <div className="absolute inset-0 p-3">
             <div className="relative w-full h-full">
               {cells.map((cell) => {
+                const item = itemBySectorId.get(cell.sectorId)
+                if (!item) return null
                 const color = SECTOR_COLORS[cell.sectorCode] ?? '#64748b'
-                const isCritical = cell.critical > 0
                 const hovered = hoverId === cell.sectorId
-                const meta = spendBySector.get(cell.sectorId)
-                const spendForCell = meta?.spend ?? 0
-                const spendPct = totalSpend > 0 ? (spendForCell / totalSpend) * 100 : 0
+                const opacity = fillOpacityFromCriticalShare(item.criticalSharePct, hovered)
 
-                // Two-tier color: critical sectors get saturated fill, others
-                // get a dark zinc fill with the sector hex as left-rule accent.
-                const bg = isCritical
-                  ? hexToRgba(color, hovered ? 0.95 : 0.82)
-                  : `var(--color-background-card)`
-                const textColor = isCritical ? '#ffffff' : 'var(--color-text-primary)'
-                const subTextColor = isCritical ? 'rgba(255,255,255,0.72)' : 'var(--color-text-muted)'
+                // Determine cell tier from rendered area
+                const cellArea = cell.w * cell.h
+                const tier: 'xl' | 'l' | 'm' | 's' =
+                  cellArea >= 80_000 ? 'xl'
+                  : cellArea >= 28_000 ? 'l'
+                  : cellArea >= 12_000 ? 'm'
+                  : 's'
 
-                // Scale typography by cell area so a tiny "Otros" cell doesn't
-                // render its title at 24px.
-                const area = (cell.w / size.w) * (cell.h / Math.max(200, size.h))
-                const titleSize = area > 0.08 ? 26
-                  : area > 0.04 ? 20
-                  : area > 0.015 ? 15
-                  : 12
-                const showSubMetrics = cell.w >= 110 && cell.h >= 70
-                const showLargeLabel = cell.w >= 90 && cell.h >= 50
+                // Editorial finding only for cells L+ with a known narrative
+                const findingForCell = (tier === 'xl' || tier === 'l')
+                  ? EDITORIAL_FINDINGS[cell.sectorCode]
+                  : null
+                const tagForCell = DESCRIPTIVE_TAGS[cell.sectorCode]
+                const editorial = findingForCell
+                  ? (isEs ? findingForCell.es : findingForCell.en)
+                  : tagForCell
+                    ? (isEs ? tagForCell.es : tagForCell.en)
+                    : null
+
+                // Dark or light text based on background brightness — opacity>0.5 means
+                // saturated enough to need white text; otherwise use primary text
+                const useWhiteText = opacity >= 0.50
+                const textColor = useWhiteText ? '#ffffff' : 'var(--color-text-primary)'
+                const subTextColor = useWhiteText ? 'rgba(255,255,255,0.78)' : 'var(--color-text-muted)'
+                const codeColor = useWhiteText ? 'rgba(255,255,255,0.85)' : color
 
                 return (
                   <div
                     key={cell.sectorId}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${cell.label} - ${formatCompactMXN(spendForCell)}`}
+                    aria-label={`${cell.label} - ${formatCompactMXN(item.spendValue)}`}
                     onClick={() => handleDrill(cell.sectorId, cell.sectorCode)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -1078,107 +1093,23 @@ function Z0Panel({
                       top: cell.y,
                       width: Math.max(0, cell.w - 3),
                       height: Math.max(0, cell.h - 3),
-                      background: bg,
-                      borderLeftWidth: 3,
-                      borderLeftStyle: 'solid',
-                      borderLeftColor: isCritical ? 'transparent' : color,
+                      background: hexToRgba(color, opacity),
                       borderRadius: 2,
-                      padding: '10px 12px',
+                      padding: tier === 'xl' ? '16px 18px' : tier === 'l' ? '12px 14px' : tier === 'm' ? '10px 12px' : '8px 10px',
                       cursor: 'pointer',
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'space-between',
                       overflow: 'hidden',
                       boxSizing: 'border-box',
-                      transition: 'filter 0.12s, transform 0.12s',
-                      filter: hovered ? 'brightness(1.05)' : 'none',
+                      transition: 'transform 0.12s, box-shadow 0.12s, background 0.18s',
                       transform: hovered ? 'translateY(-1px)' : 'none',
-                      boxShadow: hovered ? '0 2px 12px rgba(0,0,0,0.18)' : 'none',
+                      boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.22)' : 'none',
                     }}
                   >
-                    {/* Top row: sector code + critical marker */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
-                      <span
-                        className="font-mono"
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: isCritical ? 'rgba(255,255,255,0.78)' : color,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.18em',
-                          lineHeight: 1,
-                        }}
-                      >
-                        {cell.sectorCode}
-                      </span>
-                      {isCritical && cell.w >= 80 && (
-                        <span
-                          className="font-mono"
-                          style={{
-                            fontSize: 9,
-                            fontWeight: 700,
-                            color: '#ffffff',
-                            background: 'rgba(0,0,0,0.20)',
-                            padding: '2px 5px',
-                            borderRadius: 2,
-                            letterSpacing: '0.06em',
-                            lineHeight: 1,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {cell.critical} {isEs ? 'CRÍT' : 'CRIT'}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Sector name */}
-                    {showLargeLabel ? (
-                      <div
-                        style={{
-                          fontFamily: "'Playfair Display', Georgia, serif",
-                          fontWeight: 800,
-                          fontStyle: 'italic',
-                          fontSize: titleSize,
-                          color: textColor,
-                          lineHeight: 1.04,
-                          letterSpacing: '-0.01em',
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {cell.label}
-                      </div>
-                    ) : (
-                      <div
-                        className="font-mono"
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: textColor,
-                          lineHeight: 1.1,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {cell.label}
-                      </div>
-                    )}
-
-                    {/* Bottom row: spend + share */}
-                    {showSubMetrics && (
-                      <div
-                        className="font-mono tabular-nums"
-                        style={{ fontSize: 11, color: textColor, lineHeight: 1.1, fontWeight: 600 }}
-                      >
-                        <div>{formatCompactMXN(spendForCell)}</div>
-                        <div style={{ fontSize: 9, color: subTextColor, fontWeight: 400 }}>
-                          {spendPct.toFixed(1)}% {isEs ? 'del gasto' : 'of spend'}
-                        </div>
-                      </div>
-                    )}
+                    {tier === 'xl' && <XLCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
+                    {tier === 'l' && <LCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
+                    {tier === 'm' && <MCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
+                    {tier === 's' && <SCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={null} isEs={isEs} />}
                   </div>
                 )
               })}
@@ -1186,93 +1117,77 @@ function Z0Panel({
           </div>
         )}
 
-        {/* Mobile fallback: ranked stacked-bar + legend list */}
+        {/* Mobile fallback: ranked list with sector-color left rail (width = value) */}
         {!isLoading && cells.length > 0 && isMobile && (
-          <div className="absolute inset-0 overflow-y-auto p-4 pb-12">
-            {/* Stacked bar */}
-            <div className="mb-3">
-              <div
-                className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted mb-1.5"
-              >
-                {isEs ? 'GASTO POR SECTOR · % DEL TOTAL' : 'SPEND BY SECTOR · % OF TOTAL'}
-              </div>
-              <div
-                className="relative w-full rounded-sm overflow-hidden flex"
-                style={{ height: 14, background: 'var(--color-background-elevated)' }}
-              >
-                {[...stats]
-                  .sort((a, b) => b.total_value_mxn - a.total_value_mxn)
-                  .map((s) => {
-                    const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-                    const isCrit = (s.critical_risk_count ?? 0) > 0
-                    const pct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
-                    return (
-                      <div
-                        key={s.sector_id}
-                        title={`${getSectorName(s.sector_code, lang)} - ${pct.toFixed(1)}%`}
-                        style={{
-                          width: `${pct}%`,
-                          background: isCrit ? color : hexToRgba(color, 0.35),
-                          borderRight: '1px solid var(--color-background)',
-                        }}
-                      />
-                    )
-                  })}
-              </div>
-            </div>
-
-            {/* Legend list */}
-            <ul role="list" className="divide-y divide-border/60 rounded-sm border border-border" style={{ background: 'var(--color-background-card)' }}>
-              {[...stats]
+          <div className="absolute inset-0 overflow-y-auto p-3 pb-12">
+            <ul role="list" className="space-y-1.5">
+              {[...sectors]
                 .sort((a, b) => (mode === 'risk'
-                  ? (b.critical_risk_count ?? 0) - (a.critical_risk_count ?? 0)
+                  ? b.critical_share_pct - a.critical_share_pct
                   : b.total_value_mxn - a.total_value_mxn))
                 .map((s) => {
                   const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-                  const sectorLabel = getSectorName(s.sector_code, lang)
-                  const isCrit = (s.critical_risk_count ?? 0) > 0
+                  const label = isEs ? s.sector_name_es : s.sector_name_en
                   const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
+                  const railWidthPct = Math.max(3, spendPct * 2)  // amplify so smallest are visible
+                  const opacity = fillOpacityFromCriticalShare(s.critical_share_pct, false)
+                  const finding = EDITORIAL_FINDINGS[s.sector_code]
+                  const tag = DESCRIPTIVE_TAGS[s.sector_code]
+                  const editorial = finding ? (isEs ? finding.es : finding.en)
+                    : tag ? (isEs ? tag.es : tag.en) : null
                   return (
                     <li key={s.sector_id}>
                       <button
                         type="button"
                         onClick={() => handleDrill(s.sector_id, s.sector_code)}
-                        className="w-full text-left px-3 py-2.5 hover:bg-background-elevated/40 transition-colors flex items-center gap-3"
-                        style={{ borderLeft: `3px solid ${color}` }}
+                        className="w-full text-left rounded-sm overflow-hidden relative block hover:opacity-95 transition-opacity"
+                        style={{
+                          background: hexToRgba(color, opacity * 0.85),
+                          padding: '10px 12px',
+                          minHeight: 64,
+                        }}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div
-                            className="font-serif"
-                            style={{
-                              fontFamily: "'Playfair Display', Georgia, serif",
-                              fontWeight: 700,
-                              fontStyle: 'italic',
-                              fontSize: 15,
-                              color: 'var(--color-text-primary)',
-                              lineHeight: 1.15,
-                            }}
-                          >
-                            {sectorLabel}
-                          </div>
-                          <div
-                            className="font-mono text-[10px] uppercase tracking-[0.12em]"
-                            style={{ color: color }}
-                          >
-                            {s.sector_code} · {spendPct.toFixed(1)}%
-                          </div>
-                        </div>
-                        <div className="text-right whitespace-nowrap">
-                          <div className="font-mono tabular-nums text-sm font-bold text-text-primary">
-                            {formatCompactMXN(s.total_value_mxn)}
-                          </div>
-                          {isCrit && (
-                            <div
-                              className="font-mono text-[10px] tabular-nums"
-                              style={{ color: RISK_COLORS.critical }}
-                            >
-                              {s.critical_risk_count} {isEs ? 'crítico' : 'critical'}
+                        {/* Sector-color rail at top encodes spend share */}
+                        <div
+                          className="absolute top-0 left-0 h-[3px]"
+                          style={{ width: `${Math.min(100, railWidthPct)}%`, background: color }}
+                          aria-hidden="true"
+                        />
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-mono text-[9px] uppercase tracking-[0.16em]" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                              {s.sector_code} · {spendPct.toFixed(1)}%
                             </div>
-                          )}
+                            <div
+                              className="font-serif"
+                              style={{
+                                fontFamily: "'Playfair Display', Georgia, serif",
+                                fontWeight: 700,
+                                fontStyle: 'italic',
+                                fontSize: 17,
+                                color: '#ffffff',
+                                lineHeight: 1.1,
+                              }}
+                            >
+                              {label}
+                            </div>
+                            {editorial && (
+                              <div
+                                className="font-mono text-[10px] mt-0.5"
+                                style={{ color: 'rgba(255,255,255,0.78)' }}
+                              >
+                                {editorial}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right whitespace-nowrap">
+                            <div className="font-mono tabular-nums text-sm font-bold" style={{ color: '#ffffff' }}>
+                              {formatCompactMXN(s.total_value_mxn)}
+                            </div>
+                            <div className="font-mono text-[10px] tabular-nums" style={{ color: 'rgba(255,255,255,0.78)' }}>
+                              {s.critical_share_pct.toFixed(1)}% {isEs ? 'crít' : 'crit'}
+                            </div>
+                          </div>
                         </div>
                       </button>
                     </li>
@@ -1282,34 +1197,296 @@ function Z0Panel({
           </div>
         )}
       </div>
+    </div>
+  )
+}
 
-      {/* Editorial pull-line — the finding the treemap reveals */}
-      {pullLine && !isMobile && (
-        <div
-          className="px-4 sm:px-6 py-3 flex-shrink-0"
-          style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-background-elevated)' }}
+// ── Cell content components ─────────────────────────────────────────────────
+
+type CellItem = {
+  sectorId: number
+  sectorCode: string
+  label: string
+  spendValue: number
+  spendPct: number
+  critical: number
+  criticalSharePct: number
+  topInstitutions: Array<{ institution_id: number; name: string; value_mxn: number; share_pct: number }>
+}
+
+type CellProps = {
+  item: CellItem
+  color: string         // for the sector code kicker
+  textColor: string
+  subTextColor: string
+  editorial: string | null
+  isEs: boolean
+}
+
+function CellKicker({ code, color }: { code: string; color: string }) {
+  return (
+    <span
+      className="font-mono"
+      style={{
+        fontSize: 9,
+        fontWeight: 700,
+        color,
+        textTransform: 'uppercase',
+        letterSpacing: '0.18em',
+        lineHeight: 1,
+      }}
+    >
+      {code}
+    </span>
+  )
+}
+
+function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }: CellProps) {
+  return (
+    <>
+      <CellKicker code={item.sectorCode} color={color} />
+      {/* Big total + share — anchor the eye */}
+      <div className="mt-2 flex items-baseline gap-2">
+        <span
+          className="font-mono tabular-nums"
+          style={{
+            fontSize: 28,
+            fontWeight: 800,
+            color: textColor,
+            lineHeight: 1,
+            letterSpacing: '-0.01em',
+          }}
         >
-          <div className="flex items-start gap-3 max-w-3xl">
+          {formatCompactMXN(item.spendValue)}
+        </span>
+        <span className="font-mono text-xs tabular-nums" style={{ color: subTextColor }}>
+          {item.spendPct.toFixed(1)}%
+        </span>
+      </div>
+      {/* Sector name — Playfair italic */}
+      <div
+        style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontWeight: 800,
+          fontStyle: 'italic',
+          fontSize: 'clamp(22px, 3vw, 36px)',
+          color: textColor,
+          lineHeight: 1.04,
+          letterSpacing: '-0.015em',
+          marginTop: 6,
+          marginBottom: 4,
+        }}
+      >
+        {item.label}
+      </div>
+      {/* Editorial finding */}
+      {editorial && (
+        <div
+          style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 500,
+            fontSize: 13,
+            color: subTextColor,
+            lineHeight: 1.35,
+            marginBottom: 10,
+            maxWidth: '90%',
+          }}
+        >
+          “{editorial}”
+        </div>
+      )}
+      {/* Top institutions */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div
+          className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1"
+          style={{ color: subTextColor, opacity: 0.85 }}
+        >
+          {isEs ? 'PRINCIPALES INSTITUCIONES' : 'TOP INSTITUTIONS'}
+        </div>
+        <ul className="space-y-0.5">
+          {item.topInstitutions.slice(0, 3).map((inst) => (
+            <li key={inst.institution_id} className="flex items-baseline gap-2 min-w-0">
+              <span
+                className="flex-1 truncate text-[12px]"
+                style={{ color: textColor, fontWeight: 500 }}
+                title={inst.name}
+              >
+                {inst.name}
+              </span>
+              <span className="font-mono tabular-nums text-[11px] whitespace-nowrap" style={{ color: textColor, fontWeight: 700 }}>
+                {inst.share_pct.toFixed(1)}%
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* Footer rail: critical share + contracts */}
+      <div
+        className="mt-2 pt-2 flex items-center justify-between"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.20)' }}
+      >
+        <span className="font-mono text-[10px]" style={{ color: subTextColor }}>
+          {isEs ? 'Críticos' : 'Critical'}{' '}
+          <span className="tabular-nums font-bold" style={{ color: textColor }}>
+            {item.criticalSharePct.toFixed(1)}%
+          </span>
+        </span>
+        <span className="font-mono text-[10px] tabular-nums" style={{ color: subTextColor }}>
+          {formatNumber(item.critical)} {isEs ? 'ctr' : 'contracts'}
+        </span>
+      </div>
+    </>
+  )
+}
+
+function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }: CellProps) {
+  const topInst = item.topInstitutions[0]
+  return (
+    <>
+      <CellKicker code={item.sectorCode} color={color} />
+      <div className="mt-1.5 flex items-baseline gap-1.5">
+        <span
+          className="font-mono tabular-nums"
+          style={{
+            fontSize: 20,
+            fontWeight: 800,
+            color: textColor,
+            lineHeight: 1,
+          }}
+        >
+          {formatCompactMXN(item.spendValue)}
+        </span>
+        <span className="font-mono text-[10px] tabular-nums" style={{ color: subTextColor }}>
+          {item.spendPct.toFixed(1)}%
+        </span>
+      </div>
+      <div
+        style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontWeight: 800,
+          fontStyle: 'italic',
+          fontSize: 22,
+          color: textColor,
+          lineHeight: 1.05,
+          marginTop: 4,
+          marginBottom: 2,
+        }}
+      >
+        {item.label}
+      </div>
+      {editorial && (
+        <div
+          style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontStyle: 'italic',
+            fontSize: 11,
+            color: subTextColor,
+            lineHeight: 1.3,
+            marginBottom: 6,
+          }}
+        >
+          {editorial}
+        </div>
+      )}
+      {topInst && (
+        <div className="flex-1 min-h-0">
+          <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-0.5" style={{ color: subTextColor, opacity: 0.85 }}>
+            {isEs ? 'TOP' : 'TOP'}
+          </div>
+          <div className="flex items-baseline gap-2 min-w-0">
             <span
-              className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm"
-              style={{ background: 'var(--color-risk-critical)' }}
-              aria-hidden="true"
-            />
-            <p
-              className="text-text-secondary leading-snug"
-              style={{ fontSize: 13, fontFamily: "'Source Serif Pro', Georgia, serif" }}
+              className="flex-1 truncate text-[11px]"
+              style={{ color: textColor, fontWeight: 500 }}
+              title={topInst.name}
             >
-              {pullLine}
-            </p>
-            <span
-              className="ml-auto font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted self-center whitespace-nowrap"
-            >
-              {criticalSectorCount} {isEs ? 'sectores · clic para abrir' : 'sectors · click to open'}
+              {topInst.name}
+            </span>
+            <span className="font-mono tabular-nums text-[10px] font-bold" style={{ color: textColor }}>
+              {topInst.share_pct.toFixed(1)}%
             </span>
           </div>
         </div>
       )}
-    </div>
+      <div className="mt-1.5 pt-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.16)' }}>
+        <span className="font-mono text-[9px]" style={{ color: subTextColor }}>
+          {isEs ? 'Críticos' : 'Critical'}{' '}
+          <span className="tabular-nums font-bold" style={{ color: textColor }}>
+            {item.criticalSharePct.toFixed(1)}%
+          </span>
+        </span>
+      </div>
+    </>
+  )
+}
+
+function MCellContent({ item, color, textColor, subTextColor, editorial, isEs: _isEs }: CellProps) {
+  return (
+    <>
+      <CellKicker code={item.sectorCode} color={color} />
+      <div
+        style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontWeight: 800,
+          fontStyle: 'italic',
+          fontSize: 15,
+          color: textColor,
+          lineHeight: 1.1,
+          marginTop: 4,
+          marginBottom: 2,
+        }}
+      >
+        {item.label}
+      </div>
+      <div className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: textColor, lineHeight: 1 }}>
+        {formatCompactMXN(item.spendValue)}
+        <span className="ml-1 font-normal" style={{ fontSize: 9, color: subTextColor }}>
+          {item.spendPct.toFixed(1)}%
+        </span>
+      </div>
+      {editorial && (
+        <div
+          className="font-mono mt-1"
+          style={{ fontSize: 9, color: subTextColor, lineHeight: 1.25 }}
+        >
+          {editorial}
+        </div>
+      )}
+      <div className="mt-auto font-mono text-[9px] tabular-nums" style={{ color: subTextColor }}>
+        {item.criticalSharePct.toFixed(1)}% crit
+      </div>
+    </>
+  )
+}
+
+function SCellContent({ item, color, textColor, subTextColor, editorial: _editorial, isEs: _isEs }: CellProps) {
+  return (
+    <>
+      <CellKicker code={item.sectorCode} color={color} />
+      <div
+        style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontWeight: 700,
+          fontStyle: 'italic',
+          fontSize: 13,
+          color: textColor,
+          lineHeight: 1.1,
+          marginTop: 2,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+        title={item.label}
+      >
+        {item.label}
+      </div>
+      <div className="mt-auto font-mono tabular-nums" style={{ fontSize: 10, fontWeight: 700, color: textColor, lineHeight: 1 }}>
+        {formatCompactMXN(item.spendValue)}
+        <span className="ml-1 font-normal" style={{ fontSize: 9, color: subTextColor }}>
+          {item.spendPct.toFixed(1)}%
+        </span>
+      </div>
+    </>
   )
 }
 

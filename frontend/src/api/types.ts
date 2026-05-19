@@ -74,6 +74,33 @@ export interface SectorListResponse {
   total_value_mxn: number
 }
 
+// El Reparto treemap response — bundled for the Z0 entry page.
+export interface TreemapSectorItem {
+  sector_id: number
+  sector_code: string
+  sector_name_es: string
+  sector_name_en: string
+  color: string
+  total_value_mxn: number
+  total_contracts: number
+  total_vendors: number
+  critical_risk_count: number
+  critical_share_pct: number
+  top_institutions: Array<{
+    institution_id: number
+    name: string
+    value_mxn: number
+    share_pct: number
+  }>
+}
+
+export interface TreemapResponse {
+  sectors: TreemapSectorItem[]
+  total_value_mxn: number
+  total_critical_count: number
+  generated_at: string
+}
+
 // ============================================================================
 // Contract Types
 // ============================================================================
