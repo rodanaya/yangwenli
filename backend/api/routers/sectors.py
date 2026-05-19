@@ -286,6 +286,25 @@ def get_sectors_treemap():
             ).fetchall()
             sector_meta = {row[0]: {"code": row[1], "name_es": row[2], "name_en": row[3]} for row in sector_meta_rows}
 
+            # Top-3 institutions per sector — read from precomputed_stats
+            # (key 'sector_top_institutions') which is built by
+            # scripts/precompute_sector_top_institutions.py. Computing this
+            # live takes 60-110s; precomputed is instant.
+            top_inst_by_sector: Dict[int, List[Dict[str, Any]]] = {}
+            try:
+                top_row = cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_top_institutions'"
+                ).fetchone()
+                if top_row:
+                    raw = json.loads(top_row[0])
+                    for sid_str, items in raw.items():
+                        try:
+                            top_inst_by_sector[int(sid_str)] = items
+                        except (ValueError, TypeError):
+                            continue
+            except (sqlite3.Error, json.JSONDecodeError) as e:
+                logger.warning(f"sector_top_institutions read failed, falling back to empty: {e}")
+
             for item in sector_items:
                 sid = item.get("id") or item.get("sector_id")
                 if sid is None or sid not in sector_meta:
@@ -301,34 +320,17 @@ def get_sectors_treemap():
                     if total_contracts > 0 else 0.0
                 )
 
-                # Top 3 institutions in this sector by total spend
-                top_inst_rows = cursor.execute(
-                    """
-                    SELECT i.id, i.name, COALESCE(SUM(c.amount_mxn), 0) AS spend
-                    FROM contracts c
-                    JOIN institutions i ON i.id = c.institution_id
-                    WHERE c.sector_id = ?
-                      AND c.amount_mxn IS NOT NULL
-                      AND c.amount_mxn > 0
-                      AND c.amount_mxn < ?
-                    GROUP BY i.id, i.name
-                    ORDER BY spend DESC
-                    LIMIT 3
-                    """,
-                    (sid, MAX_CONTRACT_VALUE),
-                ).fetchall()
-
                 sector_total = item.get("total_value_mxn", 0) or 0
                 top_institutions = []
-                for inst_id, inst_name, inst_spend in top_inst_rows:
+                for inst in top_inst_by_sector.get(sid, []):
                     share_pct = (
-                        round((inst_spend / sector_total) * 100, 2)
+                        round((inst["value_mxn"] / sector_total) * 100, 2)
                         if sector_total > 0 else 0.0
                     )
                     top_institutions.append({
-                        "institution_id": inst_id,
-                        "name": inst_name,
-                        "value_mxn": inst_spend,
+                        "institution_id": inst["institution_id"],
+                        "name": inst["name"],
+                        "value_mxn": inst["value_mxn"],
                         "share_pct": share_pct,
                     })
 
