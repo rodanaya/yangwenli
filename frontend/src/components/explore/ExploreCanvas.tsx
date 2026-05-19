@@ -674,11 +674,20 @@ function InstRow({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z0Panel — El Panorama: intensity grid
-// 12 equal-size cards in a 4×3 CSS grid. Visual weight (bg opacity) ∝ sector
-// spend (GASTO) or weighted-risk score (RIESGO). Every sector equally legible
-// regardless of budget size. Cards sorted by metric so Health leads, Otros
-// trails — but never shrunk to illegibility. Click any card → Z1.
+// Z0Panel — El Reparto / The Spoils
+//
+// 12 sectors rendered as a d3-hierarchy treemap. Cell area = total spend (or
+// critical-risk count in RISK mode). Critical-risk sectors get a saturated
+// SECTOR_COLORS fill; the rest get zinc with only a left-rule accent — color
+// is reserved for sectors that have a story to tell.
+//
+// Editorial thesis: a pastel 4×3 grid hides the real finding — federal spend
+// is wildly concentrated AND risk concentration does NOT follow money
+// concentration. The treemap encodes that mismatch in one glance. The pull-
+// line below names it in plain Spanish.
+//
+// Dual-context: serves both /explore Z0 (full-bleed canvas → drill to Z1)
+// AND /sectors hero (within page margins → /sectors/:code route).
 // ────────────────────────────────────────────────────────────────────────────
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -686,6 +695,103 @@ function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(hex.slice(3, 5), 16)
   const b = parseInt(hex.slice(5, 7), 16)
   return `rgba(${r},${g},${b},${alpha})`
+}
+
+// Squarified treemap layout for 12 sectors. Pure implementation — no d3
+// dependency at runtime, just the standard algorithm: sort by value
+// descending, layout in rows whose total area matches each item's share.
+type ReparteoCell = {
+  sectorId: number
+  sectorCode: string
+  label: string
+  value: number
+  share: number
+  critical: number
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+function layoutTreemap(
+  items: Array<{ sectorId: number; sectorCode: string; label: string; value: number; critical: number }>,
+  W: number,
+  H: number,
+): ReparteoCell[] {
+  const total = items.reduce((s, i) => s + Math.max(0, i.value), 0) || 1
+  // Normalize values to area (W*H). Use squarified algorithm.
+  const sorted = [...items].sort((a, b) => b.value - a.value)
+  const scale = (W * H) / total
+  const areas = sorted.map((i) => Math.max(0.0001, i.value * scale))
+
+  const result: ReparteoCell[] = []
+  let x = 0, y = 0, w = W, h = H
+  let i = 0
+
+  // Squarified treemap (Bruls/Huijbregts/van Wijk 2000)
+  while (i < areas.length) {
+    const shortSide = Math.min(w, h)
+    let row: number[] = [areas[i]]
+    let bestRatio = worstAspectRatio(row, shortSide)
+    let j = i + 1
+    while (j < areas.length) {
+      const next = [...row, areas[j]]
+      const nextRatio = worstAspectRatio(next, shortSide)
+      if (nextRatio > bestRatio) break
+      row = next
+      bestRatio = nextRatio
+      j += 1
+    }
+
+    // Place the row along the short side
+    const rowSum = row.reduce((s, v) => s + v, 0)
+    const rowThickness = rowSum / shortSide
+    let cursor = 0
+    for (let k = 0; k < row.length; k++) {
+      const itemIdx = i + k
+      const item = sorted[itemIdx]
+      const segLen = row[k] / rowThickness
+      if (w >= h) {
+        // place vertically — row of cells stacked along H axis at x
+        result.push({
+          sectorId: item.sectorId,
+          sectorCode: item.sectorCode,
+          label: item.label,
+          value: item.value,
+          share: total > 0 ? item.value / total : 0,
+          critical: item.critical,
+          x, y: y + cursor, w: rowThickness, h: segLen,
+        })
+      } else {
+        result.push({
+          sectorId: item.sectorId,
+          sectorCode: item.sectorCode,
+          label: item.label,
+          value: item.value,
+          share: total > 0 ? item.value / total : 0,
+          critical: item.critical,
+          x: x + cursor, y, w: segLen, h: rowThickness,
+        })
+      }
+      cursor += segLen
+    }
+    if (w >= h) { x += rowThickness; w -= rowThickness } else { y += rowThickness; h -= rowThickness }
+    i = j
+  }
+  return result
+}
+
+function worstAspectRatio(row: number[], shortSide: number): number {
+  if (row.length === 0) return Infinity
+  const rowSum = row.reduce((s, v) => s + v, 0)
+  const sPow2 = shortSide * shortSide
+  let max = 0
+  for (const r of row) {
+    const ratio1 = (sPow2 * r) / (rowSum * rowSum)
+    const ratio2 = (rowSum * rowSum) / (sPow2 * r)
+    max = Math.max(max, ratio1, ratio2)
+  }
+  return max
 }
 
 function Z0Panel({
@@ -696,21 +802,25 @@ function Z0Panel({
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [cols, setCols] = useState(4)
+  const treemapRef = useRef<HTMLDivElement>(null)
   const [hoverId, setHoverId] = useState<number | null>(null)
   const [mode, setMode] = useState<'spend' | 'risk'>('spend')
-  const [filter, setFilter] = useState<'all' | 'critical'>('all')
+  const [size, setSize] = useState({ w: 1040, h: 520 })
+  const [isMobile, setIsMobile] = useState(false)
 
+  // Track the treemap container dimensions for accurate layout
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const obs = new ResizeObserver(([entry]) => {
-      const w = entry.contentRect.width
-      setCols(w < 480 ? 2 : w < 768 ? 3 : 4)
+    const el = treemapRef.current
+    const outer = containerRef.current
+    if (!el || !outer) return
+    const obs = new ResizeObserver(() => {
+      const w = el.clientWidth
+      const h = el.clientHeight
+      if (w > 0 && h > 0) setSize({ w, h })
+      setIsMobile(outer.clientWidth < 640)
     })
     obs.observe(el)
-    const w = el.offsetWidth
-    setCols(w < 480 ? 2 : w < 768 ? 3 : 4)
+    obs.observe(outer)
     return () => obs.disconnect()
   }, [])
 
@@ -722,21 +832,101 @@ function Z0Panel({
 
   const stats = sectorStats?.data ?? []
   const totalSpend = sectorStats?.total_value_mxn ?? 0
-
-  const maxSpend = stats.length > 0 ? Math.max(...stats.map((s) => s.total_value_mxn), 1) : 1
-  const maxCritical = stats.length > 0 ? Math.max(...stats.map((s) => s.critical_risk_count ?? 0), 1) : 1
+  const totalCritical = stats.reduce((sum, s) => sum + (s.critical_risk_count ?? 0), 0)
   const criticalSectorCount = stats.filter((s) => (s.critical_risk_count ?? 0) > 0).length
 
-  const sorted = useMemo(() => {
-    const list = filter === 'critical' ? stats.filter((s) => (s.critical_risk_count ?? 0) > 0) : stats
-    return [...list].sort((a, b) =>
-      mode === 'risk'
-        ? (b.critical_risk_count ?? 0) - (a.critical_risk_count ?? 0)
-        : b.total_value_mxn - a.total_value_mxn
-    )
-  }, [stats, mode, filter])
+  // Compute the dominant-sector finding for the editorial pull-line.
+  // We surface the sector where critical-vendor share is HIGHEST relative
+  // to its spend share — the spend/risk mismatch.
+  const mismatch = useMemo(() => {
+    if (!stats.length || totalSpend === 0 || totalCritical === 0) return null
+    let best: { code: string; label: string; criticalShare: number; spendShare: number } | null = null
+    let bestRatio = 0
+    for (const s of stats) {
+      const critShare = totalCritical > 0 ? (s.critical_risk_count ?? 0) / totalCritical : 0
+      const spendShare = s.total_value_mxn / totalSpend
+      if (critShare === 0 || spendShare === 0) continue
+      const ratio = critShare / spendShare
+      if (ratio > bestRatio && critShare >= 0.08) {
+        bestRatio = ratio
+        best = {
+          code: s.sector_code,
+          label: getSectorName(s.sector_code, lang),
+          criticalShare: critShare,
+          spendShare,
+        }
+      }
+    }
+    return best
+  }, [stats, totalSpend, totalCritical, lang])
 
-  const rows = Math.ceil(Math.max(sorted.length, 1) / cols)
+  // Build the items list for the treemap. In SPEND mode, area = spend.
+  // In RISK mode, area = critical_risk_count (sectors with zero get a
+  // tiny minimum slot so they still render as labelled cells).
+  const treeItems = useMemo(() => {
+    return stats.map((s) => {
+      const spendVal = Math.max(0, s.total_value_mxn)
+      const riskVal = Math.max(0, s.critical_risk_count ?? 0)
+      const value = mode === 'risk'
+        ? (riskVal > 0 ? riskVal : 0.5)  // tiny floor so empty sectors still render
+        : spendVal
+      return {
+        sectorId: s.sector_id,
+        sectorCode: s.sector_code,
+        label: getSectorName(s.sector_code, lang),
+        value,
+        critical: s.critical_risk_count ?? 0,
+      }
+    })
+  }, [stats, mode, lang])
+
+  const cells = useMemo(
+    () => (treeItems.length > 0 ? layoutTreemap(treeItems, size.w, Math.max(200, size.h)) : []),
+    [treeItems, size.w, size.h]
+  )
+
+  // Lookup sector spend so we can show both metrics in cell label even in RISK mode
+  const spendBySector = useMemo(() => {
+    const m = new Map<number, { spend: number; critical: number }>()
+    for (const s of stats) m.set(s.sector_id, { spend: s.total_value_mxn, critical: s.critical_risk_count ?? 0 })
+    return m
+  }, [stats])
+
+  const handleDrill = (sectorId: number, sectorCode: string) => {
+    dispatch({ type: 'drill-into-sector', sectorId, sectorCode })
+  }
+
+  // ── Headline / kicker strings ────────────────────────────────────────────
+  const isEs = lang === 'es'
+  const sectionEyebrow = isEs ? '§ EL REPARTO' : '§ THE SPOILS'
+  const headline = isEs ? 'Cómo México reparte' : 'How Mexico divides'
+  const headlineSub = isEs ? '9.9 billones de pesos' : '9.9 trillion pesos'
+  const sortLabel = isEs ? 'ORDENAR' : 'SORT'
+  const spendLabel = isEs ? 'GASTO' : 'SPEND'
+  const riskLabel = isEs ? 'RIESGO' : 'RISK'
+
+  // Pull-line: the editorial finding
+  const pullLine: React.ReactNode = (() => {
+    if (!mismatch) return null
+    const critPct = Math.round(mismatch.criticalShare * 100)
+    const spendPct = Math.round(mismatch.spendShare * 100)
+    if (isEs) {
+      return (
+        <>
+          <strong className="font-semibold text-text-primary">{mismatch.label}</strong>{' '}
+          concentra <strong className="font-semibold">{critPct}%</strong> de los proveedores
+          en crítico con apenas <strong className="font-semibold">{spendPct}%</strong> del gasto.
+        </>
+      )
+    }
+    return (
+      <>
+        <strong className="font-semibold text-text-primary">{mismatch.label}</strong>{' '}
+        holds <strong className="font-semibold">{critPct}%</strong> of critical vendors on
+        only <strong className="font-semibold">{spendPct}%</strong> of spend.
+      </>
+    )
+  })()
 
   return (
     <div
@@ -744,210 +934,381 @@ function Z0Panel({
       className="absolute inset-0 z-[5] flex flex-col"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
     >
-      {/* Controls: sort mode + filter */}
-      <div className="flex items-center gap-2 px-3 py-2 flex-shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
-        <div className="flex rounded overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
-          {(['spend', 'risk'] as const).map((m) => (
-            <button key={m} type="button" onClick={() => setMode(m)} className="font-mono text-[8px] uppercase tracking-wider px-2 py-1" style={{ background: mode === m ? 'var(--color-accent)' : 'transparent', color: mode === m ? '#fff' : 'var(--color-text-muted)', cursor: 'pointer', border: 'none' }}>
-              {m === 'spend' ? (lang === 'en' ? 'SPEND' : 'GASTO') : (lang === 'en' ? 'RISK' : 'RIESGO')}
-            </button>
-          ))}
+      {/* Editorial header — lives above the treemap; collapses on mobile */}
+      <div
+        className="flex items-end justify-between gap-4 px-4 sm:px-6 pt-4 pb-3 flex-shrink-0 flex-wrap"
+        style={{ borderBottom: '1px solid var(--color-border)' }}
+      >
+        <div className="min-w-0">
+          <div
+            className="font-mono text-[10px] uppercase tracking-[0.18em] mb-1.5"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            {sectionEyebrow}
+          </div>
+          <h1
+            className="font-serif text-text-primary leading-[1.05]"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 'clamp(1.4rem, 2.4vw, 2.1rem)',
+              letterSpacing: '-0.015em',
+            }}
+          >
+            {headline}{' '}
+            <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{headlineSub}</em>
+          </h1>
         </div>
-        <div className="flex rounded overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
-          {(['all', 'critical'] as const).map((f) => (
-            <button key={f} type="button" onClick={() => setFilter(f)} className="font-mono text-[8px] uppercase tracking-wider px-2 py-1" style={{ background: filter === f ? (f === 'critical' ? RISK_COLORS.critical : 'var(--color-accent)') : 'transparent', color: filter === f ? '#fff' : 'var(--color-text-muted)', cursor: 'pointer', border: 'none' }}>
-              {f === 'all' ? (lang === 'en' ? 'ALL' : 'TODOS') : (lang === 'en' ? 'CRITICAL ONLY' : 'SOLO CRÍTICO')}
-            </button>
-          ))}
+
+        <div className="flex items-baseline gap-4 sm:gap-6 flex-wrap">
+          {/* Total spend */}
+          <div className="text-right">
+            <div
+              className="font-mono tabular-nums text-text-primary leading-tight"
+              style={{ fontSize: 'clamp(1rem, 1.6vw, 1.5rem)', fontWeight: 700 }}
+            >
+              {formatCompactMXN(totalSpend)}
+            </div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+              {isEs ? 'gasto federal' : 'federal spend'}
+            </div>
+          </div>
+
+          {/* Critical count */}
+          <div className="text-right">
+            <div
+              className="font-mono tabular-nums leading-tight"
+              style={{
+                fontSize: 'clamp(1rem, 1.6vw, 1.5rem)',
+                fontWeight: 700,
+                color: 'var(--color-risk-critical)',
+              }}
+            >
+              {formatNumber(totalCritical)}
+            </div>
+            <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+              {isEs ? 'en crítico' : 'in critical'}
+            </div>
+          </div>
+
+          {/* Sort toggle */}
+          <div className="flex flex-col items-end gap-1">
+            <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted">
+              {sortLabel}
+            </span>
+            <div className="flex rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+              {(['spend', 'risk'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setMode(m)}
+                  className="font-mono text-[10px] uppercase tracking-[0.12em] px-2.5 py-1 transition-colors"
+                  style={{
+                    background: mode === m ? (m === 'risk' ? RISK_COLORS.critical : 'var(--color-accent)') : 'transparent',
+                    color: mode === m ? '#fff' : 'var(--color-text-secondary)',
+                    cursor: 'pointer',
+                    border: 'none',
+                  }}
+                >
+                  {m === 'spend' ? spendLabel : riskLabel}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        {!isLoading && (
-          <div className="ml-auto font-mono text-[8px] text-right flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
-            <span style={{ color: RISK_COLORS.critical }}>{criticalSectorCount}</span>
-            {lang === 'en' ? ' critical · ' : ' crítico · '}
-            {formatCompactMXN(totalSpend)}
+      </div>
+
+      {/* Treemap area */}
+      <div ref={treemapRef} className="relative flex-1 min-h-0" style={{ overflow: 'hidden' }}>
+        {isLoading && (
+          <div
+            className="absolute inset-0 flex items-center justify-center font-mono text-[10px]"
+            style={{ color: 'var(--color-text-muted)' }}
+          >
+            {isEs ? 'cargando...' : 'loading...'}
+          </div>
+        )}
+
+        {!isLoading && cells.length > 0 && !isMobile && (
+          <div className="absolute inset-0 p-3">
+            <div className="relative w-full h-full">
+              {cells.map((cell) => {
+                const color = SECTOR_COLORS[cell.sectorCode] ?? '#64748b'
+                const isCritical = cell.critical > 0
+                const hovered = hoverId === cell.sectorId
+                const meta = spendBySector.get(cell.sectorId)
+                const spendForCell = meta?.spend ?? 0
+                const spendPct = totalSpend > 0 ? (spendForCell / totalSpend) * 100 : 0
+
+                // Two-tier color: critical sectors get saturated fill, others
+                // get a dark zinc fill with the sector hex as left-rule accent.
+                const bg = isCritical
+                  ? hexToRgba(color, hovered ? 0.95 : 0.82)
+                  : `var(--color-background-card)`
+                const textColor = isCritical ? '#ffffff' : 'var(--color-text-primary)'
+                const subTextColor = isCritical ? 'rgba(255,255,255,0.72)' : 'var(--color-text-muted)'
+
+                // Scale typography by cell area so a tiny "Otros" cell doesn't
+                // render its title at 24px.
+                const area = (cell.w / size.w) * (cell.h / Math.max(200, size.h))
+                const titleSize = area > 0.08 ? 26
+                  : area > 0.04 ? 20
+                  : area > 0.015 ? 15
+                  : 12
+                const showSubMetrics = cell.w >= 110 && cell.h >= 70
+                const showLargeLabel = cell.w >= 90 && cell.h >= 50
+
+                return (
+                  <div
+                    key={cell.sectorId}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${cell.label} - ${formatCompactMXN(spendForCell)}`}
+                    onClick={() => handleDrill(cell.sectorId, cell.sectorCode)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleDrill(cell.sectorId, cell.sectorCode)
+                      }
+                    }}
+                    onMouseEnter={() => setHoverId(cell.sectorId)}
+                    onMouseLeave={() => setHoverId(null)}
+                    style={{
+                      position: 'absolute',
+                      left: cell.x,
+                      top: cell.y,
+                      width: Math.max(0, cell.w - 3),
+                      height: Math.max(0, cell.h - 3),
+                      background: bg,
+                      borderLeftWidth: 3,
+                      borderLeftStyle: 'solid',
+                      borderLeftColor: isCritical ? 'transparent' : color,
+                      borderRadius: 2,
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box',
+                      transition: 'filter 0.12s, transform 0.12s',
+                      filter: hovered ? 'brightness(1.05)' : 'none',
+                      transform: hovered ? 'translateY(-1px)' : 'none',
+                      boxShadow: hovered ? '0 2px 12px rgba(0,0,0,0.18)' : 'none',
+                    }}
+                  >
+                    {/* Top row: sector code + critical marker */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
+                      <span
+                        className="font-mono"
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 700,
+                          color: isCritical ? 'rgba(255,255,255,0.78)' : color,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.18em',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {cell.sectorCode}
+                      </span>
+                      {isCritical && cell.w >= 80 && (
+                        <span
+                          className="font-mono"
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            background: 'rgba(0,0,0,0.20)',
+                            padding: '2px 5px',
+                            borderRadius: 2,
+                            letterSpacing: '0.06em',
+                            lineHeight: 1,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {cell.critical} {isEs ? 'CRÍT' : 'CRIT'}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Sector name */}
+                    {showLargeLabel ? (
+                      <div
+                        style={{
+                          fontFamily: "'Playfair Display', Georgia, serif",
+                          fontWeight: 800,
+                          fontStyle: 'italic',
+                          fontSize: titleSize,
+                          color: textColor,
+                          lineHeight: 1.04,
+                          letterSpacing: '-0.01em',
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {cell.label}
+                      </div>
+                    ) : (
+                      <div
+                        className="font-mono"
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: textColor,
+                          lineHeight: 1.1,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {cell.label}
+                      </div>
+                    )}
+
+                    {/* Bottom row: spend + share */}
+                    {showSubMetrics && (
+                      <div
+                        className="font-mono tabular-nums"
+                        style={{ fontSize: 11, color: textColor, lineHeight: 1.1, fontWeight: 600 }}
+                      >
+                        <div>{formatCompactMXN(spendForCell)}</div>
+                        <div style={{ fontSize: 9, color: subTextColor, fontWeight: 400 }}>
+                          {spendPct.toFixed(1)}% {isEs ? 'del gasto' : 'of spend'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile fallback: ranked stacked-bar + legend list */}
+        {!isLoading && cells.length > 0 && isMobile && (
+          <div className="absolute inset-0 overflow-y-auto p-4 pb-12">
+            {/* Stacked bar */}
+            <div className="mb-3">
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted mb-1.5"
+              >
+                {isEs ? 'GASTO POR SECTOR · % DEL TOTAL' : 'SPEND BY SECTOR · % OF TOTAL'}
+              </div>
+              <div
+                className="relative w-full rounded-sm overflow-hidden flex"
+                style={{ height: 14, background: 'var(--color-background-elevated)' }}
+              >
+                {[...stats]
+                  .sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+                  .map((s) => {
+                    const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+                    const isCrit = (s.critical_risk_count ?? 0) > 0
+                    const pct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
+                    return (
+                      <div
+                        key={s.sector_id}
+                        title={`${getSectorName(s.sector_code, lang)} - ${pct.toFixed(1)}%`}
+                        style={{
+                          width: `${pct}%`,
+                          background: isCrit ? color : hexToRgba(color, 0.35),
+                          borderRight: '1px solid var(--color-background)',
+                        }}
+                      />
+                    )
+                  })}
+              </div>
+            </div>
+
+            {/* Legend list */}
+            <ul role="list" className="divide-y divide-border/60 rounded-sm border border-border" style={{ background: 'var(--color-background-card)' }}>
+              {[...stats]
+                .sort((a, b) => (mode === 'risk'
+                  ? (b.critical_risk_count ?? 0) - (a.critical_risk_count ?? 0)
+                  : b.total_value_mxn - a.total_value_mxn))
+                .map((s) => {
+                  const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+                  const sectorLabel = getSectorName(s.sector_code, lang)
+                  const isCrit = (s.critical_risk_count ?? 0) > 0
+                  const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
+                  return (
+                    <li key={s.sector_id}>
+                      <button
+                        type="button"
+                        onClick={() => handleDrill(s.sector_id, s.sector_code)}
+                        className="w-full text-left px-3 py-2.5 hover:bg-background-elevated/40 transition-colors flex items-center gap-3"
+                        style={{ borderLeft: `3px solid ${color}` }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className="font-serif"
+                            style={{
+                              fontFamily: "'Playfair Display', Georgia, serif",
+                              fontWeight: 700,
+                              fontStyle: 'italic',
+                              fontSize: 15,
+                              color: 'var(--color-text-primary)',
+                              lineHeight: 1.15,
+                            }}
+                          >
+                            {sectorLabel}
+                          </div>
+                          <div
+                            className="font-mono text-[10px] uppercase tracking-[0.12em]"
+                            style={{ color: color }}
+                          >
+                            {s.sector_code} · {spendPct.toFixed(1)}%
+                          </div>
+                        </div>
+                        <div className="text-right whitespace-nowrap">
+                          <div className="font-mono tabular-nums text-sm font-bold text-text-primary">
+                            {formatCompactMXN(s.total_value_mxn)}
+                          </div>
+                          {isCrit && (
+                            <div
+                              className="font-mono text-[10px] tabular-nums"
+                              style={{ color: RISK_COLORS.critical }}
+                            >
+                              {s.critical_risk_count} {isEs ? 'crítico' : 'critical'}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  )
+                })}
+            </ul>
           </div>
         )}
       </div>
 
-      {isLoading && (
+      {/* Editorial pull-line — the finding the treemap reveals */}
+      {pullLine && !isMobile && (
         <div
-          className="flex flex-1 items-center justify-center font-mono text-[10px]"
-          style={{ color: 'var(--color-text-muted)' }}
+          className="px-4 sm:px-6 py-3 flex-shrink-0"
+          style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-background-elevated)' }}
         >
-          {lang === 'en' ? 'loading…' : 'cargando…'}
+          <div className="flex items-start gap-3 max-w-3xl">
+            <span
+              className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm"
+              style={{ background: 'var(--color-risk-critical)' }}
+              aria-hidden="true"
+            />
+            <p
+              className="text-text-secondary leading-snug"
+              style={{ fontSize: 13, fontFamily: "'Source Serif Pro', Georgia, serif" }}
+            >
+              {pullLine}
+            </p>
+            <span
+              className="ml-auto font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted self-center whitespace-nowrap"
+            >
+              {criticalSectorCount} {isEs ? 'sectores · clic para abrir' : 'sectors · click to open'}
+            </span>
+          </div>
         </div>
       )}
-
-      {!isLoading && sorted.length === 0 && (
-        <div className="flex flex-1 items-center justify-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No critical sectors.' : 'Sin sectores críticos.'}
-        </div>
-      )}
-
-      {!isLoading && sorted.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(${cols}, 1fr)`,
-            gridTemplateRows: `repeat(${rows}, 1fr)`,
-            width: '100%',
-            flex: 1,
-            minHeight: 0,
-            gap: 3,
-            padding: 6,
-            boxSizing: 'border-box',
-          }}
-        >
-          {sorted.map((s) => {
-            const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
-            const metricMax = mode === 'risk' ? maxCritical : maxSpend
-            const metricVal = mode === 'risk' ? (s.critical_risk_count ?? 0) : s.total_value_mxn
-            const bgOpacity = 0.05 + (metricVal / metricMax) * 0.20
-            const barPct = (metricVal / metricMax) * 100
-            const spendPct = totalSpend > 0 ? (s.total_value_mxn / totalSpend) * 100 : 0
-            const hovered = hoverId === s.sector_id
-            const sectorLabel = getSectorName(s.sector_code, lang)
-
-            return (
-              <div
-                key={s.sector_id}
-                role="button"
-                tabIndex={0}
-                aria-label={`${sectorLabel} — ${formatCompactMXN(s.total_value_mxn)}`}
-                style={{
-                  background: hexToRgba(color, bgOpacity),
-                  border: `1px solid ${hexToRgba(color, hovered ? 0.55 : 0.22)}`,
-                  borderLeft: `3px solid ${color}`,
-                  borderRadius: 4,
-                  padding: '10px 12px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 5,
-                  overflow: 'hidden',
-                  boxSizing: 'border-box',
-                  transition: 'filter 0.12s, border-color 0.12s',
-                  filter: hovered ? 'brightness(1.1)' : 'none',
-                }}
-                onClick={() =>
-                  dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter')
-                    dispatch({ type: 'drill-into-sector', sectorId: s.sector_id, sectorCode: s.sector_code })
-                }}
-                onMouseEnter={() => setHoverId(s.sector_id)}
-                onMouseLeave={() => setHoverId(null)}
-              >
-                {/* sector code + critical badge */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-family-mono, monospace)',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color,
-                      textTransform: 'uppercase' as const,
-                      letterSpacing: '0.18em',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {s.sector_code}
-                  </span>
-                  {s.critical_risk_count > 0 && (
-                    <span
-                      style={{
-                        fontFamily: 'var(--font-family-mono, monospace)',
-                        fontSize: 8,
-                        fontWeight: 700,
-                        color: RISK_COLORS.critical,
-                        lineHeight: 1,
-                        whiteSpace: 'nowrap' as const,
-                      }}
-                    >
-                      ◆{s.critical_risk_count}
-                    </span>
-                  )}
-                </div>
-
-                {/* Playfair sector name */}
-                <div
-                  style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontWeight: 800,
-                    fontStyle: 'italic',
-                    fontSize: 17,
-                    color,
-                    lineHeight: 1.15,
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <span
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap' as const,
-                    }}
-                  >
-                    {sectorLabel}
-                  </span>
-                </div>
-
-                {/* intensity bar */}
-                <div
-                  style={{
-                    height: 3,
-                    background: hexToRgba(color, 0.15),
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${barPct}%`,
-                      background: mode === 'risk' && (s.critical_risk_count ?? 0) > 0 ? RISK_COLORS.critical : color,
-                      borderRadius: 2,
-                    }}
-                  />
-                </div>
-
-                {/* metric label (spend or critical risk count) */}
-                <div
-                  style={{
-                    fontFamily: 'var(--font-family-mono, monospace)',
-                    fontSize: 9,
-                    color: mode === 'risk' && (s.critical_risk_count ?? 0) > 0 ? RISK_COLORS.critical : 'var(--color-text-muted)',
-                    lineHeight: 1,
-                    flexShrink: 0,
-                    whiteSpace: 'nowrap' as const,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {mode === 'risk'
-                    ? ((s.critical_risk_count ?? 0) > 0
-                        ? `◆${s.critical_risk_count} critical`
-                        : (lang === 'en' ? 'no critical vendors' : 'sin críticos'))
-                    : (
-                      <>
-                        {formatCompactMXN(s.total_value_mxn)}
-                        {totalSpend > 0 && (
-                          <span style={{ opacity: 0.65, marginLeft: 4 }}>· {spendPct.toFixed(1)}%</span>
-                        )}
-                      </>
-                    )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
     </div>
   )
 }
