@@ -1,4 +1,49 @@
 ---
+## Visual Review — 2026-05-19T00:08:05Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/atlas | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/aria | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/cases | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/methodology | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | ⚠ |
+
+**Note**: All 403 responses carry `x-deny-reason: host_not_allowed` — remote execution environment IP blocked by WAF allowlist. Environment constraint, not a site outage. Consistent with all prior automated runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?limit=5 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/sectors | blocked (egress proxy, empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions from prior run:
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 16 hits — all confirmed false positives:
+- `AriaQueue.tsx:801–807`: bilingual `{es:…, en:…}` label maps — legitimate, not a UI key leak (line numbers shifted −164 vs. prior run, consistent with file edits)
+- `Executive.tsx:65,84,103`: company proper nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — not i18n keys
+- `InstitutionScorecards.tsx:441`: `TIER_STYLES[tierName as TierKey]` — JS object lookup, not a UI string
+- `Methodology.tsx:119`: academic citation `Mahalanobis, P.C.` — not rendered as a key (+1 line vs. prior)
+- `RedThread.tsx:327`: `WEB_VERDICT_META[article.verdict]` — TS object key lookup, not a UI string (first seen 2026-05-18T18:05Z run)
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story chart data
+- `CaseLibrary.tsx:219`: inside a code comment, never rendered (−85 lines vs. prior, consistent with file edits)
+- ExploreCanvas.tsx legal suffix array no longer present — consistent with that code being removed/moved
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy (environment constraint, not site failure) — consistent with all prior automated runs from this cloud environment. No new bilingual gaps. Bilingual scan: no genuine i18n key leaks or hardcoded English-only strings. Recommend running checks from VPS (37.60.232.109) or a whitelisted IP for accurate HTTP/API validation.
+
+---
 ## Visual Review — 2026-05-18T18:05:18Z
 
 ### HTTP Status
