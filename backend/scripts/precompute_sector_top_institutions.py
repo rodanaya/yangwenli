@@ -16,7 +16,18 @@ import json
 import time
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "RUBLI_NORMALIZED.db"
+def _resolve_db_path() -> Path:
+    """Find whichever DB file actually exists. Prod uses RUBLI_DEPLOY.db,
+    local dev uses RUBLI_NORMALIZED.db."""
+    base = Path(__file__).resolve().parent.parent
+    for name in ("RUBLI_NORMALIZED.db", "RUBLI_DEPLOY.db"):
+        p = base / name
+        if p.exists() and p.stat().st_size > 0:
+            return p
+    raise FileNotFoundError(f"No DB found at {base}/RUBLI_*.db")
+
+
+DB_PATH = _resolve_db_path()
 MAX_CONTRACT_VALUE = 100_000_000_000  # 100B MXN reject threshold
 
 
