@@ -556,6 +556,14 @@ export function AtlasZoomLayer({
             opacity: 0;
             pointer-events: none;
           }
+          /* M-OBS Phase 2 hotfix (2026-05-19): hide the engine's hover preview
+             tooltip when zoomed — the new ClusterFloatingCard is the sole
+             cluster-context UI during zoom. Without this rule the hover preview
+             (e.g. "3,985 vendors · 180 T1 · → View detail") competes with the
+             floating card and creates duplicate stats. */
+          [data-atlas-zoom-layer="true"] [data-cluster-hover-preview="true"] {
+            display: none;
+          }
         `}</style>
       )}
       <div

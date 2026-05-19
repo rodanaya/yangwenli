@@ -88,7 +88,7 @@ export function ClusterFloatingCard({
 
   return (
     <div
-      className="bg-background-card border border-border rounded-sm shadow-md p-3 w-[280px]"
+      className="bg-background-card border border-border rounded-sm shadow-md p-3 w-[320px]"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       role="dialog"
@@ -150,8 +150,8 @@ export function ClusterFloatingCard({
           </div>
           <ul className="font-mono text-[11px] text-text-secondary space-y-0.5">
             {top3.map((v) => (
-              <li key={v.vendorId} className="truncate">
-                {formatVendorName(v.name)}
+              <li key={v.vendorId} className="leading-snug" title={formatVendorName(v.name, 80)}>
+                {formatVendorName(v.name, 36)}
               </li>
             ))}
           </ul>
