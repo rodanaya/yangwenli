@@ -213,6 +213,9 @@ export function AtlasZoomLayer({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [userZoom, setUserZoom] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
+  // M-OBS P2 hotfix #2: cluster card is dismissible without exiting zoom.
+  // Resets to open whenever the active cluster changes (or zoom exits).
+  const [cardOpen, setCardOpen] = useState(true)
   const isDraggingCommittedRef = useRef(false)
   const dragStateRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -227,10 +230,12 @@ export function AtlasZoomLayer({
   // Distance threshold — below this a mousedown+mouseup sequence is a click, not a drag
   const DRAG_THRESHOLD = 6 // px in screen space
 
-  // Reset pan/zoom whenever the active cluster changes (or zoom exits)
+  // Reset pan/zoom whenever the active cluster changes (or zoom exits).
+  // Also re-open the floating card so each new zoom starts with the card visible.
   useEffect(() => {
     setPanOffset({ x: 0, y: 0 })
     setUserZoom(1)
+    setCardOpen(true)
   }, [zoomedCode])
 
   // Convert a screen-space pixel delta to SVG-viewport pixel delta
@@ -644,12 +649,15 @@ export function AtlasZoomLayer({
         </div>
       )}
 
-      {/* ── M-OBS P2 floating cluster card — top-right of canvas ───────────── */}
-      {isZoomed && zoomedMeta && (
+      {/* ── M-OBS P2 floating cluster card — top-right of canvas ─────────────
+          Dismissible without losing zoom: ✕ collapses the card to a compact
+          chip; clicking the chip re-expands it. Zoom state is unaffected.
+          (escape-zoom is reserved for ESC key / breadcrumb back). */}
+      {isZoomed && zoomedMeta && cardOpen && (
         <div
           style={{
             position: 'absolute',
-            top: 12,
+            top: 44,        // sit below the 32px breadcrumb
             right: 12,
             zIndex: 20,
             pointerEvents: 'auto',
@@ -658,10 +666,36 @@ export function AtlasZoomLayer({
           <ClusterFloatingCard
             meta={zoomedMeta}
             topVendors={topVendors}
-            onClose={() => dispatch({ type: 'escape-zoom' })}
+            onClose={() => setCardOpen(false)}
             lang={lang}
           />
         </div>
+      )}
+      {isZoomed && zoomedMeta && !cardOpen && (
+        <button
+          type="button"
+          onClick={() => setCardOpen(true)}
+          aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
+          style={{
+            position: 'absolute',
+            top: 44,
+            right: 12,
+            zIndex: 20,
+            pointerEvents: 'auto',
+            background: 'var(--color-background-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 2,
+            padding: '4px 8px',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
+        </button>
       )}
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
