@@ -41,6 +41,8 @@ import { useAtlasLOD, atlasLODBandLabel, type AtlasLOD } from '@/lib/atlas/useAt
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 import { AtlasBreadcrumb } from './AtlasBreadcrumb'
 import { ClusterFloatingCard } from './ClusterFloatingCard'
+import { AtlasVendorDrawer } from './AtlasVendorDrawer'
+import { VendorHaloCard } from './VendorHaloCard'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
 // 2026-05-09: SVG_H bumped 220 → 540 to give the constellation real
@@ -490,9 +492,10 @@ export function AtlasZoomLayer({
   }
   const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
   const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
-  const topVendors = (zoomedCode && namedVendors)
-    ? namedVendors.filter((n) => n.clusterCode === zoomedCode).slice(0, 3)
+  const clusterVendors = (zoomedCode && namedVendors)
+    ? namedVendors.filter((n) => n.clusterCode === zoomedCode)
     : []
+  const topVendors = clusterVendors.slice(0, 3)
 
   return (
     <div
@@ -696,6 +699,16 @@ export function AtlasZoomLayer({
         >
           {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
         </button>
+      )}
+
+      {/* ── M-OBS P3 vendor drawer — collapsible bottom strip ──────────────── */}
+      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
+        <AtlasVendorDrawer
+          clusterCode={zoomedMeta.code}
+          clusterLabel={zoomedMeta.label}
+          vendors={clusterVendors}
+          lang={lang}
+        />
       )}
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
@@ -1174,8 +1187,8 @@ function VendorDotOverlay({
         </div>
       )}
 
-      {/* Hover tooltip */}
-      {hoveredDot && !lasso && (() => {
+      {/* Hover tooltip — simple chip at constellation/region bands */}
+      {hoveredDot && !lasso && effectiveScale < 18 && (() => {
         const { sx, sy } = toScreen(hoveredDot.x, hoveredDot.y)
         // Convert SVG viewport coords to percentage for positioning
         const leftPct = (sx / SVG_W) * 100
@@ -1226,6 +1239,30 @@ function VendorDotOverlay({
           </div>
         )
       })()}
+
+      {/* Telescope-star halo card — richer info chip at deep zoom (≥ 18×) */}
+      {hoveredDot && !lasso && effectiveScale >= 18 && (
+        <VendorHaloCard
+          dot={{
+            id: hoveredDot.id,
+            vendorId: typeof hoveredDot.id === 'string' && /^\d+$/.test(hoveredDot.id)
+              ? Number(hoveredDot.id)
+              : undefined,
+            name: hoveredDot.name,
+            riskScore: hoveredDot.riskScore,
+            sectorColor: hoveredDot.sectorColor,
+            x: hoveredDot.x,
+            y: hoveredDot.y,
+            isMock: hoveredDot.isMock,
+          }}
+          transform={transform}
+          wrapperWidth={svgPixelWidth}
+          wrapperHeight={svgPixelWidth * (SVG_H / SVG_W)}
+          svgWidth={SVG_W}
+          svgHeight={SVG_H}
+          lang={lang}
+        />
+      )}
     </div>
   )
 }
