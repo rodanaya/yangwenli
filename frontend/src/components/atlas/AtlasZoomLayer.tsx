@@ -37,6 +37,7 @@ import type {
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 import type { AtlasAction } from './AtlasContext'
 import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
+import { useAtlasLOD, atlasLODBandLabel, type AtlasLOD } from '@/lib/atlas/useAtlasLOD'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
@@ -63,8 +64,14 @@ const ZOOM_TRANSITION = 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)'
 
 // User-driven zoom multiplier bounds (composed with ZOOM_SCALE)
 const USER_ZOOM_MIN = 0.6   // can zoom out to ~2.16× total
-const USER_ZOOM_MAX = 2.5   // can zoom in to 9× total
-const WHEEL_ZOOM_STEP = 0.0015 // wheel deltaY → zoom multiplier delta
+// 2026-05-19 (telescope): unlocked from 2.5 → 15. Composed max becomes
+// 3.6 × 15 = 54×, enabling the "fly into a star" experience. Counter-scaled
+// labels + LOD bands keep typography readable across the whole range.
+const USER_ZOOM_MAX = 15    // can zoom in to 54× total
+// Wheel step is now interpreted exponentially (Math.exp(delta)) so the
+// perceptual zoom rate stays constant across the range. Halved from 0.0015
+// to 0.00075 — exp() curves feel hotter than linear at the same coefficient.
+const WHEEL_ZOOM_STEP = 0.00075 // wheel deltaY → exp() zoom multiplier delta
 
 // Dot radius by risk level when zoomed in.
 // 2026-05-08: bumped 3-4× from previous values (was 2.4/1.7/1.2/0.7).
@@ -79,6 +86,11 @@ const VENDOR_DOT_STYLE: Record<string, { r: number; opacity: number }> = {
   high:     { r: 6.0, opacity: 0.92 },
   medium:   { r: 4.5, opacity: 0.82 },
   low:      { r: 3.0, opacity: 0.65 },
+}
+
+// Small numeric clamp helper for counter-scaled font sizes (telescope LOD).
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
 }
 
 // Attractor coordinate map — derives attractor centre (cx, cy) in viewport space
@@ -202,6 +214,13 @@ export function AtlasZoomLayer({
   const isDraggingCommittedRef = useRef(false)
   const dragStateRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  // Refs mirror the latest committed state so wheel handlers can read the
+  // current value synchronously — avoids the StrictMode double-invoke of
+  // functional setState updaters that would queue pan corrections twice.
+  const userZoomRef = useRef(userZoom)
+  const panOffsetRef = useRef(panOffset)
+  useEffect(() => { userZoomRef.current = userZoom }, [userZoom])
+  useEffect(() => { panOffsetRef.current = panOffset }, [panOffset])
 
   // Distance threshold — below this a mousedown+mouseup sequence is a click, not a drag
   const DRAG_THRESHOLD = 6 // px in screen space
@@ -273,29 +292,60 @@ export function AtlasZoomLayer({
   }, [screenToSvgScale])
 
   // Wheel zoom — only active when zoomed. Scrolling up zooms in.
+  // BUG-FIX (2026-05-19): zoom is now anchored to the cursor position.
+  // Previously we only updated `userZoom` and left `panOffset` alone — but
+  // the transform uses `transform-origin: 0 0`, so multiplying scale about
+  // the origin pushed content toward the bottom-right of the viewport. The
+  // cluster drifted off-screen instead of zooming under the cursor, which
+  // is what made the wheel feel non-functional. We now adjust `panOffset`
+  // by the same amount the scale change would move the cursor-anchored
+  // point, keeping that point pinned across the zoom step (Mapbox /
+  // Google Maps wheel-zoom model).
   // Attached to window (not wrapperRef) so ClusterDetailPanel's fixed z-50
   // overlay doesn't swallow wheel events when it visually overlaps the canvas.
-  // A rect-based guard ensures we only intercept events whose cursor is
-  // spatially within the canvas bounds; events outside skip preventDefault.
   useEffect(() => {
     if (!isZoomed) return
     const el = wrapperRef.current
     if (!el) return
     const onWheel = (e: WheelEvent) => {
       const rect = el.getBoundingClientRect()
-      // Only act when cursor is within the canvas bounds
       if (e.clientX < rect.left || e.clientX > rect.right ||
           e.clientY < rect.top  || e.clientY > rect.bottom) return
       e.preventDefault()
       const delta = -e.deltaY * WHEEL_ZOOM_STEP
-      setUserZoom((z) => {
-        const next = z * (1 + delta)
-        return Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, next))
-      })
+
+      // 2026-05-19 (telescope-anchor + StrictMode fix): zoom is anchored on
+      // the CLUSTER CENTER (canvas midpoint post-base-zoom). Cursor anchoring
+      // over-shoots in a small pane; cluster anchoring matches the telescope
+      // mental model. Read current state via refs so we don't nest
+      // setPanOffset inside setUserZoom's functional updater — React's
+      // StrictMode runs functional updaters twice in dev, which would queue
+      // pan twice per tick (the 2× over-shoot we observed before).
+      const prevUserZoom = userZoomRef.current
+      const proposed = prevUserZoom * Math.exp(delta)
+      const nextUserZoom = Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, proposed))
+      if (nextUserZoom === prevUserZoom) return
+      const scalePrev = transform.s * prevUserZoom
+      const scaleNext = transform.s * nextUserZoom
+      const anchorSvgX = SVG_W / 2
+      const anchorSvgY = SVG_H / 2
+      const prevPan = panOffsetRef.current
+      const origX = (anchorSvgX - transform.tx - prevPan.x) / scalePrev
+      const origY = (anchorSvgY - transform.ty - prevPan.y) / scalePrev
+      const nextPan = {
+        x: anchorSvgX - transform.tx - origX * scaleNext,
+        y: anchorSvgY - transform.ty - origY * scaleNext,
+      }
+      // Update refs synchronously so a rapid second wheel tick (before React
+      // commits) reads the just-computed values, not the stale state.
+      userZoomRef.current = nextUserZoom
+      panOffsetRef.current = nextPan
+      setUserZoom(nextUserZoom)
+      setPanOffset(nextPan)
     }
     window.addEventListener('wheel', onWheel, { passive: false })
     return () => window.removeEventListener('wheel', onWheel)
-  }, [isZoomed])
+  }, [isZoomed, transform])
 
   // Cluster click handler — dispatches zoom-into-cluster (legacy) OR
   // drill-into-sector (spatial nav Z1) depending on `z1Enabled` + lens.
@@ -338,6 +388,23 @@ export function AtlasZoomLayer({
   const effectiveTx = transform.tx + (isZoomed ? panOffset.x : 0)
   const effectiveTy = transform.ty + (isZoomed ? panOffset.y : 0)
 
+  // ── Telescope: LOD band + counter-scaled label sizes (2026-05-19) ─────────
+  // BUG-FIX (2026-05-19): the previous formula `clamp(11/sqrt(s), 8, 16)` was
+  // expressed in SVG-unit px, but the parent div is `transform: scale(s)`, so
+  // the on-screen size = svg_px × s. At s=3.6× a "regular" 8svg-px label
+  // rendered at 28.8 screen-px (the constraint that should keep small labels
+  // legible instead amplified them). The inverse formulation below picks a
+  // desired *screen* size that grows slowly with zoom (log2 curve), then
+  // divides by the current scale so that scale × svg_px = desired_screen_px.
+  const lod = useAtlasLOD(effectiveScale)
+  const desiredScreenPx = (s: number) =>
+    clamp(10 + Math.log2(Math.max(s, 1)) * 1.0, 10, 15)
+  const labelSvgPx = (s: number) => desiredScreenPx(s) / Math.max(s, 0.01)
+  const labelFontPx = labelSvgPx(effectiveScale)
+  // At extreme zoom the lattice should fade further so the star-band reads
+  // cleanly against the labeled dots.
+  const latticeOpacity = effectiveScale > 12 ? 0.18 : 0.45
+
   const transformStr =
     effectiveScale === 1 && effectiveTx === 0 && effectiveTy === 0
       ? 'translate(0px, 0px) scale(1)'
@@ -373,22 +440,27 @@ export function AtlasZoomLayer({
           font sizes only when the wrapper is in zoomed state. */}
       {isZoomed && (
         <style>{`
+          /* Telescope (2026-05-19): font sizes are now computed from
+             effectiveScale via sqrt() counter-scale and clamped, so labels
+             stay readable across the 3.6×–54× range without !important. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] text {
-            font-size: 3.5px !important;
+            font-size: ${labelFontPx.toFixed(2)}px;
           }
-          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
-            font-size: 5px !important;
-            font-weight: 600 !important;
-          }
-          /* Dim the constellation lattice when zoomed so the vendor-level
-             dots overlay (which IS more granular detail) dominates the view.
-             Named vendor circles are exempted so the large outlier dots
-             remain identifiable anchors. */
+          /* Lattice dimming follows the LOD band — secondary at region
+             (0.45), nearly absent at star (0.18) so vendor labels read. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle {
-            opacity: 0.25;
+            opacity: ${latticeOpacity};
+          }
+          /* BUG-FIX (2026-05-19): hide the engine's own named-vendor labels
+             when zoomed — they belong to OTHER clusters and the 3.6× transform
+             pushes them to wrong screen positions. VendorDotOverlay is the
+             sole label authority during zoom. Keep the named-vendor circles
+             visible but muted so they read as background context only. */
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
+            display: none;
           }
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle[data-named-vendor="true"] {
-            opacity: 1 !important;
+            opacity: 0.35;
           }
         `}</style>
       )}
@@ -440,14 +512,23 @@ export function AtlasZoomLayer({
           />
         )}
 
-        {/* ── Vendor-level dot overlay — visible only when zoomed ─────── */}
+        {/* ── Vendor-level dot overlay — visible only when zoomed ───────
+            BUG-FIX (2026-05-19): pass the COMPOSED transform (base cluster
+            zoom + user pan + user wheel-zoom) rather than the base transform
+            alone. Previously the overlay used `transform={transform}` (base
+            only), so vendor dots stayed pinned while everything inside the
+            constellation SVG (rings, labels, named-vendor labels) panned
+            and wheel-zoomed with the user. That produced the "labels float
+            independently from dots" desync and made wheel-zoom appear to
+            do nothing to the dots the user cares about. */}
         {isZoomed && zoomedMeta && (
           <VendorDotOverlay
             dots={vendorDots}
-            transform={transform}
+            transform={{ tx: effectiveTx, ty: effectiveTy, s: effectiveScale }}
             lang={lang}
             selection={state.selection}
             dispatch={dispatch}
+            lod={lod}
           />
         )}
       </div>
@@ -485,11 +566,19 @@ export function AtlasZoomLayer({
               color: 'var(--color-text-muted)',
               opacity: 0.85,
               letterSpacing: 0.4,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
             }}
           >
-            {lang === 'en'
-              ? 'drag to pan · wheel to zoom · esc to exit'
-              : 'arrastra para desplazar · rueda para acercar · esc para salir'}
+            <span>
+              {effectiveScale.toFixed(1)}× · {atlasLODBandLabel(lod.band, lang)}
+            </span>
+            <span>
+              {lang === 'en'
+                ? 'drag to pan · wheel to zoom · esc to exit'
+                : 'arrastra para desplazar · rueda para acercar · esc para salir'}
+            </span>
           </div>
           {(panOffset.x !== 0 || panOffset.y !== 0 || userZoom !== 1) && (
             <button
@@ -631,6 +720,7 @@ interface VendorDotOverlayProps {
   lang: 'en' | 'es'
   selection: Set<string>
   dispatch: React.Dispatch<AtlasAction>
+  lod: AtlasLOD
 }
 
 function VendorDotOverlay({
@@ -639,12 +729,47 @@ function VendorDotOverlay({
   lang,
   selection,
   dispatch,
+  lod,
 }: VendorDotOverlayProps) {
   const navigate = useNavigate()
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [lasso, setLasso] = useState<LassoRect | null>(null)
   const isDraggingRef = useRef(false)
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // ── Sub-pixel font fix (2026-05-19) ─────────────────────────────────────
+  // VendorDotOverlay's <text> elements live OUTSIDE the CSS-transformed div
+  // (this overlay is a sibling positioned absolute:inset-0 rendering its own
+  // SVG). The parent CSS `transform: scale(effectiveScale)` does NOT apply
+  // here — on-screen font size = svg_font × (wrapperPixelWidth / SVG_W).
+  // Previously we received `labelFontPx` computed as `desiredScreen /
+  // effectiveScale`, which is correct only for transformed labels. At the
+  // typical wrapper width (268px → ratio 0.319 screen-px per svg-unit),
+  // that value rendered overlay labels at ~0.8px — sub-pixel, invisible.
+  //
+  // Fix: track this SVG's real pixel width, derive svg-units per screen-px,
+  // and convert a desired *screen* font size (LOD-aware curve based on
+  // effectiveScale = transform.s) into the corresponding svg-unit value.
+  const [svgPixelWidth, setSvgPixelWidth] = useState(SVG_W)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    const update = () => setSvgPixelWidth(el.getBoundingClientRect().width || SVG_W)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const svgUnitsPerScreenPx = SVG_W / Math.max(svgPixelWidth, 1)
+  const effectiveScale = transform.s
+  // Desired ON-SCREEN size grows gently with zoom (telescope detail):
+  // ~10px at constellation/region threshold, ~14px at star, capped 16.
+  const desiredLabelScreenPx = Math.max(
+    10,
+    Math.min(16, 9 + Math.log2(Math.max(effectiveScale, 1)) * 1.2),
+  )
+  const overlayLabelFontSvgPx = desiredLabelScreenPx * svgUnitsPerScreenPx
+  const overlayChipFontSvgPx = Math.max(1, (desiredLabelScreenPx - 1) * svgUnitsPerScreenPx)
 
   // The vendor dots are already in original viewport coordinates.
   // Apply the same transform as the constellation to place them correctly.
@@ -760,6 +885,7 @@ function VendorDotOverlay({
         {dots.map((dot) => {
           const level = getRiskLevelFromScore(dot.riskScore)
           const style = VENDOR_DOT_STYLE[level] ?? VENDOR_DOT_STYLE.low
+          const baseR = style.r * lod.dotScaleMultiplier
           const { sx, sy } = toScreen(dot.x, dot.y)
           const isHovered = dot.id === hoveredId
           const isSelected = !dot.isMock && selection.has(dot.id)
@@ -771,7 +897,7 @@ function VendorDotOverlay({
                 <circle
                   cx={sx}
                   cy={sy}
-                  r={style.r * 2.2}
+                  r={baseR * 2.2}
                   fill="none"
                   stroke={riskColor}
                   strokeWidth={1.5}
@@ -782,7 +908,7 @@ function VendorDotOverlay({
               <circle
                 cx={sx}
                 cy={sy}
-                r={isHovered || isSelected ? style.r * 1.6 : style.r}
+                r={isHovered || isSelected ? baseR * 1.6 : baseR}
                 fill={dot.sectorColor}
                 opacity={style.opacity}
                 stroke={isHovered && !isSelected ? '#a06820' : 'none'}
@@ -803,6 +929,58 @@ function VendorDotOverlay({
             </g>
           )
         })}
+
+        {/* ── LOD labels (region + star bands) ────────────────────────────
+            Render top (labelDensity × N) labels by riskScore desc, with
+            per-frame greedy collision pruning. Cheap for ≤50 labels.
+            TODO: VendorDot has no contractCount field today — when the P3+
+            real-data swap arrives, surface `contractCount`/`n` on the dot
+            shape and render the star-band count tspan below. */}
+        {lod.labelDensity > 0 && (() => {
+          const ranked = [...dots].sort((a, b) => b.riskScore - a.riskScore)
+          const want = Math.ceil(ranked.length * lod.labelDensity)
+          const candidates = ranked.slice(0, want)
+          const placed: Array<{ x: number; y: number; w: number; h: number }> = []
+          const out: React.ReactElement[] = []
+          for (const dot of candidates) {
+            const level = getRiskLevelFromScore(dot.riskScore)
+            const style = VENDOR_DOT_STYLE[level] ?? VENDOR_DOT_STYLE.low
+            const dotR = style.r * lod.dotScaleMultiplier
+            const { sx, sy } = toScreen(dot.x, dot.y)
+            const label = lod.showRiskChip
+              ? `${dot.name} · ${(dot.riskScore * 100).toFixed(0)}%`
+              : dot.name
+            const w = label.length * overlayLabelFontSvgPx * 0.55
+            const h = overlayLabelFontSvgPx * 1.1
+            const lx = sx + dotR + 4
+            const ly = sy + 4
+            // Greedy AABB overlap check against previously placed labels
+            const overlaps = placed.some(
+              (p) => lx < p.x + p.w && lx + w > p.x && ly - h < p.y && ly > p.y - h,
+            )
+            if (overlaps) continue
+            placed.push({ x: lx, y: ly, w, h })
+            const riskColor = RISK_COLORS[level]
+            out.push(
+              <text
+                key={`lbl-${dot.id}`}
+                x={lx}
+                y={ly}
+                fontSize={overlayLabelFontSvgPx}
+                fill="var(--color-text-primary)"
+                style={{ pointerEvents: 'none', fontFamily: 'inherit' }}
+              >
+                {dot.name}
+                {lod.showRiskChip && (
+                  <tspan fill={riskColor} fontFamily="monospace" fontSize={overlayChipFontSvgPx} dx={4}>
+                    · {(dot.riskScore * 100).toFixed(0)}%
+                  </tspan>
+                )}
+              </text>,
+            )
+          }
+          return out
+        })()}
 
         {/* Lasso rectangle */}
         {lassoScreenRect && (
