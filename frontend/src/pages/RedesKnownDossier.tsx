@@ -19,8 +19,9 @@
  * much money flows through it.
  */
 import { useMemo, useRef, useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { VendorNetworkView } from '@/components/network/VendorNetworkView'
 import { useQuery } from '@tanstack/react-query'
 import { ariaApi, networkApi, type PatternSpotlight, type PatternSpotlightResponse, type CommunityItem } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -1343,6 +1344,14 @@ function HeaderStat({
 export default function RedesKnownDossier() {
   const { i18n } = useTranslation('redes')
   const isEs = i18n.language.startsWith('es')
+
+  // Vendor drill-down: /network?vendor=12345 → focused vendor network view
+  const [searchParams] = useSearchParams()
+  const vendorParam = searchParams.get('vendor')
+  const vendorId = vendorParam ? parseInt(vendorParam, 10) : null
+  if (vendorId !== null && Number.isFinite(vendorId) && vendorId > 0) {
+    return <VendorNetworkView vendorId={vendorId} />
+  }
 
   const { data: spotlightData, isLoading: spotlightLoading, isError: spotlightError } = useQuery({
     queryKey: ['pattern-spotlight'],
