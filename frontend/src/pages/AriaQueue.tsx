@@ -1003,7 +1003,6 @@ export default function AriaPage() {
   const totalPages = Math.ceil(totalLeads / PER_PAGE)
 
   const patternCounts = stats?.pattern_counts ?? {}
-  const elevatedValue = stats?.elevated_value_mxn ?? 0
 
   const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
 
@@ -1170,278 +1169,37 @@ export default function AriaPage() {
   return (
     <div className="bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-        {/* ════════════════════════════════════════════════════════════════
-            UTILITY HEADER — replaces EditorialPageShell.
-            The page is a working surface for investigators, not a
-            magazine cover. One title row, one dateline, two anchor
-            stats, plus a methodology popover. No serif headline,
-            no kicker, no editorial paragraph competing with the data.
-           ════════════════════════════════════════════════════════════════ */}
-        <header className="mb-5 pb-5 border-b border-border">
-          {/* folio-v1-P5: archival eyebrow */}
-          <div
-            className="mb-3 flex items-center gap-3"
+        {/* Compressed header — title + dateline + tier counts in one row */}
+        <header className="mb-3 flex items-baseline gap-3 flex-wrap">
+          <h1
+            className="text-text-primary shrink-0"
             style={{
-              fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-              fontSize: '10px',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: 'var(--color-text-muted)',
-              fontWeight: 400,
+              fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: 'clamp(20px, 3vw, 28px)',
+              lineHeight: 1,
+              letterSpacing: '-0.012em',
             }}
           >
-            <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·V</span>
-            <span style={{ width: 22, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-              {isEs ? 'Cola de investigación · ARIA' : 'Investigation queue · ARIA'}
+            {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
+          </h1>
+          {statsLoading ? (
+            <span className="h-2 w-32 rounded bg-background-elevated animate-pulse inline-block" />
+          ) : (
+            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5 flex-wrap">
+              <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
+              <span>{isEs ? 'proveedores' : 'vendors'}</span>
+              <span aria-hidden>·</span>
+              <span>v0.8.5</span>
+              <MetodologiaTooltip
+                title={t('methodology.title')}
+                body={t('methodology.body')}
+                link="/methodology"
+              />
             </span>
-          </div>
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="min-w-0">
-              <h1
-                className="text-text-primary"
-                style={{
-                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
-                  fontWeight: 500,
-                  fontSize: 'clamp(24px, 4vw, 38px)',
-                  lineHeight: 0.98,
-                  letterSpacing: '-0.012em',
-                }}
-              >
-                {isEs ? 'Cola de Riesgo' : 'Risk Queue'}
-              </h1>
-              {statsLoading ? (
-                <span className="mt-1.5 inline-flex items-center gap-2">
-                  <span className="h-2 w-32 rounded bg-background-elevated animate-pulse inline-block" />
-                  <span className="h-2 w-16 rounded bg-background-elevated animate-pulse inline-block" />
-                </span>
-              ) : (
-                <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5 inline-flex items-center gap-1.5 flex-wrap">
-                  {lastRunAt && (
-                    <>
-                      <span>{isEs ? `Sincronizado ${lastRunAt}` : `Synced ${lastRunAt}`}</span>
-                      <span aria-hidden>·</span>
-                    </>
-                  )}
-                  <span className="tabular-nums">{formatNumber(stats?.queue_total ?? 0)}</span>
-                  <span>{isEs ? 'proveedores procesados' : 'vendors processed'}</span>
-                  <span aria-hidden>·</span>
-                  <span>v0.8.5</span>
-                  <MetodologiaTooltip
-                    title={t('methodology.title')}
-                    body={t('methodology.body')}
-                    link="/methodology"
-                  />
-                </p>
-              )}
-            </div>
-            <div className="flex items-baseline gap-5">
-              {statsLoading ? (
-                <>
-                  <div className="text-right">
-                    <Skeleton className="h-8 w-16 mb-1" />
-                    <Skeleton className="h-2 w-14" />
-                  </div>
-                  <div className="text-right">
-                    <Skeleton className="h-8 w-20 mb-1" />
-                    <Skeleton className="h-2 w-12" />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-right">
-                    <div
-                      className="tabular-nums leading-none"
-                      style={{
-                        fontFamily: 'var(--font-family-serif)',
-                        fontSize: 'clamp(22px, 3vw, 32px)',
-                        fontWeight: 700,
-                        fontStyle: 'italic',
-                        color: 'var(--color-risk-critical)',
-                      }}
-                    >
-                      {formatNumber(tierCounts[1])}
-                    </div>
-                    <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
-                      {isEs ? 'T1 prioridad' : 'T1 priority'}
-                    </div>
-                  </div>
-                  {elevatedValue > 0 && (
-                    <div className="text-right">
-                      <div
-                        className="tabular-nums leading-none"
-                        style={{
-                          fontFamily: 'var(--font-family-serif)',
-                          fontSize: 'clamp(22px, 3vw, 32px)',
-                          fontWeight: 700,
-                          fontStyle: 'italic',
-                          color: 'var(--color-text-primary)',
-                        }}
-                      >
-                        {formatCompactMXN(elevatedValue)}
-                      </div>
-                      <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1 font-mono">
-                        {isEs ? 'en riesgo' : 'at risk'}
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+          )}
         </header>
-
-        {/* ════════════════════════════════════════════════════════════════
-            EDITORIAL TIER STRIP + INTELLIGENCE STATS
-            Left: 4-ring tier strip. Right: 4 real investigative metrics
-            (at-risk spend, EFOS/SFP external flags, new vendors, pipeline).
-           ════════════════════════════════════════════════════════════════ */}
-        {/* Tier chip row — replaces TierEditorialStrip fat bars */}
-        <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mr-1 shrink-0">
-            {isEs ? 'Niveles' : 'Tiers'}
-          </span>
-          {TIER_CONFIG.map((tc) => {
-            const count = tierCounts[tc.tier] ?? 0
-            return (
-              <span
-                key={tc.tier}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-[11px] font-mono"
-                style={{ borderColor: 'var(--color-border)', background: 'var(--color-background-card)', color: 'var(--color-text-muted)' }}
-              >
-                <span className={tc.textColor + ' font-bold'}>T{tc.tier}</span>
-                <span className="tabular-nums">{statsLoading ? '…' : formatNumber(count)}</span>
-              </span>
-            )
-          })}
-        </div>
-
-        <div className="mb-5 grid gap-4 md:gap-5 md:grid-cols-[1fr_340px] lg:grid-cols-[1fr_380px]">
-          <div />
-
-          {/* Right: real investigative metrics — replaces synthesized distribution */}
-          <div>
-            <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted mb-2">
-              {isEs ? '§ INTELIGENCIA DE COLA · ARIA v1.2' : '§ QUEUE INTELLIGENCE · ARIA v1.2'}
-            </p>
-            {statsLoading ? (
-              <div className="grid grid-cols-2 gap-2">
-                {[1,2,3,4].map(i => <Skeleton key={i} className="h-[96px] rounded-sm" />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {/* EFOS + SFP external flags */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
-                    {isEs ? 'Registros externos' : 'External flags'}
-                  </div>
-                  <div
-                    className="tabular-nums leading-tight"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: RISK_COLORS.high,
-                    }}
-                  >
-                    {formatNumber((stats?.external_counts?.efos ?? 0) + (stats?.external_counts?.sfp ?? 0))}
-                  </div>
-                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
-                    EFOS {formatNumber(stats?.external_counts?.efos ?? 0)}
-                    <span className="mx-1 opacity-40">·</span>
-                    SFP {formatNumber(stats?.external_counts?.sfp ?? 0)}
-                  </div>
-                </div>
-                {/* New vendor signals */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
-                    {isEs ? 'Señal proveedor nuevo' : 'New vendor signal'}
-                  </div>
-                  <div
-                    className="tabular-nums leading-tight"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: RISK_COLORS.high,
-                    }}
-                  >
-                    {formatNumber(stats?.new_vendor_count ?? 0)}
-                  </div>
-                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
-                    {isEs ? 'proveedores de reciente creación' : 'recently-formed vendors'}
-                  </div>
-                </div>
-                {/* Review pipeline */}
-                <div className="rounded-sm border border-border/60 bg-background-card px-3 sm:px-4 py-2.5 sm:py-3">
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">
-                    {isEs ? 'En revisión activa' : 'Under review'}
-                  </div>
-                  <div
-                    className="tabular-nums leading-tight"
-                    style={{
-                      fontFamily: 'var(--font-family-serif)',
-                      fontSize: 'clamp(1.15rem, 2.5vw, 1.5rem)',
-                      fontWeight: 700,
-                      fontStyle: 'italic',
-                      color: 'var(--color-text-primary)',
-                    }}
-                  >
-                    {formatNumber((stats?.review_stats?.confirmed ?? 0) + (stats?.review_stats?.reviewing ?? 0))}
-                  </div>
-                  <div className="text-[10px] text-text-muted/60 mt-1 font-mono">
-                    {formatNumber(stats?.review_stats?.confirmed ?? 0)} {isEs ? 'confirmados' : 'confirmed'}
-                    <span className="mx-1 opacity-40">·</span>
-                    {formatNumber(stats?.review_stats?.reviewing ?? 0)} {isEs ? 'activos' : 'active'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* aria-P2: Pattern editorial bars (replaces donut/pie pattern composition) */}
-        {statsLoading ? (
-          <div className="mb-5">
-            <div className="flex items-baseline justify-between mb-2">
-              <p className="font-mono uppercase tracking-[0.15em] text-[10px] text-text-muted">
-                {isEs ? '§ COMPOSICIÓN DE PATRONES' : '§ PATTERN COMPOSITION'}
-              </p>
-              <div className="h-3 w-16 bg-background-elevated rounded animate-pulse" />
-            </div>
-            <div className="rounded-sm border border-border/60 bg-background-card overflow-hidden">
-              {Object.entries(PATTERN_LABELS).map(([key, meta], i) => (
-                <div key={key} className={cn('flex items-center gap-3 px-3 py-2.5', i > 0 && 'border-t border-border/40')}>
-                  <span
-                    className="shrink-0 font-mono text-[9px] font-bold px-1.5 py-0.5 rounded-sm leading-none"
-                    style={{ background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}50` }}
-                  >
-                    {key}
-                  </span>
-                  <span className="text-[11px] font-mono text-text-secondary min-w-0 truncate flex-1">
-                    {isEs ? meta.es : meta.en}
-                  </span>
-                  <div className="flex-1 h-1.5 bg-background-elevated rounded-sm animate-pulse max-w-[120px]" />
-                  <span className="text-[10px] font-mono tabular-nums text-text-muted w-8 text-right">—</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : Object.keys(patternCounts).length > 0 ? (
-          <PatternEditorialBars
-            patternCounts={patternCounts}
-            isEs={isEs}
-            total={stats?.queue_total}
-            onPatternClick={(key) => {
-              setPatternFilter(key)
-              setTierFilter(null)
-              setPage(1)
-            }}
-          />
-        ) : null}
 
         {/* ════════════════════════════════════════════════════════════════
             UNIFIED FILTER BAR
