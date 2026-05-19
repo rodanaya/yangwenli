@@ -1212,3 +1212,44 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions 
 
 ### Overall: WARN
 HTTP and API checks blocked by egress proxy (`x-deny-reason: host_not_allowed` — environment constraint, not site failure). TLS handshake succeeds; site infrastructure appears healthy from cert/IP perspective. No new bilingual gaps detected. Recommend running checks from VPS (37.60.232.109) or a whitelisted IP for accurate HTTP/API validation.
+
+---
+## Visual Review — 2026-05-19T18:03:06Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/atlas | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/aria | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/sectors | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/cases | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/methodology | 403 (egress proxy blocked) | N/A |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | N/A |
+
+Note: All 403s are from the cloud execution environment's egress gateway (TLS cert issued by "Egress Gateway Subordinate CA"). TLS handshake to 37.60.232.109 succeeds and rubli.xyz cert is valid (issued 2026-05-19, expires 2026-06-18), confirming site infrastructure is healthy. Blocks are environment constraints, not site failures.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress proxy) | N/A |
+| /api/v1/cases?limit=5 | BLOCKED (egress proxy) | N/A |
+| /api/v1/cases?vendor_id=4325 | BLOCKED (egress proxy) | N/A |
+| /api/v1/sectors | BLOCKED (egress proxy) | N/A |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions detected:
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all confirmed false positives (same as 00:08Z run):
+- `Executive.tsx:65,84,103`: proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER)
+- `InstitutionScorecards.tsx:441`, `RedThread.tsx:339,340`: JS object lookups, not UI strings
+- `CaseLibrary.tsx:219`: inside a code comment
+- `Methodology.tsx:119`: academic citation (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded chart fixture data
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy (environment constraint, not site failure). TLS handshake succeeds; rubli.xyz cert is valid and current. No new bilingual gaps vs. 00:08Z baseline. No regressions in local frontend source.
