@@ -233,11 +233,16 @@ export function AtlasZoomLayer({
   const DRAG_THRESHOLD = 6 // px in screen space
 
   // Reset pan/zoom whenever the active cluster changes (or zoom exits).
-  // Also re-open the floating card so each new zoom starts with the card visible.
+  // The floating card auto-opens at desktop widths but auto-COLLAPSES at
+  // narrow viewports (≤ 640px) where the card eats the entire canvas — the
+  // user gets the compact "{code} · SHOW" chip and can expand if they want.
   useEffect(() => {
     setPanOffset({ x: 0, y: 0 })
     setUserZoom(1)
-    setCardOpen(true)
+    const isNarrow = typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false
+    setCardOpen(!isNarrow)
   }, [zoomedCode])
 
   // Convert a screen-space pixel delta to SVG-viewport pixel delta
