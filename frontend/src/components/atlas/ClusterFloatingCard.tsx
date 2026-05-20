@@ -88,7 +88,7 @@ export function ClusterFloatingCard({
 
   return (
     <div
-      className="bg-background-card border border-border rounded-sm shadow-md p-3 w-[320px]"
+      className="bg-background-card border border-border rounded-sm shadow-md p-2.5 sm:p-3 w-[230px] sm:w-[270px] lg:w-[320px]"
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       role="dialog"
@@ -102,14 +102,14 @@ export function ClusterFloatingCard({
         {meta.code} · {t.pattern}
       </div>
 
-      {/* Label — editorial title */}
+      {/* Label — editorial title (scales gently on narrow viewports) */}
       <div
-        className="text-text-primary mt-1"
+        className="text-text-primary mt-1 break-words"
         style={{
           fontFamily: '"Playfair Display", serif',
           fontStyle: 'italic',
           fontWeight: 600,
-          fontSize: 18,
+          fontSize: 'clamp(15px, 2.2vw, 18px)',
           lineHeight: 1.15,
         }}
       >
@@ -132,8 +132,8 @@ export function ClusterFloatingCard({
         </div>
       )}
 
-      {/* Stat row — 3 cells */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      {/* Stat row — 3 cells (tighter on narrow viewports) */}
+      <div className="mt-2 sm:mt-3 grid grid-cols-3 gap-1.5 sm:gap-2">
         <StatCell value={meta.vendors.toLocaleString(lang === 'en' ? 'en-US' : 'es-MX')} label={t.vendors} />
         <StatCell value={meta.t1.toLocaleString(lang === 'en' ? 'en-US' : 'es-MX')} label={t.t1} />
         <StatCell value={`${highPct}%`} label={t.highPlus} />
@@ -141,17 +141,21 @@ export function ClusterFloatingCard({
 
       {/* Top vendors */}
       {top3.length > 0 && (
-        <div className="mt-3">
+        <div className="mt-2 sm:mt-3">
           <div
             className="font-mono text-[9px] uppercase text-text-muted mb-1"
             style={{ letterSpacing: '0.14em' }}
           >
             {t.top}
           </div>
-          <ul className="font-mono text-[11px] text-text-secondary space-y-0.5">
+          <ul className="font-mono text-[10px] sm:text-[11px] text-text-secondary space-y-0.5">
             {top3.map((v) => (
-              <li key={v.vendorId} className="leading-snug" title={formatVendorName(v.name, 80)}>
-                {formatVendorName(v.name, 36)}
+              <li
+                key={v.vendorId}
+                className="leading-snug truncate"
+                title={formatVendorName(v.name, 80)}
+              >
+                {formatVendorName(v.name, 32)}
               </li>
             ))}
           </ul>
@@ -159,7 +163,7 @@ export function ClusterFloatingCard({
       )}
 
       {/* Footer — investigate + close */}
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-2 sm:mt-3 flex items-center justify-between">
         <button
           type="button"
           onClick={handleInvestigate}
@@ -209,15 +213,16 @@ function StatCell({ value, label }: StatCellProps) {
           fontFamily: '"Playfair Display", serif',
           fontStyle: 'italic',
           fontWeight: 600,
-          fontSize: 18,
+          fontSize: 'clamp(14px, 1.8vw, 18px)',
           lineHeight: 1.05,
         }}
       >
         {value}
       </div>
       <div
-        className="font-mono text-[8px] uppercase text-text-muted mt-0.5"
+        className="font-mono text-[8px] uppercase text-text-muted mt-0.5 truncate"
         style={{ letterSpacing: '0.12em' }}
+        title={label}
       >
         {label}
       </div>

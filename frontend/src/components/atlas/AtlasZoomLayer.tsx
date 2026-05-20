@@ -658,13 +658,8 @@ export function AtlasZoomLayer({
           (escape-zoom is reserved for ESC key / breadcrumb back). */}
       {isZoomed && zoomedMeta && cardOpen && (
         <div
-          style={{
-            position: 'absolute',
-            top: 44,        // sit below the 32px breadcrumb
-            right: 12,
-            zIndex: 20,
-            pointerEvents: 'auto',
-          }}
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
         >
           <ClusterFloatingCard
             meta={zoomedMeta}
@@ -679,11 +674,8 @@ export function AtlasZoomLayer({
           type="button"
           onClick={() => setCardOpen(true)}
           aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
           style={{
-            position: 'absolute',
-            top: 44,
-            right: 12,
-            zIndex: 20,
             pointerEvents: 'auto',
             background: 'var(--color-background-card)',
             border: '1px solid var(--color-border)',
