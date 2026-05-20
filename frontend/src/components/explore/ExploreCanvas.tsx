@@ -830,13 +830,30 @@ const DESCRIPTIVE_TAGS: Record<string, { es: string; en: string }> = {
 }
 
 // Color encoding for the new design — fill = sector color always, opacity
-// is driven by critical_share_pct. Maps 0% → dim wash (0.18), 7%+ → bright
-// (0.95). The eye lands on Salud red and Tecnología purple because they're
-// bright BECAUSE they're dangerous, not muted because they're "safe".
+// is driven by critical_share_pct. Maps 0% → 0.50 floor (visible color
+// still), 7%+ → bright (0.95). Floor raised from 0.22 to 0.50 so text
+// contrast holds even on the dimmest cells.
 function fillOpacityFromCriticalShare(critSharePct: number, hovered: boolean): number {
   const normalized = Math.min(1, Math.max(0, critSharePct / 7))
-  const base = 0.22 + normalized * 0.73   // 0.22 .. 0.95
+  const base = 0.50 + normalized * 0.45   // 0.50 .. 0.95
   return hovered ? Math.min(1, base + 0.05) : base
+}
+
+// Perceived luminance of a hex color (sRGB). Yellow / bright-green sector
+// colors are inherently light and need DARK text regardless of opacity;
+// dark reds, blues, purples need WHITE text. Cells inherit a high opacity
+// floor (≥0.50), so the resulting fill is close to the pure sector hex —
+// luminance of the hex is a good predictor of perceived background lightness.
+function luminanceOfHex(hex: string): number {
+  const h = hex.replace('#', '')
+  const r = parseInt(h.slice(0, 2), 16) / 255
+  const g = parseInt(h.slice(2, 4), 16) / 255
+  const b = parseInt(h.slice(4, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
+}
+
+function isLightSectorColor(hex: string): boolean {
+  return luminanceOfHex(hex) > 0.55
 }
 
 function Z0Panel({
@@ -1065,12 +1082,14 @@ function Z0Panel({
                     ? (isEs ? tagForCell.es : tagForCell.en)
                     : null
 
-                // Dark or light text based on background brightness — opacity>0.5 means
-                // saturated enough to need white text; otherwise use primary text
-                const useWhiteText = opacity >= 0.50
-                const textColor = useWhiteText ? '#ffffff' : 'var(--color-text-primary)'
-                const subTextColor = useWhiteText ? 'rgba(255,255,255,0.78)' : 'var(--color-text-muted)'
-                const codeColor = useWhiteText ? 'rgba(255,255,255,0.85)' : color
+                // Text color is driven by SECTOR HUE, not opacity. Yellow
+                // (Energía) and bright green (Agricultura) are inherently light
+                // → need dark text. Reds, blues, purples → white text. Opacity
+                // floor of 0.50 means the sector hue dominates the fill regardless.
+                const useDarkText = isLightSectorColor(color)
+                const textColor = useDarkText ? 'rgba(20,20,20,0.96)' : '#ffffff'
+                const subTextColor = useDarkText ? 'rgba(20,20,20,0.72)' : 'rgba(255,255,255,0.82)'
+                const codeColor = useDarkText ? 'rgba(20,20,20,0.78)' : 'rgba(255,255,255,0.86)'
 
                 return (
                   <div
@@ -1214,11 +1233,67 @@ type CellItem = {
   topInstitutions: Array<{ institution_id: number; name: string; siglas?: string | null; value_mxn: number; share_pct: number }>
 }
 
-// Short institution label: siglas if present, else extract a 12-char
-// editorial shorthand from the full name. Stops "INSTITUTO MEXICANO DEL
-// SEGURO SOCIAL" string-of-doom from bunching up the XL cell list.
+// Frontend fallback map for institutions whose DB row lacks a siglas
+// value. Keys are uppercase name prefixes (matched via startsWith). The
+// official thing to do is to fix the institutions.siglas column, but
+// this map lets us ship recognizable acronyms now without a data migration.
+const NAME_TO_SIGLAS_FALLBACK: Array<[string, string]> = [
+  ['CAMINOS Y PUENTES FEDERALES', 'CAPUFE'],
+  ['SERVICIO DE ADMINISTRACIÓN TRIBUTARIA', 'SAT'],
+  ['SERVICIO DE ADMINISTRACION TRIBUTARIA', 'SAT'],
+  ['SECRETARÍA DE HACIENDA Y CRÉDITO PÚBLICO', 'SHCP'],
+  ['SECRETARIA DE HACIENDA Y CREDITO PUBLICO', 'SHCP'],
+  ['SECRETARÍA DE LA DEFENSA NACIONAL', 'SEDENA'],
+  ['SECRETARIA DE LA DEFENSA NACIONAL', 'SEDENA'],
+  ['SECRETARÍA DE MARINA', 'SEMAR'],
+  ['SECRETARIA DE MARINA', 'SEMAR'],
+  ['SECRETARÍA DE GOBERNACIÓN', 'SEGOB'],
+  ['SECRETARIA DE GOBERNACION', 'SEGOB'],
+  ['SECRETARÍA DE SALUD', 'SSA'],
+  ['SECRETARIA DE SALUD', 'SSA'],
+  ['SECRETARÍA DE EDUCACIÓN PÚBLICA', 'SEP'],
+  ['SECRETARIA DE EDUCACION PUBLICA', 'SEP'],
+  ['SECRETARÍA DE AGRICULTURA', 'SADER'],
+  ['SECRETARIA DE AGRICULTURA', 'SADER'],
+  ['SECRETARÍA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['SECRETARIA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['SECRETARÍA DEL TRABAJO', 'STPS'],
+  ['SECRETARIA DEL TRABAJO', 'STPS'],
+  ['SECRETARÍA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
+  ['SECRETARIA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
+  ['SECRETARÍA DE INFRAESTRUCTURA', 'SICT'],
+  ['SECRETARIA DE INFRAESTRUCTURA', 'SICT'],
+  ['GRUPO AEROPORTUARIO DE LA CIUDAD DE MÉXICO', 'GACM'],
+  ['GRUPO AEROPORTUARIO DE LA CIUDAD DE MEXICO', 'GACM'],
+  ['INSTITUTO POLITÉCNICO NACIONAL', 'IPN'],
+  ['INSTITUTO POLITECNICO NACIONAL', 'IPN'],
+  ['COMISIÓN FEDERAL DE ELECTRICIDAD', 'CFE'],
+  ['COMISION FEDERAL DE ELECTRICIDAD', 'CFE'],
+  ['COMISIÓN NACIONAL DEL AGUA', 'CONAGUA'],
+  ['COMISION NACIONAL DEL AGUA', 'CONAGUA'],
+  ['CENTRO MEDICO NACIONAL', 'CMN'],
+  ['CENTRO MÉDICO NACIONAL', 'CMN'],
+  ['HOSPITAL GENERAL DE MÉXICO', 'HGM'],
+  ['HOSPITAL GENERAL DE MEXICO', 'HGM'],
+  ['FONDO NACIONAL DE FOMENTO AL TURISMO', 'FONATUR'],
+]
+
+function inferSiglasFromName(name: string): string | null {
+  const upper = (name || '').toUpperCase().trim()
+  for (const [prefix, siglas] of NAME_TO_SIGLAS_FALLBACK) {
+    if (upper.startsWith(prefix)) return siglas
+  }
+  return null
+}
+
+// Short institution label: siglas if present, else inferred from a small
+// known-prefix map, else extract a 14-char editorial shorthand from the
+// full name. Stops "INSTITUTO MEXICANO DEL SEGURO SOCIAL" string-of-doom
+// from bunching up the cell list.
 function shortInstitutionLabel(name: string, siglas?: string | null): string {
   if (siglas && siglas.trim()) return siglas.trim().toUpperCase()
+  const inferred = inferSiglasFromName(name)
+  if (inferred) return inferred
   const cleaned = name
     .replace(/^(SECRETAR[IÍ]A DE|INSTITUTO (NACIONAL )?DE|COMISI[OÓ]N (NACIONAL )?DE|HOSPITAL|FONDO (NACIONAL )?DE|CENTRO (NACIONAL )?(DE|PARA)|SERVICIOS? DE|UNIVERSIDAD|DIRECCI[OÓ]N (GENERAL )?DE)\s*/i, '')
     .trim()
@@ -1255,6 +1330,14 @@ function logoSrcForSiglas(siglas: string | null | undefined): string | null {
   const key = siglas.trim().toUpperCase()
   const file = LOGO_FILE_MAP[key]
   return file ? `/logos/${file}.svg` : null
+}
+
+// Resolve effective siglas: API value first, else infer from name. Used
+// for both label display and logo lookup so an institution missing a
+// DB siglas can still pick up its known logo file.
+function effectiveSiglas(name: string, siglas: string | null | undefined): string | null {
+  if (siglas && siglas.trim()) return siglas.trim().toUpperCase()
+  return inferSiglasFromName(name)
 }
 
 type CellProps = {
@@ -1406,15 +1489,19 @@ function XLCellContent({ item, color, textColor, subTextColor, editorial, isEs }
         </div>
         <ul className="space-y-1.5">
           {item.topInstitutions.slice(0, 3).map((inst) => {
-            const short = shortInstitutionLabel(inst.name, inst.siglas)
-            const logoSrc = logoSrcForSiglas(inst.siglas)
+            const eff = effectiveSiglas(inst.name, inst.siglas)
+            const short = shortInstitutionLabel(inst.name, eff)
+            const logoSrc = logoSrcForSiglas(eff)
+            // Fallback chip uses high-contrast vs the cell's text color
+            const fallbackChipBg = textColor === '#ffffff' ? 'rgba(255,255,255,0.18)' : 'rgba(20,20,20,0.12)'
+            const fallbackChipColor = textColor
             return (
               <li key={inst.institution_id} className="flex items-center gap-2 min-w-0" title={inst.name}>
                 <InstitutionLogo
                   logoSrc={logoSrc}
                   acronym={short}
-                  fallbackBg="rgba(255,255,255,0.22)"
-                  fallbackColor="#ffffff"
+                  fallbackBg={fallbackChipBg}
+                  fallbackColor={fallbackChipColor}
                 />
                 <span
                   className="font-mono tracking-[0.04em] flex-1"
@@ -1504,18 +1591,26 @@ function LCellContent({ item, color, textColor, subTextColor, editorial, isEs }:
             {isEs ? 'TOP' : 'TOP'}
           </div>
           <div className="flex items-center gap-2 min-w-0" title={topInst.name}>
-            <InstitutionLogo
-              logoSrc={logoSrcForSiglas(topInst.siglas)}
-              acronym={shortInstitutionLabel(topInst.name, topInst.siglas)}
-              fallbackBg="rgba(255,255,255,0.22)"
-              fallbackColor="#ffffff"
-            />
-            <span
-              className="font-mono tracking-[0.04em] flex-1"
-              style={{ color: textColor, fontWeight: 700, fontSize: 12 }}
-            >
-              {shortInstitutionLabel(topInst.name, topInst.siglas)}
-            </span>
+            {(() => {
+              const eff = effectiveSiglas(topInst.name, topInst.siglas)
+              const short = shortInstitutionLabel(topInst.name, eff)
+              return (
+                <>
+                  <InstitutionLogo
+                    logoSrc={logoSrcForSiglas(eff)}
+                    acronym={short}
+                    fallbackBg={textColor === '#ffffff' ? 'rgba(255,255,255,0.18)' : 'rgba(20,20,20,0.12)'}
+                    fallbackColor={textColor}
+                  />
+                  <span
+                    className="font-mono tracking-[0.04em] flex-1"
+                    style={{ color: textColor, fontWeight: 700, fontSize: 12 }}
+                  >
+                    {short}
+                  </span>
+                </>
+              )
+            })()}
             <span className="font-mono tabular-nums text-[11px] font-bold" style={{ color: textColor }}>
               {topInst.share_pct.toFixed(1)}%
             </span>

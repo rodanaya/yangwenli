@@ -75,9 +75,13 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
     try { localStorage.setItem(FIRST_VISIT_KEY, '1') } catch { /* ignore */ }
   }
 
+  // At Z0 (El Reparto), the treemap is self-explanatory — no need for the
+  // 280px right rail repeating the same info. Collapse the grid to a
+  // single column. Drilling into Z1+ restores the briefing rail.
+  const showBriefingRail = isPanelOpen
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-[1fr_280px] -mt-5 -mb-20 md:-mb-5 -mx-3 sm:-mx-5"
+      className={`grid grid-cols-1 ${showBriefingRail ? 'lg:grid-cols-[1fr_280px]' : ''} -mt-5 -mb-20 md:-mb-5 -mx-3 sm:-mx-5`}
       style={{
         height: 'calc(100vh - var(--topbar-h, 64px) - var(--footer-h, 56px))',
         gridTemplateRows: '1fr',
@@ -117,10 +121,13 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
           </button>
         )}
       </div>
-      {/* Briefing rail — narrower than legacy 320px → keeps map dominant */}
-      <div className="hidden lg:block">
-        <BriefingPanel lang={lang} />
-      </div>
+      {/* Briefing rail — only shown when the user has drilled past Z0.
+          At Z0 (El Reparto) the treemap carries the briefing itself. */}
+      {showBriefingRail && (
+        <div className="hidden lg:block">
+          <BriefingPanel lang={lang} />
+        </div>
+      )}
       {/* Mobile briefing drawer — slide-up bottom sheet on < lg breakpoints.
           Renders the same BriefingPanel content but as a drawer the user can
           peek (closed: 56px tab visible) or expand (open: 60vh). Touch
