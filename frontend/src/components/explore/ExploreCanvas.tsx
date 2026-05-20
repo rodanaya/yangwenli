@@ -16,7 +16,7 @@
  * level via the explore reducer.
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
 import type { ContractListItem } from '@/api/types'
@@ -856,6 +856,19 @@ function isLightSectorColor(hex: string): boolean {
   return luminanceOfHex(hex) > 0.55
 }
 
+// ── Animation language (Z0 → Z1-Z4 canon) ─────────────────────────────────
+// One easing family across the entire Explore canvas. Set here so Z1+ can
+// import the same constants when they're redesigned. The 720ms / expoOut
+// couple is the platform heartbeat for "data was re-asked a different
+// question" — sort toggles, filter changes, sector re-pivots.
+const Z_EASE = [0.16, 1, 0.3, 1] as const
+const Z_LAYOUT_DURATION_S = 0.72   // sort-toggle treemap rearrangement
+const Z_CELL_ENTRANCE_S = 0.42     // per-cell fade+scale on first paint
+const Z_BAND_S = 0.32              // header band (kicker, stats, sort)
+const Z_CASCADE_STEP_S = 0.12      // ~120ms between header bands
+const Z_CELL_STAGGER_S = 0.006     // 6ms light-sweep stagger across cells
+const Z_TREEMAP_DELAY_S = 0.24     // band cascade lands the treemap third
+
 function Z0Panel({
   lang,
   dispatch,
@@ -869,6 +882,56 @@ function Z0Panel({
   const [mode, setMode] = useState<'spend' | 'risk'>('spend')
   const [size, setSize] = useState({ w: 1040, h: 520 })
   const [isMobile, setIsMobile] = useState(false)
+
+  // Reduced-motion gate. Reader has opted out → all transforms disabled,
+  // opacity-only arrival, snap layout, instant drill. Single hook drives
+  // every transition below via the `trans()` factory.
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const trans = (duration: number, delay = 0) =>
+    prefersReducedMotion
+      ? { duration: 0 }
+      : { duration, delay, ease: Z_EASE }
+
+  // Header cascade variants. Each band gets opacity+y entrance with
+  // increasing delay so the eye lands in order: kicker → stats → treemap
+  // (treemap has its own variants below).
+  const bandVariants: Variants = {
+    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 },
+    visible: (custom: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: trans(Z_BAND_S, custom * Z_CASCADE_STEP_S),
+    }),
+  }
+
+  // Treemap container variant — orchestrates the children stagger. Children
+  // (cells) inherit `visible` and fire on staggerChildren cadence.
+  const treemapVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: prefersReducedMotion
+        ? { staggerChildren: 0 }
+        : {
+            delayChildren: Z_TREEMAP_DELAY_S,
+            staggerChildren: Z_CELL_STAGGER_S,
+          },
+    },
+  }
+
+  // Per-cell entrance variant — opacity + tiny scale, no slide. The cells
+  // are already in their truthful positions; we're just bringing up the
+  // lights.
+  const cellVariants: Variants = {
+    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.985 },
+    visible: { opacity: 1, scale: 1, transition: trans(Z_CELL_ENTRANCE_S) },
+  }
+
+  // Layout transition (sort-toggle): cells rearrange via framer-motion's
+  // `layout` prop. 720ms expoOut — long enough to follow a cell with the
+  // eye, short enough to stay responsive.
+  const layoutTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
 
   // Track container dimensions for accurate layout
   useEffect(() => {
@@ -954,13 +1017,17 @@ function Z0Panel({
   const riskLabel = isEs ? 'RIESGO' : 'RISK'
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
+      initial="hidden"
+      animate="visible"
       className="absolute inset-0 z-[5] flex flex-col"
       style={{ background: 'var(--color-background)', overflow: 'hidden' }}
     >
-      {/* Editorial header */}
-      <div
+      {/* Editorial header — kicker + headline cascade in as one band */}
+      <motion.div
+        variants={bandVariants}
+        custom={0}
         className="flex items-end justify-between gap-4 px-4 sm:px-6 pt-4 pb-3 flex-shrink-0 flex-wrap"
         style={{ borderBottom: '1px solid var(--color-border)' }}
       >
@@ -984,7 +1051,12 @@ function Z0Panel({
           </h1>
         </div>
 
-        <div className="flex items-baseline gap-4 sm:gap-6 flex-wrap">
+        {/* Stat row + sort — second band in the cascade (custom={1}) */}
+        <motion.div
+          variants={bandVariants}
+          custom={1}
+          className="flex items-baseline gap-4 sm:gap-6 flex-wrap"
+        >
           {/* Total spend */}
           <div className="text-right">
             <div
@@ -1039,11 +1111,18 @@ function Z0Panel({
               ))}
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Treemap area */}
-      <div ref={treemapRef} className="relative flex-1 min-h-0" style={{ overflow: 'hidden' }}>
+      {/* Treemap area — its own band in the entrance cascade.
+          Children (cells) stagger inside via treemapVariants. */}
+      <motion.div
+        variants={bandVariants}
+        custom={2}
+        ref={treemapRef}
+        className="relative flex-1 min-h-0"
+        style={{ overflow: 'hidden' }}
+      >
         {isLoading && (
           <div
             className="absolute inset-0 flex items-center justify-center font-mono text-[10px]"
@@ -1054,7 +1133,10 @@ function Z0Panel({
         )}
 
         {!isLoading && cells.length > 0 && !isMobile && (
-          <div className="absolute inset-0 p-3">
+          <motion.div
+            variants={treemapVariants}
+            className="absolute inset-0 p-3"
+          >
             <div className="relative w-full h-full">
               {cells.map((cell) => {
                 const item = itemBySectorId.get(cell.sectorId)
@@ -1092,8 +1174,14 @@ function Z0Panel({
                 const codeColor = useDarkText ? 'rgba(20,20,20,0.78)' : 'rgba(255,255,255,0.86)'
 
                 return (
-                  <div
+                  <motion.div
                     key={cell.sectorId}
+                    layout
+                    layoutId={`explore-cell-${cell.sectorId}`}
+                    variants={cellVariants}
+                    transition={{ layout: layoutTransition }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.004, filter: 'brightness(1.05)', transition: { duration: 0.16, ease: Z_EASE } }}
+                    whileTap={prefersReducedMotion ? undefined : { scale: 0.992 }}
                     role="button"
                     tabIndex={0}
                     aria-label={`${cell.label} - ${formatCompactMXN(item.spendValue)}`}
@@ -1120,20 +1208,20 @@ function Z0Panel({
                       flexDirection: 'column',
                       overflow: 'hidden',
                       boxSizing: 'border-box',
-                      transition: 'transform 0.12s, box-shadow 0.12s, background 0.18s',
-                      transform: hovered ? 'translateY(-1px)' : 'none',
                       boxShadow: hovered ? '0 4px 16px rgba(0,0,0,0.22)' : 'none',
+                      transitionProperty: 'box-shadow, background',
+                      transitionDuration: '0.18s',
                     }}
                   >
                     {tier === 'xl' && <XLCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
                     {tier === 'l' && <LCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
                     {tier === 'm' && <MCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={editorial} isEs={isEs} />}
                     {tier === 's' && <SCellContent item={item} color={codeColor} textColor={textColor} subTextColor={subTextColor} editorial={null} isEs={isEs} />}
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Mobile fallback: ranked list with sector-color left rail (width = value) */}
@@ -1215,8 +1303,8 @@ function Z0Panel({
             </ul>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
