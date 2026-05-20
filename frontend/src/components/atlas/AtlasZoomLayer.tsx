@@ -37,7 +37,12 @@ import type {
 import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 import type { AtlasAction } from './AtlasContext'
 import { useVendorLevelDots } from '@/lib/atlas/use-vendor-level-dots'
+import { useAtlasLOD, atlasLODBandLabel, type AtlasLOD } from '@/lib/atlas/useAtlasLOD'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
+import { AtlasBreadcrumb } from './AtlasBreadcrumb'
+import { ClusterFloatingCard } from './ClusterFloatingCard'
+import { AtlasVendorDrawer } from './AtlasVendorDrawer'
+import { VendorHaloCard } from './VendorHaloCard'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
 // 2026-05-09: SVG_H bumped 220 → 540 to give the constellation real
@@ -63,8 +68,14 @@ const ZOOM_TRANSITION = 'transform 600ms cubic-bezier(0.22, 1, 0.36, 1)'
 
 // User-driven zoom multiplier bounds (composed with ZOOM_SCALE)
 const USER_ZOOM_MIN = 0.6   // can zoom out to ~2.16× total
-const USER_ZOOM_MAX = 2.5   // can zoom in to 9× total
-const WHEEL_ZOOM_STEP = 0.0015 // wheel deltaY → zoom multiplier delta
+// 2026-05-19 (telescope): unlocked from 2.5 → 15. Composed max becomes
+// 3.6 × 15 = 54×, enabling the "fly into a star" experience. Counter-scaled
+// labels + LOD bands keep typography readable across the whole range.
+const USER_ZOOM_MAX = 15    // can zoom in to 54× total
+// Wheel step is now interpreted exponentially (Math.exp(delta)) so the
+// perceptual zoom rate stays constant across the range. Halved from 0.0015
+// to 0.00075 — exp() curves feel hotter than linear at the same coefficient.
+const WHEEL_ZOOM_STEP = 0.00075 // wheel deltaY → exp() zoom multiplier delta
 
 // Dot radius by risk level when zoomed in.
 // 2026-05-08: bumped 3-4× from previous values (was 2.4/1.7/1.2/0.7).
@@ -79,6 +90,11 @@ const VENDOR_DOT_STYLE: Record<string, { r: number; opacity: number }> = {
   high:     { r: 6.0, opacity: 0.92 },
   medium:   { r: 4.5, opacity: 0.82 },
   low:      { r: 3.0, opacity: 0.65 },
+}
+
+// Small numeric clamp helper for counter-scaled font sizes (telescope LOD).
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
 }
 
 // Attractor coordinate map — derives attractor centre (cx, cy) in viewport space
@@ -199,17 +215,34 @@ export function AtlasZoomLayer({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
   const [userZoom, setUserZoom] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
+  // M-OBS P2 hotfix #2: cluster card is dismissible without exiting zoom.
+  // Resets to open whenever the active cluster changes (or zoom exits).
+  const [cardOpen, setCardOpen] = useState(true)
   const isDraggingCommittedRef = useRef(false)
   const dragStateRef = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  // Refs mirror the latest committed state so wheel handlers can read the
+  // current value synchronously — avoids the StrictMode double-invoke of
+  // functional setState updaters that would queue pan corrections twice.
+  const userZoomRef = useRef(userZoom)
+  const panOffsetRef = useRef(panOffset)
+  useEffect(() => { userZoomRef.current = userZoom }, [userZoom])
+  useEffect(() => { panOffsetRef.current = panOffset }, [panOffset])
 
   // Distance threshold — below this a mousedown+mouseup sequence is a click, not a drag
   const DRAG_THRESHOLD = 6 // px in screen space
 
-  // Reset pan/zoom whenever the active cluster changes (or zoom exits)
+  // Reset pan/zoom whenever the active cluster changes (or zoom exits).
+  // The floating card auto-opens at desktop widths but auto-COLLAPSES at
+  // narrow viewports (≤ 640px) where the card eats the entire canvas — the
+  // user gets the compact "{code} · SHOW" chip and can expand if they want.
   useEffect(() => {
     setPanOffset({ x: 0, y: 0 })
     setUserZoom(1)
+    const isNarrow = typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false
+    setCardOpen(!isNarrow)
   }, [zoomedCode])
 
   // Convert a screen-space pixel delta to SVG-viewport pixel delta
@@ -273,28 +306,124 @@ export function AtlasZoomLayer({
   }, [screenToSvgScale])
 
   // Wheel zoom — only active when zoomed. Scrolling up zooms in.
+  // BUG-FIX (2026-05-19): zoom is now anchored to the cursor position.
+  // Previously we only updated `userZoom` and left `panOffset` alone — but
+  // the transform uses `transform-origin: 0 0`, so multiplying scale about
+  // the origin pushed content toward the bottom-right of the viewport. The
+  // cluster drifted off-screen instead of zooming under the cursor, which
+  // is what made the wheel feel non-functional. We now adjust `panOffset`
+  // by the same amount the scale change would move the cursor-anchored
+  // point, keeping that point pinned across the zoom step (Mapbox /
+  // Google Maps wheel-zoom model).
   // Attached to window (not wrapperRef) so ClusterDetailPanel's fixed z-50
   // overlay doesn't swallow wheel events when it visually overlaps the canvas.
-  // A rect-based guard ensures we only intercept events whose cursor is
-  // spatially within the canvas bounds; events outside skip preventDefault.
   useEffect(() => {
     if (!isZoomed) return
     const el = wrapperRef.current
     if (!el) return
     const onWheel = (e: WheelEvent) => {
       const rect = el.getBoundingClientRect()
-      // Only act when cursor is within the canvas bounds
       if (e.clientX < rect.left || e.clientX > rect.right ||
           e.clientY < rect.top  || e.clientY > rect.bottom) return
       e.preventDefault()
       const delta = -e.deltaY * WHEEL_ZOOM_STEP
-      setUserZoom((z) => {
-        const next = z * (1 + delta)
-        return Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, next))
-      })
+
+      // 2026-05-19 (telescope-anchor + StrictMode fix): zoom is anchored on
+      // the CLUSTER CENTER (canvas midpoint post-base-zoom). Cursor anchoring
+      // over-shoots in a small pane; cluster anchoring matches the telescope
+      // mental model. Read current state via refs so we don't nest
+      // setPanOffset inside setUserZoom's functional updater — React's
+      // StrictMode runs functional updaters twice in dev, which would queue
+      // pan twice per tick (the 2× over-shoot we observed before).
+      const prevUserZoom = userZoomRef.current
+      const proposed = prevUserZoom * Math.exp(delta)
+      // Telescope rubber-band: if the user keeps wheeling OUT while already at
+      // the minimum (proposed pushes well below the floor), pop back to galaxy.
+      // The 0.85 × MIN threshold is enough wheel travel to feel intentional
+      // (one strong scroll), but not so much that an accidental tap escapes.
+      if (proposed < USER_ZOOM_MIN * 0.85 && prevUserZoom <= USER_ZOOM_MIN + 0.01) {
+        dispatch({ type: 'escape-zoom' })
+        return
+      }
+      const nextUserZoom = Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, proposed))
+      if (nextUserZoom === prevUserZoom) return
+      const scalePrev = transform.s * prevUserZoom
+      const scaleNext = transform.s * nextUserZoom
+      const anchorSvgX = SVG_W / 2
+      const anchorSvgY = SVG_H / 2
+      const prevPan = panOffsetRef.current
+      const origX = (anchorSvgX - transform.tx - prevPan.x) / scalePrev
+      const origY = (anchorSvgY - transform.ty - prevPan.y) / scalePrev
+      const nextPan = {
+        x: anchorSvgX - transform.tx - origX * scaleNext,
+        y: anchorSvgY - transform.ty - origY * scaleNext,
+      }
+      // Update refs synchronously so a rapid second wheel tick (before React
+      // commits) reads the just-computed values, not the stale state.
+      userZoomRef.current = nextUserZoom
+      panOffsetRef.current = nextPan
+      setUserZoom(nextUserZoom)
+      setPanOffset(nextPan)
     }
     window.addEventListener('wheel', onWheel, { passive: false })
     return () => window.removeEventListener('wheel', onWheel)
+  }, [isZoomed, transform])
+
+  // ── Keyboard-driven zoom/pan (M-OBS Phase 2) ──────────────────────────────
+  // AtlasShell broadcasts `atlas:zoom-in`, `atlas:zoom-out`, `atlas:zoom-reset`
+  // and `atlas:pan-{up|down|left|right}` window events when the user presses
+  // +/-/0 or the arrow keys. Mirror the wheel-zoom math so + and wheel feel
+  // identical; pan in SVG-units steps of ±40.
+  useEffect(() => {
+    if (!isZoomed) return
+    const PAN_STEP = 40
+    const onZoomIn = () => {
+      const next = Math.min(USER_ZOOM_MAX, userZoomRef.current * 1.2)
+      if (next === userZoomRef.current) return
+      userZoomRef.current = next
+      setUserZoom(next)
+    }
+    const onZoomOut = () => {
+      const next = Math.max(USER_ZOOM_MIN, userZoomRef.current * 0.83)
+      if (next === userZoomRef.current) return
+      userZoomRef.current = next
+      setUserZoom(next)
+    }
+    const onZoomReset = () => {
+      userZoomRef.current = 1
+      panOffsetRef.current = { x: 0, y: 0 }
+      setUserZoom(1)
+      setPanOffset({ x: 0, y: 0 })
+    }
+    const pan = (dx: number, dy: number) => {
+      const next = {
+        x: panOffsetRef.current.x + dx,
+        y: panOffsetRef.current.y + dy,
+      }
+      panOffsetRef.current = next
+      setPanOffset(next)
+    }
+    const onPanUp    = () => pan(0,  PAN_STEP)
+    const onPanDown  = () => pan(0, -PAN_STEP)
+    const onPanLeft  = () => pan(PAN_STEP, 0)
+    const onPanRight = () => pan(-PAN_STEP, 0)
+
+    window.addEventListener('atlas:zoom-in', onZoomIn)
+    window.addEventListener('atlas:zoom-out', onZoomOut)
+    window.addEventListener('atlas:zoom-reset', onZoomReset)
+    window.addEventListener('atlas:pan-up', onPanUp)
+    window.addEventListener('atlas:pan-down', onPanDown)
+    window.addEventListener('atlas:pan-left', onPanLeft)
+    window.addEventListener('atlas:pan-right', onPanRight)
+    return () => {
+      window.removeEventListener('atlas:zoom-in', onZoomIn)
+      window.removeEventListener('atlas:zoom-out', onZoomOut)
+      window.removeEventListener('atlas:zoom-reset', onZoomReset)
+      window.removeEventListener('atlas:pan-up', onPanUp)
+      window.removeEventListener('atlas:pan-down', onPanDown)
+      window.removeEventListener('atlas:pan-left', onPanLeft)
+      window.removeEventListener('atlas:pan-right', onPanRight)
+    }
   }, [isZoomed])
 
   // Cluster click handler — dispatches zoom-into-cluster (legacy) OR
@@ -338,6 +467,23 @@ export function AtlasZoomLayer({
   const effectiveTx = transform.tx + (isZoomed ? panOffset.x : 0)
   const effectiveTy = transform.ty + (isZoomed ? panOffset.y : 0)
 
+  // ── Telescope: LOD band + counter-scaled label sizes (2026-05-19) ─────────
+  // BUG-FIX (2026-05-19): the previous formula `clamp(11/sqrt(s), 8, 16)` was
+  // expressed in SVG-unit px, but the parent div is `transform: scale(s)`, so
+  // the on-screen size = svg_px × s. At s=3.6× a "regular" 8svg-px label
+  // rendered at 28.8 screen-px (the constraint that should keep small labels
+  // legible instead amplified them). The inverse formulation below picks a
+  // desired *screen* size that grows slowly with zoom (log2 curve), then
+  // divides by the current scale so that scale × svg_px = desired_screen_px.
+  const lod = useAtlasLOD(effectiveScale)
+  const desiredScreenPx = (s: number) =>
+    clamp(10 + Math.log2(Math.max(s, 1)) * 1.0, 10, 15)
+  const labelSvgPx = (s: number) => desiredScreenPx(s) / Math.max(s, 0.01)
+  const labelFontPx = labelSvgPx(effectiveScale)
+  // At extreme zoom the lattice should fade further so the star-band reads
+  // cleanly against the labeled dots.
+  const latticeOpacity = effectiveScale > 12 ? 0.18 : 0.45
+
   const transformStr =
     effectiveScale === 1 && effectiveTx === 0 && effectiveTy === 0
       ? 'translate(0px, 0px) scale(1)'
@@ -347,11 +493,38 @@ export function AtlasZoomLayer({
   // The 600ms ease only runs on the initial zoom-in animation.
   const transitionStr = isDragging || (isZoomed && userZoom !== 1) ? 'none' : ZOOM_TRANSITION
 
+  // ── M-OBS Phase 2 chrome — breadcrumb + floating cluster card ──────────────
+  // Mounted inside the canvas wrapper so they share the constellation's
+  // stacking context. They appear ONLY while zoomed; on escape-zoom the
+  // canvas returns to the unchromed galaxy state.
+  const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
+    patterns:   { en: 'Patterns',   es: 'Patrones' },
+    sectors:    { en: 'Sectors',    es: 'Sectores' },
+    categories: { en: 'Categories', es: 'Categorías' },
+    sexenios:   { en: 'Terms',      es: 'Sexenios' },
+  }
+  const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
+  const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+  const clusterVendors = (zoomedCode && namedVendors)
+    ? namedVendors.filter((n) => n.clusterCode === zoomedCode)
+    : []
+  const topVendors = clusterVendors.slice(0, 3)
+
   return (
     <div
       className="relative"
       style={{ position: 'relative' }}
     >
+      {/* ── M-OBS P2 breadcrumb — context strip at top of canvas ─────────────── */}
+      {isZoomed && zoomedMeta && (
+        <AtlasBreadcrumb
+          lang={lang}
+          lensLabel={lensLabel}
+          clusterLabel={clusterLabel}
+          onGoHome={() => dispatch({ type: 'escape-zoom' })}
+        />
+      )}
+
       {/* ── SVG overlay container — wraps the constellation in a transform layer ── */}
       {/*
         We can't wrap the constellation's internal <svg> in another <g> because
@@ -373,22 +546,44 @@ export function AtlasZoomLayer({
           font sizes only when the wrapper is in zoomed state. */}
       {isZoomed && (
         <style>{`
+          /* Telescope (2026-05-19): font sizes are now computed from
+             effectiveScale via sqrt() counter-scale and clamped, so labels
+             stay readable across the 3.6×–54× range without !important. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] text {
-            font-size: 3.5px !important;
+            font-size: ${labelFontPx.toFixed(2)}px;
           }
-          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
-            font-size: 5px !important;
-            font-weight: 600 !important;
-          }
-          /* Dim the constellation lattice when zoomed so the vendor-level
-             dots overlay (which IS more granular detail) dominates the view.
-             Named vendor circles are exempted so the large outlier dots
-             remain identifiable anchors. */
+          /* Lattice dimming follows the LOD band — secondary at region
+             (0.45), nearly absent at star (0.18) so vendor labels read. */
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle {
-            opacity: 0.25;
+            opacity: ${latticeOpacity};
+          }
+          /* BUG-FIX (2026-05-19): hide the engine's own named-vendor labels
+             when zoomed — they belong to OTHER clusters and the 3.6× transform
+             pushes them to wrong screen positions. VendorDotOverlay is the
+             sole label authority during zoom. Keep the named-vendor circles
+             visible but muted so they read as background context only. */
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] text.atlas-named-vendor-label {
+            display: none;
           }
           [data-atlas-zoom-layer="true"] [data-atlas-constellation] circle[data-named-vendor="true"] {
-            opacity: 1 !important;
+            opacity: 0.35;
+          }
+          /* Replacement 5 (M-OBS Phase 1, PEPPY 2026-05-19): cross-cluster bleed
+             — when zoomed into a single cluster, hide all OTHER cluster <g>
+             groups so their attractor rings, labels, and dots don't bleed into
+             the active cluster's view. The active cluster (matching zoomedCode)
+             stays fully opaque. */
+          [data-atlas-zoom-layer="true"] [data-atlas-constellation] g[data-cluster-code]:not([data-cluster-code="${zoomedCode ?? ''}"]) {
+            opacity: 0;
+            pointer-events: none;
+          }
+          /* M-OBS Phase 2 hotfix (2026-05-19): hide the engine's hover preview
+             tooltip when zoomed — the new ClusterFloatingCard is the sole
+             cluster-context UI during zoom. Without this rule the hover preview
+             (e.g. "3,985 vendors · 180 T1 · → View detail") competes with the
+             floating card and creates duplicate stats. */
+          [data-atlas-zoom-layer="true"] [data-cluster-hover-preview="true"] {
+            display: none;
           }
         `}</style>
       )}
@@ -440,14 +635,23 @@ export function AtlasZoomLayer({
           />
         )}
 
-        {/* ── Vendor-level dot overlay — visible only when zoomed ─────── */}
+        {/* ── Vendor-level dot overlay — visible only when zoomed ───────
+            BUG-FIX (2026-05-19): pass the COMPOSED transform (base cluster
+            zoom + user pan + user wheel-zoom) rather than the base transform
+            alone. Previously the overlay used `transform={transform}` (base
+            only), so vendor dots stayed pinned while everything inside the
+            constellation SVG (rings, labels, named-vendor labels) panned
+            and wheel-zoomed with the user. That produced the "labels float
+            independently from dots" desync and made wheel-zoom appear to
+            do nothing to the dots the user cares about. */}
         {isZoomed && zoomedMeta && (
           <VendorDotOverlay
             dots={vendorDots}
-            transform={transform}
+            transform={{ tx: effectiveTx, ty: effectiveTy, s: effectiveScale }}
             lang={lang}
             selection={state.selection}
             dispatch={dispatch}
+            lod={lod}
           />
         )}
       </div>
@@ -459,6 +663,57 @@ export function AtlasZoomLayer({
         >
           click a cluster · then drag to pan · scroll to zoom
         </div>
+      )}
+
+      {/* ── M-OBS P2 floating cluster card — top-right of canvas ─────────────
+          Dismissible without losing zoom: ✕ collapses the card to a compact
+          chip; clicking the chip re-expands it. Zoom state is unaffected.
+          (escape-zoom is reserved for ESC key / breadcrumb back). */}
+      {isZoomed && zoomedMeta && cardOpen && (
+        <div
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <ClusterFloatingCard
+            meta={zoomedMeta}
+            topVendors={topVendors}
+            onClose={() => setCardOpen(false)}
+            lang={lang}
+          />
+        </div>
+      )}
+      {isZoomed && zoomedMeta && !cardOpen && (
+        <button
+          type="button"
+          onClick={() => setCardOpen(true)}
+          aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{
+            pointerEvents: 'auto',
+            background: 'var(--color-background-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 2,
+            padding: '4px 8px',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
+        </button>
+      )}
+
+      {/* ── M-OBS P3 vendor drawer — collapsible bottom strip ──────────────── */}
+      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
+        <AtlasVendorDrawer
+          clusterCode={zoomedMeta.code}
+          clusterLabel={zoomedMeta.label}
+          vendors={clusterVendors}
+          lang={lang}
+        />
       )}
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
@@ -485,11 +740,19 @@ export function AtlasZoomLayer({
               color: 'var(--color-text-muted)',
               opacity: 0.85,
               letterSpacing: 0.4,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
             }}
           >
-            {lang === 'en'
-              ? 'drag to pan · wheel to zoom · esc to exit'
-              : 'arrastra para desplazar · rueda para acercar · esc para salir'}
+            <span>
+              {effectiveScale.toFixed(1)}× · {atlasLODBandLabel(lod.band, lang)}
+            </span>
+            <span>
+              {lang === 'en'
+                ? 'drag · wheel · +/− · 0 · arrows · H · esc'
+                : 'arrastra · rueda · +/− · 0 · flechas · H · esc'}
+            </span>
           </div>
           {(panOffset.x !== 0 || panOffset.y !== 0 || userZoom !== 1) && (
             <button
@@ -631,6 +894,7 @@ interface VendorDotOverlayProps {
   lang: 'en' | 'es'
   selection: Set<string>
   dispatch: React.Dispatch<AtlasAction>
+  lod: AtlasLOD
 }
 
 function VendorDotOverlay({
@@ -639,12 +903,47 @@ function VendorDotOverlay({
   lang,
   selection,
   dispatch,
+  lod,
 }: VendorDotOverlayProps) {
   const navigate = useNavigate()
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [lasso, setLasso] = useState<LassoRect | null>(null)
   const isDraggingRef = useRef(false)
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // ── Sub-pixel font fix (2026-05-19) ─────────────────────────────────────
+  // VendorDotOverlay's <text> elements live OUTSIDE the CSS-transformed div
+  // (this overlay is a sibling positioned absolute:inset-0 rendering its own
+  // SVG). The parent CSS `transform: scale(effectiveScale)` does NOT apply
+  // here — on-screen font size = svg_font × (wrapperPixelWidth / SVG_W).
+  // Previously we received `labelFontPx` computed as `desiredScreen /
+  // effectiveScale`, which is correct only for transformed labels. At the
+  // typical wrapper width (268px → ratio 0.319 screen-px per svg-unit),
+  // that value rendered overlay labels at ~0.8px — sub-pixel, invisible.
+  //
+  // Fix: track this SVG's real pixel width, derive svg-units per screen-px,
+  // and convert a desired *screen* font size (LOD-aware curve based on
+  // effectiveScale = transform.s) into the corresponding svg-unit value.
+  const [svgPixelWidth, setSvgPixelWidth] = useState(SVG_W)
+  useEffect(() => {
+    const el = svgRef.current
+    if (!el) return
+    const update = () => setSvgPixelWidth(el.getBoundingClientRect().width || SVG_W)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const svgUnitsPerScreenPx = SVG_W / Math.max(svgPixelWidth, 1)
+  const effectiveScale = transform.s
+  // Desired ON-SCREEN size grows gently with zoom (telescope detail):
+  // ~10px at constellation/region threshold, ~14px at star, capped 16.
+  const desiredLabelScreenPx = Math.max(
+    10,
+    Math.min(16, 9 + Math.log2(Math.max(effectiveScale, 1)) * 1.2),
+  )
+  const overlayLabelFontSvgPx = desiredLabelScreenPx * svgUnitsPerScreenPx
+  const overlayChipFontSvgPx = Math.max(1, (desiredLabelScreenPx - 1) * svgUnitsPerScreenPx)
 
   // The vendor dots are already in original viewport coordinates.
   // Apply the same transform as the constellation to place them correctly.
@@ -760,6 +1059,7 @@ function VendorDotOverlay({
         {dots.map((dot) => {
           const level = getRiskLevelFromScore(dot.riskScore)
           const style = VENDOR_DOT_STYLE[level] ?? VENDOR_DOT_STYLE.low
+          const baseR = style.r * lod.dotScaleMultiplier
           const { sx, sy } = toScreen(dot.x, dot.y)
           const isHovered = dot.id === hoveredId
           const isSelected = !dot.isMock && selection.has(dot.id)
@@ -771,7 +1071,7 @@ function VendorDotOverlay({
                 <circle
                   cx={sx}
                   cy={sy}
-                  r={style.r * 2.2}
+                  r={baseR * 2.2}
                   fill="none"
                   stroke={riskColor}
                   strokeWidth={1.5}
@@ -782,7 +1082,7 @@ function VendorDotOverlay({
               <circle
                 cx={sx}
                 cy={sy}
-                r={isHovered || isSelected ? style.r * 1.6 : style.r}
+                r={isHovered || isSelected ? baseR * 1.6 : baseR}
                 fill={dot.sectorColor}
                 opacity={style.opacity}
                 stroke={isHovered && !isSelected ? '#a06820' : 'none'}
@@ -803,6 +1103,58 @@ function VendorDotOverlay({
             </g>
           )
         })}
+
+        {/* ── LOD labels (region + star bands) ────────────────────────────
+            Render top (labelDensity × N) labels by riskScore desc, with
+            per-frame greedy collision pruning. Cheap for ≤50 labels.
+            TODO: VendorDot has no contractCount field today — when the P3+
+            real-data swap arrives, surface `contractCount`/`n` on the dot
+            shape and render the star-band count tspan below. */}
+        {lod.labelDensity > 0 && (() => {
+          const ranked = [...dots].sort((a, b) => b.riskScore - a.riskScore)
+          const want = Math.ceil(ranked.length * lod.labelDensity)
+          const candidates = ranked.slice(0, want)
+          const placed: Array<{ x: number; y: number; w: number; h: number }> = []
+          const out: React.ReactElement[] = []
+          for (const dot of candidates) {
+            const level = getRiskLevelFromScore(dot.riskScore)
+            const style = VENDOR_DOT_STYLE[level] ?? VENDOR_DOT_STYLE.low
+            const dotR = style.r * lod.dotScaleMultiplier
+            const { sx, sy } = toScreen(dot.x, dot.y)
+            const label = lod.showRiskChip
+              ? `${dot.name} · ${(dot.riskScore * 100).toFixed(0)}%`
+              : dot.name
+            const w = label.length * overlayLabelFontSvgPx * 0.55
+            const h = overlayLabelFontSvgPx * 1.1
+            const lx = sx + dotR + 4
+            const ly = sy + 4
+            // Greedy AABB overlap check against previously placed labels
+            const overlaps = placed.some(
+              (p) => lx < p.x + p.w && lx + w > p.x && ly - h < p.y && ly > p.y - h,
+            )
+            if (overlaps) continue
+            placed.push({ x: lx, y: ly, w, h })
+            const riskColor = RISK_COLORS[level]
+            out.push(
+              <text
+                key={`lbl-${dot.id}`}
+                x={lx}
+                y={ly}
+                fontSize={overlayLabelFontSvgPx}
+                fill="var(--color-text-primary)"
+                style={{ pointerEvents: 'none', fontFamily: 'inherit' }}
+              >
+                {dot.name}
+                {lod.showRiskChip && (
+                  <tspan fill={riskColor} fontFamily="monospace" fontSize={overlayChipFontSvgPx} dx={4}>
+                    · {(dot.riskScore * 100).toFixed(0)}%
+                  </tspan>
+                )}
+              </text>,
+            )
+          }
+          return out
+        })()}
 
         {/* Lasso rectangle */}
         {lassoScreenRect && (
@@ -840,8 +1192,8 @@ function VendorDotOverlay({
         </div>
       )}
 
-      {/* Hover tooltip */}
-      {hoveredDot && !lasso && (() => {
+      {/* Hover tooltip — simple chip at constellation/region bands */}
+      {hoveredDot && !lasso && effectiveScale < 18 && (() => {
         const { sx, sy } = toScreen(hoveredDot.x, hoveredDot.y)
         // Convert SVG viewport coords to percentage for positioning
         const leftPct = (sx / SVG_W) * 100
@@ -892,6 +1244,30 @@ function VendorDotOverlay({
           </div>
         )
       })()}
+
+      {/* Telescope-star halo card — richer info chip at deep zoom (≥ 18×) */}
+      {hoveredDot && !lasso && effectiveScale >= 18 && (
+        <VendorHaloCard
+          dot={{
+            id: hoveredDot.id,
+            vendorId: typeof hoveredDot.id === 'string' && /^\d+$/.test(hoveredDot.id)
+              ? Number(hoveredDot.id)
+              : undefined,
+            name: hoveredDot.name,
+            riskScore: hoveredDot.riskScore,
+            sectorColor: hoveredDot.sectorColor,
+            x: hoveredDot.x,
+            y: hoveredDot.y,
+            isMock: hoveredDot.isMock,
+          }}
+          transform={transform}
+          wrapperWidth={svgPixelWidth}
+          wrapperHeight={svgPixelWidth * (SVG_H / SVG_W)}
+          svgWidth={SVG_W}
+          svgHeight={SVG_H}
+          lang={lang}
+        />
+      )}
     </div>
   )
 }

@@ -27,10 +27,10 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
-import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, Pin, PinOff, Layers, Search, NotebookPen, BookOpen, Square, Link2, Check, RotateCcw, SkipForward, FileText } from 'lucide-react'
+import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
-import { analysisApi, ariaApi } from '@/api/client'
+import { analysisApi } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
@@ -40,20 +40,19 @@ import {
   type ConstellationMode,
   type ConstellationRiskRow,
   type ClusterMeta,
-  type NamedVendorDot,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatNumber, cn } from '@/lib/utils'
-import { formatVendorName } from '@/lib/vendor/formatName'
 // atlas-C-P1: three-pane investigator console shell
 import { AtlasContextProvider, useAtlasState, useAtlasDispatch, type AtlasState } from '@/components/atlas/AtlasContext'
 import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
-import { AtlasRightPanel } from '@/components/atlas/AtlasRightPanel'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
-import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { AtlasMasthead } from '@/components/atlas/AtlasMasthead'
+import { AtlasToolbar } from '@/components/atlas/AtlasToolbar'
 // atlas-C-P5: URL state encode/decode
 import { hasAtlasCParams } from '@/lib/atlas/url-state'
 // omega-N: story-chart binding + named-outlier data hook
@@ -278,258 +277,6 @@ function snapshotToRows(s: YearSnapshot): ConstellationRiskRow[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ClusterDetailPanel — slides in from the right when a cluster is clicked.
-// ─────────────────────────────────────────────────────────────────────────────
-interface ClusterDetailPanelProps {
-  meta: ClusterMeta | null
-  mode: ConstellationMode
-  pinnedCode: string | null
-  note: string
-  yearLabel?: number
-  yearDeltaT1?: number
-  yearDeltaPct?: number
-  topVendors?: NamedVendorDot[]
-  onNoteChange: (text: string) => void
-  onTogglePin: () => void
-  onClose: () => void
-  lang: 'en' | 'es'
-}
-
-function ClusterDetailPanel({ meta, mode, pinnedCode, note, yearLabel, yearDeltaT1, yearDeltaPct, topVendors, onNoteChange, onTogglePin, onClose, lang }: ClusterDetailPanelProps) {
-  const navigate = useNavigate()
-  const isPinned = !!meta && pinnedCode === meta.code
-
-  const investigateLink = useMemo(() => {
-    if (!meta) return '/aria'
-    if (mode === 'patterns') return `/patterns/${meta.code}`
-    if (mode === 'sectors')  return `/sectors?sector=${meta.code}`
-    if (mode === 'categories') return `/sectors?view=categories&category=${meta.code}`
-    return '/administrations'
-  }, [meta, mode])
-
-  return (
-    <AnimatePresence>
-      {meta && (
-        <motion.aside
-          key="cluster-panel"
-          className="surface-card border-l-2 flex flex-col overflow-y-auto"
-          style={{ width: '100%', height: '100%', borderLeftColor: meta.color }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          aria-label={`${meta.label} — cluster details`}
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between p-5 border-b border-border/60">
-            <div className="min-w-0 pr-2">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1" style={{ color: meta.color }}>
-                {mode === 'patterns'   && (lang === 'en' ? `${meta.code} · PATTERN`     : `${meta.code} · PATRÓN`)}
-                {mode === 'sectors'    && (lang === 'en' ? 'SECTOR'                      : 'SECTOR')}
-                {mode === 'categories' && (lang === 'en' ? 'SPENDING CATEGORY'           : 'CATEGORÍA DE GASTO')}
-                {mode === 'sexenios'   && (lang === 'en' ? 'PRESIDENTIAL TERM'           : 'SEXENIO')}
-              </div>
-              <h2 className="font-serif font-extrabold text-[16px] leading-[1.15] tracking-[-0.01em] text-text-primary"
-                style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                {meta.label}
-              </h2>
-              {meta.kicker && (
-                <div className="text-[11px] font-mono text-text-muted mt-1">{meta.kicker}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={onTogglePin}
-                className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
-                aria-label={isPinned ? (lang === 'en' ? 'Unpin cluster' : 'Despinear cúmulo') : (lang === 'en' ? 'Pin cluster' : 'Pinear cúmulo')}
-                title={isPinned ? (lang === 'en' ? 'Pinned — click to unpin' : 'Pineado — clic para despinear') : (lang === 'en' ? 'Pin to keep highlighted across modes' : 'Pinear para destacar entre modos')}
-              >
-                {isPinned
-                  ? <PinOff className="h-4 w-4" style={{ color: meta.color }} />
-                  : <Pin className="h-4 w-4 text-text-muted" />
-                }
-              </button>
-              <button
-                onClick={onClose}
-                className="p-1 rounded-sm hover:bg-background-elevated/60 transition-colors"
-                aria-label={lang === 'en' ? 'Close cluster details' : 'Cerrar detalles'}
-              >
-                <X className="h-4 w-4 text-text-muted" />
-              </button>
-            </div>
-          </div>
-
-          {/* Body — scrollable */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-5">
-            {/* Description */}
-            <p className="text-sm leading-[1.7] text-text-secondary">
-              {meta.desc}
-            </p>
-
-            {/* Stat grid */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-border/60">
-              <div>
-                <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-                  {lang === 'en' ? 'VENDORS' : 'PROVEEDORES'}
-                </div>
-                <div className="font-mono font-bold text-[20px] leading-none mt-1 tabular-nums text-text-primary">
-                  {formatNumber(meta.vendors)}
-                </div>
-              </div>
-              <div>
-                <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-                  {lang === 'en' ? 'T1 LEADS' : 'LÍDERES T1'}
-                </div>
-                <div className="font-mono font-bold text-[20px] leading-none mt-1 tabular-nums" style={{ color: meta.color }}>
-                  {meta.t1}
-                </div>
-              </div>
-              <div>
-                <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted">
-                  {lang === 'en' ? 'HIGH+CRIT' : 'ALTO+CRIT'}
-                </div>
-                <div className="font-mono font-bold text-[20px] leading-none mt-1 tabular-nums" style={{ color: meta.color }}>
-                  {(meta.highRiskPct * 100).toFixed(0)}%
-                </div>
-              </div>
-            </div>
-
-            {/* Risk band visualization */}
-            <div>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-2">
-                {lang === 'en' ? 'HIGH-RISK SHARE' : 'PROPORCIÓN DE ALTO RIESGO'}
-              </div>
-              <div className="relative h-[14px] rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                <motion.div
-                  className="absolute inset-y-0 left-0 rounded-sm"
-                  style={{ background: meta.color, opacity: 0.85 }}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${meta.highRiskPct * 100}%` }}
-                  transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
-                />
-              </div>
-            </div>
-
-            {/* Top vendor list — shows top 3 critical vendors for this cluster */}
-            {topVendors && topVendors.length > 0 && (
-              <div>
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-2">
-                  {lang === 'en' ? 'TOP RISK VENDORS' : 'PROVEEDORES DE MAYOR RIESGO'}
-                </div>
-                <div className="space-y-0.5">
-                  {topVendors.map((v) => {
-                    const level = getRiskLevelFromScore(v.riskScore)
-                    return (
-                      <Link
-                        key={v.vendorId}
-                        to={`/thread/${v.vendorId}`}
-                        className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-sm transition-colors group"
-                        style={{ background: 'var(--color-background)' }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="text-[11px] font-mono text-text-secondary group-hover:text-text-primary truncate transition-colors">
-                          {formatVendorName(v.name)}
-                        </span>
-                        <span className="text-[10px] font-mono font-bold tabular-nums shrink-0" style={{ color: RISK_COLORS[level] }}>
-                          {(v.riskScore * 100).toFixed(0)}
-                        </span>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Year-delta indicator (V5) — shown when scrubbing years */}
-            {yearLabel !== undefined && (yearDeltaT1 !== undefined || yearDeltaPct !== undefined) && (
-              <div className="rounded-sm p-3 flex items-center gap-3" style={{ background: 'rgba(160,104,32,0.08)' }}>
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
-                  {lang === 'en' ? 'VS PREV. YEAR' : 'VS AÑO ANT.'}
-                </div>
-                <div className="flex items-center gap-3 flex-1 min-w-0 flex-wrap">
-                  {yearDeltaT1 !== undefined && (
-                    <span className="font-mono text-[12px] font-bold tabular-nums inline-flex items-center gap-1"
-                      style={{ color: yearDeltaT1 >= 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
-                      {yearDeltaT1 >= 0 ? '↑' : '↓'} {Math.abs(yearDeltaT1)}
-                      <span className="text-[8px] font-normal opacity-70 uppercase tracking-[0.08em]">T1</span>
-                    </span>
-                  )}
-                  {yearDeltaPct !== undefined && (
-                    <span className="font-mono text-[12px] font-bold tabular-nums inline-flex items-center gap-1"
-                      style={{ color: yearDeltaPct >= 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
-                      {yearDeltaPct >= 0 ? '↑' : '↓'} {Math.abs(yearDeltaPct).toFixed(1)}
-                      <span className="text-[8px] font-normal opacity-70">{lang === 'en' ? 'pp' : 'pp'}</span>
-                      <span className="text-[8px] font-normal opacity-70 uppercase tracking-[0.08em]">{lang === 'en' ? 'risk' : 'riesgo'}</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Why it matters / what to look for */}
-            <div className="rounded-sm p-3" style={{ background: 'var(--color-border)' }}>
-              <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-                {lang === 'en' ? 'WHAT TO LOOK FOR' : 'QUÉ BUSCAR'}
-              </div>
-              <p className="text-[11px] text-text-secondary leading-[1.6]">
-                {lang === 'en'
-                  ? `Click below to open the ${mode === 'patterns' ? 'investigation queue filtered to this pattern' : mode === 'sectors' ? 'sector profile' : mode === 'categories' ? 'category profile' : 'administrations comparison'} — the platform's surface for hand-investigating these vendors.`
-                  : `Haz clic abajo para abrir ${mode === 'patterns' ? 'la cola de investigación filtrada por este patrón' : mode === 'sectors' ? 'el perfil del sector' : mode === 'categories' ? 'el perfil de la categoría' : 'la comparación de administraciones'} — la superficie de la plataforma para investigar estos proveedores a mano.`
-                }
-              </p>
-            </div>
-
-            {/* Personal notes (localStorage) */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted inline-flex items-center gap-1.5">
-                  <NotebookPen className="h-3 w-3" aria-hidden="true" />
-                  {lang === 'en' ? 'YOUR NOTES' : 'TUS NOTAS'}
-                </div>
-                {note && (
-                  <span className="text-[8px] font-mono uppercase tracking-[0.1em]" style={{ color: 'var(--color-accent)' }}>
-                    {lang === 'en' ? 'saved locally' : 'guardado local'}
-                  </span>
-                )}
-              </div>
-              <textarea
-                value={note}
-                onChange={(e) => onNoteChange(e.target.value)}
-                placeholder={lang === 'en'
-                  ? 'What did you find when you investigated this cluster? Notes save automatically to your browser.'
-                  : '¿Qué encontraste al investigar este cúmulo? Las notas se guardan automáticamente en tu navegador.'
-                }
-                className="w-full text-[12px] leading-[1.55] p-2.5 rounded-sm font-sans resize-y focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50 transition-colors"
-                style={{
-                  background: 'var(--color-background)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-text-primary)',
-                  minHeight: 70,
-                  maxHeight: 200,
-                }}
-                aria-label={lang === 'en' ? 'Personal notes for this cluster' : 'Notas personales para este cúmulo'}
-              />
-            </div>
-          </div>
-
-          {/* Footer CTA */}
-          <div className="border-t border-border/60 p-4">
-            <button
-              onClick={() => navigate(investigateLink)}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-sm font-mono uppercase tracking-[0.1em] text-[11px] font-bold transition-opacity hover:opacity-90"
-              style={{ background: meta.color, color: 'var(--color-background)' }}
-            >
-              {lang === 'en' ? 'Investigate' : 'Investigar'}
-              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          </div>
-        </motion.aside>
-      )}
-    </AnimatePresence>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Year Scrubber — slider + autoplay control + year highlight annotation
 // ─────────────────────────────────────────────────────────────────────────────
 interface YearScrubberProps {
@@ -631,40 +378,9 @@ function YearScrubber({ yearIndex, setYearIndex, isPlaying, setIsPlaying, lang }
         </div>
       </div>
 
-      {/* Year highlight annotation */}
-      <div className="border-t border-border/60 pt-2.5 min-h-[24px]">
-        <AnimatePresence mode="wait">
-          {snapshot.highlight ? (
-            <motion.div
-              key={snapshot.year}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.25 }}
-              className="flex items-center gap-2"
-            >
-              <span
-                className="font-mono font-bold text-[10px] uppercase tracking-[0.14em] flex-shrink-0"
-                style={{ color: 'var(--color-risk-critical)' }}
-              >
-                ◆ {lang === 'en' ? 'KEY EVENT' : 'EVENTO CLAVE'}
-              </span>
-              <span className="text-[12px] text-text-secondary leading-tight">
-                {snapshot.highlight[lang]}
-              </span>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={`empty-${snapshot.year}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-[10px] font-mono text-text-muted"
-            >
-              <span style={{ color: 'var(--color-accent)' }}>—</span> {lang === 'en' ? 'no major documented case this year' : 'sin caso documentado mayor este año'}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* M-OBS Phase 1 (FALCO): KEY EVENT annotation row deleted — it ate
+          ~40px of vertical chrome below every YearScrubber and duplicated
+          the editorial story copy on the page. */}
 
       {/* Custom slider styling */}
       <style>{`
@@ -763,124 +479,6 @@ function useClusterNotes(): {
   const notesCount = Object.keys(notes).length
 
   return { notes, setNote, deleteNote, notesCount }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// VendorSearchBox — fuzzy typeahead across the curated KNOWN_VENDORS list.
-// On select, calls onPick(vendor) which auto-pins the vendor's cluster code
-// in the active mode.
-// ─────────────────────────────────────────────────────────────────────────────
-interface VendorSearchBoxProps {
-  onPick: (v: VendorLookup) => void
-  lang: 'en' | 'es'
-}
-
-function VendorSearchBox({ onPick, lang }: VendorSearchBoxProps) {
-  const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
-  const [activeIdx, setActiveIdx] = useState(0)
-
-  const matches = useMemo(() => searchKnownVendors(query), [query])
-
-  useEffect(() => {
-    setActiveIdx(0)
-  }, [query])
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setActiveIdx((i) => Math.min(matches.length - 1, i + 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setActiveIdx((i) => Math.max(0, i - 1))
-    } else if (e.key === 'Enter' && matches[activeIdx]) {
-      e.preventDefault()
-      onPick(matches[activeIdx])
-      setQuery('')
-      setOpen(false)
-    } else if (e.key === 'Escape') {
-      setOpen(false)
-    }
-  }
-
-  return (
-    <div className="relative" style={{ minWidth: 220 }}>
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" aria-hidden="true" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 180)}
-          onKeyDown={handleKeyDown}
-          placeholder={lang === 'en' ? 'Find a vendor (Toka, Edenred, IMSS…)' : 'Buscar proveedor (Toka, Edenred…)'}
-          className="w-full pl-8 pr-3 py-1.5 text-[11px] font-mono rounded-sm transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-accent/50"
-          style={{
-            background: 'var(--color-background-elevated, var(--color-border))',
-            border: '1px solid var(--color-border)',
-            color: 'var(--color-text-primary)',
-          }}
-          aria-label={lang === 'en' ? 'Vendor search' : 'Buscar proveedor'}
-        />
-      </div>
-
-      {open && matches.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.15 }}
-          className="absolute top-[calc(100%+4px)] left-0 right-0 surface-card rounded-sm shadow-xl overflow-hidden z-30"
-          style={{ border: '1px solid var(--color-border-hover)' }}
-          role="listbox"
-        >
-          {matches.map((v, i) => {
-            const isActive = i === activeIdx
-            return (
-              <button
-                key={v.query}
-                onMouseDown={(e) => { e.preventDefault(); onPick(v); setQuery(''); setOpen(false) }}
-                onMouseEnter={() => setActiveIdx(i)}
-                className="w-full text-left px-3 py-2 transition-colors block"
-                style={{
-                  background: isActive ? 'rgba(160,104,32,0.10)' : 'transparent',
-                  borderBottom: i < matches.length - 1 ? '1px solid var(--color-border)' : 'none',
-                }}
-                role="option"
-                aria-selected={isActive}
-              >
-                <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <span className="font-mono font-bold text-[11px] text-text-primary truncate">
-                    {v.displayName}
-                  </span>
-                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.1em] flex-shrink-0" style={{ color: 'var(--color-accent)' }}>
-                    {v.pattern} · {v.sector}
-                  </span>
-                </div>
-                <div className="text-[9px] font-mono text-text-muted truncate">
-                  {v.blurb[lang]}
-                </div>
-              </button>
-            )
-          })}
-          <div className="px-3 py-1.5 text-[8px] font-mono text-text-muted uppercase tracking-[0.1em]" style={{ background: 'var(--color-border)' }}>
-            {lang === 'en' ? '↑↓ navigate · ↵ select · curated set of 21 vendors' : '↑↓ navegar · ↵ seleccionar · 21 proveedores curados'}
-          </div>
-        </motion.div>
-      )}
-
-      {open && query.length >= 2 && matches.length === 0 && (
-        <div
-          className="absolute top-[calc(100%+4px)] left-0 right-0 surface-card rounded-sm shadow-xl px-3 py-2 z-30"
-          style={{ border: '1px solid var(--color-border-hover)' }}
-        >
-          <div className="text-[10px] font-mono text-text-muted">
-            {lang === 'en' ? `No curated match for "${query}". V4 will search all 320k vendors.` : `Sin coincidencias curadas para "${query}". V4 buscará en los 320k proveedores.`}
-          </div>
-        </div>
-      )}
-    </div>
-  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1153,8 +751,10 @@ export default function Atlas() {
   })
   // Most recently picked vendor — shown as a "Found X" badge near the toolbar.
   const [foundVendor, setFoundVendor] = useState<VendorLookup | null>(null)
-  // Personal notes per cluster — localStorage-backed
-  const { notes, setNote, notesCount } = useClusterNotes()
+  // Personal notes per cluster — localStorage-backed. Hook is preserved for future
+  // reuse (the inline-rendered notes UI was removed with the right rail in P2);
+  // its localStorage side-effects keep working so older saved notes are not lost.
+  useClusterNotes()
   // V6: long-form stories (replaces brief tours). A story is paused by
   // default when the user opens it; pressing Play autoplays through chapters.
   const [activeStory, setActiveStory] = useState<Story | null>(null)
@@ -1166,7 +766,6 @@ export default function Atlas() {
   const [storiesMenuOpen, setStoriesMenuOpen] = useState<boolean>(false)
   // URL-state sharing
   const [searchParams, setSearchParams] = useSearchParams()
-  const [shareJustCopied, setShareJustCopied] = useState<boolean>(false)
   // Risk-floor filter — when set, dots below the floor are dropped from the
   // population; remaining levels redistribute proportionally so the field
   // re-densifies around the focused band.
@@ -1387,15 +986,10 @@ export default function Atlas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Live ARIA stats — used to show current T1 count in the toolbar
-  const { data: ariaStats } = useQuery({
-    queryKey: ['atlas', 'aria-stats'],
-    queryFn: () => ariaApi.getStats(),
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
-
-  // Pull live dashboard data — feeds yearly_trends overrides and risk fallback
+  // Pull live dashboard data — feeds yearly_trends overrides and risk fallback.
+  // (The aria-stats useQuery here previously fed a toolbar T1 counter; that
+  // counter was removed with the rest of the heavy chrome in M-OBS P1, so the
+  // query was dead weight — dropped.)
   const { data: dashboard } = useQuery({
     queryKey: ['atlas', 'dashboard'],
     queryFn: () => analysisApi.getFastDashboard(),
@@ -1415,10 +1009,9 @@ export default function Atlas() {
     return m
   }, [dashboard])
 
-  // Track whether the current visible year has real data behind it (for caption).
-  const usingLiveData = useMemo(() => {
-    return liveYearMap[YEAR_SNAPSHOTS[yearIndex].year] !== undefined
-  }, [liveYearMap, yearIndex])
+  // (`usingLiveData` was used to flag the caption when M-OBS replaced the
+  // PlateFrame caption with its own — the flag is no longer read but the
+  // liveYearMap computation above is still needed by snapshotToRows. Kept.)
 
   // Build effective snapshot for a given year — overrides totalContracts and
   // (when available) reshapes pcts using real high_risk_pct.
@@ -1522,24 +1115,6 @@ export default function Atlas() {
   // click via the existing handleClusterClick path.
   const namedVendors = useTopVendorsForCluster(mode, selectedClusterCode)
 
-  // Resolve selected cluster meta from the active meta set — uses the same
-  // builders as the constellation so vendor/T1/risk numbers render correctly.
-  const selectedMeta: ClusterMeta | null = useMemo(() => {
-    if (!selectedClusterCode) return null
-    const isEs = lang === 'es'
-    let metas: ClusterMeta[]
-    if (mode === 'categories') {
-      metas = atlasMeta ?? buildAtlasCategoriesMeta(isEs)
-    } else if (mode === 'sectors') {
-      metas = buildSectorMeta(isEs)
-    } else if (mode === 'sexenios') {
-      metas = buildSexenioMeta(isEs)
-    } else {
-      metas = buildPatternMeta(isEs)
-    }
-    return metas.find((m) => m.code === selectedClusterCode) ?? null
-  }, [selectedClusterCode, mode, atlasMeta, lang])
-
   const handleClusterClick = (clusterCode: string) => {
     setSelectedClusterCode(clusterCode)
   }
@@ -1559,16 +1134,17 @@ export default function Atlas() {
   // will be removed one by one.
   const handleRailYearChange = (idx: number) => setYearIndex(idx)
   const handleRailPlayChange = (playing: boolean) => setIsPlaying(playing)
-  const handleRailVendorSearch = (query: string) => {
-    // Proxy into the existing VendorSearchBox logic by finding a match
+  const handleRailVendorSearch = (query: string): string | null => {
+    // Proxy into the existing VendorSearchBox logic by finding a match.
+    // Returns the cluster code so the rail can auto-zoom into it (M-OBS P5).
     const matches = searchKnownVendors(query)
-    if (matches[0]) {
-      if (mode === 'sexenios') setMode('patterns')
-      const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
-      setPinnedCode(code)
-      setFoundVendor(matches[0])
-      setSelectedClusterCode(code)
-    }
+    if (!matches[0]) return null
+    if (mode === 'sexenios') setMode('patterns')
+    const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
+    setPinnedCode(code)
+    setFoundVendor(matches[0])
+    setSelectedClusterCode(code)
+    return code
   }
   const handleRailStoryOpen = (storyId: string) => {
     const story = ATLAS_STORIES.find((s) => s.id === storyId)
@@ -1665,108 +1241,47 @@ export default function Atlas() {
           closer to a bound atlas plate than a generic dashboard title.
           Lede sits in a narrower measure with EB Garamond regular italic for
           the inline emphasis tokens. */}
-      <header className="mb-3">
-        <div
-          className="mb-1 flex items-center gap-3"
-          style={{
-            fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
-            fontSize: '10px',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            fontWeight: 400,
-          }}
-        >
-          <span style={{ color: 'var(--color-accent)', fontStyle: 'italic', fontWeight: 500 }}>Folio·IX</span>
-          <span style={{ width: 28, height: 1, background: 'rgba(160, 104, 32, 0.45)' }} />
-          <span style={{ fontStyle: 'italic', fontWeight: 300 }}>
-            {lang === 'en' ? 'Atlas of federal contracting' : 'Atlas de contratación federal'}
-          </span>
-        </div>
-        {/* 2026-05-09: hero compressed from 3-line italic Garamond + 4-line
-            sub-paragraph (~300px tall) to a single-line title + one-line
-            sub. The map should be the first thing the reader sees, not
-            an editorial preamble that hides it below the fold. */}
-        <h1
-          className="text-[24px] sm:text-[28px] md:text-[32px] leading-[1.1] text-text-primary mb-1 text-balance"
-          style={{
-            fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-            fontStyle: 'italic',
-            fontWeight: 500,
-            letterSpacing: '-0.012em',
-          }}
-        >
-          {lang === 'en' ? (
-            <>
-              An Atlas of <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nine trillion pesos</span> in federal procurement.
-            </>
-          ) : (
-            <>
-              Un Atlas de <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>nueve billones de pesos</span> en contratación federal.
-            </>
-          )}
-        </h1>
-        <p
-          className="max-w-[80ch] text-[12px]"
-          style={{
-            fontFamily: '"EB Garamond", Georgia, serif',
-            lineHeight: 1.4,
-            color: 'var(--color-text-muted)',
-            letterSpacing: '0.005em',
-          }}
-        >
-          {lang === 'en'
-            ? <>Pick a <em style={{ color: 'var(--color-text-secondary)' }}>story</em> to let data guide the narration, or choose a <em style={{ color: 'var(--color-text-secondary)' }}>lens</em> and drag the year to watch the procurement universe evolve from 2008 to 2025.</>
-            : <>Elige una <em style={{ color: 'var(--color-text-secondary)' }}>historia</em> y deja que los datos guíen el relato, o selecciona una <em style={{ color: 'var(--color-text-secondary)' }}>lente</em> y arrastra el año para ver el universo de contratación evolucionar de 2008 a 2025.</>
-          }
-        </p>
-      </header>
+      {/* M-OBS Phase 1 (FALCO): compressed 56px masthead replaces the
+          ~250px FOLIO·IX hero. See designs/M-OBS-spec.md · Replacement 1. */}
+      <AtlasMasthead lang={lang} />
 
-      {/* ── Vendor search row ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 mb-3 flex-wrap">
-        <VendorSearchBox
-          lang={lang}
-          onPick={(v) => {
-            // If active mode is sexenios, switch to patterns since most known
-            // vendors map cleanly to a pattern code.
-            if (mode === 'sexenios') setMode('patterns')
-            const code = vendorToClusterCode(v, mode === 'sexenios' ? 'patterns' : mode)
-            setPinnedCode(code)
-            setFoundVendor(v)
-            setSelectedClusterCode(code)
-          }}
-        />
+      {/* M-OBS Phase 1 (FALCO): consolidated 36px toolbar replaces the
+          vendor-search row + Stories button + Share + Compare-Years toggle
+          + the RISK FLOOR chip row. See designs/M-OBS-spec.md · Replacement 2. */}
+      <AtlasToolbar
+        lang={lang}
+        mode={mode}
+        setMode={setMode}
+        yearIndex={yearIndex}
+        setYearIndex={setYearIndex}
+        years={YEAR_SNAPSHOTS.map((s) => s.year)}
+        riskFloor={riskFloor}
+        setRiskFloor={setRiskFloor}
+        onStoriesOpen={() => setStoriesMenuOpen(true)}
+        isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
+        compareMode={compareMode}
+        setCompareMode={setCompareMode}
+      />
 
-        {/* Stories menu — replaces brief tours with long-form chapter narratives */}
-        <div className="relative">
-          <button
-            onClick={() => setStoriesMenuOpen(!storiesMenuOpen)}
-            className="text-[11px] font-mono inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm transition-all uppercase tracking-[0.1em] font-bold"
-            style={{
-              background: activeStory
-                ? activeStory.accent
-                : 'rgba(160,104,32,0.15)',
-              color: activeStory ? 'white' : '#a06820',
-              border: `1px solid ${activeStory ? activeStory.accent : 'rgba(160,104,32,0.4)'}`,
-            }}
-            aria-expanded={storiesMenuOpen}
-            aria-label={lang === 'en' ? 'Open stories menu' : 'Abrir menú de historias'}
+      {/* M-OBS Phase 1 (FALCO): Stories popover — anchored to the toolbar
+          BookOpen icon via fixed-position overlay. State controlled by
+          `storiesMenuOpen` which AtlasToolbar opens via `onStoriesOpen`. */}
+      {storiesMenuOpen && (
+        <>
+          {/* Backdrop click-out */}
+          <div
+            className="fixed inset-0 z-20"
+            onClick={() => setStoriesMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed top-[120px] right-6 surface-card rounded-sm shadow-2xl overflow-hidden z-30"
+            style={{ border: '1px solid var(--color-border-hover)', width: 380, maxWidth: '90vw' }}
           >
-            <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-            {activeStory
-              ? (lang === 'en' ? activeStory.title.en : activeStory.title.es)
-              : (lang === 'en' ? '▶ Stories' : '▶ Historias')
-            }
-          </button>
-          {storiesMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.15 }}
-              className="absolute top-[calc(100%+6px)] left-0 surface-card rounded-sm shadow-2xl overflow-hidden z-30"
-              style={{ border: '1px solid var(--color-border-hover)', width: 380, maxWidth: '90vw' }}
-              onMouseLeave={() => setStoriesMenuOpen(false)}
-            >
               <div className="px-4 py-3 border-b border-border/50" style={{ background: 'var(--color-border)' }}>
                 <div className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
                   {lang === 'en' ? 'INVESTIGATIVE STORIES' : 'HISTORIAS DE INVESTIGACIÓN'}
@@ -1859,215 +1374,34 @@ export default function Atlas() {
                 </span>
                 <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
               </button>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Share link */}
-        <button
-          onClick={() => {
-            const url = window.location.href
-            navigator.clipboard?.writeText(url).then(() => {
-              setShareJustCopied(true)
-              setTimeout(() => setShareJustCopied(false), 2000)
-            }).catch(() => {})
-          }}
-          className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
-          style={{
-            background: shareJustCopied ? '#16a34a' : 'transparent',
-            color: shareJustCopied ? 'white' : 'var(--color-text-muted)',
-            border: '1px solid var(--color-border)',
-          }}
-          aria-label={lang === 'en' ? 'Copy share link' : 'Copiar enlace'}
-          title={lang === 'en' ? 'Copy a link to this exact view' : 'Copiar enlace a esta vista'}
-        >
-          {shareJustCopied
-            ? <><Check className="h-3 w-3" /> {lang === 'en' ? 'Copied' : 'Copiado'}</>
-            : <><Link2 className="h-3 w-3" /> {lang === 'en' ? 'Share view' : 'Compartir'}</>
-          }
-        </button>
-
-        {foundVendor && (
-          <motion.div
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm"
-            style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
-          >
-            <Sparkles className="h-3 w-3" aria-hidden="true" />
-            <span className="opacity-80 uppercase tracking-[0.1em]">
-              {lang === 'en' ? 'Found' : 'Encontrado'}:
-            </span>
-            <span className="font-bold">{foundVendor.displayName}</span>
-            <span className="opacity-70">→ {foundVendor.pattern}</span>
-            <button
-              onClick={() => setFoundVendor(null)}
-              className="ml-1 hover:opacity-70 transition-opacity"
-              aria-label={lang === 'en' ? 'Clear' : 'Limpiar'}
-            >
-              <X className="h-3 w-3" />
-            </button>
           </motion.div>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* ── Toolbar: lens picker moved to left rail; only Pinned/Compare/Reset badges remain here ── */}
-      <div className="flex items-center justify-end mb-3 gap-3 flex-wrap">
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Pinned cluster badge */}
-          {pinnedCode && (
-            <button
-              onClick={() => setPinnedCode(null)}
-              className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm transition-opacity hover:opacity-80"
-              style={{ background: 'rgba(160,104,32,0.18)', color: 'var(--color-accent)' }}
-              title={lang === 'en' ? 'Click to unpin' : 'Clic para despinear'}
-            >
-              <Pin className="h-3 w-3" aria-hidden="true" />
-              <span className="font-bold uppercase tracking-[0.1em]">{lang === 'en' ? 'Pinned' : 'Pineado'}</span>
-              <span className="opacity-90">{pinnedCode.slice(0, 14)}</span>
-            </button>
-          )}
-
-          {/* Compare-mode toggle — title attr provides discoverability hint
-              (the function isn't obvious from the label alone). */}
-          <button
-            onClick={() => setCompareMode(!compareMode)}
-            className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm transition-colors uppercase tracking-[0.1em] font-bold"
-            style={{
-              background: compareMode ? '#a06820' : 'transparent',
-              color: compareMode ? 'var(--color-background)' : 'var(--color-text-muted)',
-              border: '1px solid var(--color-border)',
-            }}
-            aria-pressed={compareMode}
-            aria-label={lang === 'en'
-              ? 'Toggle compare-years mode — render two constellations side by side'
-              : 'Activar modo comparar años — dos constelaciones lado a lado'}
-            title={lang === 'en'
-              ? 'Render a second constellation alongside this one. Pick a year for each canvas to see the same lens at two moments in time — e.g. Peña 2014 vs COVID 2020.'
-              : 'Renderiza una segunda constelación junto a la actual. Elige un año para cada lienzo para ver la misma lente en dos momentos — ej. Peña 2014 vs COVID 2020.'}
-          >
-            <Layers className="h-3 w-3" aria-hidden="true" />
-            {lang === 'en' ? 'Compare years' : 'Comparar años'}
-          </button>
-
-          {/* Notes count badge */}
-          {notesCount > 0 && (
-            <div
-              className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2 py-1 rounded-sm"
-              style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
-              title={lang === 'en' ? 'Personal notes — saved in your browser' : 'Notas personales — guardadas en tu navegador'}
-            >
-              <NotebookPen className="h-3 w-3" aria-hidden="true" />
-              <span className="font-bold">{notesCount}</span>
-              <span className="opacity-70">{lang === 'en' ? (notesCount === 1 ? 'note' : 'notes') : 'notas'}</span>
-            </div>
-          )}
-
-          {/* Live T1 count */}
-          <div className="text-[10px] font-mono text-text-muted inline-flex items-center gap-2">
-            <span className="rounded-full" style={{ width: 6, height: 6, background: '#dc2626' }} aria-hidden="true" />
-            <span>{formatNumber(ariaStats?.latest_run?.tier1_count ?? 299)}</span>
-            <span className="opacity-70">{lang === 'en' ? 'T1 · live' : 'T1 · en vivo'}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* omega-P6 lens tagline REVERTED 2026-05-05 — decoration. The actual
-          amplified redesign (animated dot morphing between lens layouts)
-          is queued for omega-C-P5. */}
-
-      {/* ── Mobile-only lens selector (left rail is hidden below lg) ─── */}
-      <div className="lg:hidden flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted flex-shrink-0">
-          {lang === 'en' ? 'LENS' : 'LENTE'}
-        </span>
-        <div
-          className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden"
-          role="group"
-          aria-label={lang === 'en' ? 'Constellation lens' : 'Lente de constelación'}
-          style={{ border: '1px solid var(--color-border)' }}
+      {/* Found-vendor pill — surfaced when VendorSearchBox elsewhere picks
+          a vendor. Search box itself is queued for re-entry to Phase 2 of M-OBS. */}
+      {foundVendor && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[10px] font-mono inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm mt-2 mx-3"
+          style={{ background: 'rgba(160,104,32,0.10)', color: 'var(--color-accent)' }}
         >
-          {(
-            [
-              { id: 'patterns'   as ConstellationMode, en: 'Patterns',   es: 'Patrones'  },
-              { id: 'sectors'    as ConstellationMode, en: 'Sectors',    es: 'Sectores'  },
-              { id: 'categories' as ConstellationMode, en: 'Categories', es: 'Categorías'},
-              { id: 'sexenios'   as ConstellationMode, en: 'Terms',      es: 'Sexenios'  },
-            ]
-          ).map((lens, i, arr) => {
-            const isActive = mode === lens.id
-            return (
-              <button
-                key={lens.id}
-                onClick={() => setMode(lens.id)}
-                className="px-2.5 py-1 transition-colors"
-                style={{
-                  background: isActive ? '#a06820' : 'var(--color-background-card)',
-                  color: isActive ? 'white' : 'var(--color-text-muted)',
-                  borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
-                  fontWeight: isActive ? 700 : 400,
-                }}
-                aria-pressed={isActive}
-              >
-                {lang === 'en' ? lens.en : lens.es}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* ── Risk-floor filter row ─────────────────────────────────────── */}
-      {/* Apr 2026: relabeled "X-RAY" → "RISK FLOOR / RIESGO MÍNIMO" — the
-          original label was niche jargon; the new label reads as plain
-          editorial English/Spanish and matches the aria-label below. */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-          {lang === 'en' ? 'RISK FLOOR' : 'RIESGO MÍNIMO'}
-        </span>
-        <div
-          className="flex items-center text-[9px] font-mono uppercase tracking-[0.08em] rounded-sm overflow-hidden"
-          role="group"
-          aria-label={lang === 'en' ? 'Risk floor filter' : 'Filtro mínimo de riesgo'}
-          style={{ border: '1px solid var(--color-border)' }}
-        >
-          {(
-            [
-              { id: 'all',      en: 'all',         es: 'todos',     color: 'var(--color-text-muted)' },
-              { id: 'medium',   en: 'medium+',     es: 'medio+',    color: '#a06820' },
-              { id: 'high',     en: 'high+',       es: 'alto+',     color: '#f59e0b' },
-              { id: 'critical', en: 'critical',    es: 'crítico',   color: '#dc2626' },
-            ] as Array<{ id: typeof riskFloor; en: string; es: string; color: string }>
-          ).map((f, i, arr) => {
-            const isActive = riskFloor === f.id
-            return (
-              <button
-                key={f.id}
-                onClick={() => setRiskFloor(f.id)}
-                className="px-2.5 py-1 transition-colors flex items-center gap-1.5"
-                style={{
-                  background: isActive ? f.color : 'transparent',
-                  color: isActive ? (f.id === 'all' ? 'var(--color-background)' : 'white') : 'var(--color-text-muted)',
-                  borderRight: i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
-                  fontWeight: isActive ? 700 : 500,
-                }}
-                aria-pressed={isActive}
-              >
-                {!isActive && (
-                  <span className="rounded-full" style={{ width: 5, height: 5, background: f.color }} aria-hidden="true" />
-                )}
-                {lang === 'en' ? f.en : f.es}
-              </button>
-            )
-          })}
-        </div>
-        {riskFloor !== 'all' && (
-          <span className="text-[9px] font-mono text-text-muted">
-            {lang === 'en'
-              ? 'showing only this band — dots redistribute to fill the field'
-              : 'mostrando solo esta banda — puntos se redistribuyen'}
+          <Sparkles className="h-3 w-3" aria-hidden="true" />
+          <span className="opacity-80 uppercase tracking-[0.1em]">
+            {lang === 'en' ? 'Found' : 'Encontrado'}:
           </span>
-        )}
-      </div>
+          <span className="font-bold">{foundVendor.displayName}</span>
+          <span className="opacity-70">→ {foundVendor.pattern}</span>
+          <button
+            onClick={() => setFoundVendor(null)}
+            className="ml-1 hover:opacity-70 transition-opacity"
+            aria-label={lang === 'en' ? 'Clear' : 'Limpiar'}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </motion.div>
+      )}
 
       {/* ── STORY READER — replaces brief tour narration with rich chapter UI ─── */}
       <AnimatePresence mode="wait">
@@ -2360,6 +1694,9 @@ export default function Atlas() {
         clusterCount={activeConstellationMeta.length}
         totalContracts={totalContractsForYear}
         lang={lang}
+        /* M-OBS Phase 1 (FALCO): suppress PlateFrame's own folio header
+           strip — AtlasMasthead above carries the FOLIO·IX kicker. */
+        minimal
       >
         {/* omega-N: chapter strip overlay — pinned over the chart while a story is playing.
             Cites NYT "How the Virus Got Out" — the camera follows the narrative, with a
@@ -2416,16 +1753,9 @@ export default function Atlas() {
         {z1Enabled && <Z1Overlay lang={lang} />}
       </PlateFrame>
 
-      {/* ── Year scrubber — below canvas on all screen sizes ── */}
-      <div>
-        <YearScrubber
-          yearIndex={yearIndex}
-          setYearIndex={setYearIndex}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          lang={lang}
-        />
-      </div>
+      {/* M-OBS Phase 1 (FALCO): bottom YearScrubber deleted — year stepper
+          lives in AtlasToolbar (◆ ←/→). KEY EVENT annotation row is gone with it
+          (was rendered inside the YearScrubber component). */}
 
       {/* ── COMPARE MODE: second canvas + scrubber ─────────────────── */}
       {compareMode && (() => {
@@ -2467,75 +1797,13 @@ export default function Atlas() {
         )
       })()}
 
-      {/* ── Editorial footer / methodology footnote ──────────────────── */}
-      <div className="mt-6 pt-4 border-t border-border/40 text-[11px] font-mono text-text-muted leading-[1.6] text-pretty">
-        <span
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm mr-2 align-middle"
-          style={{
-            background: usingLiveData ? 'rgba(160,104,32,0.12)' : 'var(--color-border)',
-            color: usingLiveData ? '#a06820' : 'var(--color-text-muted)',
-            fontSize: 9,
-            fontWeight: 700,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-          }}
-        >
-          <span
-            className="rounded-full"
-            style={{ width: 5, height: 5, background: usingLiveData ? '#16a34a' : 'var(--color-text-muted)' }}
-          />
-          {usingLiveData
-            ? (lang === 'en' ? 'live · contracts + risk-pct from yearly_trends' : 'en vivo · contratos + riesgo desde yearly_trends')
-            : (lang === 'en' ? 'illustrative snapshot' : 'instantánea ilustrativa')}
-        </span>
-        {lang === 'en'
-          ? <>Categories lens shows 32 of 72 active spending categories — covers ~80% of federal spend by value. Vendor search uses a curated list of 42 known cases — pharma cartel, P3 intermediaries, tech-license cluster, gov media buys, DICONSA staples, voucher monopolies (V4 will search all 320k vendors). Personal notes save to your browser. See <a href="/methodology" className="text-accent hover:underline">methodology</a> for scope and limits.</>
-          : <>La lente de categorías muestra 32 de 72 categorías activas — cubre ~80% del gasto federal por valor. La búsqueda de proveedor usa una lista curada de 42 casos — cártel farmacéutico, intermediarios P3, licencias tecnológicas, gasto en medios, suministro DICONSA, monopolios de vales (V4 buscará en los 320k). Las notas personales se guardan en tu navegador. Consulta la <a href="/methodology" className="text-accent hover:underline">metodología</a> para alcance y límites.</>
-        }
-      </div>
+      {/* M-OBS Phase 1 (FALCO): far-bottom editorial methodology footer
+          deleted — promotional copy that pushed the canvas off-screen.
+          Methodology lives at /methodology. */}
 
           </div>{/* /folio-skin content wrapper */}
           </div>
         }
-        rightPanel={
-          // When a cluster is selected (and not in z1+sectors suppression mode),
-          // show the ClusterDetailPanel in the right rail instead of the generic
-          // AtlasRightPanel. Year-delta is computed here so it can be passed down.
-          selectedMeta && !(z1Enabled && mode === 'sectors')
-            ? (() => {
-                let deltaT1: number | undefined = undefined
-                let deltaPct: number | undefined = undefined
-                if (yearIndex > 0) {
-                  const prevSnap = effectiveSnapshot(yearIndex - 1)
-                  const curSnap = snapshot
-                  const BASELINE = 11.01
-                  const ratioCur = (curSnap.criticalPct + curSnap.highPct) / BASELINE
-                  const ratioPrev = (prevSnap.criticalPct + prevSnap.highPct) / BASELINE
-                  const t1Cur = Math.round(selectedMeta.t1 * ratioCur)
-                  const t1Prev = Math.round(selectedMeta.t1 * ratioPrev)
-                  deltaT1 = t1Cur - t1Prev
-                  deltaPct = (curSnap.criticalPct + curSnap.highPct) - (prevSnap.criticalPct + prevSnap.highPct)
-                }
-                return (
-                  <ClusterDetailPanel
-                    meta={selectedMeta}
-                    mode={mode}
-                    pinnedCode={pinnedCode}
-                    note={notes[selectedMeta.code] ?? ''}
-                    yearLabel={snapshot.year}
-                    yearDeltaT1={deltaT1}
-                    yearDeltaPct={deltaPct}
-                    topVendors={namedVendors}
-                    onNoteChange={(text) => setNote(selectedMeta.code, text)}
-                    onTogglePin={() => setPinnedCode((cur) => (cur === selectedMeta.code ? null : selectedMeta.code))}
-                    onClose={() => setSelectedClusterCode(null)}
-                    lang={lang}
-                  />
-                )
-              })()
-            : <AtlasRightPanel lang={lang} />
-        }
-        forceRightPanel={!!(selectedMeta && !(z1Enabled && mode === 'sectors'))}
       />
     </AtlasContextProvider>
   )

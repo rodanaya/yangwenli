@@ -39,8 +39,8 @@ import {
   formatCompactMXN,
   formatPercentSafe,
   getRiskLevel,
-  toTitleCase,
 } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { parseFactorLabel } from '@/lib/risk-factors'
 
 interface VendorHeroProps {
@@ -140,7 +140,7 @@ export function VendorHero({
               color: 'var(--color-text-primary)',
             }}
           >
-            {toTitleCase(vendor.name)}
+            {formatVendorName(vendor.name)}
           </h1>
           <IdentityLine
             vendor={vendor}
@@ -199,7 +199,7 @@ export function VendorHero({
         <aside
           aria-labelledby="vendor-marginal-note"
           style={{
-            borderLeft: '2px solid #a06820',
+            borderLeft: '2px solid var(--color-accent)',
             paddingLeft: '14px',
             paddingTop: '6px',
             paddingBottom: '6px',
@@ -214,7 +214,7 @@ export function VendorHero({
               fontSize: '9.5px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
-              color: '#a06820',
+              color: 'var(--color-accent)',
               fontWeight: 500,
               fontStyle: 'italic',
               marginBottom: '6px',
@@ -412,7 +412,7 @@ function getVerdictSentence(
   vendor: VendorDetailResponse,
   isEs: boolean
 ): string {
-  const name = toTitleCase(vendor.name)
+  const name = formatVendorName(vendor.name)
   if (isEs) {
     if (level === 'critical')
       return `Los patrones de contratación de ${name} coinciden fuertemente con casos de corrupción documentados. Indicador estadístico, no prueba de irregularidades.`

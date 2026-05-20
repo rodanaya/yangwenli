@@ -779,14 +779,14 @@ function ChapterMoney({ timeline, t }: {
  * draw the eye. Compact (160×96) so it floats next to the chapter
  * heading instead of dominating the layout.
  */
-function RedThreadLine({ progress }: { progress: number }) {
+function RedThreadLine({ progress, lang }: { progress: number; lang: 'en' | 'es' }) {
   // Clamp once for both the fill height and the tip-dot position so the
   // dot can never escape the line at the bottom of the page.
   const pct = Math.max(0, Math.min(100, progress * 100))
   return (
     <div
       role="progressbar"
-      aria-label="Investigation progress"
+      aria-label={lang === 'en' ? 'Investigation progress' : 'Progreso de la investigación'}
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -817,7 +817,7 @@ function RedThreadLine({ progress }: { progress: number }) {
 
 // ─── Chapter Navigation Dots ────────────────────────────────────────────────
 
-function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id: string; label: string; icon: React.ElementType }> }) {
+function ChapterNav({ active, chapters, lang }: { active: number; chapters: Array<{ id: string; label: string; icon: React.ElementType }>; lang: 'en' | 'es' }) {
   // Smooth scroll + focus management for keyboard nav. Arrow keys cycle
   // through chapter anchors so screen-reader / keyboard users can move
   // through the investigation without a mouse.
@@ -835,7 +835,7 @@ function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id
 
   return (
     <nav
-      aria-label="Investigation chapters"
+      aria-label={lang === 'en' ? 'Investigation chapters' : 'Capítulos de la investigación'}
       className="fixed right-5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3"
     >
       {chapters.map((ch, idx) => {
@@ -885,7 +885,7 @@ function ThreadSkeleton({ label: _label, vendorName }: { label: string; vendorNa
           <div className="w-1 h-8 bg-risk-critical rounded-full animate-pulse" />
           <div className="space-y-1">
             {vendorName
-              ? <p className="text-sm font-mono text-text-primary">{vendorName}</p>
+              ? <p className="text-sm font-mono text-text-primary truncate max-w-[420px]" title={vendorName}>{formatVendorName(vendorName, 60)}</p>
               : <div className="h-4 w-48 bg-border animate-pulse rounded" />
             }
             <div className="h-3 w-32 bg-border/60 animate-pulse rounded" />
@@ -1104,8 +1104,8 @@ export default function RedThread() {
   return (
     <div ref={containerRef} className="relative min-h-screen bg-[var(--color-background)]">
       {/* Fixed elements */}
-      <RedThreadLine progress={scrollPct} />
-      <ChapterNav active={activeChapter} chapters={chapters} />
+      <RedThreadLine progress={scrollPct} lang={i18n.language === 'en' ? 'en' : 'es'} />
+      <ChapterNav active={activeChapter} chapters={chapters} lang={i18n.language === 'en' ? 'en' : 'es'} />
 
       {/* Back nav */}
       <div className="sticky top-0 z-40 px-3 sm:px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between gap-2">

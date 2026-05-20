@@ -775,6 +775,7 @@ export function ConcentrationConstellation({
           return (
             <g
               key={`attractor-${meta.code}-${idx}`}
+              data-cluster-code={meta.code}
               className="atlas-ring"
               style={{ animationDelay: `${1300 + idx * 70}ms`, opacity: ringOpacityBase, transition: 'opacity 400ms ease' }}
             >
@@ -1043,6 +1044,7 @@ export function ConcentrationConstellation({
             : 'translate(-50%, -130%)'
         return (
           <div
+            data-cluster-hover-preview="true"
             className="absolute z-10 pointer-events-none rounded-md border border-border bg-background-card backdrop-blur-sm p-2.5 shadow-xl"
             style={{
               top: `${topPct}%`,

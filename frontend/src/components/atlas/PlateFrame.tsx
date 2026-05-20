@@ -54,6 +54,12 @@ interface PlateFrameProps {
    * stays bilingual.
    */
   contextLabel?: { en: string; es: string }
+  /**
+   * Optional (M-OBS Phase 1): when true, suppresses the top folio header strip
+   * (Folio·N · context · date stamp). Bottom plate caption and crop marks stay.
+   * Used by /atlas to claim back ~30px of vertical space inside the canvas.
+   */
+  minimal?: boolean
 }
 
 /** Plate caption — bilingual, lens-aware (atlas default). */
@@ -99,6 +105,7 @@ export function PlateFrame({
   caption: captionOverride,
   folio: folioOverride,
   contextLabel,
+  minimal = false,
 }: PlateFrameProps) {
   // Use overrides when provided (non-atlas surfaces); fall back to atlas defaults.
   const folio = folioOverride ?? getAtlasFolioNumber(lens ?? 'patterns')
@@ -124,7 +131,8 @@ export function PlateFrame({
       className="relative"
       style={{
         // Generous interior margin so the chart breathes within the frame.
-        padding: '36px 28px 22px',
+        // When `minimal`, drop the top header strip — the canvas claims its space.
+        padding: minimal ? '14px 28px 22px' : '36px 28px 22px',
         background: 'var(--color-background-elevated, var(--color-background))',
         border: '1px solid var(--color-border)',
         // Slight inset shadow so the plate feels tactile — like a printed page
@@ -142,8 +150,9 @@ export function PlateFrame({
 
       {/* ── Folio header strip ──────────────────────────────────────────────
           Two columns: catalog index left, archival date stamp right.
-          IBM Plex Mono italic 300 / 400 — quiet, archival, never shouting. */}
-      <div
+          IBM Plex Mono italic 300 / 400 — quiet, archival, never shouting.
+          Suppressed when `minimal` — Atlas surfaces its own masthead/toolbar. */}
+      {!minimal && (<div
         className="absolute top-3 left-7 right-7 flex items-center justify-between pointer-events-none"
         style={{
           fontFamily: '"IBM Plex Mono", "JetBrains Mono", monospace',
@@ -163,7 +172,7 @@ export function PlateFrame({
           <span style={{ opacity: 0.55 }}>{lang === 'en' ? 'Indexed' : 'Indexado'} </span>
           <span style={{ fontWeight: 500 }}>{dateStamp}</span>
         </span>
-      </div>
+      </div>)}
 
       {/* ── The chart itself ───────────────────────────────────────────── */}
       <div className="relative">{children}</div>

@@ -18,7 +18,7 @@
  * during P1's transitional dual-write period.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Play, Pause, Search, BookOpen, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -74,8 +74,10 @@ export interface AtlasLeftRailProps {
   isPlaying: boolean
   onYearChange: (index: number) => void
   onPlayChange: (playing: boolean) => void
-  // Vendor search bridge — proxied into Atlas.tsx's VendorSearchBox logic
-  onVendorSearchPick: (query: string) => void
+  // Vendor search bridge — proxied into Atlas.tsx's VendorSearchBox logic.
+  // Returns the matched cluster code so the rail can dispatch zoom-into-cluster
+  // and fly the user to the right place; returns null when no match.
+  onVendorSearchPick: (query: string) => string | null | void
   // Story bridge — opens ATLAS_STORIES narratives in Atlas.tsx
   onStoryOpen: (storyId: string) => void
   // Reset all filters
@@ -117,6 +119,28 @@ export function AtlasLeftRail({
   // Local vendor search query
   const [vendorQuery, setVendorQuery] = useState('')
 
+  // Save-view state (M-OBS P5): persists current URL to localStorage so the
+  // user can restore a specific lens/year/filters/zoom combination later.
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle')
+  const [savedHref, setSavedHref] = useState<string | null>(null)
+  // Track the current URL so the restore button can hide itself when the user
+  // is already at the saved view. Updated on lens/year/floor/view changes.
+  const [currentHref, setCurrentHref] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.href : ''
+  )
+  useEffect(() => {
+    try {
+      setSavedHref(localStorage.getItem('rubli_atlas_saved_view_v1'))
+    } catch {
+      setSavedHref(null)
+    }
+  }, [])
+  // Re-read current href whenever the relevant Observatory state changes —
+  // location.href tracks the URL state sync written by Atlas.tsx.
+  useEffect(() => {
+    setCurrentHref(window.location.href)
+  }, [state.lens, state.yearIndex, state.riskFloor, state.pinnedCode, state.view])
+
   const snapshot = yearSnapshots[state.yearIndex]
   const minYearIdx = 0
   const maxYearIdx = yearSnapshots.length - 1
@@ -135,12 +159,18 @@ export function AtlasLeftRail({
           className="px-4 pt-4 pb-3 border-b"
           style={{ borderColor: 'var(--color-border)' }}
         >
-          {/* Breadcrumb path */}
+          {/* Breadcrumb path — Atlas · zoomed · {lens} so the code below is
+              self-explanatory ("P5" out of context could be any lens). */}
           <div
             className="text-[8px] font-mono uppercase tracking-[0.14em] mb-1.5"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            {lang === 'en' ? 'ATLAS · ZOOMED' : 'ATLAS · AMPLIADO'}
+            {(() => {
+              const lensName = LENSES.find((l) => l.id === state.lens)
+              const lensLabel = lensName ? (lang === 'en' ? lensName.en : lensName.es) : ''
+              const zoomedLabel = lang === 'en' ? 'ATLAS · ZOOMED' : 'ATLAS · AMPLIADO'
+              return lensLabel ? `${zoomedLabel} · ${lensLabel.toUpperCase()}` : zoomedLabel
+            })()}
           </div>
           {/* Code + label */}
           <div
@@ -416,8 +446,13 @@ export function AtlasLeftRail({
               onChange={(e) => setVendorQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && vendorQuery.trim().length >= 2) {
-                  onVendorSearchPick(vendorQuery.trim())
+                  const code = onVendorSearchPick(vendorQuery.trim())
                   setVendorQuery('')
+                  // Auto-zoom into the matched cluster so the user lands at the
+                  // right place instead of just having it pinned in the background.
+                  if (typeof code === 'string' && code.length > 0) {
+                    dispatch({ type: 'zoom-into-cluster', code })
+                  }
                 }
               }}
               placeholder={lang === 'en' ? 'Toka, Edenred, IMSS…' : 'Toka, Edenred, IMSS…'}
@@ -438,17 +473,55 @@ export function AtlasLeftRail({
           </div>
         </div>
 
-        {/* ── SAVE VIEW (P5 stub) ───────────────────────────────────── */}
+        {/* ── SAVE / RESTORE VIEW (M-OBS P5: 2026-05-20) ─────────────
+            Serializes the current URL (which already encodes lens, year,
+            risk floor, pin, zoom) to localStorage so the user can return
+            to a specific Observatory state across sessions. */}
         <div className="px-4 pb-4">
-          <button
-            onClick={() => { /* P5: serialize state to localStorage */ }}
-            className="w-full text-left px-3 py-2 rounded-sm transition-colors text-[10px] font-mono flex items-center gap-1.5 hover:bg-background-elevated/30"
-            style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
-            title={lang === 'en' ? 'Coming soon — saves lens, year, filters, and pin' : 'Próximamente — guarda lente, año, filtros y pin'}
-          >
-            <span style={{ color: ACCENT }}>+</span>
-            {lang === 'en' ? 'Save current view' : 'Guardar vista actual'}
-          </button>
+          {saveStatus === 'saved' ? (
+            <div
+              className="w-full text-left px-3 py-2 rounded-sm text-[10px] font-mono flex items-center gap-1.5"
+              style={{ color: ACCENT, border: `1px solid ${ACCENT}`, background: 'rgba(160,104,32,0.06)' }}
+              role="status"
+              aria-live="polite"
+            >
+              <span aria-hidden="true">✓</span>
+              {lang === 'en' ? 'View saved' : 'Vista guardada'}
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                try {
+                  localStorage.setItem('rubli_atlas_saved_view_v1', location.href)
+                  setSaveStatus('saved')
+                  window.setTimeout(() => setSaveStatus('idle'), 1500)
+                } catch {
+                  /* localStorage may be unavailable (private browsing, quota) — fail silent */
+                }
+              }}
+              className="w-full text-left px-3 py-2 rounded-sm transition-colors text-[10px] font-mono flex items-center gap-1.5 hover:bg-background-elevated/30"
+              style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
+              title={lang === 'en'
+                ? 'Save this lens + year + filters + zoom so you can return to it later'
+                : 'Guarda este lente, año, filtros y zoom para volver más tarde'}
+            >
+              <span style={{ color: ACCENT }} aria-hidden="true">+</span>
+              {lang === 'en' ? 'Save current view' : 'Guardar vista actual'}
+            </button>
+          )}
+          {/* Restore link — only visible when there's a saved view AND we're not already at it. */}
+          {savedHref && savedHref !== currentHref && (
+            <button
+              onClick={() => {
+                if (savedHref) location.href = savedHref
+              }}
+              className="mt-1.5 w-full text-left px-3 py-1.5 rounded-sm transition-colors text-[10px] font-mono hover:bg-background-elevated/30"
+              style={{ color: 'var(--color-text-muted)' }}
+              title={lang === 'en' ? 'Jump to your last saved view' : 'Ir a la última vista guardada'}
+            >
+              ↳ {lang === 'en' ? 'Restore saved view' : 'Restaurar vista guardada'}
+            </button>
+          )}
         </div>
       </div>
 
