@@ -1,4 +1,47 @@
 ---
+## Visual Review — 2026-05-20T00:09:15Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/atlas | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/aria | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/sectors/salud | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/cases | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/methodology | 403 (egress proxy blocked) | ⚠ |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (egress proxy blocked) | ⚠ |
+
+**Note**: All 403 responses carry `x-deny-reason: host_not_allowed` — remote execution environment IP blocked by WAF allowlist. Environment constraint, not a site outage. Consistent with all prior automated runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?limit=5 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/cases?vendor_id=4325&limit=50 | blocked (egress proxy, empty body) | ⚠ |
+| /api/v1/sectors | blocked (egress proxy, empty body) | ⚠ |
+
+### Bilingual Gaps
+Scanned `frontend/src/pages/` and `frontend/src/components/` — no regressions from prior run:
+
+**i18n key leak pattern (`[A-Z][A-Z_]*\.[A-Z][A-Z_]*`):** 10 hits — all confirmed false positives:
+- `Executive.tsx:65,84,103`: company proper nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — not i18n keys
+- `InstitutionScorecards.tsx:441`: `TIER_STYLES[tierName as TierKey]` — JS object lookup, not a UI string
+- `Methodology.tsx:119`: academic citation `Mahalanobis, P.C.` — not rendered as a key
+- `RedThread.tsx:339,340`: `WEB_VERDICT_STYLE/KEYS[article.verdict]` — TS object key lookups, not UI strings
+- `CaseLibrary.tsx:219`: inside a code comment, never rendered
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded fixture vendor `Maypo S.A.` — story chart data
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress proxy (`x-deny-reason: host_not_allowed`) — environment constraint, not site failure. Consistent with all prior automated runs from this cloud environment. No new bilingual gaps detected. Bilingual scan clean: all flagged patterns are false positives (object lookups, proper nouns, code comments). Recommend running HTTP/API checks from a whitelisted IP (e.g. VPS at 37.60.232.109) for accurate validation.
+
+---
 ## Visual Review — 2026-05-19T00:08:05Z
 
 ### HTTP Status
