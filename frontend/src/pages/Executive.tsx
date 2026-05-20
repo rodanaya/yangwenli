@@ -25,7 +25,7 @@ import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
-import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
@@ -35,7 +35,10 @@ import {
 } from '@/components/charts/ConcentrationConstellation'
 // DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
-import { LensVisualization, buildLensTiers } from '@/components/executive/LensVisualization'
+// LensVisualization/buildLensTiers retired 2026-05-20 — replaced by Cascade
+// Ledger (log-scale rungs + GT anchor band) inline in this file. The legacy
+// concentric-funnel component is still on disk for reference but no longer
+// imported.
 import { CaseTimeline } from '@/components/executive/CaseTimeline'
 import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
@@ -1514,8 +1517,8 @@ export default function Executive() {
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
-              ? 'Each ring is a layer of focus. The platform reads every COMPRANET row, then narrows by risk, then by ARIA pattern, then by ground-truth match — until what remains is a small set of contracts that can actually be investigated by hand.'
-              : 'Cada anillo es una capa de enfoque. La plataforma lee cada registro de COMPRANET, luego filtra por riesgo, después por patrón ARIA, y finalmente por coincidencia con casos documentados — hasta que solo queda un conjunto pequeño que puede investigarse a mano.'}
+              ? 'Each rung is a filter step. The platform reads every COMPRANET row, then applies the risk model, then ARIA patterns, then a GT-anchored manual triage — each step\'s surviving population shown on a logarithmic scale. 43 documented cases anchor the model below.'
+              : 'Cada peldaño es un paso del filtro. La plataforma lee cada registro de COMPRANET, luego aplica el modelo de riesgo, después los patrones ARIA, y por último un triaje manual anclado en GT — la población superviviente de cada paso se muestra en escala logarítmica. 43 casos documentados anclan el modelo abajo.'}
           </p>
 
           <PlateFrame
@@ -1523,81 +1526,257 @@ export default function Executive() {
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — From 3.1M COMPRANET records to 299 GT-anchored T1 vendors; five filtering layers applied before human inspection.'
-              : 'Lámina — De 3.1M registros COMPRANET a 299 proveedores T1 anclados en GT; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
+              ? 'Cascade — from 3.1M COMPRANET records to 299 hand-investigable T1 vendors. Each filter step\'s retention shown in log-scale; 43 GT cases anchor the model below.'
+              : 'Cascada — de 3.1M registros COMPRANET a 299 proveedores T1 investigables a mano. La retención de cada paso se muestra en escala logarítmica; 43 casos GT anclan el modelo abajo.'}
           >
             {(() => {
-              const lensTiers = buildLensTiers(
-                ariaStats?.latest_run?.tier1_count ?? 299,
-                caseStats?.total_cases ?? 1_422,
-                stats.highCriticalCount,
+              // ── Cascade Ledger — 4 log-scaled rungs + GT anchor band ──
+              const totalContracts = stats.totalContracts || 3_058_286
+              const highCriticalCount = stats.highCriticalCount || 337_693
+              const tier2 = ariaStats?.latest_run?.tier2_count ?? 1_490
+              const tier3 = ariaStats?.latest_run?.tier3_count ?? 5_578
+              const aria23 = tier2 + tier3
+              const tier1 = ariaStats?.latest_run?.tier1_count ?? 299
+              // Use the canonical fallback constant — the caseStats API
+              // sometimes returns the small "hero cases" subset (43) instead
+              // of the full GT vendor count, so we floor at the constant.
+              const gtVendors = Math.max(
+                caseStats?.total_cases ?? 0,
+                GROUND_TRUTH_VENDOR_COUNT_FALLBACK,
               )
-              // Fixed total height — both columns lock to ROWS×ROW_H so the
-              // SVG's 5 evenly-spaced stage ticks (PAD_T + (CH/4)×i) sit at
-              // the SAME Y as the 5 list rows. Each list row is a flex
-              // container with items-center, so the row's text baseline ↔
-              // the SVG tick share an exact y center.
-              const ROW_H = 56
-              const TOTAL_H = ROW_H * 5
+
+              type Rung = {
+                count: number
+                pct: number
+                drop: number | null // null on rung 0; ratio to previous on rungs 1+
+                label: { en: string; es: string }
+                operation: { en: string; es: string } | null // filter caption BELOW this rung
+                href: string
+              }
+
+              const rungs: Rung[] = [
+                {
+                  count: totalContracts,
+                  pct: 100,
+                  drop: null,
+                  label: { en: 'COMPRANET universe · 2002–2025', es: 'Universo COMPRANET · 2002–2025' },
+                  operation: {
+                    en: '↓ filter by risk model v0.8.5 (≥0.40)',
+                    es: '↓ filtrar por modelo de riesgo v0.8.5 (≥0.40)',
+                  },
+                  href: '/contracts',
+                },
+                {
+                  count: highCriticalCount,
+                  pct: (highCriticalCount / totalContracts) * 100,
+                  drop: totalContracts / highCriticalCount,
+                  label: { en: 'High + critical contracts', es: 'Contratos alto + crítico' },
+                  operation: {
+                    en: '↓ aggregate to vendor, apply ARIA patterns P1–P7',
+                    es: '↓ agregar a proveedor, aplicar patrones ARIA P1–P7',
+                  },
+                  href: '/aria',
+                },
+                {
+                  count: aria23,
+                  pct: (aria23 / totalContracts) * 100,
+                  drop: highCriticalCount / aria23,
+                  label: { en: 'ARIA queue · tiers 2 + 3', es: 'Cola ARIA · niveles 2 + 3' },
+                  operation: {
+                    en: '↓ co-cluster GT, manual triage, capacity cap',
+                    es: '↓ co-agrupar con GT, triaje manual, tope de capacidad',
+                  },
+                  href: '/aria?tier=2,3',
+                },
+                {
+                  count: tier1,
+                  pct: (tier1 / totalContracts) * 100,
+                  drop: aria23 / tier1,
+                  label: { en: 'Tier 1 · hand-investigable today', es: 'Nivel 1 · investigable a mano hoy' },
+                  operation: null,
+                  href: '/aria?tier=1',
+                },
+              ]
+
+              // Log-scale bar widths. log10(maxCount) is full width; log10(count)
+              // is normalized against it. Floor at 4% so the smallest rung still
+              // reads as a bar (otherwise 299 renders as a 0.5% slice and
+              // disappears next to 3.05M).
+              const maxLog = Math.log10(totalContracts)
+              const barWidth = (n: number) => {
+                const w = (Math.log10(Math.max(1, n)) / maxLog) * 100
+                return Math.max(4, Math.min(100, w))
+              }
+
+              const fmtPct = (p: number) => {
+                if (p >= 10) return `${p.toFixed(1)}%`
+                if (p >= 1) return `${p.toFixed(2)}%`
+                if (p >= 0.01) return `${p.toFixed(3)}%`
+                return `${p.toFixed(4)}%`
+              }
+              const fmtDrop = (d: number) => {
+                if (d >= 100) return `${Math.round(d)}×`
+                if (d >= 10) return `${d.toFixed(0)}×`
+                return `${d.toFixed(1)}×`
+              }
+
               return (
-                <div className="flex flex-row items-start gap-6" style={{ height: TOTAL_H }}>
-                  {/* Lens — width fixed, height locked to TOTAL_H. SVG fills
-                      via preserveAspectRatio="none" so 5 stages map 1:1 to
-                      the 5 list rows on the right. */}
-                  <div className="flex-shrink-0" style={{ width: 220, height: TOTAL_H }}>
-                    <LensVisualization tiers={lensTiers} lang={lang} />
+                <div className="relative">
+                  {/* Axis hint — top-right, archival caption */}
+                  <div className="flex items-center justify-end mb-3">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted opacity-75">
+                      {lang === 'en'
+                        ? 'logarithmic scale · width = log₁₀(count)'
+                        : 'escala logarítmica · ancho = log₁₀(conteo)'}
+                    </span>
                   </div>
 
-                  {/* Right-side tier list — 5 equal-height rows, each centered
-                      vertically so the dot/number lines up with the SVG tick. */}
-                  <div className="flex-1 flex flex-col min-w-0">
-                    {lensTiers.map((t, i) => (
-                      <motion.a
-                        key={i}
-                        href={t.href}
-                        className="group flex items-center"
-                        style={{ height: ROW_H }}
-                        initial={{ opacity: 0, x: 8 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
-                      >
-                        <div className="flex flex-col w-full">
-                          <div className="flex items-center gap-3">
+                  {/* Four rungs */}
+                  <ol className="relative">
+                    {rungs.map((r, i) => {
+                      const w = barWidth(r.count)
+                      return (
+                        <motion.li
+                          key={i}
+                          initial={{ opacity: 0, x: -6 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true, margin: '-30px' }}
+                          transition={{ duration: 0.42, delay: 0.1 + i * 0.12, ease: 'easeOut' }}
+                          className="relative"
+                        >
+                          {/* Rung row */}
+                          <a
+                            href={r.href}
+                            className="group grid items-baseline gap-x-4 py-2 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                            style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}
+                            aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
+                          >
+                            {/* Count — Playfair Italic 800 anchor */}
                             <span
-                              className="rounded-full flex-shrink-0"
+                              className="tabular-nums leading-none text-right pr-1"
                               style={{
-                                width: t.filled ? 12 : 9,
-                                height: t.filled ? 12 : 9,
-                                background: t.filled ? t.color : 'transparent',
-                                border: t.filled ? 'none' : `1.6px solid ${t.color}`,
-                                boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
-                              }}
-                            />
-                            <span
-                              className="font-mono font-bold tabular-nums leading-none"
-                              style={{
-                                // Reduced font sizes 2026-05-05: previous 22/18/16
-                                // pushed the label past the column width and wrapped
-                                // 'documented corruption cases' to 2 lines, drifting
-                                // the dot up. Now 18/15/14 keeps everything on one line.
-                                fontSize: i === 4 ? 18 : i === 0 ? 15 : 14,
-                                color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
+                                fontFamily: "'Playfair Display', Georgia, serif",
+                                fontStyle: 'italic',
+                                fontWeight: 800,
+                                fontSize: i === 0 ? 28 : 26,
+                                color: 'var(--color-text-primary)',
                               }}
                             >
-                              {t.display}
+                              {formatNumber(r.count)}
                             </span>
-                            <span className="text-[10px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight whitespace-nowrap overflow-hidden text-ellipsis min-w-0">
-                              {t.label[lang]}
+
+                            {/* Log-scaled bar + label stack */}
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <div className="relative h-[7px] w-full rounded-sm overflow-hidden" style={{ background: 'rgba(160, 104, 32, 0.10)' }}>
+                                <motion.div
+                                  className="absolute inset-y-0 left-0 rounded-sm"
+                                  initial={{ width: 0 }}
+                                  whileInView={{ width: `${w}%` }}
+                                  viewport={{ once: true }}
+                                  transition={{ duration: 0.7, delay: 0.18 + i * 0.12, ease: 'easeOut' }}
+                                  style={{ background: '#a06820', opacity: 0.88 }}
+                                />
+                              </div>
+                              <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.3] truncate">
+                                {r.label[lang]}
+                              </div>
+                            </div>
+
+                            {/* Percentage readout */}
+                            <span className="font-mono tabular-nums text-[11px] text-text-secondary text-right group-hover:text-text-primary transition-colors">
+                              {fmtPct(r.pct)}
                             </span>
-                          </div>
-                          <div className="text-[9px] text-text-muted ml-[24px] leading-[1.3] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                            {t.sublabel[lang]}
-                          </div>
+                          </a>
+
+                          {/* Filter-operation caption between this rung and next */}
+                          {r.operation && (
+                            <div className="grid gap-x-4 py-1.5" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
+                              <span /> {/* spacer for count column */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className="text-[10.5px] leading-[1.4] truncate"
+                                  style={{
+                                    fontFamily: "'Playfair Display', Georgia, serif",
+                                    fontStyle: 'italic',
+                                    color: 'var(--color-text-secondary)',
+                                    opacity: 0.85,
+                                  }}
+                                >
+                                  {r.operation[lang]}
+                                </span>
+                              </div>
+                              {/* × drop readout, paired with the operation */}
+                              {rungs[i + 1]?.drop != null && (
+                                <span className="font-mono tabular-nums text-[9.5px] text-right" style={{ color: '#a06820', opacity: 0.75, letterSpacing: '0.06em' }}>
+                                  ··· {fmtDrop(rungs[i + 1].drop as number)} {lang === 'en' ? 'drop' : 'caída'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </motion.li>
+                      )
+                    })}
+                  </ol>
+
+                  {/* GT anchor band — sub-baseline, dotted-rule separator */}
+                  <motion.a
+                    href="/cases"
+                    initial={{ opacity: 0, y: 4 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-30px' }}
+                    transition={{ duration: 0.4, delay: 0.7 }}
+                    className="group block mt-5 pt-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    style={{ borderTop: '1px dashed rgba(160, 104, 32, 0.45)' }}
+                    aria-label={lang === 'en'
+                      ? `43 documented cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
+                      : `43 casos documentados · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
+                  >
+                    <div className="grid items-baseline gap-x-4" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
+                      {/* Eyebrow + count, indented to align under count column */}
+                      <div className="flex flex-col gap-1 items-end pr-1">
+                        <span className="text-[8.5px] font-mono uppercase tracking-[0.18em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                          {lang === 'en' ? 'Anchor' : 'Ancla'}
+                        </span>
+                        <span
+                          className="tabular-nums leading-none"
+                          style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                            fontStyle: 'italic',
+                            fontWeight: 800,
+                            fontSize: 22,
+                            color: '#a06820',
+                            opacity: 0.85,
+                          }}
+                        >
+                          43
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.14em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                          {lang === 'en' ? 'Training corpus' : 'Corpus de entrenamiento'}
                         </div>
-                      </motion.a>
-                    ))}
-                  </div>
+                        <div className="text-[11px] text-text-secondary group-hover:text-text-primary transition-colors leading-[1.4]">
+                          {lang === 'en'
+                            ? <>43 documented · <span className="tabular-nums">{formatNumber(gtVendors)}</span> GT vendors</>
+                            : <>43 documentados · <span className="tabular-nums">{formatNumber(gtVendors)}</span> proveedores GT</>}
+                        </div>
+                        <div
+                          className="text-[10px] leading-[1.4] mt-0.5"
+                          style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                            fontStyle: 'italic',
+                            color: 'var(--color-text-muted)',
+                            opacity: 0.85,
+                          }}
+                        >
+                          {lang === 'en' ? '← informs every filter above' : '← informa todos los filtros anteriores'}
+                        </div>
+                      </div>
+                      <span className="font-mono tabular-nums text-[9.5px] text-right uppercase tracking-[0.12em] text-text-muted self-start">
+                        {lang === 'en' ? 'seed' : 'semilla'}
+                      </span>
+                    </div>
+                  </motion.a>
                 </div>
               )
             })()}
