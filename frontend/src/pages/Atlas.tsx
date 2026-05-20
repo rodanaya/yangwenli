@@ -1512,16 +1512,17 @@ export default function Atlas() {
   // will be removed one by one.
   const handleRailYearChange = (idx: number) => setYearIndex(idx)
   const handleRailPlayChange = (playing: boolean) => setIsPlaying(playing)
-  const handleRailVendorSearch = (query: string) => {
-    // Proxy into the existing VendorSearchBox logic by finding a match
+  const handleRailVendorSearch = (query: string): string | null => {
+    // Proxy into the existing VendorSearchBox logic by finding a match.
+    // Returns the cluster code so the rail can auto-zoom into it (M-OBS P5).
     const matches = searchKnownVendors(query)
-    if (matches[0]) {
-      if (mode === 'sexenios') setMode('patterns')
-      const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
-      setPinnedCode(code)
-      setFoundVendor(matches[0])
-      setSelectedClusterCode(code)
-    }
+    if (!matches[0]) return null
+    if (mode === 'sexenios') setMode('patterns')
+    const code = vendorToClusterCode(matches[0], mode === 'sexenios' ? 'patterns' : mode)
+    setPinnedCode(code)
+    setFoundVendor(matches[0])
+    setSelectedClusterCode(code)
+    return code
   }
   const handleRailStoryOpen = (storyId: string) => {
     const story = ATLAS_STORIES.find((s) => s.id === storyId)

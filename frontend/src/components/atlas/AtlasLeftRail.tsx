@@ -74,8 +74,10 @@ export interface AtlasLeftRailProps {
   isPlaying: boolean
   onYearChange: (index: number) => void
   onPlayChange: (playing: boolean) => void
-  // Vendor search bridge — proxied into Atlas.tsx's VendorSearchBox logic
-  onVendorSearchPick: (query: string) => void
+  // Vendor search bridge — proxied into Atlas.tsx's VendorSearchBox logic.
+  // Returns the matched cluster code so the rail can dispatch zoom-into-cluster
+  // and fly the user to the right place; returns null when no match.
+  onVendorSearchPick: (query: string) => string | null | void
   // Story bridge — opens ATLAS_STORIES narratives in Atlas.tsx
   onStoryOpen: (storyId: string) => void
   // Reset all filters
@@ -444,8 +446,13 @@ export function AtlasLeftRail({
               onChange={(e) => setVendorQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && vendorQuery.trim().length >= 2) {
-                  onVendorSearchPick(vendorQuery.trim())
+                  const code = onVendorSearchPick(vendorQuery.trim())
                   setVendorQuery('')
+                  // Auto-zoom into the matched cluster so the user lands at the
+                  // right place instead of just having it pinned in the background.
+                  if (typeof code === 'string' && code.length > 0) {
+                    dispatch({ type: 'zoom-into-cluster', code })
+                  }
                 }
               }}
               placeholder={lang === 'en' ? 'Toka, Edenred, IMSS…' : 'Toka, Edenred, IMSS…'}
