@@ -37,6 +37,15 @@ import {
   useCurrentFocus,
   type Focus,
 } from './ExploreState'
+import {
+  Z_EASE,
+  Z_LAYOUT_DURATION_S,
+  Z_CELL_ENTRANCE_S,
+  Z_BAND_S,
+  Z_CASCADE_STEP_S,
+  Z_CELL_STAGGER_S,
+  Z_TREEMAP_DELAY_S,
+} from './ZPrimitives'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Layout — independent of the legacy constellation
@@ -856,18 +865,9 @@ function isLightSectorColor(hex: string): boolean {
   return luminanceOfHex(hex) > 0.55
 }
 
-// ── Animation language (Z0 → Z1-Z4 canon) ─────────────────────────────────
-// One easing family across the entire Explore canvas. Set here so Z1+ can
-// import the same constants when they're redesigned. The 720ms / expoOut
-// couple is the platform heartbeat for "data was re-asked a different
-// question" — sort toggles, filter changes, sector re-pivots.
-const Z_EASE = [0.16, 1, 0.3, 1] as const
-const Z_LAYOUT_DURATION_S = 0.72   // sort-toggle treemap rearrangement
-const Z_CELL_ENTRANCE_S = 0.42     // per-cell fade+scale on first paint
-const Z_BAND_S = 0.32              // header band (kicker, stats, sort)
-const Z_CASCADE_STEP_S = 0.12      // ~120ms between header bands
-const Z_CELL_STAGGER_S = 0.006     // 6ms light-sweep stagger across cells
-const Z_TREEMAP_DELAY_S = 0.24     // band cascade lands the treemap third
+// Animation canon now lives in ZPrimitives — imported below alongside the
+// shared breadcrumb / kicker / pull-line / sort-toggle primitives used by
+// Z1-Z4. Z0 imports the same constants to keep a single source of truth.
 
 function Z0Panel({
   lang,
