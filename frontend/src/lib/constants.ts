@@ -160,7 +160,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-05-20-m-obs-p5-narrow-viewport-hotfix'
+export const BUILD_ID = '2026-05-20-dashboard-editorial-cascade-ledger'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
