@@ -199,7 +199,7 @@ export function VendorHero({
         <aside
           aria-labelledby="vendor-marginal-note"
           style={{
-            borderLeft: '2px solid #a06820',
+            borderLeft: '2px solid var(--color-accent)',
             paddingLeft: '14px',
             paddingTop: '6px',
             paddingBottom: '6px',
@@ -214,7 +214,7 @@ export function VendorHero({
               fontSize: '9.5px',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
-              color: '#a06820',
+              color: 'var(--color-accent)',
               fontWeight: 500,
               fontStyle: 'italic',
               marginBottom: '6px',

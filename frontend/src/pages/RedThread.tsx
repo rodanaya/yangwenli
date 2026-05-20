@@ -885,7 +885,7 @@ function ThreadSkeleton({ label: _label, vendorName }: { label: string; vendorNa
           <div className="w-1 h-8 bg-risk-critical rounded-full animate-pulse" />
           <div className="space-y-1">
             {vendorName
-              ? <p className="text-sm font-mono text-text-primary">{vendorName}</p>
+              ? <p className="text-sm font-mono text-text-primary truncate max-w-[420px]" title={vendorName}>{formatVendorName(vendorName, 60)}</p>
               : <div className="h-4 w-48 bg-border animate-pulse rounded" />
             }
             <div className="h-3 w-32 bg-border/60 animate-pulse rounded" />
