@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import i18n from '@/i18n'
 import { MAX_CONTRACT_VALUE, FLAG_THRESHOLD } from './constants'
+import { getExchangeRate } from './exchangeRates'
 
 
 /**
@@ -72,6 +73,45 @@ export function formatCompactMXN(amount: number): string {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M MXN`
   if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K MXN`
   return formatMXN(amount)
+}
+
+/**
+ * Format an MXN amount as a compact USD figure using the current MXN/USD rate.
+ * For inflation-adjusted historical-year conversions, use toReal2024USD instead.
+ *
+ * Examples (rate ≈ 20.10):
+ *   9_900_000_000_000 → "US$493B"
+ *   1_200_000_000_000 → "US$60B"
+ *   582_200_000_000   → "US$29B"
+ *   100_000_000       → "US$5M"
+ */
+export function formatCompactUSD(amountMXN: number): string {
+  const rate = getExchangeRate()
+  const usd = amountMXN / rate
+
+  if (usd >= 1e12) return `US$${(usd / 1e12).toFixed(1)}T`
+  if (usd >= 1e9)  return `US$${(usd / 1e9).toFixed(0)}B`
+  if (usd >= 1e6)  return `US$${(usd / 1e6).toFixed(0)}M`
+  if (usd >= 1e3)  return `US$${(usd / 1e3).toFixed(0)}K`
+  return `US$${Math.round(usd)}`
+}
+
+/**
+ * Format an MXN amount with an inline USD companion for impact, locale-aware.
+ *
+ * EN: "9.9T MXN · ≈US$493B"  — inline USD provides instant scale for foreign readers
+ * ES: "9.9 billones MXN"     — Mexican audience reads MXN natively, no USD clutter
+ *
+ * Breaks the legacy "never inline both units" rule on purpose: the dashboard
+ * headline numbers need impact, and hover-only USD doesn't carry on first read.
+ */
+export function formatDualCurrency(amountMXN: number): string {
+  const mxn = formatCompactMXN(amountMXN)
+  const lang = i18n.language || 'en'
+  if (lang.startsWith('es')) return mxn
+
+  const usd = formatCompactUSD(amountMXN)
+  return `${mxn} · ≈${usd}`
 }
 
 /**
@@ -346,9 +386,12 @@ export const MXN_USD_RATES: Record<number, number> = {
 }
 
 /**
- * Format a MXN amount as compact USD using year-specific exchange rate
+ * Format a MXN amount as compact USD using year-specific exchange rate.
+ * Use when a contract's historical year matters (e.g. converting 2002 pesos
+ * at the 2002 rate rather than today's). For "today's-rate" scale companions
+ * on headline numbers, use formatCompactUSD() instead.
  */
-export function formatCompactUSD(amountMXN: number, year?: number): string {
+export function formatCompactUSDByYear(amountMXN: number, year?: number): string {
   const rate = year ? (MXN_USD_RATES[year] || 17.2) : 17.2
   const usd = amountMXN / rate
   if (usd >= 1e12) return `$${(usd / 1e12).toFixed(1)}T USD`

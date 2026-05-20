@@ -24,7 +24,7 @@ import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
@@ -254,8 +254,12 @@ export default function Executive() {
 
   // ─── Headline numbers — each tile has a unique editorial micro-viz ──────
   // Localized: Spanish uses "billones" for 10¹² and "MDP" for millions.
+  const TOTAL_SPEND_MXN = 9_900_000_000_000
   const headlineSpend = lang === 'es' ? '9.9 billones' : '9.9T'
   const spendCurrencyLabel = 'MXN'
+  // English-only USD companion — surfaces foreign-reader scale alongside MXN.
+  // Spanish stays MXN-only (Mexican audience reads pesos natively).
+  const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
   // Per-tile descriptors below are inlined into the editorial cards JSX
   // so they can each have a distinctive micro-visualization and layout.
 
@@ -564,229 +568,320 @@ export default function Executive() {
             chart above already carries the 74% headline + the trend; the
             duplicated giant Playfair number was redundant. */}
 
-        {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
-            micro-visualization. Replaces the bland mono-stat tile grid.
-            E5: PlateFrame replaces the standalone eyebrow + amber divider. ─── */}
+        {/* ─── HEADLINE NUMBERS — investigative sequence (4 chapters)
+            Reads as one argument: spend → bypass → flag → catch.
+            Each tile carries a chapter kicker (I/II/III/IV) and a tail
+            connector ("of which …") that ties to the next step. ─── */}
         <section className="mb-12">
           <PlateFrame
             lang={lang}
             folio="V"
             contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
             caption={lang === 'en'
-              ? 'Plate — Four anchor figures from the 2002–2025 record: total spend, direct awards, high+critical share, model accuracy.'
-              : 'Lámina — Cuatro cifras ancla del registro 2002–2025: gasto total, adjudicación directa, alto+crítico, precisión del modelo.'}
+              ? 'Plate — Four chapters of the federal-procurement record, read left-to-right: total spend, the bypass, the flag, the catch.'
+              : 'Lámina — Cuatro capítulos del registro federal, leídos de izquierda a derecha: el gasto, el desvío, la marca, la captura.'}
           >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {(() => {
+            // Chapter-marker rail: one Roman per step, sitting above the tile.
+            // Each marker carries the tile's accent color so the eye can map
+            // marker → tile at a glance. Tail captions ("of which 75% …") on
+            // the right edge of each marker hand off to the next chapter.
+            type Step = {
+              roman: string
+              accent: string
+              kicker: { en: string; es: string }
+              tail: { en: string; es: string } | null
+              story: string
+              ariaLabel: { en: string; es: string }
+            }
+            const steps: Step[] = [
+              {
+                roman: 'I',
+                accent: '#a06820',
+                kicker: { en: 'The spend', es: 'El gasto' },
+                tail:   { en: 'of which —', es: 'del cual —' },
+                story: '/stories/el-gran-precio',
+                ariaLabel: { en: 'Read: The Bigger the Contract the Higher the Risk', es: 'Leer: A Mayor Contrato, Mayor Riesgo' },
+              },
+              {
+                roman: 'II',
+                accent: '#dc2626',
+                kicker: { en: 'The bypass', es: 'El desvío' },
+                tail:   { en: 'inside that bypass —', es: 'dentro de ese desvío —' },
+                story: '/stories/marea-de-adjudicaciones',
+                ariaLabel: { en: 'Read: The Direct Award Tide', es: 'Leer: La Marea de las Adjudicaciones' },
+              },
+              {
+                roman: 'III',
+                accent: '#f59e0b',
+                kicker: { en: 'The flag', es: 'La marca' },
+                tail:   { en: 'and the catch —', es: 'y la captura —' },
+                story: '/stories/el-sexenio-del-riesgo',
+                ariaLabel: { en: 'Read: The Era of Risk', es: 'Leer: El Sexenio del Riesgo' },
+              },
+              {
+                roman: 'IV',
+                accent: 'var(--color-text-primary)',
+                kicker: { en: 'The catch', es: 'La captura' },
+                tail: null,
+                story: '/stories/volatilidad-el-precio-del-riesgo',
+                ariaLabel: { en: 'Read: Price Volatility — The Algorithm\'s Smoking Gun', es: 'Leer: Volatilidad — El Precio del Riesgo' },
+              },
+            ]
 
-            {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
-                Click anchors to el-gran-precio (the big-contract risk story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#a06820' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              onClick={() => navigate('/stories/el-gran-precio')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Bigger the Contract the Higher the Risk' : 'Leer: A Mayor Contrato, Mayor Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-gran-precio') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 36,
-                  color: '#a06820',
-                }}
+            const ChapterRail = ({ step, delay }: { step: Step; delay: number }) => (
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay }}
               >
-                {headlineSpend}
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
-              </div>
-              {/* Mini-viz: stacked yearly cubes scaled by spend */}
-              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
-                {Array.from({ length: 23 }).map((_, i) => {
-                  const w = 7
-                  const gap = 1.5
-                  const x = i * (w + gap)
-                  // Variable height to suggest 23 yearly chunks
-                  const heights = [10, 11, 12, 13, 14, 15, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20, 20, 20, 19, 22, 21, 19, 14]
-                  const h = heights[i] ?? 14
-                  return <rect key={i} x={x} y={22 - h} width={w} height={h} fill="#a06820" fillOpacity={0.55} rx={1} />
-                })}
-              </svg>
-              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
-                {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
-              </div>
-            </motion.div>
+                <div className="flex items-baseline gap-2.5">
+                  <span
+                    className="leading-none tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: 22,
+                      color: step.accent,
+                    }}
+                  >
+                    {step.roman}
+                  </span>
+                  <span className="h-[2px] flex-1" style={{ background: step.accent, opacity: 0.55 }} />
+                  <span className="text-[9.5px] font-mono uppercase tracking-[0.18em]" style={{ color: step.accent, opacity: 0.95 }}>
+                    {lang === 'en' ? step.kicker.en : step.kicker.es}
+                  </span>
+                </div>
+                {step.tail && (
+                  <div className="hidden lg:block absolute -right-3 top-0 h-full pointer-events-none">
+                    <div className="flex items-center h-full">
+                      <span className="text-[9px] font-mono italic text-text-muted whitespace-nowrap pr-1">
+                        {lang === 'en' ? step.tail.en : step.tail.es}
+                      </span>
+                      <span className="text-text-muted text-[12px] leading-none">→</span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )
 
-            {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip
-                Click anchors to marea-de-adjudicaciones (canonical DA story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-critical focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#dc2626' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.11 }}
-              onClick={() => navigate('/stories/marea-de-adjudicaciones')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Direct Award Tide' : 'Leer: La Marea de las Adjudicaciones'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/marea-de-adjudicaciones') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 44,
-                  color: '#dc2626',
-                }}
-              >
-                75<span className="text-[24px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
-              </div>
-              {/* Mini-viz: 100 dots, 75 red (DA), 25 muted (competitive) — with green ceiling marker at 30 */}
-              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
-                {Array.from({ length: 100 }).map((_, i) => {
-                  const cols = 25
-                  const col = i % cols
-                  const row = Math.floor(i / cols)
-                  const cx = 4 + col * 7.5
-                  const cy = 4 + row * 5
-                  const isDA = i < 75
-                  return (
-                    <circle key={i} cx={cx} cy={cy} r={1.6}
-                      fill={isDA ? '#dc2626' : 'var(--color-border-hover)'}
-                      fillOpacity={isDA ? 0.85 : 0.55} />
-                  )
-                })}
-                {/* OECD ceiling marker — vertical green line at the 30% mark */}
-                <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
-                  stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
-              </svg>
-              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
-                {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
-              </div>
-            </motion.div>
+            // Shared tile chrome — a single panel with the accent moved to the
+            // chapter rail above, not the tile's left edge. The bottom hairline
+            // unifies the row visually.
+            const tileBase =
+              'relative cursor-pointer group p-5 pt-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2'
 
-            {/* Tile 3 — High+Critical with risk distribution bar
-                Click anchors to el-sexenio-del-riesgo (the riskiest era). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-high focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#f59e0b' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.17 }}
-              onClick={() => navigate('/stories/el-sexenio-del-riesgo')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Era of Risk' : 'Leer: El Sexenio del Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-sexenio-del-riesgo') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 36,
-                  color: '#f59e0b',
-                }}
-              >
-                {formatNumber(stats.highCriticalCount)}
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
-              </div>
-              {/* Mini-viz: stacked 100% bar showing risk distribution */}
-              <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
-                <div style={{ width: '5.20%', background: '#dc2626', opacity: 0.85 }} />
-                <div style={{ width: '5.90%', background: '#f59e0b', opacity: 0.85 }} />
-                <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
-                <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
-              </div>
-              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-                <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
-                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
-              </div>
-            </motion.div>
-
-            {/* Tile 4 — Model AUC with quality scale (vs random=0.5, perfect=1.0)
-                Click anchors to volatilidad (the model methodology story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[color:var(--color-text-muted)] focus-visible:outline-offset-2"
-              style={{ borderLeftColor: 'var(--color-text-muted)' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.23 }}
-              onClick={() => navigate('/stories/volatilidad-el-precio-del-riesgo')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: Price Volatility — The Algorithm\'s Smoking Gun' : 'Leer: Volatilidad — El Precio del Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/volatilidad-el-precio-del-riesgo') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 44,
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                {/* 2026-05-12 (Audit V009): caption read v0.8.5 but the
-                    number was the v0.6.5 test AUC. Updated to the
-                    v0.8.5 trained-2026-05-02 value (0.785). The scale
-                    width math also rebased: (0.785 − 0.5)/0.5 = 57%. */}
-                0.785
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
-              </div>
-              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.785 */}
-              <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                {/* Filled portion from 0.5 to 0.785 — that's 57% of the scale */}
+            // Wrap each "column" so the chapter rail and tile share width.
+            const ColumnFrame = ({ children, step, onActivate, ariaLabel }: {
+              children: React.ReactNode
+              step: Step
+              onActivate: () => void
+              ariaLabel: string
+            }) => (
+              <div className="relative flex flex-col">
+                <ChapterRail step={step} delay={0.05 + steps.indexOf(step) * 0.06} />
                 <div
-                  className="absolute inset-y-0 rounded-sm"
-                  style={{
-                    left: '0%',
-                    width: '57%',
-                    background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
-                    opacity: 0.65,
-                  }}
-                />
-                {/* Tick marker at exactly 0.785 (=57%) */}
-                <div
-                  className="absolute top-0 bottom-0 w-[2px]"
-                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
-                />
-                <div
-                  className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
-                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
-                />
+                  className={`${tileBase} surface-card rounded-sm mt-2 hover:shadow-lg`}
+                  onClick={onActivate}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onActivate() }}
+                  tabIndex={0}
+                  role="link"
+                  aria-label={ariaLabel}
+                  style={{ outlineColor: step.accent }}
+                >
+                  {/* drop-line fusing chapter rail to tile (lg only — on
+                      stacked layouts the rail already sits flush above) */}
+                  <span
+                    className="hidden lg:block absolute -top-2 left-0 w-[2px] h-2"
+                    style={{ background: step.accent, opacity: 0.55 }}
+                    aria-hidden="true"
+                  />
+                  {children}
+                </div>
               </div>
-              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
-                <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
-              </div>
-            </motion.div>
+            )
 
-          </div>
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+
+                {/* Chapter I — The Spend */}
+                <ColumnFrame
+                  step={steps[0]}
+                  onActivate={() => navigate(steps[0].story)}
+                  ariaLabel={lang === 'en' ? steps[0].ariaLabel.en : steps[0].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: '#a06820',
+                    }}
+                  >
+                    {headlineSpend}
+                  </div>
+                  {headlineSpendUSD && (
+                    <div className="font-mono text-[11px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.85 }}>
+                      {headlineSpendUSD}
+                    </div>
+                  )}
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                    {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
+                  </div>
+                  <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                    {Array.from({ length: 23 }).map((_, i) => {
+                      const w = 7
+                      const gap = 1.5
+                      const x = i * (w + gap)
+                      const heights = [10, 11, 12, 13, 14, 15, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20, 20, 20, 19, 22, 21, 19, 14]
+                      const h = heights[i] ?? 14
+                      return <rect key={i} x={x} y={22 - h} width={w} height={h} fill="#a06820" fillOpacity={0.55} rx={1} />
+                    })}
+                  </svg>
+                  <div className="mt-2.5 pt-1.5 text-[9px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter II — The Bypass */}
+                <ColumnFrame
+                  step={steps[1]}
+                  onActivate={() => navigate(steps[1].story)}
+                  ariaLabel={lang === 'en' ? steps[1].ariaLabel.en : steps[1].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: '#dc2626',
+                    }}
+                  >
+                    75<span className="text-[26px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
+                  </div>
+                  <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                    {Array.from({ length: 100 }).map((_, i) => {
+                      const cols = 25
+                      const col = i % cols
+                      const row = Math.floor(i / cols)
+                      const cx = 4 + col * 7.5
+                      const cy = 4 + row * 5
+                      const isDA = i < 75
+                      return (
+                        <circle key={i} cx={cx} cy={cy} r={1.6}
+                          fill={isDA ? '#dc2626' : 'var(--color-border-hover)'}
+                          fillOpacity={isDA ? 0.85 : 0.55} />
+                      )
+                    })}
+                    <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
+                      stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
+                  </svg>
+                  <div className="mt-2.5 pt-1.5 text-[9px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter III — The Flag */}
+                <ColumnFrame
+                  step={steps[2]}
+                  onActivate={() => navigate(steps[2].story)}
+                  ariaLabel={lang === 'en' ? steps[2].ariaLabel.en : steps[2].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 40,
+                      color: '#f59e0b',
+                    }}
+                  >
+                    {formatNumber(stats.highCriticalCount)}
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
+                  </div>
+                  <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
+                    <div style={{ width: '5.20%', background: '#dc2626', opacity: 0.85 }} />
+                    <div style={{ width: '5.90%', background: '#f59e0b', opacity: 0.85 }} />
+                    <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
+                    <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                    <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                    <span style={{ color: 'var(--color-risk-medium)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter IV — The Catch */}
+                <ColumnFrame
+                  step={steps[3]}
+                  onActivate={() => navigate(steps[3].story)}
+                  ariaLabel={lang === 'en' ? steps[3].ariaLabel.en : steps[3].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    0.785
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
+                  </div>
+                  <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                    <div
+                      className="absolute inset-y-0 rounded-sm"
+                      style={{
+                        left: '0%',
+                        width: '57%',
+                        background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
+                        opacity: 0.65,
+                      }}
+                    />
+                    <div
+                      className="absolute top-0 bottom-0 w-[2px]"
+                      style={{ left: '57%', background: 'var(--color-text-primary)' }}
+                    />
+                    <div
+                      className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
+                      style={{ left: '57%', background: 'var(--color-text-primary)' }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
+                    <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
+                    <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
+                  </div>
+                </ColumnFrame>
+
+              </div>
+            )
+          })()}
           </PlateFrame>
         </section>
 

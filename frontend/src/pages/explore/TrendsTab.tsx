@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import {
   cn,
   formatCompactMXN,
-  formatCompactUSD,
+  formatCompactUSDByYear,
   formatNumber,
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -363,7 +363,7 @@ export default function TrendsTab() {
           {selectedYearData ? formatCompactMXN(selectedYearData.value) : '--'}
           {selectedYearData && (
             <span className="text-text-muted font-normal text-xs ml-1">
-              (~{formatCompactUSD(selectedYearData.value, selectedYear)})
+              (~{formatCompactUSDByYear(selectedYearData.value, selectedYear)})
             </span>
           )}
         </span>
