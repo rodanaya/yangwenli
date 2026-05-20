@@ -28,7 +28,6 @@ import {
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
-import { formatEntityName } from '@/lib/entity/format'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
   getPinAnnotation,
@@ -45,6 +44,13 @@ import {
   Z_CASCADE_STEP_S,
   Z_CELL_STAGGER_S,
   Z_TREEMAP_DELAY_S,
+  ZBreadcrumb,
+  ZKickerBand,
+  ZPullLine,
+  ZFooterLink,
+  ZSortToggle,
+  useBandVariants,
+  type CrumbSegment,
 } from './ZPrimitives'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -611,75 +617,12 @@ void sectorApi
 
 // ────────────────────────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────────────────────────
-// Z1Panel — HTML overlay: editorial institution briefing for a sector
+// Z-level sort-key types (Z1 uses inline 'spend'|'risk' now; Z2 + Z3 below)
 // ────────────────────────────────────────────────────────────────────────────
 
-type Z1SortKey = 'risk' | 'spend' | 'contracts' | 'da_pct' | 'hr_pct' | 'sector_share'
 type Z2SortKey = 'risk' | 'spend' | 'contracts' | 'year'
 type Z3SortKey = 'amount' | 'year' | 'risk'
 type SortOrder = 'asc' | 'desc'
-
-function tierMark(risk: number): { glyph: string; color: string; label: string } {
-  if (risk >= 0.60) return { glyph: '◆', color: RISK_COLORS.critical, label: 'T1' }
-  if (risk >= 0.40) return { glyph: '◆', color: RISK_COLORS.high,     label: 'T2' }
-  if (risk >= 0.25) return { glyph: '●', color: RISK_COLORS.medium,   label: 'T3' }
-  return               { glyph: '●', color: '#71717a',                label: 'T4' }
-}
-
-function InstRow({
-  inst,
-  sectorShare,
-  lang: _lang,
-  dispatch,
-}: {
-  inst: SpatialInstitution
-  sectorShare: number
-  lang: 'en' | 'es'
-  dispatch: ReturnType<typeof useExploreDispatch>
-}) {
-  const tier = tierMark(inst.risk)
-  const riskScore = Math.round(inst.risk * 100)
-  const displayName = formatEntityName('institution', inst.name, 'full')
-  const da = inst.direct_award_pct
-  const hr = inst.high_risk_pct
-  return (
-    <tr
-      className="cursor-pointer transition-colors"
-      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-      onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
-    >
-      <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] font-bold whitespace-nowrap" style={{ color: tier.color }}>
-        {tier.glyph}{tier.label}
-      </td>
-      <td className="px-1 py-1.5" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-        <div className="font-mono text-[10px] font-medium" title={displayName} style={{ color: 'var(--color-text-primary)' }}>{displayName}</div>
-        <div style={{ marginTop: 3, height: 2, borderRadius: 1, background: 'var(--color-border)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${Math.min(sectorShare, 100)}%`, background: tier.color, borderRadius: 1, opacity: 0.7 }} />
-        </div>
-      </td>
-      <td className="px-1 py-1.5 text-right whitespace-nowrap">
-        <div className="font-mono text-[9px] tabular-nums" style={{ color: tier.color }}>{formatCompactMXN(inst.total_amount_mxn)}</div>
-        <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(inst.total_amount_mxn)}</div>
-      </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: tier.color }}>
-        {riskScore}
-      </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
-        {da != null ? `${da.toFixed(0)}%` : '—'}
-      </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: (hr ?? 0) > 10 ? RISK_COLORS.high : 'var(--color-text-muted)' }}>
-        {hr != null ? `${hr.toFixed(0)}%` : '—'}
-      </td>
-      <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
-        {formatNumber(inst.total_contracts)}
-      </td>
-      <td className="pr-3 pl-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
-        {sectorShare.toFixed(1)}%
-      </td>
-    </tr>
-  )
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z0Panel — El Reparto / The Spoils
@@ -1798,7 +1741,7 @@ function Z1Panel({
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['explore', 'z1', sectorId],
     queryFn: () => atlasApi.getSectorInstitutionsSpatial({ sectorId, limit: 60 }),
     enabled: sectorId > 0 && sectorId <= 12,
@@ -1808,181 +1751,320 @@ function Z1Panel({
   const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
   const institutions = data?.institutions ?? []
   const totalSectorSpend = institutions.reduce((s, i) => s + i.total_amount_mxn, 0)
+  const sectorName = lang === 'es' ? (data?.sector_name_es ?? sectorCode) : (data?.sector_name_en ?? sectorCode)
 
-  // Editorial dek: top N institutions' spend share
-  const top4Share = institutions.slice(0, 4).reduce((s, i) => s + i.total_amount_mxn, 0)
-  const top4Pct = totalSectorSpend > 0 ? (top4Share / totalSectorSpend * 100).toFixed(0) : '—'
+  // Editorial dek: top-3 concentration finding
+  const top3Share = institutions.slice(0, 3).reduce((s, i) => s + i.total_amount_mxn, 0)
+  const top3Pct = totalSectorSpend > 0 ? Math.round((top3Share / totalSectorSpend) * 100) : 0
+  const top1 = institutions[0]
+  const top1Pct = top1 && totalSectorSpend > 0 ? Math.round((top1.total_amount_mxn / totalSectorSpend) * 100) : 0
 
-  const [sortKey, setSortKey] = useState<Z1SortKey>('risk')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [routineOpen, setRoutineOpen] = useState(true)
+  const [mode, setMode] = useState<'spend' | 'risk'>('spend')
+  const [hoverId, setHoverId] = useState<number | null>(null)
+  const treemapRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ w: 1040, h: 480 })
+  const [isMobile, setIsMobile] = useState(false)
 
-  const handleSort = (key: Z1SortKey) => {
-    if (sortKey === key) setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
-    else { setSortKey(key); setSortOrder('desc') }
-  }
+  useEffect(() => {
+    const el = treemapRef.current
+    if (!el) return
+    const obs = new ResizeObserver(() => {
+      const w = el.clientWidth, h = el.clientHeight
+      if (w > 0 && h > 0) setSize({ w, h })
+      setIsMobile(w < 640)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
 
-  const sectorShareOf = (inst: SpatialInstitution) =>
-    totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const bandVariants = useBandVariants(prefersReducedMotion)
+  const layoutTransition = prefersReducedMotion ? { duration: 0 } : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
 
-  const sorted = [...institutions].sort((a, b) => {
-    const dir = sortOrder === 'desc' ? -1 : 1
-    switch (sortKey) {
-      case 'risk':         return dir * ((b.risk ?? 0) - (a.risk ?? 0))
-      case 'spend':        return dir * (b.total_amount_mxn - a.total_amount_mxn)
-      case 'contracts':    return dir * (b.total_contracts - a.total_contracts)
-      case 'da_pct':       return dir * ((b.direct_award_pct ?? 0) - (a.direct_award_pct ?? 0))
-      case 'hr_pct':       return dir * ((b.high_risk_pct ?? 0) - (a.high_risk_pct ?? 0))
-      case 'sector_share': return dir * (sectorShareOf(b) - sectorShareOf(a))
-      default:             return 0
-    }
-  })
-  const useShelf = sortKey === 'risk'
-  const shelfCritical = useShelf ? sorted.filter((i) => (i.risk ?? 0) >= 0.60) : []
-  const shelfHigh     = useShelf ? sorted.filter((i) => { const r = i.risk ?? 0; return r >= 0.40 && r < 0.60 }) : []
-  const shelfRoutine  = useShelf ? sorted.filter((i) => (i.risk ?? 0) < 0.40) : sorted
+  // Treemap items: take top 25 institutions; rest viewable via footer link
+  const TOP_N = 25
+  const MIN_AREA_FRACTION = 0.025
+  const visibleInstitutions = useMemo(() => {
+    const sorted = [...institutions].sort((a, b) => b.total_amount_mxn - a.total_amount_mxn)
+    return sorted.slice(0, TOP_N)
+  }, [institutions])
+
+  const cells = useMemo(() => {
+    if (visibleInstitutions.length === 0) return []
+    const rawValues = visibleInstitutions.map((i) =>
+      mode === 'risk'
+        ? Math.max(0, (i.risk ?? 0) * (i.total_amount_mxn || 1))
+        : Math.max(0, i.total_amount_mxn)
+    )
+    const rawTotal = rawValues.reduce((a, b) => a + b, 0) || 1
+    const floor = rawTotal * MIN_AREA_FRACTION
+    const treeItems = visibleInstitutions.map((inst, i) => ({
+      sectorId: inst.institution_id,
+      sectorCode: '', // unused here — we encode via institution_id
+      label: inst.name,
+      value: Math.max(rawValues[i], floor),
+      critical: 0,
+    }))
+    return layoutTreemap(treeItems, size.w, Math.max(200, size.h))
+  }, [visibleInstitutions, mode, size.w, size.h])
+
+  // Map institution_id → institution data so cell renderers can pull details
+  const instById = useMemo(() => {
+    const m = new Map<number, SpatialInstitution>()
+    for (const inst of visibleInstitutions) m.set(inst.institution_id, inst)
+    return m
+  }, [visibleInstitutions])
+
+  const crumbs: CrumbSegment[] = [
+    { label: lang === 'en' ? 'Spoils' : 'Reparto', onClick: () => dispatch({ type: 'reset-to-system' }) },
+    { label: sectorName, sectorCode },
+  ]
 
   return (
     <div
-      className="absolute inset-0 z-[5] overflow-y-auto"
+      className="absolute inset-0 z-[5] overflow-hidden flex flex-col"
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* Header — three-line pattern matching Z2/Z3 */}
-      <div
-        className="px-4 py-3 sticky top-0 border-b"
-        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="absolute inset-0 flex flex-col"
       >
-        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: sectorAccent }}>
-          {lang === 'en' ? 'Z1 · INSTITUTIONS' : 'Z1 · INSTITUCIONES'}
-        </div>
-        <div className="text-sm font-semibold mt-0.5 truncate" style={{ color: 'var(--color-text-primary)' }}>
-          {lang === 'en'
-            ? (data?.sector_name_en ?? sectorCode)
-            : (data?.sector_name_es ?? sectorCode)}
-        </div>
-        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-          {isLoading
-            ? '…'
-            : lang === 'en'
-              ? `${institutions.length} institutions · ${formatCompactMXN(totalSectorSpend)} · top 4 at ${top4Pct}%`
-              : `${institutions.length} instituciones · ${formatCompactMXN(totalSectorSpend)} · top 4 al ${top4Pct}%`}
-        </div>
-        {!isLoading && sortKey !== 'risk' && (
-          <div className="font-mono text-[8px] mt-0.5" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
-            {lang === 'en' ? `sorted by ${sortKey} · risk triage disabled` : `orden: ${sortKey} · análisis de riesgo desactivado`}
+        {/* Breadcrumb — replaces the "Z1 · INSTITUTIONS" debug kicker */}
+        <ZBreadcrumb segments={crumbs} lang={lang} />
+
+        {/* Editorial header — kicker + headline + stat band */}
+        <ZKickerBand
+          custom={0}
+          variants={bandVariants}
+          kicker={lang === 'en' ? `§ INSIDE ${sectorName.toUpperCase()}` : `§ DENTRO DE ${sectorName.toUpperCase()}`}
+          headline={
+            lang === 'en'
+              ? <>Who spends the <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> in {sectorName}</>
+              : <>Quién gasta los <em style={{ fontStyle: 'italic', fontWeight: 800 }}>{formatCompactMXN(totalSectorSpend)}</em> de {sectorName}</>
+          }
+          stat={
+            isLoading
+              ? '...'
+              : lang === 'en'
+                ? `${institutions.length} institutions · top 3 share ${top3Pct}%`
+                : `${institutions.length} instituciones · top 3 al ${top3Pct}%`
+          }
+        />
+
+        {/* Sort toggle band — band 1 in cascade */}
+        <motion.div
+          variants={bandVariants}
+          custom={1}
+          className="px-4 sm:px-6 pb-2 flex justify-end"
+        >
+          <ZSortToggle
+            modes={['spend', 'risk'] as const}
+            active={mode}
+            onChange={setMode}
+            riskMode="risk"
+            label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+          />
+        </motion.div>
+
+        {/* Treemap-in-frame — band 2.
+            The sector-colored 1px border carries layoutId="explore-cell-${sectorId}"
+            so framer-motion expands the Z0 sector cell into this frame on drill-in.
+            That is the spatial-continuity carrier across the zoom levels. */}
+        <motion.div
+          variants={bandVariants}
+          custom={2}
+          ref={treemapRef}
+          layoutId={`explore-cell-${sectorId}`}
+          transition={{ layout: layoutTransition }}
+          className="relative flex-1 min-h-0 mx-4 sm:mx-6 mb-3 rounded-sm overflow-hidden"
+          style={{
+            border: `1px solid ${sectorAccent}`,
+            background: hexToRgba(sectorAccent, 0.04),
+          }}
+        >
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'loading...' : 'cargando...'}
+            </div>
+          )}
+
+          {!isLoading && cells.length > 0 && !isMobile && (
+            <div className="absolute inset-0 p-2">
+              <div className="relative w-full h-full">
+                {cells.map((cell) => {
+                  const inst = instById.get(cell.sectorId)
+                  if (!inst) return null
+                  const risk = inst.risk ?? 0
+                  const riskTier = risk >= 0.60 ? 'critical' : risk >= 0.40 ? 'high' : risk >= 0.25 ? 'medium' : 'low'
+                  const baseColor = riskTier === 'critical' ? RISK_COLORS.critical
+                                  : riskTier === 'high' ? RISK_COLORS.high
+                                  : riskTier === 'medium' ? RISK_COLORS.medium
+                                  : sectorAccent
+                  const hovered = hoverId === inst.institution_id
+                  const opacity = riskTier === 'low' ? 0.30 : 0.50 + Math.min(1, risk / 0.8) * 0.4
+                  const fillBg = hexToRgba(baseColor, hovered ? opacity + 0.06 : opacity)
+                  const useDarkText = isLightSectorColor(baseColor)
+                  const textColor = useDarkText ? 'rgba(20,20,20,0.96)' : '#ffffff'
+                  const subTextColor = useDarkText ? 'rgba(20,20,20,0.72)' : 'rgba(255,255,255,0.82)'
+
+                  const eff = effectiveSiglas(inst.name, null)
+                  const acronym = shortInstitutionLabel(inst.name, eff)
+                  const logoSrc = logoSrcForSiglas(eff)
+                  const share = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+
+                  const cellArea = cell.w * cell.h
+                  const tier: 'xl' | 'l' | 'm' | 's' = cellArea >= 50_000 ? 'xl' : cellArea >= 20_000 ? 'l' : cellArea >= 8_000 ? 'm' : 's'
+
+                  return (
+                    <motion.div
+                      key={inst.institution_id}
+                      layout
+                      layoutId={`explore-inst-${inst.institution_id}`}
+                      transition={{ layout: layoutTransition }}
+                      whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.004, filter: 'brightness(1.05)', transition: { duration: 0.16, ease: Z_EASE } }}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.992 }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${inst.name} — ${formatCompactMXN(inst.total_amount_mxn)} · ${Math.round(risk * 100)}% risk`}
+                      onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name }) } }}
+                      onMouseEnter={() => setHoverId(inst.institution_id)}
+                      onMouseLeave={() => setHoverId(null)}
+                      style={{
+                        position: 'absolute',
+                        left: cell.x,
+                        top: cell.y,
+                        width: Math.max(0, cell.w - 3),
+                        height: Math.max(0, cell.h - 3),
+                        background: fillBg,
+                        borderRadius: 2,
+                        padding: tier === 'xl' ? '12px 14px' : tier === 'l' ? '10px 12px' : tier === 'm' ? '8px 10px' : '6px 8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        overflow: 'hidden',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      {/* Top row: logo + acronym + risk indicator */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        {tier !== 's' && (
+                          <InstitutionLogo
+                            logoSrc={logoSrc}
+                            acronym={acronym}
+                            fallbackBg={useDarkText ? 'rgba(20,20,20,0.12)' : 'rgba(255,255,255,0.18)'}
+                            fallbackColor={textColor}
+                          />
+                        )}
+                        <span
+                          className="font-mono uppercase tracking-[0.06em] flex-1 truncate"
+                          style={{ color: textColor, fontWeight: 700, fontSize: tier === 'xl' ? 13 : tier === 'l' ? 11 : 10 }}
+                          title={inst.name}
+                        >
+                          {acronym}
+                        </span>
+                      </div>
+
+                      {/* Bottom row: spend + share */}
+                      {tier !== 's' && (
+                        <div className="mt-auto">
+                          <div className="font-mono tabular-nums" style={{ fontSize: tier === 'xl' ? 13 : 11, fontWeight: 700, color: textColor, lineHeight: 1.1 }}>
+                            {formatCompactMXN(inst.total_amount_mxn)}
+                          </div>
+                          <div className="font-mono tabular-nums" style={{ fontSize: 9, color: subTextColor, lineHeight: 1.2 }}>
+                            {share.toFixed(1)}% · {Math.round(risk * 100)}% risk
+                          </div>
+                        </div>
+                      )}
+                      {tier === 's' && (
+                        <div className="flex flex-col h-full justify-between">
+                          <span className="font-mono uppercase tracking-[0.06em] truncate" style={{ color: textColor, fontWeight: 700, fontSize: 9 }} title={inst.name}>
+                            {acronym}
+                          </span>
+                          <div className="font-mono tabular-nums" style={{ fontSize: 9, color: textColor, fontWeight: 700, lineHeight: 1.1 }}>
+                            {share.toFixed(1)}%
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Mobile fallback — vertical ranked list of institution chips */}
+          {!isLoading && cells.length > 0 && isMobile && (
+            <div className="absolute inset-0 overflow-y-auto p-2 pb-8">
+              <ul role="list" className="space-y-1">
+                {visibleInstitutions.map((inst) => {
+                  const risk = inst.risk ?? 0
+                  const riskTier = risk >= 0.60 ? 'critical' : risk >= 0.40 ? 'high' : risk >= 0.25 ? 'medium' : 'low'
+                  const baseColor = riskTier === 'critical' ? RISK_COLORS.critical : riskTier === 'high' ? RISK_COLORS.high : riskTier === 'medium' ? RISK_COLORS.medium : sectorAccent
+                  const opacity = riskTier === 'low' ? 0.30 : 0.50 + Math.min(1, risk / 0.8) * 0.4
+                  const eff = effectiveSiglas(inst.name, null)
+                  const acronym = shortInstitutionLabel(inst.name, eff)
+                  const logoSrc = logoSrcForSiglas(eff)
+                  const share = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
+                  const useDarkText = isLightSectorColor(baseColor)
+                  const textColor = useDarkText ? 'rgba(20,20,20,0.96)' : '#ffffff'
+                  return (
+                    <li key={inst.institution_id}>
+                      <button
+                        type="button"
+                        onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
+                        className="w-full text-left rounded-sm flex items-center gap-2.5 p-2"
+                        style={{ background: hexToRgba(baseColor, opacity * 0.85), color: textColor }}
+                      >
+                        <InstitutionLogo
+                          logoSrc={logoSrc}
+                          acronym={acronym}
+                          fallbackBg={useDarkText ? 'rgba(20,20,20,0.12)' : 'rgba(255,255,255,0.18)'}
+                          fallbackColor={textColor}
+                        />
+                        <span className="font-mono uppercase tracking-[0.06em] flex-1 truncate" style={{ fontSize: 11, fontWeight: 700, color: textColor }} title={inst.name}>
+                          {acronym}
+                        </span>
+                        <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 11, fontWeight: 700, color: textColor }}>
+                          {formatCompactMXN(inst.total_amount_mxn)}
+                        </span>
+                        <span className="font-mono tabular-nums whitespace-nowrap" style={{ fontSize: 9, color: textColor, opacity: 0.78 }}>
+                          {share.toFixed(1)}%
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+        </motion.div>
+
+        {/* Pull-line — band 3 in cascade. Editorial finding from data. */}
+        {!isLoading && top1 && top1Pct >= 25 && (
+          <ZPullLine custom={3} variants={bandVariants}>
+            {lang === 'en'
+              ? <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> alone manages <strong className="font-semibold">{top1Pct}%</strong> of the sector's spend — more than the rest of the top 10 combined.</>
+              : <><strong className="font-semibold text-text-primary">{shortInstitutionLabel(top1.name, effectiveSiglas(top1.name, null))}</strong> sola maneja el <strong className="font-semibold">{top1Pct}%</strong> del gasto del sector — más que las siguientes nueve combinadas.</>}
+          </ZPullLine>
+        )}
+
+        {/* Footer — outbound link to /sectors/:code (full dossier) */}
+        {!isLoading && institutions.length > 0 && (
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en'
+                ? `Showing top ${visibleInstitutions.length} of ${institutions.length}`
+                : `Mostrando top ${visibleInstitutions.length} de ${institutions.length}`}
+            </span>
+            <ZFooterLink href={`/sectors/${sectorCode}`} lang={lang} />
           </div>
         )}
-      </div>
-
-      {isLoading && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'Loading…' : 'Cargando…'}
-        </div>
-      )}
-      {isError && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No institution data.' : 'Sin datos.'}
-        </div>
-      )}
-      {!isLoading && !isError && institutions.length === 0 && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No institutions found.' : 'Sin instituciones.'}
-        </div>
-      )}
-
-      {/* Sortable table */}
-      {!isLoading && !isError && institutions.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="sticky top-0" style={{ background: 'var(--color-background)', zIndex: 2, borderBottom: '1px solid var(--color-border)' }}>
-              <tr>
-                <th className="pl-3 pr-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-                  {lang === 'en' ? 'TIER' : 'NIVEL'}
-                </th>
-                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'INSTITUTION' : 'INSTITUCIÓN'}
-                </th>
-                <SortHeaderTh<Z1SortKey> field="spend" label={lang === 'en' ? 'SPEND / USD' : 'GASTO / USD'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
-                <SortHeaderTh<Z1SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z1SortKey> field="da_pct" label="DA%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z1SortKey> field="hr_pct" label="HR%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z1SortKey> field="contracts" label="CTR" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z1SortKey> field="sector_share" label="%" activeField={sortKey} order={sortOrder} onSort={handleSort} className="pr-3 pl-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-              </tr>
-            </thead>
-            <tbody>
-              {useShelf ? (
-                <>
-                  {shelfCritical.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
-                          {lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}
-                          <span className="float-right tabular-nums">{shelfCritical.length}</span>
-                        </td>
-                      </tr>
-                      {shelfCritical.map((inst) => (
-                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
-                      ))}
-                    </>
-                  )}
-                  {shelfHigh.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={8} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
-                          {lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
-                          <span className="float-right tabular-nums">{shelfHigh.length}</span>
-                        </td>
-                      </tr>
-                      {shelfHigh.map((inst) => (
-                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
-                      ))}
-                    </>
-                  )}
-                  {shelfRoutine.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={8} style={{ padding: 0 }}>
-                          <button
-                            type="button"
-                            className="w-full flex items-center gap-2 px-3 py-1 text-left"
-                            style={{ background: 'var(--color-background-card)', borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }}
-                            onClick={() => setRoutineOpen((o) => !o)}
-                          >
-                            <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
-                              {lang === 'en' ? 'ROUTINE ACTIVITY · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
-                            </span>
-                            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfRoutine.length}</span>
-                            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{routineOpen ? '▾' : '▸'}</span>
-                          </button>
-                        </td>
-                      </tr>
-                      {routineOpen && shelfRoutine.map((inst) => (
-                        <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
-                      ))}
-                    </>
-                  )}
-                </>
-              ) : (
-                sorted.map((inst) => (
-                  <InstRow key={inst.institution_id} inst={inst} sectorShare={sectorShareOf(inst)} lang={lang} dispatch={dispatch} />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Footer */}
-      {!isLoading && !isError && institutions.length > 0 && (
-        <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en'
-            ? 'tap → drill into institution vendors'
-            : 'toca → explorar proveedores de la institución'}
-        </div>
-      )}
+      </motion.div>
     </div>
   )
 }
