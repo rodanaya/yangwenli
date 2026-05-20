@@ -332,6 +332,14 @@ export function AtlasZoomLayer({
       // pan twice per tick (the 2× over-shoot we observed before).
       const prevUserZoom = userZoomRef.current
       const proposed = prevUserZoom * Math.exp(delta)
+      // Telescope rubber-band: if the user keeps wheeling OUT while already at
+      // the minimum (proposed pushes well below the floor), pop back to galaxy.
+      // The 0.85 × MIN threshold is enough wheel travel to feel intentional
+      // (one strong scroll), but not so much that an accidental tap escapes.
+      if (proposed < USER_ZOOM_MIN * 0.85 && prevUserZoom <= USER_ZOOM_MIN + 0.01) {
+        dispatch({ type: 'escape-zoom' })
+        return
+      }
       const nextUserZoom = Math.max(USER_ZOOM_MIN, Math.min(USER_ZOOM_MAX, proposed))
       if (nextUserZoom === prevUserZoom) return
       const scalePrev = transform.s * prevUserZoom
@@ -737,8 +745,8 @@ export function AtlasZoomLayer({
             </span>
             <span>
               {lang === 'en'
-                ? 'drag to pan · wheel to zoom · esc to exit'
-                : 'arrastra para desplazar · rueda para acercar · esc para salir'}
+                ? 'drag · wheel · +/− · 0 · arrows · H · esc'
+                : 'arrastra · rueda · +/− · 0 · flechas · H · esc'}
             </span>
           </div>
           {(panOffset.x !== 0 || panOffset.y !== 0 || userZoom !== 1) && (

@@ -4,11 +4,15 @@
  *
  * "← The Observatory · {Lens} · {Cluster}"
  *
- * The first two crumbs are clickable shortcuts back to the galaxy view.
- * The final crumb is the current location (non-interactive).
+ * Only the first crumb ("← The Observatory") is a clickable back link —
+ * pops one level to the galaxy view. The lens crumb is contextual label
+ * (the user is already viewing this lens, so clicking it would be a no-op
+ * disguised as navigation). The cluster crumb is the current location.
  *
  * M-OBS Phase 2: this strip replaces the "where am I?" job that used to be
  * implicit in the right rail's title block.
+ * M-OBS Phase 5 (2026-05-20): demoted the lens crumb from button to span
+ * so the breadcrumb has exactly one back affordance, not two redundant ones.
  */
 
 interface AtlasBreadcrumbProps {
@@ -57,20 +61,12 @@ export function AtlasBreadcrumb({
       >
         ·
       </span>
-      <button
-        type="button"
-        onClick={handleGoHome}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleGoHome(e) }}
-        className="font-mono text-[11px] uppercase text-text-secondary hover:text-text-primary cursor-pointer transition-colors"
-        style={{
-          background: 'transparent',
-          border: 'none',
-          padding: 0,
-          letterSpacing: '0.1em',
-        }}
+      <span
+        className="font-mono text-[11px] uppercase text-text-muted select-none"
+        style={{ letterSpacing: '0.1em' }}
       >
         {lensLabel}
-      </button>
+      </span>
       <span
         className="font-mono text-[11px] uppercase text-text-muted select-none"
         style={{ letterSpacing: '0.1em' }}
