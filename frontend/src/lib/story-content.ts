@@ -110,6 +110,13 @@ export interface StoryChartPoint {
   annotation?: string
   /** Optional Spanish translation of `annotation`. */
   annotation_es?: string
+  /** Optional risk score (0.0–1.0). When present and `color` is not set,
+   *  bar renderers bind the fill color to RISK_COLORS via
+   *  getRiskLevelFromScore (critical ≥0.60, high ≥0.40, low <0.40 — never
+   *  green per Bible §3.10). Scoped opt-in: only points that supply this
+   *  field get risk-tier coloring; everything else keeps its current
+   *  palette path. */
+  riskScore?: number
 }
 
 export interface StoryInlineChartData {
@@ -776,18 +783,21 @@ export const STORIES: StoryDef[] = [
           chartId: 'mega-vendors',
           data: {
             points: [
-              { label: 'Operadora CICSA',         value: 139.0, color: '#dc2626', highlight: true, annotation: '5 contracts · risk 0.36',          annotation_es: '5 contratos · riesgo 0.36' },
-              { label: 'Mantenimiento Express',   value: 69.9,  color: '#dc2626', highlight: true, annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
-              { label: 'Dowell Schlumberger',     value: 64.8,  color: '#a06820',                  annotation: '9 contracts · risk 0.97',          annotation_es: '9 contratos · riesgo 0.97' },
-              { label: 'Grupo Fármacos',          value: 62.9,  color: '#dc2626', highlight: true, annotation: '29 contracts · risk 0.99',         annotation_es: '29 contratos · riesgo 0.99' },
-              { label: 'Urbanissa',               value: 58.0,  color: '#dc2626', highlight: true, annotation: '1 contract · risk 0.97',           annotation_es: '1 contrato · riesgo 0.97' },
-              { label: 'ICA Constructora',        value: 41.8,  color: '#a06820',                  annotation: '3 contracts · risk 0.65 · Tren Maya', annotation_es: '3 contratos · riesgo 0.65 · Tren Maya' },
-              { label: 'Alstom Transport',        value: 37.9,  color: '#a06820',                  annotation: '2 contracts · risk 0.92 · Tren Maya', annotation_es: '2 contratos · riesgo 0.92 · Tren Maya' },
-              { label: 'Constructora Arhnos',     value: 31.9,  color: '#dc2626', highlight: true, annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
-              { label: 'ICA Fluor Daniel',        value: 31.2,  color: '#a06820',                  annotation: '6 contracts · risk 1.00',          annotation_es: '6 contratos · riesgo 1.00' },
-              { label: 'Grupo Constructor Marhnos',value: 28.0, color: '#a06820',                  annotation: '2 contracts · risk 0.37',          annotation_es: '2 contratos · riesgo 0.37' },
-              { label: 'Repsol Exploración',      value: 27.2,  color: '#a06820',                  annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
-              { label: 'Mota-Engil México',       value: 25.8,  color: '#a06820',                  annotation: '4 contracts · risk 0.95',          annotation_es: '4 contratos · riesgo 0.95' },
+              // 2026-05-21: bar color now binds to riskScore via RISK_COLORS
+              // in InlineBarChart. `highlight` retained as data signal (single-
+              // contract / perfect-score outliers) but no longer drives fill.
+              { label: 'Operadora CICSA',         value: 139.0, riskScore: 0.36, highlight: true, annotation: '5 contracts · risk 0.36',          annotation_es: '5 contratos · riesgo 0.36' },
+              { label: 'Mantenimiento Express',   value: 69.9,  riskScore: 1.00, highlight: true, annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
+              { label: 'Dowell Schlumberger',     value: 64.8,  riskScore: 0.97,                  annotation: '9 contracts · risk 0.97',          annotation_es: '9 contratos · riesgo 0.97' },
+              { label: 'Grupo Fármacos',          value: 62.9,  riskScore: 0.99, highlight: true, annotation: '29 contracts · risk 0.99',         annotation_es: '29 contratos · riesgo 0.99' },
+              { label: 'Urbanissa',               value: 58.0,  riskScore: 0.97, highlight: true, annotation: '1 contract · risk 0.97',           annotation_es: '1 contrato · riesgo 0.97' },
+              { label: 'ICA Constructora',        value: 41.8,  riskScore: 0.65,                  annotation: '3 contracts · risk 0.65 · Tren Maya', annotation_es: '3 contratos · riesgo 0.65 · Tren Maya' },
+              { label: 'Alstom Transport',        value: 37.9,  riskScore: 0.92,                  annotation: '2 contracts · risk 0.92 · Tren Maya', annotation_es: '2 contratos · riesgo 0.92 · Tren Maya' },
+              { label: 'Constructora Arhnos',     value: 31.9,  riskScore: 1.00, highlight: true, annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
+              { label: 'ICA Fluor Daniel',        value: 31.2,  riskScore: 1.00,                  annotation: '6 contracts · risk 1.00',          annotation_es: '6 contratos · riesgo 1.00' },
+              { label: 'Grupo Constructor Marhnos',value: 28.0, riskScore: 0.37,                  annotation: '2 contracts · risk 0.37',          annotation_es: '2 contratos · riesgo 0.37' },
+              { label: 'Repsol Exploración',      value: 27.2,  riskScore: 1.00,                  annotation: '1 contract · risk 1.00',           annotation_es: '1 contrato · riesgo 1.00' },
+              { label: 'Mota-Engil México',       value: 25.8,  riskScore: 0.95,                  annotation: '4 contracts · risk 0.95',          annotation_es: '4 contratos · riesgo 0.95' },
             ],
             unit: 'B MXN',
             annotation: 'Each vendor\'s total only counts contracts ≥1B MXN. Top 12 capture 618 billion pesos — 23 percent of the mega-contract universe. Highlighted rows have either a single-contract structure (one vendor, one mega contract) or are perfect-score (1.00) outliers.',
