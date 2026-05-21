@@ -283,11 +283,13 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
   /** Re-pick which labels to render based on current band + transform. */
   const labelsToRender = useMemo<ConstellationDot[]>(() => {
-    if (band === 'constellation') return []
     const named = dots.filter((d) => d.name)
     // Sort by risk score desc so top-T1 wins collisions.
     const sorted = [...named].sort((a, b) => (b.riskScore ?? 0) - (a.riskScore ?? 0))
-    const cap = band === 'region' ? Math.ceil(sorted.length * 0.5) : sorted.length
+    // Galaxy: top ~15% of named vendors (matches useAtlasLOD labelDensity).
+    // Region: top 50%. Star: all of them.
+    const fraction = band === 'constellation' ? 0.15 : band === 'region' ? 0.5 : 1
+    const cap = Math.max(1, Math.ceil(sorted.length * fraction))
     return sorted.slice(0, Math.min(cap, MAX_LABELS))
   }, [band, dots])
 
@@ -750,7 +752,7 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
   const t = transformRef.current
   const { w: cssW, h: cssH } = sizeRef.current
   const renderedLabels = useMemo(() => {
-    if (band === 'constellation' || cssW === 0 || cssH === 0) return []
+    if (cssW === 0 || cssH === 0) return []
     const items: Array<{ id: string; sx: number; sy: number; label: string; riskScore?: number; color: string }> = []
     const occupied: Array<{ x: number; y: number; w: number; h: number }> = []
     const LABEL_H = 18
@@ -785,6 +787,27 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [labelsToRender, band, cssW, cssH, t.k, t.x, t.y])
 
+  // — Cluster labels (Frontier B Phase 2: 2026-05-21) —
+  // Render the cluster CODE + LABEL underneath each attractor ring so users
+  // can identify "what to click" at galaxy zoom. Hidden when zoomed into a
+  // specific cluster (the breadcrumb says where you are; second label
+  // would compete). Positioned as React divs so they stay crisp regardless
+  // of canvas zoom.
+  const renderedClusterLabels = useMemo(() => {
+    if (cssW === 0 || cssH === 0) return []
+    // Hide when zoomed in tight on one cluster — breadcrumb covers it.
+    if (pinnedClusterCode && band !== 'constellation') return []
+    return clusters
+      .map((c) => {
+        const sx = c.fx * cssW * t.k + t.x
+        const sy = c.fy * cssH * t.k + t.y
+        if (sx < -40 || sy < -60 || sx > cssW + 40 || sy > cssH + 40) return null
+        return { code: c.code, label: c.label, color: c.color, sx, sy }
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clusters, pinnedClusterCode, band, cssW, cssH, t.k, t.x, t.y])
+
   // ── Render ──
   const wrapperStyle: React.CSSProperties = {
     position: 'relative',
@@ -810,6 +833,47 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
         aria-hidden={band === 'constellation'}
       >
+        {/* Cluster identity labels — code + name beneath each attractor.
+            Lets the user see "this is P5 · Systematic Overpricing" at a glance,
+            not just a colored ring. Hidden when zoomed into a specific cluster. */}
+        {renderedClusterLabels.map((c) => (
+          <div
+            key={`cluster-${c.code}`}
+            style={{
+              position: 'absolute',
+              left: c.sx,
+              top: c.sy,
+              transform: 'translate(-50%, 20px)',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: c.color,
+                letterSpacing: '0.06em',
+                lineHeight: 1.1,
+              }}
+            >
+              {c.code}
+            </div>
+            <div
+              style={{
+                fontSize: 10,
+                color: 'var(--color-text-muted, #6b6b6b)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                marginTop: 2,
+                lineHeight: 1.2,
+              }}
+            >
+              {c.label}
+            </div>
+          </div>
+        ))}
         {renderedLabels.map((l) => (
           <div
             key={l.id}
