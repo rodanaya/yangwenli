@@ -16,7 +16,7 @@
  *     manual fetch lifecycle in CanvasAtlasView.
  */
 import { useQuery } from '@tanstack/react-query'
-import { contractsApi } from '@/api/client'
+import { contractApi } from '@/api/client'
 import type { ContractListItem } from '@/api/types'
 
 export interface VendorContractDot {
@@ -57,7 +57,7 @@ export function useVendorContracts(vendorId: number | null) {
     queryKey: ['atlas-vendor-contracts', vendorId],
     queryFn: async (): Promise<{ contracts: VendorContractDot[] }> => {
       if (vendorId === null) return { contracts: [] }
-      const res = await contractsApi.getByVendor(vendorId, 1)
+      const res = await contractApi.getByVendor(vendorId, 1)
       const rows = (res.data ?? []).slice(0, 60).map(normalize)
       return { contracts: rows }
     },
