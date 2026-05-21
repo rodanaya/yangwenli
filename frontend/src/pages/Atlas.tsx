@@ -54,6 +54,8 @@ import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/co
 import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
 import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
+import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
+import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -529,6 +531,7 @@ interface CanvasAtlasViewProps {
   activeMeta: ClusterMeta[]
   onClusterClickBridge: (code: string) => void
   riskFloor: 'all' | 'medium' | 'high' | 'critical'
+  namedVendors: NamedVendorDot[]
 }
 
 function CanvasAtlasView({
@@ -540,6 +543,7 @@ function CanvasAtlasView({
   activeMeta,
   onClusterClickBridge,
   riskFloor,
+  namedVendors,
 }: CanvasAtlasViewProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
@@ -559,7 +563,27 @@ function CanvasAtlasView({
     [zoomedCode, activeMeta],
   )
 
-  // Auto-fly when context view becomes zoomed.
+  // M-OBS P2 hotfix: cluster card is dismissible without exiting zoom.
+  // Auto-open on desktop, auto-collapse on narrow viewports (mirrors
+  // AtlasZoomLayer behavior).
+  const [cardOpen, setCardOpen] = useState(true)
+  useEffect(() => {
+    const isNarrow = typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false
+    setCardOpen(!isNarrow)
+  }, [zoomedCode])
+
+  // Vendors in the currently zoomed cluster (drawer + card top-vendors).
+  const clusterVendors = useMemo(
+    () => (zoomedCode ? namedVendors.filter((v) => v.clusterCode === zoomedCode) : []),
+    [zoomedCode, namedVendors],
+  )
+  const topVendors = useMemo(() => clusterVendors.slice(0, 3), [clusterVendors])
+
+  // Auto-fly when context view becomes zoomed (handles both cluster-glyph
+  // click AND vendor-search auto-zoom uniformly — both paths dispatch
+  // 'zoom-into-cluster' which lands us here).
   useEffect(() => {
     if (zoomedCode && flyToRef.current) {
       flyToRef.current(zoomedCode)
@@ -611,7 +635,10 @@ function CanvasAtlasView({
           lang={lang}
           lensLabel={lensLabel}
           clusterLabel={clusterLabel}
-          onGoHome={() => dispatch({ type: 'escape-zoom' })}
+          onGoHome={() => {
+            dispatch({ type: 'escape-zoom' })
+            resetRef.current?.()
+          }}
         />
       )}
       <CanvasConstellation
@@ -624,18 +651,53 @@ function CanvasAtlasView({
         pinnedClusterCode={pinnedCode ?? zoomedCode}
         riskFloor={riskFloor}
       />
-      {isZoomed && zoomedMeta && (
+      {/* M-OBS P2 floating cluster card — top-right, dismissible without
+          exiting zoom (✕ collapses to compact chip; chip re-expands). */}
+      {isZoomed && zoomedMeta && cardOpen && (
         <div
           className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
           style={{ pointerEvents: 'auto' }}
         >
           <ClusterFloatingCard
             meta={zoomedMeta}
-            topVendors={[]}
-            onClose={() => dispatch({ type: 'escape-zoom' })}
+            topVendors={topVendors}
+            onClose={() => setCardOpen(false)}
             lang={lang}
           />
         </div>
+      )}
+      {isZoomed && zoomedMeta && !cardOpen && (
+        <button
+          type="button"
+          onClick={() => setCardOpen(true)}
+          aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{
+            pointerEvents: 'auto',
+            background: 'var(--color-background-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 2,
+            padding: '4px 8px',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
+        </button>
+      )}
+      {/* M-OBS P3 vendor drawer — collapsible bottom strip (collapsed by
+          default; Esc collapses when expanded, does not escape zoom). */}
+      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
+        <AtlasVendorDrawer
+          clusterCode={zoomedMeta.code}
+          clusterLabel={zoomedMeta.label}
+          vendors={clusterVendors}
+          lang={lang}
+        />
       )}
     </div>
   )
@@ -1265,12 +1327,14 @@ export default function Atlas() {
   // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
   // as an overlay on the zoomed view.
   const z1Enabled = searchParams.get('z1') === 'true'
-  // atlas-P6 Pass 2: opt into the new Canvas engine via ?canvas=1.
-  // When on, the AtlasZoomLayer path is bypassed in favor of the
-  // dot-rendering CanvasConstellation engine. Legacy chrome (selection,
-  // lasso, vendor drawer, halo, Z1 escalation, vendor-search auto-zoom)
-  // is intentionally NOT wired in this pass — Phase 3 ports each one.
-  const canvasEnabled = searchParams.get('canvas') === '1'
+  // atlas-P6 Pass 3b (2026-05-21): Canvas engine is now the DEFAULT.
+  // The breadcrumb, floating cluster card, and vendor drawer are wired
+  // (Pass 3a). Remaining legacy-only features (selection / lasso /
+  // VendorHaloCard at deep zoom / Z1 sector escalation) fall back to the
+  // SVG AtlasZoomLayer when the URL has ?legacy=1.
+  // ?canvas=1 still works for forward-compat with shared links.
+  const canvasEnabled =
+    searchParams.get('legacy') !== '1' || searchParams.get('canvas') === '1'
 
   const totalContractsForYear = snapshot.totalContracts
 
@@ -1885,6 +1949,7 @@ export default function Atlas() {
             activeMeta={activeConstellationMeta}
             onClusterClickBridge={handleClusterClick}
             riskFloor={riskFloor}
+            namedVendors={namedVendors}
           />
         ) : (
           <AtlasZoomLayer
