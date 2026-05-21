@@ -8,6 +8,7 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   formatCompactMXN,
+  formatDualCurrency,
   formatCompactUSDByYear,
   formatNumber,
   formatPercentSafe,
@@ -700,7 +701,7 @@ export function InstitutionProfile() {
               <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
             </div>
             <div className="text-right">
-              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatCompactMXN(totalValue)}</div>
+              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(totalValue)}</div>
               <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
             </div>
             <div className="text-right">

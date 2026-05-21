@@ -4,6 +4,18 @@ AI-powered corruption detection for Mexican federal procurement. ~3.1M contracts
 
 ---
 
+## Storage — D Drive Only
+
+**C drive is full. All work must stay on D drive.**
+
+- All file writes, installs, builds, temp files, caches → `D:\` only
+- npm cache: `D:\Python\.npm-cache` (set via `npm config set cache`)
+- Worktrees: `.claude/worktrees/` (already under `D:\Python\yangwenli\`)
+- Never run `npm install` or write output to `C:\` paths
+- Dev servers default port sequence: 3009 → 3010 → 3011 (check `netstat` before starting)
+
+---
+
 ## Core Behavior
 
 ### Reasoning
@@ -300,6 +312,23 @@ StoryHero, StoryCard. Mexican media convention: never use English-loaned
 - `frontend/src/lib/tiers.ts` — 5-tier transparency system (Excelente / Satisfactorio / Regular / Deficiente / Crítico).
 - `frontend/src/lib/administrations.ts` — Mexican federal terms (Fox / Calderón / Peña Nieto / AMLO / Sheinbaum).
 - `frontend/src/lib/compare-colors.ts` — `COMPARE_HEX.{a,b}` for A-vs-B pages (no green).
+
+### Currency formatters (choose by surface, not by reflex)
+
+`frontend/src/lib/utils.ts` exports three currency helpers. Pick the one that matches the surface — don't reach for `formatCompactMXN` reflexively.
+
+| Surface | Helper | Output (EN / ES) |
+|---|---|---|
+| **Hero number / card stat footer / pull-quote / section anchor** | `formatDualCurrency(mxn)` | `9.9T MXN · ≈US$493B` / `9.9 billones MXN` |
+| **Standalone USD sub-line** (under an MXN total, etc.) | `formatCompactUSD(mxn)` | `US$493B` (both locales) |
+| **Table cell / axis label / tooltip / sort column / tight chip** | `formatCompactMXN(mxn)` | `9.9T MXN` / `9.9 billones MXN` |
+| **Year-specific contract conversion** (2002 pesos at 2002 rate, etc.) | `formatCompactUSDByYear(mxn, year)` | `$2.1B USD` (uses MXN_USD_RATES table) |
+
+**Rationale**: EN reader needs USD scale to feel the impact; ES audience reads MXN natively (Mexican procurement convention). `formatDualCurrency` returns MXN-only in Spanish by design — don't try to "fix" it.
+
+**Don't blanket-replace** `formatCompactMXN → formatDualCurrency`. Table layouts and chart axes break when USD is shoved into fixed-width cells. Reach for the helper that matches the surface, not the convenient one.
+
+The convention is enforced by review, not lint — `lint:tokens` doesn't flag wrong helper choice. If you find a hero/footer still on `formatCompactMXN`, convert it; if you find a table cell on `formatDualCurrency`, convert back.
 
 ### Canonical UI primitives
 
