@@ -100,6 +100,13 @@ export interface ConstellationDot {
   sectorColor?: string
   /** Outliers render with a larger radius (named T1 vendors). */
   isOutlier?: boolean
+  /**
+   * Optional taxonomy tag. Default behavior treats dots as vendors. Atlas P6
+   * Frontier C introduces 'contract' dots that orbit a focused vendor; the
+   * engine itself does not differentiate (rendering is identical), but
+   * consumers can branch on `dot.kind` inside click handlers.
+   */
+  kind?: 'vendor' | 'contract'
 }
 
 /** A cluster attractor (P1..P7, sector code, etc). Drives the fly-to API. */
@@ -119,6 +126,12 @@ export interface ConstellationCluster {
 /** Imperative API exposed via refs — callers mutate `.current`. */
 export type FlyToClusterFn = (code: string) => void
 export type ResetViewFn = () => void
+/**
+ * Fly to an arbitrary world coordinate at a given scale. Used by Atlas P6
+ * Frontier C planetary mode to center the view on a specific vendor without
+ * needing a cluster code.
+ */
+export type FlyToPosFn = (x: number, y: number, scale?: number) => void
 
 /** LOD band, matches `useAtlasLOD`. */
 export type ConstellationBand = 'constellation' | 'region' | 'star'
@@ -160,6 +173,12 @@ export interface CanvasConstellationProps {
   flyToClusterRef?: React.MutableRefObject<FlyToClusterFn | null>
   /** Caller-provided ref — set to a fn that resets to identity transform. */
   resetViewRef?: React.MutableRefObject<ResetViewFn | null>
+  /**
+   * Caller-provided ref — set to a fn that flies to a world coordinate at
+   * an optional scale. Atlas P6 Frontier C uses this to center on a vendor
+   * for planetary-orbit mode.
+   */
+  flyToPosRef?: React.MutableRefObject<FlyToPosFn | null>
   /** IDs of dots that should render an accent stroke (selection halo). */
   highlightedDotIds?: Set<string>
   /** Code of a sticky-highlighted cluster (others dim to 0.15). */
@@ -243,6 +262,7 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     onZoomChange,
     flyToClusterRef,
     resetViewRef,
+    flyToPosRef,
     highlightedDotIds,
     pinnedClusterCode,
     riskFloor = 'all',
@@ -489,6 +509,24 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       if (flyToClusterRef) flyToClusterRef.current = null
     }
   }, [clusters, flyToClusterRef])
+
+  useEffect(() => {
+    if (!flyToPosRef) return
+    flyToPosRef.current = (x: number, y: number, scale = 20) => {
+      const canvas = canvasRef.current
+      const zb = zoomBehaviorRef.current
+      if (!canvas || !zb) return
+      const { w, h } = sizeRef.current
+      const target = zoomIdentity
+        .translate(w / 2, h / 2)
+        .scale(scale)
+        .translate(-x * w, -y * h)
+      withTransition(select(canvas), FLY_TO_MS, easeCubicInOut).call(zb.transform, target)
+    }
+    return () => {
+      if (flyToPosRef) flyToPosRef.current = null
+    }
+  }, [flyToPosRef])
 
   useEffect(() => {
     if (!resetViewRef) return

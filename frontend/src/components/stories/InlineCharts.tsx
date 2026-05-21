@@ -27,6 +27,7 @@ import type {
   StoryNetworkData,
   StoryStackedBarData,
 } from '@/lib/story-content'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 // Eyebrow translation map. The structural labels at the top of each
 // chart card ("HORIZONTAL · RANKED", "MULTI-SERIES · 4 VENDORS", etc.)
@@ -1950,6 +1951,179 @@ export function ClevelandPairChart({
     return pt.label_es ?? pt.label
   }
 
+  // ── EXCESS mode: single bar per row, anchored at value2 baseline ────────
+  // Length = (value − value2). Positive = right of axis (breach); negative
+  // = left of axis (below baseline). Risk-tier color from RISK_COLORS,
+  // derived by normalizing the excess against the OECD 25% ceiling.
+  if (data.mode === 'excess') {
+    const E_LABEL_W = 148
+    const E_LEFT_W = 56     // narrow left-of-axis pane for deficits
+    const E_RIGHT_W = 280   // wide right-of-axis pane for breaches
+    const E_VALUE_W = 88
+    const E_TOTAL_W = E_LABEL_W + E_LEFT_W + E_RIGHT_W + E_VALUE_W
+    const E_ROW_H = 22
+    const E_ROW_GAP = 11
+
+    // Sort by gap descending so largest breach reads at top
+    const eSorted = [...data.points].sort((a, b) => {
+      const gA = a.value - (a.value2 ?? 0)
+      const gB = b.value - (b.value2 ?? 0)
+      return gB - gA
+    })
+
+    // Scale: largest absolute gap defines E_RIGHT_W; deficits scale against E_LEFT_W
+    const gaps = eSorted.map((p) => p.value - (p.value2 ?? 0))
+    const maxBreach = Math.max(...gaps, 0.001)
+    const maxDeficit = Math.max(-Math.min(...gaps, 0), 0.001)
+    const axisX = E_LABEL_W + E_LEFT_W
+
+    // Convert excess (in pp) to a 0-1 score against the OECD 25-pp ceiling,
+    // then route through getRiskLevelFromScore. > 15pp = critical (red),
+    // > 10pp = high (amber), > 6pp = medium (dark amber), else muted.
+    const colorForGap = (gap: number): string => {
+      if (gap <= 0) return RISK_COLORS.low
+      const normalized = Math.min(1, gap / 25)
+      const level = getRiskLevelFromScore(normalized)
+      return RISK_COLORS[level]
+    }
+
+    const eTotalH = eSorted.length * (E_ROW_H + E_ROW_GAP) + 32
+
+    // Anchor stat: largest breach value, colored by its tier
+    const ePt = eSorted[0]
+    const eGap = ePt ? ePt.value - (ePt.value2 ?? 0) : 0
+    const eAnchorColor = colorForGap(eGap)
+    const eAnchor = ePt
+      ? {
+          value: `+${eGap.toFixed(1)}`,
+          label: labelFor(ePt),
+          color: eAnchorColor,
+        }
+      : undefined
+
+    return (
+      <ChartCard
+        title={title}
+        eyebrow={`EXCESS · ${eSorted.length} ROWS · BASELINE ${ePt?.value2 ?? 11}%`}
+        anchor={eAnchor}
+        annotation={cardAnnotation}
+      >
+        <svg
+          viewBox={`0 0 ${E_TOTAL_W} ${eTotalH}`}
+          preserveAspectRatio="xMinYMin meet"
+          className="w-full"
+          aria-hidden="true"
+        >
+          {/* Axis header */}
+          <text
+            x={axisX}
+            y={12}
+            textAnchor="middle"
+            fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+            letterSpacing="0.14em"
+          >
+            {(ePt?.value2 ?? 11).toFixed(0)}% {lang === 'es' ? 'LÍNEA BASE' : 'BASELINE'}
+          </text>
+
+          {/* Vertical baseline axis */}
+          <line
+            x1={axisX}
+            y1={18}
+            x2={axisX}
+            y2={eTotalH - 6}
+            stroke="var(--color-text-muted)"
+            strokeWidth={1}
+            strokeDasharray="2 3"
+            opacity={0.7}
+          />
+
+          {eSorted.map((pt, i) => {
+            const yC = i * (E_ROW_H + E_ROW_GAP) + E_ROW_H / 2 + 22
+            const y = yC - E_ROW_H / 2
+            const gap = pt.value - (pt.value2 ?? 0)
+            const isPos = gap >= 0
+            const barC = colorForGap(gap)
+            const barW = isPos
+              ? (gap / maxBreach) * E_RIGHT_W
+              : (-gap / maxDeficit) * E_LEFT_W
+            const barX = isPos ? axisX : axisX - barW
+
+            return (
+              <g key={i}>
+                {/* Row label */}
+                <text
+                  x={E_LABEL_W - 8}
+                  y={yC + 1}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-secondary)"
+                >
+                  {labelFor(pt)}
+                </text>
+
+                {/* Excess bar */}
+                <rect
+                  x={barX}
+                  y={y}
+                  width={barW}
+                  height={E_ROW_H}
+                  fill={barC}
+                  opacity={isPos ? 0.9 : 0.45}
+                  rx={1}
+                />
+
+                {/* Numeric readout right of the right-pane */}
+                <text
+                  x={E_LABEL_W + E_LEFT_W + E_RIGHT_W + 8}
+                  y={yC + 1}
+                  textAnchor="start"
+                  dominantBaseline="middle"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill={barC}
+                  fontWeight={700}
+                >
+                  {isPos ? '+' : ''}{gap.toFixed(1)}
+                  <tspan
+                    fill="var(--color-text-muted)"
+                    fontWeight={400}
+                  >
+                    {` · ${pt.value.toFixed(1)}%`}
+                  </tspan>
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Risk-tier legend */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-2 pt-3 pb-1 font-mono"
+          style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: RISK_COLORS.critical, opacity: 0.9 }} />
+            <span>{lang === 'es' ? 'brecha crítica' : 'critical breach'} (≥15 pp)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: RISK_COLORS.high, opacity: 0.9 }} />
+            <span>{lang === 'es' ? 'brecha alta' : 'high breach'} (≥10 pp)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: RISK_COLORS.medium, opacity: 0.9 }} />
+            <span>{lang === 'es' ? 'brecha media' : 'medium breach'} (≥6 pp)</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: RISK_COLORS.low, opacity: 0.45 }} />
+            <span>{lang === 'es' ? 'bajo línea base' : 'below baseline'}</span>
+          </div>
+        </div>
+      </ChartCard>
+    )
+  }
+
   // Sort by gap (value - value2) descending
   const sorted = [...data.points].sort((a, b) => {
     const gapA = a.value - (a.value2 ?? 0)
@@ -2098,7 +2272,7 @@ export function InlineStackedBar({
 }) {
   const {
     rows, unit, anchor, annotation, annotation_es,
-    highlightColor, baseColor,
+    highlightColor, baseColor, comparison,
     highlightLabel, highlightLabel_es,
     baseLabel, baseLabel_es,
   } = data
@@ -2133,6 +2307,187 @@ export function InlineStackedBar({
   const legendBase = lang === 'es'
     ? (baseLabel_es ?? baseLabel ?? 'resto')
     : (baseLabel ?? 'remainder')
+
+  // ── Mirror / back-to-back comparison layout ────────────────────────────
+  if (comparison) {
+    const ROW_H_M = 22
+    const ROW_GAP_M = 14
+    const LABEL_W_M = 130
+    const HALF_W_M = 200
+    const VALUE_W_M = 84
+    const W_M = VALUE_W_M + HALF_W_M + LABEL_W_M + HALF_W_M + VALUE_W_M
+    const H_M = rows.length * (ROW_H_M + ROW_GAP_M) + 28
+
+    const maxBoth = Math.max(
+      ...rows.map((r) => Math.max(r.total, r.compareTotal ?? 0)),
+      1,
+    )
+    const centerX = VALUE_W_M + HALF_W_M + LABEL_W_M / 2
+    const leftBarRight = VALUE_W_M + HALF_W_M
+    const rightBarLeft = leftBarRight + LABEL_W_M
+    const leftHdr = lang === 'es' ? (comparison.leftLabel_es ?? comparison.leftLabel) : comparison.leftLabel
+    const rightHdr = lang === 'es' ? (comparison.rightLabel_es ?? comparison.rightLabel) : comparison.rightLabel
+
+    return (
+      <ChartCard
+        title={title}
+        eyebrow={`MIRROR · ${rows.length} ROWS`}
+        anchor={cardAnchor}
+        annotation={cardAnnotation}
+      >
+        <svg
+          viewBox={`0 0 ${W_M} ${H_M}`}
+          preserveAspectRatio="xMinYMin meet"
+          className="w-full"
+          aria-hidden="true"
+        >
+          {/* Column headers */}
+          <text
+            x={leftBarRight - 4}
+            y={14}
+            textAnchor="end"
+            fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+            letterSpacing="0.16em"
+          >
+            {leftHdr.toUpperCase()}
+          </text>
+          <text
+            x={rightBarLeft + 4}
+            y={14}
+            textAnchor="start"
+            fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="var(--color-text-muted)"
+            letterSpacing="0.16em"
+          >
+            {rightHdr.toUpperCase()}
+          </text>
+
+          {rows.map((r, i) => {
+            const y = i * (ROW_H_M + ROW_GAP_M) + 26
+            const leftVal = r.compareTotal ?? 0
+            const rightVal = r.total
+            const leftW = (leftVal / maxBoth) * HALF_W_M
+            const rightW = (rightVal / maxBoth) * HALF_W_M
+            // Sector palette on the right (AMLO) bar; muted base on the left (Peña)
+            const rightFill = r.sectorCode
+              ? `var(--color-sector-${r.sectorCode}, ${r.color ?? hi})`
+              : (r.color ?? hi)
+            return (
+              <g key={i}>
+                {/* Center axis hairline */}
+                <line
+                  x1={centerX}
+                  y1={y - 2}
+                  x2={centerX}
+                  y2={y + ROW_H_M + 2}
+                  stroke="var(--color-border)"
+                  strokeWidth={0.5}
+                />
+
+                {/* Row label centered between bars */}
+                <text
+                  x={centerX}
+                  y={y + ROW_H_M / 2 + 1}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={11.5}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-secondary)"
+                  fontWeight={700}
+                >
+                  {rowLabel(r)}
+                </text>
+
+                {/* Left (Peña) bar — grows leftward from leftBarRight */}
+                <rect
+                  x={leftBarRight - leftW}
+                  y={y}
+                  width={leftW}
+                  height={ROW_H_M}
+                  fill={base}
+                  opacity={0.28}
+                  rx={1}
+                />
+                {/* Left value readout */}
+                <text
+                  x={leftBarRight - leftW - 6}
+                  y={y + ROW_H_M / 2 + 1}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fontSize={10.5}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-muted)"
+                  fontWeight={700}
+                >
+                  {leftVal.toLocaleString(undefined, {
+                    minimumFractionDigits: leftVal < 10 ? 1 : 0,
+                    maximumFractionDigits: leftVal < 10 ? 1 : 0,
+                  })}
+                </text>
+
+                {/* Right (AMLO) bar — grows rightward from rightBarLeft */}
+                <rect
+                  x={rightBarLeft}
+                  y={y}
+                  width={rightW}
+                  height={ROW_H_M}
+                  fill={rightFill}
+                  opacity={0.92}
+                  rx={1}
+                />
+                {/* Right value readout */}
+                <text
+                  x={rightBarLeft + rightW + 6}
+                  y={y + ROW_H_M / 2 + 1}
+                  textAnchor="start"
+                  dominantBaseline="middle"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-primary)"
+                  fontWeight={700}
+                >
+                  {rightVal.toLocaleString(undefined, {
+                    minimumFractionDigits: rightVal < 10 ? 1 : 0,
+                    maximumFractionDigits: rightVal < 10 ? 1 : 0,
+                  })}
+                </text>
+                {/* Delta annotation below the right value */}
+                {rowAnnotation(r) && (
+                  <text
+                    x={rightBarLeft + rightW + 6}
+                    y={y + ROW_H_M / 2 + 14}
+                    textAnchor="start"
+                    dominantBaseline="middle"
+                    fontSize={9.5}
+                    fontFamily="var(--font-family-mono, monospace)"
+                    fill={rightFill}
+                  >
+                    {rowAnnotation(r)}
+                  </text>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Legend */}
+        <div className="flex items-center gap-5 px-2 pt-3 pb-1 font-mono"
+          style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: base, opacity: 0.28 }} />
+            <span>{legendBase}{unit ? ` · ${unit}` : ''}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-2 rounded-sm" style={{ background: hi, opacity: 0.92 }} />
+            <span>{legendHi}{unit ? ` · ${unit}` : ''}</span>
+          </div>
+        </div>
+      </ChartCard>
+    )
+  }
 
   const ROW_H = 26
   const ROW_GAP = 14

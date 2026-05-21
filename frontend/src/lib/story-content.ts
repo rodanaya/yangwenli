@@ -124,6 +124,9 @@ export interface StoryInlineChartData {
   annotation?: string
   /** Optional Spanish translation of `annotation`. */
   annotation_es?: string
+  /** ClevelandPairChart-only: switch from dual-dot+line to excess-only bars
+   *  starting at value2 (baseline) and extending to the gap. */
+  mode?: 'pair' | 'excess'
 }
 
 /**
@@ -205,8 +208,23 @@ export interface StoryStackedBarData {
     /** Sub-text shown right of the bar (e.g. "60.1% IMSS"). */
     annotation?: string
     annotation_es?: string
+    /** Optional sector code — when set in `comparison` mode, the right-hand
+     *  AMLO bar paints with SECTOR_COLORS[sectorCode]. */
+    sectorCode?: string
+    /** Optional comparator value rendered as the left-hand bar in mirror mode
+     *  (e.g. Peña-era spend when total = AMLO-era spend). */
+    compareTotal?: number
   }>
   unit?: string
+  /** Mirror / back-to-back layout. When set, `compareTotal` per row becomes
+   *  the left-hand bar (muted), `total` becomes the right-hand bar
+   *  (sector-coded). The shared midline is the editorial axis. */
+  comparison?: {
+    leftLabel: string
+    leftLabel_es?: string
+    rightLabel: string
+    rightLabel_es?: string
+  }
   /** Top-of-card anchor stat. */
   anchor?: { value: string; label: string; label_es?: string }
   annotation?: string
@@ -2095,29 +2113,35 @@ export const STORIES: StoryDef[] = [
           chartId: 'amlo-vs-pena-sectors',
           stacked: {
             rows: [
-              { label: 'Salud',           label_en: 'Health',         total: 1201.4, highlight: 1201.4, annotation: '+47% vs Peña',  annotation_es: '+47% vs Peña' },
-              { label: 'Infraestructura', label_en: 'Infrastructure', total: 326.4,  highlight: 326.4,  annotation: '−65% vs Peña',  annotation_es: '−65% vs Peña' },
-              { label: 'Hacienda',        label_en: 'Treasury',       total: 392.9,  highlight: 392.9,  annotation: '+70% vs Peña',  annotation_es: '+70% vs Peña' },
-              { label: 'Defensa',         label_en: 'Defense',        total: 168.9,  highlight: 168.9,  annotation: '+186% vs Peña', annotation_es: '+186% vs Peña' },
-              { label: 'Gobernación',     label_en: 'Governance',     total: 190.4,  highlight: 190.4,  annotation: '+100% vs Peña', annotation_es: '+100% vs Peña' },
-              { label: 'Agricultura',     label_en: 'Agriculture',    total: 166.2,  highlight: 166.2,  annotation: '+36% vs Peña',  annotation_es: '+36% vs Peña' },
-              { label: 'Educación',       label_en: 'Education',      total: 114.9,  highlight: 114.9,  annotation: '−26% vs Peña',  annotation_es: '−26% vs Peña' },
-              { label: 'Medio Ambiente',  label_en: 'Environment',    total: 94.2,   highlight: 94.2,   annotation: '−31% vs Peña',  annotation_es: '−31% vs Peña' },
-              { label: 'Energía',         label_en: 'Energy',         total: 50.1,   highlight: 50.1,   annotation: '−88% vs Peña',  annotation_es: '−88% vs Peña' },
+              { label: 'Salud',           label_en: 'Health',         total: 1201.4, highlight: 1201.4, compareTotal: 816.0,  sectorCode: 'salud',           annotation: '+47% vs Peña',  annotation_es: '+47% vs Peña' },
+              { label: 'Infraestructura', label_en: 'Infrastructure', total: 326.4,  highlight: 326.4,  compareTotal: 937.1,  sectorCode: 'infraestructura', annotation: '−65% vs Peña',  annotation_es: '−65% vs Peña' },
+              { label: 'Hacienda',        label_en: 'Treasury',       total: 392.9,  highlight: 392.9,  compareTotal: 231.1,  sectorCode: 'hacienda',        annotation: '+70% vs Peña',  annotation_es: '+70% vs Peña' },
+              { label: 'Defensa',         label_en: 'Defense',        total: 168.9,  highlight: 168.9,  compareTotal: 59.2,   sectorCode: 'defensa',         annotation: '+186% vs Peña', annotation_es: '+186% vs Peña' },
+              { label: 'Gobernación',     label_en: 'Governance',     total: 190.4,  highlight: 190.4,  compareTotal: 95.2,   sectorCode: 'gobernacion',     annotation: '+100% vs Peña', annotation_es: '+100% vs Peña' },
+              { label: 'Agricultura',     label_en: 'Agriculture',    total: 166.2,  highlight: 166.2,  compareTotal: 122.2,  sectorCode: 'agricultura',     annotation: '+36% vs Peña',  annotation_es: '+36% vs Peña' },
+              { label: 'Educación',       label_en: 'Education',      total: 114.9,  highlight: 114.9,  compareTotal: 155.3,  sectorCode: 'educacion',       annotation: '−26% vs Peña',  annotation_es: '−26% vs Peña' },
+              { label: 'Medio Ambiente',  label_en: 'Environment',    total: 94.2,   highlight: 94.2,   compareTotal: 136.5,  sectorCode: 'ambiente',        annotation: '−31% vs Peña',  annotation_es: '−31% vs Peña' },
+              { label: 'Energía',         label_en: 'Energy',         total: 50.1,   highlight: 50.1,   compareTotal: 435.2,  sectorCode: 'energia',         annotation: '−88% vs Peña',  annotation_es: '−88% vs Peña' },
             ],
             unit: 'B MXN',
+            comparison: {
+              leftLabel: 'PEÑA NIETO · 2013–18',
+              leftLabel_es: 'PEÑA NIETO · 2013–18',
+              rightLabel: 'AMLO · 2019–24',
+              rightLabel_es: 'AMLO · 2019–24',
+            },
             anchor: {
               value: '2.76T MXN',
               label: 'AMLO TOTAL FEDERAL PROCUREMENT, 2019-2024',
               label_es: 'CONTRATACIÓN FEDERAL TOTAL AMLO, 2019-2024',
             },
-            annotation: 'Bar = AMLO-era spend per sector. Annotation shows the change vs Peña Nieto. The shape of Mexican federal spending changed direction across this transition.',
-            annotation_es: 'Barra = gasto del sexenio AMLO por sector. La anotación muestra el cambio frente a Peña Nieto. La forma del gasto federal mexicano cambió de dirección en esta transición.',
+            annotation: 'Left bar = Peña Nieto-era spend (2013-18, muted). Right bar = AMLO-era spend (2019-24, sector palette). Identical scale. The shape of Mexican federal spending changed direction across this transition.',
+            annotation_es: 'Barra izquierda = gasto del sexenio Peña Nieto (2013-18, atenuado). Barra derecha = gasto del sexenio AMLO (2019-24, paleta sectorial). Misma escala. La forma del gasto federal mexicano cambió de dirección en esta transición.',
             highlightColor: '#a06820',
             highlightLabel: 'AMLO-era spend',
             highlightLabel_es: 'gasto sexenio AMLO',
-            baseLabel: 'context',
-            baseLabel_es: 'contexto',
+            baseLabel: 'Peña-era spend',
+            baseLabel_es: 'gasto Peña Nieto',
           },
         },
         pullquote: {
@@ -2155,10 +2179,9 @@ export const STORIES: StoryDef[] = [
           'Reportajes de 2023 de medios de investigación mexicanos — entre ellos Animal Político, MCCI (Mexicanos Contra la Corrupción y la Impunidad) y Aristegui Noticias — alegaron que a los contratistas de la SEDENA en el Tren Maya y el AIFA se les exigía canalizar un porcentaje del valor del contrato a través de empresas intermediarias específicas designadas por funcionarios de adquisiciones militares, un patrón que, de ser comprobado, encaja con precisión con la firma P3 (captura de intermediario) de RUBLI. RUBLI no puede verificar de forma independiente esas alegaciones a partir de los datos de contratación, pero las condiciones estructurales — adjudicaciones concentradas, proveedores intermediarios, contratación clasificada y visibilidad pública limitada — son exactamente las condiciones bajo las cuales emergen dichos patrones.',
         ],
         chartConfig: {
-          type: 'editorial-slope',
+          type: 'inline-multi-line',
           title: 'SEDENA Annual Federal Contracting, 2015-2025',
           title_es: 'Contratación federal anual de SEDENA, 2015-2025',
-          chartId: 'sedena-rise',
           multiSeries: {
             xLabels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'],
             unit: 'B MXN',
@@ -2229,21 +2252,22 @@ export const STORIES: StoryDef[] = [
           title_es: 'Tasa de alto riesgo AMLO vs promedio plataforma — por categoría',
           chartId: 'amlo-categories-risk',
           data: {
+            mode: 'excess',
             points: [
-              { label: 'Alimentos y Víveres', label_en: 'Food & Provisions',  value: 32.4, value2: 11.0, color: '#dc2626', highlight: true },
-              { label: 'Medicamentos',        label_en: 'Pharmaceuticals',    value: 22.4, value2: 11.0, color: '#dc2626', highlight: true },
-              { label: 'Servicios Hospital.', label_en: 'Hospital Services',  value: 19.4, value2: 11.0, color: '#dc2626', highlight: true },
-              { label: 'Servicios Generales', label_en: 'General Services',   value: 14.3, value2: 11.0, color: '#a06820' },
-              { label: 'Carreteras',          label_en: 'Highways',           value: 12.2, value2: 11.0, color: '#a06820' },
-              { label: 'Material Curación',   label_en: 'Medical Supplies',   value: 12.1, value2: 11.0, color: '#a06820' },
-              { label: 'Mantenimiento',       label_en: 'Maintenance',        value:  9.4, value2: 11.0, color: '#a06820' },
-              { label: 'Construcción Edif.', label_en: 'Building Constr.',    value:  8.5, value2: 11.0, color: '#a06820' },
+              { label: 'Alimentos y Víveres', label_en: 'Food & Provisions',  value: 32.4, value2: 11.0, highlight: true },
+              { label: 'Medicamentos',        label_en: 'Pharmaceuticals',    value: 22.4, value2: 11.0, highlight: true },
+              { label: 'Servicios Hospital.', label_en: 'Hospital Services',  value: 19.4, value2: 11.0, highlight: true },
+              { label: 'Servicios Generales', label_en: 'General Services',   value: 14.3, value2: 11.0 },
+              { label: 'Carreteras',          label_en: 'Highways',           value: 12.2, value2: 11.0 },
+              { label: 'Material Curación',   label_en: 'Medical Supplies',   value: 12.1, value2: 11.0 },
+              { label: 'Mantenimiento',       label_en: 'Maintenance',        value:  9.4, value2: 11.0 },
+              { label: 'Construcción Edif.', label_en: 'Building Constr.',    value:  8.5, value2: 11.0 },
             ],
             unit: '%',
-            yLabel: 'High-risk share % · filled dot = AMLO era · open dot = platform avg 11%',
-            yLabel_es: '% riesgo alto · punto lleno = era AMLO · punto vacío = prom. plataforma 11%',
-            annotation: 'Filled dot = AMLO-era high-risk rate for that category. Open dot = platform average 11.0%. Gap = excess above baseline. Food & Provisions (32.4%) and Pharmaceuticals (22.4%) are the largest outliers.',
-            annotation_es: 'Punto lleno = tasa de alto riesgo AMLO para esa categoría. Punto vacío = promedio plataforma 11.0%. Brecha = exceso sobre la línea base. Alimentos (32.4%) y Medicamentos (22.4%) son los mayores valores atípicos.',
+            yLabel: 'Excess above platform avg 11% · positive = breach, negative = below',
+            yLabel_es: 'Exceso sobre prom. plataforma 11% · positivo = sobre, negativo = bajo',
+            annotation: 'Bar = AMLO-era high-risk rate minus the 11% platform baseline. Positive = breach (sector palette: salud-red on critical excess, escalating amber on the rest). Food & Provisions (+21.4 pp) and Pharmaceuticals (+11.4 pp) are the largest breaches.',
+            annotation_es: 'Barra = tasa de alto riesgo AMLO menos la línea base plataforma 11%. Positivo = rebasa (paleta: rojo-salud en exceso crítico, ámbar escalonado en el resto). Alimentos (+21.4 pp) y Medicamentos (+11.4 pp) son las mayores brechas.',
           },
         },
         pullquote: {
