@@ -43,6 +43,8 @@ import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { DotBar } from '@/components/ui/DotBar'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Inline chart map — type string → component
@@ -621,7 +623,119 @@ function ObservatoryTrailerCTA({ longformSlug, lang }: { longformSlug: string; l
 
 // ── Decorative chapter divider (sits between chapters) ────────────────────
 
-function ChapterDivider({ accentColor }: { accentColor: string }) {
+// Sexenio-trajectory era strip — used as the chapter divider on
+// "el-sexenio-del-riesgo". 4 administration segments at proportional widths
+// (years governed), colored by their model-measured high-risk rate. A tick
+// marks "you are here" (AMLO, since the story is about the AMLO sexenio).
+// Encodes the chapter-1 thesis ("every admin since Fox has been riskier")
+// directly into the chrome between chapters.
+const SEXENIO_ERA_STRIP_STORY_SLUG = 'el-sexenio-del-riesgo'
+
+function ChapterDivider({
+  accentColor,
+  storySlug,
+}: {
+  accentColor: string
+  storySlug?: string
+}) {
+  const { i18n } = useTranslation('common')
+  const isEs = i18n.language.startsWith('es')
+
+  if (storySlug === SEXENIO_ERA_STRIP_STORY_SLUG) {
+    // 4 administrations · width proportional to years governed · color by
+    // RISK_COLORS bucket derived from the admin-era high-risk rate.
+    // Fox 7.5% → low (zinc), Calderón 8.2% → low, Peña 11.2% → medium,
+    // AMLO 12.6% → medium. Forces visual hierarchy so AMLO reads as the
+    // emphasized segment via the "you are here" tick + accent ring.
+    const eras: Array<{
+      code: string
+      label: string
+      years: string
+      span: number
+      rate: number
+      color: string
+    }> = [
+      { code: 'fox',      label: 'Fox',      years: '00–06',                                     span: 6, rate: 7.5,  color: RISK_COLORS.low },
+      { code: 'calderon', label: 'Calderón', years: '06–12',                                     span: 6, rate: 8.2,  color: RISK_COLORS.low },
+      { code: 'pena',     label: 'Peña',     years: '12–18',                                     span: 6, rate: 11.2, color: RISK_COLORS.medium },
+      { code: 'amlo',     label: 'AMLO',     years: '18–24',                                     span: 6, rate: 12.6, color: RISK_COLORS.medium },
+    ]
+    const totalSpan = eras.reduce((s, e) => s + e.span, 0)
+    const youAreHere = 'amlo'
+    return (
+      <div className="my-12 max-w-3xl mx-auto px-4" aria-hidden="true">
+        <div className="flex items-center justify-between mb-1.5">
+          <span
+            className="text-[9px] font-mono uppercase tracking-[0.18em]"
+            style={{ color: accentColor }}
+          >
+            {isEs ? '◆ Trayectoria sexenal · tasa alto riesgo v0.8.5' : '◆ Sexenio trajectory · high-risk rate v0.8.5'}
+          </span>
+          <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted">
+            {isEs ? 'aquí ▼' : 'you are here ▼'}
+          </span>
+        </div>
+
+        {/* Era segments */}
+        <div className="flex w-full gap-0.5 h-2.5">
+          {eras.map((e) => {
+            const isHere = e.code === youAreHere
+            return (
+              <div
+                key={e.code}
+                className="relative"
+                style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
+              >
+                <div
+                  className="h-full rounded-sm"
+                  style={{
+                    background: e.color,
+                    opacity: isHere ? 0.95 : 0.55,
+                    outline: isHere ? `2px solid ${accentColor}` : 'none',
+                    outlineOffset: isHere ? 1 : 0,
+                  }}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Labels under each segment */}
+        <div className="flex w-full gap-0.5 mt-1.5">
+          {eras.map((e) => {
+            const isHere = e.code === youAreHere
+            return (
+              <div
+                key={e.code}
+                className="flex flex-col items-center"
+                style={{ flexBasis: `${(e.span / totalSpan) * 100}%` }}
+              >
+                <span
+                  className="text-[10px] font-mono uppercase tracking-[0.12em]"
+                  style={{
+                    color: isHere ? accentColor : 'var(--color-text-muted)',
+                    fontWeight: isHere ? 700 : 400,
+                  }}
+                >
+                  {e.label}
+                </span>
+                <span
+                  className="font-mono tabular-nums text-[10px]"
+                  style={{ color: isHere ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}
+                >
+                  {e.rate.toFixed(1)}%
+                </span>
+                <span className="text-[9px] font-mono text-text-muted/70">
+                  {e.years}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="my-16 flex items-center justify-center" aria-hidden="true">
       <span
@@ -776,19 +890,30 @@ function FeatureChapter({ chapter, story, accentColor, isFirst = false }: Chapte
       <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-x-10 gap-y-6 isolate">
         {/* Body column */}
         <div className="lg:col-span-7 lg:col-start-1">
-          {chapter.prose.map((paragraph, i) => (
-            <ScrollReveal key={i} delay={i * 60}>
-              <p
-                className={cn(
-                  'text-text-primary leading-[1.75] mb-5 text-[17px]',
-                  i === 0 && 'feature-dropcap',
-                )}
-                style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
-              >
-                {paragraph}
-              </p>
-            </ScrollReveal>
-          ))}
+          {chapter.prose.map((paragraph, i) => {
+            const sourceCount = chapter.sources?.length ?? 0
+            // Paragraph N → source ref [N] when chapter has at least that
+            // many citations. Falls back silently when sources are absent.
+            const sourceRef = sourceCount > 0 ? Math.min(i + 1, sourceCount) : 0
+            return (
+              <ScrollReveal key={i} delay={i * 60}>
+                <p
+                  className={cn(
+                    'text-text-primary leading-[1.75] mb-5 text-[17px]',
+                    i === 0 && 'feature-dropcap',
+                  )}
+                  style={i === 0 ? { '--dropcap-color': accentColor } as React.CSSProperties : undefined}
+                >
+                  {paragraph}
+                  {sourceRef > 0 && (
+                    <sup className="font-mono text-text-muted text-[10px] ml-0.5 align-super tabular-nums">
+                      [{sourceRef}]
+                    </sup>
+                  )}
+                </p>
+              </ScrollReveal>
+            )
+          })}
           {chapter.sources && chapter.sources.length > 0 && (
             <ChapterSources sources={chapter.sources} />
           )}
@@ -1561,35 +1686,114 @@ function DramatisPersonaeSection({ story, accentColor }: { story: StoryDef; acce
         >
           {/* Kicker */}
           <p
-            className="text-[9px] font-mono uppercase tracking-[0.22em] mb-4"
+            className="text-[9px] font-mono uppercase tracking-[0.22em] mb-1"
             style={{ color: accentColor }}
           >
             {isEs ? 'Sujetos de esta investigación' : 'Subjects of this investigation'}
           </p>
+          <p
+            className="text-[11px] font-mono text-text-muted mb-5"
+          >
+            {isEs
+              ? `${story.entities.length} entidades nombradas · ordenadas por nivel de riesgo`
+              : `${story.entities.length} named entities · ordered by risk level`}
+          </p>
 
-          {/* Chip grid — 1 col on mobile, 2 col on sm+, 3 on lg */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {story.entities.map((entity) => (
-              <div
-                key={`${entity.type}-${entity.id}`}
-                className="flex flex-col gap-1 p-3 rounded-sm bg-background border border-border hover:border-border-hover transition-colors"
-              >
-                <EntityIdentityChip
-                  type={entity.type}
-                  id={entity.id}
-                  name={entity.name}
-                  riskScore={entity.riskScore}
-                  ariaTier={entity.ariaTier as 1 | 2 | 3 | 4 | undefined}
-                  size="sm"
-                />
-                {(entity.role || entity.role_es) && (
-                  <p className="text-[10px] font-mono text-text-muted pl-1 leading-relaxed">
-                    {isEs ? (entity.role_es ?? entity.role) : entity.role}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+          {/* Numbered editorial roster — one row per subject, full width.
+              Layout: 01–NN rank · entity chip · risk readout · "Open dossier →" */}
+          <ol className="divide-y divide-border/60">
+            {story.entities.map((entity, idx) => {
+              const score = typeof entity.riskScore === 'number' ? entity.riskScore : 0
+              const level = getRiskLevelFromScore(score)
+              const riskColor = RISK_COLORS[level]
+              const rank = String(idx + 1).padStart(2, '0')
+              const role = isEs ? (entity.role_es ?? entity.role) : entity.role
+              return (
+                <li
+                  key={`${entity.type}-${entity.id}`}
+                  className="group grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_minmax(0,1.4fr)_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 py-3.5"
+                >
+                  {/* Rank — large Playfair Italic, dimmed */}
+                  <span
+                    className="tabular-nums select-none"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: 28,
+                      lineHeight: 0.95,
+                      letterSpacing: '-0.02em',
+                      color: 'var(--color-text-muted)',
+                      opacity: 0.5,
+                    }}
+                    aria-hidden="true"
+                  >
+                    {rank}
+                  </span>
+
+                  {/* Entity identity + role caption */}
+                  <div className="min-w-0">
+                    <EntityIdentityChip
+                      type={entity.type}
+                      id={entity.id}
+                      name={entity.name}
+                      riskScore={entity.riskScore}
+                      ariaTier={entity.ariaTier as 1 | 2 | 3 | 4 | undefined}
+                      size="sm"
+                    />
+                    {role && (
+                      <p className="text-[10px] font-mono text-text-muted pl-1 mt-1 leading-relaxed">
+                        {role}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Risk readout — DotBar + numeric (hidden on mobile, shown sm+) */}
+                  <div className="hidden sm:flex items-center gap-2.5 justify-end">
+                    {typeof entity.riskScore === 'number' && (
+                      <>
+                        <DotBar
+                          value={entity.riskScore}
+                          max={1}
+                          color={riskColor}
+                          dots={12}
+                          dotR={1.5}
+                          dotGap={4}
+                          ariaLabel={`Risk ${entity.riskScore.toFixed(2)}`}
+                        />
+                        <span
+                          className="font-mono tabular-nums text-[11px] tracking-wide"
+                          style={{ color: riskColor }}
+                        >
+                          {entity.riskScore.toFixed(2)}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* "Open dossier →" link — animated arrow on hover */}
+                  <Link
+                    to={
+                      entity.type === 'vendor'
+                        ? `/vendors/${entity.id}`
+                        : entity.type === 'institution'
+                          ? `/institutions/${entity.id}`
+                          : entity.type === 'case'
+                            ? `/cases/${entity.id}`
+                            : `/${entity.type}/${entity.id}`
+                    }
+                    className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted hover:text-text-primary transition-colors col-span-3 sm:col-span-1 justify-self-end"
+                  >
+                    <span>{isEs ? 'Abrir dossier' : 'Open dossier'}</span>
+                    <ArrowRight
+                      className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </li>
+              )
+            })}
+          </ol>
         </div>
       </div>
     </ScrollReveal>
@@ -1955,7 +2159,7 @@ export default function StoryNarrative() {
                 />
                 {/* Decorative divider between chapters (skip after last) */}
                 {idx < story.chapters.length - 1 && variant !== 'hero' && (
-                  <ChapterDivider accentColor={accentColor} />
+                  <ChapterDivider accentColor={accentColor} storySlug={story.slug} />
                 )}
               </div>
             )
