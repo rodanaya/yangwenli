@@ -303,12 +303,17 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
   /** Re-pick which labels to render based on current band + transform. */
   const labelsToRender = useMemo<ConstellationDot[]>(() => {
+    // Galaxy band shows NO vendor labels — only the cluster identity tags
+    // render (handled by renderedClusterLabels below). User report 2026-05-21:
+    // floating vendor labels like "Repsol Comercializadora" and "Alstom
+    // Transport Mexico" collided with the cluster captions and made the
+    // galaxy view unreadable. Vendor labels reveal at region zoom (≥4×)
+    // and become the dominant text at star zoom (≥12×).
+    if (band === 'constellation') return []
     const named = dots.filter((d) => d.name)
     // Sort by risk score desc so top-T1 wins collisions.
     const sorted = [...named].sort((a, b) => (b.riskScore ?? 0) - (a.riskScore ?? 0))
-    // Galaxy: top ~15% of named vendors (matches useAtlasLOD labelDensity).
-    // Region: top 50%. Star: all of them.
-    const fraction = band === 'constellation' ? 0.15 : band === 'region' ? 0.5 : 1
+    const fraction = band === 'region' ? 0.5 : 1
     const cap = Math.max(1, Math.ceil(sorted.length * fraction))
     return sorted.slice(0, Math.min(cap, MAX_LABELS))
   }, [band, dots])
@@ -377,13 +382,25 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       tweenRafRef.current = null
     }
 
-    // Skip tween on first mount or if either array is too large.
+    // Skip tween on first mount, when either array is too large, OR when the
+    // two arrays are fundamentally different cohorts (e.g. synthetic lattice
+    // fallback ↔ real-data dots loading in). The lattice has stable ids
+    // `dot-N`; real vendor dots have numeric ids. Detect this by comparing
+    // the *first* id of each — if one set is synthetic and the other isn't,
+    // we'd otherwise render hundreds of lattice ghost dots fading in/out
+    // (user report 2026-05-21: "hovering is messed up — lots of dots light
+    // up and disappear").
+    const prevHasLattice = previous?.some((d) => d.id.startsWith('dot-')) ?? false
+    const nextHasLattice = dots.some((d) => d.id.startsWith('dot-'))
+    const cohortMismatch = prevHasLattice !== nextHasLattice
+
     const shouldTween =
       previous !== null &&
       previous.length > 0 &&
       dots.length > 0 &&
       previous.length <= YEAR_TWEEN_MAX_DOTS &&
-      dots.length <= YEAR_TWEEN_MAX_DOTS
+      dots.length <= YEAR_TWEEN_MAX_DOTS &&
+      !cohortMismatch
 
     if (shouldTween && previous) {
       const map = new Map<string, { x: number; y: number }>()

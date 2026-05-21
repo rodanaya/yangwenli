@@ -77,6 +77,17 @@ function getColor(point: StoryChartPoint, index: number): string {
   return point.color ?? PALETTE[index % PALETTE.length]
 }
 
+// 2026-05-21: risk-tier color binding for bar points that opt in via
+// `riskScore`. Scoped: only points carrying a numeric riskScore get
+// RISK_COLORS treatment (critical/high/medium/low). Bible §3.10 — `low`
+// renders as muted, never green. Returns undefined for points without a
+// riskScore so callers can fall through to the existing palette path.
+function riskTierColor(point: StoryChartPoint): string | undefined {
+  if (point.riskScore === undefined) return undefined
+  const level = getRiskLevelFromScore(point.riskScore)
+  return RISK_COLORS[level]
+}
+
 function maxVal(points: StoryChartPoint[], provided?: number): number {
   if (provided != null && provided > 0) return provided
   return Math.max(...points.map((p) => p.value), 1)
@@ -407,13 +418,18 @@ export function InlineBarChart({
 
   const refX = (v: number) => LABEL_W + (v / mx) * BAR_AREA
 
-  // Anchor stat = the highlighted row, or the largest value
+  // Anchor stat = the highlighted row, or the largest value.
+  // When the point opts into risk-tier coloring (riskScore present), the
+  // anchor color follows the same tier so the headline number matches
+  // the bar reader's eye lands on.
   const highlightedPt = data.points.find((p) => p.highlight) ?? data.points[0]
   const anchor = highlightedPt
     ? {
         value: `${highlightedPt.value.toLocaleString()}${unit ? ` ${unit}` : ''}`,
         label: labelFor(highlightedPt),
-        color: highlightedPt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR,
+        color:
+          riskTierColor(highlightedPt) ??
+          (highlightedPt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR),
       }
     : undefined
 
@@ -462,8 +478,14 @@ export function InlineBarChart({
         {data.points.map((pt, i) => {
           const y = i * (BAR_HEIGHT + ROW_GAP) + 4
           const barW = Math.max(2, (pt.value / mx) * BAR_AREA)
-          const color = pt.highlight ? HIGHLIGHT_COLOR : getColor(pt, i)
-          const opacity = pt.highlight ? 0.95 : 0.65
+          // Risk-tier color wins when the point opts in via riskScore.
+          // Otherwise: highlight → drama red; else palette/explicit color.
+          const tierColor = riskTierColor(pt)
+          const color = tierColor ?? (pt.highlight ? HIGHLIGHT_COLOR : getColor(pt, i))
+          // riskScore-driven bars carry full weight (the tier *is* the
+          // visual argument); legacy highlight bars keep their existing
+          // contrast pair (0.95 / 0.65).
+          const opacity = tierColor ? 0.95 : (pt.highlight ? 0.95 : 0.65)
 
           const lbl = labelFor(pt)
           return (
@@ -1956,10 +1978,10 @@ export function ClevelandPairChart({
   // = left of axis (below baseline). Risk-tier color from RISK_COLORS,
   // derived by normalizing the excess against the OECD 25% ceiling.
   if (data.mode === 'excess') {
-    const E_LABEL_W = 148
+    const E_LABEL_W = 180   // accommodates "Building Construction" / "Construcción de Edificios"
     const E_LEFT_W = 56     // narrow left-of-axis pane for deficits
     const E_RIGHT_W = 280   // wide right-of-axis pane for breaches
-    const E_VALUE_W = 88
+    const E_VALUE_W = 112   // fits "+21.4 · 32.4%" at 11px mono without clipping the trailing %
     const E_TOTAL_W = E_LABEL_W + E_LEFT_W + E_RIGHT_W + E_VALUE_W
     const E_ROW_H = 22
     const E_ROW_GAP = 11
