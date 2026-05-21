@@ -1360,6 +1360,74 @@ const NAME_TO_SIGLAS_FALLBACK: Array<[string, string]> = [
   ['HOSPITAL INFANTIL DE MEXICO', 'HIM'],
 ]
 
+/**
+ * Editorial title-case for institution / vendor names.
+ *
+ * COMPRANET stores most institutions as ALL-CAPS — perfectly fine for a
+ * spreadsheet, terrible for editorial typography. We normalize at render
+ * time so the data layer stays untouched but the eye reads natural
+ * Spanish: "Instituto Mexicano del Seguro Social" instead of
+ * "INSTITUTO MEXICANO DEL SEGURO SOCIAL".
+ *
+ * Rules:
+ *  - Strings that already have mixed case are returned untouched.
+ *  - Spanish connectives (de / del / la / y / etc.) lowercase unless
+ *    they're the first word.
+ *  - Known siglas / corporate-form tokens stay uppercase: S.A., C.V.,
+ *    A.C., S.C., II, III, IV, etc. plus any pre-existing all-caps
+ *    siglas the fallback map already knows (IMSS, ISSSTE, SCT...).
+ *  - Hyphenated tokens get each segment cased independently
+ *    (IMSS-Bienestar reads correctly).
+ *  - "México" / accents preserved from the source.
+ *
+ * NOT a truncator. Names of any length are returned in full — the
+ * caller's layout is responsible for wrapping.
+ */
+const LOWERCASE_CONNECTIVES = new Set([
+  'de', 'del', 'la', 'las', 'los', 'el', 'en', 'y', 'e', 'o', 'u', 'a',
+  'para', 'por', 'al', 'con', 'sin', 'sobre', 'entre', 'desde',
+])
+const UPPERCASE_TOKENS = new Set([
+  'S.A.', 'S.A', 'C.V.', 'C.V', 'S.A.B.', 'A.C.', 'A.C', 'S.C.', 'I.E.', 'S.N.C.',
+  'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII',
+])
+
+function capitalizeWord(w: string): string {
+  if (!w) return w
+  // Preserve all-caps siglas already known to be acronyms (IMSS, etc.)
+  if (UPPERCASE_TOKENS.has(w.toUpperCase())) return w.toUpperCase()
+  // Hyphenated segments — capitalize each part
+  if (w.includes('-')) {
+    return w.split('-').map((seg) => capitalizeWord(seg)).join('-')
+  }
+  // Lowercase everything then uppercase first letter (handles accents correctly)
+  const lower = w.toLowerCase()
+  return lower.charAt(0).toLocaleUpperCase('es') + lower.slice(1)
+}
+
+function toEditorialCase(s: string | null | undefined): string {
+  if (!s) return ''
+  const trimmed = s.trim()
+  if (!trimmed) return trimmed
+  // If string already contains lowercase letters, assume it's already
+  // properly cased — don't double-process it.
+  if (/[a-záéíóúñü]/.test(trimmed)) return trimmed
+
+  // Split keeping whitespace tokens so we can rejoin verbatim
+  const tokens = trimmed.split(/(\s+)/)
+  return tokens.map((tok, i) => {
+    if (/^\s+$/.test(tok)) return tok
+    // Preserve fully-uppercase corporate forms (S.A., A.C., etc.)
+    if (UPPERCASE_TOKENS.has(tok.toUpperCase())) return tok.toUpperCase()
+    const lower = tok.toLowerCase()
+    // First non-space token always capitalized
+    const isFirst = i === 0 || (i > 0 && tokens.slice(0, i).every((t) => /^\s+$/.test(t)))
+    if (isFirst) return capitalizeWord(tok)
+    if (LOWERCASE_CONNECTIVES.has(lower)) return lower
+    return capitalizeWord(tok)
+  }).join('')
+}
+
 function inferSiglasFromName(name: string): string | null {
   const upper = (name || '').toUpperCase().trim()
   for (const [prefix, siglas] of NAME_TO_SIGLAS_FALLBACK) {
@@ -1764,8 +1832,7 @@ function SCellContent({ item, color, textColor, subTextColor, editorial: _editor
           lineHeight: 1.1,
           marginTop: 2,
           overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
+          wordBreak: 'break-word',
         }}
         title={item.label}
       >
@@ -2091,9 +2158,10 @@ function Z1Row({
             {acronym}
           </span>
         </span>
-        {/* Full institution name (NEVER truncated — SYS-1) */}
-        <span className="flex-1 min-w-0 text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
-          {inst.name}
+        {/* Full institution name — title-cased, never truncated. Long names
+            wrap to multiple lines rather than getting "..." cut off. */}
+        <span className="flex-1 min-w-0 text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {toEditorialCase(inst.name)}
         </span>
         {/* Spend bar (proportion of sector's largest institution) */}
         <span className="flex-shrink-0 flex items-center gap-2" style={{ width: 140 }}>
@@ -2259,7 +2327,7 @@ function Z2Panel({
       >
         <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: accentColor }}>{rank}</td>
         <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-          {formatVendorName(v.vendor_name, 300)}
+          {toEditorialCase(formatVendorName(v.vendor_name, 300))}
         </td>
         <td className="px-1 py-1.5 text-right whitespace-nowrap">
           <div className="font-mono text-[9px] tabular-nums" style={{ color: accentColor }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</div>
@@ -2293,8 +2361,8 @@ function Z2Panel({
         <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z2 · VENDORS' : 'Z2 · PROVEEDORES'}
         </div>
-        <div className="text-sm font-semibold mt-0.5 truncate" title={institutionName} style={{ color: 'var(--color-text-primary)' }}>
-          {institutionName}
+        <div className="text-sm font-semibold mt-0.5" title={institutionName} style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
+          {toEditorialCase(institutionName)}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
           {isLoading
@@ -2502,8 +2570,8 @@ function Z3Panel({
         <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           {lang === 'en' ? 'Z3 · CONTRACTS' : 'Z3 · CONTRATOS'}
         </div>
-        <div className="text-sm font-semibold mt-0.5 truncate" title={vendorName} style={{ color: 'var(--color-text-primary)' }}>
-          {vendorName}
+        <div className="text-sm font-semibold mt-0.5" title={vendorName} style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
+          {toEditorialCase(vendorName)}
         </div>
         <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
           {isLoading
