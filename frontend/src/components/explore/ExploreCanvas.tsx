@@ -40,10 +40,8 @@ import {
 import {
   Z_EASE,
   Z_LAYOUT_DURATION_S,
-  Z_CELL_ENTRANCE_S,
   Z_BAND_S,
   Z_CASCADE_STEP_S,
-  Z_CELL_STAGGER_S,
   Z_TREEMAP_DELAY_S,
   ZBreadcrumb,
   ZKickerBand,
@@ -830,6 +828,17 @@ function Z0Panel({
 
   // Treemap container variant — orchestrates the children stagger. Children
   // (cells) inherit `visible` and fire on staggerChildren cadence.
+  //
+  // Z0-local overrides (2026-05-21 user feedback: entrance felt "brutal"):
+  //   • 60ms per-cell stagger so the eye CAN follow each cell landing,
+  //     not 12 cells popping at once. Z_CELL_STAGGER_S (6ms) is reserved
+  //     for higher-density staggers at Z1+ where 60+ institutions can't
+  //     each get a 60ms slot — keep that constant intact for those uses.
+  //   • 700ms per-cell entrance with a visible drop + scale so each block
+  //     feels like it SETTLES, not pops. Expo-out easing means most of
+  //     the motion is in the last 30%, giving the soft-landing feel.
+  const Z0_CELL_STAGGER_S = 0.06
+  const Z0_CELL_ENTRANCE_S = 0.7
   const treemapVariants: Variants = {
     hidden: {},
     visible: {
@@ -837,17 +846,24 @@ function Z0Panel({
         ? { staggerChildren: 0 }
         : {
             delayChildren: Z_TREEMAP_DELAY_S,
-            staggerChildren: Z_CELL_STAGGER_S,
+            staggerChildren: Z0_CELL_STAGGER_S,
           },
     },
   }
 
-  // Per-cell entrance variant — opacity + tiny scale, no slide. The cells
-  // are already in their truthful positions; we're just bringing up the
-  // lights.
+  // Per-cell entrance variant. Replaces the previous opacity+1.5%-scale pop
+  // (which read as "click and everything appears at once"). New shape:
+  // small drop from y:10 + scale 0.94 + opacity 0 — eye sees a block ease
+  // into its slot rather than materializing on top of it. Reduced-motion
+  // path stays opacity-only.
   const cellVariants: Variants = {
-    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.985 },
-    visible: { opacity: 1, scale: 1, transition: trans(Z_CELL_ENTRANCE_S) },
+    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: 10 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: trans(Z0_CELL_ENTRANCE_S),
+    },
   }
 
   // Layout transition (sort-toggle): cells rearrange via framer-motion's
