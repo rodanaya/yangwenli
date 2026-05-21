@@ -1896,10 +1896,6 @@ function Z1Panel({
     )
   }, [institutions, mode])
 
-  const maxInstitutionSpend = useMemo(
-    () => Math.max(1, ...institutions.map((i) => i.total_amount_mxn)),
-    [institutions]
-  )
 
   // Risk-tier shelves. When sorted by RISK, group by tier. When sorted by
   // SPEND, shelves dissolve to a flat ranked list (matching Z2's canon).
@@ -1996,7 +1992,6 @@ function Z1Panel({
                   inst={inst}
                   rank={i + 1}
                   totalSectorSpend={totalSectorSpend}
-                  maxInstitutionSpend={maxInstitutionSpend}
                   sectorAccent={sectorAccent}
                   dispatch={dispatch}
                   lang={lang}
@@ -2013,7 +2008,6 @@ function Z1Panel({
                 color={RISK_COLORS.critical}
                 items={shelfCritical}
                 totalSectorSpend={totalSectorSpend}
-                maxInstitutionSpend={maxInstitutionSpend}
                 sectorAccent={sectorAccent}
                 dispatch={dispatch}
                 lang={lang}
@@ -2026,7 +2020,6 @@ function Z1Panel({
                 color={RISK_COLORS.high}
                 items={shelfHigh}
                 totalSectorSpend={totalSectorSpend}
-                maxInstitutionSpend={maxInstitutionSpend}
                 sectorAccent={sectorAccent}
                 dispatch={dispatch}
                 lang={lang}
@@ -2039,7 +2032,6 @@ function Z1Panel({
                 color={RISK_COLORS.medium}
                 items={shelfMedium}
                 totalSectorSpend={totalSectorSpend}
-                maxInstitutionSpend={maxInstitutionSpend}
                 sectorAccent={sectorAccent}
                 dispatch={dispatch}
                 lang={lang}
@@ -2052,7 +2044,6 @@ function Z1Panel({
                 color="var(--color-text-muted)"
                 items={shelfRoutine}
                 totalSectorSpend={totalSectorSpend}
-                maxInstitutionSpend={maxInstitutionSpend}
                 sectorAccent={sectorAccent}
                 dispatch={dispatch}
                 lang={lang}
@@ -2095,7 +2086,6 @@ function Z1Row({
   inst,
   rank,
   totalSectorSpend,
-  maxInstitutionSpend,
   sectorAccent,
   dispatch,
   lang,
@@ -2105,7 +2095,6 @@ function Z1Row({
   inst: SpatialInstitution
   rank: number
   totalSectorSpend: number
-  maxInstitutionSpend: number
   sectorAccent: string
   dispatch: ReturnType<typeof useExploreDispatch>
   lang: 'en' | 'es'
@@ -2121,11 +2110,28 @@ function Z1Row({
     : riskTier === 'medium' ? RISK_COLORS.medium
     : 'var(--color-text-muted)'
   const share = totalSectorSpend > 0 ? (inst.total_amount_mxn / totalSectorSpend) * 100 : 0
-  const barPctOfMax = (inst.total_amount_mxn / maxInstitutionSpend) * 100
   const eff = effectiveSiglas(inst.name, null)
   const acronym = shortInstitutionLabel(inst.name, eff)
   const logoSrc = logoSrcForSiglas(eff)
   const riskPct = Math.round(risk * 100)
+
+  // Editorial encodings — replace the generic "proportion-of-max" grey bar
+  // that said nothing between institutions. New row carries five
+  // procurement red-flag dimensions per institution:
+  //
+  //   1. Spend (MXN absolute) + share % of sector       — the money story
+  //   2. # Contracts                                     — magnitude of activity
+  //   3. HR% bar (high-risk-contract rate, red, fills)  — the procurement signal
+  //   4. DA% (direct-award rate)                        — non-competitive flag
+  //   5. Avg risk score (existing risk pill)             — model verdict
+  //
+  // HR% varies hugely between institutions (some 80%+, some near 0%), so the
+  // bar's LENGTH visibly differentiates rows in a way the grey bar never did.
+  const hrPct = inst.high_risk_pct ?? 0
+  const daPct = inst.direct_award_pct ?? 0
+  const hrBarPct = Math.min(100, Math.max(0, hrPct))
+  const hrBarColor = hrPct >= 50 ? RISK_COLORS.critical : hrPct >= 25 ? RISK_COLORS.high : hrPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+  const daColor = daPct >= 80 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
 
   return (
     <motion.li
@@ -2139,8 +2145,8 @@ function Z1Row({
         onClick={() => dispatch({ type: 'drill-into-institution', institutionId: inst.institution_id, institutionName: inst.name })}
         className="w-full text-left flex items-center gap-3 px-2 py-2 rounded-sm cursor-pointer"
         style={{ background: 'transparent' }}
-        title={inst.name}
-        aria-label={`${inst.name} — ${formatCompactMXN(inst.total_amount_mxn)} — ${riskPct}% risk`}
+        title={`${inst.name} — ${formatCompactMXN(inst.total_amount_mxn)} — ${inst.total_contracts} contracts — HR ${hrPct.toFixed(0)}% — DA ${daPct.toFixed(0)}% — avg risk ${riskPct}%`}
+        aria-label={`${inst.name}, ${formatCompactMXN(inst.total_amount_mxn)}, ${inst.total_contracts} contracts, high-risk rate ${hrPct.toFixed(0)} percent, direct-award rate ${daPct.toFixed(0)} percent, average risk ${riskPct} percent`}
       >
         {/* Rank pill */}
         <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
@@ -2158,30 +2164,70 @@ function Z1Row({
             {acronym}
           </span>
         </span>
-        {/* Full institution name — title-cased, never truncated. Long names
-            wrap to multiple lines rather than getting "..." cut off. */}
+        {/* Full institution name — title-cased, never truncated. Wraps. */}
         <span className="flex-1 min-w-0 text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
           {toEditorialCase(inst.name)}
         </span>
-        {/* Spend bar (proportion of sector's largest institution) */}
-        <span className="flex-shrink-0 flex items-center gap-2" style={{ width: 140 }}>
-          <span className="relative flex-1 h-[5px] rounded-sm overflow-hidden" style={{ background: 'var(--color-background-elevated)' }}>
+        {/* HR% bar — replaces the grey "proportion-of-max" bar. Length =
+            high-risk-contract rate (0-100%); color escalates with severity.
+            This is the visual signal that ACTUALLY varies between institutions. */}
+        <span className="flex-shrink-0 flex items-center gap-2" style={{ width: 130 }}>
+          <span
+            className="relative flex-1 h-[6px] rounded-sm overflow-hidden"
+            style={{ background: 'var(--color-background-elevated)' }}
+            aria-hidden="true"
+          >
             <span
-              className="absolute inset-y-0 left-0 rounded-sm"
-              style={{ width: `${barPctOfMax}%`, background: riskColor, opacity: riskTier === 'low' ? 0.45 : 0.85 }}
+              className="absolute inset-y-0 left-0 rounded-sm transition-all"
+              style={{ width: `${hrBarPct}%`, background: hrBarColor, opacity: 0.92 }}
             />
+            {/* 25%, 50%, 75% reference ticks so the eye scales the bar fast */}
+            {[25, 50, 75].map((t) => (
+              <span
+                key={t}
+                className="absolute inset-y-0 w-px"
+                style={{ left: `${t}%`, background: 'rgba(0,0,0,0.10)' }}
+              />
+            ))}
           </span>
-          <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-            {formatCompactMXN(inst.total_amount_mxn)}
+          <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, fontWeight: 700, color: hrBarColor, width: 36 }}>
+            {hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>HR%</span>
           </span>
         </span>
-        {/* Share + risk pill */}
-        <span className="flex-shrink-0 text-right" style={{ width: 80 }}>
-          <span className="block font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-            {share.toFixed(1)}%
+        {/* Spend column (kept) */}
+        <span className="flex-shrink-0 text-right" style={{ width: 90 }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            {formatCompactMXN(inst.total_amount_mxn)}
           </span>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 10, color: riskColor }}>
-            {riskPct}% {lang === 'en' ? 'risk' : 'riesgo'}
+          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {share.toFixed(1)}% {lang === 'en' ? 'share' : 'aporte'}
+          </span>
+        </span>
+        {/* NEW: # Contracts — magnitude indicator separate from MXN */}
+        <span className="flex-shrink-0 text-right" style={{ width: 70 }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            {formatNumber(inst.total_contracts)}
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'contracts' : 'contratos'}
+          </span>
+        </span>
+        {/* NEW: DA% (direct-award rate) — non-competitive procurement flag */}
+        <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: daColor }}>
+            {daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'DA' : 'AD'}
+          </span>
+        </span>
+        {/* Avg risk pill (kept) */}
+        <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: riskColor }}>
+            {riskPct}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'risk' : 'riesgo'}
           </span>
         </span>
       </button>
@@ -2194,7 +2240,6 @@ function Z1Shelf({
   color,
   items,
   totalSectorSpend,
-  maxInstitutionSpend,
   sectorAccent,
   dispatch,
   lang,
@@ -2206,7 +2251,6 @@ function Z1Shelf({
   color: string
   items: SpatialInstitution[]
   totalSectorSpend: number
-  maxInstitutionSpend: number
   sectorAccent: string
   dispatch: ReturnType<typeof useExploreDispatch>
   lang: 'en' | 'es'
@@ -2237,7 +2281,6 @@ function Z1Shelf({
               inst={inst}
               rank={i + 1}
               totalSectorSpend={totalSectorSpend}
-              maxInstitutionSpend={maxInstitutionSpend}
               sectorAccent={sectorAccent}
               dispatch={dispatch}
               lang={lang}
