@@ -25,7 +25,7 @@ import {
   getRiskLevelFromScore,
   SECTOR_COLORS,
 } from '@/lib/constants'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
 import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
@@ -60,15 +60,8 @@ import {
 const SVG_W = 1200
 const SVG_H = 720
 
-const MXN_TO_USD = 17.15
-
-function formatCompactUSD(mxn: number): string {
-  const usd = mxn / MXN_TO_USD
-  if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`
-  if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`
-  if (usd >= 1_000) return `$${(usd / 1_000).toFixed(0)}K`
-  return `$${Math.round(usd)}`
-}
+// formatCompactUSD imported from @/lib/utils (uses the canonical
+// exchange-rate helper). Local duplicate removed 2026-05-21.
 
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -1436,21 +1429,82 @@ function inferSiglasFromName(name: string): string | null {
   return null
 }
 
-// Short institution label: siglas if present, else inferred from a small
-// known-prefix map, else extract a 14-char editorial shorthand from the
-// full name. Stops "INSTITUTO MEXICANO DEL SEGURO SOCIAL" string-of-doom
-// from bunching up the cell list.
+// Spanish connective words we strip when generating initials from a name.
+// Same list as toEditorialCase but ALL lowercase (caller has already lowercased).
+const ACRONYM_STOPWORDS = new Set([
+  'de', 'del', 'la', 'las', 'los', 'el', 'en', 'y', 'e', 'o', 'u', 'a',
+  'para', 'por', 'al', 'con', 'sin', 'sobre', 'entre', 'desde', 'sa', 'cv',
+  'sc', 'ac', 'snc', 'sab',
+])
+
+/**
+ * Generate a 3-5 char acronym from the FIRST LETTERS of significant words.
+ * No truncation, no "..." — every institution gets a real chip.
+ *
+ * Examples:
+ *   "Instituto Nacional de Cardiología Ignacio Chávez"  → INCIC
+ *   "Hospital Regional de Alta Especialidad del Bajío"  → HRAEB
+ *   "Universidad Autónoma Metropolitana"                → UAM
+ *   "Comisión Federal de Electricidad"                  → CFE
+ *   "BC-Comisión Estatal de Servicios Públicos"          → BCCESP
+ *   "Diconsa, S.A. de C.V."                              → DICONSA  (whole single word kept)
+ *
+ * Rules:
+ *  - State-code prefix kept as a single token: "BC-Comisión ..." → starts BC + ...
+ *  - Punctuation stripped
+ *  - Connective Spanish words filtered out
+ *  - If the result is < 2 chars, fall back to the first 4 letters of the cleaned name
+ *  - Capped at 6 chars so the 22x22 chip stays readable
+ */
+function acronymFromName(name: string): string {
+  if (!name) return '—'
+  // Normalize: strip accents for letter extraction, but keep state prefix
+  const stripped = name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[,.;:()&]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!stripped) return '—'
+
+  // Honor state-code prefix as a unit (BC-, OAX-, PUE-, ...)
+  const stateMatch = stripped.match(/^([A-Z]{2,4})-/)
+  const statePrefix = stateMatch ? stateMatch[1] : ''
+  const body = stateMatch ? stripped.slice(stateMatch[0].length) : stripped
+
+  // If the whole body is one word (e.g. "Diconsa", "Pemex"), return it
+  // uppercased as the chip — that IS the brand name.
+  const tokens = body.split(' ').filter(Boolean)
+  if (tokens.length === 1) {
+    const single = tokens[0].toUpperCase()
+    return statePrefix ? `${statePrefix}${single.slice(0, 6 - statePrefix.length)}` : single.slice(0, 6)
+  }
+
+  // Multi-word: take first letter of each non-stopword token
+  const initials = tokens
+    .filter((t) => !ACRONYM_STOPWORDS.has(t.toLowerCase()))
+    .map((t) => t[0]?.toUpperCase() ?? '')
+    .filter(Boolean)
+    .join('')
+
+  const acronym = statePrefix + initials
+  if (acronym.length >= 2) return acronym.slice(0, 6)
+
+  // Last resort: first 4 letters of body, uppercased. Still no ellipsis.
+  return (statePrefix + body.replace(/\s/g, '').slice(0, 4 - statePrefix.length)).toUpperCase()
+}
+
+/**
+ * Short institution label resolved in priority order:
+ *   1. siglas from the API (truth)
+ *   2. NAME_TO_SIGLAS_FALLBACK map (manually curated common cases)
+ *   3. acronymFromName() (auto-generated initials — never returns "...")
+ */
 function shortInstitutionLabel(name: string, siglas?: string | null): string {
   if (siglas && siglas.trim()) return siglas.trim().toUpperCase()
   const inferred = inferSiglasFromName(name)
   if (inferred) return inferred
-  const cleaned = name
-    .replace(/^(SECRETAR[IÍ]A DE|INSTITUTO (NACIONAL )?DE|COMISI[OÓ]N (NACIONAL )?DE|HOSPITAL|FONDO (NACIONAL )?DE|CENTRO (NACIONAL )?(DE|PARA)|SERVICIOS? DE|UNIVERSIDAD|DIRECCI[OÓ]N (GENERAL )?DE)\s*/i, '')
-    .trim()
-  if (cleaned.length <= 14) return cleaned
-  const cut = cleaned.slice(0, 14)
-  const lastSpace = cut.lastIndexOf(' ')
-  return (lastSpace > 6 ? cut.slice(0, lastSpace) : cut) + '…'
+  return acronymFromName(name)
 }
 
 // Logos that exist in frontend/public/logos/. Add a siglas here (and
@@ -2194,10 +2248,14 @@ function Z1Row({
             {hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>HR%</span>
           </span>
         </span>
-        {/* Spend column (kept) */}
-        <span className="flex-shrink-0 text-right" style={{ width: 90 }}>
+        {/* Spend column — MXN + USD companion for international audiences,
+            + share-of-sector % below. Three lines, all right-aligned, mono. */}
+        <span className="flex-shrink-0 text-right" style={{ width: 110 }}>
           <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {formatCompactMXN(inst.total_amount_mxn)}
+          </span>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            ≈ {formatCompactUSD(inst.total_amount_mxn)}
           </span>
           <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
             {share.toFixed(1)}% {lang === 'en' ? 'share' : 'aporte'}
