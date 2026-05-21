@@ -780,26 +780,15 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       }
     }
 
-    // Year-change tween: fade out dots that were present in the previous
-    // frame but are GONE from the current dots array. Drawn at neutral
-    // riskLevel="medium" radius since we don't keep the full prev object.
-    if (tweenProg < 1 && prevMap) {
-      const currentIds = new Set(dots.map((d) => d.id))
-      const fadeOutAlpha = 1 - tweenEased
-      if (fadeOutAlpha > 0.01) {
-        for (const [id, prev] of prevMap) {
-          if (currentIds.has(id)) continue
-          const sx = prev.x * w * k + t.x
-          const sy = prev.y * h * k + t.y
-          if (sx < -20 || sy < -20 || sx > w + 20 || sy > h + 20) continue
-          ctx.beginPath()
-          ctx.arc(sx, sy, 1.6, 0, TAU)
-          ctx.fillStyle = RISK_COLORS.medium
-          ctx.globalAlpha = fadeOutAlpha * 0.5
-          ctx.fill()
-        }
-      }
-    }
+    // 2026-05-22 — removed the "fade out removed dots" ghost render.
+    // Empirically (live trace 2026-05-21): on lattice → real-data
+    // transition, the prevMap captured the 1,200 synthetic lattice positions
+    // and this loop repainted them at low alpha indefinitely, producing the
+    // tan-dot noise scattered across the galaxy view. The cohort-mismatch
+    // guard upstream was supposed to prevent prevMap from being set in that
+    // case, but something still leaks. The fade-out was nice-to-have for
+    // year scrubbing; the dot POSITIONS still tween smoothly for matched
+    // IDs (the main effect). Strip the unmatched-id fade-out entirely.
     ctx.globalAlpha = 1
 
     // Cluster attractor rings (thin, on top of dots).
