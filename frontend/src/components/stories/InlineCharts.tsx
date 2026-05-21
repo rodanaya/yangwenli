@@ -2257,7 +2257,8 @@ export function ClevelandPairChart({
               >
                 {labelFor(pt)}
               </text>
-              {/* Gap annotation */}
+              {/* Gap annotation — 'signed' (default) shows +gap; 'ratio' shows
+                  value as % of value2, used when value is a subset of value2 */}
               <text
                 x={LABEL_W + DOT_AREA + 8}
                 y={yCenter + 1}
@@ -2267,7 +2268,9 @@ export function ClevelandPairChart({
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-muted)"
               >
-                {gap >= 0 ? '+' : ''}{gap.toLocaleString()}
+                {data.gapFormat === 'ratio' && pt.value2
+                  ? `${Math.round((pt.value / pt.value2) * 100)}%`
+                  : `${gap >= 0 ? '+' : ''}${gap.toLocaleString()}`}
               </text>
             </g>
           )
