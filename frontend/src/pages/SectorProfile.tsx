@@ -23,7 +23,6 @@ import { Act } from '@/components/layout/Act'
 import {
   cn,
   formatCompactMXN,
-  formatDualCurrency,
   formatNumber,
 } from '@/lib/utils'
 import {
