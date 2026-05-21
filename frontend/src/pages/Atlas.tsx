@@ -55,7 +55,11 @@ import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
 // Atlas P6 Frontier C — planetary system: contracts orbiting a focused vendor.
 import { useVendorContracts, type VendorContractDot } from '@/lib/atlas/use-vendor-contracts'
 import { ContractFloatingCard } from '@/components/atlas/ContractFloatingCard'
-import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
+// `dotsFromRows` (1,200 synthetic Halton lattice) was the loading fallback
+// for the Canvas engine — removed 2026-05-22 because tan low-risk lattice
+// dots speckled across the galaxy view read as noise. `clustersFromMeta`
+// stays — it builds the attractor coords the engine renders.
+import { clustersFromMeta } from '@/lib/atlas/dots-from-rows'
 // Atlas P6 Frontier B — real-vendor galaxy (replaces synthetic lattice).
 import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/lib/atlas/use-cluster-vendors'
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
@@ -530,8 +534,6 @@ function useClusterNotes(): {
 // ─────────────────────────────────────────────────────────────────────────────
 interface CanvasAtlasViewProps {
   mode: ConstellationMode
-  rows: ConstellationRiskRow[]
-  seed: number
   pinnedCode: string | null
   lang: 'en' | 'es'
   activeMeta: ClusterMeta[]
@@ -542,8 +544,6 @@ interface CanvasAtlasViewProps {
 
 function CanvasAtlasView({
   mode,
-  rows,
-  seed,
   pinnedCode,
   lang,
   activeMeta,
@@ -605,10 +605,12 @@ function CanvasAtlasView({
     return () => ro.disconnect()
   }, [])
 
-  const latticeDots = useMemo(
-    () => dotsFromRows({ rows, meta: activeMeta, mode, seed }),
-    [rows, activeMeta, mode, seed],
-  )
+  // 2026-05-22 — `latticeDots` (the 1,200-dot Halton fallback) was removed.
+  // It used to paint while the galaxy/zoom queries loaded; users read those
+  // tan low-risk dots as noise rather than identity. The cluster attractor
+  // rings drawn by the engine itself carry the galaxy structure during the
+  // brief load window. `dotsFromRows` and its inputs (`rows`, `seed`) stay
+  // dormant — the SVG legacy path may still resurrect them.
   const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
 
   // Atlas P6 Frontier B (2026-05-21) — real-vendor galaxy.
@@ -693,8 +695,15 @@ function CanvasAtlasView({
     }
 
     if (sources.length === 0) {
-      // Loading or failure — show the synthetic lattice so we never paint empty.
-      return latticeDots
+      // 2026-05-22 — was returning `latticeDots` (1,200 synthetic Halton dots)
+      // as a loading fallback. User report ("FIX THAT BEFORE WE GO TO BED"):
+      // tan low-risk lattice dots speckled across the galaxy view alongside
+      // the real 70 vendor dots and read as noise. The cluster attractor
+      // rings (rendered by the engine itself from `clusters`) already carry
+      // the structural identity of the galaxy view, so returning an empty
+      // array during the brief galaxy-load window paints just rings — clean,
+      // and the real-vendor dots fade in as soon as the batch endpoint resolves.
+      return []
     }
 
     const realDots = sources.map((v): import('@/components/atlas/CanvasConstellation').ConstellationDot => {
@@ -736,7 +745,7 @@ function CanvasAtlasView({
     zoomCluster.vendors,
     zoomedCodeForFetch,
     clusters,
-    latticeDots,
+    namedVendors,
     positionForVendor,
   ])
 
@@ -2364,8 +2373,6 @@ export default function Atlas() {
           <CanvasAtlasView
             key={constellationKey}
             mode={mode}
-            rows={rows.length > 0 ? rows : fallbackRows}
-            seed={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
             pinnedCode={pinnedCode}
             lang={lang}
             activeMeta={activeConstellationMeta}
