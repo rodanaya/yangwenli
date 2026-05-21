@@ -35,12 +35,16 @@ export interface AtlasLOD {
 export function useAtlasLOD(effectiveScale: number): AtlasLOD {
   return useMemo(() => {
     if (effectiveScale < 4) {
-      // Frontier B hotfix (2026-05-21): show top ~15% of vendor labels even
-      // at galaxy zoom so users can read who's there without zooming first.
-      // Was labelDensity: 0 — that's why the user couldn't see any names.
+      // Galaxy zoom: cluster NAMES shown (separately via cluster-label
+      // overlay in CanvasConstellation), vendor labels HIDDEN.
+      // User report 2026-05-21: at labelDensity 0.15, vendor labels like
+      // "Repsol Comercializadora" and "Alstom Transport Mexico" floated
+      // across the canvas and collided with the cluster captions —
+      // "I can't see anything, very badly organized." Clean galaxy view
+      // is cluster identity only; vendor names reveal at region band.
       return {
         band: 'constellation',
-        labelDensity: 0.15,
+        labelDensity: 0,
         showRiskChip: false,
         showContractCount: false,
         dotScaleMultiplier: 1.0,

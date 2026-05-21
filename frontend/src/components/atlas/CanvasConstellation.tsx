@@ -843,35 +843,22 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
               position: 'absolute',
               left: c.sx,
               top: c.sy,
-              transform: 'translate(-50%, 20px)',
-              textAlign: 'center',
+              transform: 'translate(-50%, 18px)',
               whiteSpace: 'nowrap',
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: 9,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              lineHeight: 1.2,
+              background: 'color-mix(in srgb, var(--color-background, #faf9f6) 92%, transparent)',
+              padding: '2px 6px',
+              borderRadius: 2,
+              borderLeft: `2px solid ${c.color}`,
+              color: 'var(--color-text-muted, #6b6b6b)',
             }}
           >
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: c.color,
-                letterSpacing: '0.06em',
-                lineHeight: 1.1,
-              }}
-            >
-              {c.code}
-            </div>
-            <div
-              style={{
-                fontSize: 10,
-                color: 'var(--color-text-muted, #6b6b6b)',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                marginTop: 2,
-                lineHeight: 1.2,
-              }}
-            >
-              {c.label}
-            </div>
+            <span style={{ color: c.color, fontWeight: 700, marginRight: 5 }}>{c.code}</span>
+            {c.label}
           </div>
         ))}
         {renderedLabels.map((l) => (
