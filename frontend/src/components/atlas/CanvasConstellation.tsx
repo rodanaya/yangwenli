@@ -51,6 +51,7 @@ import { zoom as d3zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } f
 // shipped with our @types/d3-* set, so we narrow via a local helper below.
 import 'd3-transition'
 import { quadtree as d3quadtree, type Quadtree } from 'd3-quadtree'
+import { easeCubicInOut } from 'd3-ease'
 
 /**
  * Type-safe wrapper around `selection.transition().duration(ms)`. d3-zoom
@@ -67,9 +68,12 @@ interface TransitionLikeSelection<T extends Element> {
 function withTransition<T extends Element>(
   sel: Selection<T, unknown, null, undefined>,
   duration: number,
+  ease?: (t: number) => number,
 ): TransitionLikeSelection<T> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return ((sel as any).transition().duration(duration)) as TransitionLikeSelection<T>
+  let tr: any = (sel as any).transition().duration(duration)
+  if (ease) tr = tr.ease(ease)
+  return tr as TransitionLikeSelection<T>
 }
 import { RISK_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
@@ -136,8 +140,18 @@ export interface CanvasConstellationProps {
   initialCenter?: { x: number; y: number }
   /** Fired on dot click (after quadtree hit). */
   onDotClick?: (dot: ConstellationDot) => void
-  /** Fired on hover enter/leave. Null on leave. */
-  onDotHover?: (dot: ConstellationDot | null) => void
+  /**
+   * Fired on hover enter/leave. Null on leave.
+   *
+   * Atlas P6 Frontier A (2026-05-21): also emits the dot's CURRENT screen
+   * position in CSS pixels relative to the wrapper, so consumers can render
+   * adjacent UI (e.g. VendorHaloCard at zoom ≥ 18×) without re-computing the
+   * world→screen transform themselves.
+   */
+  onDotHover?: (
+    dot: ConstellationDot | null,
+    screenPos?: { x: number; y: number },
+  ) => void
   /** Fired when a cluster attractor itself is clicked (NOT a dot). */
   onClusterClick?: (cluster: ConstellationCluster) => void
   /** Fired with the new zoom level + computed band on every zoom event. */
@@ -179,6 +193,18 @@ const SCALE_EXTENT: [number, number] = [0.5, 60]
 
 /** Max labels to keep on screen at any one time (collision-pruned). */
 const MAX_LABELS = 50
+
+/** Dot-count cap above which year-change tween is skipped (snap to new state). */
+const YEAR_TWEEN_MAX_DOTS = 2000
+
+/** Year-change morph duration in milliseconds. */
+const YEAR_TWEEN_MS = 600
+
+/** Risk-floor fade duration in milliseconds. */
+const RISK_FLOOR_FADE_MS = 400
+
+/** flyToCluster duration in milliseconds. */
+const FLY_TO_MS = 900
 
 /** Bucket a zoom scalar into a band. Mirrors `useAtlasLOD`. */
 function bandFor(k: number): ConstellationBand {
@@ -234,6 +260,23 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
   const hoveredIdRef = useRef<string | null>(null)
   const zoomBehaviorRef = useRef<ZoomBehavior<HTMLCanvasElement, unknown> | null>(null)
 
+  // — Year-change morph state —
+  // Map of previous dot positions keyed by id, captured at the moment the
+  // `dots` prop changes. While `tweenStartRef.current !== null`, the draw
+  // loop interpolates between previous and current positions over
+  // YEAR_TWEEN_MS using easeCubicInOut.
+  const prevDotsMapRef = useRef<Map<string, { x: number; y: number }> | null>(null)
+  const tweenStartRef = useRef<number | null>(null)
+  const tweenRafRef = useRef<number | null>(null)
+
+  // — Risk-floor fade state —
+  // Tracks the floor at the start of the current fade + its start timestamp.
+  // The draw loop animates each dot's alpha contribution from its OLD
+  // visibility (matching prevFloor) to its NEW visibility (matching riskFloor).
+  const prevRiskFloorRef = useRef<'all' | 'medium' | 'high' | 'critical'>(riskFloor)
+  const floorFadeStartRef = useRef<number | null>(null)
+  const floorFadeRafRef = useRef<number | null>(null)
+
   // Band lives as React state so labels rerender at threshold crossings.
   const [band, setBand] = useState<ConstellationBand>(() => bandFor(initialZoom))
   const [, forceLabelTick] = useState(0)
@@ -278,7 +321,11 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     const ro = new ResizeObserver(resize)
     ro.observe(wrapper)
     resize()
-    return () => ro.disconnect()
+    return () => {
+      ro.disconnect()
+      if (tweenRafRef.current !== null) cancelAnimationFrame(tweenRafRef.current)
+      if (floorFadeRafRef.current !== null) cancelAnimationFrame(floorFadeRafRef.current)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -292,12 +339,96 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       .addAll(dots)
   }, [dots])
 
+  // — Track previous dots for year-change tween —
+  // We hold a ref to the LAST seen dots array; when `dots` changes (a new
+  // reference), we capture each previous (id → {x,y}) into prevDotsMapRef
+  // and kick off a RAF tween. Lattice dots have stable ids (`dot-N`) and so
+  // most positions interpolate; new ids fade in, removed ids fade out.
+  const lastDotsRef = useRef<ConstellationDot[] | null>(null)
   useEffect(() => {
+    const previous = lastDotsRef.current
+    lastDotsRef.current = dots
+
+    // Cancel any in-flight tween before potentially starting a new one.
+    if (tweenRafRef.current !== null) {
+      cancelAnimationFrame(tweenRafRef.current)
+      tweenRafRef.current = null
+    }
+
+    // Skip tween on first mount or if either array is too large.
+    const shouldTween =
+      previous !== null &&
+      previous.length > 0 &&
+      dots.length > 0 &&
+      previous.length <= YEAR_TWEEN_MAX_DOTS &&
+      dots.length <= YEAR_TWEEN_MAX_DOTS
+
+    if (shouldTween && previous) {
+      const map = new Map<string, { x: number; y: number }>()
+      for (const d of previous) map.set(d.id, { x: d.x, y: d.y })
+      prevDotsMapRef.current = map
+      tweenStartRef.current = performance.now()
+
+      const tick = (now: number): void => {
+        const start = tweenStartRef.current
+        if (start === null) return
+        const t = Math.min(1, (now - start) / YEAR_TWEEN_MS)
+        draw()
+        if (t < 1) {
+          tweenRafRef.current = requestAnimationFrame(tick)
+        } else {
+          tweenStartRef.current = null
+          prevDotsMapRef.current = null
+          tweenRafRef.current = null
+          draw()
+        }
+      }
+      tweenRafRef.current = requestAnimationFrame(tick)
+    } else {
+      // No tween — clear any stale state and snap.
+      tweenStartRef.current = null
+      prevDotsMapRef.current = null
+    }
+
     rebuildQuadtree()
     draw()
     forceLabelTick((n) => n + 1)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dots, rebuildQuadtree])
+
+  // — Risk-floor fade trigger —
+  // When `riskFloor` prop changes, kick off a 400ms RAF that simply pumps
+  // `draw()` so the alpha interpolation in the draw loop has frames to render.
+  // The actual per-dot alpha math lives in `draw()` based on
+  // floorFadeStartRef + prevRiskFloorRef + current riskFloor.
+  useEffect(() => {
+    // On first mount, just snapshot — no fade.
+    if (prevRiskFloorRef.current === riskFloor) return
+    if (floorFadeRafRef.current !== null) {
+      cancelAnimationFrame(floorFadeRafRef.current)
+      floorFadeRafRef.current = null
+    }
+    floorFadeStartRef.current = performance.now()
+    const startFloor = prevRiskFloorRef.current
+    const tick = (now: number): void => {
+      const start = floorFadeStartRef.current
+      if (start === null) return
+      const t = Math.min(1, (now - start) / RISK_FLOOR_FADE_MS)
+      draw()
+      if (t < 1) {
+        floorFadeRafRef.current = requestAnimationFrame(tick)
+      } else {
+        floorFadeStartRef.current = null
+        prevRiskFloorRef.current = riskFloor
+        floorFadeRafRef.current = null
+        draw()
+      }
+    }
+    floorFadeRafRef.current = requestAnimationFrame(tick)
+    // Mark that we've started — the resolved prev-floor sticks until tween ends.
+    void startFloor
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [riskFloor])
 
   // — d3-zoom hookup —
   useEffect(() => {
@@ -349,7 +480,8 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         .translate(w / 2, h / 2)
         .scale(targetK)
         .translate(-cluster.fx * w, -cluster.fy * h)
-      withTransition(select(canvas), 600).call(zb.transform, target)
+      // Atlas P6 Frontier A — cinematic 900ms cubic curve (was 600ms linear).
+      withTransition(select(canvas), FLY_TO_MS, easeCubicInOut).call(zb.transform, target)
     }
     return () => {
       if (flyToClusterRef) flyToClusterRef.current = null
@@ -389,7 +521,16 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     const newId = found ? found.id : null
     if (newId !== hoveredIdRef.current) {
       hoveredIdRef.current = newId
-      onDotHover?.(found ?? null)
+      if (found) {
+        const { w, h } = sizeRef.current
+        const screenPos = {
+          x: found.x * w * t.k + t.x,
+          y: found.y * h * t.k + t.y,
+        }
+        onDotHover?.(found, screenPos)
+      } else {
+        onDotHover?.(null)
+      }
       draw()
     }
   }, [onDotHover])
@@ -413,7 +554,18 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     const ix = (sx - t.x) / t.k
     const iy = (sy - t.y) / t.k
     const hitR = 12 / t.k
-    const found = qt.find(ix, iy, hitR)
+    let found = qt.find(ix, iy, hitR)
+    // Atlas P6 Frontier A — faded-out dots (below current riskFloor) are not
+    // clickable. We test against the CURRENT floor (post-fade); during the
+    // 400ms fade the dot is at intermediate alpha, but allowing clicks then
+    // would feel inconsistent — pick the destination state as the source of
+    // truth.
+    if (found && riskFloor !== 'all') {
+      const floorOrder = RISK_ORDER[riskFloor]
+      if (RISK_ORDER[found.riskLevel] < floorOrder) {
+        found = undefined
+      }
+    }
     // Atlas P6 Pass 3 bug-fix (2026-05-21): only consume the click as a
     // dot-click when a handler is actually wired. Otherwise fall through to
     // cluster hit-testing — without this, every click on the densely-packed
@@ -444,7 +596,7 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         return
       }
     }
-  }, [onDotClick, onClusterClick, clusters])
+  }, [onDotClick, onClusterClick, clusters, riskFloor])
 
   // — Draw loop —
   const draw = useCallback((): void => {
@@ -458,6 +610,23 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     const floorOrder = riskFloor === 'all' ? -1 : RISK_ORDER[riskFloor]
     const hoveredId = hoveredIdRef.current
 
+    // Year-change tween progress (0..1, eased).
+    const tweenStart = tweenStartRef.current
+    const tweenProg = tweenStart === null
+      ? 1
+      : Math.min(1, (performance.now() - tweenStart) / YEAR_TWEEN_MS)
+    const tweenEased = easeCubicInOut(tweenProg)
+    const prevMap = prevDotsMapRef.current
+
+    // Risk-floor fade progress (0..1, eased).
+    const floorStart = floorFadeStartRef.current
+    const floorProg = floorStart === null
+      ? 1
+      : Math.min(1, (performance.now() - floorStart) / RISK_FLOOR_FADE_MS)
+    const floorEased = easeCubicInOut(floorProg)
+    const prevFloor = prevRiskFloorRef.current
+    const prevFloorOrder = prevFloor === 'all' ? -1 : RISK_ORDER[prevFloor]
+
     ctx.clearRect(0, 0, w, h)
 
     // Optional: subtle background paint? Keep transparent so the host can
@@ -465,8 +634,23 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
     // Dots
     for (const d of dots) {
-      const sx = d.x * w * k + t.x
-      const sy = d.y * h * k + t.y
+      // Position interpolation for year-change tween.
+      let wx = d.x
+      let wy = d.y
+      let entryAlpha = 1
+      if (tweenProg < 1 && prevMap) {
+        const prev = prevMap.get(d.id)
+        if (prev) {
+          // Existing dot — lerp position.
+          wx = prev.x + (d.x - prev.x) * tweenEased
+          wy = prev.y + (d.y - prev.y) * tweenEased
+        } else {
+          // New dot this year — fade in.
+          entryAlpha = tweenEased
+        }
+      }
+      const sx = wx * w * k + t.x
+      const sy = wy * h * k + t.y
       // Cull off-screen (with a small margin).
       if (sx < -20 || sy < -20 || sx > w + 20 || sy > h + 20) continue
 
@@ -477,9 +661,16 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       else if (k >= 4) radius *= 1.15
 
       // Opacity composition.
-      let alpha = 1
-      if (riskFloor !== 'all' && RISK_ORDER[d.riskLevel] < floorOrder) alpha *= 0.18
+      let alpha = entryAlpha
+      // Risk-floor visibility (with fade interpolation).
+      const rLevel = RISK_ORDER[d.riskLevel]
+      const prevVisible = prevFloorOrder === -1 ? 1 : (rLevel >= prevFloorOrder ? 1 : 0)
+      const nextVisible = floorOrder === -1 ? 1 : (rLevel >= floorOrder ? 1 : 0)
+      const floorAlpha = prevVisible + (nextVisible - prevVisible) * floorEased
+      alpha *= floorAlpha
       if (pinnedClusterCode && d.clusterCode && d.clusterCode !== pinnedClusterCode) alpha *= 0.18
+      // Skip near-zero alpha early — also avoids canvas calls when dot is fully faded.
+      if (alpha <= 0.01) continue
 
       // Pinned cluster halo on member dots.
       if (pinnedClusterCode && d.clusterCode === pinnedClusterCode) {
@@ -514,6 +705,27 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         ctx.lineWidth = 1.25
         ctx.globalAlpha = 0.8
         ctx.stroke()
+      }
+    }
+
+    // Year-change tween: fade out dots that were present in the previous
+    // frame but are GONE from the current dots array. Drawn at neutral
+    // riskLevel="medium" radius since we don't keep the full prev object.
+    if (tweenProg < 1 && prevMap) {
+      const currentIds = new Set(dots.map((d) => d.id))
+      const fadeOutAlpha = 1 - tweenEased
+      if (fadeOutAlpha > 0.01) {
+        for (const [id, prev] of prevMap) {
+          if (currentIds.has(id)) continue
+          const sx = prev.x * w * k + t.x
+          const sy = prev.y * h * k + t.y
+          if (sx < -20 || sy < -20 || sx > w + 20 || sy > h + 20) continue
+          ctx.beginPath()
+          ctx.arc(sx, sy, 1.6, 0, TAU)
+          ctx.fillStyle = RISK_COLORS.medium
+          ctx.globalAlpha = fadeOutAlpha * 0.5
+          ctx.fill()
+        }
       }
     }
     ctx.globalAlpha = 1

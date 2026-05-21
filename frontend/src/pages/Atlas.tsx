@@ -51,6 +51,7 @@ import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 // atlas-P6 Pass 2: Canvas constellation engine (opt-in via ?canvas=1).
 // Full replacement of AtlasZoomLayer once parity is validated.
 import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/components/atlas/CanvasConstellation'
+import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
 import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
 import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
@@ -551,6 +552,32 @@ function CanvasAtlasView({
   const flyToRef = useRef<FlyToClusterFn | null>(null)
   const resetRef = useRef<ResetViewFn | null>(null)
 
+  // Atlas P6 Frontier A — VendorHaloCard at zoom ≥ 18×.
+  // We track the currently hovered dot, its screen-space position (emitted by
+  // the engine), the current zoom level, and the wrapper rect so the card
+  // knows its own clamp boundaries.
+  const wrapperRef = useRef<HTMLDivElement | null>(null)
+  const [hoverInfo, setHoverInfo] = useState<{
+    dot: { id: string; name: string; riskScore: number; sectorColor?: string; isOutlier: boolean }
+    screenX: number
+    screenY: number
+  } | null>(null)
+  const [currentZoom, setCurrentZoom] = useState(1)
+  const [wrapperSize, setWrapperSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 })
+
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const update = () => {
+      const r = el.getBoundingClientRect()
+      setWrapperSize({ w: r.width, h: r.height })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   const latticeDots = useMemo(
     () => dotsFromRows({ rows, meta: activeMeta, mode, seed }),
     [rows, activeMeta, mode, seed],
@@ -674,6 +701,7 @@ function CanvasAtlasView({
 
   return (
     <div
+      ref={wrapperRef}
       className="relative"
       style={{ position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }}
     >
@@ -694,11 +722,39 @@ function CanvasAtlasView({
         lang={lang}
         onClusterClick={handleClusterClick}
         onDotClick={handleDotClick}
+        onDotHover={(d, pos) => {
+          if (d && d.isOutlier && d.name && pos) {
+            setHoverInfo({
+              dot: {
+                id: d.id,
+                name: d.name,
+                riskScore: d.riskScore ?? 0,
+                sectorColor: d.sectorColor,
+                isOutlier: true,
+              },
+              screenX: pos.x,
+              screenY: pos.y,
+            })
+          } else {
+            setHoverInfo(null)
+          }
+        }}
+        onZoomChange={(info) => setCurrentZoom(info.zoom)}
         flyToClusterRef={flyToRef}
         resetViewRef={resetRef}
         pinnedClusterCode={pinnedCode ?? zoomedCode}
         riskFloor={riskFloor}
       />
+      {hoverInfo && currentZoom >= 18 && (
+        <CanvasVendorHaloCard
+          dot={hoverInfo.dot}
+          screenX={hoverInfo.screenX}
+          screenY={hoverInfo.screenY}
+          wrapperWidth={wrapperSize.w}
+          wrapperHeight={wrapperSize.h}
+          lang={lang}
+        />
+      )}
       {/* M-OBS P2 floating cluster card — top-right, dismissible without
           exiting zoom (✕ collapses to compact chip; chip re-expands). */}
       {isZoomed && zoomedMeta && cardOpen && (
