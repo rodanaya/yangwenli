@@ -661,20 +661,15 @@ export default function Executive() {
                     {step.roman}
                   </span>
                   <span className="h-[2px] flex-1" style={{ background: step.accent, opacity: 0.55 }} />
-                  <span className="text-[9.5px] font-mono uppercase tracking-[0.18em]" style={{ color: step.accent, opacity: 0.95 }}>
+                  <span className="text-[9.5px] font-mono uppercase tracking-[0.18em] whitespace-nowrap" style={{ color: step.accent, opacity: 0.95 }}>
                     {lang === 'en' ? step.kicker.en : step.kicker.es}
                   </span>
                 </div>
-                {step.tail && (
-                  <div className="hidden lg:block absolute -right-3 top-0 h-full pointer-events-none">
-                    <div className="flex items-center h-full">
-                      <span className="text-[9px] font-mono italic text-text-muted whitespace-nowrap pr-1">
-                        {lang === 'en' ? step.tail.en : step.tail.es}
-                      </span>
-                      <span className="text-text-muted text-[12px] leading-none">→</span>
-                    </div>
-                  </div>
-                )}
+                {/* Tail caption "of which → ..." removed 2026-05-21: the
+                    absolutely-positioned overlay collided with the kicker label
+                    at all viewport widths, mashing the two into a single
+                    unreadable line. The narrative arc is still legible from
+                    the Roman numerals + plate caption below. */}
               </motion.div>
             )
 
@@ -1829,7 +1824,10 @@ export default function Executive() {
               // First sentence of the lede only — the rest lives on the
               // full vendor dossier. This card's job is to invite a click,
               // not summarize the case.
-              const pullQuote = d.lede[lang].split(/[.—]/)[0].trim() + '.'
+              // Split on sentence-ending period (followed by whitespace or
+              // end) OR em-dash — NOT decimal points inside amounts like
+              // "$133.2B" (caught by the trailing-digit lookahead).
+              const pullQuote = d.lede[lang].split(/\.(?=\s|$)|—/)[0].trim() + '.'
               return (
                 <a
                   key={d.vendorId}
