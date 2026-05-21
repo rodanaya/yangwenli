@@ -9,6 +9,7 @@
  */
 
 import type { VizTemplate } from '@/components/stories/DataPullquote'
+import { SECTOR_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -985,10 +986,10 @@ export const STORIES: StoryDef[] = [
           chartId: 'big-four-totals',
           data: {
             points: [
-              { label: 'Grupo Fármacos', value: 133.4, color: '#dc2626', highlight: true, annotation: 'risk 0.99', annotation_es: 'riesgo 0.99' },
-              { label: 'Maypo', value: 88.0, color: '#dc2626', highlight: true, annotation: 'risk 0.95', annotation_es: 'riesgo 0.95' },
-              { label: 'PISA', value: 55.6, color: '#a06820', highlight: true, annotation: 'risk 0.75', annotation_es: 'riesgo 0.75' },
-              { label: 'DIMM', value: 51.6, color: '#a06820', highlight: true, annotation: 'risk 0.54', annotation_es: 'riesgo 0.54' },
+              { label: 'Grupo Fármacos', value: 133.4, riskScore: 0.99, annotation: 'risk 0.99', annotation_es: 'riesgo 0.99' },
+              { label: 'Maypo', value: 88.0, riskScore: 0.95, annotation: 'risk 0.95', annotation_es: 'riesgo 0.95' },
+              { label: 'PISA', value: 55.6, riskScore: 0.75, annotation: 'risk 0.75', annotation_es: 'riesgo 0.75' },
+              { label: 'DIMM', value: 51.6, riskScore: 0.54, annotation: 'risk 0.54', annotation_es: 'riesgo 0.54' },
             ],
             unit: 'B MXN',
             annotation: 'Total federal contracting per vendor, 2003-2025. Combined: 328.6B MXN. Three of the four carry critical-tier risk scores.',
@@ -1089,7 +1090,7 @@ export const STORIES: StoryDef[] = [
             series: [
               {
                 name: 'Grupo Fármacos',
-                color: '#dc2626',
+                color: SECTOR_COLORS.salud,
                 values: [0, 0, 0, 0, 1.07, 2.81, 2.01, 12.86, 0.96, 5.83, 14.94, 13.23, 13.31, 12.93, 19.94, 15.64, 17.64, 0.00, 0, 0, 0, 0, 0],
                 annotation: { xIndex: 14, text: '19.94 peak (2017)', text_es: '19.94 pico (2017)' },
                 totalCaption: '· 133.4B total',
@@ -1105,7 +1106,7 @@ export const STORIES: StoryDef[] = [
               },
               {
                 name: 'PISA',
-                color: '#1e3a5f',
+                color: SECTOR_COLORS.gobernacion,
                 values: [1.18, 0, 2.41, 0.56, 1.39, 0.73, 2.97, 1.58, 0.18, 0.36, 0.71, 0.94, 2.60, 0.96, 1.23, 0.47, 3.50, 6.42, 2.56, 3.77, 0.13, 0.67, 19.46],
                 annotation: { xIndex: 22, text: '19.46 (2025)', text_es: '19.46 (2025)' },
                 totalCaption: '· 55.6B total',
@@ -1113,7 +1114,7 @@ export const STORIES: StoryDef[] = [
               },
               {
                 name: 'DIMM',
-                color: '#0891b2',
+                color: SECTOR_COLORS.tecnologia,
                 values: [0.01, 0, 0.02, 0, 0, 0, 0, 3.27, 0.13, 0.97, 4.56, 4.26, 5.66, 6.53, 7.40, 7.96, 7.51, 0.18, 0.24, 0.30, 0.24, 1.05, 1.09],
                 annotation: { xIndex: 15, text: '7.96 (2018)', text_es: '7.96 (2018)' },
                 totalCaption: '· 51.6B total',
@@ -1159,10 +1160,10 @@ export const STORIES: StoryDef[] = [
           chartId: 'big-four-network',
           network: {
             nodes: [
-              { id: 'gf',    label: 'Grupo F.',   sublabel: '133.4B', color: '#dc2626', highlight: true },
+              { id: 'gf',    label: 'Grupo F.',   sublabel: '133.4B', color: SECTOR_COLORS.salud, highlight: true },
               { id: 'maypo', label: 'Maypo',     sublabel: '88.0B',  color: '#a06820' },
-              { id: 'pisa',  label: 'PISA',      sublabel: '55.6B',  color: '#1e3a5f' },
-              { id: 'dimm',  label: 'DIMM',      sublabel: '51.6B',  color: '#0891b2' },
+              { id: 'pisa',  label: 'PISA',      sublabel: '55.6B',  color: SECTOR_COLORS.gobernacion },
+              { id: 'dimm',  label: 'DIMM',      sublabel: '51.6B',  color: SECTOR_COLORS.tecnologia },
             ],
             edges: [
               { from: 'maypo', to: 'pisa',  weight: 1436, label: '1,436' },
