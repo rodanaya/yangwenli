@@ -55,7 +55,12 @@ interface ExampleDossier {
   tier: 1 | 2 | 3 | 4
   flags: DossierFlag[]
   contracts: string
+  /** Display string per locale. Display only — USD is computed from mxnAmount. */
   value: { en: string; es: string }
+  /** Numeric MXN total used to compute the USD scale companion in the card
+   *  footer. Liconsa uses the documented MX$15B food-scandal anchor; Pharma
+   *  and Hemoser use their precise contract totals. */
+  mxnAmount: number
   kicker: { en: string; es: string }
   lede: { en: string; es: string }
   detected: { en: string; es: string }
@@ -68,6 +73,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
     risk: 0.99, tier: 1, flags: ['gt'],
     contracts: '6,303', value: { en: '$133.2B MXN', es: '133,200 MDP' },
+    mxnAmount: 133_200_000_000,
     kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
     lede: {
       en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
@@ -86,7 +92,8 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 31655,
     name: 'LICONSA S.A. DE C.V.',
     risk: 0.92, tier: 1, flags: ['gt'],
-    contracts: '~3,000', value: { en: 'multi-billion MXN', es: 'multimillonario en MXN' },
+    contracts: '~3,000', value: { en: '~$15B MXN', es: '~15,000 MDP' },
+    mxnAmount: 15_000_000_000,
     kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
     lede: {
       en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
@@ -106,6 +113,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
     contracts: '~400', value: { en: '$17.2B MXN', es: '17,200 MDP' },
+    mxnAmount: 17_200_000_000,
     kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
       en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
@@ -1858,14 +1866,21 @@ export default function Executive() {
                     {pullQuote}
                   </p>
 
-                  {/* Footer: stat + open affordance — single line, no chrome */}
-                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/40 text-[11px] font-mono">
-                    <div className="flex items-center gap-2 text-text-muted">
-                      <span className="tabular-nums text-text-secondary">{d.value[lang]}</span>
-                      <span aria-hidden="true">·</span>
-                      <span className="tabular-nums">{d.contracts}</span>
+                  {/* Footer: stat (MXN + USD scale companion) + open affordance.
+                      Two-line stack so USD reads as supporting scale, not a
+                      competing number. */}
+                  <div className="flex items-end justify-between gap-3 pt-3 border-t border-border/40 text-[11px] font-mono">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <div className="flex items-center gap-2 text-text-secondary">
+                        <span className="tabular-nums">{d.value[lang]}</span>
+                        <span className="text-text-muted" aria-hidden="true">·</span>
+                        <span className="tabular-nums text-text-muted">{d.contracts}</span>
+                      </div>
+                      <span className="text-[10px] tabular-nums text-text-muted opacity-80">
+                        ≈{formatCompactUSD(d.mxnAmount)}
+                      </span>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-text-muted group-hover:text-accent transition-colors">
+                    <span className="inline-flex items-center gap-1 text-text-muted group-hover:text-accent transition-colors self-end pb-0.5">
                       {lang === 'en' ? 'Open' : 'Abrir'}
                       <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
                     </span>
