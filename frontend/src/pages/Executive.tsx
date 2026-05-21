@@ -1520,8 +1520,8 @@ export default function Executive() {
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
-              ? 'Each rung is a filter step. The platform reads every COMPRANET row, then applies the risk model, then ARIA patterns, then a GT-anchored manual triage — each step\'s surviving population shown on a logarithmic scale. 43 documented cases anchor the model below.'
-              : 'Cada peldaño es un paso del filtro. La plataforma lee cada registro de COMPRANET, luego aplica el modelo de riesgo, después los patrones ARIA, y por último un triaje manual anclado en GT — la población superviviente de cada paso se muestra en escala logarítmica. 43 casos documentados anclan el modelo abajo.'}
+              ? 'Four filters in sequence — risk model, then ARIA patterns, then GT match, then manual triage. Each step narrows the population further; the last 299 are hand-investigable today.'
+              : 'Cuatro filtros en cadena — modelo de riesgo, patrones ARIA, coincidencia con GT, y triaje manual. Cada paso reduce la población; los últimos 299 son investigables a mano hoy.'}
           </p>
 
           <PlateFrame
@@ -1829,10 +1829,13 @@ export default function Executive() {
               // "$133.2B" (caught by the trailing-digit lookahead).
               const pullQuote = d.lede[lang].split(/\.(?=\s|$)|—/)[0].trim() + '.'
               return (
-                <a
+                <div
                   key={d.vendorId}
-                  href={`/vendors/${d.vendorId}`}
-                  className="group surface-card p-5 rounded-sm flex flex-col hover:border-border-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => navigate(`/vendors/${d.vendorId}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/vendors/${d.vendorId}`) }}
+                  className="group surface-card p-5 rounded-sm flex flex-col cursor-pointer hover:border-border-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   aria-label={`${lang === 'en' ? 'Open dossier' : 'Abrir dossier'}: ${d.name}`}
                 >
                   <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
@@ -1883,7 +1886,7 @@ export default function Executive() {
                       <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
                     </span>
                   </div>
-                </a>
+                </div>
               )
             })}
           </div>
