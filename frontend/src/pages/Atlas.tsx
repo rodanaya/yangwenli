@@ -1053,6 +1053,7 @@ function CanvasAtlasView({
             topVendors={topVendors}
             onClose={() => setCardOpen(false)}
             lang={lang}
+            lens={mode}
           />
         </div>
       )}
