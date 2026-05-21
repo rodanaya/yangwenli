@@ -414,12 +414,26 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     const iy = (sy - t.y) / t.k
     const hitR = 12 / t.k
     const found = qt.find(ix, iy, hitR)
-    if (found) {
-      onDotClick?.(found)
+    // Atlas P6 Pass 3 bug-fix (2026-05-21): only consume the click as a
+    // dot-click when a handler is actually wired. Otherwise fall through to
+    // cluster hit-testing — without this, every click on the densely-packed
+    // dots inside a cluster called `undefined?.(found)` and returned, so
+    // cluster click never fired and zoom-in felt broken.
+    if (found && onDotClick) {
+      onDotClick(found)
       return
     }
-    // No dot — test cluster attractors (within ~28px of attractor center).
+    // Test cluster attractors (within ~28px of attractor center). If the
+    // click hit a dot AND that dot has a clusterCode, prefer that cluster —
+    // gives clicks inside dense clusters a useful intent.
     const { w, h } = sizeRef.current
+    if (found && found.clusterCode && onClusterClick) {
+      const c = clusters.find((cc) => cc.code === found.clusterCode)
+      if (c) {
+        onClusterClick(c)
+        return
+      }
+    }
     for (const c of clusters) {
       const cx = c.fx * w
       const cy = c.fy * h
