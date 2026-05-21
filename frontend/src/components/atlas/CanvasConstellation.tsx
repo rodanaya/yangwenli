@@ -477,6 +477,21 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
     const zoomBehavior = d3zoom<HTMLCanvasElement, unknown>()
       .scaleExtent(SCALE_EXTENT)
+      // 2026-05-21 — lock pan at galaxy zoom.
+      // User reported "when I hold the map with the cursor it changes" —
+      // d3-zoom's default mousedown handler started a pan at k=1, which
+      // shifted the 7-cluster layout off-center and never snapped back.
+      // Allow wheel + pinch (touch) at any zoom; allow pan ONLY when
+      // already zoomed into a region (k > 1.5). The wheel still works
+      // to zoom INTO a cluster from the galaxy view.
+      .filter((event) => {
+        // Always allow wheel + touch (pinch zoom)
+        if (event.type === 'wheel') return true
+        if (event.type === 'touchstart' || event.type === 'touchmove') return true
+        // For mousedown / pointerdown (= start of pan): require region zoom.
+        const k = transformRef.current?.k ?? 1
+        return k > 1.5
+      })
       .on('zoom', (event) => {
         transformRef.current = event.transform
         const newBand = bandFor(event.transform.k)
