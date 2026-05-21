@@ -628,15 +628,43 @@ function CanvasAtlasView({
     // When zoomed, render the active cluster as a fanned galaxy (200 dots)
     // PLUS the other clusters' galaxy cohort (30 each) at low density. Both
     // sets are clickable.
+    // 2026-05-21 hotfix: merge is now ADDITIVE so the canvas is never empty
+    // during the zoom-cluster fetch. We always include galaxy.vendors; when
+    // zoomCluster.vendors arrives we dedupe by vendor_id and add the 200-cohort.
+    // Without this the zoom-into-cluster flight could land on an empty
+    // attractor while waiting for the 200-vendor query to complete.
     const sources: GalaxyVendor[] = []
-    if (zoomedCodeForFetch && zoomCluster.vendors.length > 0) {
-      sources.push(...zoomCluster.vendors)
-      // Non-zoomed clusters: galaxy data minus the zoomed cluster (already in zoomCluster).
-      for (const v of galaxy.vendors) {
-        if (v.clusterCode !== zoomedCodeForFetch) sources.push(v)
+    const seenIds = new Set<number>()
+    for (const v of galaxy.vendors) {
+      if (!seenIds.has(v.vendorId)) {
+        sources.push(v)
+        seenIds.add(v.vendorId)
       }
-    } else {
-      sources.push(...galaxy.vendors)
+    }
+    if (zoomedCodeForFetch && zoomCluster.vendors.length > 0) {
+      for (const v of zoomCluster.vendors) {
+        if (!seenIds.has(v.vendorId)) {
+          sources.push(v)
+          seenIds.add(v.vendorId)
+        }
+      }
+    }
+    // Legacy namedVendors (curated GT vendors) as a final fallback — guarantees
+    // the canvas always has SOMETHING to draw even if both queries are loading.
+    for (const nv of namedVendors) {
+      if (!seenIds.has(nv.vendorId)) {
+        sources.push({
+          vendorId: nv.vendorId,
+          name: nv.name,
+          riskScore: nv.riskScore,
+          tier: 1,
+          totalContracts: null,
+          totalAmountMxn: null,
+          primarySectorCode: null,
+          clusterCode: nv.clusterCode,
+        } as GalaxyVendor)
+        seenIds.add(nv.vendorId)
+      }
     }
 
     if (sources.length === 0) {
