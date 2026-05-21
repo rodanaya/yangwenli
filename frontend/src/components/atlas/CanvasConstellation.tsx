@@ -382,13 +382,25 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       tweenRafRef.current = null
     }
 
-    // Skip tween on first mount or if either array is too large.
+    // Skip tween on first mount, when either array is too large, OR when the
+    // two arrays are fundamentally different cohorts (e.g. synthetic lattice
+    // fallback ↔ real-data dots loading in). The lattice has stable ids
+    // `dot-N`; real vendor dots have numeric ids. Detect this by comparing
+    // the *first* id of each — if one set is synthetic and the other isn't,
+    // we'd otherwise render hundreds of lattice ghost dots fading in/out
+    // (user report 2026-05-21: "hovering is messed up — lots of dots light
+    // up and disappear").
+    const prevHasLattice = previous?.some((d) => d.id.startsWith('dot-')) ?? false
+    const nextHasLattice = dots.some((d) => d.id.startsWith('dot-'))
+    const cohortMismatch = prevHasLattice !== nextHasLattice
+
     const shouldTween =
       previous !== null &&
       previous.length > 0 &&
       dots.length > 0 &&
       previous.length <= YEAR_TWEEN_MAX_DOTS &&
-      dots.length <= YEAR_TWEEN_MAX_DOTS
+      dots.length <= YEAR_TWEEN_MAX_DOTS &&
+      !cohortMismatch
 
     if (shouldTween && previous) {
       const map = new Map<string, { x: number; y: number }>()
