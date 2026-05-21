@@ -587,12 +587,14 @@ function CanvasAtlasView({
   const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
 
   // Atlas P6 Frontier B (2026-05-21) — real-vendor galaxy.
-  // Galaxy view: fetch ~30 real vendors per cluster in parallel.
-  // Zoom view: fetch up to 200 vendors for the active cluster only.
-  // Lattice dots remain as a loading/fallback texture (never empty canvas).
+  // Galaxy view: fetch ~10 real vendors per cluster in parallel.
+  // Frontier B hotfix (2026-05-21): cut from 30 → 10 per cluster. At 30 the
+  // load was slow and the dots piled on top of each other — top-10-by-risk
+  // keeps the signal-rich vendors visible without crowding. Zoom view
+  // unchanged (200/cluster). Lattice dots remain as loading fallback.
   const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
   const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 30, true)
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 10, true)
   const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
 
   // Position helper — deterministic golden-ratio polar offset around the
@@ -649,8 +651,10 @@ function CanvasAtlasView({
       const slot = slotCounters.get(v.clusterCode) ?? 0
       slotCounters.set(v.clusterCode, slot + 1)
       // Zoomed cluster fans wider so its 200 dots become a visible galaxy.
+      // Frontier B hotfix (2026-05-21): macro spread 0.045 → 0.085 so the
+      // 10 dots per cluster breathe instead of piling on top of each other.
       const isZoomedHere = zoomedCodeForFetch === v.clusterCode
-      const spread = isZoomedHere ? 0.12 : 0.045
+      const spread = isZoomedHere ? 0.12 : 0.085
       const { x, y } = positionForVendor(baseX, baseY, slot, spread)
       const lvl: 'critical' | 'high' | 'medium' | 'low' =
         v.riskScore >= 0.6 ? 'critical'
