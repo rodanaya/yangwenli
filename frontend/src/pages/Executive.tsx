@@ -25,7 +25,7 @@ import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
-import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
@@ -1598,6 +1598,17 @@ export default function Executive() {
                 },
               ]
 
+              // Risk-intensity gradient — each rung visually escalates as the
+              // filter narrows toward the most-concentrated risk population.
+              // Rung 0 (universe) = neutral; rung 3 (T1) = critical red.
+              // GT anchor below stays ochre as its own "training corpus" identity.
+              const rungColors = [
+                RISK_COLORS.low,      // #71717a grey — universe, no judgment yet
+                RISK_COLORS.medium,   // #a16207 amber — flagging starts
+                RISK_COLORS.high,     // #f59e0b orange — escalation
+                RISK_COLORS.critical, // #ef4444 red — hand-investigable concentration
+              ]
+
               // Log-scale bar widths. log10(maxCount) is full width; log10(count)
               // is normalized against it. Floor at 4% so the smallest rung still
               // reads as a bar (otherwise 299 renders as a 0.5% slice and
@@ -1647,7 +1658,7 @@ export default function Executive() {
                           {/* Rung row */}
                           <a
                             href={r.href}
-                            className="group grid items-baseline gap-x-4 py-2 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                            className="group grid items-baseline gap-x-4 py-2 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                             style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}
                             aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
                           >
@@ -1667,14 +1678,14 @@ export default function Executive() {
 
                             {/* Log-scaled bar + label stack */}
                             <div className="flex flex-col gap-1 min-w-0">
-                              <div className="relative h-[7px] w-full rounded-sm overflow-hidden" style={{ background: 'rgba(160, 104, 32, 0.10)' }}>
+                              <div className="relative h-[7px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
                                 <motion.div
                                   className="absolute inset-y-0 left-0 rounded-sm"
                                   initial={{ width: 0 }}
                                   whileInView={{ width: `${w}%` }}
                                   viewport={{ once: true }}
                                   transition={{ duration: 0.7, delay: 0.18 + i * 0.12, ease: 'easeOut' }}
-                                  style={{ background: '#a06820', opacity: 0.88 }}
+                                  style={{ background: rungColors[i], opacity: 0.92 }}
                                 />
                               </div>
                               <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.3] truncate">
@@ -1705,9 +1716,11 @@ export default function Executive() {
                                   {r.operation[lang]}
                                 </span>
                               </div>
-                              {/* × drop readout, paired with the operation */}
+                              {/* × drop readout, paired with the operation.
+                                  Color tints toward the destination rung so the
+                                  eye reads "this drop lands in critical territory". */}
                               {rungs[i + 1]?.drop != null && (
-                                <span className="font-mono tabular-nums text-[9.5px] text-right" style={{ color: '#a06820', opacity: 0.75, letterSpacing: '0.06em' }}>
+                                <span className="font-mono tabular-nums text-[9.5px] text-right" style={{ color: rungColors[i + 1], opacity: 0.8, letterSpacing: '0.06em' }}>
                                   ··· {fmtDrop(rungs[i + 1].drop as number)} {lang === 'en' ? 'drop' : 'caída'}
                                 </span>
                               )}
@@ -1725,7 +1738,7 @@ export default function Executive() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-30px' }}
                     transition={{ duration: 0.4, delay: 0.7 }}
-                    className="group block mt-5 pt-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="group block mt-5 pt-3 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     style={{ borderTop: '1px dashed rgba(160, 104, 32, 0.45)' }}
                     aria-label={lang === 'en'
                       ? `43 documented cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
