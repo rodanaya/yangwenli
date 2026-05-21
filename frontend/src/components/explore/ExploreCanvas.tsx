@@ -324,34 +324,11 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      {/* Back button — visible at every non-system level. Mirrors the
-          breadcrumb pop in BriefingPanel but lives on the canvas itself
-          so mobile users (briefing panel hidden on lg-) can still walk
-          back without using ESC. */}
-      {focus.kind !== 'system' && (
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'pop-focus' })}
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-1.5 transition-colors"
-          style={{
-            background: 'var(--color-background-card, #fff)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 4,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-            color: 'var(--color-text-secondary)',
-            cursor: 'pointer',
-            fontSize: 11,
-            fontFamily: 'var(--font-family-mono, monospace)',
-            letterSpacing: '0.06em',
-          }}
-          aria-label={lang === 'en' ? 'Back one level' : 'Volver un nivel'}
-        >
-          ← {lang === 'en' ? 'Back' : 'Atrás'}
-          <span className="ml-1 px-1 py-0.5 text-[8px] font-mono opacity-70 border border-current rounded-sm">
-            ESC
-          </span>
-        </button>
-      )}
+      {/* Floating Back button removed (2026-05-21): each Z-level now
+          renders its own breadcrumb (SPOILS · HEALTH · IMSS · ...) via
+          ZBreadcrumb, which covers wayfinding. Esc-key pop still works
+          via the keyboard listener; the breadcrumb shows "ESC ↩" at
+          the right edge as a passive affordance. */}
       {/* SVG canvas — only rendered when drilled in (Z1+).
           At Z0 (system focus) the El Panorama HTML panel replaces it entirely,
           avoiding z-index conflicts between SVG bodies and HTML overlay. */}
@@ -1269,44 +1246,118 @@ type CellItem = {
 // official thing to do is to fix the institutions.siglas column, but
 // this map lets us ship recognizable acronyms now without a data migration.
 const NAME_TO_SIGLAS_FALLBACK: Array<[string, string]> = [
+  // ── Health sector (largest at Z1 today; previously fell back to junk truncation) ──
+  ['INSTITUTO MEXICANO DEL SEGURO SOCIAL PARA EL BIENESTAR', 'IMSS-B'],
+  ['SERVICIOS DE SALUD DEL INSTITUTO MEXICANO DEL SEGURO SOCIAL PARA EL BIENESTAR', 'IMSS-B'],
+  ['INSTITUTO MEXICANO DEL SEGURO SOCIAL', 'IMSS'],
+  ['INSTITUTO DE SEGURIDAD Y SERVICIOS SOCIALES DE LOS TRABAJADORES DEL ESTADO', 'ISSSTE'],
+  ['INSTITUTO DE SALUD PARA EL BIENESTAR', 'INSABI'],
+  ['LABORATORIOS DE BIOLÓGICOS Y REACTIVOS DE MÉXICO', 'BIRMEX'],
+  ['LABORATORIOS DE BIOLOGICOS Y REACTIVOS DE MEXICO', 'BIRMEX'],
+  ['SISTEMA NACIONAL PARA EL DESARROLLO INTEGRAL DE LA FAMILIA', 'DIF'],
+  ['INSTITUTO NACIONAL DE ENFERMEDADES RESPIRATORIAS', 'INER'],
+  ['INSTITUTO NACIONAL DE CANCEROLOGÍA', 'INCAN'],
+  ['INSTITUTO NACIONAL DE CANCEROLOGIA', 'INCAN'],
+  ['INSTITUTO NACIONAL DE CARDIOLOGÍA', 'INC'],
+  ['INSTITUTO NACIONAL DE CARDIOLOGIA', 'INC'],
+  ['INSTITUTO NACIONAL DE NUTRICIÓN', 'INCMNSZ'],
+  ['INSTITUTO NACIONAL DE PEDIATRÍA', 'INP'],
+  ['INSTITUTO NACIONAL DE PEDIATRIA', 'INP'],
+  ['INSTITUTO NACIONAL DE PERINATOLOGÍA', 'INPER'],
+  ['INSTITUTO NACIONAL DE PERINATOLOGIA', 'INPER'],
+  ['INSTITUTO NACIONAL DE PSIQUIATRÍA', 'INPRF'],
+  ['INSTITUTO NACIONAL DE PSIQUIATRIA', 'INPRF'],
+  ['INSTITUTO NACIONAL DE NEUROLOGÍA', 'INNN'],
+  ['INSTITUTO NACIONAL DE NEUROLOGIA', 'INNN'],
+  ['INSTITUTO NACIONAL DE REHABILITACIÓN', 'INR'],
+  ['INSTITUTO NACIONAL DE REHABILITACION', 'INR'],
+
+  // ── Government / interior ──
+  ['INSTITUTO NACIONAL DE LOS PUEBLOS INDÍGENAS', 'INPI'],
+  ['INSTITUTO NACIONAL DE LOS PUEBLOS INDIGENAS', 'INPI'],
+  ['INSTITUTO NACIONAL DE MIGRACIÓN', 'INM'],
+  ['INSTITUTO NACIONAL DE MIGRACION', 'INM'],
+  ['SECRETARÍA DE RELACIONES EXTERIORES', 'SRE'],
+  ['SECRETARIA DE RELACIONES EXTERIORES', 'SRE'],
+  ['SECRETARÍA DE BIENESTAR', 'BIENESTAR'],
+  ['SECRETARIA DE BIENESTAR', 'BIENESTAR'],
+  ['SECRETARIA DE BIENESTAR', 'BIENESTAR'],
+
+  // ── Treasury / hacienda ──
   ['CAMINOS Y PUENTES FEDERALES', 'CAPUFE'],
   ['SERVICIO DE ADMINISTRACIÓN TRIBUTARIA', 'SAT'],
   ['SERVICIO DE ADMINISTRACION TRIBUTARIA', 'SAT'],
   ['SECRETARÍA DE HACIENDA Y CRÉDITO PÚBLICO', 'SHCP'],
   ['SECRETARIA DE HACIENDA Y CREDITO PUBLICO', 'SHCP'],
+  ['FONDO NACIONAL DE FOMENTO AL TURISMO', 'FONATUR'],
+
+  // ── Defense + interior ──
   ['SECRETARÍA DE LA DEFENSA NACIONAL', 'SEDENA'],
   ['SECRETARIA DE LA DEFENSA NACIONAL', 'SEDENA'],
   ['SECRETARÍA DE MARINA', 'SEMAR'],
   ['SECRETARIA DE MARINA', 'SEMAR'],
+  ['BANCO NACIONAL DEL EJÉRCITO', 'BANJERCITO'],
+  ['BANCO NACIONAL DEL EJERCITO', 'BANJERCITO'],
   ['SECRETARÍA DE GOBERNACIÓN', 'SEGOB'],
   ['SECRETARIA DE GOBERNACION', 'SEGOB'],
+
+  // ── Education ──
   ['SECRETARÍA DE SALUD', 'SSA'],
   ['SECRETARIA DE SALUD', 'SSA'],
   ['SECRETARÍA DE EDUCACIÓN PÚBLICA', 'SEP'],
   ['SECRETARIA DE EDUCACION PUBLICA', 'SEP'],
+  ['INSTITUTO POLITÉCNICO NACIONAL', 'IPN'],
+  ['INSTITUTO POLITECNICO NACIONAL', 'IPN'],
+  ['COMISIÓN NACIONAL DE LIBROS DE TEXTO', 'CONALITEG'],
+  ['COMISION NACIONAL DE LIBROS DE TEXTO', 'CONALITEG'],
+
+  // ── Agriculture / labor ──
   ['SECRETARÍA DE AGRICULTURA', 'SADER'],
   ['SECRETARIA DE AGRICULTURA', 'SADER'],
-  ['SECRETARÍA DE MEDIO AMBIENTE', 'SEMARNAT'],
-  ['SECRETARIA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['DICONSA', 'DICONSA'],
+  ['LICONSA', 'LICONSA'],
+  ['ALIMENTACIÓN PARA EL BIENESTAR', 'BIENESTAR'],
+  ['ALIMENTACION PARA EL BIENESTAR', 'BIENESTAR'],
   ['SECRETARÍA DEL TRABAJO', 'STPS'],
   ['SECRETARIA DEL TRABAJO', 'STPS'],
+  ['INSTITUTO DEL FONDO NACIONAL PARA EL CONSUMO DE LOS TRABAJADORES', 'INFONACOT'],
+
+  // ── Environment ──
+  ['SECRETARÍA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['SECRETARIA DE MEDIO AMBIENTE', 'SEMARNAT'],
+  ['COMISIÓN NACIONAL DEL AGUA', 'CONAGUA'],
+  ['COMISION NACIONAL DEL AGUA', 'CONAGUA'],
+  ['COMISIÓN NACIONAL FORESTAL', 'CONAFOR'],
+  ['COMISION NACIONAL FORESTAL', 'CONAFOR'],
+
+  // ── Infrastructure / energy ──
   ['SECRETARÍA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
   ['SECRETARIA DE COMUNICACIONES Y TRANSPORTES', 'SCT'],
   ['SECRETARÍA DE INFRAESTRUCTURA', 'SICT'],
   ['SECRETARIA DE INFRAESTRUCTURA', 'SICT'],
   ['GRUPO AEROPORTUARIO DE LA CIUDAD DE MÉXICO', 'GACM'],
   ['GRUPO AEROPORTUARIO DE LA CIUDAD DE MEXICO', 'GACM'],
-  ['INSTITUTO POLITÉCNICO NACIONAL', 'IPN'],
-  ['INSTITUTO POLITECNICO NACIONAL', 'IPN'],
   ['COMISIÓN FEDERAL DE ELECTRICIDAD', 'CFE'],
   ['COMISION FEDERAL DE ELECTRICIDAD', 'CFE'],
-  ['COMISIÓN NACIONAL DEL AGUA', 'CONAGUA'],
-  ['COMISION NACIONAL DEL AGUA', 'CONAGUA'],
+  ['PEMEX EXPLORACIÓN Y PRODUCCIÓN', 'PEMEX-EP'],
+  ['PEMEX EXPLORACION Y PRODUCCION', 'PEMEX-EP'],
+  ['PEMEX REFINACIÓN', 'PEMEX-R'],
+  ['PEMEX REFINACION', 'PEMEX-R'],
+
+  // ── Technology ──
+  ['INSTITUTO FEDERAL DE TELECOMUNICACIONES', 'IFT'],
+  ['TELECOMUNICACIONES DE MÉXICO', 'TELECOMM'],
+  ['TELECOMUNICACIONES DE MEXICO', 'TELECOMM'],
+
+  // ── Misc ──
   ['CENTRO MEDICO NACIONAL', 'CMN'],
   ['CENTRO MÉDICO NACIONAL', 'CMN'],
   ['HOSPITAL GENERAL DE MÉXICO', 'HGM'],
   ['HOSPITAL GENERAL DE MEXICO', 'HGM'],
-  ['FONDO NACIONAL DE FOMENTO AL TURISMO', 'FONATUR'],
+  ['HOSPITAL JUÁREZ DE MÉXICO', 'HJM'],
+  ['HOSPITAL JUAREZ DE MEXICO', 'HJM'],
+  ['HOSPITAL INFANTIL DE MÉXICO', 'HIM'],
+  ['HOSPITAL INFANTIL DE MEXICO', 'HIM'],
 ]
 
 function inferSiglasFromName(name: string): string | null {
