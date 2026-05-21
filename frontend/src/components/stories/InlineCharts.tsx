@@ -1956,10 +1956,10 @@ export function ClevelandPairChart({
   // = left of axis (below baseline). Risk-tier color from RISK_COLORS,
   // derived by normalizing the excess against the OECD 25% ceiling.
   if (data.mode === 'excess') {
-    const E_LABEL_W = 148
+    const E_LABEL_W = 180   // accommodates "Building Construction" / "Construcción de Edificios"
     const E_LEFT_W = 56     // narrow left-of-axis pane for deficits
     const E_RIGHT_W = 280   // wide right-of-axis pane for breaches
-    const E_VALUE_W = 88
+    const E_VALUE_W = 112   // fits "+21.4 · 32.4%" at 11px mono without clipping the trailing %
     const E_TOTAL_W = E_LABEL_W + E_LEFT_W + E_RIGHT_W + E_VALUE_W
     const E_ROW_H = 22
     const E_ROW_GAP = 11
