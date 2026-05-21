@@ -303,12 +303,17 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
   /** Re-pick which labels to render based on current band + transform. */
   const labelsToRender = useMemo<ConstellationDot[]>(() => {
+    // Galaxy band shows NO vendor labels — only the cluster identity tags
+    // render (handled by renderedClusterLabels below). User report 2026-05-21:
+    // floating vendor labels like "Repsol Comercializadora" and "Alstom
+    // Transport Mexico" collided with the cluster captions and made the
+    // galaxy view unreadable. Vendor labels reveal at region zoom (≥4×)
+    // and become the dominant text at star zoom (≥12×).
+    if (band === 'constellation') return []
     const named = dots.filter((d) => d.name)
     // Sort by risk score desc so top-T1 wins collisions.
     const sorted = [...named].sort((a, b) => (b.riskScore ?? 0) - (a.riskScore ?? 0))
-    // Galaxy: top ~15% of named vendors (matches useAtlasLOD labelDensity).
-    // Region: top 50%. Star: all of them.
-    const fraction = band === 'constellation' ? 0.15 : band === 'region' ? 0.5 : 1
+    const fraction = band === 'region' ? 0.5 : 1
     const cap = Math.max(1, Math.ceil(sorted.length * fraction))
     return sorted.slice(0, Math.min(cap, MAX_LABELS))
   }, [band, dots])
