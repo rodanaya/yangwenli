@@ -1971,6 +1971,9 @@ function Z1Panel({
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <motion.div
         initial="hidden"
@@ -2638,6 +2641,9 @@ function Z2Panel({
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       <motion.div
         initial="hidden"
@@ -3480,6 +3486,9 @@ function Z3Panel({
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div

@@ -1182,12 +1182,21 @@ def get_institution_vendor_pool(
       2. Live aggregate scoped to (institution_id, top_vendor_ids) for HR/DA/SB counts
       3. LEFT JOIN aria_queue for tier + pattern badges
       4. Institution totals from `institution_stats` (precomputed)
+
+    Cache shape: always compute + cache the FULL top-50 per institution.
+    The `limit` query param trims the payload on the way out — slicing
+    a 50-row cached response is free, but keying the cache on
+    (inst, limit) would create stale entries when the first caller
+    picked a smaller limit (which is exactly the bug we shipped before).
     """
-    # Cache hit
+    # Cache hit — slice down if caller wants fewer than the cached 50
     with _z2_pool_lock:
         ts = _z2_pool_cache_ts.get(institution_id, 0)
         if datetime.now().timestamp() - ts < _Z2_POOL_TTL_S and institution_id in _z2_pool_cache:
-            return _z2_pool_cache[institution_id]
+            cached = _z2_pool_cache[institution_id]
+            if limit >= len(cached.data):
+                return cached
+            return cached.model_copy(update={"data": cached.data[:limit]})
 
     with get_db() as conn:
         cur = conn.cursor()
@@ -1219,7 +1228,9 @@ def get_institution_vendor_pool(
         inst_hr_pct = float(stats["high_risk_pct"]) if stats else 0.0
         inst_sb_pct = float(stats["single_bid_pct"]) if stats else 0.0
 
-        # 3. Top-N vendors (precomputed)
+        # 3. Top-50 vendors (precomputed). Always fetch the full 50 — we
+        #    cache the full payload and slice on the way out, so a caller
+        #    asking for ?limit=10 doesn't poison the cache for ?limit=50.
         cur.execute(
             """
             SELECT vendor_id, vendor_name, contract_count,
@@ -1227,9 +1238,9 @@ def get_institution_vendor_pool(
             FROM institution_top_vendors
             WHERE institution_id = ?
             ORDER BY total_value_mxn DESC
-            LIMIT ?
+            LIMIT 50
             """,
-            (institution_id, limit),
+            (institution_id,),
         )
         top_rows = cur.fetchall()
 
@@ -1352,6 +1363,12 @@ def get_institution_vendor_pool(
     with _z2_pool_lock:
         _z2_pool_cache[institution_id] = response
         _z2_pool_cache_ts[institution_id] = datetime.now().timestamp()
+
+    # Slice the cached top-50 down to the caller's requested limit. The cache
+    # always stores the full 50; smaller-limit callers get a trimmed copy
+    # without triggering a recompute and without poisoning the cache.
+    if limit < len(response.data):
+        return response.model_copy(update={"data": response.data[:limit]})
     return response
 
 
