@@ -34,6 +34,7 @@ import type {
   InstitutionRiskProfile,
   InstitutionTopListResponse,
   InstitutionVendorListResponse,
+  VendorPoolResponse,
   InstitutionFilterParams,
   SectorListResponse,
   TreemapResponse,
@@ -762,6 +763,16 @@ export const institutionApi = {
    */
   async getVendors(institutionId: number, limit = 50): Promise<InstitutionVendorListResponse> {
     const { data } = await api.get<InstitutionVendorListResponse>(`/institutions/${institutionId}/vendors?per_page=${limit}`)
+    return data
+  },
+
+  /**
+   * Z2 "La Captura" — institution vendor-pool dossier.
+   * Returns top-N vendors with HR%/DA%/SB% counts, ARIA tier/pattern,
+   * + institution-level aggregates needed to render the editorial register.
+   */
+  async getVendorPool(institutionId: number, limit = 50): Promise<VendorPoolResponse> {
+    const { data } = await api.get<VendorPoolResponse>(`/institutions/${institutionId}/vendor-pool?limit=${limit}`)
     return data
   },
 

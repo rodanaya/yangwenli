@@ -585,6 +585,51 @@ export interface InstitutionVendorListResponse {
   generated_at: string
 }
 
+// ─── Z2 "La Captura" — vendor-pool dossier ──────────────────────────────────
+// Richer shape than InstitutionVendorListResponse: per-vendor HR/DA/SB counts,
+// ARIA tier/pattern badges, plus institution-level aggregates for the kicker.
+
+export interface VendorPoolItem {
+  rank: number
+  vendor_id: number
+  vendor_name: string
+  contract_count: number
+  total_value_mxn: number
+  share_of_institution_pct: number
+  first_year?: number | null
+  last_year?: number | null
+  avg_risk_score?: number | null
+  high_risk_count: number
+  high_risk_pct: number
+  direct_award_count: number
+  direct_award_pct: number
+  single_bid_count: number
+  single_bid_pct: number
+  ips_tier?: number | null
+  primary_pattern?: string | null
+  in_ground_truth: number
+}
+
+export interface VendorPoolResponse {
+  institution_id: number
+  institution_name: string
+  siglas?: string | null
+  sector_id?: number | null
+  institution_total_value_mxn: number
+  institution_total_contracts: number
+  institution_vendor_count: number
+  institution_direct_award_pct: number
+  institution_high_risk_pct: number
+  institution_single_bid_pct: number
+  top1_vendor_id?: number | null
+  top1_vendor_name?: string | null
+  top1_share_pct: number
+  top10_share_pct: number
+  data: VendorPoolItem[]
+  total: number
+  generated_at: string
+}
+
 // ============================================================================
 // Fast Dashboard Types (from /stats/dashboard/fast precomputed endpoint)
 // ============================================================================

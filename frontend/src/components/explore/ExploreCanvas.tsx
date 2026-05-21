@@ -24,6 +24,8 @@ import {
   RISK_COLORS,
   getRiskLevelFromScore,
   SECTOR_COLORS,
+  SECTORS,
+  PATTERN_COLORS,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
@@ -587,10 +589,9 @@ void sectorApi
 
 // ────────────────────────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────────────────────────
-// Z-level sort-key types (Z1 uses inline 'spend'|'risk' now; Z2 + Z3 below)
+// Z-level sort-key types (Z1/Z2 use inline 'spend'|'risk' now; Z3 below)
 // ────────────────────────────────────────────────────────────────────────────
 
-type Z2SortKey = 'risk' | 'spend' | 'contracts' | 'year'
 type Z3SortKey = 'amount' | 'year' | 'risk'
 type SortOrder = 'asc' | 'desc'
 
@@ -2444,7 +2445,7 @@ function Z1Row({
         {/* Avg risk pill (kept) */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
           <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: riskColor }}>
-            {riskPct}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+            {riskPct}
           </span>
           <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'risk' : 'riesgo'}
@@ -2515,9 +2516,15 @@ function Z1Shelf({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Z2Panel — editorial three-shelf vendor list sorted by investigative priority
-// Critical risk / Flagged / Routine (collapsed by default)
+// Z2Panel — "La Captura" institution → vendor register
+// 2026-05-21 redesign (DESIGNUS Step 3). Mirrors Z1's editorial chrome —
+// breadcrumb, sector-color top rail (layoutId hand-off from Z1Row), kicker
+// band, sort toggle, column header, risk-tier shelves with full vendor
+// names, role badges (DOMINANT / GT / T1 / pattern), pull-line, footer.
+// Data: /institutions/{id}/vendor-pool (richer than /vendors).
 // ────────────────────────────────────────────────────────────────────────────
+
+type Z2Mode = 'spend' | 'risk'
 
 function Z2Panel({
   institutionId,
@@ -2531,218 +2538,705 @@ function Z2Panel({
   dispatch: ReturnType<typeof useExploreDispatch>
 }) {
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['explore', 'z2', institutionId],
+    queryKey: ['explore', 'z2-pool', institutionId],
     queryFn: async () => {
       const { institutionApi } = await import('@/api/client')
-      return institutionApi.getVendors(institutionId, 30)
+      return institutionApi.getVendorPool(institutionId, 50)
     },
     enabled: institutionId > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   })
 
   const vendors = data?.data ?? []
-  const totalVendors = data?.total ?? vendors.length
+  const sectorId = data?.sector_id ?? null
+  const sectorRow = SECTORS.find((s) => s.id === sectorId)
+  const sectorCode = sectorRow?.code ?? 'otros'
+  const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const sectorName = lang === 'es' ? (sectorRow?.name ?? '') : (sectorRow?.nameEN ?? '')
+  const instSpend = data?.institution_total_value_mxn ?? 0
+  const instContracts = data?.institution_total_contracts ?? 0
+  const instVendorCount = data?.institution_vendor_count ?? 0
+  const instDaPct = data?.institution_direct_award_pct ?? 0
+  const top10Share = data?.top10_share_pct ?? 0
 
-  const [sortKey, setSortKey] = useState<Z2SortKey>('risk')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [routineOpen, setRoutineOpen] = useState(false)
+  // Editorial title-cased institution name. Prefer the data-loaded name
+  // (full canonical "Instituto Mexicano del Seguro Social") over the URL
+  // placeholder (e.g. "Institution 251" when deep-linked without state).
+  const instTitle = toEditorialCase(data?.institution_name ?? institutionName)
+  const siglas = data?.siglas ?? null
 
-  const handleSort = (key: Z2SortKey) => {
-    if (sortKey === key) setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
-    else { setSortKey(key); setSortOrder('desc') }
-  }
+  const [mode, setMode] = useState<Z2Mode>('risk')
 
-  const sorted = [...vendors].sort((a, b) => {
-    const dir = sortOrder === 'desc' ? -1 : 1
-    switch (sortKey) {
-      case 'risk':      return dir * ((b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
-      case 'spend':     return dir * ((b.total_value_mxn ?? 0) - (a.total_value_mxn ?? 0))
-      case 'contracts': return dir * (b.contract_count - a.contract_count)
-      case 'year':      return dir * ((b.last_year ?? 0) - (a.last_year ?? 0))
-      default:          return 0
-    }
-  })
-  const useShelf = sortKey === 'risk'
-  const shelfCritical = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) >= 0.60) : []
-  const shelfHigh     = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.40 && s < 0.60 }) : []
-  const shelfMedium   = useShelf ? sorted.filter((v) => { const s = v.avg_risk_score ?? 0; return s >= 0.25 && s < 0.40 }) : []
-  const shelfRoutine  = useShelf ? sorted.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sorted
-  const shelfCriticalSpend = shelfCritical.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
-  const shelfHighSpend     = shelfHigh.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
-  const shelfMediumSpend   = shelfMedium.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const bandVariants = useBandVariants(prefersReducedMotion)
+  const layoutTransition = prefersReducedMotion ? { duration: 0 } : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
 
-  const VendorRow = ({ v, rank }: { v: (typeof sorted)[0]; rank: number }) => {
-    const score = v.avg_risk_score ?? 0
-    const riskPct = Math.round(score * 100)
-    const accentColor = score >= 0.60 ? RISK_COLORS.critical :
-                        score >= 0.40 ? RISK_COLORS.high :
-                        score >= 0.25 ? RISK_COLORS.medium :
-                        'var(--color-text-muted)'
-    const yearRange = (v.first_year && v.last_year && v.first_year !== v.last_year)
-      ? `${v.first_year}–${v.last_year}`
-      : v.last_year ? `${v.last_year}` : '—'
-    return (
-      <tr
-        className="cursor-pointer transition-colors"
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: formatVendorName(v.vendor_name, 300) })}
-      >
-        <td className="pl-3 pr-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: accentColor }}>{rank}</td>
-        <td className="px-1 py-1.5 font-mono text-[10px] font-medium" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-          {toEditorialCase(formatVendorName(v.vendor_name, 300))}
-        </td>
-        <td className="px-1 py-1.5 text-right whitespace-nowrap">
-          <div className="font-mono text-[9px] tabular-nums" style={{ color: accentColor }}>{formatCompactMXN(v.total_value_mxn ?? 0)}</div>
-          <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(v.total_value_mxn ?? 0)}</div>
-        </td>
-        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: score > 0 ? accentColor : 'var(--color-text-muted)' }}>
-          {score > 0 ? riskPct : '—'}
-        </td>
-        <td className="px-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
-          {formatNumber(v.contract_count)}
-        </td>
-        <td className="pr-3 pl-1 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: 'var(--color-text-muted)' }}>
-          {yearRange}
-        </td>
-      </tr>
+  const sortedVendors = useMemo(() => {
+    return [...vendors].sort((a, b) =>
+      mode === 'risk'
+        ? (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0) || b.total_value_mxn - a.total_value_mxn
+        : b.total_value_mxn - a.total_value_mxn
     )
-  }
+  }, [vendors, mode])
+
+  // Risk-tier shelves when sorted by RISK. Flat ranked list when by SPEND.
+  const useShelf = mode === 'risk'
+  const shelfCritical = useShelf ? sortedVendors.filter((v) => (v.avg_risk_score ?? 0) >= 0.60) : []
+  const shelfHigh     = useShelf ? sortedVendors.filter((v) => { const r = v.avg_risk_score ?? 0; return r >= 0.40 && r < 0.60 }) : []
+  const shelfMedium   = useShelf ? sortedVendors.filter((v) => { const r = v.avg_risk_score ?? 0; return r >= 0.25 && r < 0.40 }) : []
+  const shelfRoutine  = useShelf ? sortedVendors.filter((v) => (v.avg_risk_score ?? 0) < 0.25) : sortedVendors
+
+  // Editorial pull-line — picks the strongest narrative frame from the data.
+  // Priority: confirmed-corruption count → tier-1 count → concentration →
+  // top10 absorption → dispersion fallback. The whole point of /explore is
+  // to expose the actual finding, not show a generic stat.
+  const top10 = sortedVendors.slice(0, 10)
+  const gtInTop10 = top10.filter((v) => v.in_ground_truth === 1).length
+  const t1InTop10 = top10.filter((v) => v.ips_tier === 1).length
+  const gtSpendShare = top10.filter((v) => v.in_ground_truth === 1).reduce((s, v) => s + v.share_of_institution_pct, 0)
+  const top1 = sortedVendors[0]
+  const top1Pct = data?.top1_share_pct ?? 0
+  const pullLine: React.ReactNode = (() => {
+    if (gtInTop10 >= 3) {
+      const shareStr = `${gtSpendShare.toFixed(1)}%`
+      return lang === 'en'
+        ? <><strong className="font-semibold text-text-primary">{gtInTop10} of {instTitle}'s 10 largest suppliers</strong> are confirmed corruption cases — together they take <strong className="font-semibold">{shareStr}</strong> of its spend.</>
+        : <><strong className="font-semibold text-text-primary">{gtInTop10} de los 10 mayores proveedores</strong> de {instTitle} son casos confirmados de corrupción — juntos reciben el <strong className="font-semibold">{shareStr}</strong> de su gasto.</>
+    }
+    if (t1InTop10 >= 5) {
+      return lang === 'en'
+        ? <><strong className="font-semibold text-text-primary">{t1InTop10} of the top 10 vendors</strong> sit in ARIA's Tier-1 investigative queue — the highest-priority cohort in the entire database.</>
+        : <><strong className="font-semibold text-text-primary">{t1InTop10} de los 10 mayores proveedores</strong> están en la Cola Tier-1 de ARIA — la cohorte de máxima prioridad de toda la base.</>
+    }
+    if (top1Pct >= 10 && top1) {
+      const t1Name = toEditorialCase(formatVendorName(top1.vendor_name, 120))
+      return lang === 'en'
+        ? <><strong className="font-semibold text-text-primary">{t1Name}</strong> alone takes <strong className="font-semibold">{top1Pct.toFixed(1)}%</strong> of {instTitle}'s spend — the top 10 capture <strong className="font-semibold">{top10Share.toFixed(0)}%</strong> combined.</>
+        : <><strong className="font-semibold text-text-primary">{t1Name}</strong> se lleva el <strong className="font-semibold">{top1Pct.toFixed(1)}%</strong> del gasto de {instTitle} — los 10 mayores concentran el <strong className="font-semibold">{top10Share.toFixed(0)}%</strong> combinado.</>
+    }
+    if (top10Share >= 50) {
+      return lang === 'en'
+        ? <>The <strong className="font-semibold text-text-primary">top 10 vendors absorb {top10Share.toFixed(0)}%</strong> of {instTitle}'s spend.</>
+        : <>Los <strong className="font-semibold text-text-primary">10 mayores proveedores concentran el {top10Share.toFixed(0)}%</strong> del gasto de {instTitle}.</>
+    }
+    // Dispersion fallback
+    return lang === 'en'
+      ? <>{instTitle}'s spend is dispersed — no single vendor exceeds <strong className="font-semibold">{top1Pct.toFixed(1)}%</strong>, but the top 10 together capture <strong className="font-semibold">{top10Share.toFixed(0)}%</strong>.</>
+      : <>El gasto de {instTitle} está disperso — ningún proveedor supera el <strong className="font-semibold">{top1Pct.toFixed(1)}%</strong>, pero los 10 mayores concentran el <strong className="font-semibold">{top10Share.toFixed(0)}%</strong>.</>
+  })()
+
+  // Breadcrumb: SPOILS ▸ SECTOR ▸ INSTITUTION
+  const crumbs: CrumbSegment[] = [
+    { label: lang === 'en' ? 'Spoils' : 'Reparto', onClick: () => dispatch({ type: 'reset-to-system' }) },
+    { label: sectorName || sectorCode, sectorCode, onClick: () => dispatch({ type: 'pop-to-level', level: 1 }) },
+    { label: siglas || instTitle.slice(0, 32) },
+  ]
 
   return (
     <div
-      className="absolute inset-0 z-[5] overflow-y-auto"
+      className="absolute inset-0 z-[5] overflow-hidden flex flex-col"
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div
-        className="px-4 py-3 sticky top-0 border-b"
-        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="absolute inset-0 flex flex-col"
       >
-        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-          {lang === 'en' ? 'Z2 · VENDORS' : 'Z2 · PROVEEDORES'}
-        </div>
-        <div className="text-sm font-semibold mt-0.5" title={institutionName} style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
-          {toEditorialCase(institutionName)}
-        </div>
-        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-          {isLoading
-            ? '…'
-            : `${formatNumber(totalVendors)} ${lang === 'en' ? 'vendors · sorted by risk' : 'proveedores · por riesgo'}`}
-        </div>
-      </div>
+        {/* Breadcrumb */}
+        <ZBreadcrumb segments={crumbs} lang={lang} />
 
-      {isLoading && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'Loading…' : 'Cargando…'}
-        </div>
-      )}
-      {isError && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No vendor data available.' : 'Sin datos de proveedores.'}
-        </div>
-      )}
-      {!isLoading && !isError && vendors.length === 0 && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No vendors found.' : 'Sin proveedores.'}
-        </div>
-      )}
+        {/* Sector-color top rail — carries layoutId="explore-inst-${id}" so
+            the Z1 row's sector strip morphs into this band on drill-in. */}
+        <motion.div
+          layoutId={`explore-inst-${institutionId}`}
+          transition={{ layout: layoutTransition }}
+          style={{ height: 6, background: sectorAccent, flexShrink: 0 }}
+          aria-hidden="true"
+        />
 
-      {/* Sortable vendor table */}
-      {!isLoading && !isError && vendors.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="sticky top-0" style={{ background: 'var(--color-background)', zIndex: 2, borderBottom: '1px solid var(--color-border)' }}>
-              <tr>
-                <th className="pl-3 pr-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-right" style={{ color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>#</th>
-                <th className="px-1 pb-1.5 pt-2 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'VENDOR' : 'PROVEEDOR'}
-                </th>
-                <SortHeaderTh<Z2SortKey> field="spend" label={lang === 'en' ? 'SPEND / USD' : 'GASTO / USD'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px] whitespace-nowrap" />
-                <SortHeaderTh<Z2SortKey> field="risk" label="RS" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z2SortKey> field="contracts" label="CTR" activeField={sortKey} order={sortOrder} onSort={handleSort} className="px-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-                <SortHeaderTh<Z2SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={sortKey} order={sortOrder} onSort={handleSort} className="pr-3 pl-1 pb-1.5 pt-2 text-right font-mono text-[8px]" />
-              </tr>
-            </thead>
-            <tbody>
-              {useShelf ? (
-                <>
-                  {shelfCritical.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.critical}12`, color: RISK_COLORS.critical, borderBottom: `1px solid ${RISK_COLORS.critical}25` }}>
-                          <div className="flex items-center justify-between">
-                            <span>{lang === 'en' ? 'CRITICAL RISK · INVESTIGATE' : 'RIESGO CRÍTICO · INVESTIGAR'}</span>
-                            <span className="tabular-nums normal-case">{shelfCritical.length} · {formatCompactMXN(shelfCriticalSpend)}</span>
-                          </div>
-                        </td>
-                      </tr>
-                      {shelfCritical.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)}
-                    </>
-                  )}
-                  {shelfHigh.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.high}12`, color: RISK_COLORS.high, borderBottom: `1px solid ${RISK_COLORS.high}25` }}>
-                          <div className="flex items-center justify-between">
-                            <span>{lang === 'en' ? 'HIGH RISK · REVIEW URGENTLY' : 'RIESGO ALTO · REVISAR URGENTE'}</span>
-                            <span className="tabular-nums normal-case">{shelfHigh.length} · {formatCompactMXN(shelfHighSpend)}</span>
-                          </div>
-                        </td>
-                      </tr>
-                      {shelfHigh.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + i + 1} />)}
-                    </>
-                  )}
-                  {shelfMedium.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={6} className="px-3 py-1 font-mono text-[8px] tracking-widest uppercase" style={{ background: `${RISK_COLORS.medium}12`, color: RISK_COLORS.medium, borderBottom: `1px solid ${RISK_COLORS.medium}25` }}>
-                          <div className="flex items-center justify-between">
-                            <span>{lang === 'en' ? 'MEDIUM RISK · MONITOR' : 'RIESGO MEDIO · MONITOREAR'}</span>
-                            <span className="tabular-nums normal-case">{shelfMedium.length} · {formatCompactMXN(shelfMediumSpend)}</span>
-                          </div>
-                        </td>
-                      </tr>
-                      {shelfMedium.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfHigh.length + i + 1} />)}
-                    </>
-                  )}
-                  {shelfRoutine.length > 0 && (
-                    <>
-                      <tr>
-                        <td colSpan={6} style={{ padding: 0 }}>
-                          <button type="button" className="w-full flex items-center gap-2 px-3 py-1 text-left" style={{ background: 'var(--color-background-card)', borderBottom: routineOpen ? '1px solid var(--color-border)' : 'none', cursor: 'pointer' }} onClick={() => setRoutineOpen((o) => !o)}>
-                            <span className="font-mono text-[8px] tracking-widest uppercase flex-1" style={{ color: 'var(--color-text-muted)' }}>
-                              {lang === 'en' ? 'ROUTINE · LOW RISK' : 'RUTINARIO · RIESGO BAJO'}
-                            </span>
-                            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{shelfRoutine.length}</span>
-                            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>{routineOpen ? '▾' : '▸'}</span>
-                          </button>
-                        </td>
-                      </tr>
-                      {routineOpen && shelfRoutine.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={shelfCritical.length + shelfHigh.length + shelfMedium.length + i + 1} />)}
-                    </>
-                  )}
-                </>
-              ) : (
-                sorted.map((v, i) => <VendorRow key={v.vendor_id} v={v} rank={i + 1} />)
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+        {/* Editorial header — § LA CAPTURA + Playfair headline + stat band */}
+        <ZKickerBand
+          custom={0}
+          variants={bandVariants}
+          kicker={lang === 'en' ? '§ LA CAPTURA · INSTITUTION DEEP' : '§ LA CAPTURA · INSTITUCIÓN'}
+          headline={
+            lang === 'en'
+              ? <>{instTitle} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>who gets the money?</em></>
+              : <>{instTitle} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>¿quién recibe el dinero?</em></>
+          }
+          stat={
+            isLoading
+              ? '...'
+              : lang === 'en'
+                ? `${formatNumber(instVendorCount)} vendors · ${formatCompactMXN(instSpend)} · ${formatNumber(instContracts)} contracts · ${instDaPct.toFixed(0)}% direct award`
+                : `${formatNumber(instVendorCount)} proveedores · ${formatCompactMXN(instSpend)} · ${formatNumber(instContracts)} contratos · ${instDaPct.toFixed(0)}% adj. directa`
+          }
+        />
 
-      {/* Footer */}
-      {!isLoading && !isError && vendors.length > 0 && (
-        <div className="px-4 py-3 font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en'
-            ? 'tap → contract list · drill into full vendor history'
-            : 'toca → lista de contratos · historial completo del proveedor'}
-        </div>
+        {/* Sort toggle band */}
+        <motion.div
+          variants={bandVariants}
+          custom={1}
+          className="px-4 sm:px-6 pb-2 flex justify-end"
+        >
+          <ZSortToggle
+            modes={['spend', 'risk'] as const}
+            active={mode}
+            onChange={setMode}
+            riskMode="risk"
+            label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+          />
+        </motion.div>
+
+        {/* Scrollable register */}
+        <motion.div
+          variants={bandVariants}
+          custom={2}
+          className="flex-1 min-h-0 overflow-y-auto mx-3 sm:mx-4 mb-2"
+        >
+          {isLoading && (
+            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'loading...' : 'cargando...'}
+            </div>
+          )}
+          {isError && !isLoading && (
+            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'no vendor data available.' : 'sin datos de proveedores.'}
+            </div>
+          )}
+          {!isLoading && !isError && sortedVendors.length > 0 && <Z2ColumnHeader lang={lang} />}
+          {!isLoading && !isError && !useShelf && (
+            <ul role="list" className="space-y-px">
+              {sortedVendors.map((v, i) => (
+                <Z2Row
+                  key={v.vendor_id}
+                  v={v}
+                  rank={i + 1}
+                  sectorAccent={sectorAccent}
+                  dispatch={dispatch}
+                  lang={lang}
+                  layoutTransition={layoutTransition}
+                  prefersReducedMotion={prefersReducedMotion}
+                />
+              ))}
+            </ul>
+          )}
+          {!isLoading && !isError && useShelf && (
+            <div className="space-y-2">
+              <Z2Shelf
+                title={lang === 'en' ? 'CRITICAL · INVESTIGATE' : 'CRÍTICO · INVESTIGAR'}
+                color={RISK_COLORS.critical}
+                items={shelfCritical}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+                defaultOpen
+              />
+              <Z2Shelf
+                title={lang === 'en' ? 'HIGH PRIORITY · REVIEW' : 'ALTA PRIORIDAD · REVISAR'}
+                color={RISK_COLORS.high}
+                items={shelfHigh}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+                defaultOpen
+              />
+              <Z2Shelf
+                title={lang === 'en' ? 'MEDIUM RISK' : 'RIESGO MEDIO'}
+                color={RISK_COLORS.medium}
+                items={shelfMedium}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+                defaultOpen
+              />
+              <Z2Shelf
+                title={lang === 'en' ? 'ROUTINE · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
+                color="var(--color-text-muted)"
+                items={shelfRoutine}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+                defaultOpen={false} /* LOW collapsed — 30+ entries dominate the scroll otherwise */
+              />
+            </div>
+          )}
+        </motion.div>
+
+        {/* Pull-line — editorial finding */}
+        {!isLoading && sortedVendors.length > 0 && (
+          <ZPullLine custom={3} variants={bandVariants}>
+            {pullLine}
+          </ZPullLine>
+        )}
+
+        {/* Footer — link to /institutions/:id (canonical dossier) */}
+        {!isLoading && sortedVendors.length > 0 && (
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en'
+                ? `top ${sortedVendors.length} of ${formatNumber(instVendorCount)} vendors`
+                : `top ${sortedVendors.length} de ${formatNumber(instVendorCount)} proveedores`}
+            </span>
+            <ZFooterLink href={`/institutions/${institutionId}`} lang={lang} />
+          </div>
+        )}
+      </motion.div>
+    </div>
+  )
+}
+
+// ─── Z2 subcomponents — column header, row, shelf ───────────────────────────
+
+/**
+ * Plain-language column header for the Z2 vendor register. Widths MUST
+ * match Z2Row exactly:
+ *   rank 20 · chip 32 · vendor flex · badges 96 · HR-bar 130 ·
+ *   spend 110 · contracts 70 · DA 56 · SB 56 · risk 56
+ */
+function Z2ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+  const headerCell: React.CSSProperties = {
+    fontSize: 9,
+    fontFamily: 'var(--font-family-mono, monospace)',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.3,
+  }
+  return (
+    <div
+      className="flex items-end gap-3 px-2 pt-2 pb-1.5 mb-1 sticky top-0 z-[2]"
+      style={{
+        background: 'var(--color-background)',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+      role="row"
+    >
+      <span style={{ width: 20 }} role="columnheader" aria-label={isEs ? 'rango' : 'rank'} />
+      <span style={{ width: 32 }} role="columnheader" aria-hidden="true" />
+      <span className="flex-1 min-w-0" style={headerCell} role="columnheader">
+        {isEs ? 'Proveedor' : 'Vendor'}
+      </span>
+      <span
+        className="flex-shrink-0"
+        style={{ ...headerCell, width: 96 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Etiquetas investigativas: DOMINANTE (≥10% del gasto institucional), GT (caso confirmado en Ground Truth), T1 (cohorte de máxima prioridad de ARIA), patrones P1-P7 detectados.'
+            : 'Investigative tags: DOMINANT (≥10% of institution spend), GT (confirmed ground-truth case), T1 (ARIA top-priority cohort), detected P1–P7 patterns.'
+        }
+      >
+        {isEs ? 'Etiquetas' : 'Flags'}
+      </span>
+      <span
+        className="flex-shrink-0"
+        style={{ ...headerCell, width: 130, textAlign: 'left' }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Tasa de contratos de alto riesgo del proveedor con esta institución: % marcados como alto o crítico por el modelo. Barra al 100% = todos sus contratos aquí están en riesgo.'
+            : "High-risk contract rate for this vendor at this institution: % flagged high or critical by the risk model. A full bar means every contract this vendor holds here is at risk."
+        }
+      >
+        {isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}
+      </span>
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 110 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Gasto acumulado del proveedor con esta institución, con equivalente en USD y % del gasto total de la institución.'
+            : "Total spend this vendor has received from this institution, with USD equivalent and percentage of the institution's spend."
+        }
+      >
+        {isEs ? (
+          <>Gasto<br /><span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · %</span></>
+        ) : (
+          <>Spend<br /><span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · share</span></>
+        )}
+      </span>
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 70 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Número de contratos del proveedor con esta institución.'
+            : 'Number of contracts this vendor holds with this institution.'
+        }
+      >
+        {isEs ? (<># de<br /><span>contratos</span></>) : (<># of<br /><span>contracts</span></>)}
+      </span>
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 56 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Adjudicación directa: % de contratos del proveedor con esta institución otorgados sin licitación pública.'
+            : "Direct-award rate: % of this vendor's contracts here awarded without an open bid."
+        }
+      >
+        {isEs ? (<>Adj.<br /><span>directa</span></>) : (<>Direct<br /><span>award</span></>)}
+      </span>
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 56 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Licitación con un solo postor: % de procedimientos competitivos donde el proveedor fue el único ofertante. Señal clave de manipulación de licitaciones.'
+            : 'Single-bid rate: % of competitive procedures where this vendor was the only bidder. Key bid-rigging signal.'
+        }
+      >
+        {isEs ? (<>Único<br /><span>postor</span></>) : (<>Single<br /><span>bid</span></>)}
+      </span>
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 56 }}
+        role="columnheader"
+        title={
+          isEs
+            ? "Puntuación promedio de riesgo del modelo para los contratos de este proveedor con esta institución (0–100). Crítico ≥ 60."
+            : "Average risk score from the model for this vendor's contracts here (0–100). Critical ≥ 60."
+        }
+      >
+        {isEs ? (<>Riesgo<br /><span>prom.</span></>) : (<>Avg<br /><span>risk</span></>)}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Single vendor row in the Z2 register. Carries badges + HR%-bar + spend
+ * trio + contract count + DA% + SB% + avg risk. Layout matches
+ * Z2ColumnHeader widths exactly. Click drills into Z3.
+ */
+function Z2Row({
+  v,
+  rank,
+  sectorAccent,
+  dispatch,
+  lang,
+  layoutTransition,
+  prefersReducedMotion,
+}: {
+  v: import('@/api/types').VendorPoolItem
+  rank: number
+  sectorAccent: string
+  dispatch: ReturnType<typeof useExploreDispatch>
+  lang: 'en' | 'es'
+  layoutTransition: { duration: number; ease?: typeof Z_EASE }
+  prefersReducedMotion: boolean
+}) {
+  const score = v.avg_risk_score ?? 0
+  const riskPct = Math.round(score * 100)
+  const riskColor =
+    score >= 0.60 ? RISK_COLORS.critical
+    : score >= 0.40 ? RISK_COLORS.high
+    : score >= 0.25 ? RISK_COLORS.medium
+    : 'var(--color-text-muted)'
+
+  const hrPct = v.high_risk_pct ?? 0
+  const daPct = v.direct_award_pct ?? 0
+  const sbPct = v.single_bid_pct ?? 0
+  const hrBarPct = Math.min(100, Math.max(0, hrPct))
+  const hrBarColor = hrPct >= 50 ? RISK_COLORS.critical : hrPct >= 25 ? RISK_COLORS.high : hrPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+  const daColor = daPct >= 80 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+  const sbColor = sbPct >= 50 ? RISK_COLORS.critical : sbPct >= 25 ? RISK_COLORS.high : sbPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+
+  // Vendor initials chip — no logo registry for vendors (1000s of names),
+  // so we synthesize a 2-char initial tile in the sector accent.
+  const cleanName = formatVendorName(v.vendor_name, 300)
+  const initials = (() => {
+    const parts = cleanName.replace(/^(GRUPO|LABORATORIOS?|DISTRIBUIDORA|FARMAC[ÉE]UTIC[OA]S?)\s+/i, '').split(/\s+/).filter(Boolean)
+    const first = (parts[0]?.[0] ?? '?').toUpperCase()
+    const second = (parts[1]?.[0] ?? parts[0]?.[1] ?? '').toUpperCase()
+    return (first + second).slice(0, 2) || '?'
+  })()
+
+  // Role badges — priority-ordered, max 2 visible.
+  const badges = computeZ2Badges(v, lang)
+  const editorialName = toEditorialCase(cleanName)
+
+  return (
+    <motion.li
+      layout
+      layoutId={`explore-vendor-${v.vendor_id}`}
+      transition={{ layout: layoutTransition }}
+      whileHover={prefersReducedMotion ? undefined : { backgroundColor: 'var(--color-background-card)', transition: { duration: 0.12 } }}
+    >
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: cleanName })}
+        className="w-full text-left flex items-center gap-3 px-2 py-2 rounded-sm cursor-pointer"
+        style={{ background: 'transparent' }}
+        title={`${cleanName} — ${formatCompactMXN(v.total_value_mxn)} (${v.share_of_institution_pct.toFixed(1)}%) — ${formatNumber(v.contract_count)} contracts — HR ${hrPct.toFixed(0)}% — DA ${daPct.toFixed(0)}% — SB ${sbPct.toFixed(0)}% — avg risk ${riskPct}%`}
+        aria-label={`${cleanName}, rank ${rank}, ${formatCompactMXN(v.total_value_mxn)}, ${v.contract_count} contracts, high-risk rate ${hrPct.toFixed(0)} percent`}
+      >
+        {/* Rank */}
+        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
+          {rank}
+        </span>
+        {/* Initials chip — 2-letter vendor signature in sector accent */}
+        <span
+          className="flex items-center justify-center flex-shrink-0 rounded-sm font-mono"
+          style={{
+            width: 32,
+            height: 32,
+            background: `${sectorAccent}1f`,
+            color: sectorAccent,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+          }}
+          aria-hidden="true"
+        >
+          {initials}
+        </span>
+        {/* Full vendor name — title-cased, wraps, never truncated */}
+        <span className="flex-1 min-w-0 text-sm leading-tight" style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+          {editorialName}
+        </span>
+        {/* Badge stack — DOMINANT / GT / T1 / pattern */}
+        <span className="flex-shrink-0 flex flex-wrap items-center gap-1 justify-end" style={{ width: 96 }}>
+          {badges.map((b, i) => (
+            <span
+              key={i}
+              className="font-mono uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm whitespace-nowrap"
+              style={{
+                fontSize: 8,
+                fontWeight: 700,
+                color: b.color,
+                background: `${b.color}1f`,
+                border: `1px solid ${b.color}33`,
+              }}
+              title={b.tooltip}
+            >
+              {b.label}
+            </span>
+          ))}
+        </span>
+        {/* HR% bar — high-risk contract rate, scoped to (vendor × institution) */}
+        <span className="flex-shrink-0 flex items-center gap-2" style={{ width: 130 }}>
+          <span
+            className="relative flex-1 h-[6px] rounded-sm overflow-hidden"
+            style={{ background: 'var(--color-background-elevated)' }}
+            aria-hidden="true"
+          >
+            <span
+              className="absolute inset-y-0 left-0 rounded-sm transition-all"
+              style={{ width: `${hrBarPct}%`, background: hrBarColor, opacity: 0.92 }}
+            />
+            {[25, 50, 75].map((t) => (
+              <span
+                key={t}
+                className="absolute inset-y-0 w-px"
+                style={{ left: `${t}%`, background: 'rgba(0,0,0,0.10)' }}
+              />
+            ))}
+          </span>
+          <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, fontWeight: 700, color: hrBarColor, width: 36 }}>
+            {hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          </span>
+        </span>
+        {/* Spend trio: MXN / USD / share-of-institution */}
+        <span className="flex-shrink-0 text-right" style={{ width: 110 }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-primary)' }}>
+            {formatCompactMXN(v.total_value_mxn)}
+          </span>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            ≈ {formatCompactUSD(v.total_value_mxn)}
+          </span>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {v.share_of_institution_pct.toFixed(1)}% {lang === 'en' ? 'share' : 'aporte'}
+          </span>
+        </span>
+        {/* Contracts */}
+        <span className="flex-shrink-0 text-right" style={{ width: 70 }}>
+          <span className="block font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+            {formatNumber(v.contract_count)}
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'contracts' : 'contratos'}
+          </span>
+        </span>
+        {/* DA% */}
+        <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: daColor }}>
+            {daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'DA' : 'AD'}
+          </span>
+        </span>
+        {/* SB% (single-bid) — new column, the bid-rigging signal */}
+        <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: sbColor }}>
+            {sbPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'SB' : 'UP'}
+          </span>
+        </span>
+        {/* Avg risk */}
+        <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: riskColor }}>
+            {score > 0 ? riskPct : '—'}
+          </span>
+          <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'risk' : 'riesgo'}
+          </span>
+        </span>
+      </button>
+    </motion.li>
+  )
+}
+
+/**
+ * Collapsible risk-tier shelf grouping Z2 rows. Mirrors Z1Shelf API.
+ */
+function Z2Shelf({
+  title,
+  color,
+  items,
+  sectorAccent,
+  dispatch,
+  lang,
+  layoutTransition,
+  prefersReducedMotion,
+  defaultOpen,
+}: {
+  title: string
+  color: string
+  items: import('@/api/types').VendorPoolItem[]
+  sectorAccent: string
+  dispatch: ReturnType<typeof useExploreDispatch>
+  lang: 'en' | 'es'
+  layoutTransition: { duration: number; ease?: typeof Z_EASE }
+  prefersReducedMotion: boolean
+  defaultOpen: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  if (items.length === 0) return null
+  const shelfSpend = items.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-sm font-mono uppercase tracking-[0.14em] cursor-pointer"
+        style={{ fontSize: 9, color, background: `${color}10`, fontWeight: 700 }}
+        aria-expanded={open}
+      >
+        <span aria-hidden="true">{open ? '▾' : '▸'}</span>
+        <span className="flex-1 text-left">{title}</span>
+        <span className="font-mono tabular-nums normal-case" style={{ fontSize: 9, opacity: 0.7 }}>{formatCompactMXN(shelfSpend)}</span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{items.length}</span>
+      </button>
+      {open && (
+        <ul role="list" className="space-y-px mt-0.5">
+          {items.map((v, i) => (
+            <Z2Row
+              key={v.vendor_id}
+              v={v}
+              rank={i + 1}
+              sectorAccent={sectorAccent}
+              dispatch={dispatch}
+              lang={lang}
+              layoutTransition={layoutTransition}
+              prefersReducedMotion={prefersReducedMotion}
+            />
+          ))}
+        </ul>
       )}
     </div>
   )
+}
+
+/**
+ * Compute the visible badges for a Z2 vendor row. Returns at most 2 in
+ * priority order: GT → DOMINANT → T1 → pattern (P1-P7) → T2. Each badge
+ * carries its own color + localized tooltip.
+ */
+function computeZ2Badges(
+  v: import('@/api/types').VendorPoolItem,
+  lang: 'en' | 'es',
+): Array<{ label: string; color: string; tooltip: string }> {
+  const out: Array<{ label: string; color: string; tooltip: string }> = []
+  const isEs = lang === 'es'
+
+  if (v.in_ground_truth === 1) {
+    out.push({
+      label: 'GT',
+      color: RISK_COLORS.critical,
+      tooltip: isEs ? 'Caso confirmado en la base Ground Truth' : 'Confirmed corruption case in Ground Truth',
+    })
+  }
+
+  if (v.share_of_institution_pct >= 10) {
+    out.push({
+      label: isEs ? 'DOMINANTE' : 'DOMINANT',
+      color: RISK_COLORS.high,
+      tooltip: isEs
+        ? `Concentra ${v.share_of_institution_pct.toFixed(1)}% del gasto de esta institución (≥10%)`
+        : `Captures ${v.share_of_institution_pct.toFixed(1)}% of this institution's spend (≥10%)`,
+    })
+  }
+
+  if (out.length < 2 && v.ips_tier === 1) {
+    out.push({
+      label: 'T1',
+      color: RISK_COLORS.critical,
+      tooltip: isEs ? 'Cohorte Tier-1 de ARIA: máxima prioridad investigativa' : 'ARIA Tier-1 cohort: highest investigative priority',
+    })
+  }
+
+  if (out.length < 2 && v.primary_pattern) {
+    const labels: Record<string, [string, string]> = {
+      P1: ['BID-RIG', 'SOBORNO'],
+      P2: ['GHOST', 'FANTASMA'],
+      P3: ['INTERMED.', 'INTERMED.'],
+      P4: ['KICKBACK', 'COMISIÓN'],
+      P5: ['ROTATION', 'ROTACIÓN'],
+      P6: ['CAPTURE', 'CAPTURA'],
+      P7: ['DUMP', 'VOLQUEO'],
+    }
+    const pair = labels[v.primary_pattern]
+    if (pair) {
+      out.push({
+        label: pair[isEs ? 1 : 0],
+        color: PATTERN_COLORS[v.primary_pattern] ?? RISK_COLORS.high,
+        tooltip: isEs
+          ? `Patrón ${v.primary_pattern} detectado por ARIA`
+          : `ARIA-detected pattern ${v.primary_pattern}`,
+      })
+    }
+  }
+
+  if (out.length < 2 && v.ips_tier === 2) {
+    out.push({
+      label: 'T2',
+      color: RISK_COLORS.high,
+      tooltip: isEs ? 'Cohorte Tier-2 de ARIA' : 'ARIA Tier-2 cohort',
+    })
+  }
+
+  return out.slice(0, 2)
 }
 
 // ────────────────────────────────────────────────────────────────────────────

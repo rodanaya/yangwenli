@@ -180,6 +180,65 @@ class InstitutionVendorListResponse(BaseModel):
     generated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Z2 "La Captura" — vendor-pool dossier shape (richer than the basic list)
+# Carries per-vendor HR/DA/SB counts + ARIA tier/pattern + institution-level
+# aggregates so the Z2 panel can render the editorial register without
+# chaining N follow-up requests.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class VendorPoolItem(BaseModel):
+    """One vendor row in the Z2 institution → vendor register."""
+
+    rank: int
+    vendor_id: int
+    vendor_name: str
+    # Core
+    contract_count: int = 0
+    total_value_mxn: float = 0
+    share_of_institution_pct: float = 0.0
+    first_year: Optional[int] = None
+    last_year: Optional[int] = None
+    # Risk
+    avg_risk_score: Optional[float] = None
+    high_risk_count: int = 0
+    high_risk_pct: float = 0.0
+    # Procedure flags (scoped to this institution)
+    direct_award_count: int = 0
+    direct_award_pct: float = 0.0
+    single_bid_count: int = 0
+    single_bid_pct: float = 0.0
+    # ARIA investigative signals
+    ips_tier: Optional[int] = None
+    primary_pattern: Optional[str] = None
+    in_ground_truth: int = 0
+
+
+class VendorPoolResponse(BaseModel):
+    """Z2 vendor-pool response — institution context + ranked vendor list."""
+
+    institution_id: int
+    institution_name: str
+    siglas: Optional[str] = None
+    sector_id: Optional[int] = None
+    # Institution-level aggregates for the kicker band
+    institution_total_value_mxn: float = 0
+    institution_total_contracts: int = 0
+    institution_vendor_count: int = 0
+    institution_direct_award_pct: float = 0.0
+    institution_high_risk_pct: float = 0.0
+    institution_single_bid_pct: float = 0.0
+    # Pre-computed concentration summary (drives the pull-line)
+    top1_vendor_id: Optional[int] = None
+    top1_vendor_name: Optional[str] = None
+    top1_share_pct: float = 0.0
+    top10_share_pct: float = 0.0
+    # The register itself
+    data: List[VendorPoolItem]
+    total: int = 0
+    generated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class InstitutionTopItem(BaseModel):
     """Institution in top list."""
 

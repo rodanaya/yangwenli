@@ -23,6 +23,8 @@ from ..models.institution import (
     AutonomyLevelListResponse,
     InstitutionVendorItem,
     InstitutionVendorListResponse,
+    VendorPoolItem,
+    VendorPoolResponse,
     InstitutionTopItem,
     InstitutionTopListResponse,
     InstitutionHierarchyItem,
@@ -1149,6 +1151,208 @@ def get_institution_vendors(
             data=vendors,
             total=result["total_vendors"],
         )
+
+
+# =============================================================================
+# Z2 "La Captura" — institution vendor-pool dossier
+# =============================================================================
+
+# 30-min TTL cache for the Z2 vendor-pool payload. Keyed by institution_id.
+_z2_pool_cache: Dict[int, VendorPoolResponse] = {}
+_z2_pool_cache_ts: Dict[int, float] = {}
+_z2_pool_lock = threading.Lock()
+_Z2_POOL_TTL_S = 1800  # 30 minutes
+
+
+@router.get("/{institution_id:int}/vendor-pool", response_model=VendorPoolResponse)
+def get_institution_vendor_pool(
+    institution_id: int = Path(..., description="Institution ID"),
+    limit: int = Query(50, ge=10, le=50, description="Top-N vendors by spend (max 50)"),
+):
+    """
+    Z2 "La Captura" — institution vendor-pool dossier.
+
+    Returns the institution's top vendors with per-vendor HR%/DA%/SB% counts
+    plus ARIA investigative signals (ips_tier, primary_pattern, in_ground_truth)
+    and institution-level aggregates needed to render the editorial Z2 register
+    without follow-up requests.
+
+    Strategy:
+      1. Fast top-N lookup from `institution_top_vendors` (precomputed, ≤50 per inst)
+      2. Live aggregate scoped to (institution_id, top_vendor_ids) for HR/DA/SB counts
+      3. LEFT JOIN aria_queue for tier + pattern badges
+      4. Institution totals from `institution_stats` (precomputed)
+    """
+    # Cache hit
+    with _z2_pool_lock:
+        ts = _z2_pool_cache_ts.get(institution_id, 0)
+        if datetime.now().timestamp() - ts < _Z2_POOL_TTL_S and institution_id in _z2_pool_cache:
+            return _z2_pool_cache[institution_id]
+
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        # 1. Verify institution + grab metadata
+        cur.execute(
+            "SELECT id, name, siglas, sector_id FROM institutions WHERE id = ?",
+            (institution_id,),
+        )
+        inst = cur.fetchone()
+        if inst is None:
+            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+        # 2. Institution-level aggregates (precomputed table)
+        cur.execute(
+            """
+            SELECT total_contracts, total_value_mxn, vendor_count,
+                   direct_award_pct, high_risk_pct, single_bid_pct
+            FROM institution_stats
+            WHERE institution_id = ?
+            """,
+            (institution_id,),
+        )
+        stats = cur.fetchone()
+        inst_total_value = float(stats["total_value_mxn"]) if stats else 0.0
+        inst_total_contracts = int(stats["total_contracts"]) if stats else 0
+        inst_vendor_count = int(stats["vendor_count"]) if stats else 0
+        inst_da_pct = float(stats["direct_award_pct"]) if stats else 0.0
+        inst_hr_pct = float(stats["high_risk_pct"]) if stats else 0.0
+        inst_sb_pct = float(stats["single_bid_pct"]) if stats else 0.0
+
+        # 3. Top-N vendors (precomputed)
+        cur.execute(
+            """
+            SELECT vendor_id, vendor_name, contract_count,
+                   total_value_mxn, avg_risk_score, first_year, last_year
+            FROM institution_top_vendors
+            WHERE institution_id = ?
+            ORDER BY total_value_mxn DESC
+            LIMIT ?
+            """,
+            (institution_id, limit),
+        )
+        top_rows = cur.fetchall()
+
+        if not top_rows:
+            empty = VendorPoolResponse(
+                institution_id=inst["id"],
+                institution_name=inst["name"],
+                siglas=inst["siglas"],
+                sector_id=inst["sector_id"],
+                institution_total_value_mxn=inst_total_value,
+                institution_total_contracts=inst_total_contracts,
+                institution_vendor_count=inst_vendor_count,
+                institution_direct_award_pct=inst_da_pct,
+                institution_high_risk_pct=inst_hr_pct,
+                institution_single_bid_pct=inst_sb_pct,
+                data=[],
+                total=inst_vendor_count,
+            )
+            with _z2_pool_lock:
+                _z2_pool_cache[institution_id] = empty
+                _z2_pool_cache_ts[institution_id] = datetime.now().timestamp()
+            return empty
+
+        vendor_ids = [r["vendor_id"] for r in top_rows]
+        placeholders = ",".join("?" * len(vendor_ids))
+
+        # 4. Live aggregate: per-vendor HR / DA / SB counts scoped to this institution
+        #    Single GROUP BY on contracts WHERE institution_id=? AND vendor_id IN (≤50).
+        #    Fast even at IMSS scale because the IN-list narrows to ~50 vendors.
+        cur.execute(
+            f"""
+            SELECT vendor_id,
+                   SUM(CASE WHEN risk_score >= 0.40 THEN 1 ELSE 0 END) AS hr_count,
+                   SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) AS da_count,
+                   SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) AS sb_count
+            FROM contracts
+            WHERE institution_id = ?
+              AND vendor_id IN ({placeholders})
+              AND COALESCE(amount_mxn, 0) <= ?
+            GROUP BY vendor_id
+            """,
+            (institution_id, *vendor_ids, MAX_CONTRACT_VALUE),
+        )
+        flag_counts = {r["vendor_id"]: r for r in cur.fetchall()}
+
+        # 5. ARIA tier/pattern lookup
+        cur.execute(
+            f"""
+            SELECT vendor_id, ips_tier, primary_pattern, in_ground_truth
+            FROM aria_queue
+            WHERE vendor_id IN ({placeholders})
+            """,
+            tuple(vendor_ids),
+        )
+        aria = {r["vendor_id"]: r for r in cur.fetchall()}
+
+    # 6. Compose response
+    items: List[VendorPoolItem] = []
+    top10_value = 0.0
+    for rank, row in enumerate(top_rows, start=1):
+        vid = row["vendor_id"]
+        ccount = int(row["contract_count"] or 0)
+        value = float(row["total_value_mxn"] or 0)
+        share = (value / inst_total_value * 100.0) if inst_total_value > 0 else 0.0
+        if rank <= 10:
+            top10_value += value
+
+        flags = flag_counts.get(vid)
+        hr_count = int(flags["hr_count"]) if flags else 0
+        da_count = int(flags["da_count"]) if flags else 0
+        sb_count = int(flags["sb_count"]) if flags else 0
+        hr_pct = (hr_count / ccount * 100.0) if ccount > 0 else 0.0
+        da_pct = (da_count / ccount * 100.0) if ccount > 0 else 0.0
+        sb_pct = (sb_count / ccount * 100.0) if ccount > 0 else 0.0
+
+        a = aria.get(vid)
+        items.append(VendorPoolItem(
+            rank=rank,
+            vendor_id=vid,
+            vendor_name=row["vendor_name"],
+            contract_count=ccount,
+            total_value_mxn=value,
+            share_of_institution_pct=round(share, 2),
+            first_year=row["first_year"],
+            last_year=row["last_year"],
+            avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
+            high_risk_count=hr_count,
+            high_risk_pct=round(hr_pct, 1),
+            direct_award_count=da_count,
+            direct_award_pct=round(da_pct, 1),
+            single_bid_count=sb_count,
+            single_bid_pct=round(sb_pct, 1),
+            ips_tier=int(a["ips_tier"]) if a and a["ips_tier"] is not None else None,
+            primary_pattern=a["primary_pattern"] if a else None,
+            in_ground_truth=int(a["in_ground_truth"]) if a and a["in_ground_truth"] is not None else 0,
+        ))
+
+    top1 = items[0] if items else None
+    top10_share = (top10_value / inst_total_value * 100.0) if inst_total_value > 0 else 0.0
+
+    response = VendorPoolResponse(
+        institution_id=inst["id"],
+        institution_name=inst["name"],
+        siglas=inst["siglas"],
+        sector_id=inst["sector_id"],
+        institution_total_value_mxn=inst_total_value,
+        institution_total_contracts=inst_total_contracts,
+        institution_vendor_count=inst_vendor_count,
+        institution_direct_award_pct=inst_da_pct,
+        institution_high_risk_pct=inst_hr_pct,
+        institution_single_bid_pct=inst_sb_pct,
+        top1_vendor_id=top1.vendor_id if top1 else None,
+        top1_vendor_name=top1.vendor_name if top1 else None,
+        top1_share_pct=top1.share_of_institution_pct if top1 else 0.0,
+        top10_share_pct=round(top10_share, 2),
+        data=items,
+        total=inst_vendor_count,
+    )
+
+    with _z2_pool_lock:
+        _z2_pool_cache[institution_id] = response
+        _z2_pool_cache_ts[institution_id] = datetime.now().timestamp()
+    return response
 
 
 # =============================================================================
