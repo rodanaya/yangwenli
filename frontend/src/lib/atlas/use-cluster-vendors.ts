@@ -12,7 +12,7 @@
  * Backend: GET /api/v1/atlas/cluster-vendors?lens=...&code=...&limit=...
  */
 import { useMemo } from 'react'
-import { useQueries, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import api, { type AtlasClusterVendorItem } from '@/api/client'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 
@@ -41,11 +41,15 @@ function toGalaxyVendor(v: AtlasClusterVendorItem, clusterCode: string): GalaxyV
 }
 
 /**
- * Fetch up to `perClusterLimit` vendors for EACH cluster code in parallel.
- * Returns a flat array + loading/error flags.
+ * Fetch up to `perClusterLimit` vendors for EVERY cluster in ONE request.
  *
- * Keys are stable per lens + code + limit, so switching modes warms the cache
- * for that lens permanently (5min staleTime).
+ * 2026-05-21 — switched from N parallel /cluster-vendors calls to a single
+ * /cluster-vendors-batch request. The per-call TLS handshake over the public
+ * edge was ~1.5s; batching collapses 7+ handshakes into 1 round-trip
+ * (verified via vetting: 1,687ms avg per call → ~200ms total).
+ *
+ * Cache key: `['atlas-galaxy-vendors-batch', lens, joinedCodes, limit]`
+ * — switching lens warms the per-lens cache for 5 min.
  */
 export function useGalaxyVendors(
   lens: string,
@@ -53,33 +57,36 @@ export function useGalaxyVendors(
   perClusterLimit = 30,
   enabled = true,
 ): UseGalaxyVendorsResult {
-  const queries = useQueries({
-    queries: clusterCodes.map((code) => ({
-      queryKey: ['atlas-galaxy-vendors', lens, code, perClusterLimit],
-      queryFn: async () => {
-        const res = await api.atlas.getClusterVendors({ lens, code, limit: perClusterLimit })
-        return res.vendors.map((v) => toGalaxyVendor(v, code))
-      },
-      enabled: enabled && !!lens && !!code,
-      staleTime: 5 * 60 * 1000,
-      retry: 1,
-    })),
+  // Sorted-join makes the key stable regardless of input order.
+  const codesKey = useMemo(() => [...clusterCodes].sort().join(','), [clusterCodes])
+
+  const q = useQuery({
+    queryKey: ['atlas-galaxy-vendors-batch', lens, codesKey, perClusterLimit],
+    queryFn: async () => {
+      const res = await api.atlas.getClusterVendorsBatch({
+        lens,
+        codes: clusterCodes,
+        limit: perClusterLimit,
+      })
+      const flat: GalaxyVendor[] = []
+      for (const cluster of res.clusters) {
+        for (const v of cluster.vendors) {
+          flat.push(toGalaxyVendor(v, cluster.code))
+        }
+      }
+      return flat
+    },
+    enabled: enabled && !!lens && clusterCodes.length > 0,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   })
 
-  const isLoading = queries.some((q) => q.isLoading)
-  const isError = queries.every((q) => q.isError) && queries.length > 0
-
   const vendors = useMemo<GalaxyVendor[]>(() => {
-    const out: GalaxyVendor[] = []
-    for (const q of queries) {
-      if (q.data) out.push(...q.data)
-    }
-    return out.length === 0 ? EMPTY_VENDORS : out
-    // queries reference changes every render; depend on data identities instead.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [queries.map((q) => q.dataUpdatedAt).join('|')])
+    if (!q.data || q.data.length === 0) return EMPTY_VENDORS
+    return q.data
+  }, [q.data])
 
-  return { vendors, isLoading, isError }
+  return { vendors, isLoading: q.isLoading, isError: q.isError }
 }
 
 /**

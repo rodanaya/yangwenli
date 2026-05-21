@@ -91,6 +91,18 @@ class ClusterVendorsResponse(BaseModel):
     note: Optional[str] = None
 
 
+class ClusterVendorsBatchResponse(BaseModel):
+    """Bulk variant of ClusterVendorsResponse — one entry per requested code.
+
+    Used by the Observatory galaxy view to fetch all cluster cohorts in a
+    single HTTP round-trip instead of N parallel TLS handshakes (see
+    Atlas P6 vetting 2026-05-21: 27ms internal vs 1,687ms per-request
+    over TLS for the 7-cluster patterns lens).
+    """
+    lens: str
+    clusters: list[ClusterVendorsResponse]
+
+
 # ---------------------------------------------------------------------------
 # Risk level helper
 # ---------------------------------------------------------------------------
@@ -146,6 +158,47 @@ def get_cluster_vendors(
         return _query_categories(conn, code, limit, offset, cursor)
     # lens == "terms"
     return _query_terms(conn, code)
+
+
+@router.get("/cluster-vendors-batch", response_model=ClusterVendorsBatchResponse)
+def get_cluster_vendors_batch(
+    lens: str = Query(..., description="Lens type: patterns, sectors, categories, terms"),
+    codes: str = Query(..., description="Comma-separated cluster codes, e.g. 'P1,P2,P3,P4,P5,P6,P7'"),
+    limit: int = Query(10, ge=1, le=50, description="Top-N vendors per cluster"),
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """Return top vendors for MULTIPLE clusters in a single response.
+
+    Replaces N parallel /cluster-vendors calls with one round-trip. The galaxy
+    view of the Observatory uses this to populate all 7 patterns / 12 sectors
+    / 32 categories in one shot — avoiding 7+ TLS handshakes whose latency
+    dominated the per-call cost over the public edge.
+
+    Returns the same per-cluster response shape as /cluster-vendors, wrapped
+    in a `{ lens, clusters: [...] }` envelope.
+    """
+    if lens not in _VALID_LENSES:
+        return ClusterVendorsBatchResponse(lens=lens, clusters=[])
+
+    # Cap the comma list to a defensive maximum so a malicious caller can't
+    # request 1000 codes and exhaust DB connections.
+    code_list = [c.strip() for c in codes.split(",") if c.strip()][:50]
+    if not code_list:
+        return ClusterVendorsBatchResponse(lens=lens, clusters=[])
+
+    results: list[ClusterVendorsResponse] = []
+    for code in code_list:
+        if lens == "patterns":
+            r = _query_patterns(conn, code, limit, 0, None)
+        elif lens == "sectors":
+            r = _query_sectors(conn, code, limit, 0, None)
+        elif lens == "categories":
+            r = _query_categories(conn, code, limit, 0, None)
+        else:  # lens == "terms"
+            r = _query_terms(conn, code)
+        results.append(r)
+
+    return ClusterVendorsBatchResponse(lens=lens, clusters=results)
 
 
 # ---------------------------------------------------------------------------

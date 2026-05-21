@@ -3289,6 +3289,27 @@ export const atlasApi = {
     return data
   },
 
+  /**
+   * Batch variant — fetch top-N vendors for many clusters in ONE request.
+   * Used by the galaxy view to avoid 7+ parallel TLS handshakes on /atlas page load.
+   * Returns `{ lens, clusters: [ClusterVendorsResponse, ...] }`.
+   */
+  async getClusterVendorsBatch(params: {
+    lens: string
+    codes: string[]
+    limit?: number
+  }): Promise<{ lens: string; clusters: AtlasClusterVendorsResponse[] }> {
+    const q = buildQueryParams({
+      lens: params.lens,
+      codes: params.codes.join(','),
+      limit: params.limit ?? 10,
+    })
+    const { data } = await api.get<{ lens: string; clusters: AtlasClusterVendorsResponse[] }>(
+      `/atlas/cluster-vendors-batch?${q}`,
+    )
+    return data
+  },
+
   async getSectorInstitutionsSpatial(params: {
     sectorId: number
     limit?: number
