@@ -477,28 +477,28 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
     const zoomBehavior = d3zoom<HTMLCanvasElement, unknown>()
       .scaleExtent(SCALE_EXTENT)
-      // 2026-05-21 — lock pan at galaxy zoom.
-      // User reported "when I hold the map with the cursor it changes" —
-      // d3-zoom's default mousedown handler started a pan at k=1, which
-      // shifted the 7-cluster layout off-center and never snapped back.
-      // Allow wheel + pinch (touch) at any zoom; allow pan ONLY when
-      // already zoomed into a region (k > 1.5). The wheel still works
-      // to zoom INTO a cluster from the galaxy view.
-      .filter((event) => {
-        // Always allow wheel + touch (pinch zoom)
-        if (event.type === 'wheel') return true
-        if (event.type === 'touchstart' || event.type === 'touchmove') return true
-        // For mousedown / pointerdown (= start of pan): require region zoom.
-        const k = transformRef.current?.k ?? 1
-        return k > 1.5
-      })
       .on('zoom', (event) => {
-        transformRef.current = event.transform
-        const newBand = bandFor(event.transform.k)
+        let next = event.transform
+        // 2026-05-21 — at galaxy zoom (k near 1) the user expects the 7-cluster
+        // layout to stay centered; an accidental drag at the macro view used
+        // to shift the constellation off-center with no snap-back. Instead
+        // of filtering out mousedown (which also killed cluster clicks),
+        // we re-anchor the translate component to identity whenever k is
+        // close to 1. Wheel zoom + drag-pan at deeper zoom levels work
+        // normally. Cluster click hit-testing is unaffected because the
+        // native click pipeline never runs through this branch.
+        if (next.k <= 1.05 && (next.x !== 0 || next.y !== 0)) {
+          next = zoomIdentity
+          // Sync d3-zoom's internal state so the next event starts from
+          // identity, otherwise it would re-emit the drifted transform.
+          select(canvas).property('__zoom', next)
+        }
+        transformRef.current = next
+        const newBand = bandFor(next.k)
         setBand((prev) => (prev === newBand ? prev : newBand))
         draw()
         forceLabelTick((n) => n + 1)
-        onZoomChange?.({ zoom: event.transform.k, band: newBand })
+        onZoomChange?.({ zoom: next.k, band: newBand })
       })
     zoomBehaviorRef.current = zoomBehavior
     sel.call(zoomBehavior)
