@@ -53,12 +53,14 @@ import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/components/atlas/CanvasConstellation'
 import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
 import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
+// Atlas P6 Frontier B — real-vendor galaxy (replaces synthetic lattice).
+import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/lib/atlas/use-cluster-vendors'
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
 import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
 import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { AtlasMasthead } from '@/components/atlas/AtlasMasthead'
 import { AtlasToolbar } from '@/components/atlas/AtlasToolbar'
@@ -584,40 +586,102 @@ function CanvasAtlasView({
   )
   const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
 
-  // Atlas P6 Pass 3b (2026-05-21): merge named-vendor outliers into the dots
-  // array so they become CLICKABLE on the canvas. Lattice dots have synthetic
-  // IDs (dot-0…dot-1199) and aren't navigable; named vendors get real IDs +
-  // names + isOutlier so onDotClick can route to /thread/{vendorId}.
-  // Each named vendor is positioned slightly offset from its cluster's
-  // attractor (deterministic spread via vendorId, so positions stay stable
-  // across re-renders).
+  // Atlas P6 Frontier B (2026-05-21) — real-vendor galaxy.
+  // Galaxy view: fetch ~30 real vendors per cluster in parallel.
+  // Zoom view: fetch up to 200 vendors for the active cluster only.
+  // Lattice dots remain as a loading/fallback texture (never empty canvas).
+  const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
+  const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 30, true)
+  const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
+
+  // Position helper — deterministic golden-ratio polar offset around the
+  // cluster attractor. `slot` is the dot's index within its cluster; larger
+  // slots fan farther out so a 200-dot cluster reads as a fanned galaxy
+  // rather than a stacked point. Position is stable across re-renders.
+  const positionForVendor = useCallback(
+    (
+      baseX: number,
+      baseY: number,
+      slot: number,
+      spread: number,
+    ): { x: number; y: number } => {
+      const golden = 2.39996
+      const angle = slot * golden
+      // sqrt growth keeps angular density even at larger radii.
+      const radius = spread * (0.4 + Math.sqrt(slot) * 0.12)
+      return {
+        x: Math.max(0.02, Math.min(0.98, baseX + Math.cos(angle) * radius)),
+        y: Math.max(0.02, Math.min(0.98, baseY + Math.sin(angle) * radius)),
+      }
+    },
+    [],
+  )
+
+  // Build the real-vendor dots from the appropriate galaxy/zoom datasets.
   const dots = useMemo(() => {
-    if (!namedVendors || namedVendors.length === 0) return latticeDots
     const clusterByCode = new Map(clusters.map((c) => [c.code, c]))
-    const outlierDots = namedVendors.map((v, idx) => {
+    const slotCounters = new Map<string, number>()
+
+    // When zoomed, render the active cluster as a fanned galaxy (200 dots)
+    // PLUS the other clusters' galaxy cohort (30 each) at low density. Both
+    // sets are clickable.
+    const sources: GalaxyVendor[] = []
+    if (zoomedCodeForFetch && zoomCluster.vendors.length > 0) {
+      sources.push(...zoomCluster.vendors)
+      // Non-zoomed clusters: galaxy data minus the zoomed cluster (already in zoomCluster).
+      for (const v of galaxy.vendors) {
+        if (v.clusterCode !== zoomedCodeForFetch) sources.push(v)
+      }
+    } else {
+      sources.push(...galaxy.vendors)
+    }
+
+    if (sources.length === 0) {
+      // Loading or failure — show the synthetic lattice so we never paint empty.
+      return latticeDots
+    }
+
+    const realDots = sources.map((v): import('@/components/atlas/CanvasConstellation').ConstellationDot => {
       const c = clusterByCode.get(v.clusterCode)
       const baseX = c?.fx ?? 0.5
       const baseY = c?.fy ?? 0.5
-      // Deterministic spread — golden-ratio polar to spread evenly around the
-      // attractor without overlapping (offset by vendorId so it stays stable).
-      const golden = 2.39996
-      const angle = idx * golden
-      const radius = 0.025 + (idx % 5) * 0.008
+      const slot = slotCounters.get(v.clusterCode) ?? 0
+      slotCounters.set(v.clusterCode, slot + 1)
+      // Zoomed cluster fans wider so its 200 dots become a visible galaxy.
+      const isZoomedHere = zoomedCodeForFetch === v.clusterCode
+      const spread = isZoomedHere ? 0.12 : 0.045
+      const { x, y } = positionForVendor(baseX, baseY, slot, spread)
       const lvl: 'critical' | 'high' | 'medium' | 'low' =
-        v.riskScore >= 0.6 ? 'critical' : v.riskScore >= 0.4 ? 'high' : v.riskScore >= 0.25 ? 'medium' : 'low'
+        v.riskScore >= 0.6 ? 'critical'
+        : v.riskScore >= 0.4 ? 'high'
+        : v.riskScore >= 0.25 ? 'medium'
+        : 'low'
+      const sectorHex = v.primarySectorCode ? SECTOR_COLORS[v.primarySectorCode] : undefined
       return {
         id: String(v.vendorId),
-        x: Math.max(0.02, Math.min(0.98, baseX + Math.cos(angle) * radius)),
-        y: Math.max(0.02, Math.min(0.98, baseY + Math.sin(angle) * radius)),
+        x,
+        y,
         riskLevel: lvl,
         clusterCode: v.clusterCode,
         name: v.name,
         riskScore: v.riskScore,
-        isOutlier: true,
+        sectorColor: sectorHex,
+        // All real-vendor dots are clickable (route to /thread/{id}).
+        // Top-tier (T1) and zoomed-cluster dots render as outliers (larger radius).
+        isOutlier: v.tier === 1 || isZoomedHere,
       }
     })
-    return [...latticeDots, ...outlierDots]
-  }, [latticeDots, namedVendors, clusters])
+
+    return realDots
+  }, [
+    galaxy.vendors,
+    zoomCluster.vendors,
+    zoomedCodeForFetch,
+    clusters,
+    latticeDots,
+    positionForVendor,
+  ])
 
   const handleDotClick = useCallback(
     (dot: { id: string; name?: string }) => {
@@ -649,10 +713,33 @@ function CanvasAtlasView({
   }, [zoomedCode])
 
   // Vendors in the currently zoomed cluster (drawer + card top-vendors).
-  const clusterVendors = useMemo(
-    () => (zoomedCode ? namedVendors.filter((v) => v.clusterCode === zoomedCode) : []),
-    [zoomedCode, namedVendors],
-  )
+  // Atlas P6 Frontier B — sourced from the real /atlas/cluster-vendors fetch
+  // (limit=200) rather than the legacy 3-vendor `namedVendors` mock. Falls back
+  // to galaxy data while the zoom query is in flight so the drawer never
+  // flashes empty. `namedVendors` is also merged in to keep curated GT entries
+  // visible even if the API trims them (deduped by vendorId).
+  const clusterVendors = useMemo(() => {
+    if (!zoomedCode) return [] as NamedVendorDot[]
+    const seen = new Set<number>()
+    const out: NamedVendorDot[] = []
+    const push = (v: NamedVendorDot): void => {
+      if (seen.has(v.vendorId)) return
+      seen.add(v.vendorId)
+      out.push(v)
+    }
+    for (const v of zoomCluster.vendors) {
+      if (v.clusterCode === zoomedCode) push(v)
+    }
+    if (out.length === 0) {
+      for (const v of galaxy.vendors) {
+        if (v.clusterCode === zoomedCode) push(v)
+      }
+    }
+    for (const v of namedVendors) {
+      if (v.clusterCode === zoomedCode) push(v)
+    }
+    return out.sort((a, b) => b.riskScore - a.riskScore)
+  }, [zoomedCode, zoomCluster.vendors, galaxy.vendors, namedVendors])
   const topVendors = useMemo(() => clusterVendors.slice(0, 3), [clusterVendors])
 
   // Auto-fly when context view becomes zoomed (handles both cluster-glyph
