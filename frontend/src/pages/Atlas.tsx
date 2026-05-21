@@ -48,6 +48,12 @@ import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+// atlas-P6 Pass 2: Canvas constellation engine (opt-in via ?canvas=1).
+// Full replacement of AtlasZoomLayer once parity is validated.
+import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/components/atlas/CanvasConstellation'
+import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
+import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
+import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -500,6 +506,141 @@ function useClusterNotes(): {
 // idempotent (last write wins within the 250ms window). In practice the
 // context state dispatch happens slightly after mount so AtlasUrlSync wins.
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CanvasAtlasView (Atlas P6 Pass 2)
+//
+// Mounts the new Canvas-based constellation engine when ?canvas=1 is set.
+// Lives inside AtlasContextProvider so it can read/dispatch zoom state.
+//
+// Phase-3 follow-ups (not in this pass):
+//   • named vendor outliers (engine accepts name on each dot)
+//   • vendor drawer + halo card + lasso selection
+//   • Z1 sector drill escalation
+//   • cluster floating card content parity with AtlasZoomLayer
+//   • vendor-search auto-fly (M-OBS P5)
+//   • keyboard +/-/0/arrows wired to flyToClusterRef + resetViewRef
+// ─────────────────────────────────────────────────────────────────────────────
+interface CanvasAtlasViewProps {
+  mode: ConstellationMode
+  rows: ConstellationRiskRow[]
+  seed: number
+  pinnedCode: string | null
+  lang: 'en' | 'es'
+  activeMeta: ClusterMeta[]
+  onClusterClickBridge: (code: string) => void
+  riskFloor: 'all' | 'medium' | 'high' | 'critical'
+}
+
+function CanvasAtlasView({
+  mode,
+  rows,
+  seed,
+  pinnedCode,
+  lang,
+  activeMeta,
+  onClusterClickBridge,
+  riskFloor,
+}: CanvasAtlasViewProps) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const flyToRef = useRef<FlyToClusterFn | null>(null)
+  const resetRef = useRef<ResetViewFn | null>(null)
+
+  const dots = useMemo(
+    () => dotsFromRows({ rows, meta: activeMeta, mode, seed }),
+    [rows, activeMeta, mode, seed],
+  )
+  const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
+
+  const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
+  const isZoomed = zoomedCode !== null
+  const zoomedMeta = useMemo(
+    () => (zoomedCode ? activeMeta.find((m) => m.code === zoomedCode) ?? null : null),
+    [zoomedCode, activeMeta],
+  )
+
+  // Auto-fly when context view becomes zoomed.
+  useEffect(() => {
+    if (zoomedCode && flyToRef.current) {
+      flyToRef.current(zoomedCode)
+    } else if (!zoomedCode && resetRef.current) {
+      resetRef.current()
+    }
+  }, [zoomedCode])
+
+  // ESC pops zoom (consistent with AtlasZoomLayer behavior).
+  useEffect(() => {
+    if (!isZoomed) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dispatch({ type: 'escape-zoom' })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isZoomed, dispatch])
+
+  // Keyboard zoom/pan events broadcast by AtlasShell (atlas:zoom-in etc.).
+  // Phase 3: wire to engine imperative API. For Pass 2 we no-op pan and
+  // delegate +/- to the engine via reset (zoom-in/out require a new
+  // imperative on the engine — keep additive, defer to Phase 3).
+
+  const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
+    patterns:   { en: 'Patterns',   es: 'Patrones' },
+    sectors:    { en: 'Sectors',    es: 'Sectores' },
+    categories: { en: 'Categories', es: 'Categorías' },
+    sexenios:   { en: 'Terms',      es: 'Sexenios' },
+  }
+  const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
+  const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+
+  const handleClusterClick = (cluster: { code: string }) => {
+    onClusterClickBridge(cluster.code)
+    dispatch({ type: 'zoom-into-cluster', code: cluster.code })
+  }
+
+  // Field click in the canvas wrapper (background) escapes zoom.
+  // The CanvasConstellation engine handles dot/cluster clicks itself;
+  // we listen on a sibling layer for the "click outside any glyph" case.
+
+  return (
+    <div
+      className="relative"
+      style={{ position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }}
+    >
+      {isZoomed && zoomedMeta && (
+        <AtlasBreadcrumb
+          lang={lang}
+          lensLabel={lensLabel}
+          clusterLabel={clusterLabel}
+          onGoHome={() => dispatch({ type: 'escape-zoom' })}
+        />
+      )}
+      <CanvasConstellation
+        dots={dots}
+        clusters={clusters}
+        lang={lang}
+        onClusterClick={handleClusterClick}
+        flyToClusterRef={flyToRef}
+        resetViewRef={resetRef}
+        pinnedClusterCode={pinnedCode ?? zoomedCode}
+        riskFloor={riskFloor}
+      />
+      {isZoomed && zoomedMeta && (
+        <div
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <ClusterFloatingCard
+            meta={zoomedMeta}
+            topVendors={[]}
+            onClose={() => dispatch({ type: 'escape-zoom' })}
+            lang={lang}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface AtlasUrlSyncProps {
   mode: ConstellationMode
   yearIndex: number
@@ -1124,6 +1265,12 @@ export default function Atlas() {
   // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
   // as an overlay on the zoomed view.
   const z1Enabled = searchParams.get('z1') === 'true'
+  // atlas-P6 Pass 2: opt into the new Canvas engine via ?canvas=1.
+  // When on, the AtlasZoomLayer path is bypassed in favor of the
+  // dot-rendering CanvasConstellation engine. Legacy chrome (selection,
+  // lasso, vendor drawer, halo, Z1 escalation, vendor-search auto-zoom)
+  // is intentionally NOT wired in this pass — Phase 3 ports each one.
+  const canvasEnabled = searchParams.get('canvas') === '1'
 
   const totalContractsForYear = snapshot.totalContracts
 
@@ -1727,25 +1874,39 @@ export default function Atlas() {
             authorization to break the sacred-engine rule.
             folio-skin: PlateFrame above gives this card investigative-folio
             chrome (corner crops, archival folio number, italic plate caption). */}
-        <AtlasZoomLayer
-          key={constellationKey}
-          mode={mode}
-          rows={rows.length > 0 ? rows : fallbackRows}
-          totalContracts={totalContractsForYear}
-          metaOverride={atlasMeta}
-          /* Seed depends ONLY on mode — dots stay in place across years
-             so CSS transitions can morph their fill-opacity smoothly as the
-             critical/high/medium/low pcts shift per year. */
-          seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
-          pinnedCode={pinnedCode}
-          lang={lang}
-          activeMeta={activeConstellationMeta}
-          onClusterClickBridge={handleClusterClick}
-          namedVendors={namedVendors}
-          highlightedClusterCodes={highlightedClusterCodes}
-          z1Enabled={z1Enabled}
-          resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
-        />
+        {canvasEnabled ? (
+          <CanvasAtlasView
+            key={constellationKey}
+            mode={mode}
+            rows={rows.length > 0 ? rows : fallbackRows}
+            seed={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
+            pinnedCode={pinnedCode}
+            lang={lang}
+            activeMeta={activeConstellationMeta}
+            onClusterClickBridge={handleClusterClick}
+            riskFloor={riskFloor}
+          />
+        ) : (
+          <AtlasZoomLayer
+            key={constellationKey}
+            mode={mode}
+            rows={rows.length > 0 ? rows : fallbackRows}
+            totalContracts={totalContractsForYear}
+            metaOverride={atlasMeta}
+            /* Seed depends ONLY on mode — dots stay in place across years
+               so CSS transitions can morph their fill-opacity smoothly as the
+               critical/high/medium/low pcts shift per year. */
+            seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
+            pinnedCode={pinnedCode}
+            lang={lang}
+            activeMeta={activeConstellationMeta}
+            onClusterClickBridge={handleClusterClick}
+            namedVendors={namedVendors}
+            highlightedClusterCodes={highlightedClusterCodes}
+            z1Enabled={z1Enabled}
+            resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
+          />
+        )}
         {/* 2026-05-09 spatial-nav Phase 1.3 — Z1 sub-constellation overlay.
             Renders institutions as bodies in space when the user has
             drilled into a sector. Only mounted when ?z1=true so the
