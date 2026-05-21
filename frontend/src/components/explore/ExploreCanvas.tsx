@@ -30,7 +30,6 @@ import {
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
-import { SortHeaderTh } from '@/components/ui/SortHeaderTh'
 import {
   getPinAnnotation,
   useExploreState,
@@ -431,11 +430,25 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
           ? focus
           : [...state.stack].reverse().find((f): f is Extract<Focus, { kind: 'vendor' }> => f.kind === 'vendor')
         if (!parentVendor) return null
+        // Walk the focus stack for breadcrumb ancestry. Z3 can be reached
+        // via Z0→Z1→Z2→Z3 (full ancestry), Z0→Z1→Z3 (search shortcut, no
+        // institution), or deep-link (no ancestry). All three render
+        // cleanly — missing crumbs just disappear.
+        const ancestrySector = [...state.stack].reverse().find(
+          (f): f is Extract<Focus, { kind: 'sector' }> => f.kind === 'sector',
+        ) ?? null
+        const ancestryInstitution = [...state.stack].reverse().find(
+          (f): f is Extract<Focus, { kind: 'institution' }> => f.kind === 'institution',
+        ) ?? null
         return (
           <Z3Panel
             key={`z3panel-${parentVendor.vendorId}`}
             vendorId={parentVendor.vendorId}
             vendorName={parentVendor.vendorName}
+            ancestrySectorId={ancestrySector?.sectorId ?? null}
+            ancestrySectorCode={ancestrySector?.sectorCode ?? null}
+            ancestryInstitutionId={ancestryInstitution?.institutionId ?? null}
+            ancestryInstitutionName={ancestryInstitution?.institutionName ?? null}
             lang={lang}
             dispatch={dispatch}
             highlightContractId={focus.kind === 'contract' ? focus.contractId : null}
@@ -589,11 +602,8 @@ void sectorApi
 
 // ────────────────────────────────────────────────────────────────────────────
 // ────────────────────────────────────────────────────────────────────────────
-// Z-level sort-key types (Z1/Z2 use inline 'spend'|'risk' now; Z3 below)
+// Z-level sort-key types (all levels now use inline mode literals)
 // ────────────────────────────────────────────────────────────────────────────
-
-type Z3SortKey = 'amount' | 'year' | 'risk'
-type SortOrder = 'asc' | 'desc'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z0Panel — El Reparto / The Spoils
@@ -3411,15 +3421,25 @@ function computeZ2Badges(
 // Z3Panel — editorial contract view: "LOS 3 QUE IMPORTAN" + year bars + full list
 // ────────────────────────────────────────────────────────────────────────────
 
+type Z3Mode = 'time' | 'risk'
+
 function Z3Panel({
   vendorId,
   vendorName,
+  ancestrySectorId,
+  ancestrySectorCode,
+  ancestryInstitutionId,
+  ancestryInstitutionName,
   lang,
   dispatch,
   highlightContractId,
 }: {
   vendorId: number
   vendorName: string
+  ancestrySectorId: number | null
+  ancestrySectorCode: string | null
+  ancestryInstitutionId: number | null
+  ancestryInstitutionName: string | null
   lang: 'en' | 'es'
   dispatch: ReturnType<typeof useExploreDispatch>
   highlightContractId?: number | null
@@ -3436,53 +3456,114 @@ function Z3Panel({
 
   const contracts = data?.data ?? []
   const totalContractSpend = contracts.reduce((s, c) => s + (Number(c.amount_mxn) || 0), 0)
-  const riskDist = {
-    critical: contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'critical').length,
-    high:     contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'high').length,
-    medium:   contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'medium').length,
-    low:      contracts.filter((c) => getRiskLevelFromScore(Number(c.risk_score ?? 0)) === 'low').length,
-  }
 
-  // Top 3 by risk score — "the ones that matter"
-  const top3 = [...contracts]
-    .sort((a, b) => (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
-    .slice(0, 3)
+  // Vendor's primary sector — prefer ancestry (we came from there) over
+  // mode of the contract sectors. Falls back to mode if deep-linked.
+  const sectorFromContracts = (() => {
+    const counts = new Map<number, number>()
+    contracts.forEach((c) => {
+      const sid = Number(c.sector_id ?? 0)
+      if (sid > 0) counts.set(sid, (counts.get(sid) ?? 0) + 1)
+    })
+    let best: number | null = null
+    let bestN = 0
+    counts.forEach((n, sid) => {
+      if (n > bestN) { best = sid; bestN = n }
+    })
+    return best
+  })()
+  const effectiveSectorId = ancestrySectorId ?? sectorFromContracts
+  const sectorRow = SECTORS.find((s) => s.id === effectiveSectorId)
+  const sectorCode = ancestrySectorCode ?? sectorRow?.code ?? 'otros'
+  const sectorAccent = SECTOR_COLORS[sectorCode] ?? '#64748b'
+  const sectorName = lang === 'es' ? (sectorRow?.name ?? '') : (sectorRow?.nameEN ?? '')
 
-  // Group by year for the distribution bars
-  const byYear = new Map<number, { count: number; amount: number }>()
+  // Procedure-flag aggregates for the kicker stat row
+  const directAwardN = contracts.filter((c) => c.is_direct_award).length
+  const singleBidN = contracts.filter((c) => c.is_single_bid).length
+  const daPct = contracts.length > 0 ? (directAwardN / contracts.length) * 100 : 0
+  const hrCount = contracts.filter((c) => {
+    const s = Number(c.risk_score ?? 0)
+    return s >= 0.40
+  }).length
+  const hrPct = contracts.length > 0 ? (hrCount / contracts.length) * 100 : 0
+
+  // Year buckets for the timeline strip — covers the FULL year range
+  // 2002 → latest year so admin bands stay continuous even in idle years.
+  const byYear = new Map<number, { count: number; amount: number; riskSum: number; riskN: number }>()
   contracts.forEach((c) => {
     const yr = Number(c.contract_year ?? 0)
+    if (yr < 2002 || yr > 2030) return
     const amt = Number(c.amount_mxn ?? 0)
-    if (yr > 1990) {
-      const ex = byYear.get(yr) ?? { count: 0, amount: 0 }
-      byYear.set(yr, { count: ex.count + 1, amount: ex.amount + amt })
-    }
+    const risk = Number(c.risk_score ?? 0)
+    const ex = byYear.get(yr) ?? { count: 0, amount: 0, riskSum: 0, riskN: 0 }
+    ex.count += 1
+    ex.amount += amt
+    if (risk > 0) { ex.riskSum += risk; ex.riskN += 1 }
+    byYear.set(yr, ex)
   })
-  const yearEntries = Array.from(byYear.entries()).sort(([a], [b]) => a - b)
-  const maxYearAmt = Math.max(...yearEntries.map(([, v]) => v.amount), 1)
+  const allYearsSorted = Array.from(byYear.keys()).sort((a, b) => a - b)
+  const yearMin = allYearsSorted[0] ?? 2002
+  const yearMax = allYearsSorted[allYearsSorted.length - 1] ?? 2025
+  // Build a complete year sequence so the strip has stable spacing
+  const yearSequence: number[] = []
+  for (let y = yearMin; y <= yearMax; y++) yearSequence.push(y)
+  const maxYearAmt = Math.max(...Array.from(byYear.values()).map((v) => v.amount), 1)
 
-  const [z3SortKey, setZ3SortKey] = useState<Z3SortKey>('amount')
-  const [z3SortOrder, setZ3SortOrder] = useState<SortOrder>('desc')
-  const [listOpen, setListOpen] = useState(true)
+  // Top-3 cards: BIGGEST / HIGHEST RISK / MOST RECENT. Disambiguate by
+  // falling through to the next candidate when picks collide.
+  const top3 = pickZ3Top3(contracts)
 
-  const handleZ3Sort = (key: Z3SortKey) => {
-    if (z3SortKey === key) setZ3SortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
-    else { setZ3SortKey(key); setZ3SortOrder('desc') }
+  // Sort + year filter for the contracts register
+  const [mode, setMode] = useState<Z3Mode>('time')
+  const [yearFilter, setYearFilter] = useState<number | null>(null)
+  const filtered = yearFilter ? contracts.filter((c) => Number(c.contract_year) === yearFilter) : contracts
+  const sortedContracts = useMemo(() => {
+    return [...filtered].sort((a, b) =>
+      mode === 'risk'
+        ? (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0)
+        : (Number(b.contract_year) || 0) - (Number(a.contract_year) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0),
+    )
+  }, [filtered, mode])
+
+  const prefersReducedMotion = useReducedMotion() ?? false
+  const bandVariants = useBandVariants(prefersReducedMotion)
+  const layoutTransition = prefersReducedMotion ? { duration: 0 } : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
+
+  // Editorial vendor name + display
+  const cleanName = formatVendorName(vendorName, 300)
+  const editorialName = toEditorialCase(cleanName)
+
+  // Breadcrumb ancestry — crumbs that don't apply quietly disappear
+  const crumbs: CrumbSegment[] = [
+    { label: lang === 'en' ? 'Spoils' : 'Reparto', onClick: () => dispatch({ type: 'reset-to-system' }) },
+  ]
+  if (ancestrySectorId != null) {
+    crumbs.push({ label: sectorName || sectorCode, sectorCode, onClick: () => dispatch({ type: 'pop-to-level', level: 1 }) })
   }
+  if (ancestryInstitutionId != null) {
+    crumbs.push({ label: ancestryInstitutionName ? toEditorialCase(ancestryInstitutionName).slice(0, 32) : `Inst ${ancestryInstitutionId}`, onClick: () => dispatch({ type: 'pop-to-level', level: 2 }) })
+  }
+  crumbs.push({ label: editorialName.slice(0, 32) })
 
-  const sortedContracts = [...contracts].sort((a, b) => {
-    const dir = z3SortOrder === 'desc' ? -1 : 1
-    switch (z3SortKey) {
-      case 'amount': return dir * ((Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
-      case 'year':   return dir * ((Number(b.contract_year) || 0) - (Number(a.contract_year) || 0))
-      case 'risk':   return dir * ((Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
-      default:       return 0
-    }
+  // Pull-line — picks the strongest narrative frame from the data
+  const pullLine = computeZ3PullLine({
+    editorialName,
+    institutionName: ancestryInstitutionName,
+    totalContractSpend,
+    contractCount: contracts.length,
+    hrPct,
+    daPct,
+    byYear,
+    lang,
   })
+
+  const RENDER_LIMIT = 30
+  const visibleContracts = sortedContracts.slice(0, RENDER_LIMIT)
 
   return (
     <div
-      className="absolute inset-0 z-[5] overflow-y-auto"
+      className="absolute inset-0 z-[5] overflow-hidden flex flex-col"
       data-scroll-panel="true"
       style={{ background: 'var(--color-background)', top: '48px' }}
       onPointerDown={(e) => e.stopPropagation()}
@@ -3490,237 +3571,593 @@ function Z3Panel({
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
     >
-      {/* Header */}
-      <div
-        className="px-4 py-3 sticky top-0 border-b"
-        style={{ background: 'var(--color-background)', borderColor: 'var(--color-border)', zIndex: 1 }}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        className="absolute inset-0 flex flex-col"
       >
-        <div className="font-mono text-[10px] tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
-          {lang === 'en' ? 'Z3 · CONTRACTS' : 'Z3 · CONTRATOS'}
-        </div>
-        <div className="text-sm font-semibold mt-0.5" title={vendorName} style={{ color: 'var(--color-text-primary)', wordBreak: 'break-word' }}>
-          {toEditorialCase(vendorName)}
-        </div>
-        <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-          {isLoading
-            ? '…'
-            : lang === 'en'
-              ? `${contracts.length} contracts · ${formatCompactMXN(totalContractSpend)} lifetime`
-              : `${contracts.length} contratos · ${formatCompactMXN(totalContractSpend)} total`}
-        </div>
-        {!isLoading && contracts.length > 0 && (
-          <div className="font-mono text-[8px] mt-1 flex gap-2 flex-wrap">
-            {riskDist.critical > 0 && <span style={{ color: RISK_COLORS.critical }}>{riskDist.critical} critical</span>}
-            {riskDist.high > 0 && <span style={{ color: RISK_COLORS.high }}>{riskDist.high} high</span>}
-            {riskDist.medium > 0 && <span style={{ color: RISK_COLORS.medium }}>{riskDist.medium} medium</span>}
-            {riskDist.low > 0 && <span style={{ color: 'var(--color-text-muted)' }}>{riskDist.low} low</span>}
-          </div>
-        )}
-      </div>
+        {/* Breadcrumb */}
+        <ZBreadcrumb segments={crumbs} lang={lang} />
 
-      {isLoading && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'Loading…' : 'Cargando…'}
-        </div>
-      )}
-      {isError && (
-        <div className="py-12 text-center font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
-          {lang === 'en' ? 'No contracts found.' : 'Sin contratos disponibles.'}
-        </div>
-      )}
+        {/* Sector-color rail — Z2's vendor chip morphs into this on drill-in */}
+        <motion.div
+          layoutId={`explore-vendor-${vendorId}`}
+          transition={{ layout: layoutTransition }}
+          style={{ height: 6, background: sectorAccent, flexShrink: 0 }}
+          aria-hidden="true"
+        />
 
-      {/* LOS 3 QUE IMPORTAN — highest-risk contracts with editorial signals */}
-      {!isLoading && !isError && top3.length > 0 && (
-        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <div
-            className="font-mono text-[9px] tracking-widest uppercase mb-3"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            {lang === 'en' ? 'HIGHEST RISK CONTRACTS' : 'LOS 3 QUE IMPORTAN'}
-          </div>
-          <div className="space-y-3">
-            {top3.map((c) => {
-              const score = Number(c.risk_score ?? 0)
-              const level = getRiskLevelFromScore(score)
-              const fill = RISK_COLORS[level]
-              const isHighlighted = c.id === highlightContractId
-              const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
-                ?? (c.is_direct_award
-                  ? (lang === 'en' ? 'direct award' : 'adjudicación directa')
-                  : (lang === 'en' ? 'open bid' : 'licitación'))
-              const title = (c as ContractListItem & { title?: string }).title
+        {/* Editorial header */}
+        <ZKickerBand
+          custom={0}
+          variants={bandVariants}
+          kicker={lang === 'en' ? '§ EL HISTORIAL · VENDOR DEEP' : '§ EL HISTORIAL · PROVEEDOR'}
+          headline={
+            lang === 'en'
+              ? <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>what they actually did</em></>
+              : <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>qué hicieron en realidad</em></>
+          }
+          stat={
+            isLoading
+              ? '...'
+              : lang === 'en'
+                ? `${formatNumber(contracts.length)} contracts · ${formatCompactMXN(totalContractSpend)} · ${hrPct.toFixed(0)}% high-risk · ${daPct.toFixed(0)}% direct award · ${formatNumber(singleBidN)} single-bid`
+                : `${formatNumber(contracts.length)} contratos · ${formatCompactMXN(totalContractSpend)} · ${hrPct.toFixed(0)}% alto riesgo · ${daPct.toFixed(0)}% adj. directa · ${formatNumber(singleBidN)} único postor`
+          }
+        />
 
-              const signals: string[] = []
-              if (c.is_direct_award) signals.push(lang === 'en' ? 'DIRECT AWARD' : 'ADJ. DIRECTA')
-              if (c.is_single_bid)   signals.push(lang === 'en' ? 'SINGLE BID' : 'OFERTA ÚNICA')
-              if (Number(c.amount_mxn) > 500_000_000) signals.push(lang === 'en' ? 'LARGE CONTRACT' : 'ALTO MONTO')
-
-              return (
-                <div
-                  key={c.id}
-                  className="border-l-2 pl-3 cursor-pointer rounded-r-sm"
-                  style={{
-                    borderColor: fill,
-                    background: isHighlighted ? `${fill}10` : 'transparent',
-                  }}
-                  onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = isHighlighted ? `${fill}10` : 'transparent' }}
-                  onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-                >
-                  <div className="flex items-center gap-2 flex-wrap py-0.5">
-                    <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                      {c.contract_year}
-                    </span>
-                    <span className="font-mono text-[11px] font-bold tabular-nums" style={{ color: fill }}>
-                      {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-                    </span>
-                    <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                      {formatCompactUSD(Number(c.amount_mxn ?? 0))}
-                    </span>
-                    <span
-                      className="px-1 py-0.5 font-mono text-[8px] uppercase rounded-sm"
-                      style={{ background: `${fill}20`, color: fill, border: `1px solid ${fill}40` }}
-                    >
-                      {level}
-                    </span>
-                  </div>
-                  {signals.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-0.5">
-                      {signals.map((s) => (
-                        <span
-                          key={s}
-                          className="font-mono text-[8px] px-1 rounded-sm"
-                          style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)' }}
-                        >
-                          ↳ {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="font-mono text-[9px] mt-0.5 pb-0.5 line-clamp-1" style={{ color: 'var(--color-text-secondary)' }}>
-                    {title ?? procType}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Activity by year — bars colored by administration */}
-      {yearEntries.length > 0 && (
-        <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <div
-            className="font-mono text-[9px] tracking-widest uppercase mb-2"
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            {lang === 'en' ? 'ACTIVITY BY YEAR' : 'ACTIVIDAD POR AÑO'}
-          </div>
-          <div className="space-y-0.5">
-            {yearEntries.map(([yr, { count, amount }], idx) => {
-              const admin = getAdministrationByYear(yr)
-              const adminColors: Record<string, string> = {
-                fox: '#64748b', calderon: '#1d4ed8', epn: '#7c3aed', amlo: '#b45309', sheinbaum: '#0d9488',
-              }
-              const barColor = admin ? (adminColors[admin.key] ?? 'var(--color-accent)') : 'var(--color-accent)'
-              const prevAdmin = idx > 0 ? getAdministrationByYear(yearEntries[idx - 1][0]) : null
-              const adminChanged = !prevAdmin || prevAdmin.key !== admin?.key
-              return (
-                <div key={yr}>
-                  {adminChanged && admin && (
-                    <div className="font-mono text-[7px] uppercase tracking-widest pt-1.5 pb-0.5" style={{ color: barColor, opacity: 0.8 }}>
-                      {admin.short}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[9px] w-8 flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                      {yr}
-                    </span>
-                    <div className="flex-1 h-1.5 rounded-full" style={{ background: 'var(--color-border)' }}>
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${(amount / maxYearAmt) * 100}%`, background: barColor, opacity: 0.7 }}
-                      />
-                    </div>
-                    <span className="font-mono text-[9px] w-16 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                      {formatCompactMXN(amount)}
-                    </span>
-                    <span className="font-mono text-[9px] w-5 text-right flex-shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
-                      {count}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Full list — sortable table */}
-      {sortedContracts.length > 0 && (
-        <div className="px-4 py-3">
-          <button
-            type="button"
-            className="w-full flex items-center justify-between py-1 cursor-pointer"
-            onClick={() => setListOpen((o) => !o)}
-          >
-            <span className="font-mono text-[9px] tracking-widest uppercase" style={{ color: 'var(--color-text-muted)' }}>
-              {lang === 'en' ? `ALL ${sortedContracts.length} CONTRACTS` : `TODOS (${sortedContracts.length})`}
-            </span>
-            <span className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
-              {listOpen ? '▾' : '▸'}
-            </span>
-          </button>
-          {listOpen && (
-            <div className="mt-2 overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <SortHeaderTh<Z3SortKey> field="year" label={lang === 'en' ? 'YEAR' : 'AÑO'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="pr-2 pb-1 pt-1 font-mono text-[8px] text-left" />
-                    <SortHeaderTh<Z3SortKey> field="amount" label={lang === 'en' ? 'AMOUNT / USD' : 'MONTO / USD'} activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
-                    <SortHeaderTh<Z3SortKey> field="risk" label="RS" activeField={z3SortKey} order={z3SortOrder} onSort={handleZ3Sort} className="px-2 pb-1 pt-1 font-mono text-[8px] text-right" />
-                    <th className="px-2 pb-1 pt-1 font-mono text-[8px] uppercase tracking-wider text-left" style={{ color: 'var(--color-text-muted)' }}>
-                      {lang === 'en' ? 'DESCRIPTION' : 'DESCRIPCIÓN'}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedContracts.map((c) => {
-                    const level = getRiskLevelFromScore(Number(c.risk_score ?? 0))
-                    const fill = RISK_COLORS[level]
-                    const isHighlighted = c.id === highlightContractId
-                    const label = (c as ContractListItem & { title?: string }).title
-                      ?? (c as ContractListItem & { procedure_type?: string | null }).procedure_type
-                      ?? (lang === 'en' ? 'Direct award' : 'Adjudicación directa')
-                    return (
-                      <tr
-                        key={c.id}
-                        className="cursor-pointer transition-colors"
-                        style={isHighlighted ? { background: `${fill}18` } : {}}
-                        onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-                        onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = '' }}
-                        onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-                      >
-                        <td className="pr-2 py-1.5 font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{c.contract_year}</td>
-                        <td className="px-2 py-1.5 text-right whitespace-nowrap">
-                          <div className="font-mono text-[10px] font-bold tabular-nums" style={{ color: fill }}>{formatCompactMXN(Number(c.amount_mxn ?? 0))}</div>
-                          <div className="font-mono text-[8px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{formatCompactUSD(Number(c.amount_mxn ?? 0))}</div>
-                        </td>
-                        <td className="px-2 py-1.5 font-mono text-[9px] tabular-nums text-right" style={{ color: fill }}>
-                          {Number(c.risk_score ?? 0) > 0 ? Math.round(Number(c.risk_score) * 100) : '—'}
-                        </td>
-                        <td className="px-2 py-1.5 font-mono text-[9px] line-clamp-1 max-w-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                          {label}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+        {/* Scrollable middle — timeline + top-3 + toggle + register */}
+        <motion.div
+          variants={bandVariants}
+          custom={1}
+          className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4"
+        >
+          {isLoading && (
+            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
-        </div>
-      )}
+          {isError && !isLoading && (
+            <div className="py-12 text-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'no contracts found.' : 'sin contratos disponibles.'}
+            </div>
+          )}
+
+          {/* Timeline strip — vendor's year-by-year activity with admin bands */}
+          {!isLoading && !isError && byYear.size > 0 && (
+            <Z3TimelineStrip
+              yearSequence={yearSequence}
+              byYear={byYear}
+              maxYearAmt={maxYearAmt}
+              selectedYear={yearFilter}
+              onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
+              lang={lang}
+            />
+          )}
+
+          {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
+          {!isLoading && !isError && top3.length > 0 && (
+            <Z3HeroCards
+              top3={top3}
+              highlightContractId={highlightContractId ?? null}
+              dispatch={dispatch}
+              lang={lang}
+            />
+          )}
+
+          {/* Sort toggle + filter chip */}
+          {!isLoading && !isError && contracts.length > 0 && (
+            <div className="flex items-center justify-between pt-4 pb-2 gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Contracts' : 'Contratos'}
+                </span>
+                {yearFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setYearFilter(null)}
+                    className="font-mono text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm cursor-pointer"
+                    style={{
+                      background: `${sectorAccent}1f`,
+                      color: sectorAccent,
+                      border: `1px solid ${sectorAccent}55`,
+                    }}
+                    title={lang === 'en' ? 'Clear year filter' : 'Quitar filtro de año'}
+                  >
+                    {yearFilter} ×
+                  </button>
+                )}
+              </div>
+              <ZSortToggle
+                modes={['time', 'risk'] as const}
+                active={mode}
+                onChange={setMode}
+                riskMode="risk"
+                label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+              />
+            </div>
+          )}
+
+          {/* Dense register — top 30 contracts, disclosure to /vendors/{id} for full list */}
+          {!isLoading && !isError && visibleContracts.length > 0 && (
+            <ul role="list" className="space-y-px">
+              {visibleContracts.map((c) => (
+                <Z3ContractRow
+                  key={c.id}
+                  c={c}
+                  isHighlighted={c.id === highlightContractId}
+                  dispatch={dispatch}
+                  lang={lang}
+                  layoutTransition={layoutTransition}
+                  prefersReducedMotion={prefersReducedMotion}
+                />
+              ))}
+            </ul>
+          )}
+
+          {/* "view all" disclosure when we have more than RENDER_LIMIT */}
+          {!isLoading && !isError && filtered.length > RENDER_LIMIT && (
+            <div className="pt-3 pb-4">
+              <ZFooterLink
+                href={`/vendors/${vendorId}`}
+                lang={lang}
+                label={lang === 'en'
+                  ? `View all ${formatNumber(filtered.length)} contracts in full dossier`
+                  : `Ver los ${formatNumber(filtered.length)} contratos en la ficha completa`}
+              />
+            </div>
+          )}
+        </motion.div>
+
+        {/* Pull-line — editorial finding */}
+        {!isLoading && !isError && contracts.length > 0 && (
+          <ZPullLine custom={3} variants={bandVariants}>
+            {pullLine}
+          </ZPullLine>
+        )}
+
+        {/* Footer */}
+        {!isLoading && !isError && contracts.length > 0 && (
+          <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+              {lang === 'en'
+                ? `${visibleContracts.length} of ${formatNumber(filtered.length)} shown`
+                : `${visibleContracts.length} de ${formatNumber(filtered.length)} mostrados`}
+            </span>
+            <ZFooterLink href={`/vendors/${vendorId}`} lang={lang} />
+          </div>
+        )}
+      </motion.div>
     </div>
   )
+}
+
+// ─── Z3 subcomponents ───────────────────────────────────────────────────────
+
+const ADMIN_COLORS: Record<string, string> = {
+  fox: '#64748b', calderon: '#1d4ed8', epn: '#7c3aed', amlo: '#b45309', sheinbaum: '#0d9488',
+}
+
+/**
+ * Z3TimelineStrip — horizontal strip of year cells. Spend bar height
+ * proportional to spend that year; cap color from avg risk. Admin band
+ * runs across the top labeling political eras. Click a year to filter
+ * the register below; click again to clear.
+ */
+function Z3TimelineStrip({
+  yearSequence,
+  byYear,
+  maxYearAmt,
+  selectedYear,
+  onYearClick,
+  lang,
+}: {
+  yearSequence: number[]
+  byYear: Map<number, { count: number; amount: number; riskSum: number; riskN: number }>
+  maxYearAmt: number
+  selectedYear: number | null
+  onYearClick: (y: number) => void
+  lang: 'en' | 'es'
+}) {
+  // Build admin segments — each is a run of consecutive years under one admin
+  type Seg = { key: string; short: string; from: number; to: number; color: string }
+  const segments: Seg[] = []
+  for (const yr of yearSequence) {
+    const admin = getAdministrationByYear(yr)
+    if (!admin) continue
+    const last = segments[segments.length - 1]
+    if (last && last.key === admin.key) {
+      last.to = yr
+    } else {
+      segments.push({
+        key: admin.key,
+        short: admin.short,
+        from: yr,
+        to: yr,
+        color: ADMIN_COLORS[admin.key] ?? 'var(--color-accent)',
+      })
+    }
+  }
+
+  const totalYears = yearSequence.length
+  const widthPct = (n: number) => (n / Math.max(totalYears, 1)) * 100
+
+  return (
+    <div className="pt-4 pb-2">
+      <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-text-muted)' }}>
+        {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
+      </div>
+      <div className="relative" style={{ height: 100 }}>
+        {/* Admin band — full-width strip labeled with sexenio short names */}
+        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 14 }}>
+          {segments.map((seg) => {
+            const span = seg.to - seg.from + 1
+            const offset = seg.from - yearSequence[0]
+            return (
+              <div
+                key={seg.key + '-' + seg.from}
+                className="font-mono text-[8px] uppercase tracking-[0.12em] flex items-center px-1.5"
+                style={{
+                  position: 'absolute',
+                  left: `${widthPct(offset)}%`,
+                  width: `${widthPct(span)}%`,
+                  height: '100%',
+                  background: `${seg.color}26`,
+                  color: seg.color,
+                  borderLeft: `1px solid ${seg.color}55`,
+                  fontWeight: 700,
+                }}
+                title={`${seg.short} ${seg.from}–${seg.to}`}
+              >
+                <span className="truncate">{seg.short}</span>
+              </div>
+            )
+          })}
+        </div>
+        {/* Spend bars — one column per year, click to filter */}
+        <div className="absolute left-0 right-0 flex items-end" style={{ top: 18, bottom: 14 }}>
+          {yearSequence.map((yr) => {
+            const cell = byYear.get(yr) ?? { count: 0, amount: 0, riskSum: 0, riskN: 0 }
+            const heightPct = cell.amount > 0 ? Math.max(4, (cell.amount / maxYearAmt) * 100) : 0
+            const avgRisk = cell.riskN > 0 ? cell.riskSum / cell.riskN : 0
+            const capColor =
+              avgRisk >= 0.60 ? RISK_COLORS.critical
+              : avgRisk >= 0.40 ? RISK_COLORS.high
+              : avgRisk >= 0.25 ? RISK_COLORS.medium
+              : 'var(--color-text-muted)'
+            const isSelected = selectedYear === yr
+            return (
+              <button
+                key={yr}
+                type="button"
+                onClick={() => onYearClick(yr)}
+                className="flex flex-col justify-end items-center flex-1 px-px h-full transition-opacity cursor-pointer"
+                style={{
+                  opacity: selectedYear == null || isSelected ? 1 : 0.4,
+                  background: isSelected ? `${capColor}14` : 'transparent',
+                }}
+                title={
+                  cell.count > 0
+                    ? `${yr} · ${cell.count} ${lang === 'en' ? 'contracts' : 'contratos'} · ${formatCompactMXN(cell.amount)} · ${(avgRisk * 100).toFixed(0)} risk`
+                    : `${yr} · ${lang === 'en' ? 'no contracts' : 'sin contratos'}`
+                }
+                aria-label={`Year ${yr}, ${cell.count} contracts, ${formatCompactMXN(cell.amount)}`}
+              >
+                {/* Spend bar with risk cap */}
+                {cell.amount > 0 ? (
+                  <div
+                    className="w-full"
+                    style={{
+                      height: `${heightPct}%`,
+                      background: 'var(--color-text-muted)',
+                      opacity: 0.4,
+                      borderTop: `3px solid ${capColor}`,
+                      minHeight: 4,
+                    }}
+                  />
+                ) : (
+                  <div className="w-full" style={{ height: 1, background: 'var(--color-border)' }} />
+                )}
+              </button>
+            )
+          })}
+        </div>
+        {/* Year labels — show every 2nd or 4th to avoid crowding */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-end" style={{ height: 12 }}>
+          {yearSequence.map((yr, i) => {
+            // Show first, last, and every 2-4 years depending on density
+            const step = totalYears > 16 ? 4 : totalYears > 10 ? 2 : 1
+            const showLabel = i === 0 || i === totalYears - 1 || yr % step === 0
+            return (
+              <div
+                key={yr}
+                className="flex-1 text-center font-mono"
+                style={{ fontSize: 8, color: 'var(--color-text-muted)', visibility: showLabel ? 'visible' : 'hidden' }}
+              >
+                '{String(yr).slice(-2)}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Z3HeroCards — three editorial cards picking BIGGEST / HIGHEST RISK /
+ * MOST RECENT contracts. Each card carries year, amount, procedure
+ * chip, risk-tier color rail. Click jumps to the Z4 drawer.
+ */
+function Z3HeroCards({
+  top3,
+  highlightContractId,
+  dispatch,
+  lang,
+}: {
+  top3: Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }>
+  highlightContractId: number | null
+  dispatch: ReturnType<typeof useExploreDispatch>
+  lang: 'en' | 'es'
+}) {
+  const labels: Record<'biggest' | 'risk' | 'recent', [string, string]> = {
+    biggest: ['BIGGEST', 'EL MÁS GRANDE'],
+    risk:    ['HIGHEST RISK', 'MAYOR RIESGO'],
+    recent:  ['MOST RECENT', 'MÁS RECIENTE'],
+  }
+  return (
+    <div className="pt-3 pb-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
+      {top3.map(({ contract: c, pick }) => {
+        const score = Number(c.risk_score ?? 0)
+        const level = getRiskLevelFromScore(score)
+        const fill = RISK_COLORS[level]
+        const isHighlighted = c.id === highlightContractId
+        const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
+          ?? (c.is_direct_award
+            ? (lang === 'en' ? 'direct award' : 'adjudicación directa')
+            : (lang === 'en' ? 'open bid' : 'licitación'))
+        const title = (c as ContractListItem & { title?: string }).title
+        return (
+          <button
+            key={pick}
+            type="button"
+            onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+            className="text-left rounded-sm p-2.5 cursor-pointer transition-colors"
+            style={{
+              borderLeft: `3px solid ${fill}`,
+              background: isHighlighted ? `${fill}10` : 'var(--color-background-elevated)',
+              minHeight: 92,
+            }}
+            onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
+            onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-elevated)' }}
+          >
+            <div
+              className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1"
+              style={{ color: fill, fontWeight: 700 }}
+            >
+              {lang === 'en' ? labels[pick][0] : labels[pick][1]}
+            </div>
+            <div className="font-mono text-[10px] tabular-nums mb-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              {c.contract_year}
+            </div>
+            <div
+              className="font-serif tabular-nums leading-tight"
+              style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: 18,
+                fontWeight: 800,
+                color: fill,
+              }}
+            >
+              {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+            </div>
+            <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              ≈ {formatCompactUSD(Number(c.amount_mxn ?? 0))}
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              <span
+                className="font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm"
+                style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
+              >
+                {procType}
+              </span>
+              <span
+                className="font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm"
+                style={{ background: `${fill}1f`, color: fill, border: `1px solid ${fill}44` }}
+              >
+                {lang === 'en' ? `risk ${Math.round(score * 100)}` : `riesgo ${Math.round(score * 100)}`}
+              </span>
+            </div>
+            {title && (
+              <div className="font-mono text-[9px] mt-1.5 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
+                {title}
+              </div>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * Z3ContractRow — dense single-line contract row. Click → Z4 drawer.
+ */
+function Z3ContractRow({
+  c,
+  isHighlighted,
+  dispatch,
+  lang,
+  layoutTransition,
+  prefersReducedMotion,
+}: {
+  c: ContractListItem
+  isHighlighted: boolean
+  dispatch: ReturnType<typeof useExploreDispatch>
+  lang: 'en' | 'es'
+  layoutTransition: { duration: number; ease?: typeof Z_EASE }
+  prefersReducedMotion: boolean
+}) {
+  const score = Number(c.risk_score ?? 0)
+  const level = getRiskLevelFromScore(score)
+  const fill = RISK_COLORS[level]
+  const riskPct = score > 0 ? Math.round(score * 100) : null
+  const title = (c as ContractListItem & { title?: string }).title
+  const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
+    ?? (c.is_direct_award
+      ? (lang === 'en' ? 'direct' : 'directa')
+      : (lang === 'en' ? 'open bid' : 'licitación'))
+
+  return (
+    <motion.li
+      layout
+      transition={{ layout: layoutTransition }}
+      whileHover={prefersReducedMotion ? undefined : { backgroundColor: 'var(--color-background-card)', transition: { duration: 0.12 } }}
+      style={isHighlighted ? { background: `${fill}14` } : undefined}
+    >
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
+        className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer"
+        style={{ background: 'transparent', borderLeft: `2px solid ${fill}` }}
+        title={`${c.contract_year} · ${formatCompactMXN(Number(c.amount_mxn ?? 0))} · ${procType} · ${title ?? ''}`}
+      >
+        {/* Year */}
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 32 }}>
+          {c.contract_year}
+        </span>
+        {/* Amount */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 88 }}>
+          {formatCompactMXN(Number(c.amount_mxn ?? 0))}
+        </span>
+        {/* Procedure chip */}
+        <span
+          className="flex-shrink-0 font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm whitespace-nowrap"
+          style={{
+            background: c.is_direct_award ? `${RISK_COLORS.high}1f` : 'var(--color-border)',
+            color: c.is_direct_award ? RISK_COLORS.high : 'var(--color-text-secondary)',
+            border: c.is_direct_award ? `1px solid ${RISK_COLORS.high}44` : 'none',
+          }}
+        >
+          {procType}
+        </span>
+        {/* Single-bid flag if applicable */}
+        {c.is_single_bid && (
+          <span
+            className="flex-shrink-0 font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm whitespace-nowrap"
+            style={{
+              background: `${RISK_COLORS.critical}1f`,
+              color: RISK_COLORS.critical,
+              border: `1px solid ${RISK_COLORS.critical}44`,
+            }}
+          >
+            {lang === 'en' ? 'SB' : 'UP'}
+          </span>
+        )}
+        {/* Title (truncates) */}
+        <span className="flex-1 min-w-0 truncate" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+          {title ?? '—'}
+        </span>
+        {/* Risk pill */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 36 }}>
+          {riskPct ?? '—'}
+        </span>
+      </button>
+    </motion.li>
+  )
+}
+
+/**
+ * Pick the three editorial top contracts: BIGGEST / HIGHEST RISK /
+ * MOST RECENT. Disambiguate by falling through to the next candidate
+ * when the same contract would be picked twice.
+ */
+function pickZ3Top3(contracts: ContractListItem[]): Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }> {
+  if (contracts.length === 0) return []
+  const used = new Set<number>()
+  const result: Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }> = []
+
+  const byAmount = [...contracts].sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
+  const byRisk = [...contracts].sort((a, b) => (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
+  const byRecent = [...contracts].sort((a, b) => (Number(b.contract_year) || 0) - (Number(a.contract_year) || 0))
+
+  const take = (list: ContractListItem[], pick: 'biggest' | 'risk' | 'recent') => {
+    for (const c of list) {
+      if (!used.has(c.id)) { used.add(c.id); result.push({ contract: c, pick }); return }
+    }
+  }
+  take(byAmount, 'biggest')
+  take(byRisk, 'risk')
+  take(byRecent, 'recent')
+  return result
+}
+
+/**
+ * Pull-line picks the strongest narrative frame from vendor data.
+ *   GT-pattern frames first (would need GT flag; deferred to v2)
+ *   Sexenio concentration > 50% → administration frame
+ *   Burst year > 40% → year frame
+ *   HR% > 80% → procurement-pathology frame
+ *   Otherwise standard summary
+ */
+function computeZ3PullLine({
+  editorialName,
+  institutionName,
+  totalContractSpend,
+  contractCount,
+  hrPct,
+  daPct,
+  byYear,
+  lang,
+}: {
+  editorialName: string
+  institutionName: string | null
+  totalContractSpend: number
+  contractCount: number
+  hrPct: number
+  daPct: number
+  byYear: Map<number, { count: number; amount: number; riskSum: number; riskN: number }>
+  lang: 'en' | 'es'
+}): React.ReactNode {
+  // Sexenio breakdown
+  const sexenioSpend: Record<string, number> = {}
+  byYear.forEach((v, yr) => {
+    const admin = getAdministrationByYear(yr)
+    if (!admin) return
+    sexenioSpend[admin.short] = (sexenioSpend[admin.short] ?? 0) + v.amount
+  })
+  let topSexenio: [string, number] | null = null
+  for (const [key, val] of Object.entries(sexenioSpend)) {
+    if (!topSexenio || val > topSexenio[1]) topSexenio = [key, val]
+  }
+  const topSexenioPct = topSexenio && totalContractSpend > 0 ? (topSexenio[1] / totalContractSpend) * 100 : 0
+
+  // Burst year
+  let burstYear: [number, number] | null = null
+  byYear.forEach((v, yr) => {
+    if (!burstYear || v.amount > burstYear[1]) burstYear = [yr, v.amount]
+  })
+  const burstYearPct = burstYear && totalContractSpend > 0 ? ((burstYear as [number, number])[1] / totalContractSpend) * 100 : 0
+
+  const inst = institutionName ? toEditorialCase(institutionName) : null
+
+  if (topSexenioPct >= 50 && topSexenio) {
+    return lang === 'en'
+      ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> collected <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> from {inst}</> : ''} — <strong className="font-semibold">{topSexenioPct.toFixed(0)}%</strong> arrived under {topSexenio[0]}.</>
+      : <><strong className="font-semibold text-text-primary">{editorialName}</strong> recibió <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> de {inst}</> : ''} — el <strong className="font-semibold">{topSexenioPct.toFixed(0)}%</strong> llegó bajo {topSexenio[0]}.</>
+  }
+  if (burstYearPct >= 40 && burstYear) {
+    return lang === 'en'
+      ? <><strong className="font-semibold">{burstYearPct.toFixed(0)}%</strong> of {editorialName}'s lifetime revenue arrived in <strong className="font-semibold text-text-primary">{(burstYear as [number, number])[0]}</strong> alone.</>
+      : <>El <strong className="font-semibold">{burstYearPct.toFixed(0)}%</strong> de los ingresos de {editorialName} llegó en <strong className="font-semibold text-text-primary">{(burstYear as [number, number])[0]}</strong> solamente.</>
+  }
+  if (hrPct >= 80) {
+    return lang === 'en'
+      ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> holds {formatNumber(contractCount)} contracts worth <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong> — <strong className="font-semibold">{hrPct.toFixed(0)}% flagged</strong> high or critical, <strong className="font-semibold">{daPct.toFixed(0)}% direct-award</strong>.</>
+      : <><strong className="font-semibold text-text-primary">{editorialName}</strong> tiene {formatNumber(contractCount)} contratos por <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong> — <strong className="font-semibold">{hrPct.toFixed(0)}% marcados</strong> alto o crítico, <strong className="font-semibold">{daPct.toFixed(0)}% adj. directa</strong>.</>
+  }
+  // Standard summary
+  return lang === 'en'
+    ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> holds {formatNumber(contractCount)} contracts worth <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> with {inst}</> : ''}.</>
+    : <><strong className="font-semibold text-text-primary">{editorialName}</strong> tiene {formatNumber(contractCount)} contratos por <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> con {inst}</> : ''}.</>
 }
