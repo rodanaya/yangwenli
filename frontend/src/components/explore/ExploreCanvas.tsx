@@ -2759,7 +2759,7 @@ function Z2Panel({
                 defaultOpen
               />
               <Z2Shelf
-                title={lang === 'en' ? 'ROUTINE · LOW RISK' : 'ACTIVIDAD REGULAR · RIESGO BAJO'}
+                title={lang === 'en' ? 'THE LONG TAIL' : 'LA COLA LARGA'}
                 color="var(--color-text-muted)"
                 items={shelfRoutine}
                 sectorAccent={sectorAccent}
@@ -2767,7 +2767,10 @@ function Z2Panel({
                 lang={lang}
                 layoutTransition={layoutTransition}
                 prefersReducedMotion={prefersReducedMotion}
-                defaultOpen={false} /* LOW collapsed — 30+ entries dominate the scroll otherwise */
+                defaultOpen={true}
+                variant="long-tail"
+                instTitle={instTitle}
+                totalRegisterCount={sortedVendors.length}
               />
             </div>
           )}
@@ -3109,6 +3112,11 @@ function Z2Row({
 
 /**
  * Collapsible risk-tier shelf grouping Z2 rows. Mirrors Z1Shelf API.
+ *
+ * variant='long-tail' renders an editorial dek under the header + uses
+ * Z2RowDense (single-line condensed format) instead of Z2Row. Reserved
+ * for the below-high-risk-threshold tier so the visual hierarchy still
+ * reads top-down without hiding any vendor behind a click.
  */
 function Z2Shelf({
   title,
@@ -3120,6 +3128,9 @@ function Z2Shelf({
   layoutTransition,
   prefersReducedMotion,
   defaultOpen,
+  variant = 'standard',
+  instTitle,
+  totalRegisterCount,
 }: {
   title: string
   color: string
@@ -3130,10 +3141,29 @@ function Z2Shelf({
   layoutTransition: { duration: number; ease?: typeof Z_EASE }
   prefersReducedMotion: boolean
   defaultOpen: boolean
+  variant?: 'standard' | 'long-tail'
+  instTitle?: string
+  totalRegisterCount?: number
 }) {
   const [open, setOpen] = useState(defaultOpen)
   if (items.length === 0) return null
   const shelfSpend = items.reduce((s, v) => s + (v.total_value_mxn ?? 0), 0)
+
+  // Long-tail aggregate stats — computed from the items in this shelf.
+  // The dek names the long tail as a *structure* rather than a list.
+  const isLongTail = variant === 'long-tail'
+  const maxShare = isLongTail ? items.reduce((m, v) => Math.max(m, v.share_of_institution_pct), 0) : 0
+  const avgRisk = isLongTail
+    ? Math.round(
+        (items.reduce((s, v) => s + (v.avg_risk_score ?? 0), 0) / items.length) * 100,
+      )
+    : 0
+  const longTailDek = isLongTail
+    ? (lang === 'en'
+        ? `${items.length} of ${instTitle ?? 'this institution'}'s top ${totalRegisterCount ?? items.length} vendors sit below the high-risk threshold — they share ${formatCompactMXN(shelfSpend)}. None individually exceeds ${maxShare.toFixed(1)}% of total spend. Average risk ${avgRisk}.`
+        : `${items.length} de los ${totalRegisterCount ?? items.length} mayores proveedores de ${instTitle ?? 'esta institución'} están bajo el umbral de alto riesgo — comparten ${formatCompactMXN(shelfSpend)}. Ninguno supera el ${maxShare.toFixed(1)}% del gasto total individualmente. Riesgo promedio ${avgRisk}.`)
+    : null
+
   return (
     <div>
       <button
@@ -3148,23 +3178,155 @@ function Z2Shelf({
         <span className="font-mono tabular-nums normal-case" style={{ fontSize: 9, opacity: 0.7 }}>{formatCompactMXN(shelfSpend)}</span>
         <span className="font-mono tabular-nums" style={{ fontSize: 10 }}>{items.length}</span>
       </button>
+      {open && longTailDek && (
+        <div
+          className="px-3 py-2 mt-0.5 flex items-start gap-2"
+          style={{
+            background: 'var(--color-background-elevated)',
+            borderLeft: `2px solid ${color}`,
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: 11, color, lineHeight: 1.3, fontWeight: 700 }}>▎</span>
+          <p
+            className="text-text-secondary leading-snug"
+            style={{
+              fontSize: 11,
+              fontFamily: "'Source Serif Pro', Georgia, serif",
+              fontStyle: 'italic',
+            }}
+          >
+            {longTailDek}
+          </p>
+        </div>
+      )}
       {open && (
         <ul role="list" className="space-y-px mt-0.5">
-          {items.map((v, i) => (
-            <Z2Row
-              key={v.vendor_id}
-              v={v}
-              rank={i + 1}
-              sectorAccent={sectorAccent}
-              dispatch={dispatch}
-              lang={lang}
-              layoutTransition={layoutTransition}
-              prefersReducedMotion={prefersReducedMotion}
-            />
-          ))}
+          {items.map((v, i) =>
+            isLongTail ? (
+              <Z2RowDense
+                key={v.vendor_id}
+                v={v}
+                rank={i + 1}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+              />
+            ) : (
+              <Z2Row
+                key={v.vendor_id}
+                v={v}
+                rank={i + 1}
+                sectorAccent={sectorAccent}
+                dispatch={dispatch}
+                lang={lang}
+                layoutTransition={layoutTransition}
+                prefersReducedMotion={prefersReducedMotion}
+              />
+            ),
+          )}
         </ul>
       )}
     </div>
+  )
+}
+
+/**
+ * Z2RowDense — condensed single-line variant for the long-tail shelf.
+ * Drops badges, HR-bar, DA%, SB%, USD line. Shows: rank · 22px chip ·
+ * name (truncates with title attribute) · spend (MXN + share) · #contracts ·
+ * avg risk. ~24px row height vs. Z2Row's ~60px so the long tail flows
+ * beneath the headline rows without competing for visual weight.
+ */
+function Z2RowDense({
+  v,
+  rank,
+  sectorAccent,
+  dispatch,
+  layoutTransition,
+  prefersReducedMotion,
+}: {
+  v: import('@/api/types').VendorPoolItem
+  rank: number
+  sectorAccent: string
+  dispatch: ReturnType<typeof useExploreDispatch>
+  lang: 'en' | 'es'  // accepted for parity with Z2Row's signature; not currently used (no localized labels in dense row)
+  layoutTransition: { duration: number; ease?: typeof Z_EASE }
+  prefersReducedMotion: boolean
+}) {
+  const score = v.avg_risk_score ?? 0
+  const riskPct = Math.round(score * 100)
+  const cleanName = formatVendorName(v.vendor_name, 300)
+  const editorialName = toEditorialCase(cleanName)
+  const initials = (() => {
+    const parts = cleanName.replace(/^(GRUPO|LABORATORIOS?|DISTRIBUIDORA|FARMAC[ÉE]UTIC[OA]S?)\s+/i, '').split(/\s+/).filter(Boolean)
+    const first = (parts[0]?.[0] ?? '?').toUpperCase()
+    const second = (parts[1]?.[0] ?? parts[0]?.[1] ?? '').toUpperCase()
+    return (first + second).slice(0, 2) || '?'
+  })()
+
+  return (
+    <motion.li
+      layout
+      layoutId={`explore-vendor-${v.vendor_id}`}
+      transition={{ layout: layoutTransition }}
+      whileHover={prefersReducedMotion ? undefined : { backgroundColor: 'var(--color-background-card)', transition: { duration: 0.12 } }}
+    >
+      <button
+        type="button"
+        onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: v.vendor_id, vendorName: cleanName })}
+        className="w-full text-left flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer"
+        style={{ background: 'transparent' }}
+        title={`${cleanName} — ${formatCompactMXN(v.total_value_mxn)} (${v.share_of_institution_pct.toFixed(2)}%) — ${formatNumber(v.contract_count)} contracts — avg risk ${riskPct}%`}
+        aria-label={`${cleanName}, rank ${rank}, ${formatCompactMXN(v.total_value_mxn)}, ${v.contract_count} contracts, avg risk ${riskPct} percent`}
+      >
+        {/* Rank — match Z2Row width 20 for column alignment */}
+        <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 20 }}>
+          {rank}
+        </span>
+        {/* Smaller chip — 22px vs Z2Row's 32 — signals secondary tier */}
+        <span
+          className="flex items-center justify-center flex-shrink-0 rounded-sm font-mono"
+          style={{
+            width: 22,
+            height: 22,
+            background: `${sectorAccent}14`,
+            color: sectorAccent,
+            fontSize: 9,
+            fontWeight: 700,
+            letterSpacing: '0.04em',
+            opacity: 0.85,
+          }}
+          aria-hidden="true"
+        >
+          {initials}
+        </span>
+        {/* Full vendor name, single-line, truncates with native ellipsis +
+            full name in title attribute. Long-tail vendors don't need the
+            same word-wrapping reverence as headline rows — the dek above
+            already names the tail's structure. */}
+        <span
+          className="flex-1 min-w-0 leading-snug truncate"
+          style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}
+        >
+          {editorialName}
+        </span>
+        {/* Spend trio collapsed to one line: MXN · share% */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 140 }}>
+          {formatCompactMXN(v.total_value_mxn)}
+          <span style={{ color: 'var(--color-text-muted)', marginLeft: 6 }}>{v.share_of_institution_pct.toFixed(2)}%</span>
+        </span>
+        {/* Contracts — single number, no label */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 60 }}>
+          {formatNumber(v.contract_count)}
+        </span>
+        {/* Avg risk — single number, no label */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 28 }}>
+          {score > 0 ? riskPct : '—'}
+        </span>
+      </button>
+    </motion.li>
   )
 }
 
