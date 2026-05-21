@@ -2038,6 +2038,7 @@ function Z1Panel({
               {lang === 'en' ? 'loading...' : 'cargando...'}
             </div>
           )}
+          {!isLoading && sortedInstitutions.length > 0 && <Z1ColumnHeader lang={lang} />}
           {!isLoading && !useShelf && (
             <ul role="list" className="space-y-px">
               {sortedInstitutions.map((inst, i) => (
@@ -2135,6 +2136,167 @@ function Z1Panel({
 }
 
 // ─── Z1 subcomponents — single row + collapsible shelf ──────────────────────
+
+/**
+ * Column-header strip rendered above the Z1 institution list. Names what
+ * each column means in plain language — readers shouldn't have to infer
+ * what "DA" or "HR" stand for. Title attribute (hover tooltip) carries
+ * the full definition. Sticky-top inside the scroll container.
+ *
+ * Widths MUST match Z1Row's columns exactly:
+ *   rank 20 · logo+chip 88 · name flex · HR-bar 130 · spend 110 ·
+ *   contracts 70 · DA 56 · risk 56
+ */
+function Z1ColumnHeader({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+  const headerCell: React.CSSProperties = {
+    fontSize: 9,
+    fontFamily: 'var(--font-family-mono, monospace)',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: 'var(--color-text-muted)',
+    lineHeight: 1.3,
+  }
+  return (
+    <div
+      className="flex items-end gap-3 px-2 pt-2 pb-1.5 mb-1 sticky top-0 z-[2]"
+      style={{
+        background: 'var(--color-background)',
+        borderBottom: '1px solid var(--color-border)',
+      }}
+      role="row"
+    >
+      {/* rank — empty header */}
+      <span style={{ width: 20 }} role="columnheader" aria-label={isEs ? 'rango' : 'rank'} />
+
+      {/* logo + acronym */}
+      <span
+        className="flex-shrink-0"
+        style={{ ...headerCell, width: 88 }}
+        role="columnheader"
+        title={isEs ? 'Acrónimo o siglas de la institución' : 'Institution acronym or siglas'}
+      >
+        {isEs ? 'Institución' : 'Institution'}
+      </span>
+
+      {/* full name — empty header (the acronym column header covers it visually) */}
+      <span className="flex-1 min-w-0" style={headerCell} role="columnheader">
+        {isEs ? 'Nombre completo' : 'Full name'}
+      </span>
+
+      {/* HR% bar */}
+      <span
+        className="flex-shrink-0"
+        style={{ ...headerCell, width: 130, textAlign: 'left' }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Tasa de contratos de alto riesgo: % de contratos marcados como alto o crítico por el modelo de riesgo. Barra llena al 100% = todos los contratos en riesgo.'
+            : 'High-risk contract rate: % of this institution\'s contracts flagged high or critical by the risk model. A bar filled to 100% means every contract is at risk.'
+        }
+      >
+        {isEs ? 'Contratos de alto riesgo' : 'High-risk contracts'}
+      </span>
+
+      {/* spend column (MXN / USD / share) */}
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 110 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Gasto acumulado en pesos mexicanos, con equivalente en dólares y porcentaje del gasto total del sector.'
+            : 'Total spend in Mexican pesos, with USD equivalent and percentage of the sector\'s total spend.'
+        }
+      >
+        {isEs ? (
+          <>
+            Gasto<br />
+            <span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · %</span>
+          </>
+        ) : (
+          <>
+            Spend<br />
+            <span style={{ fontWeight: 400, opacity: 0.7 }}>MXN · USD · share</span>
+          </>
+        )}
+      </span>
+
+      {/* contracts count */}
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 70 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Número total de contratos otorgados por la institución (2002 a la fecha).'
+            : 'Total number of contracts the institution has awarded (2002 to present).'
+        }
+      >
+        {isEs ? (
+          <>
+            # de<br />
+            <span>contratos</span>
+          </>
+        ) : (
+          <>
+            # of<br />
+            <span>contracts</span>
+          </>
+        )}
+      </span>
+
+      {/* DA% */}
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 56 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Adjudicación directa: % de contratos otorgados sin licitación pública. Una tasa alta indica riesgo de procura no competitiva.'
+            : 'Direct-award rate: % of contracts awarded without an open bid. A high rate flags non-competitive procurement.'
+        }
+      >
+        {isEs ? (
+          <>
+            Adj.<br />
+            <span>directa</span>
+          </>
+        ) : (
+          <>
+            Direct<br />
+            <span>award</span>
+          </>
+        )}
+      </span>
+
+      {/* avg risk% */}
+      <span
+        className="flex-shrink-0 text-right"
+        style={{ ...headerCell, width: 56 }}
+        role="columnheader"
+        title={
+          isEs
+            ? 'Puntuación promedio de riesgo del modelo (0–100). Combina dirección, precios, redes y otros factores. Crítico ≥ 60.'
+            : 'Average risk score from the model (0–100). Blends direct-award, pricing, network and other factors. Critical ≥ 60.'
+        }
+      >
+        {isEs ? (
+          <>
+            Riesgo<br />
+            <span>prom.</span>
+          </>
+        ) : (
+          <>
+            Avg<br />
+            <span>risk</span>
+          </>
+        )}
+      </span>
+    </div>
+  )
+}
 
 function Z1Row({
   inst,
