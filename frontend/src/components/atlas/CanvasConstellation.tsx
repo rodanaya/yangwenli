@@ -289,6 +289,13 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
   const tweenStartRef = useRef<number | null>(null)
   const tweenRafRef = useRef<number | null>(null)
 
+  // 2026-05-22 — drawRef holds the latest `draw` callback. The d3-zoom
+  // 'zoom' event handler is registered ONCE on mount inside a useEffect
+  // with empty deps; calling `draw()` directly from there closes over the
+  // initial draw (which references the lattice-fallback dots). Using a ref
+  // ensures wheel/pan events call the current draw, with the current dots.
+  const drawRef = useRef<() => void>(() => {})
+
   // — Risk-floor fade state —
   // Tracks the floor at the start of the current fade + its start timestamp.
   // The draw loop animates each dot's alpha contribution from its OLD
@@ -496,7 +503,13 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         transformRef.current = next
         const newBand = bandFor(next.k)
         setBand((prev) => (prev === newBand ? prev : newBand))
-        draw()
+        // 2026-05-22 — call the LATEST draw via the ref, not the closure-
+        // captured one from initial mount. The mount-time `draw` closed over
+        // the lattice fallback (1,200 dots); every wheel/pan kept calling
+        // that stale closure and repainted the lattice on top of the real
+        // galaxy. Live trace confirmed 1207 arc calls per zoom event when
+        // dots prop was only 70. The ref always points to the current draw.
+        drawRef.current()
         forceLabelTick((n) => n + 1)
         onZoomChange?.({ zoom: next.k, band: newBand })
       })
@@ -806,6 +819,12 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     }
     ctx.globalAlpha = 1
   }, [dots, clusters, pinnedClusterCode, highlightedDotIds, riskFloor])
+
+  // 2026-05-22 — keep drawRef in sync with the latest draw so the d3-zoom
+  // 'zoom' handler (bound once on mount) calls the up-to-date implementation.
+  // Without this, wheel/pan re-paints the lattice fallback that was active at
+  // the moment d3-zoom was first bound.
+  useEffect(() => { drawRef.current = draw }, [draw])
 
   // — Label positions (React render) —
   const t = transformRef.current
