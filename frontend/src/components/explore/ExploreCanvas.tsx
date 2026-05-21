@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { atlasApi, sectorApi, type SpatialInstitution } from '@/api/client'
 import type { ContractListItem } from '@/api/types'
 import {
@@ -43,6 +44,7 @@ import {
   Z_BAND_S,
   Z_CASCADE_STEP_S,
   Z_TREEMAP_DELAY_S,
+  Z_DRAWER_S,
   ZBreadcrumb,
   ZKickerBand,
   ZPullLine,
@@ -453,6 +455,24 @@ export function ExploreCanvas({ lang, onFocusChange }: ExploreCanvasProps) {
           />
         )
       })()}
+
+      {/* Z4 HTML overlay — contract drawer slides in from the right when
+          focus is on a specific contract. Z3 stays visible behind it so
+          the constellation of sibling contracts is never lost. */}
+      <AnimatePresence>
+        {focus.kind === 'contract' && (
+          <Z4Drawer
+            key={`z4drawer-${focus.contractId}`}
+            contractId={focus.contractId}
+            lang={lang}
+            dispatch={dispatch}
+            sectorAccent={(() => {
+              const s = [...state.stack].reverse().find((f): f is Extract<Focus, { kind: 'sector' }> => f.kind === 'sector')
+              return s ? SECTOR_COLORS[s.sectorCode] ?? '#64748b' : '#64748b'
+            })()}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -4176,4 +4196,500 @@ function computeZ3PullLine({
   return lang === 'en'
     ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> holds {formatNumber(contractCount)} contracts worth <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> with {inst}</> : ''}.</>
     : <><strong className="font-semibold text-text-primary">{editorialName}</strong> tiene {formatNumber(contractCount)} contratos por <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> con {inst}</> : ''}.</>
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z4 — Contract drawer
+// Slides in from the right at 440px when focus.kind === 'contract'. The
+// Z3 register stays visible behind it (compressed on the left) so the
+// reader never loses the constellation of sibling contracts.
+// Inline preview, not a full page — "Open full contract page ↗" links
+// to the canonical /contracts/:id dossier for the deep dive.
+// ────────────────────────────────────────────────────────────────────────────
+
+function Z4Drawer({
+  contractId,
+  lang,
+  dispatch,
+  sectorAccent,
+}: {
+  contractId: number
+  lang: 'en' | 'es'
+  dispatch: ReturnType<typeof useExploreDispatch>
+  sectorAccent: string
+}) {
+  const navigate = useNavigate()
+  const prefersReducedMotion = useReducedMotion() ?? false
+
+  // Esc closes the drawer — pops back to Z3 vendor focus
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        dispatch({ type: 'pop-to-level', level: 3 })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [dispatch])
+
+  const { data: contract, isLoading } = useQuery({
+    queryKey: ['explore', 'z4-contract', contractId],
+    queryFn: async () => {
+      const { contractApi } = await import('@/api/client')
+      return contractApi.getById(contractId)
+    },
+    enabled: contractId > 0,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: explanation } = useQuery({
+    queryKey: ['explore', 'z4-explain', contractId],
+    queryFn: async () => {
+      const { contractApi } = await import('@/api/client')
+      return contractApi.getRiskExplanation(contractId)
+    },
+    enabled: contractId > 0,
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const score = Number(contract?.risk_score ?? 0)
+  const level = score > 0 ? getRiskLevelFromScore(score) : 'low'
+  const fill = RISK_COLORS[level]
+  const riskPct = score > 0 ? Math.round(score * 100) : null
+
+  // Top-3 SHAP contributors — sorted by absolute contribution descending,
+  // then filtered to positive (risk-increasing) and negative (protective).
+  const topContributors = (() => {
+    const features = explanation?.features ?? []
+    return [...features].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 4)
+  })()
+
+  // Signals row — high-signal procurement flags
+  const signals: Array<{ label: string; color: string; tooltip: string }> = []
+  if (contract?.is_direct_award) {
+    signals.push({
+      label: lang === 'en' ? 'DIRECT AWARD' : 'ADJ. DIRECTA',
+      color: RISK_COLORS.high,
+      tooltip: lang === 'en' ? 'Awarded without an open bid' : 'Otorgado sin licitación pública',
+    })
+  }
+  if (contract?.is_single_bid) {
+    signals.push({
+      label: lang === 'en' ? 'SINGLE BID' : 'ÚNICO POSTOR',
+      color: RISK_COLORS.critical,
+      tooltip: lang === 'en' ? 'Competitive procedure with only one bidder' : 'Procedimiento competitivo con un solo postor',
+    })
+  }
+  if (contract && Number(contract.amount_mxn) > 500_000_000) {
+    signals.push({
+      label: lang === 'en' ? 'LARGE' : 'ALTO MONTO',
+      color: RISK_COLORS.medium,
+      tooltip: lang === 'en' ? 'Contract value exceeds 500M MXN' : 'Valor del contrato supera 500M MXN',
+    })
+  }
+  if (contract?.is_year_end) {
+    signals.push({
+      label: lang === 'en' ? 'YEAR-END' : 'FIN DE AÑO',
+      color: RISK_COLORS.medium,
+      tooltip: lang === 'en' ? 'Awarded in November or December' : 'Otorgado en noviembre o diciembre',
+    })
+  }
+  if (contract?.is_threshold_gaming) {
+    signals.push({
+      label: lang === 'en' ? 'THRESHOLD GAMING' : 'JUEGO DE UMBRAL',
+      color: RISK_COLORS.critical,
+      tooltip: lang === 'en' ? 'Amount suspiciously close to procedure threshold' : 'Monto cerca del umbral del procedimiento',
+    })
+  }
+  if (contract?.is_framework) {
+    signals.push({
+      label: lang === 'en' ? 'FRAMEWORK' : 'CONVENIO MARCO',
+      color: 'var(--color-text-secondary)',
+      tooltip: lang === 'en' ? 'Framework / open-order contract' : 'Convenio marco / abierto',
+    })
+  }
+
+  return (
+    <>
+      {/* Dismiss-on-outside-click overlay — invisible scrim, clicking it
+          pops to Z3. Not a darkened backdrop because we want Z3 fully
+          visible behind the drawer. */}
+      <motion.div
+        initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 z-[6] cursor-default"
+        style={{ background: 'transparent' }}
+        onClick={() => dispatch({ type: 'pop-to-level', level: 3 })}
+        aria-label={lang === 'en' ? 'Close contract drawer' : 'Cerrar panel del contrato'}
+      />
+      {/* The drawer itself */}
+      <motion.aside
+        initial={prefersReducedMotion ? { opacity: 0 } : { x: '100%' }}
+        animate={prefersReducedMotion ? { opacity: 1 } : { x: 0 }}
+        exit={prefersReducedMotion ? { opacity: 0 } : { x: '100%' }}
+        transition={prefersReducedMotion ? { duration: 0 } : { duration: Z_DRAWER_S, ease: Z_EASE }}
+        className="absolute right-0 z-[7] flex flex-col overflow-hidden"
+        style={{
+          top: '48px',
+          bottom: 0,
+          width: 'min(440px, 100vw)',
+          background: 'var(--color-background)',
+          borderLeft: '1px solid var(--color-border)',
+          boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.18)',
+        }}
+        role="dialog"
+        aria-modal="false"
+        aria-label={lang === 'en' ? 'Contract dossier preview' : 'Vista previa del contrato'}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top sector-color rail — visual continuity with Z1/Z2/Z3 */}
+        <div style={{ height: 6, background: sectorAccent, flexShrink: 0 }} aria-hidden="true" />
+
+        {/* Close button */}
+        <div className="px-4 sm:px-5 pt-3 flex items-center justify-between flex-shrink-0">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: 'var(--color-accent)' }}>
+            {lang === 'en' ? '§ EL CONTRATO · CONTRACT DEEP' : '§ EL CONTRATO · CONTRATO'}
+          </span>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'pop-to-level', level: 3 })}
+            className="font-mono text-[14px] leading-none px-1.5 py-0.5 rounded-sm cursor-pointer hover:opacity-70 transition-opacity"
+            style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none' }}
+            aria-label={lang === 'en' ? 'Close' : 'Cerrar'}
+            title={lang === 'en' ? 'Esc to close' : 'Esc para cerrar'}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex-1 flex items-center justify-center font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+            {lang === 'en' ? 'loading contract...' : 'cargando contrato...'}
+          </div>
+        )}
+
+        {/* Body */}
+        {!isLoading && contract && (
+          <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-4">
+            {/* Contract number + amount headline */}
+            <div className="pt-2 pb-3">
+              {contract.contract_number && (
+                <div
+                  className="font-mono text-[10px] tabular-nums mb-1"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  #{contract.contract_number}
+                </div>
+              )}
+              <div
+                className="font-serif tabular-nums leading-tight"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: 28,
+                  fontWeight: 800,
+                  fontStyle: 'italic',
+                  color: fill,
+                  letterSpacing: '-0.015em',
+                }}
+              >
+                {formatCompactMXN(Number(contract.amount_mxn ?? 0))}
+              </div>
+              <div className="font-mono text-[10px] tabular-nums mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                ≈ {formatCompactUSD(Number(contract.amount_mxn ?? 0))} · {contract.contract_year ?? '—'}
+              </div>
+            </div>
+
+            {/* Description / title */}
+            {(contract.description ?? contract.title) && (
+              <p
+                className="leading-snug"
+                style={{
+                  fontFamily: "'Source Serif Pro', Georgia, serif",
+                  fontSize: 13,
+                  fontStyle: 'italic',
+                  color: 'var(--color-text-secondary)',
+                  borderLeft: `2px solid ${sectorAccent}`,
+                  paddingLeft: 10,
+                  marginBottom: 16,
+                }}
+              >
+                {(contract.description ?? contract.title)?.slice(0, 280)}
+                {((contract.description ?? contract.title)?.length ?? 0) > 280 && '…'}
+              </p>
+            )}
+
+            {/* Parties */}
+            <div className="pb-4">
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {lang === 'en' ? 'Parties' : 'Partes'}
+              </div>
+              <div className="space-y-2">
+                {contract.vendor_id && contract.vendor_name && (
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'drill-into-vendor', vendorId: contract.vendor_id!, vendorName: contract.vendor_name! })}
+                    className="w-full text-left flex items-start gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
+                      {lang === 'en' ? 'Vendor' : 'Proveedor'}
+                    </span>
+                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
+                      {toEditorialCase(formatVendorName(contract.vendor_name, 200))}
+                    </span>
+                  </button>
+                )}
+                {contract.institution_id && contract.institution_name && (
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: 'drill-into-institution', institutionId: contract.institution_id!, institutionName: contract.institution_name! })}
+                    className="w-full text-left flex items-start gap-2 cursor-pointer hover:opacity-70 transition-opacity"
+                  >
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
+                      {lang === 'en' ? 'Institution' : 'Institución'}
+                    </span>
+                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>
+                      {toEditorialCase(contract.institution_name)}
+                    </span>
+                  </button>
+                )}
+                {contract.sector_name && (
+                  <div className="flex items-start gap-2">
+                    <span className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5" style={{ color: 'var(--color-text-muted)', width: 72 }}>
+                      {lang === 'en' ? 'Sector' : 'Sector'}
+                    </span>
+                    <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-secondary)' }}>
+                      {contract.sector_name}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Signals row */}
+            {signals.length > 0 && (
+              <div className="pb-4">
+                <div
+                  className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {lang === 'en' ? 'Procurement signals' : 'Señales de contratación'}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {signals.map((s, i) => (
+                    <span
+                      key={i}
+                      className="font-mono text-[9px] uppercase tracking-[0.10em] px-1.5 py-0.5 rounded-sm"
+                      style={{
+                        background: `${s.color}1f`,
+                        color: s.color,
+                        border: `1px solid ${s.color}44`,
+                        fontWeight: 700,
+                      }}
+                      title={s.tooltip}
+                    >
+                      {s.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Risk verdict */}
+            <div className="pb-4">
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {lang === 'en' ? 'Risk verdict' : 'Veredicto de riesgo'}
+              </div>
+              {riskPct == null ? (
+                <div className="font-mono text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                  {lang === 'en' ? 'Not scored' : 'Sin puntuación'}
+                </div>
+              ) : (
+                <div className="flex items-baseline gap-3">
+                  <span
+                    className="font-serif tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontSize: 36,
+                      fontWeight: 800,
+                      color: fill,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {riskPct}
+                  </span>
+                  <span className="font-mono text-[10px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                    / 100
+                  </span>
+                  <span
+                    className="font-mono text-[10px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm"
+                    style={{ background: `${fill}1f`, color: fill, fontWeight: 700, border: `1px solid ${fill}44` }}
+                  >
+                    {level}
+                  </span>
+                </div>
+              )}
+              {/* Risk bar */}
+              {riskPct != null && (
+                <div
+                  className="relative mt-2 rounded-sm overflow-hidden"
+                  style={{ height: 6, background: 'var(--color-background-elevated)' }}
+                  aria-hidden="true"
+                >
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-sm"
+                    style={{ width: `${Math.min(100, riskPct)}%`, background: fill, opacity: 0.92 }}
+                  />
+                  {[25, 40, 60].map((t) => (
+                    <span
+                      key={t}
+                      className="absolute inset-y-0 w-px"
+                      style={{ left: `${t}%`, background: 'rgba(0,0,0,0.10)' }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Why the model flagged it — SHAP contributors */}
+            {explanation?.explanation_available && topContributors.length > 0 && (
+              <div className="pb-4">
+                <div
+                  className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  {lang === 'en' ? 'Why the model flagged it' : 'Por qué el modelo lo marcó'}
+                </div>
+                <ul className="space-y-1.5">
+                  {topContributors.map((f, i) => {
+                    const isPositive = f.contribution > 0
+                    const factorColor = isPositive ? fill : 'var(--color-text-muted)'
+                    const sign = isPositive ? '+' : ''
+                    return (
+                      <li key={i} className="flex items-baseline gap-2">
+                        <span
+                          aria-hidden="true"
+                          className="font-mono"
+                          style={{ fontSize: 10, color: factorColor, fontWeight: 700 }}
+                        >
+                          {isPositive ? '▲' : '▽'}
+                        </span>
+                        <span className="flex-1 text-[12px] leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+                          {f.label}
+                        </span>
+                        <span
+                          className="font-mono tabular-nums text-right"
+                          style={{ fontSize: 10, color: factorColor, fontWeight: 700, minWidth: 48 }}
+                        >
+                          {sign}{f.contribution.toFixed(2)}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                {explanation.model_version && (
+                  <div className="font-mono text-[8px] mt-2" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                    {lang === 'en' ? 'model' : 'modelo'} {explanation.model_version}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Procedure */}
+            <div className="pb-4">
+              <div
+                className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {lang === 'en' ? 'Procedure' : 'Procedimiento'}
+              </div>
+              <dl className="space-y-1.5">
+                {contract.procedure_number && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Number' : 'Número'} value={contract.procedure_number} />
+                )}
+                {(contract.procedure_type_normalized ?? contract.procedure_type) && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Type' : 'Tipo'} value={contract.procedure_type_normalized ?? contract.procedure_type ?? '—'} />
+                )}
+                {contract.award_date && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Awarded' : 'Otorgado'} value={contract.award_date} mono />
+                )}
+                {contract.contract_date && !contract.award_date && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Contract date' : 'Fecha'} value={contract.contract_date} mono />
+                )}
+                {contract.publication_date && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Published' : 'Publicado'} value={contract.publication_date} mono />
+                )}
+                {contract.data_quality_grade && (
+                  <Z4ProcedureRow lang={lang} label={lang === 'en' ? 'Data quality' : 'Calidad de datos'} value={contract.data_quality_grade} />
+                )}
+              </dl>
+              {contract.url && (
+                <a
+                  href={contract.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 mt-2 font-mono text-[10px] uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
+                  style={{ color: 'var(--color-text-secondary)' }}
+                >
+                  {lang === 'en' ? 'Source document' : 'Documento fuente'} ↗
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Footer — outbound to canonical contract page */}
+        {!isLoading && contract && (
+          <div
+            className="px-4 sm:px-5 py-3 flex-shrink-0 flex items-center justify-between"
+            style={{ borderTop: '1px solid var(--color-border)', background: 'var(--color-background)' }}
+          >
+            <span className="font-mono text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+              #{contract.id}
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate(`/contracts/${contract.id}`)}
+              className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] hover:opacity-70 transition-opacity"
+              style={{ color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              {lang === 'en' ? 'Open full contract page' : 'Ver ficha completa'} ↗
+            </button>
+          </div>
+        )}
+      </motion.aside>
+    </>
+  )
+}
+
+/** Procedure-row helper used inside Z4Drawer. Label + value pair. */
+function Z4ProcedureRow({ label, value, mono = false }: { lang: 'en' | 'es'; label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-start gap-2">
+      <dt
+        className="font-mono text-[8px] uppercase tracking-[0.12em] flex-shrink-0 mt-0.5"
+        style={{ color: 'var(--color-text-muted)', width: 90 }}
+      >
+        {label}
+      </dt>
+      <dd
+        className="flex-1 text-[11px] leading-snug"
+        style={{
+          color: 'var(--color-text-primary)',
+          fontFamily: mono ? 'var(--font-family-mono, monospace)' : undefined,
+          fontVariantNumeric: mono ? 'tabular-nums' : undefined,
+        }}
+      >
+        {value}
+      </dd>
+    </div>
+  )
 }
