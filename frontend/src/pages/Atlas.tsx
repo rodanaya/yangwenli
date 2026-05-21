@@ -50,8 +50,11 @@ import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
 // atlas-P6 Pass 2: Canvas constellation engine (opt-in via ?canvas=1).
 // Full replacement of AtlasZoomLayer once parity is validated.
-import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/components/atlas/CanvasConstellation'
+import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn, type FlyToPosFn } from '@/components/atlas/CanvasConstellation'
 import { CanvasVendorHaloCard } from '@/components/atlas/CanvasVendorHaloCard'
+// Atlas P6 Frontier C — planetary system: contracts orbiting a focused vendor.
+import { useVendorContracts, type VendorContractDot } from '@/lib/atlas/use-vendor-contracts'
+import { ContractFloatingCard } from '@/components/atlas/ContractFloatingCard'
 import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
 // Atlas P6 Frontier B — real-vendor galaxy (replaces synthetic lattice).
 import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/lib/atlas/use-cluster-vendors'
@@ -553,6 +556,28 @@ function CanvasAtlasView({
   const navigate = useNavigate()
   const flyToRef = useRef<FlyToClusterFn | null>(null)
   const resetRef = useRef<ResetViewFn | null>(null)
+  // Atlas P6 Frontier C — planetary mode: imperative fly to a vendor's world coords.
+  const flyVendorRef = useRef<FlyToPosFn | null>(null)
+
+  // Atlas P6 Frontier C — focused vendor state (LOCAL — not context state, to
+  // avoid polluting the global state machine with a UI-only zoom-into-vendor
+  // mode). When set, contract dots orbit the vendor and the breadcrumb extends.
+  const [focusedVendor, setFocusedVendor] = useState<{
+    id: number
+    name: string
+    x: number
+    y: number
+    accent?: string
+  } | null>(null)
+  // Currently shown contract panel (when a contract dot is clicked).
+  const [focusedContract, setFocusedContract] = useState<VendorContractDot | null>(null)
+  // Double-click detection: remembers the last vendor-dot click time + id,
+  // plus a pending single-click timer so a follow-up click within 320ms can
+  // upgrade the single-click navigation into planetary mode.
+  const lastClickRef = useRef<{ id: string; t: number } | null>(null)
+  const pendingNavRef = useRef<number | null>(null)
+
+  const vendorContractsQuery = useVendorContracts(focusedVendor?.id ?? null)
 
   // Atlas P6 Frontier A — VendorHaloCard at zoom ≥ 18×.
   // We track the currently hovered dot, its screen-space position (emitted by
@@ -715,15 +740,116 @@ function CanvasAtlasView({
     positionForVendor,
   ])
 
-  const handleDotClick = useCallback(
-    (dot: { id: string; name?: string }) => {
-      // Only named outlier dots have real vendor IDs — route to the dossier.
-      // Lattice dots (dot-NNN) have no name and are non-navigable.
-      if (dot.name && /^\d+$/.test(dot.id)) {
-        navigate(`/thread/${dot.id}`)
+  // Atlas P6 Frontier C — build planetary contract dots when a vendor is focused.
+  // Contract dots ride a deterministic golden-ratio polar ring around the
+  // focused vendor's world coords. Stable across re-renders for a given vendor
+  // because positions are derived from the dot's index in the sorted contract list.
+  const contractDots = useMemo(() => {
+    if (!focusedVendor) return [] as import('@/components/atlas/CanvasConstellation').ConstellationDot[]
+    const rows = vendorContractsQuery.data?.contracts ?? []
+    if (rows.length === 0) return []
+    const golden = 2.39996
+    // Tight orbit — readable at zoom ≥ 18×, contract dots ~6px apart.
+    const baseRadius = 0.012
+    const ringGrowth = 0.0042
+    return rows.map((c, i): import('@/components/atlas/CanvasConstellation').ConstellationDot => {
+      const angle = i * golden
+      const radius = baseRadius + Math.sqrt(i) * ringGrowth
+      const x = Math.max(0.02, Math.min(0.98, focusedVendor.x + Math.cos(angle) * radius))
+      const y = Math.max(0.02, Math.min(0.98, focusedVendor.y + Math.sin(angle) * radius))
+      const rs = c.riskScore
+      const lvl: 'critical' | 'high' | 'medium' | 'low' =
+        c.riskLevel ??
+        (rs !== null && rs >= 0.6 ? 'critical'
+         : rs !== null && rs >= 0.4 ? 'high'
+         : rs !== null && rs >= 0.25 ? 'medium'
+         : 'low')
+      return {
+        id: `contract-${c.id}`,
+        x,
+        y,
+        riskLevel: lvl,
+        riskScore: rs ?? undefined,
+        // Larger radius so contract dots read as distinct from background vendors.
+        isOutlier: true,
+        kind: 'contract',
       }
+    })
+  }, [focusedVendor, vendorContractsQuery.data])
+
+  const mergedDots = useMemo(() => {
+    if (contractDots.length === 0) return dots
+    return [...dots, ...contractDots]
+  }, [dots, contractDots])
+
+  // Lookup table for click handler: contract dot id → underlying contract.
+  const contractById = useMemo(() => {
+    const map = new Map<string, VendorContractDot>()
+    for (const c of vendorContractsQuery.data?.contracts ?? []) {
+      map.set(`contract-${c.id}`, c)
+    }
+    return map
+  }, [vendorContractsQuery.data])
+
+  // Helper used by both the double-click path and the halo card "Examine"
+  // affordance — enter planetary mode for the given vendor.
+  const enterPlanetaryMode = useCallback(
+    (vendor: { id: number; name: string; x: number; y: number; accent?: string }) => {
+      setFocusedContract(null)
+      setFocusedVendor(vendor)
+      // Tight zoom on the vendor so the orbit is legible.
+      flyVendorRef.current?.(vendor.x, vendor.y, 28)
     },
-    [navigate],
+    [],
+  )
+
+  const exitPlanetaryMode = useCallback(() => {
+    setFocusedContract(null)
+    setFocusedVendor(null)
+  }, [])
+
+  const handleDotClick = useCallback(
+    (dot: { id: string; name?: string; x?: number; y?: number; sectorColor?: string; kind?: 'vendor' | 'contract' }) => {
+      // 1. Contract dot → show contract floating card; no navigation.
+      if (dot.kind === 'contract' || dot.id.startsWith('contract-')) {
+        const c = contractById.get(dot.id)
+        if (c) setFocusedContract(c)
+        return
+      }
+      // 2. Vendor dot — detect double-click to enter planetary mode.
+      const isVendorDot = dot.name && /^\d+$/.test(dot.id)
+      if (!isVendorDot) return
+      const now = performance.now()
+      const last = lastClickRef.current
+      if (last && last.id === dot.id && now - last.t < 400) {
+        // Double-click — cancel pending navigation and enter planetary mode.
+        lastClickRef.current = null
+        if (pendingNavRef.current !== null) {
+          window.clearTimeout(pendingNavRef.current)
+          pendingNavRef.current = null
+        }
+        if (typeof dot.x === 'number' && typeof dot.y === 'number') {
+          enterPlanetaryMode({
+            id: Number(dot.id),
+            name: dot.name ?? '',
+            x: dot.x,
+            y: dot.y,
+            accent: dot.sectorColor,
+          })
+        }
+        return
+      }
+      lastClickRef.current = { id: dot.id, t: now }
+      // Single click — defer the navigation by 320ms so a fast second click
+      // upgrades to planetary mode instead of opening the dossier.
+      const dotId = dot.id
+      if (pendingNavRef.current !== null) window.clearTimeout(pendingNavRef.current)
+      pendingNavRef.current = window.setTimeout(() => {
+        pendingNavRef.current = null
+        navigate(`/thread/${dotId}`)
+      }, 320)
+    },
+    [navigate, contractById, enterPlanetaryMode],
   )
 
   const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
@@ -785,15 +911,38 @@ function CanvasAtlasView({
     }
   }, [zoomedCode])
 
-  // ESC pops zoom (consistent with AtlasZoomLayer behavior).
+  // ESC pops zoom (consistent with AtlasZoomLayer behavior). When in
+  // planetary mode (focusedVendor !== null), ESC peels back one layer at a
+  // time: first the contract panel (if open), then planetary mode itself,
+  // then cluster zoom — matching the breadcrumb hierarchy.
   useEffect(() => {
-    if (!isZoomed) return
+    if (!isZoomed && !focusedVendor && !focusedContract) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') dispatch({ type: 'escape-zoom' })
+      if (e.key !== 'Escape') return
+      if (focusedContract) {
+        setFocusedContract(null)
+        return
+      }
+      if (focusedVendor) {
+        exitPlanetaryMode()
+        // Re-fly back to the cluster so the user lands where they started.
+        if (zoomedCode) flyToRef.current?.(zoomedCode)
+        return
+      }
+      dispatch({ type: 'escape-zoom' })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [isZoomed, dispatch])
+  }, [isZoomed, dispatch, focusedVendor, focusedContract, exitPlanetaryMode, zoomedCode])
+
+  // Exiting cluster zoom also exits planetary mode — guarantees the canvas
+  // never carries orphan contract dots after the user pops back to galaxy.
+  useEffect(() => {
+    if (!isZoomed && focusedVendor) {
+      setFocusedContract(null)
+      setFocusedVendor(null)
+    }
+  }, [isZoomed, focusedVendor])
 
   // Keyboard zoom/pan events broadcast by AtlasShell (atlas:zoom-in etc.).
   // Phase 3: wire to engine imperative API. For Pass 2 we no-op pan and
@@ -807,7 +956,17 @@ function CanvasAtlasView({
     sexenios:   { en: 'Terms',      es: 'Sexenios' },
   }
   const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
-  const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+  let clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+  // Atlas P6 Frontier C — when focused on a vendor, append the vendor's name
+  // to the breadcrumb so the user can see "where they are" in the telescope.
+  if (focusedVendor) {
+    const vendorCrumb = focusedVendor.name.length > 32
+      ? `${focusedVendor.name.slice(0, 30)}…`
+      : focusedVendor.name
+    clusterLabel = clusterLabel
+      ? `${clusterLabel} · ${vendorCrumb}`
+      : vendorCrumb
+  }
 
   const handleClusterClick = (cluster: { code: string }) => {
     onClusterClickBridge(cluster.code)
@@ -830,13 +989,20 @@ function CanvasAtlasView({
           lensLabel={lensLabel}
           clusterLabel={clusterLabel}
           onGoHome={() => {
+            // Atlas P6 Frontier C — back-arrow exits planetary mode FIRST,
+            // peeling back one layer; a second click exits cluster zoom.
+            if (focusedVendor) {
+              exitPlanetaryMode()
+              if (zoomedCode) flyToRef.current?.(zoomedCode)
+              return
+            }
             dispatch({ type: 'escape-zoom' })
             resetRef.current?.()
           }}
         />
       )}
       <CanvasConstellation
-        dots={dots}
+        dots={mergedDots}
         clusters={clusters}
         lang={lang}
         onClusterClick={handleClusterClick}
@@ -861,6 +1027,7 @@ function CanvasAtlasView({
         onZoomChange={(info) => setCurrentZoom(info.zoom)}
         flyToClusterRef={flyToRef}
         resetViewRef={resetRef}
+        flyToPosRef={flyVendorRef}
         pinnedClusterCode={pinnedCode ?? zoomedCode}
         riskFloor={riskFloor}
       />
@@ -912,6 +1079,22 @@ function CanvasAtlasView({
           {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
         </button>
       )}
+      {/* Atlas P6 Frontier C — contract detail panel (planetary mode). Pinned
+          below the cluster card on the right rail; takes precedence over the
+          vendor halo card while open. */}
+      {focusedContract && (
+        <div
+          className="absolute z-30 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <ContractFloatingCard
+            contract={focusedContract}
+            vendorAccentColor={focusedVendor?.accent}
+            onClose={() => setFocusedContract(null)}
+            lang={lang}
+          />
+        </div>
+      )}
       {/* M-OBS P3 vendor drawer — collapsible bottom strip (collapsed by
           default; Esc collapses when expanded, does not escape zoom). */}
       {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
@@ -921,6 +1104,21 @@ function CanvasAtlasView({
           vendors={clusterVendors}
           lang={lang}
         />
+      )}
+      {/* Frontier C — contract detail card when a planetary contract dot is clicked.
+          Positioned where the cluster card sits so it never overlaps the orbit. */}
+      {focusedContract && (
+        <div
+          className="absolute z-30 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <ContractFloatingCard
+            contract={focusedContract}
+            vendorAccentColor={zoomedMeta?.color}
+            onClose={() => setFocusedContract(null)}
+            lang={lang}
+          />
+        </div>
       )}
     </div>
   )
