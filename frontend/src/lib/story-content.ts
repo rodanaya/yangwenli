@@ -499,10 +499,24 @@ export const STORIES: StoryDef[] = [
           'La ley mexicana de contratación pública permite que personas físicas tengan contratos federales, y hay circunstancias legítimas en las que un contratista individual nominado es apropiado: consultoría especializada, comisiones artísticas, servicios locales de pequeña escala. Ninguna de esas circunstancias explica contratos de 370 MDP. Combinadas con las otras señales P2 — sin actividad previa, sin actividad posterior, concentración en una sola institución durante un solo año — estos contratistas individuales constituyen los líderes P2 más claros de toda la cola.',
         ],
         chartConfig: {
-          type: 'editorial-treemap',
-          title: 'P2 Ghost-Pattern Vendors — Spend by Sector',
-          title_es: 'Proveedores con patrón fantasma P2 — Gasto por sector',
-          chartId: 'editorial-treemap',
+          type: 'inline-bar',
+          title: 'Named P2-pattern vendors — top by contract value',
+          title_es: 'Proveedores P2 nombrados — principales por valor de contrato',
+          chartId: 'p2-named-vendors',
+          data: {
+            points: [
+              { label: 'RAPISCAN SYSTEMS INC',      value: 2500, annotation: 'US-INC · 2 contracts',     annotation_es: 'US-INC · 2 contratos',          highlight: true },
+              { label: 'APIS FOOD BV',              value: 732,  annotation: 'NL-BV · 3 contracts',      annotation_es: 'NL-BV · 3 contratos' },
+              { label: 'EMILIO CARRANZA OBERSOHN',  value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+              { label: 'ARTURO PUEBLITA FERNANDEZ', value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+              { label: 'VALERIA FERNANDEZ DIAZ',    value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+            ],
+            unit: 'M MXN',
+            yLabel: 'Total contract value',
+            yLabel_es: 'Valor total de contratos',
+            annotation: 'Five named P2-pattern vendors. Top two are foreign-domiciled incorporated entities; the bottom three are physical persons — not companies — each holding ≈370M-peso federal contracts and then disappearing from the procurement record entirely.',
+            annotation_es: 'Cinco proveedores P2 nombrados. Los dos primeros son entidades incorporadas con domicilio extranjero; los tres últimos son personas físicas — no empresas — cada una con contratos federales por ≈370 MDP, y luego desaparecen completamente del registro de contratación.',
+          },
         },
         pullquote: {
           quote: 'An individual person — not a company — winning federal contracts worth 370 million pesos, and then disappearing from the record entirely.',
