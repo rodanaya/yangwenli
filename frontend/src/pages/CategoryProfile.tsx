@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
-import { cn, formatNumber, formatCompactMXN, shortenContractName } from '@/lib/utils'
+import { cn, formatNumber, formatCompactMXN, formatDualCurrency, shortenContractName } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
 import {
@@ -547,7 +547,7 @@ export default function CategoryProfile() {
                 color: sectorColor,
               }}
             >
-              {formatCompactMXN(category.total_value)}
+              {formatDualCurrency(category.total_value)}
             </p>
             <p className="text-[11px] font-mono text-text-muted mt-1.5">
               {formatNumber(category.total_contracts)} {t('profile.kpi.contracts').toLowerCase()}

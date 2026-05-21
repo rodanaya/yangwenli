@@ -11,7 +11,7 @@ import { networkApi, ariaApi } from '@/api/client'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { DotBar } from '@/components/ui/DotBar'
 import { getRiskLevelFromScore, SECTOR_COLORS, PATTERN_COLORS } from '@/lib/constants'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Hardcoded editorial data per pattern
@@ -306,7 +306,7 @@ export default function PatternDossier() {
                 {spotlight.total_value_mxn != null && spotlight.total_value_mxn > 0 && (
                   <div className="rounded-sm border border-border/60 bg-background-card px-2 py-1.5 col-span-2 sm:col-span-1">
                     <div className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted/60">{isEs ? 'Gasto total' : 'Total spend'}</div>
-                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: 'var(--color-risk-critical)' }}>{formatCompactMXN(spotlight.total_value_mxn)}</div>
+                    <div className="text-sm font-mono font-bold tabular-nums mt-0.5" style={{ color: 'var(--color-risk-critical)' }}>{formatDualCurrency(spotlight.total_value_mxn)}</div>
                   </div>
                 )}
               </div>
