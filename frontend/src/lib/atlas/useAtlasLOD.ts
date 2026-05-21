@@ -35,9 +35,12 @@ export interface AtlasLOD {
 export function useAtlasLOD(effectiveScale: number): AtlasLOD {
   return useMemo(() => {
     if (effectiveScale < 4) {
+      // Frontier B hotfix (2026-05-21): show top ~15% of vendor labels even
+      // at galaxy zoom so users can read who's there without zooming first.
+      // Was labelDensity: 0 — that's why the user couldn't see any names.
       return {
         band: 'constellation',
-        labelDensity: 0,
+        labelDensity: 0.15,
         showRiskChip: false,
         showContractCount: false,
         dotScaleMultiplier: 1.0,
