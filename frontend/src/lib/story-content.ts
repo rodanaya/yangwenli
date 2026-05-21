@@ -135,6 +135,12 @@ export interface StoryInlineChartData {
   /** ClevelandPairChart-only: switch from dual-dot+line to excess-only bars
    *  starting at value2 (baseline) and extending to the gap. */
   mode?: 'pair' | 'excess'
+  /** ClevelandPairChart-only (default mode): how to format the right-column
+   *  readout. 'signed' (default) shows the raw value-minus-value2 gap with
+   *  a + prefix for positives. 'ratio' shows (value / value2) as a
+   *  percentage — used when value is a subset of value2 (e.g. single-bid
+   *  wins out of total wins) and the gap is always negative + meaningless. */
+  gapFormat?: 'signed' | 'ratio'
 }
 
 /**
@@ -1399,24 +1405,25 @@ export const STORIES: StoryDef[] = [
           chartId: 'sb-top-vendors',
           data: {
             points: [
-              { label: 'Edenred México',          value: 1679, value2: 536, color: '#dc2626', highlight: true, annotation: '23.8B · vouchers',          annotation_es: '23.8B · vales' },
-              { label: 'INFRA',                   value: 1423, value2: 454, color: '#a06820',                  annotation: '20.1B · gas (FP)',         annotation_es: '20.1B · gas (FP)' },
-              { label: 'TOKA Internacional',      value: 1290, value2: 412, color: '#dc2626', highlight: true, annotation: '37.0B · vouchers',          annotation_es: '37.0B · vales' },
-              { label: 'Efectivale (RL)',         value: 1155, value2: 368, color: '#dc2626', highlight: true, annotation: '6.1B · vouchers',           annotation_es: '6.1B · vales' },
-              { label: 'Efectivale (S.A.)',       value: 1055, value2: 337, color: '#dc2626', highlight: true, annotation: '13.5B · vouchers',          annotation_es: '13.5B · vales' },
-              { label: 'Seg. Alim. Mex (Segalmex)',value: 1014, value2: 324, color: '#dc2626', highlight: true, annotation: '5.3B · risk 0.94',          annotation_es: '5.3B · riesgo 0.94' },
-              { label: 'Liconsa',                 value: 998,  value2: 318, color: '#a06820',                  annotation: '0.7B · gov-owned',           annotation_es: '0.7B · paraestatal' },
-              { label: 'Sodexo',                  value: 658,  value2: 210, color: '#dc2626', highlight: true, annotation: '5.2B · vouchers',           annotation_es: '5.2B · vales' },
-              { label: 'PRAXAIR México',          value: 585,  value2: 187, color: '#a06820',                  annotation: '9.5B · gas',                 annotation_es: '9.5B · gas' },
-              { label: 'Servicio Postal',         value: 551,  value2: 176, color: '#a06820',                  annotation: '1.4B · gov-owned',           annotation_es: '1.4B · paraestatal' },
-              { label: 'Productos Hospitalarios', value: 511,  value2: 163, color: '#a06820',                  annotation: '8.0B · medical supply',      annotation_es: '8.0B · insumos médicos' },
-              { label: 'Estafeta Mexicana',       value: 475,  value2: 152, color: '#a06820',                  annotation: '0.8B · logistics',           annotation_es: '0.8B · logística' },
+              { label: 'Edenred México',          value: 1679, value2: 2898, color: '#dc2626', highlight: true, annotation: '58% single-bid · vouchers',          annotation_es: '58% oferta única · vales' },
+              { label: 'INFRA',                   value: 1423, value2: 4283, color: '#a06820',                  annotation: '33% single-bid · gas (FP)',          annotation_es: '33% oferta única · gas (FP)' },
+              { label: 'TOKA Internacional',      value: 1290, value2: 1944, color: '#dc2626', highlight: true, annotation: '66% single-bid · vouchers',          annotation_es: '66% oferta única · vales' },
+              { label: 'Efectivale (RL)',         value: 1155, value2: 2539, color: '#dc2626', highlight: true, annotation: '45% single-bid · vouchers',          annotation_es: '45% oferta única · vales' },
+              { label: 'Efectivale (S.A.)',       value: 1055, value2: 1150, color: '#dc2626', highlight: true, annotation: '92% single-bid · vouchers',          annotation_es: '92% oferta única · vales' },
+              { label: 'Seg. Alim. Mex (Segalmex)',value: 1014, value2: 1541, color: '#dc2626', highlight: true, annotation: '66% single-bid · risk 0.94',         annotation_es: '66% oferta única · riesgo 0.94' },
+              { label: 'Liconsa',                 value: 998,  value2: 5858, color: '#a06820',                  annotation: '17% single-bid · gov-owned',          annotation_es: '17% oferta única · paraestatal' },
+              { label: 'Sodexo',                  value: 658,  value2: 1203, color: '#dc2626', highlight: true, annotation: '55% single-bid · vouchers',          annotation_es: '55% oferta única · vales' },
+              { label: 'PRAXAIR México',          value: 585,  value2: 2794, color: '#a06820',                  annotation: '21% single-bid · gas',                annotation_es: '21% oferta única · gas' },
+              { label: 'Servicio Postal',         value: 551,  value2: 878,  color: '#a06820',                  annotation: '63% single-bid · gov-owned',          annotation_es: '63% oferta única · paraestatal' },
+              { label: 'Productos Hospitalarios', value: 511,  value2: 1596, color: '#a06820',                  annotation: '32% single-bid · medical supply',     annotation_es: '32% oferta única · insumos médicos' },
+              { label: 'Estafeta Mexicana',       value: 475,  value2: 1342, color: '#a06820',                  annotation: '35% single-bid · logistics',          annotation_es: '35% oferta única · logística' },
             ],
-            yLabel: 'Single-bid wins',
-            yLabel_es: 'Victorias de oferta única',
+            yLabel: 'Contract wins',
+            yLabel_es: 'Victorias de contrato',
             unit: 'wins',
-            annotation: 'Filled dot = actual single-bid wins. Open dot = OECD-compliant estimate (15% threshold × inferred total procedures at national 47% rate). Gap = excess above OECD standard.',
-            annotation_es: 'Punto relleno = victorias reales de oferta única. Punto abierto = estimado conforme OCDE (umbral 15% × procedimientos totales inferidos a tasa nacional 47%). Brecha = exceso sobre estándar OCDE.',
+            gapFormat: 'ratio',
+            annotation: 'Filled dot = single-bid wins (vendor was the only bidder). Open dot = total contract wins of any kind. The ratio shows what fraction of every contract this vendor secured came as the only "competitive" bidder — Efectivale S.A. is structurally captive at 92%; Liconsa and PRAXAIR run diversified books at 17–21%.',
+            annotation_es: 'Punto relleno = victorias de oferta única (único oferente). Punto abierto = victorias totales de contrato de cualquier tipo. La razón muestra qué fracción de los contratos que ganó este proveedor llegó como único oferente "competitivo" — Efectivale S.A. es estructuralmente cautivo al 92%; Liconsa y PRAXAIR operan carteras diversificadas al 17–21%.',
           },
         },
         pullquote: {

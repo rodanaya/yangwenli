@@ -31,7 +31,14 @@ export function AtlasVendorDrawer({
   lang,
 }: AtlasVendorDrawerProps) {
   const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
+  // 2026-05-21 — Default OPEN on desktop, COLLAPSED on narrow screens.
+  // User feedback: "too many clicks to see the vendors". Cluster zoom now
+  // surfaces the vendor list immediately on desktop, while mobile still
+  // gets a handle so the small canvas isn't dominated.
+  const isDesktop = typeof window !== 'undefined'
+    && window.matchMedia
+    && window.matchMedia('(min-width: 1024px)').matches
+  const [open, setOpen] = useState(isDesktop)
 
   // Esc collapses the drawer (when expanded). Does NOT escape zoom.
   useEffect(() => {
@@ -46,9 +53,13 @@ export function AtlasVendorDrawer({
     return () => document.removeEventListener('keydown', onKey, true)
   }, [open])
 
-  // Reset open state whenever the cluster changes.
+  // Reset open state whenever the cluster changes — match the initial-mount
+  // default so cluster switches consistently re-expand on desktop.
   useEffect(() => {
-    setOpen(false)
+    const desktopNow = typeof window !== 'undefined'
+      && window.matchMedia
+      && window.matchMedia('(min-width: 1024px)').matches
+    setOpen(desktopNow)
   }, [clusterCode])
 
   if (vendors.length === 0) return null

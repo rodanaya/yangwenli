@@ -35,6 +35,15 @@ interface ClusterFloatingCardProps {
   topVendors?: NamedVendorDot[]
   onClose: () => void
   lang: 'en' | 'es'
+  /**
+   * Active lens — drives which dossier the Investigate button opens.
+   * Patterns → /patterns/:code (rich PatternDossier with editorial lede,
+   * detection-signal explanation, T1 vendor table, sector heat).
+   * Other lenses currently fall back to the ARIA risk queue with a
+   * pre-filter on this cluster code; will graduate to lens-specific
+   * dossiers as those routes mature.
+   */
+  lens?: 'patterns' | 'sectors' | 'categories' | 'sexenios'
 }
 
 const COPY = {
@@ -66,12 +75,23 @@ export function ClusterFloatingCard({
   topVendors,
   onClose,
   lang,
+  lens,
 }: ClusterFloatingCardProps) {
   const navigate = useNavigate()
   const t = COPY[lang]
 
+  // 2026-05-21 — Investigate now opens a rich dossier (editorial lede +
+  // detection signal + T1 vendor table + sector heat), not the raw ARIA
+  // risk queue. Pattern lens has a dedicated /patterns/:code page;
+  // other lenses currently fall back to the ARIA queue pre-filtered on
+  // the cluster code until their own dossier routes mature.
   const handleInvestigate = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (lens === 'patterns' || (!lens && /^P\d$/.test(meta.code))) {
+      navigate(`/patterns/${encodeURIComponent(meta.code)}`)
+      return
+    }
+    // Sector/category/sexenio — graduated dossier routes pending.
     navigate(`/aria?pattern=${encodeURIComponent(meta.code)}`)
   }
 

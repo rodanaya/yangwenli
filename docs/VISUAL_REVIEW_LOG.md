@@ -806,3 +806,44 @@ HTTP and API checks blocked by egress gateway (`x-deny-reason: host_not_allowed`
 
 ### Overall: WARN
 HTTP and API checks blocked by egress gateway (`x-deny-reason: host_not_allowed`) — environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced. Run from VPS (37.60.232.109) or an unrestricted host for live HTTP/API verification.
+
+---
+## Visual Review — 2026-05-21T18:06:22Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s carry `Host not in allowlist` from the egress gateway — cloud runner IP is not in rubli.xyz allowlist. TLS handshake succeeds; block is at the proxy layer. Not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks:** 14 grep hits — all confirmed false positives (no new regressions vs. prior run):
+- `Executive.tsx:73,93,113`: proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — data, not UI strings
+- `InstitutionScorecards.tsx:441`: JS object key lookup (`TIER_STYLES[tierName as TierKey]`) — not rendered raw
+- `RedThread.tsx:339,340`: JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`) — not rendered raw
+- `CaseLibrary.tsx:219`: inside a code comment (not rendered in UI)
+- `Methodology.tsx:119`: academic citation (`Mahalanobis, P.C.`) — intentional proper noun
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded chart fixture data (`Maypo S.A.`)
+- `ExploreCanvas.tsx:1380,1381,1395,1461`: corporate-form abbreviation allowlist (S.A., C.V.) — code, not UI strings
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced. Run from an unrestricted host (e.g. VPS or local machine) for live HTTP/API verification.
