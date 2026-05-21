@@ -1,21 +1,32 @@
 /**
- * TopCategoriesChart — 2-row proportional treemap (NOT a bar chart).
+ * TopCategoriesChart — ranked editorial list (was: 2-row treemap).
  *
- * Row 1 = the 3 biggest spend categories, taller cells with serif spend value.
- * Row 2 = the next 5 categories at compact height. Cell width within each row
- * is proportional to spend; cell color = sector palette tinted by risk score.
+ * Eight rows, top 8 spending categories. Each row carries:
+ *   - Rank index (01–08) in mono micro-caps
+ *   - Category name in Playfair serif (full text, never truncated)
+ *   - Proportional DotBar (canonical primitive)
+ *   - Amount in Playfair Italic 800, tabular-nums
+ *   - Sector accent chip (SECTOR_COLORS, no inline hex)
+ *   - Risk pip (RISK_COLORS via getRiskLevelFromScore)
  *
  * Falls back to a curated dataset when the live category_stats table is empty.
- *
- * Extracted from Executive.tsx — do not inline again.
+ * Row click → /categories/:id (preserved from the old treemap behavior).
  */
 
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { categoriesApi } from '@/api/client'
-import { formatCompactMXN } from '@/lib/utils'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { formatCompactMXN, formatCompactUSD } from '@/lib/utils'
+import {
+  SECTOR_COLORS,
+  SECTOR_NAMES_EN,
+  SECTOR_NAMES_ES,
+  RISK_COLORS,
+  getRiskLevelFromScore,
+} from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -47,10 +58,6 @@ interface CategoryCell {
 // Fallback data
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Editorial captions keyed by name_es prefix — applied to live data cells
-// so the Pudding "annotation-as-chart" principle holds even with live data.
-// Keys match the first word or two of the live category name to be robust
-// against minor name changes between DB versions.
 const LIVE_CAPTIONS: Record<string, { en: string; es: string }> = {
   'Medicamentos':              { en: 'IMSS-ISSSTE cluster · 1 in 4 pesos',   es: 'Clúster IMSS-ISSSTE · 1 de cada 4 pesos' },
   'Combustibles':              { en: 'Pemex-CFE supply chain',                es: 'Cadena suministro Pemex-CFE' },
@@ -65,9 +72,6 @@ const LIVE_CAPTIONS: Record<string, { en: string; es: string }> = {
   'Construcción':              { en: 'Military-civil overlap',                es: 'Solapamiento militar-civil' },
 }
 
-// Curated fallback — illustrative figures that round to the v0.8.5 distribution.
-// Used only when category_stats is unavailable (the table doesn't exist on
-// every environment yet — precompute job ships separately).
 const FALLBACK_CATEGORIES: CategoryCell[] = [
   { id: 'medicamentos',  name_es: 'Medicamentos',           name_en: 'Pharmaceuticals',     sector_code: 'salud',           total_value: 1_100_000_000_000, avg_risk: 0.55, caption_es: 'Clúster IMSS-ISSSTE · 1 de cada 4 pesos', caption_en: 'IMSS-ISSSTE cluster · 1 in 4 pesos' },
   { id: 'combustibles',  name_es: 'Combustibles y energía', name_en: 'Fuel & Energy',       sector_code: 'energia',         total_value:   980_000_000_000, avg_risk: 0.42, caption_es: 'Cadena suministro Pemex-CFE',               caption_en: 'Pemex-CFE supply chain' },
@@ -88,6 +92,7 @@ interface TopCategoriesChartProps {
 }
 
 export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
+  const navigate = useNavigate()
   const { data: liveData } = useQuery({
     queryKey: ['executive', 'categories-treemap'],
     queryFn: () => categoriesApi.getSummary() as Promise<{ data: CategorySummaryItem[] }>,
@@ -95,7 +100,6 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     retry: 0,
   })
 
-  // Use live data when available; otherwise the curated fallback.
   const { items, usingFallback } = useMemo(() => {
     const live = liveData?.data ?? []
     if (live.length > 0) {
@@ -103,8 +107,6 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
         .sort((a, b) => b.total_value - a.total_value)
         .slice(0, 8)
         .map<CategoryCell>((c) => {
-          // Match against LIVE_CAPTIONS by longest prefix match so minor
-          // name variations in future DB versions still find a caption.
           const captionKey = Object.keys(LIVE_CAPTIONS).find((k) => c.name_es.startsWith(k))
           const cap = captionKey ? LIVE_CAPTIONS[captionKey] : undefined
           return {
@@ -123,99 +125,8 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
     return { items: FALLBACK_CATEGORIES, usingFallback: true }
   }, [liveData])
 
-  // Split into two rows — top 3 dominate row 1, next 5 fill row 2.
-  const row1 = items.slice(0, 3)
-  const row2 = items.slice(3, 8)
-  const row1Total = row1.reduce((s, c) => s + c.total_value, 0) || 1
-  const row2Total = row2.reduce((s, c) => s + c.total_value, 0) || 1
   const grandTotal = items.reduce((s, c) => s + c.total_value, 0)
-
-  // Risk → background-tint opacity. Low risk barely shows the sector color;
-  // high risk saturates to the sector palette.
-  const riskTintAlpha = (risk: number) => Math.max(0.08, Math.min(0.42, 0.08 + risk * 0.55))
-
-  // Risk → small badge color in the corner of each cell.
-  const riskBadgeColor = (risk: number) => {
-    if (risk >= 0.60) return '#dc2626'
-    if (risk >= 0.40) return '#f59e0b'
-    if (risk >= 0.25) return '#a06820'
-    return 'var(--color-text-muted)'
-  }
-
-  const renderCell = (cat: CategoryCell, rowTotal: number, idx: number, primary: boolean, baseDelay: number) => {
-    const sectorColor = SECTOR_COLORS[cat.sector_code] ?? '#64748b'
-    const widthPct = (cat.total_value / rowTotal) * 100
-    const tintAlpha = riskTintAlpha(cat.avg_risk)
-    const riskColor = riskBadgeColor(cat.avg_risk)
-    const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
-
-    return (
-      <motion.div
-        key={cat.id}
-        className="relative rounded-sm overflow-hidden"
-        style={{
-          flexBasis: `${widthPct}%`,
-          flexGrow: 0,
-          flexShrink: 1,
-          minWidth: 56,
-          background: 'var(--color-border)',
-        }}
-        initial={{ opacity: 0, y: 6 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-30px' }}
-        transition={{ duration: 0.5, delay: (baseDelay + idx * 70) / 1000, ease: 'easeOut' }}
-      >
-        {/* Sector wash — intensity ∝ risk */}
-        <div
-          className="absolute inset-0"
-          style={{ background: sectorColor, opacity: tintAlpha }}
-        />
-        {/* Top accent bar = sector identity */}
-        <div
-          className="absolute top-0 left-0 right-0"
-          style={{ height: 3, background: sectorColor, opacity: 0.85 }}
-        />
-        {/* Risk indicator dot — top right */}
-        <div
-          className="absolute top-1.5 right-1.5 rounded-full"
-          style={{ width: 5, height: 5, background: riskColor, boxShadow: `0 0 6px ${riskColor}` }}
-        />
-        {/* Content */}
-        <div className={`relative h-full flex flex-col justify-between ${primary ? 'p-3' : 'p-2'}`}>
-          <div
-            className={`font-mono uppercase ${primary ? 'text-[9.5px]' : 'text-[8.5px]'} leading-[1.25] tracking-[0.05em]`}
-            style={{ color: 'var(--color-text-primary)', opacity: 0.92 }}
-          >
-            {name}
-          </div>
-          <div>
-            <div
-              className={`font-mono font-bold tabular-nums leading-none ${primary ? 'text-[20px]' : 'text-[13px]'}`}
-              style={{
-                color: 'var(--color-text-primary)',
-                fontFamily: primary ? "'Playfair Display', Georgia, serif" : undefined,
-                fontWeight: primary ? 800 : 700,
-              }}
-            >
-              {formatCompactMXN(cat.total_value)}
-            </div>
-            {(cat.caption_es || cat.caption_en) && (
-              <div
-                className={`leading-[1.3] mt-0.5 italic ${primary ? 'text-[8px]' : 'text-[7px]'}`}
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  color: 'var(--color-text-muted)',
-                  opacity: primary ? 0.75 : 0.65,
-                }}
-              >
-                {lang === 'en' ? (cat.caption_en ?? cat.caption_es) : (cat.caption_es ?? cat.caption_en)}
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
+  const maxValue = items[0]?.total_value ?? 1
 
   if (items.length === 0) {
     return (
@@ -234,41 +145,179 @@ export function TopCategoriesChart({ lang }: TopCategoriesChartProps) {
 
   return (
     <div>
-      {/* Row 1 — top 3 categories, taller cells */}
-      <div className="flex gap-1 mb-1" style={{ height: 96 }}>
-        {row1.map((cat, idx) => renderCell(cat, row1Total, idx, true, 100))}
-      </div>
-      {/* Row 2 — categories 4-8, compact cells */}
-      <div className="flex gap-1" style={{ height: 60 }}>
-        {row2.map((cat, idx) => renderCell(cat, row2Total, idx, false, 450))}
+      {/* Editorial column header — printed rank-order page, not a chart legend. */}
+      <div
+        className="grid items-end gap-x-4 pb-2 text-[9px] font-mono uppercase tracking-[0.16em] text-text-muted"
+        style={{ gridTemplateColumns: '28px minmax(0,1fr) 176px 110px 18px', borderBottom: '1px solid rgba(160, 104, 32, 0.22)' }}
+      >
+        <span>{lang === 'en' ? 'Rk' : 'No'}</span>
+        <span>{lang === 'en' ? 'Category · sector' : 'Categoría · sector'}</span>
+        <span className="hidden sm:block">{lang === 'en' ? 'Share of total' : 'Cuota del total'}</span>
+        <span className="text-right">{lang === 'en' ? 'Spend MXN · USD' : 'Gasto (MXN)'}</span>
+        <span className="text-right" aria-hidden="true">·</span>
       </div>
 
-      {/* Caption + risk legend */}
-      <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
-        <span className="text-[9px] font-mono text-text-muted">
+      {/* Ranked rows */}
+      <ol className="divide-y divide-[color:rgba(160,104,32,0.12)]">
+        {items.map((cat, idx) => {
+          const sectorColor = SECTOR_COLORS[cat.sector_code] ?? SECTOR_COLORS.otros
+          const sectorName = lang === 'en'
+            ? (SECTOR_NAMES_EN[cat.sector_code] ?? cat.sector_code)
+            : (SECTOR_NAMES_ES[cat.sector_code] ?? cat.sector_code)
+          const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+          const riskColor = RISK_COLORS[riskLevel]
+          const riskLabel =
+            riskLevel === 'critical' ? (lang === 'en' ? 'critical' : 'crítico') :
+            riskLevel === 'high'     ? (lang === 'en' ? 'high'     : 'alto') :
+            riskLevel === 'medium'   ? (lang === 'en' ? 'medium'   : 'medio') :
+                                       (lang === 'en' ? 'low'      : 'bajo')
+          const name = lang === 'en' ? (cat.name_en || cat.name_es) : cat.name_es
+          const caption = lang === 'en' ? (cat.caption_en ?? cat.caption_es) : (cat.caption_es ?? cat.caption_en)
+          const sharePct = (cat.total_value / grandTotal) * 100
+
+          return (
+            <motion.li
+              key={cat.id}
+              initial={{ opacity: 0, x: -4 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-20px' }}
+              transition={{ duration: 0.42, delay: idx * 0.045, ease: 'easeOut' }}
+              className="group cursor-pointer relative grid items-center gap-x-4 py-3 transition-colors hover:bg-[color:rgba(160,104,32,0.045)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              style={{ gridTemplateColumns: '28px minmax(0,1fr) 176px 110px 18px' }}
+              onClick={() => navigate(`/categories/${cat.id}`)}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/categories/${cat.id}`) }}
+              tabIndex={0}
+              role="link"
+              aria-label={`${name} — ${formatCompactMXN(cat.total_value)} — ${riskLabel}`}
+            >
+              {/* Rank */}
+              <span
+                className="font-mono tabular-nums text-[11px] text-text-muted tracking-[0.05em] self-center"
+              >
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+
+              {/* Category name + sector */}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className="shrink-0 h-3 w-[3px] rounded-[1px]"
+                    style={{ background: sectorColor }}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="leading-[1.15] truncate-balance"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontWeight: 600,
+                      fontSize: 17,
+                      color: 'var(--color-text-primary)',
+                    }}
+                    title={name}
+                  >
+                    {name}
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center gap-2 text-[9.5px] font-mono uppercase tracking-[0.12em] text-text-muted">
+                  <span style={{ color: sectorColor, opacity: 0.95, fontWeight: 600 }}>
+                    {sectorName}
+                  </span>
+                  {caption && (
+                    <>
+                      <span aria-hidden="true" className="opacity-50">·</span>
+                      <span className="italic normal-case tracking-normal text-[10px] text-text-muted/85 truncate">
+                        {caption}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Proportional DotBar — canonical primitive */}
+              <div className="flex items-center gap-2 justify-self-start">
+                <DotBar
+                  value={cat.total_value}
+                  max={maxValue}
+                  color={sectorColor}
+                  emptyColor="var(--color-border)"
+                  dots={28}
+                  dotR={2}
+                  dotGap={5}
+                  ariaLabel={`${sharePct.toFixed(1)}% ${lang === 'en' ? 'of top 8' : 'del top 8'}`}
+                />
+                <span className="font-mono tabular-nums text-[10px] text-text-muted w-[30px] text-right">
+                  {sharePct.toFixed(0)}%
+                </span>
+              </div>
+
+              {/* Amount — MXN anchor, optional USD scale companion (EN only). */}
+              <div className="text-right tabular-nums flex flex-col items-end gap-0.5">
+                <span
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 19,
+                    color: 'var(--color-text-primary)',
+                    lineHeight: 1,
+                  }}
+                >
+                  {formatCompactMXN(cat.total_value)}
+                </span>
+                {lang === 'en' && (
+                  <span
+                    className="font-mono text-[9.5px] tracking-[0.02em]"
+                    style={{ color: 'var(--color-text-muted)', opacity: 0.8 }}
+                  >
+                    ≈{formatCompactUSD(cat.total_value)}
+                  </span>
+                )}
+              </div>
+
+              {/* Risk pip */}
+              <span
+                className="justify-self-end rounded-full"
+                style={{
+                  width: 8,
+                  height: 8,
+                  background: riskColor,
+                  boxShadow: `0 0 0 2px var(--color-background)`,
+                }}
+                title={`${lang === 'en' ? 'avg risk' : 'riesgo promedio'} · ${cat.avg_risk.toFixed(2)} · ${riskLabel}`}
+                aria-hidden="true"
+              />
+            </motion.li>
+          )
+        })}
+      </ol>
+
+      {/* Editorial footer — single band: totals, encoding, risk legend. */}
+      <div
+        className="mt-4 pt-2 flex items-start justify-between flex-wrap gap-x-4 gap-y-1.5 text-[9px] font-mono text-text-muted leading-[1.4]"
+        style={{ borderTop: '1px solid rgba(160, 104, 32, 0.22)' }}
+      >
+        <span>
           {lang === 'en'
-            ? 'Cell area ∝ total spend · color = sector · intensity = avg risk'
-            : 'Área celda ∝ gasto total · color = sector · intensidad = riesgo promedio'}
+            ? <>top 8 <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{formatCompactMXN(grandTotal)}</span> of MX$9.9T total{usingFallback ? ' · illustrative figures (precompute pending)' : ''}</>
+            : <>top 8 <span style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>{formatCompactMXN(grandTotal)}</span> del total MX$9.9 billones{usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}</>}
         </span>
-        <div className="flex items-center gap-3 text-[9px] font-mono text-text-muted">
-          <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#dc2626' }} aria-hidden="true" />
-            {lang === 'en' ? 'critical risk' : 'riesgo crítico'}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="opacity-80">
+            {lang === 'en' ? 'bar = share of top 8 · pip = avg risk' : 'barra = cuota del top 8 · pip = riesgo promedio'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#f59e0b' }} aria-hidden="true" />
+            <span className="rounded-full" style={{ width: 6, height: 6, background: RISK_COLORS.critical }} aria-hidden="true" />
+            {lang === 'en' ? 'critical' : 'crítico'}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="rounded-full" style={{ width: 6, height: 6, background: RISK_COLORS.high }} aria-hidden="true" />
             {lang === 'en' ? 'high' : 'alto'}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="rounded-full" style={{ width: 5, height: 5, background: '#a06820' }} aria-hidden="true" />
+            <span className="rounded-full" style={{ width: 6, height: 6, background: RISK_COLORS.medium }} aria-hidden="true" />
             {lang === 'en' ? 'medium' : 'medio'}
           </span>
         </div>
-      </div>
-      <div className="mt-1 text-[9px] font-mono text-text-muted">
-        {lang === 'en'
-          ? `top 8 = ${formatCompactMXN(grandTotal)} of MX$9.9T total${usingFallback ? ' · illustrative figures (precompute pending)' : ''}`
-          : `top 8 = ${formatCompactMXN(grandTotal)} del total MX$9.9 billones${usingFallback ? ' · cifras ilustrativas (precómputo pendiente)' : ''}`}
       </div>
     </div>
   )

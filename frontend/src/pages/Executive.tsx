@@ -24,8 +24,8 @@ import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
 import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTOR_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK } from '@/lib/constants'
+import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
+import { SECTOR_COLORS, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
@@ -35,7 +35,10 @@ import {
 } from '@/components/charts/ConcentrationConstellation'
 // DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
-import { LensVisualization, buildLensTiers } from '@/components/executive/LensVisualization'
+// LensVisualization/buildLensTiers retired 2026-05-20 — replaced by Cascade
+// Ledger (log-scale rungs + GT anchor band) inline in this file. The legacy
+// concentric-funnel component is still on disk for reference but no longer
+// imported.
 import { CaseTimeline } from '@/components/executive/CaseTimeline'
 import { LeadTimeChart } from '@/components/executive/LeadTimeChart'
 import { TopCategoriesChart } from '@/components/executive/TopCategoriesChart'
@@ -52,7 +55,12 @@ interface ExampleDossier {
   tier: 1 | 2 | 3 | 4
   flags: DossierFlag[]
   contracts: string
+  /** Display string per locale. Display only — USD is computed from mxnAmount. */
   value: { en: string; es: string }
+  /** Numeric MXN total used to compute the USD scale companion in the card
+   *  footer. Liconsa uses the documented MX$15B food-scandal anchor; Pharma
+   *  and Hemoser use their precise contract totals. */
+  mxnAmount: number
   kicker: { en: string; es: string }
   lede: { en: string; es: string }
   detected: { en: string; es: string }
@@ -65,6 +73,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     name: 'GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.',
     risk: 0.99, tier: 1, flags: ['gt'],
     contracts: '6,303', value: { en: '$133.2B MXN', es: '133,200 MDP' },
+    mxnAmount: 133_200_000_000,
     kicker: { en: 'PHARMA OLIGOPOLY · IMSS CAPTURE', es: 'OLIGOPOLIO FARMACÉUTICO · CAPTURA IMSS' },
     lede: {
       en: '$133.2B MXN in IMSS medicines over 14 years — 60% of the entire pharma category. A single distributor holding a majority of Mexico\'s public drug supply, 79% awarded without competitive bidding.',
@@ -83,7 +92,8 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     vendorId: 31655,
     name: 'LICONSA S.A. DE C.V.',
     risk: 0.92, tier: 1, flags: ['gt'],
-    contracts: '~3,000', value: { en: 'multi-billion MXN', es: 'multimillonario en MXN' },
+    contracts: '~3,000', value: { en: '~$15B MXN', es: '~15,000 MDP' },
+    mxnAmount: 15_000_000_000,
     kicker: { en: 'SEGALMEX FOOD FRAUD', es: 'FRAUDE SEGALMEX' },
     lede: {
       en: 'Government parastatal at the center of a MX$15B food-distribution scandal. Funds diverted from a program feeding Mexico\'s poorest households — corn tortillas, milk, and beans that never arrived.',
@@ -103,6 +113,7 @@ const EXAMPLE_DOSSIERS: ExampleDossier[] = [
     name: 'HEMOSER, S.A. DE C.V.',
     risk: 0.85, tier: 1, flags: ['gt'],
     contracts: '~400', value: { en: '$17.2B MXN', es: '17,200 MDP' },
+    mxnAmount: 17_200_000_000,
     kicker: { en: 'COVID MEDICAL SUPPLY · SAME-DAY IMSS', es: 'INSUMOS COVID · MISMO DÍA IMSS' },
     lede: {
       en: '$17.2B MXN in IMSS medical supplies awarded during COVID emergency — many contracts signed and fulfilled the same day, a pattern that is physically impossible under normal procurement.',
@@ -254,8 +265,12 @@ export default function Executive() {
 
   // ─── Headline numbers — each tile has a unique editorial micro-viz ──────
   // Localized: Spanish uses "billones" for 10¹² and "MDP" for millions.
+  const TOTAL_SPEND_MXN = 9_900_000_000_000
   const headlineSpend = lang === 'es' ? '9.9 billones' : '9.9T'
   const spendCurrencyLabel = 'MXN'
+  // English-only USD companion — surfaces foreign-reader scale alongside MXN.
+  // Spanish stays MXN-only (Mexican audience reads pesos natively).
+  const headlineSpendUSD = lang === 'en' ? `≈${formatCompactUSD(TOTAL_SPEND_MXN)}` : null
   // Per-tile descriptors below are inlined into the editorial cards JSX
   // so they can each have a distinctive micro-visualization and layout.
 
@@ -564,229 +579,320 @@ export default function Executive() {
             chart above already carries the 74% headline + the trend; the
             duplicated giant Playfair number was redundant. */}
 
-        {/* ─── HEADLINE NUMBERS — 4 editorial fact cards, each with a unique
-            micro-visualization. Replaces the bland mono-stat tile grid.
-            E5: PlateFrame replaces the standalone eyebrow + amber divider. ─── */}
+        {/* ─── HEADLINE NUMBERS — investigative sequence (4 chapters)
+            Reads as one argument: spend → bypass → flag → catch.
+            Each tile carries a chapter kicker (I/II/III/IV) and a tail
+            connector ("of which …") that ties to the next step. ─── */}
         <section className="mb-12">
           <PlateFrame
             lang={lang}
             folio="V"
             contextLabel={{ en: 'Headline numbers', es: 'Cifras clave' }}
             caption={lang === 'en'
-              ? 'Plate — Four anchor figures from the 2002–2025 record: total spend, direct awards, high+critical share, model accuracy.'
-              : 'Lámina — Cuatro cifras ancla del registro 2002–2025: gasto total, adjudicación directa, alto+crítico, precisión del modelo.'}
+              ? 'Plate — Four chapters of the federal-procurement record, read left-to-right: total spend, the bypass, the flag, the catch.'
+              : 'Lámina — Cuatro capítulos del registro federal, leídos de izquierda a derecha: el gasto, el desvío, la marca, la captura.'}
           >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {(() => {
+            // Chapter-marker rail: one Roman per step, sitting above the tile.
+            // Each marker carries the tile's accent color so the eye can map
+            // marker → tile at a glance. Tail captions ("of which 75% …") on
+            // the right edge of each marker hand off to the next chapter.
+            type Step = {
+              roman: string
+              accent: string
+              kicker: { en: string; es: string }
+              tail: { en: string; es: string } | null
+              story: string
+              ariaLabel: { en: string; es: string }
+            }
+            const steps: Step[] = [
+              {
+                roman: 'I',
+                accent: '#a06820',
+                kicker: { en: 'The spend', es: 'El gasto' },
+                tail:   { en: 'of which —', es: 'del cual —' },
+                story: '/stories/el-gran-precio',
+                ariaLabel: { en: 'Read: The Bigger the Contract the Higher the Risk', es: 'Leer: A Mayor Contrato, Mayor Riesgo' },
+              },
+              {
+                roman: 'II',
+                accent: '#dc2626',
+                kicker: { en: 'The bypass', es: 'El desvío' },
+                tail:   { en: 'inside that bypass —', es: 'dentro de ese desvío —' },
+                story: '/stories/marea-de-adjudicaciones',
+                ariaLabel: { en: 'Read: The Direct Award Tide', es: 'Leer: La Marea de las Adjudicaciones' },
+              },
+              {
+                roman: 'III',
+                accent: '#f59e0b',
+                kicker: { en: 'The flag', es: 'La marca' },
+                tail:   { en: 'and the catch —', es: 'y la captura —' },
+                story: '/stories/el-sexenio-del-riesgo',
+                ariaLabel: { en: 'Read: The Era of Risk', es: 'Leer: El Sexenio del Riesgo' },
+              },
+              {
+                roman: 'IV',
+                accent: 'var(--color-text-primary)',
+                kicker: { en: 'The catch', es: 'La captura' },
+                tail: null,
+                story: '/stories/volatilidad-el-precio-del-riesgo',
+                ariaLabel: { en: 'Read: Price Volatility — The Algorithm\'s Smoking Gun', es: 'Leer: Volatilidad — El Precio del Riesgo' },
+              },
+            ]
 
-            {/* Tile 1 — Total Spend with comparison to Mexico's federal budget
-                Click anchors to el-gran-precio (the big-contract risk story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#a06820' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              onClick={() => navigate('/stories/el-gran-precio')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Bigger the Contract the Higher the Risk' : 'Leer: A Mayor Contrato, Mayor Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-gran-precio') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 36,
-                  color: '#a06820',
-                }}
+            const ChapterRail = ({ step, delay }: { step: Step; delay: number }) => (
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay }}
               >
-                {headlineSpend}
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
-              </div>
-              {/* Mini-viz: stacked yearly cubes scaled by spend */}
-              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
-                {Array.from({ length: 23 }).map((_, i) => {
-                  const w = 7
-                  const gap = 1.5
-                  const x = i * (w + gap)
-                  // Variable height to suggest 23 yearly chunks
-                  const heights = [10, 11, 12, 13, 14, 15, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20, 20, 20, 19, 22, 21, 19, 14]
-                  const h = heights[i] ?? 14
-                  return <rect key={i} x={x} y={22 - h} width={w} height={h} fill="#a06820" fillOpacity={0.55} rx={1} />
-                })}
-              </svg>
-              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
-                {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
-              </div>
-            </motion.div>
+                <div className="flex items-baseline gap-2.5">
+                  <span
+                    className="leading-none tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontWeight: 800,
+                      fontSize: 22,
+                      color: step.accent,
+                    }}
+                  >
+                    {step.roman}
+                  </span>
+                  <span className="h-[2px] flex-1" style={{ background: step.accent, opacity: 0.55 }} />
+                  <span className="text-[9.5px] font-mono uppercase tracking-[0.18em]" style={{ color: step.accent, opacity: 0.95 }}>
+                    {lang === 'en' ? step.kicker.en : step.kicker.es}
+                  </span>
+                </div>
+                {step.tail && (
+                  <div className="hidden lg:block absolute -right-3 top-0 h-full pointer-events-none">
+                    <div className="flex items-center h-full">
+                      <span className="text-[9px] font-mono italic text-text-muted whitespace-nowrap pr-1">
+                        {lang === 'en' ? step.tail.en : step.tail.es}
+                      </span>
+                      <span className="text-text-muted text-[12px] leading-none">→</span>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )
 
-            {/* Tile 2 — Direct Award Rate with OECD benchmark dot strip
-                Click anchors to marea-de-adjudicaciones (canonical DA story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-critical focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#dc2626' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.11 }}
-              onClick={() => navigate('/stories/marea-de-adjudicaciones')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Direct Award Tide' : 'Leer: La Marea de las Adjudicaciones'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/marea-de-adjudicaciones') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 44,
-                  color: '#dc2626',
-                }}
-              >
-                75<span className="text-[24px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
-              </div>
-              {/* Mini-viz: 100 dots, 75 red (DA), 25 muted (competitive) — with green ceiling marker at 30 */}
-              <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
-                {Array.from({ length: 100 }).map((_, i) => {
-                  const cols = 25
-                  const col = i % cols
-                  const row = Math.floor(i / cols)
-                  const cx = 4 + col * 7.5
-                  const cy = 4 + row * 5
-                  const isDA = i < 75
-                  return (
-                    <circle key={i} cx={cx} cy={cy} r={1.6}
-                      fill={isDA ? '#dc2626' : 'var(--color-border-hover)'}
-                      fillOpacity={isDA ? 0.85 : 0.55} />
-                  )
-                })}
-                {/* OECD ceiling marker — vertical green line at the 30% mark */}
-                <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
-                  stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
-              </svg>
-              <div className="text-[9px] font-mono text-text-muted mt-1.5 leading-[1.4]">
-                {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
-              </div>
-            </motion.div>
+            // Shared tile chrome — a single panel with the accent moved to the
+            // chapter rail above, not the tile's left edge. The bottom hairline
+            // unifies the row visually.
+            const tileBase =
+              'relative cursor-pointer group p-5 pt-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2'
 
-            {/* Tile 3 — High+Critical with risk distribution bar
-                Click anchors to el-sexenio-del-riesgo (the riskiest era). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-risk-high focus-visible:outline-offset-2"
-              style={{ borderLeftColor: '#f59e0b' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.17 }}
-              onClick={() => navigate('/stories/el-sexenio-del-riesgo')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: The Era of Risk' : 'Leer: El Sexenio del Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/el-sexenio-del-riesgo') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 36,
-                  color: '#f59e0b',
-                }}
-              >
-                {formatNumber(stats.highCriticalCount)}
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
-              </div>
-              {/* Mini-viz: stacked 100% bar showing risk distribution */}
-              <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
-                <div style={{ width: '5.20%', background: '#dc2626', opacity: 0.85 }} />
-                <div style={{ width: '5.90%', background: '#f59e0b', opacity: 0.85 }} />
-                <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
-                <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
-              </div>
-              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
-                <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
-                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
-              </div>
-            </motion.div>
-
-            {/* Tile 4 — Model AUC with quality scale (vs random=0.5, perfect=1.0)
-                Click anchors to volatilidad (the model methodology story). */}
-            <motion.div
-              className="surface-card p-5 border-l-[3px] rounded-sm relative overflow-hidden cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-[color:var(--color-text-muted)] focus-visible:outline-offset-2"
-              style={{ borderLeftColor: 'var(--color-text-muted)' }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.23 }}
-              onClick={() => navigate('/stories/volatilidad-el-precio-del-riesgo')}
-              tabIndex={0}
-              role="link"
-              aria-label={lang === 'en' ? 'Read: Price Volatility — The Algorithm\'s Smoking Gun' : 'Leer: Volatilidad — El Precio del Riesgo'}
-              onKeyDown={(e) => { if (e.key === 'Enter') navigate('/stories/volatilidad-el-precio-del-riesgo') }}
-            >
-              <div
-                className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: 44,
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                {/* 2026-05-12 (Audit V009): caption read v0.8.5 but the
-                    number was the v0.6.5 test AUC. Updated to the
-                    v0.8.5 trained-2026-05-02 value (0.785). The scale
-                    width math also rebased: (0.785 − 0.5)/0.5 = 57%. */}
-                0.785
-              </div>
-              <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
-                {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
-              </div>
-              <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
-                {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
-              </div>
-              {/* Mini-viz: linear scale from 0.5 (random) to 1.0 (perfect) with marker at 0.785 */}
-              <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                {/* Filled portion from 0.5 to 0.785 — that's 57% of the scale */}
+            // Wrap each "column" so the chapter rail and tile share width.
+            const ColumnFrame = ({ children, step, onActivate, ariaLabel }: {
+              children: React.ReactNode
+              step: Step
+              onActivate: () => void
+              ariaLabel: string
+            }) => (
+              <div className="relative flex flex-col">
+                <ChapterRail step={step} delay={0.05 + steps.indexOf(step) * 0.06} />
                 <div
-                  className="absolute inset-y-0 rounded-sm"
-                  style={{
-                    left: '0%',
-                    width: '57%',
-                    background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
-                    opacity: 0.65,
-                  }}
-                />
-                {/* Tick marker at exactly 0.785 (=57%) */}
-                <div
-                  className="absolute top-0 bottom-0 w-[2px]"
-                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
-                />
-                <div
-                  className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
-                  style={{ left: '57%', background: 'var(--color-text-primary)' }}
-                />
+                  className={`${tileBase} surface-card rounded-sm mt-2 hover:shadow-lg`}
+                  onClick={onActivate}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onActivate() }}
+                  tabIndex={0}
+                  role="link"
+                  aria-label={ariaLabel}
+                  style={{ outlineColor: step.accent }}
+                >
+                  {/* drop-line fusing chapter rail to tile (lg only — on
+                      stacked layouts the rail already sits flush above) */}
+                  <span
+                    className="hidden lg:block absolute -top-2 left-0 w-[2px] h-2"
+                    style={{ background: step.accent, opacity: 0.55 }}
+                    aria-hidden="true"
+                  />
+                  {children}
+                </div>
               </div>
-              <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-1.5">
-                <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
-                <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
-                <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
-              </div>
-            </motion.div>
+            )
 
-          </div>
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+
+                {/* Chapter I — The Spend */}
+                <ColumnFrame
+                  step={steps[0]}
+                  onActivate={() => navigate(steps[0].story)}
+                  ariaLabel={lang === 'en' ? steps[0].ariaLabel.en : steps[0].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: '#a06820',
+                    }}
+                  >
+                    {headlineSpend}
+                  </div>
+                  {headlineSpendUSD && (
+                    <div className="font-mono text-[11px] tracking-[0.04em] tabular-nums mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.85 }}>
+                      {headlineSpendUSD}
+                    </div>
+                  )}
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1">
+                    {spendCurrencyLabel} {lang === 'en' ? '· over 23 years' : '· en 23 años'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'ANALYZED SPEND' : 'GASTO ANALIZADO'}
+                  </div>
+                  <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                    {Array.from({ length: 23 }).map((_, i) => {
+                      const w = 7
+                      const gap = 1.5
+                      const x = i * (w + gap)
+                      const heights = [10, 11, 12, 13, 14, 15, 16, 17, 17, 17, 18, 18, 18, 19, 20, 20, 20, 20, 19, 22, 21, 19, 14]
+                      const h = heights[i] ?? 14
+                      return <rect key={i} x={x} y={22 - h} width={w} height={h} fill="#a06820" fillOpacity={0.55} rx={1} />
+                    })}
+                  </svg>
+                  <div className="mt-2.5 pt-1.5 text-[9px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    {lang === 'en' ? '3.05M contracts · 12 sectors · post-outlier' : '3.05M contratos · 12 sectores · post-atípicos'}
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter II — The Bypass */}
+                <ColumnFrame
+                  step={steps[1]}
+                  onActivate={() => navigate(steps[1].story)}
+                  ariaLabel={lang === 'en' ? steps[1].ariaLabel.en : steps[1].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: '#dc2626',
+                    }}
+                  >
+                    75<span className="text-[26px] align-baseline" style={{ fontFamily: 'inherit' }}>%</span>
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· vs 30% OECD ceiling' : '· vs umbral OCDE 30%'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'DIRECT AWARDS' : 'ADJUDICACIÓN DIRECTA'}
+                  </div>
+                  <svg viewBox="0 0 200 22" className="w-full mt-1" style={{ height: 22 }} aria-hidden>
+                    {Array.from({ length: 100 }).map((_, i) => {
+                      const cols = 25
+                      const col = i % cols
+                      const row = Math.floor(i / cols)
+                      const cx = 4 + col * 7.5
+                      const cy = 4 + row * 5
+                      const isDA = i < 75
+                      return (
+                        <circle key={i} cx={cx} cy={cy} r={1.6}
+                          fill={isDA ? '#dc2626' : 'var(--color-border-hover)'}
+                          fillOpacity={isDA ? 0.85 : 0.55} />
+                      )
+                    })}
+                    <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
+                      stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
+                  </svg>
+                  <div className="mt-2.5 pt-1.5 text-[9px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter III — The Flag */}
+                <ColumnFrame
+                  step={steps[2]}
+                  onActivate={() => navigate(steps[2].story)}
+                  ariaLabel={lang === 'en' ? steps[2].ariaLabel.en : steps[2].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 40,
+                      color: '#f59e0b',
+                    }}
+                  >
+                    {formatNumber(stats.highCriticalCount)}
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· 11.0% of all flagged' : '· 11.0% del total marcado'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'HIGH + CRITICAL' : 'ALTO + CRÍTICO'}
+                  </div>
+                  <div className="flex h-[14px] w-full rounded-sm overflow-hidden gap-[1px]" style={{ background: 'var(--color-border)' }}>
+                    <div style={{ width: '5.20%', background: '#dc2626', opacity: 0.85 }} />
+                    <div style={{ width: '5.90%', background: '#f59e0b', opacity: 0.85 }} />
+                    <div style={{ width: '16.20%', background: '#a06820', opacity: 0.40 }} />
+                    <div style={{ width: '72.70%', background: 'var(--color-text-muted)', opacity: 0.20 }} />
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    <span style={{ color: 'var(--color-risk-critical)' }}>● {lang === 'en' ? 'crit' : 'crít'} 5%</span>
+                    <span style={{ color: 'var(--color-risk-high)' }}>● {lang === 'en' ? 'high' : 'alto'} 6%</span>
+                    <span style={{ color: 'var(--color-risk-medium)' }}>● {lang === 'en' ? 'med' : 'med'} 16%</span>
+                  </div>
+                </ColumnFrame>
+
+                {/* Chapter IV — The Catch */}
+                <ColumnFrame
+                  step={steps[3]}
+                  onActivate={() => navigate(steps[3].story)}
+                  ariaLabel={lang === 'en' ? steps[3].ariaLabel.en : steps[3].ariaLabel.es}
+                >
+                  <div
+                    className="font-extrabold leading-[0.95] tracking-[-0.02em] tabular-nums"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontSize: 48,
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    0.785
+                  </div>
+                  <div className="font-mono text-[10px] tracking-[0.1em] text-text-muted mt-1.5">
+                    {lang === 'en' ? '· random = 0.5  ·  perfect = 1.0' : '· azar = 0.5  ·  perfecto = 1.0'}
+                  </div>
+                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 mb-2">
+                    {lang === 'en' ? 'MODEL ACCURACY' : 'PRECISIÓN MODELO'}
+                  </div>
+                  <div className="relative h-[14px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                    <div
+                      className="absolute inset-y-0 rounded-sm"
+                      style={{
+                        left: '0%',
+                        width: '57%',
+                        background: 'linear-gradient(90deg, var(--color-text-muted) 0%, #a06820 100%)',
+                        opacity: 0.65,
+                      }}
+                    />
+                    <div
+                      className="absolute top-0 bottom-0 w-[2px]"
+                      style={{ left: '57%', background: 'var(--color-text-primary)' }}
+                    />
+                    <div
+                      className="absolute -bottom-0.5 -translate-x-1/2 w-2 h-2 rotate-45 rounded-[1px]"
+                      style={{ left: '57%', background: 'var(--color-text-primary)' }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[8px] font-mono text-text-muted mt-2.5 pt-1.5 leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
+                    <span>0.5 {lang === 'en' ? '· random' : '· azar'}</span>
+                    <span style={{ color: 'var(--color-accent)' }}>● {lang === 'en' ? 'v0.8.5' : 'v0.8.5'}</span>
+                    <span>1.0 {lang === 'en' ? '· perfect' : '· perfecto'}</span>
+                  </div>
+                </ColumnFrame>
+
+              </div>
+            )
+          })()}
           </PlateFrame>
         </section>
 
@@ -1419,8 +1525,8 @@ export default function Executive() {
           </div>
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
-              ? 'Each ring is a layer of focus. The platform reads every COMPRANET row, then narrows by risk, then by ARIA pattern, then by ground-truth match — until what remains is a small set of contracts that can actually be investigated by hand.'
-              : 'Cada anillo es una capa de enfoque. La plataforma lee cada registro de COMPRANET, luego filtra por riesgo, después por patrón ARIA, y finalmente por coincidencia con casos documentados — hasta que solo queda un conjunto pequeño que puede investigarse a mano.'}
+              ? 'Each rung is a filter step. The platform reads every COMPRANET row, then applies the risk model, then ARIA patterns, then a GT-anchored manual triage — each step\'s surviving population shown on a logarithmic scale. 43 documented cases anchor the model below.'
+              : 'Cada peldaño es un paso del filtro. La plataforma lee cada registro de COMPRANET, luego aplica el modelo de riesgo, después los patrones ARIA, y por último un triaje manual anclado en GT — la población superviviente de cada paso se muestra en escala logarítmica. 43 casos documentados anclan el modelo abajo.'}
           </p>
 
           <PlateFrame
@@ -1428,81 +1534,270 @@ export default function Executive() {
             folio="VIII"
             contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
             caption={lang === 'en'
-              ? 'Plate — From 3.1M COMPRANET records to 299 GT-anchored T1 vendors; five filtering layers applied before human inspection.'
-              : 'Lámina — De 3.1M registros COMPRANET a 299 proveedores T1 anclados en GT; cinco capas de filtrado que la plataforma aplica antes de la inspección humana.'}
+              ? 'Cascade — from 3.1M COMPRANET records to 299 hand-investigable T1 vendors. Each filter step\'s retention shown in log-scale; 43 GT cases anchor the model below.'
+              : 'Cascada — de 3.1M registros COMPRANET a 299 proveedores T1 investigables a mano. La retención de cada paso se muestra en escala logarítmica; 43 casos GT anclan el modelo abajo.'}
           >
             {(() => {
-              const lensTiers = buildLensTiers(
-                ariaStats?.latest_run?.tier1_count ?? 299,
-                caseStats?.total_cases ?? 1_422,
-                stats.highCriticalCount,
+              // ── Cascade Ledger — 4 log-scaled rungs + GT anchor band ──
+              const totalContracts = stats.totalContracts || 3_058_286
+              const highCriticalCount = stats.highCriticalCount || 337_693
+              const tier2 = ariaStats?.latest_run?.tier2_count ?? 1_490
+              const tier3 = ariaStats?.latest_run?.tier3_count ?? 5_578
+              const aria23 = tier2 + tier3
+              const tier1 = ariaStats?.latest_run?.tier1_count ?? 299
+              // Use the canonical fallback constant — the caseStats API
+              // sometimes returns the small "hero cases" subset (43) instead
+              // of the full GT vendor count, so we floor at the constant.
+              const gtVendors = Math.max(
+                caseStats?.total_cases ?? 0,
+                GROUND_TRUTH_VENDOR_COUNT_FALLBACK,
               )
-              // Fixed total height — both columns lock to ROWS×ROW_H so the
-              // SVG's 5 evenly-spaced stage ticks (PAD_T + (CH/4)×i) sit at
-              // the SAME Y as the 5 list rows. Each list row is a flex
-              // container with items-center, so the row's text baseline ↔
-              // the SVG tick share an exact y center.
-              const ROW_H = 56
-              const TOTAL_H = ROW_H * 5
+
+              type Rung = {
+                count: number
+                pct: number
+                drop: number | null // null on rung 0; ratio to previous on rungs 1+
+                label: { en: string; es: string }
+                operation: { en: string; es: string } | null // filter caption BELOW this rung
+                href: string
+              }
+
+              const rungs: Rung[] = [
+                {
+                  count: totalContracts,
+                  pct: 100,
+                  drop: null,
+                  label: { en: 'COMPRANET universe · 2002–2025', es: 'Universo COMPRANET · 2002–2025' },
+                  operation: {
+                    en: '↓ filter by risk model v0.8.5 (≥0.40)',
+                    es: '↓ filtrar por modelo de riesgo v0.8.5 (≥0.40)',
+                  },
+                  href: '/contracts',
+                },
+                {
+                  count: highCriticalCount,
+                  pct: (highCriticalCount / totalContracts) * 100,
+                  drop: totalContracts / highCriticalCount,
+                  label: { en: 'High + critical contracts', es: 'Contratos alto + crítico' },
+                  operation: {
+                    en: '↓ aggregate to vendor, apply ARIA patterns P1–P7',
+                    es: '↓ agregar a proveedor, aplicar patrones ARIA P1–P7',
+                  },
+                  href: '/aria',
+                },
+                {
+                  count: aria23,
+                  pct: (aria23 / totalContracts) * 100,
+                  drop: highCriticalCount / aria23,
+                  label: { en: 'ARIA queue · tiers 2 + 3', es: 'Cola ARIA · niveles 2 + 3' },
+                  operation: {
+                    en: '↓ co-cluster GT, manual triage, capacity cap',
+                    es: '↓ co-agrupar con GT, triaje manual, tope de capacidad',
+                  },
+                  href: '/aria?tier=2,3',
+                },
+                {
+                  count: tier1,
+                  pct: (tier1 / totalContracts) * 100,
+                  drop: aria23 / tier1,
+                  label: { en: 'Tier 1 · hand-investigable today', es: 'Nivel 1 · investigable a mano hoy' },
+                  operation: null,
+                  href: '/aria?tier=1',
+                },
+              ]
+
+              // Risk-intensity gradient — each rung visually escalates as the
+              // filter narrows toward the most-concentrated risk population.
+              // Rung 0 (universe) = neutral; rung 3 (T1) = critical red.
+              // GT anchor below stays ochre as its own "training corpus" identity.
+              const rungColors = [
+                RISK_COLORS.low,      // #71717a grey — universe, no judgment yet
+                RISK_COLORS.medium,   // #a16207 amber — flagging starts
+                RISK_COLORS.high,     // #f59e0b orange — escalation
+                RISK_COLORS.critical, // #ef4444 red — hand-investigable concentration
+              ]
+
+              // Log-scale bar widths. log10(maxCount) is full width; log10(count)
+              // is normalized against it. Floor at 4% so the smallest rung still
+              // reads as a bar (otherwise 299 renders as a 0.5% slice and
+              // disappears next to 3.05M).
+              const maxLog = Math.log10(totalContracts)
+              const barWidth = (n: number) => {
+                const w = (Math.log10(Math.max(1, n)) / maxLog) * 100
+                return Math.max(4, Math.min(100, w))
+              }
+
+              const fmtPct = (p: number) => {
+                if (p >= 10) return `${p.toFixed(1)}%`
+                if (p >= 1) return `${p.toFixed(2)}%`
+                if (p >= 0.01) return `${p.toFixed(3)}%`
+                return `${p.toFixed(4)}%`
+              }
+              const fmtDrop = (d: number) => {
+                if (d >= 100) return `${Math.round(d)}×`
+                if (d >= 10) return `${d.toFixed(0)}×`
+                return `${d.toFixed(1)}×`
+              }
+
               return (
-                <div className="flex flex-row items-start gap-6" style={{ height: TOTAL_H }}>
-                  {/* Lens — width fixed, height locked to TOTAL_H. SVG fills
-                      via preserveAspectRatio="none" so 5 stages map 1:1 to
-                      the 5 list rows on the right. */}
-                  <div className="flex-shrink-0" style={{ width: 220, height: TOTAL_H }}>
-                    <LensVisualization tiers={lensTiers} lang={lang} />
+                <div className="relative">
+                  {/* Axis hint — top-right, archival caption */}
+                  <div className="flex items-center justify-end mb-3">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted opacity-75">
+                      {lang === 'en'
+                        ? 'logarithmic scale · width = log₁₀(count)'
+                        : 'escala logarítmica · ancho = log₁₀(conteo)'}
+                    </span>
                   </div>
 
-                  {/* Right-side tier list — 5 equal-height rows, each centered
-                      vertically so the dot/number lines up with the SVG tick. */}
-                  <div className="flex-1 flex flex-col min-w-0">
-                    {lensTiers.map((t, i) => (
-                      <motion.a
-                        key={i}
-                        href={t.href}
-                        className="group flex items-center"
-                        style={{ height: ROW_H }}
-                        initial={{ opacity: 0, x: 8 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: 0.4 + i * 0.13 }}
-                      >
-                        <div className="flex flex-col w-full">
-                          <div className="flex items-center gap-3">
+                  {/* Four rungs */}
+                  <ol className="relative">
+                    {rungs.map((r, i) => {
+                      const w = barWidth(r.count)
+                      return (
+                        <motion.li
+                          key={i}
+                          initial={{ opacity: 0, x: -6 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true, margin: '-30px' }}
+                          transition={{ duration: 0.42, delay: 0.1 + i * 0.12, ease: 'easeOut' }}
+                          className="relative"
+                        >
+                          {/* Rung row */}
+                          <a
+                            href={r.href}
+                            className="group grid items-baseline gap-x-4 py-2 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                            style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}
+                            aria-label={`${formatNumber(r.count)} — ${r.label[lang]}`}
+                          >
+                            {/* Count — Playfair Italic 800 anchor */}
                             <span
-                              className="rounded-full flex-shrink-0"
+                              className="tabular-nums leading-none text-right pr-1"
                               style={{
-                                width: t.filled ? 12 : 9,
-                                height: t.filled ? 12 : 9,
-                                background: t.filled ? t.color : 'transparent',
-                                border: t.filled ? 'none' : `1.6px solid ${t.color}`,
-                                boxShadow: t.filled ? `0 0 8px ${t.color}` : 'none',
-                              }}
-                            />
-                            <span
-                              className="font-mono font-bold tabular-nums leading-none"
-                              style={{
-                                // Reduced font sizes 2026-05-05: previous 22/18/16
-                                // pushed the label past the column width and wrapped
-                                // 'documented corruption cases' to 2 lines, drifting
-                                // the dot up. Now 18/15/14 keeps everything on one line.
-                                fontSize: i === 4 ? 18 : i === 0 ? 15 : 14,
-                                color: t.filled ? '#dc2626' : 'var(--color-text-primary)',
+                                fontFamily: "'Playfair Display', Georgia, serif",
+                                fontStyle: 'italic',
+                                fontWeight: 800,
+                                fontSize: i === 0 ? 28 : 26,
+                                color: 'var(--color-text-primary)',
                               }}
                             >
-                              {t.display}
+                              {formatNumber(r.count)}
                             </span>
-                            <span className="text-[10px] font-mono text-text-secondary group-hover:text-text-primary transition-colors leading-tight whitespace-nowrap overflow-hidden text-ellipsis min-w-0">
-                              {t.label[lang]}
+
+                            {/* Log-scaled bar + label stack */}
+                            <div className="flex flex-col gap-1 min-w-0">
+                              <div className="relative h-[7px] w-full rounded-sm overflow-hidden" style={{ background: 'var(--color-border)' }}>
+                                <motion.div
+                                  className="absolute inset-y-0 left-0 rounded-sm"
+                                  initial={{ width: 0 }}
+                                  whileInView={{ width: `${w}%` }}
+                                  viewport={{ once: true }}
+                                  transition={{ duration: 0.7, delay: 0.18 + i * 0.12, ease: 'easeOut' }}
+                                  style={{ background: rungColors[i], opacity: 0.92 }}
+                                />
+                              </div>
+                              <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted leading-[1.3] truncate">
+                                {r.label[lang]}
+                              </div>
+                            </div>
+
+                            {/* Percentage readout */}
+                            <span className="font-mono tabular-nums text-[11px] text-text-secondary text-right group-hover:text-text-primary transition-colors">
+                              {fmtPct(r.pct)}
                             </span>
-                          </div>
-                          <div className="text-[9px] text-text-muted ml-[24px] leading-[1.3] mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
-                            {t.sublabel[lang]}
-                          </div>
+                          </a>
+
+                          {/* Filter-operation caption between this rung and next */}
+                          {r.operation && (
+                            <div className="grid gap-x-4 py-1.5" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
+                              <span /> {/* spacer for count column */}
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span
+                                  className="text-[10.5px] leading-[1.4] truncate"
+                                  style={{
+                                    fontFamily: "'Playfair Display', Georgia, serif",
+                                    fontStyle: 'italic',
+                                    color: 'var(--color-text-secondary)',
+                                    opacity: 0.85,
+                                  }}
+                                >
+                                  {r.operation[lang]}
+                                </span>
+                              </div>
+                              {/* × drop readout, paired with the operation.
+                                  Color tints toward the destination rung so the
+                                  eye reads "this drop lands in critical territory". */}
+                              {rungs[i + 1]?.drop != null && (
+                                <span className="font-mono tabular-nums text-[9.5px] text-right" style={{ color: rungColors[i + 1], opacity: 0.8, letterSpacing: '0.06em' }}>
+                                  ··· {fmtDrop(rungs[i + 1].drop as number)} {lang === 'en' ? 'drop' : 'caída'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </motion.li>
+                      )
+                    })}
+                  </ol>
+
+                  {/* GT anchor band — sub-baseline, dotted-rule separator */}
+                  <motion.a
+                    href="/cases"
+                    initial={{ opacity: 0, y: 4 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-30px' }}
+                    transition={{ duration: 0.4, delay: 0.7 }}
+                    className="group block mt-5 pt-3 transition-colors hover:bg-[color:var(--color-border)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    style={{ borderTop: '1px dashed rgba(160, 104, 32, 0.45)' }}
+                    aria-label={lang === 'en'
+                      ? `43 documented cases · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} GT vendors — training corpus`
+                      : `43 casos documentados · ${formatNumber(GROUND_TRUTH_VENDOR_COUNT_FALLBACK)} proveedores GT — corpus de entrenamiento`}
+                  >
+                    <div className="grid items-baseline gap-x-4" style={{ gridTemplateColumns: '136px minmax(0,1fr) 92px' }}>
+                      {/* Eyebrow + count, indented to align under count column */}
+                      <div className="flex flex-col gap-1 items-end pr-1">
+                        <span className="text-[8.5px] font-mono uppercase tracking-[0.18em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                          {lang === 'en' ? 'Anchor' : 'Ancla'}
+                        </span>
+                        <span
+                          className="tabular-nums leading-none"
+                          style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                            fontStyle: 'italic',
+                            fontWeight: 800,
+                            fontSize: 22,
+                            color: '#a06820',
+                            opacity: 0.85,
+                          }}
+                        >
+                          43
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="text-[10px] font-mono uppercase tracking-[0.14em]" style={{ color: '#a06820', opacity: 0.75 }}>
+                          {lang === 'en' ? 'Training corpus' : 'Corpus de entrenamiento'}
                         </div>
-                      </motion.a>
-                    ))}
-                  </div>
+                        <div className="text-[11px] text-text-secondary group-hover:text-text-primary transition-colors leading-[1.4]">
+                          {lang === 'en'
+                            ? <>43 documented · <span className="tabular-nums">{formatNumber(gtVendors)}</span> GT vendors</>
+                            : <>43 documentados · <span className="tabular-nums">{formatNumber(gtVendors)}</span> proveedores GT</>}
+                        </div>
+                        <div
+                          className="text-[10px] leading-[1.4] mt-0.5"
+                          style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                            fontStyle: 'italic',
+                            color: 'var(--color-text-muted)',
+                            opacity: 0.85,
+                          }}
+                        >
+                          {lang === 'en' ? '← informs every filter above' : '← informa todos los filtros anteriores'}
+                        </div>
+                      </div>
+                      <span className="font-mono tabular-nums text-[9.5px] text-right uppercase tracking-[0.12em] text-text-muted self-start">
+                        {lang === 'en' ? 'seed' : 'semilla'}
+                      </span>
+                    </div>
+                  </motion.a>
                 </div>
               )
             })()}
@@ -1530,63 +1825,69 @@ export default function Executive() {
             {lang === 'en' ? '§ 5 · Example dossiers — open one' : '§ 5 · Historias ejemplares — abre una'}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {EXAMPLE_DOSSIERS.map((d) => (
-              <article
-                key={d.vendorId}
-                className="surface-card p-5 rounded-sm hover:border-border-hover transition-colors"
-              >
-                <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
-                  {d.kicker[lang]}
-                </div>
-                <div className="mb-3">
-                  <EntityIdentityChip
-                    type="vendor"
-                    id={d.vendorId}
-                    name={d.name}
-                    riskScore={d.risk}
-                    ariaTier={d.tier}
-                    flags={d.flags}
-                    size="md"
-                    narrative
-                  />
-                </div>
-                <p className="text-xs text-text-secondary leading-[1.6] mb-3">
-                  {d.lede[lang]}
-                </p>
-
-                {/* What RUBLI detected */}
-                <div
-                  className="rounded-sm px-2.5 py-2 mb-2"
-                  style={{ background: 'var(--color-border)' }}
+            {EXAMPLE_DOSSIERS.map((d) => {
+              // First sentence of the lede only — the rest lives on the
+              // full vendor dossier. This card's job is to invite a click,
+              // not summarize the case.
+              const pullQuote = d.lede[lang].split(/[.—]/)[0].trim() + '.'
+              return (
+                <a
+                  key={d.vendorId}
+                  href={`/vendors/${d.vendorId}`}
+                  className="group surface-card p-5 rounded-sm flex flex-col hover:border-border-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  aria-label={`${lang === 'en' ? 'Open dossier' : 'Abrir dossier'}: ${d.name}`}
                 >
-                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-                    {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                    {d.kicker[lang]}
                   </div>
-                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-risk-high)' }}>
-                    {d.detected[lang]}
-                  </p>
-                </div>
 
-                {/* What actually happened */}
-                <div
-                  className="rounded-sm px-2.5 py-2 mb-3 border-l-2"
-                  style={{ borderLeftColor: '#dc2626', background: 'rgba(220,38,38,0.05)' }}
-                >
-                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-                    {lang === 'en' ? 'What happened' : 'Lo que ocurrió'}
+                  <div className="mb-4">
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={d.vendorId}
+                      name={d.name}
+                      riskScore={d.risk}
+                      ariaTier={d.tier}
+                      flags={d.flags}
+                      size="md"
+                      narrative
+                    />
                   </div>
-                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-text-secondary)' }}>
-                    {d.outcome[lang]}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
-                  <span>{d.contracts} {lang === 'en' ? 'contracts' : 'contratos'}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{d.value[lang]}</span>
-                </div>
-              </article>
-            ))}
+                  {/* Single editorial pull-quote — first sentence of the lede */}
+                  <p
+                    className="text-[14px] leading-[1.55] mb-5 text-pretty flex-1"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {pullQuote}
+                  </p>
+
+                  {/* Footer: stat (MXN + USD scale companion) + open affordance.
+                      Two-line stack so USD reads as supporting scale, not a
+                      competing number. */}
+                  <div className="flex items-end justify-between gap-3 pt-3 border-t border-border/40 text-[11px] font-mono">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <div className="flex items-center gap-2 text-text-secondary">
+                        <span className="tabular-nums">{d.value[lang]}</span>
+                        <span className="text-text-muted" aria-hidden="true">·</span>
+                        <span className="tabular-nums text-text-muted">{d.contracts}</span>
+                      </div>
+                      <span className="text-[10px] tabular-nums text-text-muted opacity-80">
+                        ≈{formatCompactUSD(d.mxnAmount)}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-text-muted group-hover:text-accent transition-colors self-end pb-0.5">
+                      {lang === 'en' ? 'Open' : 'Abrir'}
+                      <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                </a>
+              )
+            })}
           </div>
         </section>
 

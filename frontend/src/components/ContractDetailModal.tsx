@@ -4,7 +4,7 @@ import { contractApi, vendorApi } from '@/api/client'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { RiskBadge, Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toTitleCase, formatCompactMXN, formatCompactUSD, formatDate } from '@/lib/utils'
+import { toTitleCase, formatCompactMXN, formatCompactUSDByYear, formatDate } from '@/lib/utils'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RiskExplanationPanel } from '@/components/RiskExplanation'
@@ -118,7 +118,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                       {formatCompactMXN(contract.amount_mxn)}
                     </span>
                     <span className="text-text-muted ml-1.5 text-xs">
-                      ({formatCompactUSD(contract.amount_mxn, contract.contract_year)})
+                      ({formatCompactUSDByYear(contract.amount_mxn, contract.contract_year)})
                     </span>
                   </InfoRow>
 

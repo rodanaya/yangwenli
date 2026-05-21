@@ -20,7 +20,7 @@ import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import {
   toTitleCase,
   formatCompactMXN,
-  formatCompactUSD,
+  formatCompactUSDByYear,
   formatDate,
 } from '@/lib/utils'
 import { DotBar } from '@/components/ui/DotBar'
@@ -229,7 +229,7 @@ export default function ContractDetail() {
             }
             sub={
               contract.amount_mxn && contract.amount_mxn > 0
-                ? formatCompactUSD(contract.amount_mxn, contract.contract_year)
+                ? formatCompactUSDByYear(contract.amount_mxn, contract.contract_year)
                 : 'Amount not reported'
             }
           />

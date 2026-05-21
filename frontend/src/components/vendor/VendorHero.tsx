@@ -36,7 +36,7 @@ import { StatRow } from '@/components/ui/StatRow'
 import { DotBarRow } from '@/components/ui/DotBar'
 import { SECTOR_COLORS, SECTOR_TEXT_COLORS } from '@/lib/constants'
 import {
-  formatCompactMXN,
+  formatDualCurrency,
   formatPercentSafe,
   getRiskLevel,
 } from '@/lib/utils'
@@ -278,7 +278,7 @@ export function VendorHero({
           },
           {
             label: isEs ? 'Valor total' : 'Total value',
-            value: formatCompactMXN(vendor.total_value_mxn),
+            value: formatDualCurrency(vendor.total_value_mxn),
           },
           {
             label: isEs ? 'Adj. directas' : 'Direct awards',

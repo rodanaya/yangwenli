@@ -25,7 +25,7 @@ import { GhostSuspectsPanel } from '@/components/aria/GhostSuspectsPanel'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
+import { cn, formatCompactMXN, formatCompactUSDByYear, formatNumber } from '@/lib/utils'
 import { getSectorName, SECTORS } from '@/lib/constants'
 import {
   Search,
@@ -523,7 +523,7 @@ function InvestigationRow({ item, isEs }: { item: AriaQueueItem; isEs: boolean }
                 {formatCompactMXN(value)}
               </span>
               <span className="tabular-nums text-text-muted/70">
-                ~{formatCompactUSD(value)}
+                ~{formatCompactUSDByYear(value)}
               </span>
             </>
           )}

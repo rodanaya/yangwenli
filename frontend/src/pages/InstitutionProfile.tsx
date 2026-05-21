@@ -8,7 +8,8 @@ import { RiskBadge, Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   formatCompactMXN,
-  formatCompactUSD,
+  formatDualCurrency,
+  formatCompactUSDByYear,
   formatNumber,
   formatPercentSafe,
   formatDate,
@@ -700,7 +701,7 @@ export function InstitutionProfile() {
               <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Contracts</div>
             </div>
             <div className="text-right">
-              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatCompactMXN(totalValue)}</div>
+              <div className="text-xl sm:text-2xl font-bold tabular-nums leading-none" style={{ color: 'var(--color-accent)' }}>{formatDualCurrency(totalValue)}</div>
               <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">Total spend</div>
             </div>
             <div className="text-right">
@@ -2256,7 +2257,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       <div className="flex items-center gap-2.5 flex-shrink-0 ml-2">
         <div className="text-right">
           <p className="text-xs font-mono font-medium tabular-nums text-text-primary">{formatCompactMXN(contract.amount_mxn)}</p>
-          <p className="text-xs font-mono text-text-muted tabular-nums">{formatCompactUSD(contract.amount_mxn)}</p>
+          <p className="text-xs font-mono text-text-muted tabular-nums">{formatCompactUSDByYear(contract.amount_mxn)}</p>
         </div>
         {contract.risk_score != null && (
           <RiskBadge score={contract.risk_score} className="text-xs px-1.5 py-0" />

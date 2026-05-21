@@ -22,7 +22,7 @@
  * (atlas-density). The full set covers ~80% of federal spend by category.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -48,6 +48,14 @@ import { AtlasShell } from '@/components/atlas/AtlasShell'
 import { AtlasLeftRail } from '@/components/atlas/AtlasLeftRail'
 // atlas-C-P2: zoom state machine
 import { AtlasZoomLayer } from '@/components/atlas/AtlasZoomLayer'
+// atlas-P6 Pass 2: Canvas constellation engine (opt-in via ?canvas=1).
+// Full replacement of AtlasZoomLayer once parity is validated.
+import { CanvasConstellation, type FlyToClusterFn, type ResetViewFn } from '@/components/atlas/CanvasConstellation'
+import { dotsFromRows, clustersFromMeta } from '@/lib/atlas/dots-from-rows'
+import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
+import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
+import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
+import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -500,6 +508,249 @@ function useClusterNotes(): {
 // idempotent (last write wins within the 250ms window). In practice the
 // context state dispatch happens slightly after mount so AtlasUrlSync wins.
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CanvasAtlasView (Atlas P6 Pass 2)
+//
+// Mounts the new Canvas-based constellation engine when ?canvas=1 is set.
+// Lives inside AtlasContextProvider so it can read/dispatch zoom state.
+//
+// Phase-3 follow-ups (not in this pass):
+//   • named vendor outliers (engine accepts name on each dot)
+//   • vendor drawer + halo card + lasso selection
+//   • Z1 sector drill escalation
+//   • cluster floating card content parity with AtlasZoomLayer
+//   • vendor-search auto-fly (M-OBS P5)
+//   • keyboard +/-/0/arrows wired to flyToClusterRef + resetViewRef
+// ─────────────────────────────────────────────────────────────────────────────
+interface CanvasAtlasViewProps {
+  mode: ConstellationMode
+  rows: ConstellationRiskRow[]
+  seed: number
+  pinnedCode: string | null
+  lang: 'en' | 'es'
+  activeMeta: ClusterMeta[]
+  onClusterClickBridge: (code: string) => void
+  riskFloor: 'all' | 'medium' | 'high' | 'critical'
+  namedVendors: NamedVendorDot[]
+}
+
+function CanvasAtlasView({
+  mode,
+  rows,
+  seed,
+  pinnedCode,
+  lang,
+  activeMeta,
+  onClusterClickBridge,
+  riskFloor,
+  namedVendors,
+}: CanvasAtlasViewProps) {
+  const state = useAtlasState()
+  const dispatch = useAtlasDispatch()
+  const navigate = useNavigate()
+  const flyToRef = useRef<FlyToClusterFn | null>(null)
+  const resetRef = useRef<ResetViewFn | null>(null)
+
+  const latticeDots = useMemo(
+    () => dotsFromRows({ rows, meta: activeMeta, mode, seed }),
+    [rows, activeMeta, mode, seed],
+  )
+  const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
+
+  // Atlas P6 Pass 3b (2026-05-21): merge named-vendor outliers into the dots
+  // array so they become CLICKABLE on the canvas. Lattice dots have synthetic
+  // IDs (dot-0…dot-1199) and aren't navigable; named vendors get real IDs +
+  // names + isOutlier so onDotClick can route to /thread/{vendorId}.
+  // Each named vendor is positioned slightly offset from its cluster's
+  // attractor (deterministic spread via vendorId, so positions stay stable
+  // across re-renders).
+  const dots = useMemo(() => {
+    if (!namedVendors || namedVendors.length === 0) return latticeDots
+    const clusterByCode = new Map(clusters.map((c) => [c.code, c]))
+    const outlierDots = namedVendors.map((v, idx) => {
+      const c = clusterByCode.get(v.clusterCode)
+      const baseX = c?.fx ?? 0.5
+      const baseY = c?.fy ?? 0.5
+      // Deterministic spread — golden-ratio polar to spread evenly around the
+      // attractor without overlapping (offset by vendorId so it stays stable).
+      const golden = 2.39996
+      const angle = idx * golden
+      const radius = 0.025 + (idx % 5) * 0.008
+      const lvl: 'critical' | 'high' | 'medium' | 'low' =
+        v.riskScore >= 0.6 ? 'critical' : v.riskScore >= 0.4 ? 'high' : v.riskScore >= 0.25 ? 'medium' : 'low'
+      return {
+        id: String(v.vendorId),
+        x: Math.max(0.02, Math.min(0.98, baseX + Math.cos(angle) * radius)),
+        y: Math.max(0.02, Math.min(0.98, baseY + Math.sin(angle) * radius)),
+        riskLevel: lvl,
+        clusterCode: v.clusterCode,
+        name: v.name,
+        riskScore: v.riskScore,
+        isOutlier: true,
+      }
+    })
+    return [...latticeDots, ...outlierDots]
+  }, [latticeDots, namedVendors, clusters])
+
+  const handleDotClick = useCallback(
+    (dot: { id: string; name?: string }) => {
+      // Only named outlier dots have real vendor IDs — route to the dossier.
+      // Lattice dots (dot-NNN) have no name and are non-navigable.
+      if (dot.name && /^\d+$/.test(dot.id)) {
+        navigate(`/thread/${dot.id}`)
+      }
+    },
+    [navigate],
+  )
+
+  const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
+  const isZoomed = zoomedCode !== null
+  const zoomedMeta = useMemo(
+    () => (zoomedCode ? activeMeta.find((m) => m.code === zoomedCode) ?? null : null),
+    [zoomedCode, activeMeta],
+  )
+
+  // M-OBS P2 hotfix: cluster card is dismissible without exiting zoom.
+  // Auto-open on desktop, auto-collapse on narrow viewports (mirrors
+  // AtlasZoomLayer behavior).
+  const [cardOpen, setCardOpen] = useState(true)
+  useEffect(() => {
+    const isNarrow = typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false
+    setCardOpen(!isNarrow)
+  }, [zoomedCode])
+
+  // Vendors in the currently zoomed cluster (drawer + card top-vendors).
+  const clusterVendors = useMemo(
+    () => (zoomedCode ? namedVendors.filter((v) => v.clusterCode === zoomedCode) : []),
+    [zoomedCode, namedVendors],
+  )
+  const topVendors = useMemo(() => clusterVendors.slice(0, 3), [clusterVendors])
+
+  // Auto-fly when context view becomes zoomed (handles both cluster-glyph
+  // click AND vendor-search auto-zoom uniformly — both paths dispatch
+  // 'zoom-into-cluster' which lands us here).
+  useEffect(() => {
+    if (zoomedCode && flyToRef.current) {
+      flyToRef.current(zoomedCode)
+    } else if (!zoomedCode && resetRef.current) {
+      resetRef.current()
+    }
+  }, [zoomedCode])
+
+  // ESC pops zoom (consistent with AtlasZoomLayer behavior).
+  useEffect(() => {
+    if (!isZoomed) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') dispatch({ type: 'escape-zoom' })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isZoomed, dispatch])
+
+  // Keyboard zoom/pan events broadcast by AtlasShell (atlas:zoom-in etc.).
+  // Phase 3: wire to engine imperative API. For Pass 2 we no-op pan and
+  // delegate +/- to the engine via reset (zoom-in/out require a new
+  // imperative on the engine — keep additive, defer to Phase 3).
+
+  const lensLabelMap: Record<ConstellationMode, { en: string; es: string }> = {
+    patterns:   { en: 'Patterns',   es: 'Patrones' },
+    sectors:    { en: 'Sectors',    es: 'Sectores' },
+    categories: { en: 'Categories', es: 'Categorías' },
+    sexenios:   { en: 'Terms',      es: 'Sexenios' },
+  }
+  const lensLabel = lensLabelMap[mode]?.[lang] ?? mode
+  const clusterLabel = zoomedMeta ? `${zoomedMeta.code} ${zoomedMeta.label}` : ''
+
+  const handleClusterClick = (cluster: { code: string }) => {
+    onClusterClickBridge(cluster.code)
+    dispatch({ type: 'zoom-into-cluster', code: cluster.code })
+  }
+
+  // Field click in the canvas wrapper (background) escapes zoom.
+  // The CanvasConstellation engine handles dot/cluster clicks itself;
+  // we listen on a sibling layer for the "click outside any glyph" case.
+
+  return (
+    <div
+      className="relative"
+      style={{ position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }}
+    >
+      {isZoomed && zoomedMeta && (
+        <AtlasBreadcrumb
+          lang={lang}
+          lensLabel={lensLabel}
+          clusterLabel={clusterLabel}
+          onGoHome={() => {
+            dispatch({ type: 'escape-zoom' })
+            resetRef.current?.()
+          }}
+        />
+      )}
+      <CanvasConstellation
+        dots={dots}
+        clusters={clusters}
+        lang={lang}
+        onClusterClick={handleClusterClick}
+        onDotClick={handleDotClick}
+        flyToClusterRef={flyToRef}
+        resetViewRef={resetRef}
+        pinnedClusterCode={pinnedCode ?? zoomedCode}
+        riskFloor={riskFloor}
+      />
+      {/* M-OBS P2 floating cluster card — top-right, dismissible without
+          exiting zoom (✕ collapses to compact chip; chip re-expands). */}
+      {isZoomed && zoomedMeta && cardOpen && (
+        <div
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <ClusterFloatingCard
+            meta={zoomedMeta}
+            topVendors={topVendors}
+            onClose={() => setCardOpen(false)}
+            lang={lang}
+          />
+        </div>
+      )}
+      {isZoomed && zoomedMeta && !cardOpen && (
+        <button
+          type="button"
+          onClick={() => setCardOpen(true)}
+          aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
+          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
+          style={{
+            pointerEvents: 'auto',
+            background: 'var(--color-background-card)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 2,
+            padding: '4px 8px',
+            fontSize: 10,
+            fontFamily: 'monospace',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: 'var(--color-text-secondary)',
+            cursor: 'pointer',
+          }}
+        >
+          {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
+        </button>
+      )}
+      {/* M-OBS P3 vendor drawer — collapsible bottom strip (collapsed by
+          default; Esc collapses when expanded, does not escape zoom). */}
+      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
+        <AtlasVendorDrawer
+          clusterCode={zoomedMeta.code}
+          clusterLabel={zoomedMeta.label}
+          vendors={clusterVendors}
+          lang={lang}
+        />
+      )}
+    </div>
+  )
+}
+
 interface AtlasUrlSyncProps {
   mode: ConstellationMode
   yearIndex: number
@@ -1124,6 +1375,14 @@ export default function Atlas() {
   // drill-into-sector and the AtlasContextBridge mounts <Z1SectorMap>
   // as an overlay on the zoomed view.
   const z1Enabled = searchParams.get('z1') === 'true'
+  // atlas-P6 Pass 3b (2026-05-21): Canvas engine is now the DEFAULT.
+  // The breadcrumb, floating cluster card, and vendor drawer are wired
+  // (Pass 3a). Remaining legacy-only features (selection / lasso /
+  // VendorHaloCard at deep zoom / Z1 sector escalation) fall back to the
+  // SVG AtlasZoomLayer when the URL has ?legacy=1.
+  // ?canvas=1 still works for forward-compat with shared links.
+  const canvasEnabled =
+    searchParams.get('legacy') !== '1' || searchParams.get('canvas') === '1'
 
   const totalContractsForYear = snapshot.totalContracts
 
@@ -1727,25 +1986,40 @@ export default function Atlas() {
             authorization to break the sacred-engine rule.
             folio-skin: PlateFrame above gives this card investigative-folio
             chrome (corner crops, archival folio number, italic plate caption). */}
-        <AtlasZoomLayer
-          key={constellationKey}
-          mode={mode}
-          rows={rows.length > 0 ? rows : fallbackRows}
-          totalContracts={totalContractsForYear}
-          metaOverride={atlasMeta}
-          /* Seed depends ONLY on mode — dots stay in place across years
-             so CSS transitions can morph their fill-opacity smoothly as the
-             critical/high/medium/low pcts shift per year. */
-          seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
-          pinnedCode={pinnedCode}
-          lang={lang}
-          activeMeta={activeConstellationMeta}
-          onClusterClickBridge={handleClusterClick}
-          namedVendors={namedVendors}
-          highlightedClusterCodes={highlightedClusterCodes}
-          z1Enabled={z1Enabled}
-          resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
-        />
+        {canvasEnabled ? (
+          <CanvasAtlasView
+            key={constellationKey}
+            mode={mode}
+            rows={rows.length > 0 ? rows : fallbackRows}
+            seed={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
+            pinnedCode={pinnedCode}
+            lang={lang}
+            activeMeta={activeConstellationMeta}
+            onClusterClickBridge={handleClusterClick}
+            riskFloor={riskFloor}
+            namedVendors={namedVendors}
+          />
+        ) : (
+          <AtlasZoomLayer
+            key={constellationKey}
+            mode={mode}
+            rows={rows.length > 0 ? rows : fallbackRows}
+            totalContracts={totalContractsForYear}
+            metaOverride={atlasMeta}
+            /* Seed depends ONLY on mode — dots stay in place across years
+               so CSS transitions can morph their fill-opacity smoothly as the
+               critical/high/medium/low pcts shift per year. */
+            seedOverride={mode === 'patterns' ? 31415 : mode === 'sectors' ? 27182 : mode === 'categories' ? 14142 : 16180}
+            pinnedCode={pinnedCode}
+            lang={lang}
+            activeMeta={activeConstellationMeta}
+            onClusterClickBridge={handleClusterClick}
+            namedVendors={namedVendors}
+            highlightedClusterCodes={highlightedClusterCodes}
+            z1Enabled={z1Enabled}
+            resolveSectorId={(code) => SECTORS.find((s) => s.code === code)?.id ?? null}
+          />
+        )}
         {/* 2026-05-09 spatial-nav Phase 1.3 — Z1 sub-constellation overlay.
             Renders institutions as bodies in space when the user has
             drilled into a sector. Only mounted when ?z1=true so the

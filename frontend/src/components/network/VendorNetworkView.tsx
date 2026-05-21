@@ -30,7 +30,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, GitBranch, Building2, Users, ChevronDown, ChevronRight, ExternalLink, Gavel, Zap } from 'lucide-react'
 import { vendorApi, networkApi } from '@/api/client'
 import type { VendorInstitutionItem, CoBidderItem, ContractListItem } from '@/api/types'
-import { cn, formatCompactMXN, formatCompactUSD, formatNumber, getRiskLevel } from '@/lib/utils'
+import { cn, formatCompactMXN, formatCompactUSDByYear, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -169,7 +169,7 @@ export function VendorNetworkView({ vendorId }: { vendorId: number }) {
               <StatChip value={formatNumber(vendor.sectors_count ?? 0)} label={isEs ? 'sectores' : 'sectors'} />
               <StatChip
                 value={formatCompactMXN(vendor.total_value_mxn ?? 0)}
-                secondary={`≈ ${formatCompactUSD(vendor.total_value_mxn ?? 0)}`}
+                secondary={`≈ ${formatCompactUSDByYear(vendor.total_value_mxn ?? 0)}`}
                 label={isEs ? 'valor total' : 'total value'}
               />
               <Link
@@ -436,7 +436,7 @@ function InstitutionRow({
               {formatCompactMXN(value)}
             </span>
             <span className="text-[10px] font-mono tabular-nums text-text-muted block">
-              ≈ {formatCompactUSD(value)}
+              ≈ {formatCompactUSDByYear(value)}
             </span>
           </span>
         </div>
@@ -574,7 +574,7 @@ function InstitutionContractsBreakdown({
         <SmallStat
           label={isEs ? 'Top contrato' : 'Top contract'}
           value={contracts[0] ? formatCompactMXN(contracts[0].amount_mxn) : '—'}
-          secondary={contracts[0] ? `≈ ${formatCompactUSD(contracts[0].amount_mxn, contracts[0].contract_year)}` : undefined}
+          secondary={contracts[0] ? `≈ ${formatCompactUSDByYear(contracts[0].amount_mxn, contracts[0].contract_year)}` : undefined}
         />
       </div>
 
@@ -639,7 +639,7 @@ function InstitutionContractsBreakdown({
                       {formatCompactMXN(c.amount_mxn)}
                     </div>
                     <div className="text-[10px] font-mono tabular-nums text-text-muted">
-                      ≈ {formatCompactUSD(c.amount_mxn, c.contract_year)}
+                      ≈ {formatCompactUSDByYear(c.amount_mxn, c.contract_year)}
                     </div>
                     <div className="text-[10px] font-mono tabular-nums" style={{ color: cRiskColor }}>
                       {Math.round(cRisk * 100)}% {isEs ? 'riesgo' : 'risk'}

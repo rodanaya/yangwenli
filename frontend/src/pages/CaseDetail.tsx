@@ -14,7 +14,7 @@ import { slideUp } from '@/lib/animations'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 // EditorialTimeline import deferred to follow-up cases-P2 — Cases agent timed
 // out before wiring it. The current scandal_timeline JSX block stays.
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, formatDualCurrency } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Bible §2: cream page + white cards + warm border + dark ink.
@@ -178,7 +178,7 @@ function legalStatusMeta(status: string, lang: string): {
 // ─────────────────────────────────────────────────────────────────────────────
 function formatMXN(n?: number | null): string {
   if (!n) return '—'
-  return formatCompactMXN(n)
+  return formatDualCurrency(n)
 }
 
 function formatCompact(n: number): string {
@@ -2552,7 +2552,7 @@ function CaseBody({
                       }}
                     >
                       <span>{FRAUD_LABEL_EN[cas.fraud_type] ?? titleCase(cas.fraud_type)}</span>
-                      {cas.amount_mxn_low && <span>{formatMXN(cas.amount_mxn_low)} MXN</span>}
+                      {cas.amount_mxn_low && <span>{formatCompactMXN(cas.amount_mxn_low)} MXN</span>}
                     </div>
                   </button>
                 )
