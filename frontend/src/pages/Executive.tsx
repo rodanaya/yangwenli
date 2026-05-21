@@ -1817,63 +1817,62 @@ export default function Executive() {
             {lang === 'en' ? '§ 5 · Example dossiers — open one' : '§ 5 · Historias ejemplares — abre una'}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {EXAMPLE_DOSSIERS.map((d) => (
-              <article
-                key={d.vendorId}
-                className="surface-card p-5 rounded-sm hover:border-border-hover transition-colors"
-              >
-                <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
-                  {d.kicker[lang]}
-                </div>
-                <div className="mb-3">
-                  <EntityIdentityChip
-                    type="vendor"
-                    id={d.vendorId}
-                    name={d.name}
-                    riskScore={d.risk}
-                    ariaTier={d.tier}
-                    flags={d.flags}
-                    size="md"
-                    narrative
-                  />
-                </div>
-                <p className="text-xs text-text-secondary leading-[1.6] mb-3">
-                  {d.lede[lang]}
-                </p>
-
-                {/* What RUBLI detected */}
-                <div
-                  className="rounded-sm px-2.5 py-2 mb-2"
-                  style={{ background: 'var(--color-border)' }}
+            {EXAMPLE_DOSSIERS.map((d) => {
+              // First sentence of the lede only — the rest lives on the
+              // full vendor dossier. This card's job is to invite a click,
+              // not summarize the case.
+              const pullQuote = d.lede[lang].split(/[.—]/)[0].trim() + '.'
+              return (
+                <a
+                  key={d.vendorId}
+                  href={`/vendors/${d.vendorId}`}
+                  className="group surface-card p-5 rounded-sm flex flex-col hover:border-border-hover transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  aria-label={`${lang === 'en' ? 'Open dossier' : 'Abrir dossier'}: ${d.name}`}
                 >
-                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-                    {lang === 'en' ? 'RUBLI detected' : 'RUBLI detectó'}
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                    {d.kicker[lang]}
                   </div>
-                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-risk-high)' }}>
-                    {d.detected[lang]}
-                  </p>
-                </div>
 
-                {/* What actually happened */}
-                <div
-                  className="rounded-sm px-2.5 py-2 mb-3 border-l-2"
-                  style={{ borderLeftColor: '#dc2626', background: 'rgba(220,38,38,0.05)' }}
-                >
-                  <div className="text-[8px] font-mono uppercase tracking-[0.12em] text-text-muted mb-1">
-                    {lang === 'en' ? 'What happened' : 'Lo que ocurrió'}
+                  <div className="mb-4">
+                    <EntityIdentityChip
+                      type="vendor"
+                      id={d.vendorId}
+                      name={d.name}
+                      riskScore={d.risk}
+                      ariaTier={d.tier}
+                      flags={d.flags}
+                      size="md"
+                      narrative
+                    />
                   </div>
-                  <p className="text-[10px] font-mono leading-[1.45]" style={{ color: 'var(--color-text-secondary)' }}>
-                    {d.outcome[lang]}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
-                  <span>{d.contracts} {lang === 'en' ? 'contracts' : 'contratos'}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{d.value[lang]}</span>
-                </div>
-              </article>
-            ))}
+                  {/* Single editorial pull-quote — first sentence of the lede */}
+                  <p
+                    className="text-[14px] leading-[1.55] mb-5 text-pretty flex-1"
+                    style={{
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontStyle: 'italic',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {pullQuote}
+                  </p>
+
+                  {/* Footer: stat + open affordance — single line, no chrome */}
+                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-border/40 text-[11px] font-mono">
+                    <div className="flex items-center gap-2 text-text-muted">
+                      <span className="tabular-nums text-text-secondary">{d.value[lang]}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="tabular-nums">{d.contracts}</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-text-muted group-hover:text-accent transition-colors">
+                      {lang === 'en' ? 'Open' : 'Abrir'}
+                      <ArrowUpRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
+                    </span>
+                  </div>
+                </a>
+              )
+            })}
           </div>
         </section>
 
