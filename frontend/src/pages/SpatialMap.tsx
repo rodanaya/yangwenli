@@ -25,7 +25,6 @@ import {
   useExploreState,
 } from '@/components/explore/ExploreState'
 import { ExploreCanvas } from '@/components/explore/ExploreCanvas'
-import { BriefingPanel } from '@/components/explore/BriefingPanel'
 import { useExploreUrlSync } from '@/components/explore/useExploreUrlSync'
 import { YearScrubber } from '@/components/explore/CanvasControls'
 
@@ -75,13 +74,14 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
     try { localStorage.setItem(FIRST_VISIT_KEY, '1') } catch { /* ignore */ }
   }
 
-  // At Z0 (El Reparto), the treemap is self-explanatory — no need for the
-  // 280px right rail repeating the same info. Collapse the grid to a
-  // single column. Drilling into Z1+ restores the briefing rail.
-  const showBriefingRail = isPanelOpen
+  // Briefing rail killed at all Z levels (2026-05-20): every Z-level now
+  // carries its own breadcrumb + kicker + headline + sort toggle + footer
+  // link via ZPrimitives. The 280px right rail was duplicating the
+  // breadcrumb + sector context the new chrome already provides. Single
+  // column at every level → more room for the editorial register.
   return (
     <div
-      className={`grid grid-cols-1 ${showBriefingRail ? 'lg:grid-cols-[1fr_280px]' : ''} -mt-5 -mb-20 md:-mb-5 -mx-3 sm:-mx-5`}
+      className="grid grid-cols-1 -mt-5 -mb-20 md:-mb-5 -mx-3 sm:-mx-5"
       style={{
         height: 'calc(100vh - var(--topbar-h, 64px) - var(--footer-h, 56px))',
         gridTemplateRows: '1fr',
@@ -121,13 +121,8 @@ function ExploreInner({ lang }: { lang: 'en' | 'es' }) {
           </button>
         )}
       </div>
-      {/* Briefing rail — only shown when the user has drilled past Z0.
-          At Z0 (El Reparto) the treemap carries the briefing itself. */}
-      {showBriefingRail && (
-        <div className="hidden lg:block">
-          <BriefingPanel lang={lang} />
-        </div>
-      )}
+      {/* Briefing rail removed — Z0 treemap + Z1-Z4 embedded chrome carry
+          all the context that used to live here. */}
       {/* MobileBriefingDrawer removed (2026-05-20): the Z1 redesign carries
           its own breadcrumb + kicker + pull-line + footer link, so the
           bottom-sheet drawer was rendering duplicate chrome that visually
