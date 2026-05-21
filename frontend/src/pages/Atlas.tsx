@@ -22,7 +22,7 @@
  * (atlas-density). The full set covers ~80% of federal spend by category.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -547,14 +547,61 @@ function CanvasAtlasView({
 }: CanvasAtlasViewProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
+  const navigate = useNavigate()
   const flyToRef = useRef<FlyToClusterFn | null>(null)
   const resetRef = useRef<ResetViewFn | null>(null)
 
-  const dots = useMemo(
+  const latticeDots = useMemo(
     () => dotsFromRows({ rows, meta: activeMeta, mode, seed }),
     [rows, activeMeta, mode, seed],
   )
   const clusters = useMemo(() => clustersFromMeta(activeMeta), [activeMeta])
+
+  // Atlas P6 Pass 3b (2026-05-21): merge named-vendor outliers into the dots
+  // array so they become CLICKABLE on the canvas. Lattice dots have synthetic
+  // IDs (dot-0…dot-1199) and aren't navigable; named vendors get real IDs +
+  // names + isOutlier so onDotClick can route to /thread/{vendorId}.
+  // Each named vendor is positioned slightly offset from its cluster's
+  // attractor (deterministic spread via vendorId, so positions stay stable
+  // across re-renders).
+  const dots = useMemo(() => {
+    if (!namedVendors || namedVendors.length === 0) return latticeDots
+    const clusterByCode = new Map(clusters.map((c) => [c.code, c]))
+    const outlierDots = namedVendors.map((v, idx) => {
+      const c = clusterByCode.get(v.clusterCode)
+      const baseX = c?.fx ?? 0.5
+      const baseY = c?.fy ?? 0.5
+      // Deterministic spread — golden-ratio polar to spread evenly around the
+      // attractor without overlapping (offset by vendorId so it stays stable).
+      const golden = 2.39996
+      const angle = idx * golden
+      const radius = 0.025 + (idx % 5) * 0.008
+      const lvl: 'critical' | 'high' | 'medium' | 'low' =
+        v.riskScore >= 0.6 ? 'critical' : v.riskScore >= 0.4 ? 'high' : v.riskScore >= 0.25 ? 'medium' : 'low'
+      return {
+        id: String(v.vendorId),
+        x: Math.max(0.02, Math.min(0.98, baseX + Math.cos(angle) * radius)),
+        y: Math.max(0.02, Math.min(0.98, baseY + Math.sin(angle) * radius)),
+        riskLevel: lvl,
+        clusterCode: v.clusterCode,
+        name: v.name,
+        riskScore: v.riskScore,
+        isOutlier: true,
+      }
+    })
+    return [...latticeDots, ...outlierDots]
+  }, [latticeDots, namedVendors, clusters])
+
+  const handleDotClick = useCallback(
+    (dot: { id: string; name?: string }) => {
+      // Only named outlier dots have real vendor IDs — route to the dossier.
+      // Lattice dots (dot-NNN) have no name and are non-navigable.
+      if (dot.name && /^\d+$/.test(dot.id)) {
+        navigate(`/thread/${dot.id}`)
+      }
+    },
+    [navigate],
+  )
 
   const zoomedCode = state.view.kind === 'zoomed-cluster' ? state.view.code : null
   const isZoomed = zoomedCode !== null
@@ -646,6 +693,7 @@ function CanvasAtlasView({
         clusters={clusters}
         lang={lang}
         onClusterClick={handleClusterClick}
+        onDotClick={handleDotClick}
         flyToClusterRef={flyToRef}
         resetViewRef={resetRef}
         pinnedClusterCode={pinnedCode ?? zoomedCode}
