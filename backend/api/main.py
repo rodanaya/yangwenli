@@ -189,6 +189,30 @@ def _warmup_caches():
         *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
         *[f"/api/v1/analysis/risk-distribution?sector_id={i}" for i in range(1, 13)],
         *[f"/api/v1/vendors/top?by=value&limit=10&sector_id={i}" for i in range(1, 13)],
+        # 2026-05-22 — Observatory galaxy batch endpoint. Cold path is 4-7s
+        # for sectors / patterns lens (per-request SQLite connection setup
+        # against 5GB deploy DB + 7×count + 7×SELECT-with-LEFT-JOIN). The
+        # in-process cache is per-gunicorn-worker (6 workers in prod), so
+        # we need ~10 hits per payload to statistically warm every worker.
+        # The browser cache (max-age=600) covers individual users, but new
+        # visitors and lens switches still pay the cold path until all
+        # workers have seen the (lens, codes, limit) tuple.
+        *([
+            "/api/v1/atlas/cluster-vendors-batch?lens=patterns&codes=P1,P2,P3,P4,P5,P6,P7&limit=10",
+            "/api/v1/atlas/cluster-vendors-batch?lens=sectors&codes=salud,educacion,infraestructura,energia,defensa,tecnologia,hacienda,gobernacion,agricultura,ambiente,trabajo,otros&limit=10",
+        ] * 10),
+        # Common single-cluster zoom queries — P5/P6/P2 are the most-clicked
+        # patterns; salud/energia/infraestructura are the most-clicked sectors.
+        # These power the AtlasVendorDrawer (200 vendors per cluster) and
+        # the floating-card top-3 list.
+        *[
+            f"/api/v1/atlas/cluster-vendors?lens=patterns&code={p}&limit=200"
+            for p in ["P5", "P6", "P2", "P1", "P3"]
+        ],
+        *[
+            f"/api/v1/atlas/cluster-vendors?lens=sectors&code={s}&limit=200"
+            for s in ["salud", "energia", "infraestructura", "educacion", "tecnologia"]
+        ],
     ]
     for ep in endpoints:
         try:
@@ -222,6 +246,10 @@ def _warmup_caches():
                 timeout = 120  # 85s live scan on first ever call; fast after precomputed_stats write
             elif "statistics" in ep or "overview" in ep:
                 timeout = 12
+            elif "/atlas/" in ep:
+                # cluster-vendors cold = 4-7s; cluster-vendors-batch with 12
+                # sectors cold = 7s. Default 3s silently dropped these.
+                timeout = 20
             else:
                 timeout = 3
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
