@@ -2571,21 +2571,31 @@ export const STORIES: StoryDef[] = [
           title_es: 'Top proveedores con patrón de intermediario P3 por valor total de contratos',
           chartId: 'p3-top-vendors',
           data: {
+            // 2026-05-22: colors driven by real v0.8.5 risk scores from
+            // aria_queue (avg_risk_score per vendor_stats). The original
+            // editorial split was "red = pass-through cartels, gold =
+            // legitimate foreign specialists." The model disagrees: all
+            // 10 land in high/critical. PEMEX foreign specialists
+            // (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride 0.95)
+            // are model-flagged critical despite being on the structural-
+            // FP list per CLAUDE.md — surfacing that disagreement is the
+            // point. The two-population editorial claim is in the prose;
+            // the chart shows what the model actually says.
             points: [
-              { label: 'Constructora ARHNOS',         value: 32.0, color: '#dc2626', highlight: true, annotation: '6 contracts · state public works',  annotation_es: '6 contratos · obras públicas estatales' },
-              { label: 'Promotora y Desarrolladora',  value: 21.1, color: '#dc2626', highlight: true, annotation: '3 contracts · IMSS hospitals',       annotation_es: '3 contratos · hospitales IMSS' },
-              { label: 'Antonio Vigil Maximino',      value: 9.75, color: '#dc2626', highlight: true, annotation: '2 contracts · IMSS',                  annotation_es: '2 contratos · IMSS' },
-              { label: 'CAABSA Constructora',         value: 9.18, color: '#dc2626', highlight: true, annotation: '3 contracts · CDMX',                  annotation_es: '3 contratos · CDMX' },
-              { label: 'GTECH Printing',              value: 7.72, color: '#a06820',                  annotation: '2 contracts · lottery printing',      annotation_es: '2 contratos · impresión lotería' },
-              { label: 'Técnicas Reunidas (ES)',      value: 7.24, color: '#a06820',                  annotation: '2 contracts · PEMEX engineering',     annotation_es: '2 contratos · ingeniería PEMEX' },
-              { label: 'GX2 Desarrollos',             value: 5.89, color: '#dc2626', highlight: true, annotation: '2 contracts · Sinaloa · risk 0.84',  annotation_es: '2 contratos · Sinaloa · riesgo 0.84' },
-              { label: 'Petrobras JV (BR)',           value: 5.86, color: '#a06820',                  annotation: '2 contracts · PEMEX',                 annotation_es: '2 contratos · PEMEX' },
-              { label: 'Pride International (US)',    value: 5.48, color: '#a06820',                  annotation: '6 contracts · PEMEX offshore',        annotation_es: '6 contratos · PEMEX costa afuera' },
-              { label: 'LAMAP',                       value: 4.73, color: '#dc2626', highlight: true, annotation: '17 contracts · IMSS-Bienestar',      annotation_es: '17 contratos · IMSS-Bienestar' },
+              { label: 'Constructora ARHNOS',         value: 32.0, riskScore: 0.52, highlight: true, annotation: '6 contracts · state public works · risk 0.52',  annotation_es: '6 contratos · obras públicas estatales · riesgo 0.52' },
+              { label: 'Promotora y Desarrolladora',  value: 21.1, riskScore: 0.59,                  annotation: '3 contracts · IMSS hospitals · risk 0.59',      annotation_es: '3 contratos · hospitales IMSS · riesgo 0.59' },
+              { label: 'Antonio Vigil Maximino',      value: 9.75, riskScore: 0.50,                  annotation: '2 contracts · IMSS · risk 0.50',                annotation_es: '2 contratos · IMSS · riesgo 0.50' },
+              { label: 'CAABSA Constructora',         value: 9.18, riskScore: 0.72,                  annotation: '3 contracts · CDMX · risk 0.72',                annotation_es: '3 contratos · CDMX · riesgo 0.72' },
+              { label: 'GTECH Printing',              value: 7.72, riskScore: 0.58,                  annotation: '2 contracts · lottery printing · risk 0.58',    annotation_es: '2 contratos · impresión lotería · riesgo 0.58' },
+              { label: 'Técnicas Reunidas (ES)',      value: 7.24, riskScore: 0.89,                  annotation: '2 contracts · PEMEX engineering · risk 0.89 (structural FP)', annotation_es: '2 contratos · ingeniería PEMEX · riesgo 0.89 (FP estructural)' },
+              { label: 'GX2 Desarrollos',             value: 5.89, riskScore: 0.54,                  annotation: '2 contracts · Sinaloa · risk 0.54',             annotation_es: '2 contratos · Sinaloa · riesgo 0.54' },
+              { label: 'Petrobras JV (BR)',           value: 5.86, riskScore: 0.90,                  annotation: '2 contracts · PEMEX · risk 0.90',               annotation_es: '2 contratos · PEMEX · riesgo 0.90' },
+              { label: 'Pride International (US)',    value: 5.48, riskScore: 0.95,                  annotation: '6 contracts · PEMEX offshore · risk 0.95',      annotation_es: '6 contratos · PEMEX costa afuera · riesgo 0.95' },
+              { label: 'LAMAP',                       value: 4.73, riskScore: 0.47,                  annotation: '17 contracts · IMSS-Bienestar · risk 0.47',     annotation_es: '17 contratos · IMSS-Bienestar · riesgo 0.47' },
             ],
             unit: 'B MXN',
-            annotation: 'Red rows: pass-through signature (microscopic contract counts × enormous per-contract value, domestic). Gold rows: international specialists with structurally narrow supplier markets (PEMEX legitimate sole-source). The investigative work is to separate these two populations from RUBLI\'s 2,974 P3-flagged vendors.',
-            annotation_es: 'Filas rojas: firma de paso (cuentas de contratos minúsculas × valor por contrato enorme, locales). Filas oro: especialistas internacionales con mercados de proveedores estructuralmente reducidos (única fuente legítima en PEMEX). El trabajo investigativo consiste en separar estas dos poblaciones entre los 2,974 proveedores con bandera P3 de RUBLI.',
+            annotation: 'Bar color = v0.8.5 risk score (critical / high). All 10 top-value P3 vendors land in the high-or-critical band — the model rejects the prose\'s "legitimate foreign specialist" framing for PEMEX contractors (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride International 0.95), which sit on RUBLI\'s structural-FP exclusion list precisely because the model otherwise flags them. The investigative question shifts: which of these critical-band scores reflect real intermediary fraud and which are model artifacts of structurally narrow supplier markets?',
+            annotation_es: 'Color de barra = calificación de riesgo v0.8.5 (crítica / alta). Los 10 proveedores P3 de mayor valor caen en la banda alta-o-crítica — el modelo rechaza la lectura del cuerpo del texto de "especialista extranjero legítimo" para los contratistas de PEMEX (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride International 0.95), que están en la lista de exclusión de FP estructurales de RUBLI precisamente porque el modelo de otra forma los marca. La pregunta investigativa cambia: ¿cuáles de estas calificaciones de banda crítica reflejan fraude real por intermediación y cuáles son artefactos del modelo en mercados de proveedores estructuralmente reducidos?',
           },
         },
         pullquote: {
