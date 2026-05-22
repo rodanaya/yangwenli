@@ -499,10 +499,24 @@ export const STORIES: StoryDef[] = [
           'La ley mexicana de contratación pública permite que personas físicas tengan contratos federales, y hay circunstancias legítimas en las que un contratista individual nominado es apropiado: consultoría especializada, comisiones artísticas, servicios locales de pequeña escala. Ninguna de esas circunstancias explica contratos de 370 MDP. Combinadas con las otras señales P2 — sin actividad previa, sin actividad posterior, concentración en una sola institución durante un solo año — estos contratistas individuales constituyen los líderes P2 más claros de toda la cola.',
         ],
         chartConfig: {
-          type: 'editorial-treemap',
-          title: 'P2 Ghost-Pattern Vendors — Spend by Sector',
-          title_es: 'Proveedores con patrón fantasma P2 — Gasto por sector',
-          chartId: 'editorial-treemap',
+          type: 'inline-bar',
+          title: 'Named P2-pattern vendors — top by contract value',
+          title_es: 'Proveedores P2 nombrados — principales por valor de contrato',
+          chartId: 'p2-named-vendors',
+          data: {
+            points: [
+              { label: 'RAPISCAN SYSTEMS INC',      value: 2500, annotation: 'US-INC · 2 contracts',     annotation_es: 'US-INC · 2 contratos',          highlight: true },
+              { label: 'APIS FOOD BV',              value: 732,  annotation: 'NL-BV · 3 contracts',      annotation_es: 'NL-BV · 3 contratos' },
+              { label: 'EMILIO CARRANZA OBERSOHN',  value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+              { label: 'ARTURO PUEBLITA FERNANDEZ', value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+              { label: 'VALERIA FERNANDEZ DIAZ',    value: 370,  annotation: 'INDIVIDUAL · 2 contracts', annotation_es: 'PERSONA FÍSICA · 2 contratos',  highlight: true },
+            ],
+            unit: 'M MXN',
+            yLabel: 'Total contract value',
+            yLabel_es: 'Valor total de contratos',
+            annotation: 'Five named P2-pattern vendors. Top two are foreign-domiciled incorporated entities; the bottom three are physical persons — not companies — each holding ≈370M-peso federal contracts and then disappearing from the procurement record entirely.',
+            annotation_es: 'Cinco proveedores P2 nombrados. Los dos primeros son entidades incorporadas con domicilio extranjero; los tres últimos son personas físicas — no empresas — cada una con contratos federales por ≈370 MDP, y luego desaparecen completamente del registro de contratación.',
+          },
         },
         pullquote: {
           quote: 'An individual person — not a company — winning federal contracts worth 370 million pesos, and then disappearing from the record entirely.',
@@ -1632,24 +1646,28 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'editorial-cleveland-pair',
-          title: 'P3 Intermediary Vendors by Sector (Total Value)',
-          title_es: 'Proveedores intermediarios P3 por sector (valor total)',
+          title: 'P3 Intermediation as a Share of Each Sector’s High-Risk Spend',
+          title_es: 'Intermediación P3 como porción del gasto de alto riesgo por sector',
           chartId: 'p3-by-sector',
           data: {
+            // Sorted by P3 share of high-risk spend (descending) so the largest
+            // capture footprint reads at top. value = P3 intermediary spend;
+            // value2 = total high+critical-risk spend in the same sector (real
+            // comparator, sourced from contracts.risk_level rollup, May 22 2026).
             points: [
-              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, value2: 65.85, color: '#ea580c' },
-              { label: 'Energía',         label_en: 'Energy',          value: 130.6, value2: 65.85, color: '#eab308' },
-              { label: 'Salud',           label_en: 'Health',          value: 104.2, value2: 65.85, color: '#dc2626', highlight: true },
-              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  value2: 65.85, color: '#16a34a' },
-              { label: 'Educación',       label_en: 'Education',       value: 19.1,  value2: 65.85, color: '#3b82f6' },
-              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  value2: 65.85, color: '#22c55e' },
-              { label: 'Gobernación',     label_en: 'Governance',      value: 17.8,  value2: 65.85, color: '#be123c' },
-              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  value2: 65.85, color: '#1e3a5f' },
+              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, value2: 917.3,  color: '#ea580c', highlight: true },
+              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  value2: 163.2,  color: '#22c55e' },
+              { label: 'Energía',    label_en: 'Energy',          value: 130.6, value2: 1181.6, color: '#eab308' },
+              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  value2: 158.3,  color: '#1e3a5f' },
+              { label: 'Gobernación', label_en: 'Governance',     value: 17.8,  value2: 204.4,  color: '#be123c' },
+              { label: 'Educación',  label_en: 'Education',       value: 19.1,  value2: 250.1,  color: '#3b82f6' },
+              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  value2: 625.5,  color: '#16a34a' },
+              { label: 'Salud',           label_en: 'Health',          value: 104.2, value2: 1739.7, color: '#dc2626' },
             ],
-            referenceLine: { value: 65.85, label: 'Equal distribution (526.8B / 8 sectors)', label_es: 'Distribución igual (526.8 mil millones / 8 sectores)', color: 'var(--color-sector-tecnologia)' },
             unit: 'B MXN',
-            annotation: 'Filled dot = P3 intermediary value (B MXN). Open dot = equal-distribution reference (65.85B per sector). Top 3 sectors hold 2–3× their expected share.',
-            annotation_es: 'Punto relleno = valor intermediario P3 (miles de millones MXN). Punto abierto = referencia de distribución igual (65.85 mil millones por sector). Los 3 primeros sectores concentran 2–3× su parte esperada.',
+            gapFormat: 'ratio',
+            annotation: 'Filled dot = P3 intermediary spend (B MXN). Open dot = sector total at high or critical risk (B MXN). Right column = P3 share of the sector’s at-risk footprint. Infrastructure routes 19.6% of its high-risk spend through P3 intermediaries — roughly three times the share seen in Health (6.0%) or Hacienda (6.5%).',
+            annotation_es: 'Punto relleno = gasto P3 de intermediación (miles de millones MXN). Punto abierto = total sectorial en riesgo alto o crítico (miles de millones MXN). Columna derecha = porción del gasto de riesgo del sector que corre por estructuras P3. Infraestructura canaliza 19.6% de su gasto de alto riesgo por intermediarios P3 — cerca del triple de la porción que se observa en Salud (6.0%) o Hacienda (6.5%).',
           },
         },
         pullquote: {
@@ -2553,21 +2571,31 @@ export const STORIES: StoryDef[] = [
           title_es: 'Top proveedores con patrón de intermediario P3 por valor total de contratos',
           chartId: 'p3-top-vendors',
           data: {
+            // 2026-05-22: colors driven by real v0.8.5 risk scores from
+            // aria_queue (avg_risk_score per vendor_stats). The original
+            // editorial split was "red = pass-through cartels, gold =
+            // legitimate foreign specialists." The model disagrees: all
+            // 10 land in high/critical. PEMEX foreign specialists
+            // (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride 0.95)
+            // are model-flagged critical despite being on the structural-
+            // FP list per CLAUDE.md — surfacing that disagreement is the
+            // point. The two-population editorial claim is in the prose;
+            // the chart shows what the model actually says.
             points: [
-              { label: 'Constructora ARHNOS',         value: 32.0, color: '#dc2626', highlight: true, annotation: '6 contracts · state public works',  annotation_es: '6 contratos · obras públicas estatales' },
-              { label: 'Promotora y Desarrolladora',  value: 21.1, color: '#dc2626', highlight: true, annotation: '3 contracts · IMSS hospitals',       annotation_es: '3 contratos · hospitales IMSS' },
-              { label: 'Antonio Vigil Maximino',      value: 9.75, color: '#dc2626', highlight: true, annotation: '2 contracts · IMSS',                  annotation_es: '2 contratos · IMSS' },
-              { label: 'CAABSA Constructora',         value: 9.18, color: '#dc2626', highlight: true, annotation: '3 contracts · CDMX',                  annotation_es: '3 contratos · CDMX' },
-              { label: 'GTECH Printing',              value: 7.72, color: '#a06820',                  annotation: '2 contracts · lottery printing',      annotation_es: '2 contratos · impresión lotería' },
-              { label: 'Técnicas Reunidas (ES)',      value: 7.24, color: '#a06820',                  annotation: '2 contracts · PEMEX engineering',     annotation_es: '2 contratos · ingeniería PEMEX' },
-              { label: 'GX2 Desarrollos',             value: 5.89, color: '#dc2626', highlight: true, annotation: '2 contracts · Sinaloa · risk 0.84',  annotation_es: '2 contratos · Sinaloa · riesgo 0.84' },
-              { label: 'Petrobras JV (BR)',           value: 5.86, color: '#a06820',                  annotation: '2 contracts · PEMEX',                 annotation_es: '2 contratos · PEMEX' },
-              { label: 'Pride International (US)',    value: 5.48, color: '#a06820',                  annotation: '6 contracts · PEMEX offshore',        annotation_es: '6 contratos · PEMEX costa afuera' },
-              { label: 'LAMAP',                       value: 4.73, color: '#dc2626', highlight: true, annotation: '17 contracts · IMSS-Bienestar',      annotation_es: '17 contratos · IMSS-Bienestar' },
+              { label: 'Constructora ARHNOS',         value: 32.0, riskScore: 0.52, highlight: true, annotation: '6 contracts · state public works · risk 0.52',  annotation_es: '6 contratos · obras públicas estatales · riesgo 0.52' },
+              { label: 'Promotora y Desarrolladora',  value: 21.1, riskScore: 0.59,                  annotation: '3 contracts · IMSS hospitals · risk 0.59',      annotation_es: '3 contratos · hospitales IMSS · riesgo 0.59' },
+              { label: 'Antonio Vigil Maximino',      value: 9.75, riskScore: 0.50,                  annotation: '2 contracts · IMSS · risk 0.50',                annotation_es: '2 contratos · IMSS · riesgo 0.50' },
+              { label: 'CAABSA Constructora',         value: 9.18, riskScore: 0.72,                  annotation: '3 contracts · CDMX · risk 0.72',                annotation_es: '3 contratos · CDMX · riesgo 0.72' },
+              { label: 'GTECH Printing',              value: 7.72, riskScore: 0.58,                  annotation: '2 contracts · lottery printing · risk 0.58',    annotation_es: '2 contratos · impresión lotería · riesgo 0.58' },
+              { label: 'Técnicas Reunidas (ES)',      value: 7.24, riskScore: 0.89,                  annotation: '2 contracts · PEMEX engineering · risk 0.89 (structural FP)', annotation_es: '2 contratos · ingeniería PEMEX · riesgo 0.89 (FP estructural)' },
+              { label: 'GX2 Desarrollos',             value: 5.89, riskScore: 0.54,                  annotation: '2 contracts · Sinaloa · risk 0.54',             annotation_es: '2 contratos · Sinaloa · riesgo 0.54' },
+              { label: 'Petrobras JV (BR)',           value: 5.86, riskScore: 0.90,                  annotation: '2 contracts · PEMEX · risk 0.90',               annotation_es: '2 contratos · PEMEX · riesgo 0.90' },
+              { label: 'Pride International (US)',    value: 5.48, riskScore: 0.95,                  annotation: '6 contracts · PEMEX offshore · risk 0.95',      annotation_es: '6 contratos · PEMEX costa afuera · riesgo 0.95' },
+              { label: 'LAMAP',                       value: 4.73, riskScore: 0.47,                  annotation: '17 contracts · IMSS-Bienestar · risk 0.47',     annotation_es: '17 contratos · IMSS-Bienestar · riesgo 0.47' },
             ],
             unit: 'B MXN',
-            annotation: 'Red rows: pass-through signature (microscopic contract counts × enormous per-contract value, domestic). Gold rows: international specialists with structurally narrow supplier markets (PEMEX legitimate sole-source). The investigative work is to separate these two populations from RUBLI\'s 2,974 P3-flagged vendors.',
-            annotation_es: 'Filas rojas: firma de paso (cuentas de contratos minúsculas × valor por contrato enorme, locales). Filas oro: especialistas internacionales con mercados de proveedores estructuralmente reducidos (única fuente legítima en PEMEX). El trabajo investigativo consiste en separar estas dos poblaciones entre los 2,974 proveedores con bandera P3 de RUBLI.',
+            annotation: 'Bar color = v0.8.5 risk score (critical / high). All 10 top-value P3 vendors land in the high-or-critical band — the model rejects the prose\'s "legitimate foreign specialist" framing for PEMEX contractors (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride International 0.95), which sit on RUBLI\'s structural-FP exclusion list precisely because the model otherwise flags them. The investigative question shifts: which of these critical-band scores reflect real intermediary fraud and which are model artifacts of structurally narrow supplier markets?',
+            annotation_es: 'Color de barra = calificación de riesgo v0.8.5 (crítica / alta). Los 10 proveedores P3 de mayor valor caen en la banda alta-o-crítica — el modelo rechaza la lectura del cuerpo del texto de "especialista extranjero legítimo" para los contratistas de PEMEX (Petrobras JV 0.90, Técnicas Reunidas 0.89, Pride International 0.95), que están en la lista de exclusión de FP estructurales de RUBLI precisamente porque el modelo de otra forma los marca. La pregunta investigativa cambia: ¿cuáles de estas calificaciones de banda crítica reflejan fraude real por intermediación y cuáles son artefactos del modelo en mercados de proveedores estructuralmente reducidos?',
           },
         },
         pullquote: {

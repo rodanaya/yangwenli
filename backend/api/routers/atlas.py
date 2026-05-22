@@ -14,9 +14,11 @@ Lens mapping:
 import json
 import logging
 import sqlite3
+import time
+import threading
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_db_dep
@@ -57,6 +59,61 @@ _SECTOR_LABEL_FALLBACK: dict[str, tuple[str, str]] = {
     "trabajo": ("Trabajo", "Labor"),
     "otros": ("Otros", "Other"),
 }
+
+
+# ---------------------------------------------------------------------------
+# In-process cache for the batch endpoint
+# ---------------------------------------------------------------------------
+#
+# Galaxy data only changes when the ARIA pipeline re-runs (typically once
+# per retrain or once per CENTINELA refresh). We measured 4.1s cold and 4.1s
+# warm for the same (lens, codes, limit) tuple over the public edge — most
+# of which is per-request SQLite connection setup with cache_size/mmap_size
+# PRAGMAs against a 5GB DB. An in-process TTL cache collapses every repeat
+# call into a dict lookup and lets `Cache-Control: public, max-age=300` on
+# the response take over the rest.
+#
+# Cache key is a frozen tuple of (lens, normalized-codes, limit). Codes are
+# sorted to make the key insensitive to order — a request for `P1,P2,P3` and
+# `P3,P2,P1` hit the same entry. Frontend already sorts its codes for the
+# react-query key.
+#
+# TTL = 600s. ARIA pipeline runs are explicit, manual events; a 10-minute
+# staleness window is well inside the rate of legitimate data movement.
+
+_BATCH_CACHE_TTL_S = 600.0
+_batch_cache: dict[tuple, tuple[float, "ClusterVendorsBatchResponse"]] = {}
+_batch_cache_lock = threading.Lock()
+
+
+def _batch_cache_key(lens: str, codes: list[str], limit: int) -> tuple:
+    return (lens, tuple(sorted(codes)), limit)
+
+
+def _batch_cache_get(key: tuple) -> Optional["ClusterVendorsBatchResponse"]:
+    with _batch_cache_lock:
+        entry = _batch_cache.get(key)
+        if entry is None:
+            return None
+        expires_at, payload = entry
+        if time.monotonic() > expires_at:
+            _batch_cache.pop(key, None)
+            return None
+        return payload
+
+
+def _batch_cache_put(key: tuple, payload: "ClusterVendorsBatchResponse") -> None:
+    with _batch_cache_lock:
+        _batch_cache[key] = (time.monotonic() + _BATCH_CACHE_TTL_S, payload)
+        # Bound the cache so a long-running process can't grow it forever.
+        # 256 entries is enough for every (lens × code-set × limit) combo the
+        # Observatory typically requests (4 lenses × ~16 reasonable code-sets
+        # × ~4 limits = 256). On overflow, drop the oldest entry by recreating
+        # the dict from the most recent insertions.
+        if len(_batch_cache) > 256:
+            keep = list(_batch_cache.items())[-128:]
+            _batch_cache.clear()
+            _batch_cache.update(keep)
 
 
 # ---------------------------------------------------------------------------
@@ -162,6 +219,7 @@ def get_cluster_vendors(
 
 @router.get("/cluster-vendors-batch", response_model=ClusterVendorsBatchResponse)
 def get_cluster_vendors_batch(
+    response: Response,
     lens: str = Query(..., description="Lens type: patterns, sectors, categories, terms"),
     codes: str = Query(..., description="Comma-separated cluster codes, e.g. 'P1,P2,P3,P4,P5,P6,P7'"),
     limit: int = Query(10, ge=1, le=50, description="Top-N vendors per cluster"),
@@ -176,7 +234,23 @@ def get_cluster_vendors_batch(
 
     Returns the same per-cluster response shape as /cluster-vendors, wrapped
     in a `{ lens, clusters: [...] }` envelope.
+
+    Caching (2026-05-22):
+      • In-process TTL cache (600s) keyed on (lens, sorted-codes, limit).
+        Galaxy data only changes when the ARIA pipeline re-runs; the cold
+        path used to be 4.1s end-to-end and warm was *also* 4.1s because
+        every request opened a fresh SQLite connection. The cache makes
+        repeat hits a dict lookup (<1ms).
+      • `Cache-Control: public, max-age=300` lets browsers and any edge
+        proxy reuse the response. `stale-while-revalidate=600` keeps the
+        UI snappy if a refresh races a TTL expiry — the user gets the
+        stale payload immediately while a fresh fetch runs in the
+        background.
     """
+    # Always set cache headers so the browser/edge layer can collaborate
+    # even when we have to do the DB work ourselves.
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=600"
+
     if lens not in _VALID_LENSES:
         return ClusterVendorsBatchResponse(lens=lens, clusters=[])
 
@@ -185,6 +259,15 @@ def get_cluster_vendors_batch(
     code_list = [c.strip() for c in codes.split(",") if c.strip()][:50]
     if not code_list:
         return ClusterVendorsBatchResponse(lens=lens, clusters=[])
+
+    # Cache lookup — sorted-codes key collapses callers that request the
+    # same codes in different orders into one entry.
+    cache_key = _batch_cache_key(lens, code_list, limit)
+    cached = _batch_cache_get(cache_key)
+    if cached is not None:
+        response.headers["X-Cache"] = "HIT"
+        return cached
+    response.headers["X-Cache"] = "MISS"
 
     results: list[ClusterVendorsResponse] = []
     for code in code_list:
@@ -198,7 +281,9 @@ def get_cluster_vendors_batch(
             r = _query_terms(conn, code)
         results.append(r)
 
-    return ClusterVendorsBatchResponse(lens=lens, clusters=results)
+    payload = ClusterVendorsBatchResponse(lens=lens, clusters=results)
+    _batch_cache_put(cache_key, payload)
+    return payload
 
 
 # ---------------------------------------------------------------------------
