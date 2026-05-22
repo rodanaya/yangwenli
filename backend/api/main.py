@@ -436,6 +436,11 @@ _CACHE_MED_PREFIXES = (  # 10min — analytical read-only aggregates
     "/api/v1/categories",
     "/api/v1/procurement-health",
     "/api/v1/collusion",
+    # 2026-05-22 — Observatory galaxy/zoom endpoints. Data only changes when
+    # the ARIA pipeline re-runs (manual, infrequent). The cluster-vendors-batch
+    # endpoint was paying 4.1s on every page refresh because the default
+    # `no-cache` fallthrough below was stripping the router-level header.
+    "/api/v1/atlas",
 )
 _CACHE_SHORT_PREFIXES = (  # 5min — entity profiles (change only with new data)
     "/api/v1/vendors",
