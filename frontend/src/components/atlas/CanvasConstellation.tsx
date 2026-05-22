@@ -295,6 +295,11 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
   // initial draw (which references the lattice-fallback dots). Using a ref
   // ensures wheel/pan events call the current draw, with the current dots.
   const drawRef = useRef<() => void>(() => {})
+  // 2026-05-22 — same issue for the ResizeObserver: the resize callback is
+  // also registered once on mount (empty deps) and calls rebuildQuadtree().
+  // After real-vendor dots load, the stale rebuildQuadtree closure would
+  // rebuild with zero dots. Keep a ref in sync so resize always uses current.
+  const rebuildQuadtreeRef = useRef<() => void>(() => {})
 
   // — Risk-floor fade state —
   // Tracks the floor at the start of the current fade + its start timestamp.
@@ -347,8 +352,12 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
         ctx.scale(dpr, dpr)
       }
       // Quadtree is in CSS-px screen space; rebuild on resize.
-      rebuildQuadtree()
-      draw()
+      // 2026-05-22 — use refs (not the mount-time closures) so that when
+      // ResizeObserver fires after real-vendor dots have loaded, it uses
+      // the current rebuildQuadtree + draw (with the live 70-dot array),
+      // not the stale initial versions that had dots = [].
+      rebuildQuadtreeRef.current()
+      drawRef.current()
       forceLabelTick((n) => n + 1)
     }
 
@@ -825,6 +834,8 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
   // Without this, wheel/pan re-paints the lattice fallback that was active at
   // the moment d3-zoom was first bound.
   useEffect(() => { drawRef.current = draw }, [draw])
+  // Keep rebuildQuadtreeRef in sync for the same reason — ResizeObserver uses it.
+  useEffect(() => { rebuildQuadtreeRef.current = rebuildQuadtree }, [rebuildQuadtree])
 
   // — Label positions (React render) —
   const t = transformRef.current
