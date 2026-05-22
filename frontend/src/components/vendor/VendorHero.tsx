@@ -110,7 +110,10 @@ export function VendorHero({
   // end in "S.A. de C.V.", "S.C.", "S. de R.L.", etc. Split for typographic
   // hierarchy: name big, legal form quiet beneath it.
   const { displayName, legalForm } = splitNameAndLegalForm(vendor.name)
-  const editorialName = formatVendorName(displayName)
+  // Hero headline gets the full editorial name (no maxLength truncation).
+  // formatVendorName defaults to maxLength=28 for compact UI — that's the
+  // wrong contract for a magazine cover slug, so pass 300 explicitly.
+  const editorialName = formatVendorName(displayName, 300)
 
   return (
     <header className="relative">
@@ -767,7 +770,10 @@ function buildVendorLede(
   vendor: VendorDetailResponse,
   { lang, isGroundTruth }: { lang: 'en' | 'es'; isGroundTruth: boolean },
 ): string {
-  const name = formatVendorName(vendor.name)
+  // Lede prose uses the full editorial name — no compact-UI truncation.
+  // Split off the legal form first so the lede reads naturally.
+  const { displayName: ledeDisplay } = splitNameAndLegalForm(vendor.name)
+  const name = formatVendorName(ledeDisplay, 300)
   const spend = formatCompactMXN(vendor.total_value_mxn)
   const usd = formatCompactUSD(vendor.total_value_mxn)
   const contracts = formatNumber(vendor.total_contracts)
