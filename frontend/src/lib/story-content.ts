@@ -1646,24 +1646,28 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'editorial-cleveland-pair',
-          title: 'P3 Intermediary Vendors by Sector (Total Value)',
-          title_es: 'Proveedores intermediarios P3 por sector (valor total)',
+          title: 'P3 Intermediation as a Share of Each Sector’s High-Risk Spend',
+          title_es: 'Intermediación P3 como porción del gasto de alto riesgo por sector',
           chartId: 'p3-by-sector',
           data: {
+            // Sorted by P3 share of high-risk spend (descending) so the largest
+            // capture footprint reads at top. value = P3 intermediary spend;
+            // value2 = total high+critical-risk spend in the same sector (real
+            // comparator, sourced from contracts.risk_level rollup, May 22 2026).
             points: [
-              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, value2: 65.85, color: '#ea580c' },
-              { label: 'Energía',         label_en: 'Energy',          value: 130.6, value2: 65.85, color: '#eab308' },
-              { label: 'Salud',           label_en: 'Health',          value: 104.2, value2: 65.85, color: '#dc2626', highlight: true },
-              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  value2: 65.85, color: '#16a34a' },
-              { label: 'Educación',       label_en: 'Education',       value: 19.1,  value2: 65.85, color: '#3b82f6' },
-              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  value2: 65.85, color: '#22c55e' },
-              { label: 'Gobernación',     label_en: 'Governance',      value: 17.8,  value2: 65.85, color: '#be123c' },
-              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  value2: 65.85, color: '#1e3a5f' },
+              { label: 'Infraestructura', label_en: 'Infrastructure',  value: 179.5, value2: 917.3,  color: '#ea580c', highlight: true },
+              { label: 'Agricultura',     label_en: 'Agriculture',     value: 18.8,  value2: 163.2,  color: '#22c55e' },
+              { label: 'Energía',    label_en: 'Energy',          value: 130.6, value2: 1181.6, color: '#eab308' },
+              { label: 'Defensa',         label_en: 'Defense',         value: 15.9,  value2: 158.3,  color: '#1e3a5f' },
+              { label: 'Gobernación', label_en: 'Governance',     value: 17.8,  value2: 204.4,  color: '#be123c' },
+              { label: 'Educación',  label_en: 'Education',       value: 19.1,  value2: 250.1,  color: '#3b82f6' },
+              { label: 'Hacienda',        label_en: 'Treasury',        value: 40.9,  value2: 625.5,  color: '#16a34a' },
+              { label: 'Salud',           label_en: 'Health',          value: 104.2, value2: 1739.7, color: '#dc2626' },
             ],
-            referenceLine: { value: 65.85, label: 'Equal distribution (526.8B / 8 sectors)', label_es: 'Distribución igual (526.8 mil millones / 8 sectores)', color: 'var(--color-sector-tecnologia)' },
             unit: 'B MXN',
-            annotation: 'Filled dot = P3 intermediary value (B MXN). Open dot = equal-distribution reference (65.85B per sector). Top 3 sectors hold 2–3× their expected share.',
-            annotation_es: 'Punto relleno = valor intermediario P3 (miles de millones MXN). Punto abierto = referencia de distribución igual (65.85 mil millones por sector). Los 3 primeros sectores concentran 2–3× su parte esperada.',
+            gapFormat: 'ratio',
+            annotation: 'Filled dot = P3 intermediary spend (B MXN). Open dot = sector total at high or critical risk (B MXN). Right column = P3 share of the sector’s at-risk footprint. Infrastructure routes 19.6% of its high-risk spend through P3 intermediaries — roughly three times the share seen in Health (6.0%) or Hacienda (6.5%).',
+            annotation_es: 'Punto relleno = gasto P3 de intermediación (miles de millones MXN). Punto abierto = total sectorial en riesgo alto o crítico (miles de millones MXN). Columna derecha = porción del gasto de riesgo del sector que corre por estructuras P3. Infraestructura canaliza 19.6% de su gasto de alto riesgo por intermediarios P3 — cerca del triple de la porción que se observa en Salud (6.0%) o Hacienda (6.5%).',
           },
         },
         pullquote: {
