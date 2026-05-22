@@ -1,4 +1,45 @@
 ---
+## Visual Review — 2026-05-22T18:04:16Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s return `x-deny-reason: host_not_allowed` from the egress gateway — cloud runner IP is not in rubli.xyz allowlist. Persistent sandbox infrastructure limitation; consistent with all prior runs since 2026-05-14. Not a site failure. Run from VPS (37.60.232.109) or unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks:** 14 grep hits — all confirmed false positives (no new regressions vs. 2026-05-21 run):
+- `Executive.tsx:73,93,113`: proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — data literals, not UI labels
+- `InstitutionScorecards.tsx:441`: JS object key lookup (`TIER_STYLES[tierName as TierKey]`)
+- `RedThread.tsx:339,340`: JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`)
+- `CaseLibrary.tsx:219`: inside a code comment (not rendered in UI)
+- `Methodology.tsx:119`: academic citation (`Mahalanobis, P.C.`)
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded chart fixture data (`Maypo S.A.`)
+- `ExploreCanvas.tsx:1416,1417,1431,1497`: code comments and corporate-form token constants (S.A., C.V. etc.)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new genuine i18n leaks or hardcoded English-only strings. No regressions vs. 2026-05-21T12:06:02Z run.
+
+---
 ## Visual Review — 2026-05-21T12:06:02Z
 
 ### HTTP Status
