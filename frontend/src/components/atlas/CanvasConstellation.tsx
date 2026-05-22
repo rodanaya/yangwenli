@@ -77,6 +77,18 @@ function withTransition<T extends Element>(
 }
 import { RISK_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { halton } from '@/lib/particle'
+
+// ── Ambient starfield ─────────────────────────────────────────────────────
+// 600 Halton(2,3) positions in 0..1 unit space. Rendered in CANVAS PIXEL
+// space (multiplied by w,h with no zoom transform) so they remain visible
+// at every zoom level, giving the galaxy a persistent starfield texture.
+// Generated once at module load — stable across re-renders and zoom changes.
+const AMBIENT_COUNT = 600
+const AMBIENT_DOTS: Array<{ x: number; y: number }> = Array.from(
+  { length: AMBIENT_COUNT },
+  (_, i) => ({ x: halton(i + 1, 2), y: halton(i + 1, 3) }),
+)
 
 // ── Public API types ──────────────────────────────────────────────────────
 
@@ -723,8 +735,19 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
     ctx.clearRect(0, 0, w, h)
 
-    // Optional: subtle background paint? Keep transparent so the host can
-    // place its own backdrop (Bible §4 — engine stays presentation-neutral).
+    // Ambient starfield — drawn in CANVAS PIXEL space, no zoom transform.
+    // These 600 tiny dots provide background density at every zoom level so
+    // the galaxy never feels empty when zoomed into a single cluster.
+    ctx.fillStyle = '#94a3b8'   // slate-400 — neutral, visible on dark bg
+    ctx.globalAlpha = 0.07
+    ctx.beginPath()
+    for (const p of AMBIENT_DOTS) {
+      // moveTo lifts the fill pen so adjacent arcs aren't connected by lines.
+      ctx.moveTo(p.x * w + 1, p.y * h)
+      ctx.arc(p.x * w, p.y * h, 1, 0, TAU)
+    }
+    ctx.fill()
+    ctx.globalAlpha = 1
 
     // Dots
     for (const d of dots) {

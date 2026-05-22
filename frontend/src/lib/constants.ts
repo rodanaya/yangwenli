@@ -160,7 +160,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-05-22-atlas-fix-resize-stale-draw'
+export const BUILD_ID = '2026-05-22-atlas-ambient-starfield-density'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
