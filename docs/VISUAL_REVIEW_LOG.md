@@ -1135,3 +1135,44 @@ HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — pers
 
 ### Overall: WARN
 HTTP and API checks blocked by Cloudflare egress policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
+
+---
+## Visual Review — 2026-05-23T18:03:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | BLOCKED |
+| https://rubli.xyz/atlas | BLOCKED | BLOCKED |
+| https://rubli.xyz/aria | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors/salud | BLOCKED | BLOCKED |
+| https://rubli.xyz/cases | BLOCKED | BLOCKED |
+| https://rubli.xyz/methodology | BLOCKED | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | BLOCKED |
+
+> All requests return "Host not in allowlist" from the remote execution environment's network policy — cloud runner egress to rubli.xyz is blocked at the network layer (not a Cloudflare 403 from the site itself). Consistent with all prior automated runs in this environment. Not a site failure; run from VPS (37.60.232.109) or an unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-23T12:09:34Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
