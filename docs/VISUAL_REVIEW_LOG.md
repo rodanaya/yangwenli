@@ -1213,3 +1213,40 @@ Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern ma
 
 ### Overall: WARN
 HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced since last review.
+
+---
+## Visual Review — 2026-05-24T06:10:33Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+**Note:** All 403 responses carry body `Host not in allowlist` — confirmed remote execution environment network policy blocks outbound requests to rubli.xyz. Not a site-side failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern matches reviewed):
+
+- **Raw i18n key leaks:** None detected. All 14 regex hits are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token lists — not rendered UI text.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced since last review.
