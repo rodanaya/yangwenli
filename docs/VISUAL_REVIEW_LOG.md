@@ -1176,3 +1176,40 @@ HTTP and API checks blocked by Cloudflare egress policy (`host_not_allowed`) —
 
 ### Overall: WARN
 HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
+
+---
+## Visual Review — 2026-05-24T00:08:55Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/atlas | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/aria | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/cases | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/methodology | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | BLOCKED |
+
+**Note:** All HTTP checks blocked by remote execution environment network policy (`x-deny-reason: host_not_allowed` from reverse proxy). Persistent infrastructure constraint — cloud runner egress IP not on rubli.xyz allowlist. Not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern matches reviewed):
+
+- **Raw i18n key leaks:** None detected. All 14 regex hits are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token lists — not rendered UI text.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced since last review.
