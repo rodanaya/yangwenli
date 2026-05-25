@@ -102,6 +102,158 @@ function patternStrokeFor(clusterCode: string | undefined): string | null {
   return PATTERN_COLORS[clusterCode] ?? null
 }
 
+// ── Pattern glyphs (M-CLUSTER Phase 2) ───────────────────────────────────
+// Each P1..P7 cluster gets a decorative SVG-style glyph drawn behind its
+// vendor dots that encodes the pattern's behavioural signature. The glyph
+// is rendered in the pattern color at low alpha (0.18) so it never competes
+// with the data dots but gives each cluster a visual identity that the
+// user learns to read like a star chart constellation.
+//
+// All glyphs draw within a ~120px box centered at (0,0) — the caller
+// translates + scales before invoking. Stroke + fill use ctx's current
+// strokeStyle / fillStyle (set by caller to pattern hex).
+// Note: TAU = Math.PI * 2 is declared at module scope further down (~line 367).
+// Functions capture it via closure at call time, so forward-reference is safe.
+
+function drawPatternGlyph(
+  ctx: CanvasRenderingContext2D,
+  code: string,
+  cx: number,
+  cy: number,
+  size: number,   // half-width in px — full glyph fits inside ±size box
+  color: string,
+): void {
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = Math.max(1, size / 60)
+  ctx.globalAlpha = 0.16
+  const s = size / 60  // scale factor — design glyphs at "size=60" reference
+
+  switch (code) {
+    case 'P1': {
+      // CONCENTRATED MONOPOLY — large central node + 2 small satellites.
+      ctx.beginPath()
+      ctx.arc(0, 0, 14 * s, 0, TAU)
+      ctx.fill()
+      ctx.globalAlpha = 0.08
+      ctx.beginPath()
+      ctx.arc(28 * s, -10 * s, 4 * s, 0, TAU)
+      ctx.arc(-25 * s, 14 * s, 5 * s, 0, TAU)
+      ctx.fill()
+      break
+    }
+    case 'P2': {
+      // GHOST COMPANY — fading dot trail dissolving outward.
+      for (let i = 0; i < 6; i++) {
+        const t = i / 5
+        ctx.globalAlpha = 0.18 * (1 - t * 0.85)
+        ctx.beginPath()
+        ctx.arc((-25 + i * 12) * s, 0, (6 - i * 0.7) * s, 0, TAU)
+        ctx.fill()
+      }
+      break
+    }
+    case 'P3': {
+      // SINGLE-USE INTERMEDIARY — sharp arrow / burst shape.
+      ctx.beginPath()
+      ctx.moveTo(-28 * s, -16 * s)
+      ctx.lineTo(20 * s, 0)
+      ctx.lineTo(-28 * s, 16 * s)
+      ctx.lineTo(-18 * s, 0)
+      ctx.closePath()
+      ctx.fill()
+      ctx.globalAlpha = 0.10
+      ctx.beginPath()
+      ctx.arc(-34 * s, -8 * s, 3 * s, 0, TAU)
+      ctx.arc(-36 * s, 6 * s, 2.5 * s, 0, TAU)
+      ctx.fill()
+      break
+    }
+    case 'P4': {
+      // BID COLLUSION — paired dyads linked by horizontal bar.
+      ctx.beginPath()
+      ctx.arc(-18 * s, 0, 9 * s, 0, TAU)
+      ctx.arc(18 * s, 0, 9 * s, 0, TAU)
+      ctx.fill()
+      ctx.globalAlpha = 0.22
+      ctx.lineWidth = 3 * s
+      ctx.beginPath()
+      ctx.moveTo(-12 * s, 0)
+      ctx.lineTo(12 * s, 0)
+      ctx.stroke()
+      break
+    }
+    case 'P5': {
+      // SYSTEMATIC OVERPRICING — ascending stair of rectangles.
+      ctx.globalAlpha = 0.16
+      const stepW = 9 * s
+      const heights = [6, 12, 18, 24, 30]
+      for (let i = 0; i < heights.length; i++) {
+        const x = (-22 + i * stepW) * s
+        const h = heights[i] * s
+        ctx.fillRect(x, -h / 2, stepW - 1 * s, h)
+      }
+      break
+    }
+    case 'P6': {
+      // INSTITUTIONAL CAPTURE — hub-and-spoke radial.
+      ctx.beginPath()
+      ctx.arc(0, 0, 6 * s, 0, TAU)
+      ctx.fill()
+      ctx.globalAlpha = 0.12
+      ctx.lineWidth = 1.5 * s
+      const spokes = 8
+      for (let i = 0; i < spokes; i++) {
+        const a = (i / spokes) * TAU
+        ctx.beginPath()
+        ctx.moveTo(Math.cos(a) * 9 * s, Math.sin(a) * 9 * s)
+        ctx.lineTo(Math.cos(a) * 28 * s, Math.sin(a) * 28 * s)
+        ctx.stroke()
+        // satellite dot at the end of each spoke
+        ctx.fillStyle = color
+        ctx.globalAlpha = 0.20
+        ctx.beginPath()
+        ctx.arc(Math.cos(a) * 30 * s, Math.sin(a) * 30 * s, 3 * s, 0, TAU)
+        ctx.fill()
+        ctx.globalAlpha = 0.12
+      }
+      break
+    }
+    case 'P7': {
+      // CONTRACTOR NETWORK — 3 clustered subgroups connected.
+      const groups = [
+        { x: -22, y: -14 },
+        { x: 22, y: -12 },
+        { x: 0, y: 18 },
+      ]
+      // Edges between groups
+      ctx.globalAlpha = 0.10
+      ctx.lineWidth = 1.5 * s
+      ctx.beginPath()
+      for (let i = 0; i < groups.length; i++) {
+        for (let j = i + 1; j < groups.length; j++) {
+          ctx.moveTo(groups[i].x * s, groups[i].y * s)
+          ctx.lineTo(groups[j].x * s, groups[j].y * s)
+        }
+      }
+      ctx.stroke()
+      // 3-node bunches at each group point
+      ctx.globalAlpha = 0.20
+      for (const g of groups) {
+        ctx.beginPath()
+        ctx.arc(g.x * s, g.y * s, 4.5 * s, 0, TAU)
+        ctx.arc((g.x + 6) * s, (g.y + 4) * s, 3 * s, 0, TAU)
+        ctx.arc((g.x - 5) * s, (g.y + 5) * s, 2.5 * s, 0, TAU)
+        ctx.fill()
+      }
+      break
+    }
+  }
+  ctx.restore()
+}
+
 // ── Public API types ──────────────────────────────────────────────────────
 
 /** A single particle in the constellation. World coords in 0..1 fractions. */
@@ -778,6 +930,26 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       grad.addColorStop(1, c.color + '00')  // fully transparent at edge
       ctx.fillStyle = grad
       ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2)
+    }
+
+    // M-CLUSTER Phase 2 — Pattern constellation glyphs. Drawn AFTER ground
+    // glow but BEFORE data dots so they sit behind the swarm. Each P1..P7
+    // cluster gets a decorative SVG-style shape encoding its behavioural
+    // signature (monopoly = central node, ghost = fading trail, etc.). Skip
+    // glyphs when zoomed in tight on a different cluster (other clusters
+    // fade to 0.18 already, glyph would compete with dots).
+    for (const c of clusters) {
+      if (!c.code.startsWith('P') || !PATTERN_COLORS[c.code]) continue
+      const cx = c.fx * w * k + t.x
+      const cy = c.fy * h * k + t.y
+      const glyphSize = 60 * Math.max(1, Math.min(k, 4))
+      if (cx + glyphSize < 0 || cy + glyphSize < 0 || cx - glyphSize > w || cy - glyphSize > h) continue
+      // Dim glyphs in non-pinned clusters when zoomed in
+      const dimFactor = pinnedClusterCode && c.code !== pinnedClusterCode ? 0.35 : 1
+      ctx.save()
+      ctx.globalAlpha = dimFactor
+      drawPatternGlyph(ctx, c.code, cx, cy, glyphSize, c.color)
+      ctx.restore()
     }
 
     // Dots
