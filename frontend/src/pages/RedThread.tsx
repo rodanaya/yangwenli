@@ -19,9 +19,9 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
-import { motion, useScroll, useInView } from 'framer-motion'
+import { motion, useScroll } from 'framer-motion'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
-import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
@@ -40,10 +40,9 @@ import {
 import { ChapterSubject } from '@/components/thread/ChapterSubject'
 import { TimelineHourglass } from '@/components/thread/TimelineHourglass'
 import { PatternDiagnostic } from '@/components/thread/PatternDiagnostic'
-import { ConcentricConstellation, classifyRole } from '@/components/thread/ConcentricConstellation'
+import { ConcentricConstellation } from '@/components/thread/ConcentricConstellation'
 import { MoneyStaircase } from '@/components/thread/MoneyStaircase'
 import { ChapterVerdict } from '@/components/thread/ChapterVerdict'
-import { Skeleton } from '@/components/ui/skeleton'
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
@@ -64,34 +63,8 @@ const CHAPTER_ICONS: Record<ChapterId, React.ElementType> = {
   verdict:  Gavel,
 }
 
-// Pattern palette — mapped to canonical design tokens (bible §2). No invented
-// 7-color palette: we reuse risk + sector tokens so pattern chips read as part
-// of the editorial system.
-//   P1 Monopoly       → risk-critical (structural, severe)
-//   P2 Ghost companies → risk-critical (worst signal)
-//   P3 Intermediary   → risk-high
-//   P4 Splitting      → risk-high
-//   P5 Overpricing    → accent-data (evidence, numeric)
-//   P6 Capture        → accent (gold — institutional)
-//   P7 Misc           → sector-hacienda (green treasury — neutral)
-function getPatternMeta(t: TFunction): Record<string, { label: string; color: string; bg: string; description: string }> {
-  return {
-    P1: { label: t('patterns.P1.label'), color: 'var(--color-risk-critical)',       bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P1.description') },
-    P2: { label: t('patterns.P2.label'), color: 'var(--color-risk-critical)',       bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P2.description') },
-    P3: { label: t('patterns.P3.label'), color: 'var(--color-risk-high)',           bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P3.description') },
-    P4: { label: t('patterns.P4.label'), color: 'var(--color-risk-high)',           bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P4.description') },
-    P5: { label: t('patterns.P5.label'), color: 'var(--color-accent-data)',         bg: 'rgba(37,99,235,0.10)',   description: t('patterns.P5.description') },
-    P6: { label: t('patterns.P6.label'), color: 'var(--color-accent)',              bg: 'rgba(160,104,32,0.10)',  description: t('patterns.P6.description') },
-    P7: { label: t('patterns.P7.label'), color: 'var(--color-sector-hacienda)',     bg: 'rgba(22,163,74,0.10)',   description: t('patterns.P7.description') },
-  }
-}
+// Pattern metadata moved into PatternDiagnostic chapter (component 6/10, 2026-05-25)
 
-const RISK_DOT_COLORS: Record<string, string> = {
-  critical: 'var(--color-risk-critical)',
-  high:     'var(--color-risk-high)',
-  medium:   'var(--color-risk-medium)',
-  low:      'var(--color-text-muted)',
-}
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
@@ -174,95 +147,20 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
 // ─── Chapter 3: The Pattern ─────────────────────────────────────────────────
 
-function ChapterPattern({ waterfall, ariaPattern, isLoading, t }: {
+function ChapterPattern({ waterfall, ariaPattern, isLoading, primarySectorName }: {
   waterfall: Array<{ feature: string; contribution: number; z_score: number; label_en: string }>
   ariaPattern: string | null
   isLoading?: boolean
-  t: TFunction
+  primarySectorName?: string
+  t?: unknown
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-15% 0px' })
-
-  const PATTERN_META = getPatternMeta(t)
-  const meta = ariaPattern ? PATTERN_META[ariaPattern] : null
-
-  // Sort: positive contributions first (drivers), then protective factors
-  const safeWaterfall = Array.isArray(waterfall) ? waterfall : []
-  const sorted = [...safeWaterfall]
-    .filter((f) => Math.abs(f.contribution) > 0.001)
-    .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
-    .slice(0, 10)
-
-  // Cap diagnostic panel at 3 rows: direct award, high-risk rate, avg contract value are
-  // the most interpretable signals; beyond 3 the contributions are <0.05 and add noise.
-  const sortedSix = sorted.slice(0, 3)
-
   return (
-    <ChapterShell id="chapter-pattern">
-      <RedThreadChapter label={t('chapters.headings.pattern')} title={t('pattern.heading')} />
-      <p className="text-text-muted mb-6 max-w-xl text-sm">
-        {t('pattern.description')}
-      </p>
-
-      {/* ARIA pattern badge — compact one-liner instead of a 6-padding card */}
-      {meta && ariaPattern && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="rounded-sm border px-4 py-2.5 mb-5 flex items-center gap-3 flex-wrap"
-          style={{ backgroundColor: meta.bg, borderColor: meta.color + '44' }}
-        >
-          <AlertTriangle className="w-4 h-4 flex-shrink-0" style={{ color: meta.color }} aria-hidden="true" />
-          <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
-          <span className="text-sm font-bold text-text-primary">{meta.label}</span>
-          <span className="text-text-muted">·</span>
-          <span className="text-text-secondary text-xs leading-relaxed flex-1 min-w-[280px]">{meta.description}</span>
-        </motion.div>
-      )}
-
-      {/* Diagnostic panel — replaces the SHAP waterfall with a medical
-          lab-report layout. Each row shows the feature on a -3σ to +3σ
-          axis with sector p25-p75 reference band, vendor's marker dot,
-          and contribution value. Reader sees instantly which "lab values"
-          are out of normal range vs within the population. */}
-      <div ref={ref}>
-        {isLoading && safeWaterfall.length === 0 ? (
-          <div className="space-y-2" role="status" aria-live="polite" aria-label={t('pattern.loadingLabel', { defaultValue: 'Loading diagnostic features' })}>
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-        ) : (
-          <PatternDiagnostic
-            features={sortedSix}
-            inView={inView}
-            raisesLabel={t('pattern.raisesRisk', { defaultValue: 'raises' })}
-            lowersLabel={t('pattern.lowersRisk', { defaultValue: 'lowers' })}
-            referenceLabel={t('pattern.sectorReference', { defaultValue: 'sector p25–p75' })}
-            diagnosisLabel={t('pattern.diagnosis', {
-              defaultValue: '{{anomalous}} of {{total}} lab values outside sector reference range',
-              anomalous: sortedSix.filter((f) => Math.abs(f.z_score) >= 1).length,
-              total: sortedSix.length,
-            })}
-            headerDiagnosis={t('diagnostic.diagnosisLabel', { defaultValue: 'Diagnosis' })}
-            headerFeature={t('diagnostic.featureLabel', { defaultValue: 'Feature' })}
-            headerShap={t('diagnostic.shapLabel', { defaultValue: 'SHAP' })}
-            legendTail={t('diagnostic.tailRaisesRisk', { defaultValue: 'tail (|z| ≥ 1) raises risk' })}
-            legendWithin={t('diagnostic.withinRange', { defaultValue: 'within range or protective' })}
-          />
-        )}
-      </div>
-
-      {!isLoading && safeWaterfall.length === 0 && (
-        <div className="text-text-secondary text-sm italic">{t('pattern.noData')}</div>
-      )}
-
-      <p className="text-[10px] text-text-muted italic mt-2 leading-relaxed">
-        {t('pattern.shapNote')}
-      </p>
-    </ChapterShell>
+    <PatternDiagnostic
+      features={waterfall}
+      ariaPattern={ariaPattern}
+      primarySectorName={primarySectorName}
+      isLoading={isLoading}
+    />
   )
 }
 
@@ -421,108 +319,10 @@ function ChapterPress({ vendorId, webEvidenceScore, t }: {
  * here: this is a *diagnosis*, not an opinion.
  */
 
-// ─── Institutional Footprint Table ─────────────────────────────────────────
+// ─── Institutional Footprint Table — moved into ChapterNetwork's
+//     ConcentricConstellation rewrite (component 4/10, 2026-05-25) ──
 
-type InstitutionRow = {
-  institution_id: number
-  institution_name: string
-  institution_type?: string
-  contract_count: number
-  total_value_mxn: number
-  avg_risk_score?: number
-  first_year?: number
-  last_year?: number
-}
-
-type InstSortKey = 'name' | 'value' | 'contracts' | 'years'
-
-function InstitutionalFootprintTable({ institutions }: { institutions: InstitutionRow[] }) {
-  const { t } = useTranslation('redThread')
-  const [instSortKey, setInstSortKey] = useState<InstSortKey>('value')
-  const [instSortDir, setInstSortDir] = useState<'asc' | 'desc'>('desc')
-
-  const sorted = [...institutions].sort((a, b) => {
-    let cmp = 0
-    if (instSortKey === 'name') cmp = a.institution_name.localeCompare(b.institution_name)
-    else if (instSortKey === 'value') cmp = a.total_value_mxn - b.total_value_mxn
-    else if (instSortKey === 'contracts') cmp = a.contract_count - b.contract_count
-    else {
-      const aSpan = (a.last_year ?? 0) - (a.first_year ?? 0)
-      const bSpan = (b.last_year ?? 0) - (b.first_year ?? 0)
-      cmp = aSpan - bSpan
-    }
-    return instSortDir === 'desc' ? -cmp : cmp
-  })
-
-  const toggleSort = (key: InstSortKey) => {
-    if (instSortKey === key) setInstSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
-    else { setInstSortKey(key); setInstSortDir('desc') }
-  }
-
-  const arrow = (key: InstSortKey) =>
-    instSortKey === key ? (instSortDir === 'desc' ? ' ↓' : ' ↑') : ' ↕'
-
-  return (
-    <div className="mt-5 pt-4 border-t border-border">
-      <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-        {t('institutional.footprintLabel')}
-      </p>
-      <div className="overflow-x-auto rounded-sm border border-border/60 bg-background-card">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-border/60">
-              {(
-                [
-                  { key: 'name' as InstSortKey, label: t('institutional.label'), align: 'left' },
-                  { key: 'value' as InstSortKey, label: t('institutional.totalMxn'), align: 'right' },
-                  { key: 'contracts' as InstSortKey, label: t('institutional.numContracts'), align: 'right' },
-                  { key: 'years' as InstSortKey, label: t('institutional.yearRange'), align: 'right' },
-                ]
-              ).map(({ key, label, align }) => (
-                <th
-                  key={key}
-                  className="px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-text-muted cursor-pointer hover:text-text-primary transition-colors select-none whitespace-nowrap"
-                  style={{ textAlign: align as 'left' | 'right' }}
-                  onClick={() => toggleSort(key)}
-                  aria-sort={instSortKey === key ? (instSortDir === 'desc' ? 'descending' : 'ascending') : 'none'}
-                >
-                  {label + arrow(key)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.slice(0, 12).map((inst, i) => {
-              const yearRange = inst.first_year && inst.last_year
-                ? inst.first_year === inst.last_year ? String(inst.first_year) : `${inst.first_year}–${inst.last_year}`
-                : '—'
-              return (
-                <tr key={inst.institution_id} className={i > 0 ? 'border-t border-border/40' : ''}>
-                  <td className="px-3 py-1.5 min-w-0">
-                    <span className="block" title={inst.institution_name} style={{ color: 'var(--color-text-primary)' }}>
-                      {inst.institution_name}
-                    </span>
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-primary whitespace-nowrap">
-                    {formatCompactMXN(inst.total_value_mxn)}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-secondary whitespace-nowrap">
-                    {formatNumber(inst.contract_count)}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono tabular-nums text-text-muted whitespace-nowrap">
-                    {yearRange}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
-function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: {
+function ChapterNetwork({ vendorId, vendor, coBidders, institutions }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number; primary_sector_name?: string | null; first_contract_year?: number; last_contract_year?: number }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
@@ -539,103 +339,25 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
   t: TFunction
   i18n: { language: string }
 }) {
-  const totalCoBidders = coBidders?.length ?? 0
-  const topCoBidder = coBidders?.[0] ?? null
-  const sectorName = vendor.primary_sector_name ?? null
-
-  // Topology read — interprets the constellation in plain language
-  const topologyRead =
-    totalCoBidders === 0 && vendor.total_institutions <= 5
-      ? t('network.topology.tightSingleSource')
-      : totalCoBidders === 0
-      ? t('network.topology.broadSingleSource')
-      : totalCoBidders <= 3
-      ? t('network.topology.thinNetwork')
-      : t('network.topology.denseNetwork')
-
+  // Loading state — coBidders not yet resolved
+  if (coBidders === null) {
+    return (
+      <ChapterShell id="chapter-network">
+        <div className="h-[340px] rounded bg-background-elevated animate-pulse" role="status" aria-live="polite" />
+      </ChapterShell>
+    )
+  }
+  // Self-contained chapter renders heading + lede + constellation + sections
   return (
-    <ChapterShell id="chapter-network">
-      <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
-      <p className="text-text-secondary mb-3 max-w-2xl text-sm leading-relaxed">
-        {t('network.constellationDescription')}
-      </p>
-
-      {/* The constellation — always renders, even with 0 co-bidders */}
-      <div className="bg-background-card border border-border rounded-sm p-4 mb-3">
-        {coBidders === null ? (
-          <div
-            className="h-[340px] rounded bg-background-elevated animate-pulse"
-            role="status"
-            aria-live="polite"
-            aria-label={t('network.loadingConstellation', { defaultValue: 'Loading network constellation' })}
-          />
-        ) : (
-          <ConcentricConstellation
-            subjectName={vendor.name}
-            sectorName={sectorName}
-            totalInstitutions={vendor.total_institutions}
-            sectorsCount={vendor.sectors_count}
-            coBidders={coBidders}
-            t={t}
-            i18n={i18n}
-          />
-        )}
-      </div>
-
-      {/* Empty-state note — coBidders is loaded but contains zero entries.
-          A blank space here reads as "data missing"; this clarifies it's
-          an editorial finding (the vendor never shared a procedure). */}
-      {coBidders !== null && coBidders.length === 0 && (
-        <div className="rounded-sm border border-border bg-background-card/40 px-4 py-3 mb-3">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
-            {t('network.noCoBiddersLabel', { defaultValue: 'No co-bidders on record' })}
-          </p>
-          <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
-            {t('network.noCoBiddersBody', {
-              defaultValue:
-                'This vendor has not participated in a single procedure alongside another bidder in the COMPRANET record. Either every contract was awarded by direct adjudication, or every competitive procedure had only one valid bidder. Both are themselves signals.',
-            })}
-          </p>
-        </div>
-      )}
-
-      {/* Topology read — plain-language interpretation */}
-      <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
-        <span className="font-mono uppercase tracking-[0.12em] text-[10px] text-text-muted">{t('network.topologyRead')}</span>
-        {' '}— {topologyRead}
-      </p>
-
-      {/* Top co-bidder callout — only when present */}
-      {topCoBidder && (
-        <p className="text-xs text-text-secondary mb-3 max-w-2xl leading-relaxed">
-          <span className="text-text-muted">{t('network.mostFrequent')}</span>{' '}
-          <EntityIdentityChip
-            type="vendor"
-            id={topCoBidder.vendor_id}
-            name={topCoBidder.vendor_name}
-            narrative={true}
-            size="xs"
-            className="inline-flex align-middle"
-          />
-          {' '}— {t('network.sharedProcedures', { count: topCoBidder.co_bid_count })}, {classifyRole(topCoBidder, t).label.toLowerCase()}.
-        </p>
-      )}
-
-      {/* Institutional footprint — sortable compact table */}
-      {institutions && institutions.length > 0 && (
-        <InstitutionalFootprintTable institutions={institutions} />
-      )}
-
-      {/* CTA */}
-      <Link
-        to={`/network?vendor=${vendorId}`}
-        className="group inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors mt-4"
-      >
-        <GitBranch className="w-3.5 h-3.5" aria-hidden="true" />
-        {t('network.openNetworkGraph')}
-        <ExternalLink className="w-3 h-3" aria-hidden="true" />
-      </Link>
-    </ChapterShell>
+    <ConcentricConstellation
+      vendorId={vendorId}
+      subjectName={vendor.name}
+      sectorName={vendor.primary_sector_name ?? null}
+      totalInstitutions={vendor.total_institutions}
+      sectorsCount={vendor.sectors_count}
+      coBidders={coBidders}
+      institutions={institutions ?? undefined}
+    />
   )
 }
 
@@ -655,123 +377,18 @@ function ChapterNetwork({ vendorId, vendor, coBidders, institutions, t, i18n }: 
  * What Chapter II covered (year-by-year activity) is intentionally NOT
  * repeated here. This chapter is about the journey, not the snapshots.
  */
-function ChapterMoney({ timeline, t }: {
+function ChapterMoney({ timeline, vendorName, primarySectorName }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
-  t: TFunction
+  vendorName?: string
+  primarySectorName?: string
+  t?: unknown
 }) {
-  const [hoverYear, setHoverYear] = useState<number | null>(null)
-  const [selectedYear, setSelectedYear] = useState<number | null>(null)
-
-  const totalValue = timeline.reduce((s, item) => s + item.total_value, 0)
-  const peakYear = timeline.reduce((max, item) => item.total_value > (max.total_value ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
-  const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
-  const peakShare = totalValue > 0 ? (peakYear.total_value / totalValue) * 100 : 0
-
-  // Active year for the detail panel — hover wins, then pinned, else peak by value
-  const sorted = [...timeline].sort((a, b) => a.year - b.year)
-  let runningCum = 0
-  const cumByYear = new Map<number, { cum: number; share: number; deltaShare: number }>()
-  for (const item of sorted) {
-    runningCum += item.total_value
-    cumByYear.set(item.year, {
-      cum: runningCum,
-      share: totalValue > 0 ? (runningCum / totalValue) * 100 : 0,
-      deltaShare: totalValue > 0 ? (item.total_value / totalValue) * 100 : 0,
-    })
-  }
-  const detailYear = hoverYear ?? selectedYear
-  const detailItem =
-    detailYear != null
-      ? sorted.find((item) => item.year === detailYear) ?? peakYear
-      : peakYear
-  const detailRisk = detailItem.avg_risk_score ?? 0
-  const detailColor = RISK_DOT_COLORS[getRiskLevel(detailRisk)]
-  const detailCum = cumByYear.get(detailItem.year) ?? { cum: 0, share: 0, deltaShare: 0 }
-
   return (
-    <ChapterShell id="chapter-money">
-      <RedThreadChapter
-        label={t('chapters.headings.money')}
-        title={t('money.heading', { value: formatCompactMXN(totalValue) })}
-      />
-      <p className="text-text-secondary mb-4 max-w-2xl text-sm leading-relaxed">
-        {t('money.staircaseDescription')}
-      </p>
-
-      {/* Inline anchor stats — concentration + peak risk year */}
-      {peakYear && (
-        <div className="flex items-baseline gap-6 mb-3 flex-wrap">
-          <div>
-            <span className="text-base font-bold text-text-primary font-mono tabular-nums">{peakShare.toFixed(0)}%</span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.flowedIn', { year: peakYear.year })}</span>
-          </div>
-          {peakRiskYear && (
-            <div>
-              <span className="text-base font-bold font-mono tabular-nums" style={{ color: 'var(--color-risk-critical)' }}>{((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(0)}%</span>
-              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted ml-2">{t('money.peakRiskYearShort')}</span>
-              <span className="text-xs ml-2 font-mono tabular-nums text-text-muted">{peakRiskYear.year}</span>
-            </div>
-          )}
-          {selectedYear != null && (
-            <button
-              type="button"
-              onClick={() => setSelectedYear(null)}
-              className="ml-auto text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted hover:text-text-primary transition-colors"
-            >
-              {t('timeline.unpin')}
-            </button>
-          )}
-        </div>
-      )}
-
-      <div className="bg-background-card border border-border/60 rounded-sm p-3">
-        <MoneyStaircase
-          timeline={timeline}
-          selectedYear={selectedYear}
-          hoverYear={hoverYear}
-          onHoverYear={setHoverYear}
-          onSelectYear={setSelectedYear}
-          byYearLabel={t('money.byYear')}
-        />
-      </div>
-
-      {/* Detail panel — mirrors Chapter II's interactivity. Hover any
-          year column or click to pin; the panel updates to show the
-          jump for that year + the cumulative share to date. */}
-      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 px-3 py-2.5 rounded-sm border border-border bg-background-card/40">
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {hoverYear != null
-              ? t('timeline.detail.hovering')
-              : selectedYear != null
-              ? t('timeline.detail.pinned')
-              : t('money.peakByValue')}
-          </p>
-          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{detailItem.year}</p>
-          <p className="text-[10px] font-mono uppercase tracking-[0.12em]" style={{ color: detailColor }}>
-            {Math.round(detailRisk * 100)}% {t('timeline.detail.avgRisk').toLowerCase()}
-          </p>
-        </div>
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('money.detail.delta')}</p>
-          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">+{formatCompactMXN(detailItem.total_value)}</p>
-          <p className="text-[10px] font-mono tabular-nums text-text-muted">{detailCum.deltaShare.toFixed(1)}% {t('timeline.detail.ofTotal')}</p>
-        </div>
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('money.detail.cumulative')}</p>
-          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatCompactMXN(detailCum.cum)}</p>
-          <p className="text-[10px] font-mono tabular-nums text-text-muted">{detailCum.share.toFixed(0)}% {t('money.detail.toDate')}</p>
-        </div>
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">{t('timeline.detail.contracts')}</p>
-          <p className="text-base font-bold font-mono tabular-nums text-text-primary leading-tight">{formatNumber(detailItem.contract_count)}</p>
-        </div>
-      </div>
-
-      <p className="text-[10px] text-text-muted italic mt-3 leading-relaxed">
-        {t('money.riskNote')}
-      </p>
-    </ChapterShell>
+    <MoneyStaircase
+      timeline={timeline}
+      vendorName={vendorName}
+      primarySectorName={primarySectorName}
+    />
   )
 }
 
@@ -1204,6 +821,8 @@ export default function RedThread() {
             contract_count: item.contract_count,
             total_value: item.total_value,
           }))}
+          vendorName={vendor.name}
+          primarySectorName={vendor.primary_sector_name}
           t={t}
         />
 
@@ -1213,6 +832,7 @@ export default function RedThread() {
           waterfall={waterfall ?? []}
           ariaPattern={aria?.primary_pattern ?? null}
           isLoading={waterfallLoading}
+          primarySectorName={vendor.primary_sector_name}
           t={t}
         />
 
