@@ -621,7 +621,11 @@ function CanvasAtlasView({
   // unchanged (200/cluster). Lattice dots remain as loading fallback.
   const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
   const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 10, true)
+  // 2026-05-22 — raised from 10 → 50 to restore galaxy density (~350 dots
+  // vs 70). Frontier B cut this to 10 to avoid piling; ambient starfield
+  // layer in CanvasConstellation now provides texture independently of the
+  // real-vendor count, so we can go back to more data dots.
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 50, true)
   const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
 
   // Position helper — deterministic golden-ratio polar offset around the

@@ -1,4 +1,211 @@
 ---
+## Visual Review — 2026-05-25T00:02:08Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s — CDN WAF blocking cloud container egress IP (`x-deny-reason: host_not_allowed`). TLS handshake succeeds; WAF denies at application layer. Persistent environment constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 15 hits — all confirmed false positives (unchanged from 2026-05-23T12:09:34Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `VendorHero.tsx:716` — code comment (JSDoc example, not rendered text)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by CDN egress policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean: 15 hits, all false positives, no change from prior baseline.
+
+---
+## Visual Review — 2026-05-23T12:09:34Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s — Cloudflare WAF blocking cloud container egress IP. TLS handshake to 37.60.232.109 succeeds; WAF denies at application layer. Persistent environment constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 15 hits — all confirmed false positives (+1 vs. 2026-05-23T06:05:54Z baseline of 14):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `VendorHero.tsx:716` — code comment (NEW vs. baseline; contains `"GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V."` as JSDoc example, not rendered text)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by Cloudflare egress policy — persistent environment constraint, not a site failure. Bilingual scan clean: 15 hits, all false positives (+1 new code comment in VendorHero.tsx vs. prior baseline, no actionable gaps).
+
+---
+## Visual Review — 2026-05-23T06:03:51Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s return `Host not in allowlist` from the Anthropic egress gateway — cloud runner IP is not in rubli.xyz allowlist. TLS handshake succeeds (cert CN=rubli.xyz, issuer=sandbox-egress-production TLS Inspection CA, valid until 2026-06-22). Persistent sandbox infrastructure limitation; not a site failure. Run from VPS (37.60.232.109) or unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-23T00:05:07Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — data values, not UI strings
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered in UI
+- `Methodology.tsx:119` — academic citation proper noun (`Mahalanobis, P.C.`)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (`Maypo S.A.`)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants (S.A., C.V., etc.)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run. Hit count stable at 14 confirmed false-positive matches.
+
+---
+## Visual Review — 2026-05-23T00:05:07Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s carry `x-deny-reason: host_not_allowed` from the egress gateway — cloud runner IP is not in rubli.xyz allowlist. Consistent with all prior automated runs since 2026-05-14. Not a site failure; run from VPS (37.60.232.109) or an unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-22T18:04:16Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — data values, not UI strings
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered in UI
+- `Methodology.tsx:119` — academic citation proper noun (`Mahalanobis, P.C.`)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (`Maypo S.A.`)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants (S.A., C.V., etc.)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`x-deny-reason: host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run. Hit count stable at 14 confirmed false-positive matches.
+
+---
+## Visual Review — 2026-05-22T18:04:16Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s return `x-deny-reason: host_not_allowed` from the egress gateway — cloud runner IP is not in rubli.xyz allowlist. Persistent sandbox infrastructure limitation; consistent with all prior runs since 2026-05-14. Not a site failure. Run from VPS (37.60.232.109) or unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy — empty body) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks:** 14 grep hits — all confirmed false positives (no new regressions vs. 2026-05-21 run):
+- `Executive.tsx:73,93,113`: proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — data literals, not UI labels
+- `InstitutionScorecards.tsx:441`: JS object key lookup (`TIER_STYLES[tierName as TierKey]`)
+- `RedThread.tsx:339,340`: JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`)
+- `CaseLibrary.tsx:219`: inside a code comment (not rendered in UI)
+- `Methodology.tsx:119`: academic citation (`Mahalanobis, P.C.`)
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded chart fixture data (`Maypo S.A.`)
+- `ExploreCanvas.tsx:1416,1417,1431,1497`: code comments and corporate-form token constants (S.A., C.V. etc.)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new genuine i18n leaks or hardcoded English-only strings. No regressions vs. 2026-05-21T12:06:02Z run.
+
+---
 ## Visual Review — 2026-05-21T12:06:02Z
 
 ### HTTP Status
@@ -168,7 +375,7 @@ Scanned `frontend/src/pages/` and `frontend/src/components/` for raw i18n key le
 **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
 
 ### Overall: WARN
-Egress proxy blocks all outbound HTTPS from this sandbox — HTTP and API checks cannot be validated from this environment. This is a persistent infrastructure limitation, not a site failure. Bilingual gap scan: no genuine i18n leaks or new hardcoded English-only strings. No regressions vs. 2026-05-14T06:14:02Z run.
+Egress proxy blocks all outbound HTTPS from this environment — HTTP and API checks cannot complete from this sandbox. No change from 2026-05-13 run. Bilingual gap scan: no genuine i18n leaks, no new regressions. To get valid HTTP/API results, run from VPS (37.60.232.109) or an unrestricted host.
 
 ---
 ## Visual Review — 2026-05-14T06:14:02Z
@@ -888,3 +1095,315 @@ HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — envi
 
 ### Overall: WARN
 HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — environment constraint, not a site failure. TLS cert renewed (expires 2026-06-21). Bilingual scan clean — no new gaps detected. Run from an unrestricted host (e.g. VPS or local machine) for live HTTP/API verification.
+
+---
+## Visual Review — 2026-05-22T06:05:54Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s return `Host not in allowlist` from the egress gateway — cloud runner IP is not in rubli.xyz allowlist. Consistent with all prior runs since 2026-05-14. Not a site failure; run from VPS (37.60.232.109) or an unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks:** 14 grep hits — all confirmed false positives (no regressions vs. 2026-05-21 baseline):
+- `Executive.tsx:73,93,113`: proper company nouns (GRUPO FARMACOS, LICONSA, HEMOSER) — legitimate data
+- `InstitutionScorecards.tsx:441`: JS object key lookup (`TIER_STYLES[tierName as TierKey]`) — not UI text
+- `RedThread.tsx:339,340`: JS object key lookups (`WEB_VERDICT_STYLE[verdict]`, `WEB_VERDICT_KEYS[verdict]`) — not UI text
+- `CaseLibrary.tsx:219`: inside a code comment — not rendered in UI
+- `Methodology.tsx:119`: academic citation (`Mahalanobis, P.C.`) — proper noun
+- `StoryMoneySankeyChart.tsx:22,37`: hardcoded chart fixture data (`Maypo S.A.`) — static demo data
+- `ExploreCanvas.tsx:1416,1417,1431,1497`: code comments and corporate-form token constants (S.A., C.V., etc.)
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by egress gateway (`Host not in allowlist`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run. Hit count stable at 14 false-positive matches. Run from an unrestricted host for live HTTP/API verification.
+
+---
+## Visual Review — 2026-05-22T12:03:21Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+> All 403s carry `x-deny-reason: host_not_allowed` from Cloudflare — cloud runner egress IP not in rubli.xyz allowlist. Consistent with all prior automated runs. Not a site failure; run from VPS (37.60.232.109) or an unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-22T06:05:54Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by Cloudflare egress policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
+
+---
+## Visual Review — 2026-05-23T18:03:14Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED | BLOCKED |
+| https://rubli.xyz/atlas | BLOCKED | BLOCKED |
+| https://rubli.xyz/aria | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors | BLOCKED | BLOCKED |
+| https://rubli.xyz/sectors/salud | BLOCKED | BLOCKED |
+| https://rubli.xyz/cases | BLOCKED | BLOCKED |
+| https://rubli.xyz/methodology | BLOCKED | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED | BLOCKED |
+
+> All requests return "Host not in allowlist" from the remote execution environment's network policy — cloud runner egress to rubli.xyz is blocked at the network layer (not a Cloudflare 403 from the site itself). Consistent with all prior automated runs in this environment. Not a site failure; run from VPS (37.60.232.109) or an unrestricted host for live verification.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-23T12:09:34Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
+
+---
+## Visual Review — 2026-05-24T00:08:55Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/atlas | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/aria | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/cases | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/methodology | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | BLOCKED |
+
+**Note:** All HTTP checks blocked by remote execution environment network policy (`x-deny-reason: host_not_allowed` from reverse proxy). Persistent infrastructure constraint — cloud runner egress IP not on rubli.xyz allowlist. Not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern matches reviewed):
+
+- **Raw i18n key leaks:** None detected. All 14 regex hits are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token lists — not rendered UI text.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced since last review.
+
+---
+## Visual Review — 2026-05-24T06:10:33Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+**Note:** All 403 responses carry body `Host not in allowlist` — confirmed remote execution environment network policy blocks outbound requests to rubli.xyz. Not a site-side failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern matches reviewed):
+
+- **Raw i18n key leaks:** None detected. All 14 regex hits are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token lists — not rendered UI text.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced since last review.
+
+---
+## Visual Review — 2026-05-24T12:04:36Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/atlas | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/aria | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/cases | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/methodology | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | BLOCKED |
+
+**Note:** Remote execution environment network policy blocks all outbound HTTP to external hosts ("Host not in allowlist"). HTTP checks cannot be performed from this container. This is an environment constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/` (14 pattern matches reviewed):
+
+- **Raw i18n key leaks:** None detected. All regex hits are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token lists — not rendered UI text.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps introduced.
+
+---
+## Visual Review — 2026-05-24T18:04:04Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/atlas | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/aria | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/cases | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/methodology | 403 host_not_allowed | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | BLOCKED |
+
+**Note:** Remote execution environment network policy blocks all outbound HTTP to external hosts ("Host not in allowlist"). HTTP checks cannot be performed from this container. This is an environment constraint, not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed | BLOCKED |
+
+**Note:** Same network block as above. API checks could not be performed from this environment.
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/`:
+
+- **Raw i18n key leaks (14 hits reviewed):** All are TypeScript object lookups (`TIER_STYLES[tierName]`, `WEB_VERDICT_STYLE[verdict]`), inline comments, vendor name data strings, or corporate-form token arrays — not rendered UI text. No leaks detected.
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by remote environment network policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new i18n gaps detected.
+
+---
+## Visual Review — 2026-05-25T06:14:02Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 BLOCKED (egress policy) | BLOCKED |
+| /atlas | 403 BLOCKED (egress policy) | BLOCKED |
+| /aria | 403 BLOCKED (egress policy) | BLOCKED |
+| /sectors | 403 BLOCKED (egress policy) | BLOCKED |
+| /sectors/salud | 403 BLOCKED (egress policy) | BLOCKED |
+| /cases | 403 BLOCKED (egress policy) | BLOCKED |
+| /methodology | 403 BLOCKED (egress policy) | BLOCKED |
+| /stories/el-ejercito-fantasma | 403 BLOCKED (egress policy) | BLOCKED |
+
+> All 403s carry `x-deny-reason: host_not_allowed` — Cloudflare egress block from managed cloud container, not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 BLOCKED (egress policy) | BLOCKED |
+| /api/v1/sectors | 403 BLOCKED (egress policy) | BLOCKED |
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** 14 hits — all confirmed false positives (no change vs. 2026-05-24T18:04:04Z baseline):
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup (`TIER_STYLES[tierName as TierKey]`), not rendered text
+- `RedThread.tsx:339,340` — JS object key lookups (`WEB_VERDICT_STYLE`, `WEB_VERDICT_KEYS`), not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun (Mahalanobis, P.C.)
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data (Maypo S.A.)
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+
+### Overall: WARN
+HTTP and API checks blocked by Cloudflare egress policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
