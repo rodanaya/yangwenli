@@ -222,7 +222,7 @@ def get_cluster_vendors_batch(
     response: Response,
     lens: str = Query(..., description="Lens type: patterns, sectors, categories, terms"),
     codes: str = Query(..., description="Comma-separated cluster codes, e.g. 'P1,P2,P3,P4,P5,P6,P7'"),
-    limit: int = Query(10, ge=1, le=50, description="Top-N vendors per cluster"),
+    limit: int = Query(10, ge=1, le=200, description="Top-N vendors per cluster"),
     conn: sqlite3.Connection = Depends(get_db_dep),
 ):
     """Return top vendors for MULTIPLE clusters in a single response.
