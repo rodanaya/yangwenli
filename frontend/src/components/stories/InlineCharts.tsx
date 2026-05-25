@@ -27,7 +27,7 @@ import type {
   StoryNetworkData,
   StoryStackedBarData,
 } from '@/lib/story-content'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 // Eyebrow translation map. The structural labels at the top of each
 // chart card ("HORIZONTAL · RANKED", "MULTI-SERIES · 4 VENDORS", etc.)
@@ -1098,22 +1098,46 @@ export function InlineSpikeChart({
 // 6. InlineDivergingBar — centered at 0
 // ---------------------------------------------------------------------------
 
+// Canonical hex allowlist for per-row `color` overrides. Story-content.ts
+// passes raw hexes from SECTOR_COLORS / RISK_COLORS; we accept those values
+// (case-insensitive) and silently drop anything else so a stray ad-hoc hex
+// can't slip into the renderer.
+const CANONICAL_COLOR_ALLOWLIST: ReadonlySet<string> = new Set([
+  ...Object.values(SECTOR_COLORS),
+  ...Object.values(RISK_COLORS),
+].map((c) => c.toLowerCase()))
+
+function resolveRowColor(raw: string | undefined): string | null {
+  if (!raw) return null
+  const v = raw.trim().toLowerCase()
+  if (CANONICAL_COLOR_ALLOWLIST.has(v)) return raw
+  return null
+}
+
 export function InlineDivergingBar({
   data,
   title,
+  lang = 'en',
 }: {
   data: StoryInlineChartData
   title: string
+  lang?: 'en' | 'es'
 }) {
   const pts = data.points
   const BAR_HEIGHT = 20
-  const LABEL_W = 148
+  // Wider label gutter — was 148, truncating "P6 Capture — institution_diversity"
+  // at 18 chars. The new gutter + ~40-char allowance covers every SHAP feature
+  // label in volatilidad ch3/ch5 without breaking the centered layout.
+  const LABEL_W = 240
   const ROW_GAP = 6
   const HALF_W = 180
   const VALUE_PAD = 36
+  const LABEL_MAX_CHARS = 40
   const W = LABEL_W + HALF_W * 2 + VALUE_PAD * 2
   const H = pts.length * (BAR_HEIGHT + ROW_GAP) + 28
   const centerX = LABEL_W + HALF_W
+  const labelFor = (p: StoryChartPoint) =>
+    lang === 'es' ? (p.label_es ?? p.label) : p.label
 
   const absMax = Math.max(...pts.map((p) => Math.abs(p.value)), 0.01)
   const maxAbsPt = pts.reduce((a, b) => (Math.abs(a.value) > Math.abs(b.value) ? a : b), pts[0])
@@ -1126,12 +1150,12 @@ export function InlineDivergingBar({
         maxAbsPt
           ? {
               value: `${maxAbsPt.value > 0 ? '+' : ''}${maxAbsPt.value.toFixed(maxAbsPt.value < 1 ? 4 : 0)}`,
-              label: maxAbsPt.label,
+              label: labelFor(maxAbsPt),
               color: maxAbsPt.value >= 0 ? HIGHLIGHT_COLOR : 'var(--color-sector-tecnologia)',
             }
           : undefined
       }
-      annotation={data.annotation}
+      annotation={lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -1162,10 +1186,20 @@ export function InlineDivergingBar({
           const y = i * (BAR_HEIGHT + ROW_GAP) + 4
           const barW = (Math.abs(pt.value) / absMax) * HALF_W
           const isPos = pt.value >= 0
-          const color = isPos
-            ? (pt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR)
-            : 'var(--color-sector-tecnologia)'
+          // Per-row color override honored only when it resolves against
+          // the canonical SECTOR_COLORS / RISK_COLORS allowlist; otherwise
+          // fall back to the default risk/protective palette.
+          const overrideColor = resolveRowColor(pt.color)
+          const color = overrideColor
+            ?? (isPos
+              ? (pt.highlight ? HIGHLIGHT_COLOR : ANCHOR_COLOR)
+              : 'var(--color-sector-tecnologia)')
           const opacity = pt.highlight ? 0.95 : 0.7
+          const rowLabel = labelFor(pt)
+          const displayLabel =
+            rowLabel.length > LABEL_MAX_CHARS
+              ? rowLabel.slice(0, LABEL_MAX_CHARS - 1) + '…'
+              : rowLabel
 
           return (
             <g key={i}>
@@ -1179,7 +1213,7 @@ export function InlineDivergingBar({
                 fill={pt.highlight ? 'var(--color-text-primary)' : 'var(--color-text-secondary)'}
                 fontWeight={pt.highlight ? 700 : 400}
               >
-                {pt.label.length > 18 ? pt.label.slice(0, 17) + '…' : pt.label}
+                {displayLabel}
               </text>
 
               <rect

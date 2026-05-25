@@ -74,6 +74,8 @@ export interface StoryChapterDef {
       | 'inline-multi-line'
       | 'inline-network'
       | 'inline-stacked-bar'
+      | 'inline-roster'
+      | 'inline-timeline'
       | 'editorial-slope'
       | 'editorial-treemap'
       | 'editorial-beeswarm'
@@ -2869,28 +2871,28 @@ export const STORIES: StoryDef[] = [
           'Extraído de los datos, el ranking institucional es más nítido que el encuadre sectorial. Contando "cúmulos sospechosos" — instancias donde una sola institución adjudicó tres o más contratos al mismo proveedor el mismo día, cada uno en la banda umbral de 195K-305K — DICONSA encabeza la lista con 985 cúmulos que totalizan 3,395 contratos divididos (829.6 millones de pesos), seguida por su entidad sucesora renombrada Alimentación para el Bienestar con 230 cúmulos y 869 contratos. El IMSS se ubica en segundo lugar institucionalmente con 588 cúmulos, 2,109 contratos divididos y 519.5 millones de pesos canalizados por la estructura de fragmentación por umbral. El sector salud aporta además ISSSTE (77 cúmulos), INCMNSZ-Salvador Zubirán (69 cúmulos) y la SSA federal (15 cúmulos) — el patrón de fragmentación en la contratación de insumos médicos es la versión editorialmente más cargada del mecanismo, porque la necesidad de contratación subyacente rara vez se fragmenta temporalmente en la forma que la estructura del contrato implica.',
         ],
         chartConfig: {
-          type: 'inline-bar',
+          type: 'inline-roster',
           title: 'Top Institutions by Same-Day Same-Vendor Threshold-Cluster Splits',
           title_es: 'Top instituciones por divisiones umbral con mismo proveedor en el mismo día',
           chartId: 'threshold-split-institutions',
           data: {
             points: [
-              { label: 'DICONSA',                       value: 985, color: '#16a34a',                  annotation: '3,395 contracts · 829.6M MXN',  annotation_es: '3,395 contratos · 829.6 M MXN' },
-              { label: 'IMSS',                          value: 588, color: '#dc2626', highlight: true, annotation: '2,109 contracts · 519.5M MXN', annotation_es: '2,109 contratos · 519.5 M MXN' },
-              { label: 'Alimentación p/ Bienestar',     value: 230, color: '#16a34a',                  annotation: '869 contracts · 214.2M MXN',    annotation_es: '869 contratos · 214.2 M MXN' },
-              { label: 'ISSSTE',                        value: 77,  color: '#dc2626', highlight: true, annotation: '302 contracts · 75.1M MXN',     annotation_es: '302 contratos · 75.1 M MXN' },
-              { label: 'INCMNSZ Salvador Zubirán',     value: 69,  color: '#dc2626', highlight: true, annotation: '268 contracts · 65.7M MXN',     annotation_es: '268 contratos · 65.7 M MXN' },
-              { label: 'CFE',                           value: 47,  color: '#eab308',                  annotation: '162 contracts · 40.1M MXN',     annotation_es: '162 contratos · 40.1 M MXN' },
-              { label: 'CONALITEG',                     value: 36,  color: '#3b82f6',                  annotation: '132 contracts · 31.7M MXN',     annotation_es: '132 contratos · 31.7 M MXN' },
-              { label: 'Puebla — Comité Educativo',     value: 27,  color: '#3b82f6',                  annotation: '186 contracts · 46.2M MXN',     annotation_es: '186 contratos · 46.2 M MXN' },
-              { label: 'SEMAR',                         value: 19,  color: '#1e3a5f',                  annotation: '61 contracts · 15.2M MXN',      annotation_es: '61 contratos · 15.2 M MXN' },
-              { label: 'PROFECO',                       value: 18,  color: '#be123c',                  annotation: '89 contracts · 20.8M MXN',      annotation_es: '89 contratos · 20.8 M MXN' },
-              { label: 'Secretaría de Salud',           value: 15,  color: '#dc2626', highlight: true, annotation: '132 contracts · 30.1M MXN',     annotation_es: '132 contratos · 30.1 M MXN' },
-              { label: 'IPN',                           value: 14,  color: '#3b82f6',                  annotation: '53 contracts · 13.0M MXN',      annotation_es: '53 contratos · 13.0 M MXN' },
+              { label: 'DICONSA',                      label_es: 'DICONSA',                      value: 985, annotation: 'HACIENDA · SOCIAL PROGRAMS · 3,395 CONTRACTS · 829.6M MXN',  annotation_es: 'HACIENDA · PROGRAMAS SOCIALES · 3,395 CONTRATOS · 829.6 M MXN' },
+              { label: 'IMSS',                         label_es: 'IMSS',                         value: 588, highlight: true, annotation: 'SALUD · MEDICAL SUPPLY · 2,109 CONTRACTS · 519.5M MXN',          annotation_es: 'SALUD · INSUMOS MÉDICOS · 2,109 CONTRATOS · 519.5 M MXN' },
+              { label: 'Alimentación p/ Bienestar',    label_es: 'Alimentación p/ Bienestar',    value: 230, annotation: 'HACIENDA · SOCIAL PROGRAMS · 869 CONTRACTS · 214.2M MXN',    annotation_es: 'HACIENDA · PROGRAMAS SOCIALES · 869 CONTRATOS · 214.2 M MXN' },
+              { label: 'ISSSTE',                       label_es: 'ISSSTE',                       value: 77,  highlight: true, annotation: 'SALUD · MEDICAL SUPPLY · 302 CONTRACTS · 75.1M MXN',           annotation_es: 'SALUD · INSUMOS MÉDICOS · 302 CONTRATOS · 75.1 M MXN' },
+              { label: 'INCMNSZ Salvador Zubirán',     label_es: 'INCMNSZ Salvador Zubirán',     value: 69,  highlight: true, annotation: 'SALUD · MEDICAL SUPPLY · 268 CONTRACTS · 65.7M MXN',           annotation_es: 'SALUD · INSUMOS MÉDICOS · 268 CONTRATOS · 65.7 M MXN' },
+              { label: 'CFE',                          label_es: 'CFE',                          value: 47,  annotation: 'ENERGÍA · ELECTRICITY · 162 CONTRACTS · 40.1M MXN',           annotation_es: 'ENERGÍA · ELECTRICIDAD · 162 CONTRATOS · 40.1 M MXN' },
+              { label: 'CONALITEG',                    label_es: 'CONALITEG',                    value: 36,  annotation: 'EDUCACIÓN · TEXTBOOKS · 132 CONTRACTS · 31.7M MXN',           annotation_es: 'EDUCACIÓN · LIBROS DE TEXTO · 132 CONTRATOS · 31.7 M MXN' },
+              { label: 'Puebla — Comité Educativo',    label_es: 'Puebla — Comité Educativo',    value: 27,  annotation: 'EDUCACIÓN · STATE-LEVEL · 186 CONTRACTS · 46.2M MXN',         annotation_es: 'EDUCACIÓN · NIVEL ESTATAL · 186 CONTRATOS · 46.2 M MXN' },
+              { label: 'SEMAR',                        label_es: 'SEMAR',                        value: 19,  annotation: 'DEFENSA · NAVAL · 61 CONTRACTS · 15.2M MXN',                  annotation_es: 'DEFENSA · MARINA · 61 CONTRATOS · 15.2 M MXN' },
+              { label: 'PROFECO',                      label_es: 'PROFECO',                      value: 18,  annotation: 'GOBERNACIÓN · CONSUMER PROTECTION · 89 CONTRACTS · 20.8M MXN', annotation_es: 'GOBERNACIÓN · PROCURADURÍA DEL CONSUMIDOR · 89 CONTRATOS · 20.8 M MXN' },
+              { label: 'Secretaría de Salud',          label_es: 'Secretaría de Salud',          value: 15,  highlight: true, annotation: 'SALUD · FEDERAL HEALTH · 132 CONTRACTS · 30.1M MXN',           annotation_es: 'SALUD · SALUD FEDERAL · 132 CONTRATOS · 30.1 M MXN' },
+              { label: 'IPN',                          label_es: 'IPN',                          value: 14,  annotation: 'EDUCACIÓN · POLYTECHNIC · 53 CONTRACTS · 13.0M MXN',          annotation_es: 'EDUCACIÓN · POLITÉCNICO · 53 CONTRATOS · 13.0 M MXN' },
             ],
             unit: 'clusters',
-            annotation: 'Each cluster = one institution awarding 3+ contracts to the same vendor on the same day, each between 195K and 305K MXN. The DICONSA pattern (top) reflects bulk-staples purchasing concentration; the healthcare cluster (red — IMSS / ISSSTE / INCMNSZ / SSA) is the editorially loaded version, since medical-supply procurement rarely needs to be fragmented at threshold values.',
-            annotation_es: 'Cada cúmulo = una institución que adjudicó 3 o más contratos al mismo proveedor el mismo día, cada uno entre 195 mil y 305 mil pesos. El patrón DICONSA (arriba) refleja la concentración de compra a granel; el cúmulo de salud (rojo — IMSS / ISSSTE / INCMNSZ / SSA) es la versión editorialmente más cargada, porque la procuración de insumos médicos rara vez necesita fragmentarse en valores umbral.',
+            annotation: 'Each cluster = one institution awarding 3+ contracts to the same vendor on the same day, each between 195K and 305K MXN. The healthcare cluster (IMSS / ISSSTE / INCMNSZ / SSA — ochre rail) is the editorial finding: medical procurement rarely needs day-of fragmentation, so the threshold-splitting pattern is most editorially loaded there. DICONSA and Alimentación p/ Bienestar lead by raw count, but their bulk-staples profile is a different mechanism — large recurrent purchases against a thin oversight surface.',
+            annotation_es: 'Cada cúmulo = una institución que adjudicó 3 o más contratos al mismo proveedor el mismo día, cada uno entre 195 mil y 305 mil pesos. El cúmulo de salud (IMSS / ISSSTE / INCMNSZ / SSA — riel ocre) es el hallazgo editorial: la contratación médica rara vez necesita fragmentarse en un mismo día, por lo que ahí el patrón de fragmentación por umbral está más editorialmente cargado. DICONSA y Alimentación para el Bienestar encabezan por conteo bruto, pero su perfil de compra de productos básicos a granel es un mecanismo distinto — compras grandes y recurrentes contra una superficie de fiscalización delgada.',
           },
         },
         pullquote: {
@@ -2962,9 +2964,6 @@ export const STORIES: StoryDef[] = [
           stat: '~40K',
           statLabel: 'excess contracts structured at threshold values',
           statLabel_es: 'contratos en exceso estructurados en valores umbral',
-          barValue: 0.75,
-          barLabel: 'share awarded by direct adjudication',
-          barLabel_es: 'porción adjudicada por adjudicación directa',
         },
         sources: [
           'Transparencia Mexicana. (2024). Diagnóstico de la Corrupción en Compras Municipales y Estatales.',
@@ -3044,27 +3043,26 @@ export const STORIES: StoryDef[] = [
           'Esto no es un artefacto del diseño. El modelo no fue forzado a elegir price_volatility. Fue una de 18 candidatas iguales. Los datos de 1,427 casos de corrupción confirmada convergieron en ese coeficiente. La elección del algoritmo es un juicio comprimido sobre qué tienen en común los contratos corruptos: precios inconsistentes para trabajo comparable. El mapa de coeficientes abajo muestra la estructura completa.',
         ],
         chartConfig: {
-          type: 'inline-diverging',
-          title: 'v0.8.5 — Mapa de coeficientes de riesgo',
-          title_es: 'v0.8.5 — Mapa de coeficientes de riesgo',
+          type: 'inline-roster',
+          title: 'v0.8.5 — Roster de coeficientes: 18 candidatas, 10 activas',
+          title_es: 'v0.8.5 — Roster de coeficientes: 18 candidatas, 10 activas',
           chartId: 'model-coefficients-full',
           data: {
             points: [
-              { label: 'Price volatility',       label_es: 'Volatilidad de precios',      value: 0.558, highlight: true, annotation: 'señal más fuerte', annotation_es: 'señal más fuerte' },
-              { label: 'Price ratio',             label_es: 'Razón de precios',            value: 0.358 },
-              { label: 'Vendor concentration',   label_es: 'Concentración de proveedor',  value: 0.327 },
-              { label: 'Cobid herfindahl',        label_es: 'Herfindahl de co-licitación', value: 0.272 },
-              { label: 'Network member count',   label_es: 'Tamaño de red',               value: 0.166 },
-              { label: 'Amendment flag',         label_es: 'Modificaciones',              value: 0.102 },
-              { label: 'Ad period (days)',        label_es: 'Periodo publicación (días)',  value: 0.090 },
-              { label: 'Recency z-score',        label_es: 'Recencia (z)',                value: -0.247 },
-              { label: 'Amount residual z',      label_es: 'Residual de monto (z)',       value: -0.187 },
-              { label: 'Institution diversity',  label_es: 'Diversidad institucional',    value: -0.388, color: '#3b82f6', annotation: 'protectora', annotation_es: 'protectora' },
+              { label: 'Price volatility',       label_es: 'Volatilidad de precios',      value: 0.558, highlight: true, annotation: 'PRICE FAMILY · señal más fuerte · +43% vs siguiente', annotation_es: 'FAMILIA PRECIO · señal más fuerte · +43% vs siguiente' },
+              { label: 'Price ratio',             label_es: 'Razón de precios',            value: 0.358, annotation: 'PRICE FAMILY', annotation_es: 'FAMILIA PRECIO' },
+              { label: 'Vendor concentration',   label_es: 'Concentración de proveedor',  value: 0.327, annotation: 'NETWORK FAMILY', annotation_es: 'FAMILIA RED' },
+              { label: 'Cobid herfindahl',        label_es: 'Herfindahl de co-licitación', value: 0.272, annotation: 'NETWORK FAMILY', annotation_es: 'FAMILIA RED' },
+              { label: 'Network member count',   label_es: 'Tamaño de red',               value: 0.166, annotation: 'NETWORK FAMILY', annotation_es: 'FAMILIA RED' },
+              { label: 'Amendment flag',         label_es: 'Modificaciones',              value: 0.102, annotation: 'STRUCTURAL FAMILY', annotation_es: 'FAMILIA ESTRUCTURAL' },
+              { label: 'Ad period (days)',        label_es: 'Periodo publicación (días)',  value: 0.090, annotation: 'STRUCTURAL FAMILY', annotation_es: 'FAMILIA ESTRUCTURAL' },
+              { label: 'Amount residual z',      label_es: 'Residual de monto (z)',       value: -0.187, annotation: 'PRICE FAMILY · protector menor', annotation_es: 'FAMILIA PRECIO · protector menor' },
+              { label: 'Recency z-score',        label_es: 'Recencia (z)',                value: -0.247, annotation: 'STRUCTURAL FAMILY · protector menor', annotation_es: 'FAMILIA ESTRUCTURAL · protector menor' },
+              { label: 'Institution diversity',  label_es: 'Diversidad institucional',    value: -0.388, highlight: true, annotation: 'NETWORK FAMILY · única protectora estructural', annotation_es: 'FAMILIA RED · única protectora estructural' },
             ],
-            referenceLine: { value: 0, label: '', color: '#52525b' },
-            unit: 'coefficient',
-            annotation: '6 features regularized to zero by ElasticNet. price_volatility leads by 43%.',
-            annotation_es: '6 variables regularizadas a cero. price_volatility lidera por 43%.',
+            unit: 'β',
+            annotation: 'Roster ranked by coefficient. 7 risk signals (positive β) above, 2 minor protectives, and institution_diversity (-0.388) as the structural protective anchor. 6 of 18 candidate features were regularized to zero by ElasticNet.',
+            annotation_es: 'Roster ordenado por coeficiente. 7 señales de riesgo (β positivo) arriba, 2 protectoras menores y institution_diversity (-0.388) como ancla protectora estructural. 6 de 18 variables candidatas fueron regularizadas a cero por ElasticNet.',
           },
         },
         pullquote: {
