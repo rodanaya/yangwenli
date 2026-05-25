@@ -50,6 +50,8 @@ function useEyebrow(): (en: string) => string {
       .replace(/^NETWORK · (\d+) NODES · (\d+) TIES/, 'RED · $1 NODOS · $2 LAZOS')
       .replace(/^SHARE · (\d+) ROWS/, 'PROPORCIÓN · $1 FILAS')
       .replace(/^CLEVELAND · PAIR/, 'CLEVELAND · PARES')
+      .replace(/^ROSTER · (\d+) NAMED/, 'NÓMINA · $1 NOMBRADOS')
+      .replace(/^TIMELINE · (\d+) MARKERS/, 'CRONOLOGÍA · $1 MARCADORES')
       .replace(/^CHART · COMPRANET/, 'GRÁFICO · COMPRANET')
   }
 }
@@ -2626,6 +2628,407 @@ export function InlineStackedBar({
           <span>{legendBase}</span>
         </div>
       </div>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// InlineRoster — numbered editorial roster for a small named cast.
+// Each row spans the full width: rank · name (Playfair) · type badge ·
+// value (Playfair Italic 800, right-aligned, tabular-nums). Replaces
+// horizontal bar charts when the editorial point IS the names and labels
+// would truncate in a bar layout. Mirrors the sexenio roster in
+// StoryNarrative.tsx (~line 1700). Highlighted rows get a 2px left rail
+// in ANCHOR_COLOR.
+//
+// Glyph convention: highlighted rows render a filled dot (persona física
+// / individual contractor); non-highlight rows render an open diamond
+// (foreign-INC / shell entity). Single characters keep the markup simple.
+// ---------------------------------------------------------------------------
+
+export function InlineRoster({
+  data,
+  title,
+  lang = 'en',
+}: {
+  data: StoryInlineChartData
+  title: string
+  lang?: 'en' | 'es'
+}) {
+  const pts = data.points
+  const unit = data.unit ?? ''
+  const annotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const labelFor = (p: StoryChartPoint) => (lang === 'es' ? (p.label_es ?? p.label) : p.label)
+  const annotationFor = (p: StoryChartPoint) =>
+    lang === 'es' ? (p.annotation_es ?? p.annotation ?? '') : (p.annotation ?? '')
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow={`ROSTER · ${pts.length} NAMED`}
+      annotation={annotation}
+    >
+      <ol className="divide-y divide-border/60 px-2">
+        {pts.map((p, idx) => {
+          const rank = String(idx + 1).padStart(2, '0')
+          const highlight = !!p.highlight
+          const rail = highlight ? ANCHOR_COLOR : 'transparent'
+          const glyph = highlight ? '●' : '◇'
+          const glyphColor = highlight ? ANCHOR_COLOR : 'var(--color-text-muted)'
+          return (
+            <li
+              key={`${p.label}-${idx}`}
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 py-4 pl-3 pr-2"
+              style={{ borderLeft: `2px solid ${rail}` }}
+            >
+              {/* Rank — Playfair Italic, dimmed */}
+              <span
+                className="tabular-nums select-none"
+                style={{
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontStyle: 'italic',
+                  fontWeight: 800,
+                  fontSize: 24,
+                  lineHeight: 0.95,
+                  letterSpacing: '-0.02em',
+                  color: 'var(--color-text-muted)',
+                  opacity: 0.5,
+                }}
+                aria-hidden="true"
+              >
+                {rank}
+              </span>
+
+              {/* Name + type badge */}
+              <div className="min-w-0">
+                <div
+                  className="text-text-primary"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontWeight: 600,
+                    fontSize: 'clamp(1rem, 1.6vw, 1.18rem)',
+                    lineHeight: 1.25,
+                    letterSpacing: '-0.005em',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {labelFor(p)}
+                </div>
+                {annotationFor(p) && (
+                  <div
+                    className="font-mono uppercase mt-1.5 flex items-center gap-1.5"
+                    style={{
+                      fontSize: 9.5,
+                      letterSpacing: '0.16em',
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    <span aria-hidden style={{ color: glyphColor, fontSize: 11 }}>{glyph}</span>
+                    <span>{annotationFor(p)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Value — Playfair Italic 800, right-aligned */}
+              <div className="text-right whitespace-nowrap">
+                <span
+                  className="tabular-nums"
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontStyle: 'italic',
+                    fontWeight: 800,
+                    fontSize: 'clamp(1.6rem, 2.6vw, 1.9rem)',
+                    lineHeight: 0.95,
+                    letterSpacing: '-0.02em',
+                    color: highlight ? ANCHOR_COLOR : 'var(--color-text-primary)',
+                  }}
+                >
+                  {p.value.toLocaleString()}
+                </span>
+                {unit && (
+                  <span
+                    className="font-mono uppercase ml-1.5"
+                    style={{
+                      fontSize: 9.5,
+                      letterSpacing: '0.16em',
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    {unit}
+                  </span>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </ChartCard>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// InlineTimeline — typographic horizontal timeline. Single hairline scale
+// 0→maxValue with N proportional markers. Above each marker: Playfair
+// Italic 800 value. Below each marker: mono caption + role tag (label).
+// Two optional bracket arcs underneath label process windows. Replaces
+// bar charts when the editorial point is TIME / latency, not amount.
+//
+// Data shape:
+//   points: [{ label, value (months), highlight?, annotation? }, ...]
+//   maxValue: scale upper bound (default 40)
+//   referenceLine + referenceLine2: optional, repurposed as bracket arcs
+//     ({ value: startMonth, label: 'ARIA window' }) — value is the START
+//     position; the arc extends to the LAST highlighted/non-highlighted
+//     marker respectively. Simpler: we derive arc spans from highlight
+//     vs non-highlight automatically.
+// ---------------------------------------------------------------------------
+
+export function InlineTimeline({
+  data,
+  title,
+  lang = 'en',
+}: {
+  data: StoryInlineChartData
+  title: string
+  lang?: 'en' | 'es'
+}) {
+  const pts = data.points
+  const maxV = data.maxValue ?? 40
+  const unit = data.unit ?? 'months'
+  const unitLabel = lang === 'es' ? (unit === 'months' ? 'meses' : unit) : unit
+  const annotation = lang === 'es' ? (data.annotation_es ?? data.annotation) : data.annotation
+  const labelFor = (p: StoryChartPoint) => (lang === 'es' ? (p.label_es ?? p.label) : p.label)
+  const annotationFor = (p: StoryChartPoint) =>
+    lang === 'es' ? (p.annotation_es ?? p.annotation ?? '') : (p.annotation ?? '')
+
+  // SVG geometry
+  const W = 760
+  const H = 260
+  const PAD_L = 40
+  const PAD_R = 40
+  const trackY = 130 // hairline y
+  const innerW = W - PAD_L - PAD_R
+
+  const xFor = (v: number) => PAD_L + (Math.min(Math.max(v, 0), maxV) / maxV) * innerW
+
+  // Derive bracket arcs: highlighted markers form one window, others form
+  // the second. We pick the min/max value for each group.
+  const hiPts = pts.filter((p) => p.highlight)
+  const otherPts = pts.filter((p) => !p.highlight)
+  const hiMin = hiPts.length ? Math.min(...hiPts.map((p) => p.value)) : null
+  const hiMax = hiPts.length ? Math.max(...hiPts.map((p) => p.value)) : null
+  const otMin = otherPts.length ? Math.min(...otherPts.map((p) => p.value)) : null
+  const otMax = otherPts.length ? Math.max(...otherPts.map((p) => p.value)) : null
+
+  // Reference labels for the two windows. referenceLine = highlight window
+  // (ARIA), referenceLine2 = non-highlight window (SAT).
+  const hiBracketLabel = data.referenceLine
+    ? (lang === 'es' ? (data.referenceLine.label_es ?? data.referenceLine.label) : data.referenceLine.label)
+    : null
+  const otBracketLabel = data.referenceLine2
+    ? (lang === 'es' ? (data.referenceLine2.label_es ?? data.referenceLine2.label) : data.referenceLine2.label)
+    : null
+
+  // Axis ticks at 0 / maxV/4 / maxV/2 / 3*maxV/4 / maxV
+  const tickValues = [0, Math.round(maxV / 4), Math.round(maxV / 2), Math.round((3 * maxV) / 4), maxV]
+
+  return (
+    <ChartCard
+      title={title}
+      eyebrow={`TIMELINE · ${pts.length} MARKERS`}
+      annotation={annotation}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full"
+        role="img"
+        aria-label={title}
+      >
+        {/* Hairline scale */}
+        <line
+          x1={PAD_L}
+          x2={W - PAD_R}
+          y1={trackY}
+          y2={trackY}
+          stroke="var(--color-border)"
+          strokeWidth={1}
+        />
+
+        {/* Axis ticks (faint) */}
+        {tickValues.map((tv, i) => (
+          <g key={`tick-${i}`}>
+            <line
+              x1={xFor(tv)}
+              x2={xFor(tv)}
+              y1={trackY - 3}
+              y2={trackY + 3}
+              stroke="var(--color-border)"
+              strokeWidth={1}
+            />
+            <text
+              x={xFor(tv)}
+              y={trackY + 18}
+              textAnchor="middle"
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="var(--color-text-muted)"
+              opacity={0.6}
+            >
+              {tv}
+            </text>
+          </g>
+        ))}
+        {/* Scale unit label at far right of ticks */}
+        <text
+          x={W - PAD_R + 4}
+          y={trackY + 18}
+          textAnchor="start"
+          fontSize={9}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="var(--color-text-muted)"
+          opacity={0.55}
+          style={{ letterSpacing: '0.14em' }}
+        >
+          {unitLabel.toUpperCase()}
+        </text>
+
+        {/* Bracket arc 1 — highlight window (above the track) */}
+        {hiBracketLabel && hiMin != null && hiMax != null && (
+          <g>
+            <path
+              d={`M ${xFor(hiMin) - 6} ${trackY - 36} Q ${(xFor(hiMin) + xFor(hiMax)) / 2} ${trackY - 52} ${xFor(hiMax) + 6} ${trackY - 36}`}
+              fill="none"
+              stroke={ANCHOR_COLOR}
+              strokeWidth={1}
+              opacity={0.55}
+            />
+            <text
+              x={(xFor(hiMin) + xFor(hiMax)) / 2}
+              y={trackY - 58}
+              textAnchor="middle"
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill={ANCHOR_COLOR}
+              style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
+            >
+              {hiBracketLabel}
+            </text>
+          </g>
+        )}
+
+        {/* Bracket arc 2 — non-highlight window (below the track) */}
+        {otBracketLabel && otMin != null && otMax != null && (
+          <g>
+            <path
+              d={`M ${xFor(otMin) - 6} ${trackY + 56} Q ${(xFor(otMin) + xFor(otMax)) / 2} ${trackY + 72} ${xFor(otMax) + 6} ${trackY + 56}`}
+              fill="none"
+              stroke="var(--color-text-muted)"
+              strokeWidth={1}
+              opacity={0.55}
+            />
+            <text
+              x={(xFor(otMin) + xFor(otMax)) / 2}
+              y={trackY + 86}
+              textAnchor="middle"
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="var(--color-text-muted)"
+              style={{ letterSpacing: '0.18em', textTransform: 'uppercase' }}
+            >
+              {otBracketLabel}
+            </text>
+          </g>
+        )}
+
+        {/* Markers + labels */}
+        {pts.map((p, i) => {
+          const cx = xFor(p.value)
+          const highlight = !!p.highlight
+          const color = highlight ? ANCHOR_COLOR : 'var(--color-text-muted)'
+          const opacity = highlight ? 1 : 0.7
+          // Stagger above/below labels to avoid collision when markers are
+          // close (e.g. 0.5 and 6). Pure rule: highlight markers always
+          // anchor labels ABOVE the track; non-highlight labels anchor
+          // ABOVE as well but at a slightly lower y so they read together.
+          const valueY = trackY - 16
+          const captionY = trackY + 36
+          return (
+            <g key={`mk-${i}`}>
+              {/* Marker dot */}
+              <circle cx={cx} cy={trackY} r={5} fill={color} opacity={opacity} />
+              {/* Outer ring on highlight for emphasis */}
+              {highlight && (
+                <circle cx={cx} cy={trackY} r={9} fill="none" stroke={color} strokeWidth={1} opacity={0.4} />
+              )}
+
+              {/* Playfair Italic 800 value above */}
+              <text
+                x={cx}
+                y={valueY}
+                textAnchor="middle"
+                fontFamily="'Playfair Display', Georgia, serif"
+                fontStyle="italic"
+                fontWeight={800}
+                fontSize={highlight ? 28 : 22}
+                fill={highlight ? ANCHOR_COLOR : 'var(--color-text-primary)'}
+                style={{ letterSpacing: '-0.02em' }}
+              >
+                <tspan className="tabular-nums">{p.value}</tspan>
+                <tspan
+                  dx={3}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontStyle="normal"
+                  fontWeight={500}
+                  fontSize={9}
+                  fill="var(--color-text-muted)"
+                  style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
+                >
+                  {unitLabel.toLowerCase().startsWith('mes') ? 'mo' : unitLabel.slice(0, 2)}
+                </tspan>
+              </text>
+
+              {/* Vertical drop line from marker to label cluster below */}
+              <line
+                x1={cx}
+                x2={cx}
+                y1={trackY + 6}
+                y2={captionY - 12}
+                stroke={color}
+                strokeWidth={1}
+                opacity={highlight ? 0.6 : 0.3}
+              />
+
+              {/* Role / label (below) */}
+              <text
+                x={cx}
+                y={captionY}
+                textAnchor="middle"
+                fontSize={10}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={highlight ? ANCHOR_COLOR : 'var(--color-text-secondary)'}
+                style={{ letterSpacing: '0.16em', textTransform: 'uppercase' }}
+              >
+                {labelFor(p)}
+              </text>
+              {/* Caption (annotation) — second line below role */}
+              {annotationFor(p) && (
+                <text
+                  x={cx}
+                  y={captionY + 14}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="var(--color-text-muted)"
+                  opacity={0.85}
+                >
+                  {annotationFor(p)}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
     </ChartCard>
   )
 }
