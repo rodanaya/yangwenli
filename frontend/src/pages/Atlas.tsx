@@ -65,6 +65,8 @@ import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
 import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
 import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
+import { ClusterMiniMap } from '@/components/atlas/ClusterMiniMap'
+import { ClusterPaginator } from '@/components/atlas/ClusterPaginator'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -621,11 +623,11 @@ function CanvasAtlasView({
   // unchanged (200/cluster). Lattice dots remain as loading fallback.
   const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
   const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
-  // 2026-05-22 — raised from 10 → 50 to restore galaxy density (~350 dots
-  // vs 70). Frontier B cut this to 10 to avoid piling; ambient starfield
-  // layer in CanvasConstellation now provides texture independently of the
-  // real-vendor count, so we can go back to more data dots.
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 50, true)
+  // 2026-05-22 (M-CLUSTER P1) — bumped from 50 → 200 per cluster to feed the
+  // cluster dock vendor rail with enough rows for browsing (top-200 by risk
+  // per cluster is enough for investigation depth without overwhelming the
+  // render).
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 200, true)
   const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
 
   // Position helper — deterministic golden-ratio polar offset around the
@@ -957,6 +959,36 @@ function CanvasAtlasView({
     }
   }, [isZoomed, focusedVendor])
 
+  // M-CLUSTER P1 — wire cluster paginator keyboard events to flyTo
+  useEffect(() => {
+    if (!isZoomed || !zoomedMeta) return
+    const onPrev = () => {
+      const idx = clusters.findIndex(c => c.code === zoomedCode)
+      if (idx < 0) return
+      const prev = clusters[(idx - 1 + clusters.length) % clusters.length]
+      flyToRef.current?.(prev.code)
+    }
+    const onNext = () => {
+      const idx = clusters.findIndex(c => c.code === zoomedCode)
+      if (idx < 0) return
+      const next = clusters[(idx + 1) % clusters.length]
+      flyToRef.current?.(next.code)
+    }
+    const onJump = (e: Event) => {
+      const ev = e as CustomEvent<{ index: number }>
+      const target = clusters[ev.detail.index]
+      if (target) flyToRef.current?.(target.code)
+    }
+    window.addEventListener('atlas:cluster-prev', onPrev)
+    window.addEventListener('atlas:cluster-next', onNext)
+    window.addEventListener('atlas:cluster-jump', onJump as EventListener)
+    return () => {
+      window.removeEventListener('atlas:cluster-prev', onPrev)
+      window.removeEventListener('atlas:cluster-next', onNext)
+      window.removeEventListener('atlas:cluster-jump', onJump as EventListener)
+    }
+  }, [isZoomed, zoomedMeta, zoomedCode, clusters])
+
   // Keyboard zoom/pan events broadcast by AtlasShell (atlas:zoom-in etc.).
   // Phase 3: wire to engine imperative API. For Pass 2 we no-op pan and
   // delegate +/- to the engine via reset (zoom-in/out require a new
@@ -1044,6 +1076,14 @@ function CanvasAtlasView({
         pinnedClusterCode={pinnedCode ?? zoomedCode}
         riskFloor={riskFloor}
       />
+      {isZoomed && zoomedMeta && !focusedVendor && (
+        <ClusterMiniMap
+          clusters={clusters.map(c => ({ code: c.code, fx: c.fx, fy: c.fy, color: c.color, label: c.label }))}
+          pinnedCode={zoomedCode}
+          onJumpToCluster={(code) => flyToRef.current?.(code)}
+          lang={lang}
+        />
+      )}
       {hoverInfo && currentZoom >= 18 && (
         <CanvasVendorHaloCard
           dot={hoverInfo.dot}
@@ -1133,6 +1173,14 @@ function CanvasAtlasView({
             lang={lang}
           />
         </div>
+      )}
+      {isZoomed && zoomedMeta && !focusedVendor && (
+        <ClusterPaginator
+          clusters={clusters.map(c => ({ code: c.code, color: c.color, label: c.label }))}
+          pinnedCode={zoomedCode}
+          onJumpToCluster={(code) => flyToRef.current?.(code)}
+          lang={lang}
+        />
       )}
     </div>
   )
