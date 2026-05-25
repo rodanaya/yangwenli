@@ -79,16 +79,18 @@ import { RISK_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { halton } from '@/lib/particle'
 
-// ── Ambient starfield ─────────────────────────────────────────────────────
-// 1,200 Halton(2,3) positions in 0..1 unit space. Rendered in CANVAS PIXEL
-// space (multiplied by w,h with no zoom transform) so they remain visible
-// at every zoom level, giving the galaxy a persistent field texture.
-// Generated once at module load — stable across re-renders and zoom changes.
+// ── Ambient field ─────────────────────────────────────────────────────────
+// 3,000 Halton(2,3) positions in 0..1 WORLD space (same space as data dots).
+// Rendered THROUGH the zoom transform so the field participates in pan/zoom
+// — it feels like diving into a starfield instead of staring at a static
+// overlay. Higher count compensates for the fact that high zoom reveals
+// fewer dots within the viewport (at k=12 only ~1/144 of the field is on
+// screen, so 3,000 → ~20 visible — still enough for texture).
 //
 // Color/alpha calibrated for the app's light background (#faf9f6):
 //   slate-500 (#64748b) at alpha 0.18 → effective rgb(~226,228,231) on white
-//   — subtle grey freckle field, clearly visible but not overwhelming.
-const AMBIENT_COUNT = 1200
+//   — subtle grey freckle, clearly visible but not overwhelming.
+const AMBIENT_COUNT = 3000
 const AMBIENT_DOTS: Array<{ x: number; y: number }> = Array.from(
   { length: AMBIENT_COUNT },
   (_, i) => ({ x: halton(i + 1, 2), y: halton(i + 1, 3) }),
@@ -732,17 +734,26 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
 
     ctx.clearRect(0, 0, w, h)
 
-    // Ambient field — drawn in CANVAS PIXEL space, no zoom transform.
-    // 1,200 tiny dots provide background density at every zoom level so
-    // the galaxy never feels empty when zoomed into a single cluster.
-    // slate-500 at 0.18 alpha is calibrated for the light (#faf9f6) background.
+    // Ambient field — drawn in WORLD space, transformed by zoom so the
+    // field pans/zooms together with the data dots (dive-into-starfield
+    // feel). slate-500 at 0.18 alpha is calibrated for the light
+    // (#faf9f6) background.
     ctx.fillStyle = '#64748b'   // slate-500
     ctx.globalAlpha = 0.18
     ctx.beginPath()
+    // Dot radius nudges up at deeper zoom so individual stars stay legible
+    // when only a handful are on screen. Keep modest — too big and it
+    // competes with the data dots.
+    const ambientR = k >= 12 ? 2.2 : k >= 4 ? 1.8 : 1.5
     for (const p of AMBIENT_DOTS) {
+      const sx = p.x * w * k + t.x
+      const sy = p.y * h * k + t.y
+      // Cull off-screen (with a small margin) — at high zoom most of the
+      // field falls outside the viewport, skip those arc calls.
+      if (sx < -10 || sy < -10 || sx > w + 10 || sy > h + 10) continue
       // moveTo lifts the fill pen so adjacent arcs aren't connected by lines.
-      ctx.moveTo(p.x * w + 1.5, p.y * h)
-      ctx.arc(p.x * w, p.y * h, 1.5, 0, TAU)
+      ctx.moveTo(sx + ambientR, sy)
+      ctx.arc(sx, sy, ambientR, 0, TAU)
     }
     ctx.fill()
     ctx.globalAlpha = 1
