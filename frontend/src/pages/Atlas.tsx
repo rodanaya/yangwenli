@@ -623,11 +623,11 @@ function CanvasAtlasView({
   // unchanged (200/cluster). Lattice dots remain as loading fallback.
   const zoomedCodeForFetch = state.view.kind === 'zoomed-cluster' ? state.view.code : null
   const galaxyClusterCodes = useMemo(() => activeMeta.map((m) => m.code), [activeMeta])
-  // 2026-05-22 (M-CLUSTER P1) — bumped from 50 → 200 per cluster to feed the
-  // cluster dock vendor rail with enough rows for browsing (top-200 by risk
-  // per cluster is enough for investigation depth without overwhelming the
-  // render).
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 200, true)
+  // 2026-05-22 — pulled back from 200 to 80 per cluster after user feedback
+  // "it's too much, I can't even navigate." 80 keeps the cluster swarm visibly
+  // dense (top-80 by risk per cluster — much more than the original 50) while
+  // not flooding the canvas. Zoom view stays at 200 (zoomCluster, line below).
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 80, true)
   const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
 
   // Position helper — deterministic golden-ratio polar offset around the

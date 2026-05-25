@@ -23,7 +23,7 @@ export function ClusterMiniMap({
       className="absolute z-20"
       style={{
         top: 56,
-        right: 16,
+        left: 16,
         background: 'var(--color-background-card)',
         border: '1px solid var(--color-border)',
         borderRadius: 4,

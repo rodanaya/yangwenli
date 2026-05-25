@@ -916,41 +916,31 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     ctx.fill()
     ctx.globalAlpha = 1
 
-    // Cluster ground glow — radial gradient at each attractor in its pattern
-    // color, very subtle. Gives the user a visual anchor for each cluster's
-    // identity even before dots render.
-    for (const c of clusters) {
-      const cx = c.fx * w * k + t.x
-      const cy = c.fy * h * k + t.y
-      const glowR = 80 * Math.max(1, Math.min(k, 6))  // scale gently with zoom, cap at 6x
-      // Cull off-screen glows
-      if (cx + glowR < 0 || cy + glowR < 0 || cx - glowR > w || cy - glowR > h) continue
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR)
-      grad.addColorStop(0, c.color + '20')  // ~12% alpha at center (hex 20)
-      grad.addColorStop(1, c.color + '00')  // fully transparent at edge
-      ctx.fillStyle = grad
-      ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2)
+    // Cluster ground glow — only at galaxy view (k < 2). When zoomed in,
+    // the glow fills the canvas and competes with vendor dots. Galaxy-only
+    // glow still gives the user pattern identity when surveying all 7
+    // clusters without overwhelming the in-cluster investigation surface.
+    if (k < 2) {
+      for (const c of clusters) {
+        const cx = c.fx * w * k + t.x
+        const cy = c.fy * h * k + t.y
+        const glowR = 80
+        if (cx + glowR < 0 || cy + glowR < 0 || cx - glowR > w || cy - glowR > h) continue
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR)
+        grad.addColorStop(0, c.color + '20')  // ~12% alpha at center (hex 20)
+        grad.addColorStop(1, c.color + '00')  // fully transparent at edge
+        ctx.fillStyle = grad
+        ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2)
+      }
     }
 
-    // M-CLUSTER Phase 2 — Pattern constellation glyphs. Drawn AFTER ground
-    // glow but BEFORE data dots so they sit behind the swarm. Each P1..P7
-    // cluster gets a decorative SVG-style shape encoding its behavioural
-    // signature (monopoly = central node, ghost = fading trail, etc.). Skip
-    // glyphs when zoomed in tight on a different cluster (other clusters
-    // fade to 0.18 already, glyph would compete with dots).
-    for (const c of clusters) {
-      if (!c.code.startsWith('P') || !PATTERN_COLORS[c.code]) continue
-      const cx = c.fx * w * k + t.x
-      const cy = c.fy * h * k + t.y
-      const glyphSize = 60 * Math.max(1, Math.min(k, 4))
-      if (cx + glyphSize < 0 || cy + glyphSize < 0 || cx - glyphSize > w || cy - glyphSize > h) continue
-      // Dim glyphs in non-pinned clusters when zoomed in
-      const dimFactor = pinnedClusterCode && c.code !== pinnedClusterCode ? 0.35 : 1
-      ctx.save()
-      ctx.globalAlpha = dimFactor
-      drawPatternGlyph(ctx, c.code, cx, cy, glyphSize, c.color)
-      ctx.restore()
-    }
+    // 2026-05-22 — Pattern glyph backdrop (Phase 2) DISABLED.
+    // User feedback: "it's too much, I can't even navigate." The decorative
+    // SVG shapes behind each cluster added visual weight without adding
+    // information density. Keeping the helper function for now (in case we
+    // revisit at a smaller scale or higher zoom only), but the draw loop
+    // skips it. If reinstated, gate strictly on `k < 2` (galaxy band only)
+    // and clamp glyphSize tightly so it never competes with vendor dots.
 
     // Dots
     for (const d of dots) {
@@ -1007,17 +997,19 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       ctx.globalAlpha = alpha
       ctx.fill()
 
-      // Pattern identity stroke — 1px outline in the dot's pattern color.
-      // Preserves risk color as dot fill (CLAUDE.md §3.10) while giving each
-      // cluster visual signature when many clusters are visible at once.
-      const strokeColor = patternStrokeFor(d.clusterCode)
-      if (strokeColor) {
-        ctx.beginPath()
-        ctx.arc(sx, sy, radius, 0, TAU)
-        ctx.strokeStyle = strokeColor
-        ctx.lineWidth = 1
-        ctx.globalAlpha = alpha * 0.4
-        ctx.stroke()
+      // Pattern identity stroke — only at galaxy view (k < 2) when many
+      // clusters are visible. When zoomed in, the dot fill already carries
+      // all the signal and the stroke adds noise. Reduced alpha 0.4 → 0.25.
+      if (k < 2) {
+        const strokeColor = patternStrokeFor(d.clusterCode)
+        if (strokeColor) {
+          ctx.beginPath()
+          ctx.arc(sx, sy, radius, 0, TAU)
+          ctx.strokeStyle = strokeColor
+          ctx.lineWidth = 1
+          ctx.globalAlpha = alpha * 0.25
+          ctx.stroke()
+        }
       }
 
       // Selection halo for highlighted dots.

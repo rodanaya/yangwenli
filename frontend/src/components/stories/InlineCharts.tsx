@@ -392,7 +392,11 @@ export function InlineBarChart({
 }) {
   const mx = maxVal(data.points, data.maxValue)
   const BAR_HEIGHT = 22
-  const LABEL_W = 140
+  // 2026-05-25: bumped LABEL_W 140 → 200 so 18-char vendor names like
+  // "Mantenimiento Expreso" / "Constructora Arhnos" / "Dowell Schlumberger"
+  // / "Mota-Engil México" render fully without right-edge clipping.
+  // Affects gran-precio ch3, marea ch4, industria-del-intermediario ch3.
+  const LABEL_W = 200
   // 2026-05-08: bumped VALUE_W 60 → 90 so 12-character values like
   // "179.5 B MXN" don't clip the rightmost characters when the bar is
   // long. User report: "in infrastructure, I don't see the n."
@@ -762,15 +766,15 @@ export function InlineLineChart({
 
         {lineYLabel && (
           <text
-            x={6}
-            y={PAD.top + plotH / 2}
-            textAnchor="middle"
-            fontSize={10}
+            x={PAD.left}
+            y={10}
+            textAnchor="start"
+            fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
-            transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
+            letterSpacing="0.06em"
           >
-            {lineYLabel}
+            {lineYLabel.toUpperCase()}
           </text>
         )}
       </svg>
@@ -922,15 +926,15 @@ export function InlineAreaChart({
 
         {areaYLabel && (
           <text
-            x={6}
-            y={PAD.top + plotH / 2}
-            textAnchor="middle"
-            fontSize={10}
+            x={PAD.left}
+            y={10}
+            textAnchor="start"
+            fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
-            transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
+            letterSpacing="0.06em"
           >
-            {areaYLabel}
+            {areaYLabel.toUpperCase()}
           </text>
         )}
       </svg>
@@ -1413,15 +1417,15 @@ export function InlineMultiLine({
 
         {yLabel && (
           <text
-            x={6}
-            y={PAD.top + plotH / 2}
-            textAnchor="middle"
-            fontSize={10}
+            x={PAD.left}
+            y={10}
+            textAnchor="start"
+            fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             fill="var(--color-text-muted)"
-            transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
+            letterSpacing="0.06em"
           >
-            {yLabel}{unit ? ` (${unit})` : ''}
+            {(yLabel + (unit ? ` (${unit})` : '')).toUpperCase()}
           </text>
         )}
       </svg>
@@ -1824,7 +1828,10 @@ export function AnnotatedThermometer({
   title: string
   lang?: 'en' | 'es'
 }) {
-  const LABEL_W = 138
+  // 2026-05-25: bumped LABEL_W 138 → 200 to match the InlineBarChart fix.
+  // Thermometer is used on captura ch3 and similar — sector/institution
+  // names like "Infraestructura" / "Pharmaceuticals" need ~165px.
+  const LABEL_W = 200
   const BAR_W = 288
   const VALUE_W = 94
   const TOTAL_W = LABEL_W + BAR_W + VALUE_W
@@ -1995,7 +2002,11 @@ export function ClevelandPairChart({
   title: string
   lang?: 'en' | 'es'
 }) {
-  const LABEL_W = 148
+  // 2026-05-25: bumped LABEL_W 148 → 240 so 24-char vendor names like
+  // "Seg. Alim. Mex (Segalmex)" / "Productos Hospitalarios" /
+  // "Efectivale (S.A.)" render fully without right-edge clipping.
+  // Affects ilusion-competitiva ch3, captura-institucional ch2.
+  const LABEL_W = 240
   const DOT_AREA = 268
   const GAP_W = 84
   const TOTAL_W = LABEL_W + DOT_AREA + GAP_W

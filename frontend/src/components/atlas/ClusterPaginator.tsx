@@ -32,7 +32,7 @@ export function ClusterPaginator({
 
   return (
     <div
-      className="absolute z-20 left-1/2 -translate-x-1/2 bottom-3 flex items-center gap-3 px-3 py-2"
+      className="absolute z-30 left-1/2 -translate-x-1/2 bottom-14 flex items-center gap-3 px-3 py-2"
       style={{
         background: 'var(--color-background-card)',
         border: '1px solid var(--color-border)',
