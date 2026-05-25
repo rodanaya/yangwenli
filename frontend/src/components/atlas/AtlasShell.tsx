@@ -13,10 +13,12 @@
  *
  * Global keyboard handler:
  *   ESC          → pop zoom (zoomed-* / selecting → idle)
- *   + / =        → emit `atlas:zoom-in` (AtlasZoomLayer applies userZoom × 1.2)
- *   -            → emit `atlas:zoom-out` (userZoom × 0.83)
- *   0            → emit `atlas:zoom-reset` (userZoom = 1, panOffset reset)
+ *   + / =        → emit `atlas:zoom-in`
+ *   -            → emit `atlas:zoom-out`
+ *   0            → emit `atlas:zoom-reset`
  *   Arrow keys   → emit `atlas:pan-{up|down|left|right}` (±40 SVG units)
+ *   [ / ]        → emit `atlas:cluster-{prev|next}` (M-CLUSTER P1)
+ *   1-7          → emit `atlas:cluster-jump` with detail.index (M-CLUSTER P1)
  *   H / h        → escape-zoom (return to galaxy)
  *   Enter        → click the focused element (default browser behavior, no-op)
  *
@@ -91,6 +93,22 @@ export function AtlasShell({ leftRail, center }: AtlasShellProps) {
       if (e.key === 'ArrowDown')  { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-down'));  return }
       if (e.key === 'ArrowLeft')  { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-left'));  return }
       if (e.key === 'ArrowRight') { e.preventDefault(); window.dispatchEvent(new CustomEvent('atlas:pan-right')); return }
+      // M-CLUSTER P1 — [ / ] step prev/next cluster, 1-7 jump to pattern by code
+      if (e.key === '[') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:cluster-prev'))
+        return
+      }
+      if (e.key === ']') {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:cluster-next'))
+        return
+      }
+      if (/^[1-7]$/.test(e.key)) {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent('atlas:cluster-jump', { detail: { index: parseInt(e.key, 10) - 1 } }))
+        return
+      }
       // Enter — no-op (lets default browser behavior click the focused element)
     }
 

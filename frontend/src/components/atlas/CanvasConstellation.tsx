@@ -75,7 +75,7 @@ function withTransition<T extends Element>(
   if (ease) tr = tr.ease(ease)
   return tr as TransitionLikeSelection<T>
 }
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { halton } from '@/lib/particle'
 
@@ -95,6 +95,12 @@ const AMBIENT_DOTS: Array<{ x: number; y: number }> = Array.from(
   { length: AMBIENT_COUNT },
   (_, i) => ({ x: halton(i + 1, 2), y: halton(i + 1, 3) }),
 )
+
+/** Hex pattern color for a dot's cluster code (only for P1..P7). */
+function patternStrokeFor(clusterCode: string | undefined): string | null {
+  if (!clusterCode) return null
+  return PATTERN_COLORS[clusterCode] ?? null
+}
 
 // ── Public API types ──────────────────────────────────────────────────────
 
@@ -758,6 +764,22 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     ctx.fill()
     ctx.globalAlpha = 1
 
+    // Cluster ground glow — radial gradient at each attractor in its pattern
+    // color, very subtle. Gives the user a visual anchor for each cluster's
+    // identity even before dots render.
+    for (const c of clusters) {
+      const cx = c.fx * w * k + t.x
+      const cy = c.fy * h * k + t.y
+      const glowR = 80 * Math.max(1, Math.min(k, 6))  // scale gently with zoom, cap at 6x
+      // Cull off-screen glows
+      if (cx + glowR < 0 || cy + glowR < 0 || cx - glowR > w || cy - glowR > h) continue
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR)
+      grad.addColorStop(0, c.color + '20')  // ~12% alpha at center (hex 20)
+      grad.addColorStop(1, c.color + '00')  // fully transparent at edge
+      ctx.fillStyle = grad
+      ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2)
+    }
+
     // Dots
     for (const d of dots) {
       // Position interpolation for year-change tween.
@@ -812,6 +834,19 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       ctx.fillStyle = colorForDot(d)
       ctx.globalAlpha = alpha
       ctx.fill()
+
+      // Pattern identity stroke — 1px outline in the dot's pattern color.
+      // Preserves risk color as dot fill (CLAUDE.md §3.10) while giving each
+      // cluster visual signature when many clusters are visible at once.
+      const strokeColor = patternStrokeFor(d.clusterCode)
+      if (strokeColor) {
+        ctx.beginPath()
+        ctx.arc(sx, sy, radius, 0, TAU)
+        ctx.strokeStyle = strokeColor
+        ctx.lineWidth = 1
+        ctx.globalAlpha = alpha * 0.4
+        ctx.stroke()
+      }
 
       // Selection halo for highlighted dots.
       if (highlightedDotIds && highlightedDotIds.has(d.id)) {
