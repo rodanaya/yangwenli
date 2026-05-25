@@ -84,6 +84,8 @@ export interface StoryChapterDef {
       | 'editorial-threshold'      // P2 ThresholdDistribution
       | 'editorial-thermometer'    // P2 AnnotatedThermometer
       | 'editorial-cleveland-pair' // P2 ClevelandPairChart
+      | 'inline-roster'            // n-ejercito ch3 — roster list of named ghost vendors
+      | 'inline-timeline'          // n-ejercito ch4 — detection-pipeline timeline
     highlight?: string
     title: string
     /** Optional Spanish translation of `title`. */

@@ -155,8 +155,6 @@ export function TimelineHourglass({
         <div className="mt-7">
           <TimelineChart
             timeline={sortedTimeline}
-            minYear={minYear}
-            maxYear={maxYear}
             peakYear={peakItem.year}
             hoverYear={hoverYear}
             selectedYear={selectedYear}
@@ -280,8 +278,6 @@ export function TimelineHourglass({
 
 function TimelineChart({
   timeline,
-  minYear,
-  maxYear,
   peakYear,
   hoverYear,
   selectedYear,
@@ -291,8 +287,6 @@ function TimelineChart({
   lang,
 }: {
   timeline: TimelineItem[]
-  minYear: number
-  maxYear: number
   peakYear: number
   hoverYear: number | null
   selectedYear: number | null
@@ -303,7 +297,6 @@ function TimelineChart({
 }) {
   if (timeline.length === 0) return null
 
-  const yearSpan = Math.max(1, maxYear - minYear)
   const maxValue = Math.max(...timeline.map((t) => t.total_value), 1)
   const maxCount = Math.max(...timeline.map((t) => t.contract_count), 1)
   const logMaxValue = Math.log(maxValue + 1)
@@ -323,35 +316,57 @@ function TimelineChart({
   const BAR_MAX_H = BAR_BASELINE - BAR_TOP
   const innerW = W - PAD.left - PAD.right
 
-  const xOf = (year: number) => PAD.left + ((year - minYear) / yearSpan) * innerW
+  // Index-based slot layout (replaces year→x linear interpolation).
+  // Sparse vendors (2–3 years) cluster centered; long vendors fill width.
+  // Slot width capped at MAX_SLOT_W so 2 bars don't get 350px each.
+  const N = timeline.length
+  const MIN_SLOT_W = 24
+  const MAX_SLOT_W = 56
+  const slotW = Math.max(MIN_SLOT_W, Math.min(MAX_SLOT_W, innerW / Math.max(1, N)))
+  const chartContentW = slotW * N
+  // Center the chart content within innerW when the data doesn't fill it
+  const chartStartX = PAD.left + Math.max(0, (innerW - chartContentW) / 2)
+  const xOfIndex = (i: number) => chartStartX + slotW * (i + 0.5)
+  const xOfYear = (year: number) => {
+    const idx = timeline.findIndex((t) => t.year === year)
+    return idx >= 0 ? xOfIndex(idx) : null
+  }
   const valueH = (v: number) => Math.max(2, (Math.log(v + 1) / logMaxValue) * (BAR_MAX_H - 4))
   const countR = (n: number) => 1.5 + (Math.log(n + 1) / logMaxCount) * 3.5
-
-  const slotW = innerW / Math.max(1, timeline.length)
-  const barW = Math.max(4, Math.min(18, slotW * 0.62))
+  const barW = Math.max(4, Math.min(20, slotW * 0.55))
   const activeYear = hoverYear ?? selectedYear
 
-  // Build admin segments inside the visible year range
-  const adminSegments = ADMINISTRATIONS
-    .map((admin) => {
-      const segStart = Math.max(admin.yearStart, minYear)
-      const segEnd = Math.min(admin.yearEnd, maxYear)
-      if (segEnd < segStart) return null
-      return { admin, segStart, segEnd }
-    })
-    .filter((s): s is NonNullable<typeof s> => s !== null)
+  // Per-year admin assignment via getAdministrationByYear (single source of
+  // truth — same convention used everywhere else in the codebase). Groups
+  // consecutive same-admin years into contiguous index ranges. Each year
+  // belongs to exactly ONE admin, so no overlap at transition years.
+  type AdminSeg = { admin: typeof ADMINISTRATIONS[number]; startIdx: number; endIdx: number }
+  const adminSegments: AdminSeg[] = []
+  for (let i = 0; i < N; i++) {
+    const admin = getAdministrationByYear(timeline[i].year)
+    if (!admin) continue
+    const last = adminSegments[adminSegments.length - 1]
+    if (last && last.admin.key === admin.key) {
+      last.endIdx = i
+    } else {
+      adminSegments.push({ admin, startIdx: i, endIdx: i })
+    }
+  }
 
-  // Determine which years get a label (every year for ≤16, every other for ≤24, every 4 otherwise)
-  const labelStride = timeline.length <= 16 ? 1 : timeline.length <= 24 ? 2 : 4
+  // Determine which years get a label
+  const labelStride = N <= 16 ? 1 : N <= 24 ? 2 : 4
   const yearsToLabel = new Set<number>()
   timeline.forEach((item, i) => {
-    if (i === 0 || i === timeline.length - 1 || item.year === peakYear || i % labelStride === 0) {
+    if (i === 0 || i === N - 1 || item.year === peakYear || i % labelStride === 0) {
       yearsToLabel.add(item.year)
     }
   })
 
-  // Event chips — numbered to match captions below
-  const visibleEvents = TIMELINE_EVENTS.filter((e) => e.year >= minYear && e.year <= maxYear)
+  // Event chips — only show events that align with actual data years
+  // (anchoring to non-data years would float over empty chart space)
+  const visibleEvents = TIMELINE_EVENTS.filter((e) =>
+    timeline.some((t) => t.year === e.year),
+  )
 
   return (
     <svg
@@ -361,17 +376,18 @@ function TimelineChart({
       aria-label={lang === 'es' ? 'Cronología de valor anual de contratos' : 'Annual contract value timeline'}
       onMouseLeave={() => onHoverYear(null)}
     >
-      {/* Admin segment labels at the TOP — centered in each segment */}
-      {adminSegments.map(({ admin, segStart, segEnd }) => {
-        const x1 = xOf(segStart) - slotW / 2
-        const x2 = xOf(segEnd) + slotW / 2
+      {/* Admin segment labels at the TOP — centered over the actual data
+          slots that belong to each admin (no overflow at chart edges). */}
+      {adminSegments.map(({ admin, startIdx, endIdx }) => {
+        const x1 = xOfIndex(startIdx) - slotW / 2
+        const x2 = xOfIndex(endIdx) + slotW / 2
         const cx = (x1 + x2) / 2
         const adminColor = ADMIN_COLORS[admin.key] ?? 'var(--color-text-muted)'
         const segWidth = x2 - x1
-        // Only render label if the segment is wide enough to read
-        if (segWidth < 36) return null
+        // Only render label if the segment is wide enough to read (~40px)
+        if (segWidth < 40) return null
         return (
-          <g key={`admin-label-${admin.key}`}>
+          <g key={`admin-label-${admin.key}-${startIdx}`}>
             <text
               x={cx}
               y={ADMIN_LABEL_Y}
@@ -389,13 +405,13 @@ function TimelineChart({
         )
       })}
 
-      {/* Dashed vertical transition lines between administrations */}
-      {adminSegments.slice(1).map(({ segStart, admin }) => {
-        const x = xOf(segStart) - slotW / 2
+      {/* Dashed vertical transition lines — between each admin segment */}
+      {adminSegments.slice(1).map(({ startIdx, admin }) => {
+        const x = xOfIndex(startIdx) - slotW / 2
         const adminColor = ADMIN_COLORS[admin.key] ?? 'var(--color-text-muted)'
         return (
           <line
-            key={`transition-${admin.key}`}
+            key={`transition-${admin.key}-${startIdx}`}
             x1={x}
             x2={x}
             y1={ADMIN_LABEL_Y + 6}
@@ -409,9 +425,9 @@ function TimelineChart({
       })}
 
       {/* Active-year highlight column */}
-      {activeYear != null && (
+      {activeYear != null && xOfYear(activeYear) != null && (
         <rect
-          x={xOf(activeYear) - slotW / 2}
+          x={(xOfYear(activeYear) ?? 0) - slotW / 2}
           y={BAR_TOP - 4}
           width={slotW}
           height={AXIS_Y - BAR_TOP + 6}
@@ -423,10 +439,10 @@ function TimelineChart({
         />
       )}
 
-      {/* Baseline axis */}
+      {/* Baseline axis — only spans the chart content, not the full innerW */}
       <line
-        x1={PAD.left}
-        x2={W - PAD.right}
+        x1={chartStartX}
+        x2={chartStartX + chartContentW}
         y1={AXIS_Y}
         y2={AXIS_Y}
         stroke="var(--color-border)"
@@ -434,14 +450,13 @@ function TimelineChart({
       />
 
       {/* Value bars + count dots + hit areas */}
-      {timeline.map((item) => {
-        const x = xOf(item.year)
+      {timeline.map((item, i) => {
+        const x = xOfIndex(i)
         const isPeak = item.year === peakYear
         const isActive = item.year === activeYear
         const isPinned = item.year === selectedYear
         const vH = valueH(item.total_value)
         const risk = item.avg_risk_score ?? 0
-        // Peak year gets sector accent; other years get risk-tier color
         const valueColor = isPeak ? sectorAccent : RISK_DOT_COLORS[getRiskLevel(risk)]
         const hitW = Math.max(18, slotW * 0.95)
         return (
@@ -492,9 +507,9 @@ function TimelineChart({
       })}
 
       {/* Year labels along the axis — every year (or every-other / every-fourth) */}
-      {timeline.map((item) => {
+      {timeline.map((item, i) => {
         if (!yearsToLabel.has(item.year)) return null
-        const cx = xOf(item.year)
+        const cx = xOfIndex(i)
         const isPeak = item.year === peakYear
         const isActive = item.year === activeYear
         const yearShort = "'" + String(item.year).slice(-2)
@@ -516,9 +531,10 @@ function TimelineChart({
         )
       })}
 
-      {/* Event chips at the bottom */}
+      {/* Event chips — only render events that align with data years */}
       {visibleEvents.map((e, i) => {
-        const cx = xOf(e.year)
+        const cx = xOfYear(e.year)
+        if (cx == null) return null
         return (
           <g key={`event-${e.year}`} className="cursor-help">
             <title>{e.year} · {lang === 'es' ? e.label_es : e.label_en}</title>
