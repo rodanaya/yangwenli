@@ -1,62 +1,56 @@
 /**
- * ChapterVerdict — Chapter 6: The Verdict
- * Extracted from RedThread.tsx.
+ * ChapterVerdict — Chapter VI of the vendor dossier narrative.
  *
- * Synthesizes all evidence into a prosecutorial closing argument:
- * Question → Evidence → Finding → Memo → Next Steps.
+ * Redesigned 2026-05-25 (DESIGNUS round 6, component 7/10). Argument:
+ * SO WHAT? Editorial closing — synthesizes evidence, presents the ARIA
+ * memo, lists next steps a journalist or auditor would actually take.
+ *
+ * Self-contained chapter. Composition:
+ *   1. Chapter heading (VI · VERDICT · Where this leaves us)
+ *   2. Lede — single sentence synthesizing the case + risk indicator
+ *   3. THE EVIDENCE — weighted list of signals (model · pattern · ARIA ·
+ *      external · web · network)
+ *   4. ARIA MEMO — when present, sector-rule italic block with expand
+ *   5. WEB EVIDENCE — article cards from CENTINELA when present
+ *   6. THE NEXT STEP — action buttons (vendor dossier · save · export)
  */
 
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { cn, getRiskLevel } from '@/lib/utils'
 import { ariaApi } from '@/api/client'
 import { Building2, BookmarkPlus, Download, FileText } from 'lucide-react'
+import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
+import {
+  ChapterShell,
+  ChapterHeading,
+  SubheadRule,
+  LedeParagraph,
+  FadeIn,
+} from '@/components/dossier/primitives'
 
-// ─── Local constants ─────────────────────────────────────────────────────────
+// ─── Local constants ────────────────────────────────────────────────────────
 
 const RISK_DOT_COLORS: Record<string, string> = {
-  critical: 'var(--color-risk-critical)',
-  high:     'var(--color-risk-high)',
-  medium:   'var(--color-risk-medium)',
+  critical: RISK_COLORS.critical,
+  high:     RISK_COLORS.high,
+  medium:   RISK_COLORS.medium,
   low:      'var(--color-text-muted)',
 }
 
-function getPatternMeta(t: (key: string) => string): Record<string, { label: string; color: string; bg: string; description: string }> {
-  return {
-    P1: { label: t('patterns.P1.label'), color: 'var(--color-risk-critical)',   bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P1.description') },
-    P2: { label: t('patterns.P2.label'), color: 'var(--color-risk-critical)',   bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P2.description') },
-    P3: { label: t('patterns.P3.label'), color: 'var(--color-risk-high)',       bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P3.description') },
-    P4: { label: t('patterns.P4.label'), color: 'var(--color-risk-high)',       bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P4.description') },
-    P5: { label: t('patterns.P5.label'), color: 'var(--color-accent-data)',     bg: 'rgba(37,99,235,0.10)',   description: t('patterns.P5.description') },
-    P6: { label: t('patterns.P6.label'), color: 'var(--color-accent)',          bg: 'rgba(160,104,32,0.10)',  description: t('patterns.P6.description') },
-    P7: { label: t('patterns.P7.label'), color: 'var(--color-sector-hacienda)', bg: 'rgba(22,163,74,0.10)',   description: t('patterns.P7.description') },
-  }
-}
+const PATTERN_META = (lang: 'en' | 'es'): Record<string, { label: string; color: string }> => ({
+  P1: { label: lang === 'es' ? 'Monopolio concentrado' : 'Concentrated monopoly', color: RISK_COLORS.critical },
+  P2: { label: lang === 'es' ? 'Empresa fantasma' : 'Ghost company', color: RISK_COLORS.critical },
+  P3: { label: lang === 'es' ? 'Intermediario' : 'Intermediary', color: RISK_COLORS.high },
+  P4: { label: lang === 'es' ? 'Soborno / colusión' : 'Kickback / collusion', color: RISK_COLORS.high },
+  P5: { label: lang === 'es' ? 'Rotación de licitaciones' : 'Bid rotation', color: RISK_COLORS.high },
+  P6: { label: lang === 'es' ? 'Captura institucional' : 'Institutional capture', color: RISK_COLORS.critical },
+  P7: { label: lang === 'es' ? 'Vaciamiento presupuestal' : 'Budget dump', color: RISK_COLORS.medium },
+})
 
-// ─── ChapterShell ────────────────────────────────────────────────────────────
-
-function ChapterShell({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <section id={id} className="py-5 px-4 sm:px-8 max-w-4xl mx-auto">
-      {children}
-    </section>
-  )
-}
-
-function RedThreadChapter({ label, title }: { label: string; title: React.ReactNode }) {
-  return (
-    <header>
-      <h2 className="editorial-label text-[var(--color-accent)] mb-4 tracking-[0.18em]">{label}</h2>
-      <h2 className="font-serif text-xl font-bold text-text-primary mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {title}
-      </h2>
-    </header>
-  )
-}
-
-// ─── Props ───────────────────────────────────────────────────────────────────
+// ─── Props ──────────────────────────────────────────────────────────────────
 
 interface ChapterVerdictProps {
   vendorId: number
@@ -67,6 +61,7 @@ interface ChapterVerdictProps {
     total_institutions: number
     sectors_count: number
     total_contracts: number
+    primary_sector_name?: string
   }
   coBidderCount: number
   aria: {
@@ -82,11 +77,11 @@ interface ChapterVerdictProps {
     web_evidence_verdict?: string | null
     web_evidence_updated_at?: string | null
   } | null
-  /** Unused — component calls useTranslation internally. Accepted for call-site compatibility. */
+  /** Accepted for call-site compatibility. */
   t?: unknown
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export function ChapterVerdict({
   vendorId,
@@ -94,8 +89,12 @@ export function ChapterVerdict({
   coBidderCount,
   aria,
 }: ChapterVerdictProps) {
-  const { t } = useTranslation('redThread')
+  const { i18n } = useTranslation()
+  const lang: 'en' | 'es' = i18n.language?.startsWith('es') ? 'es' : 'en'
   const navigate = useNavigate()
+
+  const sectorCode = vendor.primary_sector_name?.toLowerCase() ?? 'otros'
+  const sectorAccent = SECTOR_COLORS[sectorCode] ?? SECTOR_COLORS.otros ?? '#dc2626'
 
   const { data: webEvidence } = useQuery({
     queryKey: ['aria-web-evidence', vendorId],
@@ -105,39 +104,50 @@ export function ChapterVerdict({
     staleTime: 5 * 60 * 1000,
   })
 
-  const PATTERN_META = getPatternMeta(t)
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const riskColor = RISK_DOT_COLORS[riskLevel]
-  const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
   const score100 = (vendor.avg_risk_score ?? 0) * 100
+  const patternMeta = aria?.primary_pattern ? PATTERN_META(lang)[aria.primary_pattern] : null
 
   const [memoExpanded, setMemoExpanded] = useState(false)
 
-  const finding =
-    riskLevel === 'critical' ? t('verdict.finding.critical', { defaultValue: 'The data warrants urgent investigation.' })
-    : riskLevel === 'high'   ? t('verdict.finding.high',     { defaultValue: 'Statistical signals warrant scrutiny.' })
-    : riskLevel === 'medium' ? t('verdict.finding.medium',   { defaultValue: 'Anomalies present. Verification recommended.' })
-    : t('verdict.finding.low', { defaultValue: 'No standout signals against sector baseline.' })
-
+  // Build evidence rows — weighted, with sensible composition
   type EvidenceRow = { label: string; value: React.ReactNode; weight: 'high' | 'medium' | 'low' }
-  const evidence: EvidenceRow[] = [
-    {
-      label: t('verdict.evidence.signal', { defaultValue: 'Statistical signal' }),
-      value: <span><span className="font-mono tabular-nums" style={{ color: riskColor }}>{score100.toFixed(1)} / 100</span> <span className="text-text-muted">({riskLevel})</span></span>,
-      weight: riskLevel === 'critical' || riskLevel === 'high' ? 'high' : 'medium',
-    },
-  ]
+  const evidence: EvidenceRow[] = []
+
+  evidence.push({
+    label: lang === 'es' ? 'Indicador estadístico' : 'Statistical indicator',
+    value: (
+      <span>
+        <span className="font-mono tabular-nums" style={{ color: riskColor, fontWeight: 700 }}>
+          {score100.toFixed(0)}
+        </span>
+        <span className="text-text-muted"> / 100 · {localizeLevel(riskLevel, lang)}</span>
+      </span>
+    ),
+    weight: riskLevel === 'critical' || riskLevel === 'high' ? 'high' : 'medium',
+  })
+
   if (patternMeta && aria?.primary_pattern) {
     evidence.push({
-      label: t('verdict.evidence.pattern', { defaultValue: 'Pattern detected' }),
-      value: <span style={{ color: patternMeta.color }}>{aria.primary_pattern} · <span className="text-text-primary">{patternMeta.label}</span></span>,
+      label: lang === 'es' ? 'Patrón detectado' : 'Pattern detected',
+      value: (
+        <span>
+          <span style={{ color: patternMeta.color, fontWeight: 700 }}>{aria.primary_pattern}</span>
+          <span className="text-text-secondary"> · {patternMeta.label}</span>
+        </span>
+      ),
       weight: 'high',
     })
   }
   if (aria) {
     evidence.push({
-      label: t('verdict.evidence.aria', { defaultValue: 'ARIA classification' }),
-      value: <span className="text-text-primary">Tier {aria.ips_tier} · IPS {(aria.ips_final * 100).toFixed(0)}</span>,
+      label: lang === 'es' ? 'Clasificación ARIA' : 'ARIA classification',
+      value: (
+        <span className="text-text-primary">
+          Tier {aria.ips_tier} · IPS {(aria.ips_final * 100).toFixed(0)}
+        </span>
+      ),
       weight: aria.ips_tier <= 2 ? 'high' : 'medium',
     })
   }
@@ -145,266 +155,432 @@ export function ChapterVerdict({
     const flags: string[] = []
     if (aria.is_efos_definitivo) flags.push('EFOS')
     if (aria.is_sfp_sanctioned) flags.push('SFP')
-    if (aria.in_ground_truth) flags.push(t('verdict.groundTruthLabel', { defaultValue: 'GT' }))
+    if (aria.in_ground_truth) flags.push('GT')
     evidence.push({
-      label: t('verdict.evidence.external', { defaultValue: 'External validation' }),
-      value: <span className="text-accent">{flags.join(' · ')}</span>,
+      label: lang === 'es' ? 'Validación externa' : 'External validation',
+      value: <span style={{ color: RISK_COLORS.critical, fontWeight: 700 }}>{flags.join(' · ')}</span>,
       weight: 'high',
     })
   }
   if (aria?.web_evidence_updated_at) {
     const webVerdict = aria.web_evidence_verdict
     if (webVerdict && webVerdict !== 'NEGATIVE' && (aria.web_evidence_score ?? 0) > 0) {
-      const webColor = webVerdict === 'SANCTION' ? 'var(--color-risk-critical)' : webVerdict === 'CORRUPTION_MENTION' ? 'var(--color-risk-high)' : 'var(--color-text-secondary)'
-      const webLabel = webVerdict === 'SANCTION'
-        ? t('verdict.documentedSanction', { defaultValue: 'Documented sanction' })
-        : webVerdict === 'CORRUPTION_MENTION'
-        ? t('verdict.newsMention', { defaultValue: 'News mention' })
-        : t('verdict.pressCoverage', { defaultValue: 'Press coverage' })
+      const webColor =
+        webVerdict === 'SANCTION' ? RISK_COLORS.critical
+        : webVerdict === 'CORRUPTION_MENTION' ? RISK_COLORS.high
+        : 'var(--color-text-secondary)'
+      const webLabel =
+        webVerdict === 'SANCTION'
+          ? (lang === 'es' ? 'Sanción documentada' : 'Documented sanction')
+          : webVerdict === 'CORRUPTION_MENTION'
+          ? (lang === 'es' ? 'Mención noticiosa' : 'News mention')
+          : (lang === 'es' ? 'Cobertura de prensa' : 'Press coverage')
       evidence.push({
-        label: t('verdict.webEvidence', { defaultValue: 'Web evidence' }),
-        value: <span style={{ color: webColor }}>{webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%</span>,
+        label: lang === 'es' ? 'Evidencia web' : 'Web evidence',
+        value: (
+          <span style={{ color: webColor }}>
+            {webLabel} · {((aria.web_evidence_score ?? 0) * 100).toFixed(0)}%
+          </span>
+        ),
         weight: webVerdict === 'SANCTION' ? 'high' : 'medium',
-      })
-    } else {
-      evidence.push({
-        label: t('verdict.webEvidence', { defaultValue: 'Web evidence' }),
-        value: <span className="text-text-muted">{t('verdict.noCoverageFound', { defaultValue: 'No coverage found' })}</span>,
-        weight: 'low',
       })
     }
   }
   evidence.push({
-    label: t('verdict.evidence.network', { defaultValue: 'Network' }),
-    value: <span className="text-text-primary">{coBidderCount} co-bidder{coBidderCount === 1 ? '' : 's'} · {vendor.total_institutions} inst. · {vendor.sectors_count} sector{vendor.sectors_count === 1 ? '' : 's'}</span>,
+    label: lang === 'es' ? 'Red' : 'Network',
+    value: (
+      <span className="text-text-secondary">
+        {coBidderCount} {lang === 'es' ? (coBidderCount === 1 ? 'co-licitante' : 'co-licitantes') : (coBidderCount === 1 ? 'co-bidder' : 'co-bidders')}{' '}
+        · {vendor.total_institutions} {lang === 'es' ? 'inst.' : 'inst.'}
+        {' '}· {vendor.sectors_count} {lang === 'es' ? (vendor.sectors_count === 1 ? 'sector' : 'sectores') : (vendor.sectors_count === 1 ? 'sector' : 'sectors')}
+      </span>
+    ),
     weight: 'low',
   })
 
+  const lede = buildVerdictLede({ vendor, aria, riskLevel, patternMeta, lang })
+
   return (
     <ChapterShell id="chapter-verdict">
-      <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
+      <ChapterHeading
+        numeral="VI"
+        title={lang === 'es' ? 'El Veredicto' : 'Verdict'}
+        subtitle={lang === 'es' ? 'Dónde nos deja esto' : 'Where this leaves us'}
+        sectorAccent={sectorAccent}
+      />
 
-      {/* Verdict header — 3 stat items replace the gauge */}
-      <div className="flex items-start gap-4 mb-5 flex-wrap">
-        <div className="flex-1 min-w-[240px]">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-1">
-            {t('verdict.theQuestion', { defaultValue: 'The Question' })}
-          </p>
-          <p className="text-text-primary text-base leading-snug max-w-md">
-            {t('verdict.questionText', {
-              defaultValue: "Does this vendor's procurement record warrant investigation?",
-            })}
-          </p>
-        </div>
-        <div className="flex items-start gap-4 flex-wrap">
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
-              {t('verdict.riskIndicatorLabel', { defaultValue: 'Risk indicator' })}
-            </p>
-            <span
-              className="text-sm font-mono font-bold tabular-nums"
-              style={{ color: riskColor }}
-            >
-              {score100.toFixed(0)}
-              <span className="text-[10px] font-normal text-text-muted">/100</span>
-            </span>
-          </div>
-          <div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
-              {t('verdict.riskLevelLabel', { defaultValue: 'Risk level' })}
-            </p>
-            <span
-              className="text-xs font-mono font-bold uppercase tracking-[0.08em]"
-              style={{ color: riskLevel === 'low' ? 'var(--color-text-muted)' : riskColor }}
-            >
-              {riskLevel}
-            </span>
-          </div>
-          <div className="max-w-[220px]">
-            <p className="text-[9px] font-mono uppercase tracking-[0.14em] text-text-muted mb-0.5">
-              {t('verdict.assessmentLabel', { defaultValue: 'Assessment' })}
-            </p>
-            <p className="text-xs text-text-secondary leading-snug">{finding}</p>
-          </div>
-        </div>
-      </div>
+      <FadeIn className="mt-12">
+        <LedeParagraph sectorAccent={sectorAccent}>{lede}</LedeParagraph>
+      </FadeIn>
 
-      {/* The Evidence */}
-      <div className="mb-5">
-        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-          {t('verdict.theEvidence', { defaultValue: 'The Evidence' })}
-        </p>
-        <ul className="space-y-1.5">
+      {/* THE EVIDENCE */}
+      <FadeIn className="mt-12">
+        <SubheadRule label={lang === 'es' ? 'La evidencia' : 'The evidence'} />
+        <ul className="mt-6 max-w-3xl mx-auto space-y-2 list-none p-0">
           {evidence.map((row, i) => (
             <li
               key={i}
-              className="grid grid-cols-[150px_1fr] gap-3 items-baseline border-l-2 pl-3 py-1"
+              className="grid items-baseline"
               style={{
-                borderLeftColor: row.weight === 'high' ? riskColor + '99' : row.weight === 'medium' ? 'var(--color-border)' : 'transparent',
+                gridTemplateColumns: '180px 1fr',
+                gap: 16,
+                borderLeft: `2px solid ${
+                  row.weight === 'high' ? riskColor + 'aa'
+                  : row.weight === 'medium' ? 'var(--color-border)'
+                  : 'transparent'
+                }`,
+                paddingLeft: 14,
+                paddingTop: 6,
+                paddingBottom: 6,
               }}
             >
-              <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">{row.label}</span>
-              <span className="text-xs">{row.value}</span>
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: 10,
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                {row.label}
+              </span>
+              <span
+                style={{
+                  fontFamily: '"Source Serif Pro", Georgia, serif',
+                  fontSize: 14,
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {row.value}
+              </span>
             </li>
           ))}
         </ul>
-      </div>
+      </FadeIn>
 
-      {/* ARIA memo */}
+      {/* ARIA MEMO */}
       {aria?.memo_text && (
-        <div className="mb-5">
-          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
-                {t('verdict.ariaMemoTitle', { defaultValue: 'ARIA Intelligence Memo' })}
-              </p>
-              <span className="text-[9px] font-mono bg-background-elevated px-1.5 py-0.5 rounded-sm text-text-muted">ES</span>
-            </div>
-            <button
-              onClick={() => setMemoExpanded((v) => !v)}
-              className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-secondary hover:text-text-primary transition-colors"
-            >
-              {memoExpanded ? t('verdict.collapseMemo') : t('verdict.readFullMemo')}
-            </button>
-          </div>
-          <div className="border-l-2 border-[var(--color-accent)] pl-3">
+        <FadeIn className="mt-12">
+          <SubheadRule label={lang === 'es' ? 'Memo ARIA' : 'ARIA memo'} />
+          <div className="mt-6 max-w-3xl mx-auto">
             <div
-              className={cn('text-text-secondary text-xs leading-relaxed', !memoExpanded && 'line-clamp-4')}
-              style={!memoExpanded ? { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' } : undefined}
+              style={{
+                borderLeft: `2px solid ${sectorAccent}`,
+                paddingLeft: 18,
+              }}
             >
-              {memoExpanded ? (
-                aria.memo_text.split('\n').map((line, i) => {
-                  if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-xs mt-2">{line.slice(4)}</h4>
-                  if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-sm mt-3">{line.slice(3)}</h3>
-                  if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-base mt-3">{line.slice(2)}</h2>
-                  if (line.trim() === '') return <div key={i} className="h-1" />
-                  if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
-                    const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
-                    const isSeparator = cells.every((c) => /^[-: ]+$/.test(c))
-                    if (isSeparator) return null
-                    return (
-                      <div key={i} className="flex gap-2 text-[11px] my-1">
-                        {cells.map((cell, ci) => (
-                          <span key={ci} className={cn('flex-1 px-2 py-0.5 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>{cell.trim()}</span>
-                        ))}
-                      </div>
-                    )
-                  }
-                  const parts = line.split(/\*\*(.+?)\*\*/g)
-                  return (
-                    <p key={i} className="my-0.5">
-                      {parts.map((part, j) => (j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part))}
-                    </p>
-                  )
-                })
-              ) : (
-                (() => {
-                  const lines = aria.memo_text.split('\n')
-                  const meaningful = lines.filter(l => {
-                    const s = l.trim()
-                    if (!s) return false
-                    if (s.startsWith('#')) return false
-                    if (/^[=\-]{3,}$/.test(s)) return false
-                    if (s.startsWith('|') && s.endsWith('|')) return false
-                    if (/^MEMO DE INVESTIGACI[OÓ]N/i.test(s)) return false
-                    if (/^RESUMEN EJECUTIVO/i.test(s)) return false
-                    return true
-                  })
-                  return meaningful.slice(0, 3).join(' ').replace(/\*\*/g, '').slice(0, 350)
-                })()
-              )}
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                <span
+                  className="font-mono"
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: '0.18em',
+                    textTransform: 'uppercase',
+                    color: sectorAccent,
+                    fontWeight: 700,
+                    padding: '2px 6px',
+                    background: `${sectorAccent}14`,
+                    border: `1px solid ${sectorAccent}44`,
+                    borderRadius: 2,
+                  }}
+                >
+                  ES
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMemoExpanded((v) => !v)}
+                  className="font-mono cursor-pointer hover:opacity-70 transition-opacity"
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: '0.14em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-text-secondary)',
+                    background: 'none',
+                    border: 'none',
+                  }}
+                >
+                  {memoExpanded
+                    ? (lang === 'es' ? '× Colapsar' : '× Collapse')
+                    : (lang === 'es' ? 'Leer memo completo →' : 'Read full memo →')}
+                </button>
+              </div>
+              <div
+                className={cn('text-text-secondary leading-relaxed', !memoExpanded && 'line-clamp-4')}
+                style={{
+                  fontFamily: '"Source Serif Pro", Georgia, serif',
+                  fontSize: 13,
+                  ...(memoExpanded ? {} : { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
+                }}
+              >
+                {memoExpanded ? renderMemoExpanded(aria.memo_text) : renderMemoCollapsed(aria.memo_text)}
+              </div>
             </div>
           </div>
-        </div>
+        </FadeIn>
       )}
 
-      {/* CENTINELA web evidence articles */}
+      {/* WEB EVIDENCE */}
       {webEvidence && webEvidence.articles.length > 0 && (
-        <div className="mb-5">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-            {t('verdict.webEvidenceCentinela', { defaultValue: 'Web Evidence · CENTINELA' })}
-          </p>
-          <div className="flex flex-col gap-1.5">
+        <FadeIn className="mt-12">
+          <SubheadRule label={lang === 'es' ? 'Evidencia web · CENTINELA' : 'Web evidence · CENTINELA'} />
+          <ul className="mt-6 max-w-3xl mx-auto space-y-3 list-none p-0">
             {webEvidence.articles.slice(0, 5).map((art, i) => {
               const isHigh = art.verdict === 'SANCTION' || art.verdict === 'CORRUPTION_MENTION'
+              const verdictColor = art.verdict === 'SANCTION' ? RISK_COLORS.critical
+                : art.verdict === 'CORRUPTION_MENTION' ? RISK_COLORS.high
+                : 'var(--color-text-muted)'
               return (
-                <div key={i} className={cn('border rounded-sm p-2 text-[11px]', isHigh ? 'border-risk-high/40 bg-risk-high/5' : 'border-border bg-background-elevated')}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className={cn('font-mono font-bold uppercase tracking-wider text-[9px] px-1 py-0.5 rounded border', art.verdict === 'SANCTION' ? 'text-risk-critical bg-risk-critical/10 border-risk-critical/30' : art.verdict === 'CORRUPTION_MENTION' ? 'text-risk-high bg-risk-high/10 border-risk-high/30' : 'text-text-secondary bg-background-card border-border')}>
+                <li
+                  key={i}
+                  className="px-3 py-2"
+                  style={{
+                    borderLeft: `2px solid ${isHigh ? verdictColor : 'var(--color-border)'}`,
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="font-mono"
+                        style={{
+                          fontSize: 9,
+                          letterSpacing: '0.10em',
+                          textTransform: 'uppercase',
+                          fontWeight: 700,
+                          color: verdictColor,
+                          padding: '2px 5px',
+                          background: `${verdictColor}1f`,
+                          border: `1px solid ${verdictColor}44`,
+                          borderRadius: 2,
+                        }}
+                      >
                         {art.verdict}
                       </span>
                       {art.source_name && (
-                        <span className="text-[9px] font-mono text-text-muted truncate max-w-[120px]">{art.source_name}</span>
+                        <span
+                          className="font-mono truncate"
+                          style={{ fontSize: 10, color: 'var(--color-text-muted)', maxWidth: 180 }}
+                        >
+                          {art.source_name}
+                        </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {art.published_date && (
-                        <span className="text-[9px] font-mono text-text-muted">{art.published_date.slice(0, 16)}</span>
-                      )}
-                      <span className="text-text-muted font-mono tabular-nums text-[9px]">{(art.confidence * 100).toFixed(0)}%</span>
+                    <div className="flex items-center gap-2 shrink-0 font-mono tabular-nums" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                      {art.published_date && <span>{art.published_date.slice(0, 10)}</span>}
+                      <span>{(art.confidence * 100).toFixed(0)}%</span>
                     </div>
                   </div>
-                  <p className="text-text-primary mt-1 leading-snug">{art.snippet}</p>
+                  <p
+                    style={{
+                      fontFamily: '"Source Serif Pro", Georgia, serif',
+                      fontSize: 13,
+                      lineHeight: 1.5,
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    {art.snippet}
+                  </p>
                   {art.source_url && (
                     <a
                       href={art.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 mt-1 text-[10px] font-mono text-text-secondary hover:text-text-primary transition-colors underline"
+                      className="inline-flex items-center gap-1 mt-2 font-mono hover:opacity-70 transition-opacity"
+                      style={{
+                        fontSize: 10,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'var(--color-text-secondary)',
+                        textDecoration: 'none',
+                      }}
                     >
-                      {t('verdict.viewArticle', { defaultValue: 'View article →' })}
-                    <span className="sr-only"> (opens in new tab)</span></a>
+                      {lang === 'es' ? 'Ver artículo' : 'View article'} ↗
+                    </a>
                   )}
-                </div>
+                </li>
               )
             })}
-          </div>
-        </div>
+          </ul>
+        </FadeIn>
       )}
 
-      {/* The Next Step */}
-      <div>
-        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-2">
-          {t('verdict.theNextStep', { defaultValue: 'The Next Step' })}
-        </p>
-        <div className="flex items-center gap-2 flex-wrap">
+      {/* THE NEXT STEP */}
+      <FadeIn className="mt-12">
+        <SubheadRule label={lang === 'es' ? 'Próximo paso' : 'Next step'} />
+        <div className="mt-6 max-w-3xl mx-auto flex items-center gap-2 flex-wrap">
           <button
+            type="button"
             onClick={() => navigate(`/vendors/${vendorId}`)}
-            className="inline-flex items-center gap-1.5 bg-[var(--color-risk-critical)] hover:opacity-90 text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-opacity"
+            className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] hover:opacity-90 transition-opacity"
+            style={{
+              fontSize: 11,
+              background: RISK_COLORS.critical,
+              color: '#fff',
+              padding: '8px 14px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
           >
-            <Building2 className="w-3.5 h-3.5" />
-            {t('verdict.fullVendorProfile')}
+            <Building2 className="w-3.5 h-3.5" aria-hidden="true" />
+            {lang === 'es' ? 'Ficha completa' : 'Full vendor dossier'}
           </button>
-          <Link
-            to="/workspace"
-            className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
+          <button
+            type="button"
+            onClick={() => navigate('/atlas')}
+            className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] hover:bg-background-card transition-colors"
+            style={{
+              fontSize: 11,
+              background: 'var(--color-background-elevated)',
+              color: 'var(--color-text-primary)',
+              padding: '8px 14px',
+              border: '1px solid var(--color-border)',
+              cursor: 'pointer',
+            }}
           >
             <BookmarkPlus className="w-3.5 h-3.5" aria-hidden="true" />
-            {t('verdict.addToWorkspace')}
-          </Link>
+            {lang === 'es' ? 'Guardar' : 'Save'}
+          </button>
           <button
+            type="button"
             onClick={() => {
               const prev = document.title
               document.title = `RUBLI — ${vendor.name} — Investigation Thread`
               window.print()
               window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
             }}
-            className="inline-flex items-center gap-1.5 bg-background-elevated hover:bg-background-card text-text-primary text-xs font-mono uppercase tracking-wider rounded-sm px-3 py-2 transition-colors border border-border"
+            className="inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] hover:bg-background-card transition-colors"
+            style={{
+              fontSize: 11,
+              background: 'var(--color-background-elevated)',
+              color: 'var(--color-text-primary)',
+              padding: '8px 14px',
+              border: '1px solid var(--color-border)',
+              cursor: 'pointer',
+            }}
           >
             <Download className="w-3.5 h-3.5" aria-hidden="true" />
-            {t('verdict.exportPdf')}
+            {lang === 'es' ? 'Exportar PDF' : 'Export PDF'}
           </button>
-          <Link
-            to="/methodology"
-            className="ml-auto inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted hover:text-text-primary transition-colors"
+          <button
+            type="button"
+            onClick={() => navigate('/methodology')}
+            className="ml-auto inline-flex items-center gap-1.5 font-mono uppercase tracking-[0.12em] hover:opacity-70 transition-opacity"
+            style={{
+              fontSize: 10,
+              color: 'var(--color-text-muted)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
             <FileText className="w-3 h-3" aria-hidden="true" />
-            {t('verdict.methodologyLink')}
-          </Link>
+            {lang === 'es' ? 'Metodología' : 'Methodology'}
+          </button>
         </div>
-      </div>
+      </FadeIn>
     </ChapterShell>
   )
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function buildVerdictLede({
+  vendor,
+  aria,
+  riskLevel,
+  patternMeta,
+  lang,
+}: {
+  vendor: ChapterVerdictProps['vendor']
+  aria: ChapterVerdictProps['aria']
+  riskLevel: 'critical' | 'high' | 'medium' | 'low'
+  patternMeta: { label: string; color: string } | null
+  lang: 'en' | 'es'
+}): string {
+  const externalFlags: string[] = []
+  if (aria?.is_efos_definitivo) externalFlags.push('EFOS')
+  if (aria?.is_sfp_sanctioned) externalFlags.push('SFP')
+  if (aria?.in_ground_truth || vendor.in_ground_truth) externalFlags.push(lang === 'es' ? 'Ground Truth' : 'Ground Truth')
+
+  // Frame 1: GT-confirmed — strongest editorial verdict
+  if (externalFlags.includes('Ground Truth') || externalFlags.includes('EFOS') || externalFlags.includes('SFP')) {
+    const flagPhrase = externalFlags.length === 1
+      ? externalFlags[0]
+      : externalFlags.length === 2
+        ? externalFlags.join(lang === 'es' ? ' y ' : ' and ')
+        : (lang === 'es' ? 'múltiples registros externos' : 'multiple external registries')
+    return lang === 'es'
+      ? `El caso ya está documentado externamente — ${flagPhrase} — y la evidencia procuradora respalda esa lectura${patternMeta ? `, con patrón ${patternMeta.label.toLowerCase()}` : ''}. Para investigadores: la prioridad es contrastar nombres y RFCs con bases legales y proseguir con la verificación.`
+      : `The case is already documented externally — ${flagPhrase} — and the procurement evidence supports that reading${patternMeta ? `, with a ${patternMeta.label.toLowerCase()} pattern` : ''}. For investigators: priority is cross-referencing names and RFCs against legal databases and pursuing verification.`
+  }
+  // Frame 2: Critical/high risk, no external validation
+  if (riskLevel === 'critical' || riskLevel === 'high') {
+    return lang === 'es'
+      ? `El modelo de riesgo arroja una señal ${riskLevel === 'critical' ? 'crítica' : 'alta'}${patternMeta ? ` consistente con ${patternMeta.label.toLowerCase()}` : ''}, pero el caso no aparece todavía en registros externos. Es un perfil prioritario para verificación periodística — los patrones procuradores son fuertes; falta confirmación documental.`
+      : `The risk model returns a ${riskLevel} signal${patternMeta ? ` consistent with ${patternMeta.label.toLowerCase()}` : ''}, but the case hasn't surfaced in external registries yet. This is a priority profile for journalistic verification — the procurement patterns are strong; documentary confirmation is what's missing.`
+  }
+  // Frame 3: Medium risk
+  if (riskLevel === 'medium') {
+    return lang === 'es'
+      ? `El modelo identifica anomalías moderadas en este proveedor — vale la pena monitorear su evolución pero no es prioridad absoluta dentro del panorama actual.`
+      : `The model identifies moderate anomalies in this vendor — worth monitoring its evolution but not an absolute priority within the current landscape.`
+  }
+  // Frame 4: Low risk
+  return lang === 'es'
+    ? `Las señales procuradoras no se destacan contra la línea base sectorial. Sin embargo, ausencia de evidencia no es evidencia de ausencia.`
+    : `Procurement signals do not stand out against the sector baseline. That said, absence of evidence is not evidence of absence.`
+}
+
+function localizeLevel(level: 'critical' | 'high' | 'medium' | 'low', lang: 'en' | 'es'): string {
+  if (lang !== 'es') return level
+  return level === 'critical' ? 'crítico'
+    : level === 'high' ? 'alto'
+    : level === 'medium' ? 'medio'
+    : 'bajo'
+}
+
+function renderMemoExpanded(memo: string): React.ReactNode {
+  return memo.split('\n').map((line, i) => {
+    if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>
+    if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>
+    if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>
+    if (line.trim() === '') return <div key={i} className="h-2" />
+    if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+      const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
+      const isSeparator = cells.every((c) => /^[-: ]+$/.test(c))
+      if (isSeparator) return null
+      return (
+        <div key={i} className="flex gap-2 text-xs my-1">
+          {cells.map((cell, ci) => (
+            <span key={ci} className={cn('flex-1 px-2 py-1 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>
+              {cell.trim()}
+            </span>
+          ))}
+        </div>
+      )
+    }
+    const parts = line.split(/\*\*(.+?)\*\*/g)
+    return (
+      <p key={i} className="my-1">
+        {parts.map((part, j) => (j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part))}
+      </p>
+    )
+  })
+}
+
+function renderMemoCollapsed(memo: string): string {
+  const lines = memo.split('\n')
+  const meaningful = lines.filter((l) => {
+    const s = l.trim()
+    if (!s) return false
+    if (s.startsWith('#')) return false
+    if (/^[=\-]{3,}$/.test(s)) return false
+    if (s.startsWith('|') && s.endsWith('|')) return false
+    if (/^MEMO DE INVESTIGACI[OÓ]N/i.test(s)) return false
+    if (/^RESUMEN EJECUTIVO/i.test(s)) return false
+    return true
+  })
+  return meaningful.slice(0, 3).join(' ').replace(/\*\*/g, '').slice(0, 350)
 }
