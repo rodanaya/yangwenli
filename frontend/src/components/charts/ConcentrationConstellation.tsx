@@ -134,25 +134,28 @@ interface ClusterMeta {
 // clusters distribute across the panel without overlap.
 export function buildPatternMeta(isEs: boolean): ClusterMeta[] {
   return [
-    // 2026-05-22 — fy values shifted by -0.02 to vertically center the
-    // constellation in the canvas (previous layout had top margin ~2× the
-    // bottom margin because labels render below clusters and add visual
-    // weight at the bottom). Atlas + Dashboard both consume buildPatternMeta,
-    // so this propagates to /atlas and /executive in one change.
-    // P5 — center, largest cluster (180 T1)
-    { code: 'P5', label: isEs ? 'Sobreprecio Sistemático' : 'Systematic Overpricing',   desc: isEs ? 'Precios 2σ sobre promedio sectorial — 180 proveedores T1' : 'Prices 2σ above sector average — 180 T1 vendors',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.38 },
+    // 2026-05-22 — symmetric layout around fy=0.50. P5 sits at the
+    // exact geometric center (it's the largest cluster — 180 T1 — so it
+    // anchors the field). Top/bottom cluster pairs mirror around the
+    // horizontal axis: P4 (top, 0.18) ↔ P2 (bottom, 0.82); P3/P7
+    // (upper band, 0.30) ↔ P6/P1 (lower band, 0.70). Mean fy = 0.50.
+    // Horizontal pairs mirror around fx=0.50 too: P3 (0.22) ↔ P7 (0.78);
+    // P6 (0.28) ↔ P1 (0.72); P4 and P2 sit on the centerline.
+    // Atlas + Dashboard both consume this helper.
+    // P5 — true center, largest cluster (180 T1)
+    { code: 'P5', label: isEs ? 'Sobreprecio Sistemático' : 'Systematic Overpricing',   desc: isEs ? 'Precios 2σ sobre promedio sectorial — 180 proveedores T1' : 'Prices 2σ above sector average — 180 T1 vendors',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.50 },
     // P7 — upper right (56 T1)
-    { code: 'P7', label: isEs ? 'Red de Contratistas' : 'Contractor Network',        desc: isEs ? 'Redes multi-proveedor con evidencia externa — 56 T1' : 'Multi-vendor networks with external evidence — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  highRiskPct: 0.72, fx: 0.78, fy: 0.20 },
+    { code: 'P7', label: isEs ? 'Red de Contratistas' : 'Contractor Network',        desc: isEs ? 'Redes multi-proveedor con evidencia externa — 56 T1' : 'Multi-vendor networks with external evidence — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  highRiskPct: 0.72, fx: 0.78, fy: 0.30 },
     // P1 — lower right (23 T1)
-    { code: 'P1', label: isEs ? 'Monopolio Concentrado' : 'Concentrated Monopoly',      desc: isEs ? 'Proveedor domina >3% del valor sectorial — 23 T1' : 'Vendor dominates >3% of sector value — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  highRiskPct: 0.85, fx: 0.72, fy: 0.66 },
+    { code: 'P1', label: isEs ? 'Monopolio Concentrado' : 'Concentrated Monopoly',      desc: isEs ? 'Proveedor domina >3% del valor sectorial — 23 T1' : 'Vendor dominates >3% of sector value — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  highRiskPct: 0.85, fx: 0.72, fy: 0.70 },
     // P3 — upper left (26 T1)
-    { code: 'P3', label: isEs ? 'Intermediaria de Uso Único' : 'Single-Use Intermediary', desc: isEs ? 'Ráfaga de contratos + desaparición — 26 T1' : 'Burst of contracts + disappearance — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  highRiskPct: 0.44, fx: 0.22, fy: 0.26 },
+    { code: 'P3', label: isEs ? 'Intermediaria de Uso Único' : 'Single-Use Intermediary', desc: isEs ? 'Ráfaga de contratos + desaparición — 26 T1' : 'Burst of contracts + disappearance — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  highRiskPct: 0.44, fx: 0.22, fy: 0.30 },
     // P6 — lower left (31 T1)
     { code: 'P6', label: isEs ? 'Captura Institucional' : 'Institutional Capture',      desc: isEs ? '>80% contratos de una sola institución — 31 T1' : '>80% of contracts from a single institution — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  highRiskPct: 0.28, fx: 0.28, fy: 0.70 },
-    // P2 — lower center (1 T1)
-    { code: 'P2', label: isEs ? 'Empresa Fantasma' : 'Ghost Company',           desc: isEs ? 'Sin RFC, ≤10 contratos, desaparece — 1 T1' : 'No RFC, ≤10 contracts, disappears — 1 T1',                        color: '#57534e', vendors: 6118,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.76 },
+    // P2 — bottom center (1 T1)
+    { code: 'P2', label: isEs ? 'Empresa Fantasma' : 'Ghost Company',           desc: isEs ? 'Sin RFC, ≤10 contratos, desaparece — 1 T1' : 'No RFC, ≤10 contracts, disappears — 1 T1',                        color: '#57534e', vendors: 6118,  t1: 1,   highRiskPct: 0.12, fx: 0.50, fy: 0.82 },
     // P4 — top center (3 T1)
-    { code: 'P4', label: isEs ? 'Colusión en Licitaciones' : 'Bid Collusion',   desc: isEs ? 'Co-licitación >50% + tasa de victoria >70% — 3 T1' : 'Co-bidding >50% + win rate >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.42, fy: 0.12 },
+    { code: 'P4', label: isEs ? 'Colusión en Licitaciones' : 'Bid Collusion',   desc: isEs ? 'Co-licitación >50% + tasa de victoria >70% — 3 T1' : 'Co-bidding >50% + win rate >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.50, fy: 0.18 },
   ]
 }
 
