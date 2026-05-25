@@ -1443,3 +1443,46 @@ Grep scanned `frontend/src/pages/` and `frontend/src/components/`:
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. Bilingual scan: 14 known false-positive i18n hits (stable); one pre-existing low-severity hardcoded English label in `ContractCompareModal.tsx`.
+
+---
+## Visual Review — 2026-05-25T18:11:03Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | BLOCKED |
+| https://rubli.xyz/atlas | 403 | BLOCKED |
+| https://rubli.xyz/aria | 403 | BLOCKED |
+| https://rubli.xyz/sectors | 403 | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 | BLOCKED |
+| https://rubli.xyz/cases | 403 | BLOCKED |
+| https://rubli.xyz/methodology | 403 | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | BLOCKED |
+
+**Note:** All 403s carry body `"Host not in allowlist"` — managed-cloud egress policy for this execution environment, not a site-side failure. TLS handshake completes successfully (IP 37.60.232.109 reachable), confirming the server is up. Identical block pattern to all prior automated health-check runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/cases?limit=5 | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/sectors | 403 — Host not in allowlist | BLOCKED |
+
+**Note:** Same egress-policy block as HTTP checks above. No evidence of API regression from this environment.
+
+### Bilingual Gaps
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+- **i18n key leak scan (raw `UPPER.UPPER` patterns):** 14 matches found; all confirmed false-positives:
+  - `TIER_STYLES[tierName]` / `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` — TypeScript object-accessor patterns, not UI key leaks.
+  - Vendor name literals in `Executive.tsx` (lines 73, 93, 113) — legitimate Spanish content.
+  - Comment line in `CaseLibrary.tsx:219` — inside a JSX comment block.
+  - `StoryMoneySankeyChart.tsx:22,37` — internal chart fixture data.
+  - `ExploreCanvas.tsx:1416–1431` — code comments and corporate-form token allowlist.
+  - `VendorHero.tsx:716` — JSDoc example string.
+  - `Methodology.tsx:119` — academic citation (Mahalanobis, P.C.).
+- **Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197` — `label="Risk Score"` hardcoded English without Spanish variant. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`Host not in allowlist`) — persistent infrastructure constraint identical to all prior automated runs; not a site failure (TLS connects, server IP confirmed live). Bilingual scan: 14 false-positive i18n matches (all stable/legitimate). One pre-existing low-severity hardcoded English label in `ContractCompareModal.tsx` (carried from prior scan).
