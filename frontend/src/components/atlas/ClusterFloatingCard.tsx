@@ -26,6 +26,7 @@ import type {
   NamedVendorDot,
 } from '@/components/charts/ConcentrationConstellation'
 import { formatVendorName } from '@/lib/vendor/formatName'
+import { PatternSignature } from './PatternSignature'
 
 interface ClusterFloatingCardProps {
   meta: ClusterMeta
@@ -158,6 +159,19 @@ export function ClusterFloatingCard({
         <StatCell value={meta.t1.toLocaleString(lang === 'en' ? 'en-US' : 'es-MX')} label={t.t1} />
         <StatCell value={`${highPct}%`} label={t.highPlus} />
       </div>
+
+      {/* M-CLUSTER P3 — per-pattern signature mini-viz. Only renders for
+          P1..P7 codes; falls through for sector/category/sexenio lenses. */}
+      {/^P\d$/.test(meta.code) && (
+        <PatternSignature
+          code={meta.code}
+          topVendors={(topVendors ?? []).map(v => ({ vendorId: v.vendorId, riskScore: v.riskScore }))}
+          totalVendors={meta.vendors}
+          t1={meta.t1}
+          highRiskPct={meta.highRiskPct ?? 0}
+          lang={lang}
+        />
+      )}
 
       {/* Top vendors */}
       {top3.length > 0 && (
