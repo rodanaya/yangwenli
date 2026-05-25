@@ -1407,3 +1407,39 @@ HTTP and API checks blocked by remote environment network policy (`host_not_allo
 
 ### Overall: WARN
 HTTP and API checks blocked by Cloudflare egress policy (`host_not_allowed`) — persistent environment constraint, not a site failure. Bilingual scan clean — no new gaps. Hit count stable at 14 false-positive matches.
+
+---
+## Visual Review — 2026-05-25T12:12:34Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| / | 403 host_not_allowed | BLOCKED |
+| /atlas | 403 host_not_allowed | BLOCKED |
+| /aria | 403 host_not_allowed | BLOCKED |
+| /sectors | 403 host_not_allowed | BLOCKED |
+| /sectors/salud | 403 host_not_allowed | BLOCKED |
+| /cases | 403 host_not_allowed | BLOCKED |
+| /methodology | 403 host_not_allowed | BLOCKED |
+| /stories/el-ejercito-fantasma | 403 host_not_allowed | BLOCKED |
+
+> All 403s carry `x-deny-reason: host_not_allowed` (TLS egress gateway — "Egress Gateway Subordinate CA"). Persistent managed-cloud constraint; not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed (empty body) | BLOCKED |
+| /api/v1/cases?limit=5 | 403 host_not_allowed (empty body) | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed (empty body) | BLOCKED |
+| /api/v1/sectors | 403 host_not_allowed (empty body) | BLOCKED |
+
+### Bilingual Gaps
+Grep scanned `frontend/src/pages/` and `frontend/src/components/`:
+
+- **Raw i18n key leaks (14 hits):** All confirmed false positives — TS object key lookups, code comments, company-name data strings, corporate-form token constants. No rendered UI leaks. (Stable vs. previous run.)
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+- **New finding — `ContractCompareModal.tsx:197`:** `label="Risk Score"` — hardcoded English label without Spanish variant. Low severity (modal label); not a regression (present in prior scans, first time explicitly logged).
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. Bilingual scan: 14 known false-positive i18n hits (stable); one pre-existing low-severity hardcoded English label in `ContractCompareModal.tsx`.
