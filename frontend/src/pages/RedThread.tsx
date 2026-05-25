@@ -151,11 +151,13 @@ function ChapterShell({ id, children }: { id: string; children: React.ReactNode 
 
 type TimelineItem = { year: number; avg_risk_score: number | null; contract_count: number; total_value: number }
 
-function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline }: {
+function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline, vendorName, primarySectorName }: {
   totalContracts?: number
   vendorFirstYear?: number
   vendorLastYear?: number
   timeline: TimelineItem[]
+  vendorName?: string
+  primarySectorName?: string
   t?: unknown
 }) {
   return (
@@ -164,6 +166,8 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
       vendorFirstYear={vendorFirstYear}
       vendorLastYear={vendorLastYear}
       timeline={timeline}
+      vendorName={vendorName}
+      primarySectorName={primarySectorName}
     />
   )
 }
@@ -1168,6 +1172,8 @@ export default function RedThread() {
           vendorFirstYear={vendor.first_contract_year}
           vendorLastYear={vendor.last_contract_year}
           timeline={timeline?.timeline ?? []}
+          vendorName={vendor.name}
+          primarySectorName={vendor.primary_sector_name}
           t={t}
         />
 
