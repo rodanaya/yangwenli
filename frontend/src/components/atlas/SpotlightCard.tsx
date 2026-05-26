@@ -55,6 +55,7 @@ import type { ClusterMeta, NamedVendorDot } from '@/components/charts/Concentrat
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { PatternSignature } from './PatternSignature'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { getExemplarFor } from '@/lib/atlas/pattern-exemplars'
 
 export interface SpotlightCardProps {
   /** Currently-focused cluster's metadata. */
@@ -93,6 +94,7 @@ const COPY = {
     high: 'high',
     medium: 'med',
     low: 'low',
+    knownAs: 'Known as',
     browse: 'Browse this cluster',
     dossier: 'Open full dossier',
     close: 'Close',
@@ -111,6 +113,7 @@ const COPY = {
     high: 'alto',
     medium: 'med',
     low: 'bajo',
+    knownAs: 'Caso conocido',
     browse: 'Explorar este clúster',
     dossier: 'Abrir expediente completo',
     close: 'Cerrar',
@@ -177,6 +180,11 @@ export function SpotlightCard({
   // Editorial lede — sourced from meta.desc (existing) or fall back to the
   // raw description sans dash-delimited stats.
   const lede = meta.desc?.split(' — ')[0] ?? meta.desc ?? ''
+
+  // P7 — Named exemplar (one well-known case per P1..P7 that anchors the
+  // pattern in concrete reality). Null for non-pattern lenses.
+  const exemplar = getExemplarFor(meta.code)
+  const exemplarName = exemplar ? (lang === 'en' ? exemplar.name_en : exemplar.name_es) : null
 
   return (
     <div
@@ -279,10 +287,49 @@ export function SpotlightCard({
             fontSize: 14,
             lineHeight: 1.45,
             color: 'var(--color-text-secondary)',
-            marginBottom: 14,
+            marginBottom: 12,
           }}
         >
           {lede}
+        </div>
+      )}
+
+      {/* P7 — Named exemplar: one famous case per pattern. Anchors the
+          abstract pattern in concrete history. Rendered between lede and
+          stats so the eye reads narrative → anchor case → numbers. */}
+      {exemplar && exemplarName && (
+        <div
+          className="mb-3"
+          style={{
+            borderLeft: `2px solid ${meta.color}`,
+            paddingLeft: 9,
+            opacity: 0.95,
+          }}
+        >
+          <div
+            className="font-mono uppercase"
+            style={{ fontSize: 8.5, letterSpacing: '0.14em', color: 'var(--color-text-muted)', marginBottom: 1 }}
+          >
+            {t.knownAs}
+          </div>
+          <div
+            style={{
+              fontFamily: '"Playfair Display", serif',
+              fontStyle: 'italic',
+              fontWeight: 600,
+              fontSize: 14,
+              lineHeight: 1.2,
+              color: 'var(--color-text-primary)',
+            }}
+          >
+            {exemplarName}
+          </div>
+          <div
+            className="font-mono"
+            style={{ fontSize: 10, color: 'var(--color-text-muted)', letterSpacing: '0.04em', marginTop: 1 }}
+          >
+            {exemplar.period}
+          </div>
         </div>
       )}
 
