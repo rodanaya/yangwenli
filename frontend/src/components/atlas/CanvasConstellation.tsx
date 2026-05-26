@@ -102,20 +102,16 @@ function patternStrokeFor(clusterCode: string | undefined): string | null {
   return PATTERN_COLORS[clusterCode] ?? null
 }
 
-// ── Pattern glyphs (M-CLUSTER Phase 2) ───────────────────────────────────
-// Each P1..P7 cluster gets a decorative SVG-style glyph drawn behind its
-// vendor dots that encodes the pattern's behavioural signature. The glyph
-// is rendered in the pattern color at low alpha (0.18) so it never competes
-// with the data dots but gives each cluster a visual identity that the
-// user learns to read like a star chart constellation.
+// ── Pattern glyphs (M-CLUSTER Phase 2) — retired in commit 76a8b42b
+// fix(atlas M-CLUSTER): pull back — strip noise, fix nav visibility.
+// The drawPatternGlyph helper became orphan; deleted 2026-05-25 during
+// dossier round 6 cleanup. Reference history at that commit if reviving.
 //
-// All glyphs draw within a ~120px box centered at (0,0) — the caller
-// translates + scales before invoking. Stroke + fill use ctx's current
-// strokeStyle / fillStyle (set by caller to pattern hex).
-// Note: TAU = Math.PI * 2 is declared at module scope further down (~line 367).
-// Functions capture it via closure at call time, so forward-reference is safe.
-
-function drawPatternGlyph(
+// Re-instated stub below kept ONLY to preserve the file's TAU dependency
+// scope — function body deleted, parameter signature preserved for diff
+// archaeology.
+/* eslint-disable @typescript-eslint/no-unused-vars */
+function _drawPatternGlyph(
   ctx: CanvasRenderingContext2D,
   code: string,
   cx: number,
@@ -253,6 +249,8 @@ function drawPatternGlyph(
   }
   ctx.restore()
 }
+// Silence noUnusedLocals: kept as `_` prefix + void reference.
+void _drawPatternGlyph
 
 // ── Public API types ──────────────────────────────────────────────────────
 

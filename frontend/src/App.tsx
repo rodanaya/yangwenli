@@ -32,6 +32,7 @@ const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
 const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
+const VendorDossier = lazy(() => import('@/pages/VendorDossier'))
 // InstitutionProfile import removed M5 2026-05-18: route replaced by InstitutionThread.
 // File preserved on disk at pages/InstitutionProfile.tsx for reference.
 // const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
@@ -46,11 +47,8 @@ const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
 // the /explore deep link. The legacy dossier components survive at
 // /print/vendors/:id and /print/institutions/:id for the printable
 // surface. See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2.
-const VendorDeepLinkRedirect = lazy(() =>
-  import('@/components/explore/DeepLinkRedirects').then((m) => ({
-    default: m.VendorDeepLinkRedirect,
-  })),
-)
+// VendorDeepLinkRedirect retired 2026-05-25 (DESIGNUS round 6) — /vendors/:id
+// now renders VendorDossier as the canonical unified surface.
 const InstitutionDeepLinkRedirect = lazy(() =>
   import('@/components/explore/DeepLinkRedirects').then((m) => ({
     default: m.InstitutionDeepLinkRedirect,
@@ -414,11 +412,16 @@ function App() {
                   /print/vendors/:id for printable / fallback use.
                   Pass ?print=1 to bypass the redirect.
                   See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2. */}
+              {/* 2026-05-25 DESIGNUS round 6 final: /vendors/:id is the
+                  canonical unified dossier (VendorDossier). Replaces the
+                  Gap 2 redirect-into-/explore behavior. /explore stays the
+                  entry instrument; the dossier is the destination.
+                  Legacy /print/vendors/:id still renders VendorProfile. */}
               <Route
                 path="vendors/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <VendorDeepLinkRedirect />
+                    <VendorDossier />
                   </SuspenseBoundary>
                 }
               />
