@@ -1156,6 +1156,11 @@ function CanvasAtlasView({
       {isZoomed && zoomedMeta && !spotlightBrowsing && !focusedVendor && wrapperSize.w > 0 && (
         <>
           <GalaxyDimmer
+            clusters={activeMeta.map(m => ({ code: m.code, fx: m.fx, fy: m.fy }))}
+            pinnedCode={zoomedCode}
+            wrapperWidth={wrapperSize.w}
+            wrapperHeight={wrapperSize.h}
+            onJumpToCluster={(code) => dispatch({ type: 'zoom-into-cluster', code })}
             onDismiss={() => {
               dispatch({ type: 'escape-zoom' })
               resetRef.current?.()
