@@ -68,7 +68,14 @@ import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
 // ClusterDock with built-in paginator). Imports retained for type
 // references only — runtime renders removed.
 import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
-import { ClusterMiniMap } from '@/components/atlas/ClusterMiniMap'
+// M-CLUSTER P5 — ClusterMiniMap import removed; the Spotlight card sits
+// at the cluster's spatial position and replaces the mini-map's role.
+// M-CLUSTER P5 Spotlight pattern (focus+context per Shneiderman):
+//   click cluster → dim galaxy + show SpotlightCard at cluster's position.
+//   "Browse" expands to full ClusterDock (in-page).
+//   "Open dossier" navigates to /patterns/:code (subpage).
+import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
+import { SpotlightCard } from '@/components/atlas/SpotlightCard'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -876,9 +883,30 @@ function CanvasAtlasView({
     [zoomedCode, activeMeta],
   )
 
-  // M-CLUSTER P4 — `cardOpen` state removed. The old ClusterFloatingCard
-  // (top-right card) was deleted in favour of the unified bottom dock;
-  // open/close state now lives inside AtlasVendorDrawer.
+  // M-CLUSTER P5 Spotlight — when a cluster is selected, the first state
+  // is "spotlight only" (galaxy dimmed, small card at cluster position).
+  // Clicking "Browse this cluster" inside the card flips this to false,
+  // which triggers the d3-zoom fly-to + reveals the full bottom dock.
+  // URL: `?browse=1` is added/removed in sync with this flag so the state
+  // survives reload and can be deep-linked. Resets to true on every new
+  // cluster click (handleClusterClick) so each click starts in spotlight.
+  const [spotlightBrowsing, setSpotlightBrowsing] = useState(false)
+  // Reset to spotlight on cluster change (and on initial zoom).
+  useEffect(() => {
+    if (!zoomedCode) {
+      setSpotlightBrowsing(false)
+      return
+    }
+    // On URL hydration, respect `?browse=1` so deep-links land on the dock.
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('browse') === '1') {
+        setSpotlightBrowsing(true)
+      } else {
+        setSpotlightBrowsing(false)
+      }
+    }
+  }, [zoomedCode])
 
   // Vendors in the currently zoomed cluster.
   // Atlas P6 Frontier B — sourced from the real /atlas/cluster-vendors fetch
@@ -911,16 +939,61 @@ function CanvasAtlasView({
   // M-CLUSTER P4 — `topVendors` removed (was passed to old ClusterFloatingCard).
   // The unified AtlasVendorDrawer receives the full clusterVendors list.
 
-  // Auto-fly when context view becomes zoomed (handles both cluster-glyph
-  // click AND vendor-search auto-zoom uniformly — both paths dispatch
-  // 'zoom-into-cluster' which lands us here).
+  // M-CLUSTER P5 — Auto-fly only when the user explicitly enters BROWSE
+  // mode. While in spotlight-only state, the galaxy stays at k=1 with a
+  // dimmer overlay; we set pinnedClusterCode (via state) but do NOT zoom.
+  // When spotlightBrowsing flips true (user clicked "Browse"), fly-to fires.
+  // On exit (zoomedCode → null), reset the view back to galaxy.
   useEffect(() => {
-    if (zoomedCode && flyToRef.current) {
+    if (zoomedCode && spotlightBrowsing && flyToRef.current) {
       flyToRef.current(zoomedCode)
     } else if (!zoomedCode && resetRef.current) {
       resetRef.current()
     }
-  }, [zoomedCode])
+  }, [zoomedCode, spotlightBrowsing])
+
+  // M-CLUSTER P7c — Arrow-key cluster cycling in spotlight.
+  // ← / → step prev/next in the activeMeta order while the spotlight is
+  // open (NOT browsing). Skipped when focus is inside INPUT/TEXTAREA so
+  // vendor-search + personal notes still work. Doesn't conflict with
+  // AtlasShell's existing arrow handler — that one fires
+  // 'atlas:pan-{direction}' custom events which only the legacy
+  // AtlasZoomLayer listens to; CanvasConstellation ignores them.
+  useEffect(() => {
+    if (!zoomedCode || spotlightBrowsing) return
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      const idx = activeMeta.findIndex(m => m.code === zoomedCode)
+      if (idx < 0) return
+      const next = e.key === 'ArrowRight'
+        ? activeMeta[(idx + 1) % activeMeta.length]
+        : activeMeta[(idx - 1 + activeMeta.length) % activeMeta.length]
+      e.preventDefault()
+      e.stopPropagation()
+      dispatch({ type: 'zoom-into-cluster', code: next.code })
+    }
+    window.addEventListener('keydown', onKey, true)  // capture phase, beat AtlasShell
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [zoomedCode, spotlightBrowsing, activeMeta, dispatch])
+
+  // M-CLUSTER P5 — URL sync: push `?browse=1` when expanded into the dock,
+  // remove the param when collapsed back to spotlight. Side-effect only —
+  // does not re-trigger the spotlight state itself.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    if (zoomedCode && spotlightBrowsing) {
+      url.searchParams.set('browse', '1')
+    } else {
+      url.searchParams.delete('browse')
+    }
+    if (url.toString() !== window.location.href) {
+      window.history.replaceState(null, '', url.toString())
+    }
+  }, [zoomedCode, spotlightBrowsing])
 
   // ESC pops zoom (consistent with AtlasZoomLayer behavior). When in
   // planetary mode (focusedVendor !== null), ESC peels back one layer at a
@@ -1072,13 +1145,42 @@ function CanvasAtlasView({
         pinnedClusterCode={pinnedCode ?? zoomedCode}
         riskFloor={riskFloor}
       />
-      {isZoomed && zoomedMeta && !focusedVendor && (
-        <ClusterMiniMap
-          clusters={clusters.map(c => ({ code: c.code, fx: c.fx, fy: c.fy, color: c.color, label: c.label }))}
-          pinnedCode={zoomedCode}
-          onJumpToCluster={(code) => flyToRef.current?.(code)}
-          lang={lang}
-        />
+      {/* M-CLUSTER P5 — ClusterMiniMap deprecated by the Spotlight pattern.
+          The spotlight card itself sits at the cluster's spatial position,
+          which carries the same "where am I" information without an extra
+          panel. File preserved for revival if needed. */}
+
+      {/* M-CLUSTER P5 — GALAXY DIMMER + SPOTLIGHT CARD.
+          Shown only when: zoomed + NOT yet browsing + not in planetary
+          mode + wrapper has measured size. Click dimmer → escape zoom. */}
+      {isZoomed && zoomedMeta && !spotlightBrowsing && !focusedVendor && wrapperSize.w > 0 && (
+        <>
+          <GalaxyDimmer
+            onDismiss={() => {
+              dispatch({ type: 'escape-zoom' })
+              resetRef.current?.()
+            }}
+          />
+          <SpotlightCard
+            meta={zoomedMeta}
+            topVendors={clusterVendors}
+            wrapperWidth={wrapperSize.w}
+            wrapperHeight={wrapperSize.h}
+            onBrowse={() => setSpotlightBrowsing(true)}
+            onOpenDossier={() => {
+              if (mode === 'patterns' || /^P\d$/.test(zoomedMeta.code)) {
+                navigate(`/patterns/${encodeURIComponent(zoomedMeta.code)}`)
+              } else {
+                navigate(`/aria?pattern=${encodeURIComponent(zoomedMeta.code)}`)
+              }
+            }}
+            onClose={() => {
+              dispatch({ type: 'escape-zoom' })
+              resetRef.current?.()
+            }}
+            lang={lang}
+          />
+        </>
       )}
       {hoverInfo && currentZoom >= 18 && (
         <CanvasVendorHaloCard
@@ -1105,17 +1207,22 @@ function CanvasAtlasView({
           />
         </div>
       )}
-      {/* M-CLUSTER P4 — Unified ClusterDock (was AtlasVendorDrawer + the
-          floating card + the standalone paginator — now ONE bottom dock
-          with header paginator, 3-column body, and built-in close). */}
-      {isZoomed && zoomedMeta && !focusedVendor && (
+      {/* M-CLUSTER P5 — Bottom dock renders ONLY when the user has flipped
+          past the spotlight into "Browse" mode. From spotlight, "Browse"
+          sets spotlightBrowsing=true → fly-to fires → dock appears. ✕ on
+          the dock or ESC returns to spotlight (NOT galaxy). Second ESC
+          escapes the spotlight (and the zoom). */}
+      {isZoomed && zoomedMeta && spotlightBrowsing && !focusedVendor && (
         <AtlasVendorDrawer
           meta={zoomedMeta}
           clusters={activeMeta}
           vendors={clusterVendors}
           onJumpToCluster={(code) => flyToRef.current?.(code)}
           onClose={() => {
-            dispatch({ type: 'escape-zoom' })
+            // Return to spotlight first; a second click on the dimmer
+            // (or another ✕) escapes zoom entirely. Matches the two-step
+            // ESC behaviour at AtlasShell + Atlas.tsx levels.
+            setSpotlightBrowsing(false)
             resetRef.current?.()
           }}
           onInvestigate={() => {
