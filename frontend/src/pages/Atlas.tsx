@@ -63,10 +63,12 @@ import { clustersFromMeta } from '@/lib/atlas/dots-from-rows'
 // Atlas P6 Frontier B — real-vendor galaxy (replaces synthetic lattice).
 import { useGalaxyVendors, useZoomedClusterVendors, type GalaxyVendor } from '@/lib/atlas/use-cluster-vendors'
 import { AtlasBreadcrumb } from '@/components/atlas/AtlasBreadcrumb'
-import { ClusterFloatingCard } from '@/components/atlas/ClusterFloatingCard'
+// M-CLUSTER P4 — ClusterFloatingCard + ClusterPaginator standalone renders
+// were deleted in favour of the unified AtlasVendorDrawer (now a 3-col
+// ClusterDock with built-in paginator). Imports retained for type
+// references only — runtime renders removed.
 import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
 import { ClusterMiniMap } from '@/components/atlas/ClusterMiniMap'
-import { ClusterPaginator } from '@/components/atlas/ClusterPaginator'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -874,18 +876,11 @@ function CanvasAtlasView({
     [zoomedCode, activeMeta],
   )
 
-  // M-OBS P2 hotfix: cluster card is dismissible without exiting zoom.
-  // Auto-open on desktop, auto-collapse on narrow viewports (mirrors
-  // AtlasZoomLayer behavior).
-  const [cardOpen, setCardOpen] = useState(true)
-  useEffect(() => {
-    const isNarrow = typeof window !== 'undefined' && window.matchMedia
-      ? window.matchMedia('(max-width: 640px)').matches
-      : false
-    setCardOpen(!isNarrow)
-  }, [zoomedCode])
+  // M-CLUSTER P4 — `cardOpen` state removed. The old ClusterFloatingCard
+  // (top-right card) was deleted in favour of the unified bottom dock;
+  // open/close state now lives inside AtlasVendorDrawer.
 
-  // Vendors in the currently zoomed cluster (drawer + card top-vendors).
+  // Vendors in the currently zoomed cluster.
   // Atlas P6 Frontier B — sourced from the real /atlas/cluster-vendors fetch
   // (limit=200) rather than the legacy 3-vendor `namedVendors` mock. Falls back
   // to galaxy data while the zoom query is in flight so the drawer never
@@ -913,7 +908,8 @@ function CanvasAtlasView({
     }
     return out.sort((a, b) => b.riskScore - a.riskScore)
   }, [zoomedCode, zoomCluster.vendors, galaxy.vendors, namedVendors])
-  const topVendors = useMemo(() => clusterVendors.slice(0, 3), [clusterVendors])
+  // M-CLUSTER P4 — `topVendors` removed (was passed to old ClusterFloatingCard).
+  // The unified AtlasVendorDrawer receives the full clusterVendors list.
 
   // Auto-fly when context view becomes zoomed (handles both cluster-glyph
   // click AND vendor-search auto-zoom uniformly — both paths dispatch
@@ -1094,48 +1090,8 @@ function CanvasAtlasView({
           lang={lang}
         />
       )}
-      {/* M-OBS P2 floating cluster card — top-right, dismissible without
-          exiting zoom (✕ collapses to compact chip; chip re-expands). */}
-      {isZoomed && zoomedMeta && cardOpen && (
-        <div
-          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <ClusterFloatingCard
-            meta={zoomedMeta}
-            topVendors={topVendors}
-            onClose={() => setCardOpen(false)}
-            lang={lang}
-            lens={mode}
-          />
-        </div>
-      )}
-      {isZoomed && zoomedMeta && !cardOpen && (
-        <button
-          type="button"
-          onClick={() => setCardOpen(true)}
-          aria-label={lang === 'en' ? 'Show cluster card' : 'Mostrar tarjeta de clúster'}
-          className="absolute z-20 top-[38px] right-1 sm:top-11 sm:right-3"
-          style={{
-            pointerEvents: 'auto',
-            background: 'var(--color-background-card)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 2,
-            padding: '4px 8px',
-            fontSize: 10,
-            fontFamily: 'monospace',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-secondary)',
-            cursor: 'pointer',
-          }}
-        >
-          {zoomedMeta.code} · {lang === 'en' ? 'show' : 'mostrar'}
-        </button>
-      )}
-      {/* Atlas P6 Frontier C — contract detail panel (planetary mode). Pinned
-          below the cluster card on the right rail; takes precedence over the
-          vendor halo card while open. */}
+      {/* M-CLUSTER P4 — Contract detail panel (planetary mode). Positioned
+          top-right since the cluster card is gone. */}
       {focusedContract && (
         <div
           className="absolute z-30 top-[38px] right-1 sm:top-11 sm:right-3"
@@ -1143,42 +1099,32 @@ function CanvasAtlasView({
         >
           <ContractFloatingCard
             contract={focusedContract}
-            vendorAccentColor={focusedVendor?.accent}
+            vendorAccentColor={focusedVendor?.accent ?? zoomedMeta?.color}
             onClose={() => setFocusedContract(null)}
             lang={lang}
           />
         </div>
       )}
-      {/* M-OBS P3 vendor drawer — collapsible bottom strip (collapsed by
-          default; Esc collapses when expanded, does not escape zoom). */}
-      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
-        <AtlasVendorDrawer
-          clusterCode={zoomedMeta.code}
-          clusterLabel={zoomedMeta.label}
-          vendors={clusterVendors}
-          lang={lang}
-        />
-      )}
-      {/* Frontier C — contract detail card when a planetary contract dot is clicked.
-          Positioned where the cluster card sits so it never overlaps the orbit. */}
-      {focusedContract && (
-        <div
-          className="absolute z-30 top-[38px] right-1 sm:top-11 sm:right-3"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <ContractFloatingCard
-            contract={focusedContract}
-            vendorAccentColor={zoomedMeta?.color}
-            onClose={() => setFocusedContract(null)}
-            lang={lang}
-          />
-        </div>
-      )}
+      {/* M-CLUSTER P4 — Unified ClusterDock (was AtlasVendorDrawer + the
+          floating card + the standalone paginator — now ONE bottom dock
+          with header paginator, 3-column body, and built-in close). */}
       {isZoomed && zoomedMeta && !focusedVendor && (
-        <ClusterPaginator
-          clusters={clusters.map(c => ({ code: c.code, color: c.color, label: c.label }))}
-          pinnedCode={zoomedCode}
+        <AtlasVendorDrawer
+          meta={zoomedMeta}
+          clusters={activeMeta}
+          vendors={clusterVendors}
           onJumpToCluster={(code) => flyToRef.current?.(code)}
+          onClose={() => {
+            dispatch({ type: 'escape-zoom' })
+            resetRef.current?.()
+          }}
+          onInvestigate={() => {
+            if (mode === 'patterns' || /^P\d$/.test(zoomedMeta.code)) {
+              navigate(`/patterns/${encodeURIComponent(zoomedMeta.code)}`)
+            } else {
+              navigate(`/aria?pattern=${encodeURIComponent(zoomedMeta.code)}`)
+            }
+          }}
           lang={lang}
         />
       )}
