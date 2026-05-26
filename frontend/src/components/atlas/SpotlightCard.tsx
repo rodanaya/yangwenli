@@ -49,7 +49,7 @@
  */
 
 import * as React from 'react'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { X } from 'lucide-react'
 import type { ClusterMeta, NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { formatVendorName } from '@/lib/vendor/formatName'
@@ -186,6 +186,28 @@ export function SpotlightCard({
   const exemplar = getExemplarFor(meta.code)
   const exemplarName = exemplar ? (lang === 'en' ? exemplar.name_en : exemplar.name_es) : null
 
+  // P7b — Keyboard shortcuts in spotlight:
+  //   B → Browse this cluster (in-page expansion)
+  //   D → Open full dossier (subpage navigation)
+  // Skipped when focus is inside an input/textarea (vendor search,
+  // personal notes, etc.) to avoid hijacking text entry.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault()
+        onBrowse()
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault()
+        onOpenDossier()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onBrowse, onOpenDossier])
+
   return (
     <div
       role="dialog"
@@ -300,10 +322,12 @@ export function SpotlightCard({
       {exemplar && exemplarName && (
         <div
           className="mb-3"
+          title={lang === 'en' ? exemplar.context_en ?? '' : exemplar.context_es ?? ''}
           style={{
             borderLeft: `2px solid ${meta.color}`,
             paddingLeft: 9,
             opacity: 0.95,
+            cursor: (exemplar.context_en || exemplar.context_es) ? 'help' : undefined,
           }}
         >
           <div
@@ -443,7 +467,9 @@ export function SpotlightCard({
             gap: 6,
           }}
         >
-          <span style={{ fontSize: 13 }}>›</span> {t.browse}
+          <span style={{ fontSize: 13 }}>›</span>
+          <span style={{ flex: 1 }}>{t.browse}</span>
+          <KeyHint label="B" />
         </button>
         <button
           type="button"
@@ -465,10 +491,33 @@ export function SpotlightCard({
             gap: 6,
           }}
         >
-          {t.dossier} <span>→</span>
+          <span style={{ flex: 1 }}>{t.dossier} <span>→</span></span>
+          <KeyHint label="D" />
         </button>
       </div>
     </div>
+  )
+}
+
+function KeyHint({ label }: { label: string }) {
+  return (
+    <kbd
+      className="font-mono"
+      style={{
+        background: 'var(--color-border)',
+        color: 'var(--color-text-muted)',
+        padding: '1px 5px',
+        borderRadius: 2,
+        fontSize: 9,
+        letterSpacing: '0.05em',
+        fontWeight: 600,
+        textTransform: 'uppercase',
+        lineHeight: 1.3,
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </kbd>
   )
 }
 
