@@ -505,7 +505,7 @@ export function InlineBarChart({
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="var(--color-text-secondary)"
               >
-                {lbl.length > 18 ? lbl.slice(0, 17) + '…' : lbl}
+                {lbl}
               </text>
 
               <rect
@@ -530,7 +530,7 @@ export function InlineBarChart({
                     fontFamily="var(--font-family-mono, monospace)"
                     fill="rgba(255,255,255,0.85)"
                   >
-                    {txt.length > 22 ? txt.slice(0, 21) + '…' : txt}
+                    {txt}
                   </text>
                 )
               })()}
@@ -1006,7 +1006,7 @@ export function InlineSpikeChart({
                     fill={HIGHLIGHT_COLOR}
                     fontWeight={700}
                   >
-                    {txt.length > 7 ? txt.slice(0, 6) + '…' : txt}
+                    {txt}
                   </text>
                 )
               })()}
