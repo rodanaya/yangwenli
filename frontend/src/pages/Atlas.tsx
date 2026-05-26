@@ -952,6 +952,33 @@ function CanvasAtlasView({
     }
   }, [zoomedCode, spotlightBrowsing])
 
+  // M-CLUSTER P7c — Arrow-key cluster cycling in spotlight.
+  // ← / → step prev/next in the activeMeta order while the spotlight is
+  // open (NOT browsing). Skipped when focus is inside INPUT/TEXTAREA so
+  // vendor-search + personal notes still work. Doesn't conflict with
+  // AtlasShell's existing arrow handler — that one fires
+  // 'atlas:pan-{direction}' custom events which only the legacy
+  // AtlasZoomLayer listens to; CanvasConstellation ignores them.
+  useEffect(() => {
+    if (!zoomedCode || spotlightBrowsing) return
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      const idx = activeMeta.findIndex(m => m.code === zoomedCode)
+      if (idx < 0) return
+      const next = e.key === 'ArrowRight'
+        ? activeMeta[(idx + 1) % activeMeta.length]
+        : activeMeta[(idx - 1 + activeMeta.length) % activeMeta.length]
+      e.preventDefault()
+      e.stopPropagation()
+      dispatch({ type: 'zoom-into-cluster', code: next.code })
+    }
+    window.addEventListener('keydown', onKey, true)  // capture phase, beat AtlasShell
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [zoomedCode, spotlightBrowsing, activeMeta, dispatch])
+
   // M-CLUSTER P5 — URL sync: push `?browse=1` when expanded into the dock,
   // remove the param when collapsed back to spotlight. Side-effect only —
   // does not re-trigger the spotlight state itself.
