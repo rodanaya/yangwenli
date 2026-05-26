@@ -41,7 +41,8 @@ import { useAtlasLOD, atlasLODBandLabel, type AtlasLOD } from '@/lib/atlas/useAt
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 import { AtlasBreadcrumb } from './AtlasBreadcrumb'
 import { ClusterFloatingCard } from './ClusterFloatingCard'
-import { AtlasVendorDrawer } from './AtlasVendorDrawer'
+// M-CLUSTER P4 — AtlasVendorDrawer no longer rendered in the legacy SVG path
+// (see comment at the former render site below).
 import { VendorHaloCard } from './VendorHaloCard'
 
 // ── Constellation layout constants (must mirror ConcentrationConstellation.tsx) ──
@@ -706,15 +707,12 @@ export function AtlasZoomLayer({
         </button>
       )}
 
-      {/* ── M-OBS P3 vendor drawer — collapsible bottom strip ──────────────── */}
-      {isZoomed && zoomedMeta && clusterVendors.length > 0 && (
-        <AtlasVendorDrawer
-          clusterCode={zoomedMeta.code}
-          clusterLabel={zoomedMeta.label}
-          vendors={clusterVendors}
-          lang={lang}
-        />
-      )}
+      {/* M-CLUSTER P4 — AtlasVendorDrawer in the legacy SVG path was removed.
+          The drawer's props signature changed to require cluster metadata
+          + paginator callbacks the legacy layer doesn't have. Legacy users
+          (rare — only via ?legacy=1) still get the ClusterFloatingCard
+          above for stats and use ESC to exit. To revive the drawer here,
+          mirror the call site in Atlas.tsx (canvas path). */}
 
       {/* ── Zoom-active visual cue: subtle amber outline around container ── */}
       {isZoomed && (

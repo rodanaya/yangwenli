@@ -664,6 +664,11 @@ export function InlineLineChart({
       anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={lineAnnotation}
     >
+      {lineYLabel && (
+        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+          {lineYLabel}
+        </div>
+      )}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -764,19 +769,6 @@ export function InlineLineChart({
           )
         )}
 
-        {lineYLabel && (
-          <text
-            x={PAD.left}
-            y={10}
-            textAnchor="start"
-            fontSize={9}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill="var(--color-text-muted)"
-            letterSpacing="0.06em"
-          >
-            {lineYLabel.toUpperCase()}
-          </text>
-        )}
       </svg>
     </ChartCard>
   )
@@ -825,6 +817,11 @@ export function InlineAreaChart({
       anchor={pickAnchor(pts, data.unit, mainColor, lang)}
       annotation={areaAnnotation}
     >
+      {areaYLabel && (
+        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+          {areaYLabel}
+        </div>
+      )}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -924,19 +921,6 @@ export function InlineAreaChart({
           )
         )}
 
-        {areaYLabel && (
-          <text
-            x={PAD.left}
-            y={10}
-            textAnchor="start"
-            fontSize={9}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill="var(--color-text-muted)"
-            letterSpacing="0.06em"
-          >
-            {areaYLabel.toUpperCase()}
-          </text>
-        )}
       </svg>
     </ChartCard>
   )
@@ -1293,6 +1277,11 @@ export function InlineMultiLine({
       eyebrow={`MULTI-SERIES · ${series.length} VENDORS`}
       annotation={annotation}
     >
+      {yLabel && (
+        <div className="text-[9px] font-mono uppercase tracking-[0.06em] text-text-muted mb-1">
+          {yLabel}{unit ? ` (${unit})` : ''}
+        </div>
+      )}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
@@ -1415,19 +1404,6 @@ export function InlineMultiLine({
           )
         })}
 
-        {yLabel && (
-          <text
-            x={PAD.left}
-            y={10}
-            textAnchor="start"
-            fontSize={9}
-            fontFamily="var(--font-family-mono, monospace)"
-            fill="var(--color-text-muted)"
-            letterSpacing="0.06em"
-          >
-            {(yLabel + (unit ? ` (${unit})` : '')).toUpperCase()}
-          </text>
-        )}
       </svg>
 
       {/* Legend with totals — color swatch + name + total caption */}
@@ -1602,27 +1578,28 @@ export function InlineNetwork({
                 fill={p.node.color}
                 opacity={0.92}
               />
+              {/* Node label — outside the circle to fit long vendor names
+                  (was inside, clipped at ~72px diameter for 136px labels) */}
               <text
                 x={p.x}
-                y={p.y - 2}
+                y={p.y + r + 14}
                 textAnchor="middle"
                 fontSize={11}
                 fontFamily="var(--font-family-mono, monospace)"
-                fontWeight={800}
-                fill="var(--color-background)"
+                fontWeight={700}
+                fill="var(--color-text-primary)"
               >
                 {p.node.label}
               </text>
               {p.node.sublabel && (
                 <text
                   x={p.x}
-                  y={p.y + 11}
+                  y={p.y + r + 27}
                   textAnchor="middle"
                   fontSize={9}
                   fontFamily="var(--font-family-mono, monospace)"
                   fontWeight={400}
-                  fill="var(--color-background)"
-                  opacity={0.85}
+                  fill="var(--color-text-muted)"
                 >
                   {p.node.sublabel}
                 </text>
@@ -1655,7 +1632,10 @@ export function ThresholdDistribution({
   const mx = maxVal(pts, data.maxValue)
   const unit = data.unit ?? ''
 
-  const margin = { top: 48, right: 90, bottom: 56, left: 20 }
+  // 2026-05-25: bumped bottom 56 → 96 so rotated x-axis labels like
+  // "2019 pre-COVID" (134px content, rotated -40° ≈ 102px horizontal +
+  // 86px vertical) don't get clipped by the SVG bottom edge.
+  const margin = { top: 48, right: 90, bottom: 96, left: 20 }
   const plotW = 450
   const plotH = 156
   const totalH = margin.top + plotH + margin.bottom
@@ -2002,11 +1982,11 @@ export function ClevelandPairChart({
   title: string
   lang?: 'en' | 'es'
 }) {
-  // 2026-05-25: bumped LABEL_W 148 → 240 so 24-char vendor names like
-  // "Seg. Alim. Mex (Segalmex)" / "Productos Hospitalarios" /
+  // 2026-05-25: bumped LABEL_W 148 → 260 so 24-char vendor names like
+  // "Seg. Alim. Mex (Segalmex)" (248px) / "Productos Hospitalarios" /
   // "Efectivale (S.A.)" render fully without right-edge clipping.
   // Affects ilusion-competitiva ch3, captura-institucional ch2.
-  const LABEL_W = 240
+  const LABEL_W = 260
   const DOT_AREA = 268
   const GAP_W = 84
   const TOTAL_W = LABEL_W + DOT_AREA + GAP_W
@@ -2025,7 +2005,7 @@ export function ClevelandPairChart({
   // = left of axis (below baseline). Risk-tier color from RISK_COLORS,
   // derived by normalizing the excess against the OECD 25% ceiling.
   if (data.mode === 'excess') {
-    const E_LABEL_W = 180   // accommodates "Building Construction" / "Construcción de Edificios"
+    const E_LABEL_W = 210   // accommodates "Building Construction" (197px) / "Construcción de Edificios"
     const E_LEFT_W = 56     // narrow left-of-axis pane for deficits
     const E_RIGHT_W = 280   // wide right-of-axis pane for breaches
     const E_VALUE_W = 112   // fits "+21.4 · 32.4%" at 11px mono without clipping the trailing %
@@ -2384,7 +2364,9 @@ export function InlineStackedBar({
   if (comparison) {
     const ROW_H_M = 22
     const ROW_GAP_M = 14
-    const LABEL_W_M = 130
+    // 2026-05-25: bumped 130 → 170 to fit "Infraestructura" (143px) and
+    // "Medio Ambiente" (134px) — sexenio mirror chart sector center column.
+    const LABEL_W_M = 170
     const HALF_W_M = 200
     const VALUE_W_M = 84
     const W_M = VALUE_W_M + HALF_W_M + LABEL_W_M + HALF_W_M + VALUE_W_M
@@ -2563,7 +2545,10 @@ export function InlineStackedBar({
 
   const ROW_H = 26
   const ROW_GAP = 14
-  const LABEL_W = 132
+  // 2026-05-25: bumped 132 → 170 to fit sector labels like
+  // "Infraestructura" (143px) / "Medio Ambiente" (134px) without
+  // overflowing into the bar area.
+  const LABEL_W = 170
   const VALUE_W = 110
   const BAR_AREA = 380
   const W = LABEL_W + BAR_AREA + VALUE_W + 12

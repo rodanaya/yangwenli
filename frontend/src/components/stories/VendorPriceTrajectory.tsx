@@ -177,6 +177,12 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
 
       {/* SVG chart */}
       <div className="px-2 py-4">
+        <p
+          className="text-[9px] font-mono uppercase tracking-[0.06em] mb-1 pl-2"
+          style={{ color: textMuted }}
+        >
+          {lang === 'es' ? 'PRECIO UNITARIO (MXN)' : 'UNIT PRICE (MXN)'}
+        </p>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
@@ -312,16 +318,8 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
             </g>
           )}
 
-          {/* Y-axis label (rotated) */}
-          <text
-            transform={`translate(14, ${yMin + yHeight / 2}) rotate(-90)`}
-            fontSize={9}
-            fontFamily="monospace"
-            fill={textMuted}
-            textAnchor="middle"
-          >
-            {lang === 'es' ? 'PRECIO UNITARIO (MXN)' : 'UNIT PRICE (MXN)'}
-          </text>
+          {/* Y-axis label — moved from rotated SVG text to horizontal kicker
+              above the chart to avoid clipping when label > plot height */}
         </svg>
       </div>
 
