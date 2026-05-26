@@ -52,6 +52,7 @@ const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
 // /vendors/:id → VendorDossier · /institutions/:id → InstitutionDossier.
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
+const SectorDossier = lazy(() => import('@/pages/SectorDossier'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
@@ -349,8 +350,21 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-26 DESIGNUS round 8: /sectors/:id is the canonical
+                  unified sector dossier (SectorDossier). Replaces the legacy
+                  SectorProfile 4-tab card-grid. /print/sectors/:id reserved
+                  for future printable surface (SectorProfile preserved on
+                  disk for reference). */}
               <Route
                 path="sectors/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <SectorDossier />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="print/sectors/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <SectorProfile />
