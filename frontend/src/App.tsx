@@ -37,6 +37,7 @@ const VendorDossier = lazy(() => import('@/pages/VendorDossier'))
 // File preserved on disk at pages/InstitutionProfile.tsx for reference.
 // const InstitutionProfile = lazy(() => import('@/pages/InstitutionProfile'))
 const InstitutionThread = lazy(() => import('@/pages/InstitutionThread'))
+const InstitutionDossier = lazy(() => import('@/pages/InstitutionDossier'))
 // 2026-05-09: spatial-nav rebuild — the Star Fox map. Lives at /explore
 // while it iterates; will be promoted to / when stable.
 // File is named SpatialMap.tsx (not Explore.tsx) to avoid a Windows
@@ -47,13 +48,8 @@ const SpatialMap = lazy(() => import('@/pages/SpatialMap'))
 // the /explore deep link. The legacy dossier components survive at
 // /print/vendors/:id and /print/institutions/:id for the printable
 // surface. See docs/SCAFFOLDING_OF_THE_UNIVERSE.md Gap 2.
-// VendorDeepLinkRedirect retired 2026-05-25 (DESIGNUS round 6) — /vendors/:id
-// now renders VendorDossier as the canonical unified surface.
-const InstitutionDeepLinkRedirect = lazy(() =>
-  import('@/components/explore/DeepLinkRedirects').then((m) => ({
-    default: m.InstitutionDeepLinkRedirect,
-  })),
-)
+// Both DeepLinkRedirect components retired 2026-05-25/26 (DESIGNUS rounds 6+7):
+// /vendors/:id → VendorDossier · /institutions/:id → InstitutionDossier.
 const Sectors = lazy(() => import('@/pages/Sectors'))
 const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -425,11 +421,15 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-26 DESIGNUS round 7: /institutions/:id is the
+                  canonical unified institution dossier (InstitutionDossier).
+                  Replaces the Gap 2 redirect-into-/explore behavior. The
+                  legacy /print/institutions/:id still renders InstitutionThread. */}
               <Route
                 path="institutions/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
-                    <InstitutionDeepLinkRedirect />
+                    <InstitutionDossier />
                   </SuspenseBoundary>
                 }
               />
