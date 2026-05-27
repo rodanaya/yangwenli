@@ -1659,3 +1659,46 @@ HTTP and API checks blocked by managed-cloud egress policy (`Host not in allowli
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`Host not in allowlist`) — persistent infrastructure constraint identical to all prior automated runs; not a site failure. Bilingual scan clean (14 false-positive matches, all stable). One pre-existing low-severity hardcoded English label in `ContractCompareModal.tsx` (carried from prior scan).
+
+---
+## Visual Review — 2026-05-27T00:11:34Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/atlas | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/aria | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/sectors | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/sectors/salud | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/cases | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/methodology | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (host_not_allowed — CDN egress block) | BLOCKED |
+
+**Note:** `x-deny-reason: host_not_allowed` in response headers confirms this is a WAF/CDN egress-policy block on this managed-cloud container's IP — not a site outage. Identical to all prior automated runs from this environment.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/cases?limit=5 | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 — Host not in allowlist | BLOCKED |
+| /api/v1/sectors | 403 — Host not in allowlist | BLOCKED |
+
+**Note:** Same egress-policy block as HTTP checks. No evidence of API regression from this environment.
+
+### Bilingual Gaps
+- **"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+- **i18n key leak scan (raw `UPPER.UPPER` patterns):** 14 matches found; all confirmed false-positives:
+  - `TIER_STYLES[tierName]` / `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` — TypeScript object-accessor patterns, not UI key leaks.
+  - Vendor name literals in `Executive.tsx` (lines 73, 93, 113) — legitimate Spanish content.
+  - Comment line in `CaseLibrary.tsx:219` — inside a JSX comment block.
+  - `StoryMoneySankeyChart.tsx:22,37` — internal chart fixture data.
+  - `ExploreCanvas.tsx:1416–1431` — code comments and corporate-form token allowlist.
+  - `VendorHero.tsx:716` — JSDoc example string.
+  - `Methodology.tsx:119` — academic citation (Mahalanobis, P.C.).
+- **Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,204,290` — `label="Risk Score"`, `label="Risk Level"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint identical to all prior automated runs; not a site failure. Bilingual scan clean (14 false-positive matches, all stable). Pre-existing low-severity hardcoded English labels in `ContractCompareModal.tsx` carried forward from prior scan.
