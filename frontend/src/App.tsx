@@ -29,6 +29,7 @@ function SpatialRedirect() {
 // Lazy load all page components for code splitting
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
+const ContractDossier = lazy(() => import('@/pages/ContractDossier'))
 const ExploreLegacy = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
@@ -73,8 +74,10 @@ const Executive = lazy(() => import('@/pages/Executive'))
 const Atlas = lazy(() => import('@/pages/Atlas'))
 const CategoriesIndex = lazy(() => import('@/pages/CategoriesIndex'))
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
+const CategoryDossier = lazy(() => import('@/pages/CategoryDossier'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
+const CaseDossier = lazy(() => import('@/pages/CaseDossier'))
 const LoginPage = lazy(() => import('@/pages/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
@@ -224,8 +227,20 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-27 Phase 5: /categories/:id is the canonical
+                  unified category dossier. Replaces CategoryProfile
+                  card-grid. /print/categories/:id preserves the legacy
+                  surface for printable / reference use. */}
               <Route
                 path="categories/:id"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CategoryDossier />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="print/categories/:id"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <CategoryProfile />
@@ -240,8 +255,19 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-27 Phase 4: /contracts/:id is the canonical
+                  unified contract dossier. Replaces ContractDetail.
+                  /print/contracts/:id preserves the legacy surface. */}
               <Route
                 path="contracts/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <ContractDossier />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="print/contracts/:id"
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <ContractDetail />
@@ -388,8 +414,19 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
+              {/* 2026-05-27 Phase 6: /cases/:slug is the canonical
+                  unified case dossier. Replaces CaseDetail (2,586 LOC).
+                  /print/cases/:slug preserves the legacy surface. */}
               <Route
                 path="cases/:slug"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CaseDossier />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="print/cases/:slug"
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <CaseDetail />
