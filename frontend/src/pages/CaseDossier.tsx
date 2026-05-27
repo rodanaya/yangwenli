@@ -133,6 +133,14 @@ function legalStatusMeta(status: string, lang: 'en' | 'es') {
           ? 'Caso documentado por periodismo o auditoría, sin acción judicial conocida.'
           : 'Documented by journalism or audit, with no known judicial action.',
       }
+    case 'impunity':
+      return {
+        accent: RISK_COLORS.critical,
+        label: es ? 'Impunidad documentada' : 'Documented impunity',
+        body:  es
+          ? 'Caso documentado por auditoría o investigación periodística; ningún actor enfrentó consecuencias penales pese a evidencia disponible.'
+          : 'Case documented by audit or investigative journalism; no actor faced criminal consequences despite available evidence.',
+      }
     case 'acquitted':
       return {
         accent: 'var(--color-text-muted)',
