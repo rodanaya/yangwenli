@@ -111,6 +111,14 @@ export default function CategoryDossier() {
     return summaryData.data.find((c: { category_id: number }) => c.category_id === categoryId) ?? null
   }, [summaryData, categoryId])
 
+  // Hooks must run on every render in the same order — keep this before
+  // the early returns below. React error #310 fired here on first ship.
+  const categoryTrends = useMemo(() => {
+    if (!trendsData?.categories) return []
+    const arr = (trendsData.categories as Array<{ category_id: number; trend: Array<{ year: number; total_value: number; total_contracts: number; avg_risk: number | null }> }>).find((t) => t.category_id === categoryId)
+    return arr?.trend ?? []
+  }, [trendsData, categoryId])
+
   if (!validId) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
@@ -177,12 +185,7 @@ export default function CategoryDossier() {
     hrPct >= 25 ? 'critical' : hrPct >= 15 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
   const verdictColor = RISK_COLORS[hrLevel]
 
-  // Timeline shape for TimelineHourglass — filter to this category from trends
-  const categoryTrends = useMemo(() => {
-    if (!trendsData?.categories) return []
-    const arr = (trendsData.categories as Array<{ category_id: number; trend: Array<{ year: number; total_value: number; total_contracts: number; avg_risk: number | null }> }>).find((t) => t.category_id === categoryId)
-    return arr?.trend ?? []
-  }, [trendsData, categoryId])
+  // categoryTrends was hoisted above the early returns to satisfy Rules of Hooks.
   const timelineForChapters = categoryTrends.map((t) => ({
     year: t.year,
     avg_risk_score: t.avg_risk ?? null,
