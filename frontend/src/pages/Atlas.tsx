@@ -636,7 +636,11 @@ function CanvasAtlasView({
   // "it's too much, I can't even navigate." 80 keeps the cluster swarm visibly
   // dense (top-80 by risk per cluster — much more than the original 50) while
   // not flooding the canvas. Zoom view stays at 200 (zoomCluster, line below).
-  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 80, true)
+  // 2026-05-29 de-clutter: 80 → 55 dots/cluster. Fewer dots both thin the
+  // cluster core AND shrink the golden-spiral blob radius (grows with √slot),
+  // so clusters overlap less — addressing the "too clustered" report without
+  // losing the galaxy's sense of scale.
+  const galaxy = useGalaxyVendors(mode, galaxyClusterCodes, 55, true)
   const zoomCluster = useZoomedClusterVendors(mode, zoomedCodeForFetch, 200)
 
   // Position helper — deterministic golden-ratio polar offset around the
@@ -738,7 +742,13 @@ function CanvasAtlasView({
         : v.riskScore >= 0.4 ? 'high'
         : v.riskScore >= 0.25 ? 'medium'
         : 'low'
-      const sectorHex = v.primarySectorCode ? SECTOR_COLORS[v.primarySectorCode] : undefined
+      // 2026-05-29 de-clutter: color encodes RISK in the patterns/sexenios
+      // lenses (where the cluster already groups by pattern/term, so sector
+      // color was just rainbow noise). Sectors/categories lenses keep their
+      // sector identity. With the engine's risk alpha ramp, risk-colored dots
+      // turn the galaxy into a legible hot/cold map instead of confetti.
+      const colorBySector = mode === 'sectors' || mode === 'categories'
+      const sectorHex = colorBySector && v.primarySectorCode ? SECTOR_COLORS[v.primarySectorCode] : undefined
       return {
         id: String(v.vendorId),
         x,
@@ -762,6 +772,7 @@ function CanvasAtlasView({
     clusters,
     namedVendors,
     positionForVendor,
+    mode,
   ])
 
   // Atlas P6 Frontier C — build planetary contract dots when a vendor is focused.

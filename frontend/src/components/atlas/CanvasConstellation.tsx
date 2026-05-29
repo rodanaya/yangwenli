@@ -75,7 +75,7 @@ function withTransition<T extends Element>(
   if (ease) tr = tr.ease(ease)
   return tr as TransitionLikeSelection<T>
 }
-import { RISK_COLORS, PATTERN_COLORS } from '@/lib/constants'
+import { RISK_COLORS } from '@/lib/constants'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { halton } from '@/lib/particle'
 
@@ -90,17 +90,15 @@ import { halton } from '@/lib/particle'
 // Color/alpha calibrated for the app's light background (#faf9f6):
 //   slate-500 (#64748b) at alpha 0.18 → effective rgb(~226,228,231) on white
 //   — subtle grey freckle, clearly visible but not overwhelming.
-const AMBIENT_COUNT = 3000
+// 2026-05-29 de-clutter pass: 3000 → 1200. The galaxy view rendered all
+// 3,000 freckles at once, which compounded with the data dots into visual
+// static ("too clustered"). 1,200 still gives ambient texture without
+// reading as a second dot layer competing with the vendors.
+const AMBIENT_COUNT = 1200
 const AMBIENT_DOTS: Array<{ x: number; y: number }> = Array.from(
   { length: AMBIENT_COUNT },
   (_, i) => ({ x: halton(i + 1, 2), y: halton(i + 1, 3) }),
 )
-
-/** Hex pattern color for a dot's cluster code (only for P1..P7). */
-function patternStrokeFor(clusterCode: string | undefined): string | null {
-  if (!clusterCode) return null
-  return PATTERN_COLORS[clusterCode] ?? null
-}
 
 // M-CLUSTER Phase 2 — Pattern glyphs (decorative SVG-style backdrops per
 // cluster) were REMOVED 2026-05-22 after user feedback "it's too much, I
@@ -222,11 +220,28 @@ export interface CanvasConstellationProps {
 const TAU = Math.PI * 2
 
 /** Risk-level → screen pixel radius at zoom=1, before LOD multiplier. */
+// 2026-05-29 de-clutter: widened the critical↔low gap (was 2.8/2.2/1.6/1.0)
+// so critical vendors read as distinctly larger "stars" and low-risk recedes
+// to fine grain. Hierarchy through size is half the figure-ground story; the
+// alpha ramp below is the other half.
 const RISK_BASE_RADIUS: Record<ConstellationDot['riskLevel'], number> = {
-  critical: 2.8,
-  high: 2.2,
-  medium: 1.6,
-  low: 1.0,
+  critical: 3.4,
+  high: 2.4,
+  medium: 1.5,
+  low: 0.9,
+}
+
+/**
+ * Risk-level → base opacity. The single biggest de-clutter lever: low and
+ * medium dots recede to texture so the eye locks onto the critical/high
+ * hotspots (figure-ground). Without this, 560 same-weight dots read as
+ * uniform confetti. Hover/pin/floor multipliers compose on top of this.
+ */
+const RISK_BASE_ALPHA: Record<ConstellationDot['riskLevel'], number> = {
+  critical: 1.0,
+  high: 0.82,
+  medium: 0.5,
+  low: 0.28,
 }
 
 /** Risk-floor ordering (numeric for cheap comparison). */
@@ -751,12 +766,15 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
     // feel). slate-500 at 0.18 alpha is calibrated for the light
     // (#faf9f6) background.
     ctx.fillStyle = '#64748b'   // slate-500
-    ctx.globalAlpha = 0.18
+    // 2026-05-29 de-clutter: 0.18 → 0.07. The freckle field should be a
+    // barely-there texture, not a second data layer. At galaxy view this is
+    // the single biggest noise contributor after the dots themselves.
+    ctx.globalAlpha = 0.07
     ctx.beginPath()
     // Dot radius nudges up at deeper zoom so individual stars stay legible
     // when only a handful are on screen. Keep modest — too big and it
     // competes with the data dots.
-    const ambientR = k >= 12 ? 2.2 : k >= 4 ? 1.8 : 1.5
+    const ambientR = k >= 12 ? 2.0 : k >= 4 ? 1.5 : 1.2
     for (const p of AMBIENT_DOTS) {
       const sx = p.x * w * k + t.x
       const sy = p.y * h * k + t.y
@@ -778,10 +796,14 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       for (const c of clusters) {
         const cx = c.fx * w * k + t.x
         const cy = c.fy * h * k + t.y
-        const glowR = 80
+        const glowR = 96
         if (cx + glowR < 0 || cy + glowR < 0 || cx - glowR > w || cy - glowR > h) continue
         const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR)
-        grad.addColorStop(0, c.color + '20')  // ~12% alpha at center (hex 20)
+        // 2026-05-29 de-clutter: 0x20 (~12%) → 0x12 (~7%). Seven overlapping
+        // glows were hazing the clusters together. A wider but fainter glow
+        // gives each cluster a soft footprint without bleeding into neighbors.
+        grad.addColorStop(0, c.color + '12')  // ~7% alpha at center
+        grad.addColorStop(0.7, c.color + '08')
         grad.addColorStop(1, c.color + '00')  // fully transparent at edge
         ctx.fillStyle = grad
         ctx.fillRect(cx - glowR, cy - glowR, glowR * 2, glowR * 2)
@@ -824,8 +846,9 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       if (k >= 12) radius *= 1.35
       else if (k >= 4) radius *= 1.15
 
-      // Opacity composition.
-      let alpha = entryAlpha
+      // Opacity composition. Base opacity encodes risk tier (figure-ground)
+      // so low/medium recede to texture and critical/high read as the signal.
+      let alpha = entryAlpha * RISK_BASE_ALPHA[d.riskLevel]
       // Risk-floor visibility (with fade interpolation).
       const rLevel = RISK_ORDER[d.riskLevel]
       const prevVisible = prevFloorOrder === -1 ? 1 : (rLevel >= prevFloorOrder ? 1 : 0)
@@ -851,20 +874,11 @@ export function CanvasConstellation(props: CanvasConstellationProps): React.Reac
       ctx.globalAlpha = alpha
       ctx.fill()
 
-      // Pattern identity stroke — only at galaxy view (k < 2) when many
-      // clusters are visible. When zoomed in, the dot fill already carries
-      // all the signal and the stroke adds noise. Reduced alpha 0.4 → 0.25.
-      if (k < 2) {
-        const strokeColor = patternStrokeFor(d.clusterCode)
-        if (strokeColor) {
-          ctx.beginPath()
-          ctx.arc(sx, sy, radius, 0, TAU)
-          ctx.strokeStyle = strokeColor
-          ctx.lineWidth = 1
-          ctx.globalAlpha = alpha * 0.25
-          ctx.stroke()
-        }
-      }
+      // 2026-05-29 de-clutter: removed the per-dot pattern stroke ring.
+      // It outlined every one of ~560 galaxy dots, doubling the per-dot draw
+      // and adding a ring of edge-noise that compounded the "too clustered"
+      // read. Pattern identity is already carried by the attractor rings +
+      // ground glow + cluster labels; the dot fill carries risk.
 
       // Selection halo for highlighted dots.
       if (highlightedDotIds && highlightedDotIds.has(d.id)) {
