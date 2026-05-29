@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface YearRow {
@@ -54,9 +55,9 @@ const BAR_H = ROW_H - 3
 const BAR_W = W - PADDING_L - PADDING_R
 
 const COLORS = {
-  direct: 'var(--color-sector-salud)',
-  single: 'var(--color-sector-infraestructura)',
-  open: 'var(--color-sector-hacienda)',
+  direct: RISK_COLORS.critical,
+  single: RISK_COLORS.high,
+  open: 'var(--color-text-muted)',
 }
 
 export function StoryInfraestructura() {

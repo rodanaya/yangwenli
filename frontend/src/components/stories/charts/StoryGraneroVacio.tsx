@@ -8,7 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface VendorRow {
@@ -41,9 +41,10 @@ const W = LABEL_W + COL_W + VALUE_W
 const H = 40 + DATA.length * ROW_H + 16
 
 function getVendorColor(daPct: number): string {
-  if (daPct >= 99) return 'var(--color-sector-salud)'
-  if (daPct >= 60) return 'var(--color-sector-infraestructura)'
-  return SECTOR_COLORS.agricultura
+  if (daPct >= 90) return RISK_COLORS.critical
+  if (daPct >= 75) return RISK_COLORS.high
+  if (daPct >= 60) return RISK_COLORS.medium
+  return 'var(--color-text-muted)'
 }
 
 export function StoryGraneroVacio() {
@@ -151,15 +152,15 @@ export function StoryGraneroVacio() {
 
       <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-salud)' }} />
+          <span className="w-2 h-2 rounded-sm" style={{ background: RISK_COLORS.critical }} />
           {t('emptyGranary.legend100')}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-sector-infraestructura)' }} />
+          <span className="w-2 h-2 rounded-sm" style={{ background: RISK_COLORS.high }} />
           {t('emptyGranary.legend60')}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-sm" style={{ background: SECTOR_COLORS.agricultura }} />
+          <span className="w-2 h-2 rounded-sm" style={{ background: 'var(--color-text-muted)' }} />
           {t('emptyGranary.legendUnder')}
         </span>
       </div>

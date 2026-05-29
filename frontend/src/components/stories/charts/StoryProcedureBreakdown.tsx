@@ -11,6 +11,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface SectorRow {
@@ -36,9 +37,9 @@ const DATA: SectorRow[] = [
 ]
 
 const COLORS = {
-  direct: 'var(--color-sector-salud)',
-  single: 'var(--color-sector-infraestructura)',
-  open:   'var(--color-sector-hacienda)',
+  direct: RISK_COLORS.critical,
+  single: RISK_COLORS.high,
+  open:   'var(--color-text-muted)',
 }
 
 const DOTS = 50 // each dot = 2pp
@@ -87,15 +88,15 @@ export function StoryProcedureBreakdown() {
           </text>
           <g transform={`translate(${LABEL_W}, 20)`}>
             <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
-            <text x={11} y={6} fill="var(--color-sector-salud)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={11} y={6} fill={COLORS.direct} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.directLabel')}
             </text>
             <circle cx={80} cy={2} r={3} fill={COLORS.single} />
-            <text x={88} y={6} fill="var(--color-sector-infraestructura)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={88} y={6} fill={COLORS.single} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.singleLabel')}
             </text>
             <circle cx={205} cy={2} r={3} fill={COLORS.open} />
-            <text x={213} y={6} fill="var(--color-sector-hacienda)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+            <text x={213} y={6} fill={COLORS.open} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
               {t('procedureBreakdown.openLabel')}
             </text>
           </g>

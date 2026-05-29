@@ -40,7 +40,7 @@ function getConcentrationColor(pct: number): string {
   if (pct >= 75) return '#dc2626'
   if (pct >= 50) return '#ea580c'
   if (pct >= 30) return '#eab308'
-  return '#16a34a'
+  return '#71717a'
 }
 
 /** Map a sector_name (Spanish, from API) to our SECTOR_COLORS key */
@@ -225,7 +225,7 @@ export default function SectorConcentrationChart({
             { color: '#dc2626', label: t('charts.sectorConcentration.legendHigh') },
             { color: '#ea580c', label: t('charts.sectorConcentration.legendModerate') },
             { color: '#eab308', label: t('charts.sectorConcentration.legendLow') },
-            { color: '#16a34a', label: t('charts.sectorConcentration.legendCompetitive') },
+            { color: '#71717a', label: t('charts.sectorConcentration.legendCompetitive') },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <span className="inline-block rounded-full" style={{ width: 6, height: 6, backgroundColor: color, opacity: 0.85 }} aria-hidden="true" />

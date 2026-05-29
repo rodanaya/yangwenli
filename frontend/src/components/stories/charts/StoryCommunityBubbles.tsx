@@ -11,6 +11,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { ExternalLink } from 'lucide-react'
 import { EditorialChartFrame } from '../EditorialChartFrame'
+import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 interface Node {
   id: string
@@ -46,10 +47,9 @@ const NODES: Node[] = [
 ]
 
 function colorFor(risk: number): string {
-  if (risk >= 0.60) return 'var(--color-sector-salud)'
-  if (risk >= 0.40) return 'var(--color-sector-infraestructura)'
-  if (risk >= 0.25) return 'var(--color-sector-energia)'
-  return 'var(--color-sector-hacienda)'
+  const level = getRiskLevelFromScore(risk)
+  if (level === 'low') return 'var(--color-text-muted)'
+  return RISK_COLORS[level]
 }
 
 const W = 680
@@ -197,10 +197,10 @@ export function StoryCommunityBubbles() {
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           {[
-            { label: t('communityBubbles.legendCritical'), color: 'var(--color-sector-salud)' },
-            { label: t('communityBubbles.legendHigh'),     color: 'var(--color-sector-infraestructura)' },
-            { label: t('communityBubbles.legendMedium'),   color: 'var(--color-sector-energia)' },
-            { label: t('communityBubbles.legendLow'),      color: 'var(--color-sector-hacienda)' },
+            { label: t('communityBubbles.legendCritical'), color: RISK_COLORS.critical },
+            { label: t('communityBubbles.legendHigh'),     color: RISK_COLORS.high },
+            { label: t('communityBubbles.legendMedium'),   color: RISK_COLORS.medium },
+            { label: t('communityBubbles.legendLow'),      color: 'var(--color-text-muted)' },
           ].map(({ label, color }) => (
             <span key={label} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} aria-hidden="true" />

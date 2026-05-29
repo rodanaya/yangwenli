@@ -11,7 +11,7 @@
 import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Feature definitions — 9 representative features from v0.8.5 (subset for chart readability)
@@ -50,10 +50,10 @@ const PROTECT_PETAL_BASE = '#0f766e'
 const PROTECT_PETAL_LIGHT = '#5eead4'
 
 const CENTER_COLORS: Record<string, string> = {
-  critical: '#dc2626',
-  high:     '#f97316',
-  medium:   '#eab308',
-  low:      '#22c55e',
+  critical: RISK_COLORS.critical,
+  high:     RISK_COLORS.high,
+  medium:   RISK_COLORS.medium,
+  low:      RISK_COLORS.low,
 }
 
 // ---------------------------------------------------------------------------

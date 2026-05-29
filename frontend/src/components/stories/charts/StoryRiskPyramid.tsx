@@ -9,13 +9,14 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const TIERS = [
-  { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: 'var(--color-sector-salud)', threshold: '≥ 0.60', count: '184K' },
-  { level: 'High',     pct: 7.5,  valuePct: 18.2, color: 'var(--color-sector-infraestructura)', threshold: '≥ 0.40', count: '229K' },
-  { level: 'Medium',   pct: 26.8, valuePct: 23.4, color: 'var(--color-sector-energia)', threshold: '≥ 0.25', count: '821K' },
-  { level: 'Low',      pct: 59.4, valuePct: 16.6, color: 'var(--color-sector-hacienda)', threshold: '< 0.25', count: '1.82M' },
+  { level: 'Critical', pct: 6.0,  valuePct: 41.8, color: RISK_COLORS.critical, threshold: '≥ 0.60', count: '184K' },
+  { level: 'High',     pct: 7.5,  valuePct: 18.2, color: RISK_COLORS.high, threshold: '≥ 0.40', count: '229K' },
+  { level: 'Medium',   pct: 26.8, valuePct: 23.4, color: RISK_COLORS.medium, threshold: '≥ 0.25', count: '821K' },
+  { level: 'Low',      pct: 59.4, valuePct: 16.6, color: 'var(--color-text-muted)', threshold: '< 0.25', count: '1.82M' },
 ]
 
 const DOTS_PER_ROW = 50 // each dot = 2% of total contracts

@@ -9,6 +9,7 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { EditorialChartFrame } from '../EditorialChartFrame'
+import { RISK_COLORS } from '@/lib/constants'
 
 interface SexenioCol {
   president: string
@@ -43,10 +44,10 @@ const W = LEFT_PAD + DATA.length * COL_W + (DATA.length - 1) * COL_GAP + 30
 const H = TOP_PAD + STRIP_H + BOT_PAD
 
 function colorForRate(rate: number): string {
-  if (rate >= 75) return 'var(--color-sector-salud)'  // critical red
-  if (rate >= 60) return 'var(--color-sector-infraestructura)'  // orange
-  if (rate >= 40) return 'var(--color-risk-high)'  // amber
-  return 'var(--color-sector-hacienda)'                   // green
+  if (rate >= 80) return RISK_COLORS.critical
+  if (rate >= 60) return RISK_COLORS.high
+  if (rate >= 40) return RISK_COLORS.medium
+  return 'var(--color-text-muted)'
 }
 
 export function StorySexenioASexenio() {

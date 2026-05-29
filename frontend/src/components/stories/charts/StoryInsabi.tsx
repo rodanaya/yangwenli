@@ -8,6 +8,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface EraMetric {
@@ -97,7 +98,7 @@ export function StoryInsabi() {
           aria-label={t('insabi.ariaLabel')}
         >
           {/* Headers */}
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-sector-hacienda)" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
             {t('insabi.spName')}
           </text>
           <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
@@ -108,7 +109,7 @@ export function StoryInsabi() {
             x={LABEL_W + STRIP_W + VALUE_W + COL_GAP + STRIP_W / 2 + VALUE_W / 2}
             y={26}
             textAnchor="middle"
-            fill="var(--color-sector-salud)"
+            fill={RISK_COLORS.critical}
             fontSize={11}
             fontFamily="var(--font-family-serif)"
             fontWeight={700}
@@ -156,13 +157,13 @@ export function StoryInsabi() {
             const spFilled = Math.round(m.seguroPopular / 2)
             const insabiFilled = Math.round(m.insabi / 2)
 
-            // Color logic: green if SP is better, red if INSABI worse
+            // Color logic: neutral if the era is the relative "winner", critical red if the "loser"
             const spColor = m.worseIsHigher
-              ? (m.seguroPopular < m.insabi ? 'var(--color-sector-hacienda)' : 'var(--color-sector-salud)')
-              : (m.seguroPopular > m.insabi ? 'var(--color-sector-hacienda)' : 'var(--color-sector-salud)')
+              ? (m.seguroPopular < m.insabi ? 'var(--color-text-secondary)' : RISK_COLORS.critical)
+              : (m.seguroPopular > m.insabi ? 'var(--color-text-secondary)' : RISK_COLORS.critical)
             const insabiColor = m.worseIsHigher
-              ? (m.insabi > m.seguroPopular ? 'var(--color-sector-salud)' : 'var(--color-sector-hacienda)')
-              : (m.insabi < m.seguroPopular ? 'var(--color-sector-salud)' : 'var(--color-sector-hacienda)')
+              ? (m.insabi > m.seguroPopular ? RISK_COLORS.critical : 'var(--color-text-secondary)')
+              : (m.insabi < m.seguroPopular ? RISK_COLORS.critical : 'var(--color-text-secondary)')
 
             return (
               <g key={m.key}>

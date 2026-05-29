@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const TOTAL_ATTEMPTS = 50 // visualization scale (not actual count)
@@ -26,11 +27,11 @@ const CONTRACT_DOTS = Array.from({ length: 147 }).map((_, i) => {
 })
 
 const COLORS = {
-  critical: 'var(--color-sector-salud)',
-  high: 'var(--color-sector-infraestructura)',
-  medium: 'var(--color-sector-energia)',
-  low: 'var(--color-sector-hacienda)',
-  win: 'var(--color-sector-salud)',
+  critical: RISK_COLORS.critical,
+  high: RISK_COLORS.high,
+  medium: RISK_COLORS.medium,
+  low: 'var(--color-text-muted)',
+  win: RISK_COLORS.critical,
   lose: 'var(--color-text-muted)',
   baselineWin: 'var(--color-oecd)',
 }

@@ -9,7 +9,7 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react'
 import { sankey, sankeyLinkHorizontal, type SankeyNode, type SankeyLink } from 'd3-sankey'
 import { formatCompactMXN, toTitleCase } from '@/lib/utils'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 
 interface MoneyFlowItem {
   source_type: string
@@ -34,10 +34,8 @@ type SLink = SankeyLink<{ name: string; color: string; type: 'institution' | 've
 
 function riskColor(avgRisk: number | null): string {
   if (avgRisk == null) return '#64748b'
-  if (avgRisk >= 0.60) return '#f87171'
-  if (avgRisk >= 0.40) return '#fb923c'
-  if (avgRisk >= 0.25) return '#fbbf24'
-  return '#4ade80'
+  const level = getRiskLevelFromScore(avgRisk)
+  return RISK_COLORS[level]
 }
 
 function guessSectorFromName(name: string): string {
