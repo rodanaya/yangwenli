@@ -8,9 +8,6 @@
  * when the user actually opens the network/treemap views.
  */
 
-// Custom chart components (Recharts-based only)
-export { ProcedureBreakdown } from './ProcedureBreakdown'
-
 // Editorial particle-grammar primitives (pure SVG, deterministic)
 export { MiniRiskField } from './MiniRiskField'
 export { RiskRingField } from './RiskRingField'

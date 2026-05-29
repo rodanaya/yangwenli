@@ -72,6 +72,18 @@ const PATTERNS = [
     regex: 'bg-(red|orange|purple)-(600|700)/[0-9]+',
     severity: 'warn',
   },
+  // Raw hex inside SVG color attributes (fill=/stroke=/stopColor="#…").
+  // Tracked SEPARATELY from the generic raw-hex warning below so it doesn't
+  // hide in the ~1k generic-hex pool. The 2026-05-29 chart audit found these
+  // slipping past review because they read as "just a chart color" — but they
+  // bypass RISK_COLORS / SECTOR_COLORS and the cream-theme tokens. 'warn' for
+  // now; promote to 'fail' once the count drops below ~10 (same philosophy as
+  // the orange/purple hues above). Excludes url(#…) filter/gradient refs.
+  {
+    name: 'Raw hex in SVG color attr (fill=/stroke=/stopColor="#…") — use RISK_COLORS/SECTOR_COLORS/var(--…) (warn → promote to fail near 0)',
+    regex: "(fill|stroke|stopColor)=[\"']#[0-9a-fA-F]{3,6}",
+    severity: 'warn',
+  },
   // Hardcoded dark-mode hex — render as black bullets on cream.
   {
     name: 'Hardcoded #2d2926 (dark empty-dot fill)',

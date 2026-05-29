@@ -187,6 +187,31 @@ export function getRiskLevelFromScore(score: number): 'critical' | 'high' | 'med
   return 'low'
 }
 
+/**
+ * Canonical risk → color ramp. SINGLE SOURCE OF TRUTH for "color a risk value".
+ *
+ * Charts MUST use this instead of inline `if (score < x) return green` ladders.
+ * The 2026-05-29 chart audit found charts routing risk tiers through the SECTOR
+ * palette (sector-hacienda / sector-agricultura), painting "low risk" GREEN —
+ * a Bible §3.10 absolute-rule violation (a procurement-only model cannot certify
+ * integrity). This helper guarantees low → neutral zinc, never green.
+ *
+ * @param score 0–1 risk score
+ * @returns a RISK_COLORS hex (apply via style={{ color/fill }}, NOT className)
+ */
+export function riskRamp(score: number): string {
+  return RISK_COLORS[getRiskLevelFromScore(score)]
+}
+
+/**
+ * Risk ramp keyed off a percentage (0–100). Convenience for charts whose data
+ * is already in percentage terms AND genuinely represents a risk score. Do NOT
+ * use for a non-risk rate (e.g. direct-award %) — that would imply low rate = safe.
+ */
+export function riskRampFromPct(pct: number): string {
+  return riskRamp(pct / 100)
+}
+
 // Data validation thresholds (CLAUDE.md spec)
 export const MAX_CONTRACT_VALUE = 100_000_000_000  // 100B MXN - reject above this
 export const FLAG_THRESHOLD = 10_000_000_000       // 10B MXN - flag for review

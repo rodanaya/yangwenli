@@ -31,7 +31,7 @@ const VENDORS: Vendor[] = [
 function colorFor(daPct: number): string {
   if (daPct >= 99) return 'var(--color-sector-salud)'
   if (daPct >= 60) return 'var(--color-sector-infraestructura)'
-  return 'var(--color-sector-agricultura)'
+  return 'var(--color-text-muted)' // §3.10: low rate reads neutral, not green-as-clean
 }
 
 // Manual layout — SEGALMEX center, others orbit clockwise
@@ -183,7 +183,7 @@ export function StoryRacingBar() {
             {t('racingBar.legend60')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-sector-agricultura)', opacity: 0.5 }} aria-hidden="true" />
+            <span className="w-3 h-3 rounded-full" style={{ background: 'var(--color-text-muted)', opacity: 0.5 }} aria-hidden="true" />
             {t('racingBar.legendUnder')}
           </span>
           <span className="text-text-muted ml-auto">{t('racingBar.legendSizeNote')}</span>

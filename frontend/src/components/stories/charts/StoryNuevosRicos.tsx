@@ -60,7 +60,7 @@ function riskColor(risk: number): string {
   if (risk >= 0.5) return 'var(--color-sector-salud)'
   if (risk >= 0.35) return 'var(--color-sector-infraestructura)'
   if (risk >= 0.2) return 'var(--color-sector-energia)'
-  return 'var(--color-sector-hacienda)'
+  return 'var(--color-text-muted)' // §3.10: low risk is neutral, never green
 }
 
 // Chart dimensions
@@ -239,7 +239,7 @@ export function StoryNuevosRicos() {
           { label: t('nuevosRicos.legendCritical'), color: 'var(--color-sector-salud)' },
           { label: t('nuevosRicos.legendHigh'),     color: 'var(--color-sector-infraestructura)' },
           { label: t('nuevosRicos.legendMedium'),   color: 'var(--color-sector-energia)' },
-          { label: t('nuevosRicos.legendLow'),      color: 'var(--color-sector-hacienda)' },
+          { label: t('nuevosRicos.legendLow'),      color: 'var(--color-text-muted)' },
         ].map(({ label, color }) => (
           <span key={label} className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full" style={{ background: color, opacity: 0.6 }} aria-hidden="true" />

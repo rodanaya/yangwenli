@@ -6,9 +6,6 @@
 export { CHART_TOKENS, tokenColor, formatValue, annotationStroke } from './tokens'
 export type { ColorToken, ChartAnnotation } from './tokens'
 
-export { ChartFrame } from './ChartFrame'
-export type { ChartFrameProps } from './ChartFrame'
-
 export { DotStrip } from './DotStrip'
 export type { DotStripProps, DotStripRow } from './DotStrip'
 

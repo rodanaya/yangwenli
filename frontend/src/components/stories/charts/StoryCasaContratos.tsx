@@ -45,7 +45,7 @@ function colorForRisk(risk: number): string {
   if (risk >= 0.80) return 'var(--color-sector-salud)'
   if (risk >= 0.60) return 'var(--color-sector-infraestructura)'
   if (risk >= 0.40) return 'var(--color-risk-high)'
-  return 'var(--color-sector-hacienda)'
+  return 'var(--color-text-muted)' // §3.10: low risk is neutral, never green
 }
 
 export function StoryCasaContratos() {
@@ -226,7 +226,7 @@ export function StoryCasaContratos() {
               {t('casaContratos.legendHeader')}
             </text>
             <g transform="translate(0, 14)">
-              <circle cx={5} cy={0} r={4} fill="var(--color-sector-hacienda)" />
+              <circle cx={5} cy={0} r={4} fill="var(--color-text-muted)" />
               <text x={14} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendLow')}</text>
               <circle cx={56} cy={0} r={4} fill="var(--color-risk-high)" />
               <text x={65} y={3} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">{t('casaContratos.legendMedium')}</text>

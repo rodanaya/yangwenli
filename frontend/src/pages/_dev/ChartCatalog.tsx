@@ -227,12 +227,6 @@ export default function ChartCatalog() {
             hex per cell.
           </p>
         </Example>
-        <Example caption="ChartFrame  · @/components/charts/editorial">
-          <p className="text-xs text-text-muted">
-            Editorial wrapper. Overline (mono caps), Playfair finding-first title, italic dek,
-            mono source line. Wrap every chart in a frame on a page.
-          </p>
-        </Example>
       </Section>
 
       <footer className="mt-12 pt-6 border-t border-border text-[11px] font-mono text-text-muted">
