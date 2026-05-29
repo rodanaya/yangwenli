@@ -30,7 +30,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Play, Pause, ChevronLeft, ChevronRight, X, ArrowUpRight, Sparkles, BookOpen, Square, RotateCcw, SkipForward, FileText } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { ATLAS_STORIES, type Story, type StoryChapter } from '@/lib/atlas-stories'
-import { analysisApi } from '@/api/client'
+import { analysisApi, atlasApi } from '@/api/client'
 import type { RiskDistribution, YearOverYearChange } from '@/api/types'
 import {
   ConcentrationConstellation,
@@ -571,6 +571,14 @@ function CanvasAtlasView({
   // macro view. ?legacy=1 falls back to the canvas constellation — reversible
   // safety net while the new encoding beds in.
   const useFaithfulObservatory = stageParams.get('legacy') !== '1'
+  // Stage 2: live per-cluster aggregates for the faithful scatter (patterns +
+  // sectors). Falls back to the static meta while loading / for other lenses.
+  const { data: clusterStats } = useQuery({
+    queryKey: ['atlas-cluster-stats', mode],
+    queryFn: () => atlasApi.getClusterStats(mode),
+    enabled: useFaithfulObservatory && (mode === 'patterns' || mode === 'sectors'),
+    staleTime: 10 * 60 * 1000,
+  })
   const flyToRef = useRef<FlyToClusterFn | null>(null)
   const resetRef = useRef<ResetViewFn | null>(null)
   // Atlas P6 Frontier C — planetary mode: imperative fly to a vendor's world coords.
@@ -1104,6 +1112,24 @@ function CanvasAtlasView({
     dispatch({ type: 'zoom-into-cluster', code: cluster.code })
   }
 
+  // Scatter clusters: prefer LIVE aggregates; fall back to static meta while
+  // loading or for lenses without a live endpoint (categories/sexenios).
+  const scatterClusters = useMemo(() => {
+    const live = clusterStats?.clusters
+    if (live && live.length > 0) {
+      return live.map((c) => ({
+        code: c.code,
+        label: lang === 'es' ? c.label_es : c.label_en,
+        vendors: c.vendors,
+        t1: c.t1,
+        highRiskPct: c.high_risk_rate,
+      }))
+    }
+    return activeMeta.map((m) => ({
+      code: m.code, label: m.label, vendors: m.vendors, t1: m.t1, highRiskPct: m.highRiskPct,
+    }))
+  }, [clusterStats, activeMeta, lang])
+
   // Faithful Observatory: a bubble click opens the cluster's dossier
   // (overview → dossier IA) instead of in-page semantic zoom. Mirrors the
   // existing SpotlightCard onOpenDossier routing.
@@ -1134,13 +1160,7 @@ function CanvasAtlasView({
     >
       {useFaithfulObservatory ? (
         <ObservatoryScatter
-          clusters={activeMeta.map((m) => ({
-            code: m.code,
-            label: m.label,
-            vendors: m.vendors,
-            t1: m.t1,
-            highRiskPct: m.highRiskPct,
-          }))}
+          clusters={scatterClusters}
           lang={lang}
           onClusterClick={handleScatterNav}
         />

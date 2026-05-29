@@ -3290,6 +3290,26 @@ export const atlasApi = {
   },
 
   /**
+   * Live per-cluster aggregates for the faithful-encoding Observatory scatter.
+   * All-time (not year-sliced); patterns + sectors only. Returns [] for other lenses.
+   */
+  async getClusterStats(lens: string): Promise<{
+    lens: string
+    clusters: Array<{
+      code: string
+      label_es: string
+      label_en: string
+      vendors: number
+      t1: number
+      high_risk_rate: number
+      total_value_mxn: number
+    }>
+  }> {
+    const { data } = await api.get(`/atlas/cluster-stats?lens=${encodeURIComponent(lens)}`)
+    return data
+  },
+
+  /**
    * Batch variant — fetch top-N vendors for many clusters in ONE request.
    * Used by the galaxy view to avoid 7+ parallel TLS handshakes on /atlas page load.
    * Returns `{ lens, clusters: [ClusterVendorsResponse, ...] }`.

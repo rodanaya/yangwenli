@@ -160,6 +160,112 @@ class ClusterVendorsBatchResponse(BaseModel):
     clusters: list[ClusterVendorsResponse]
 
 
+class ClusterStatItem(BaseModel):
+    """Per-cluster aggregate for the faithful-encoding Observatory scatter.
+
+    All-time aggregates over aria_queue (vendor-level). NOT year-sliced —
+    aria_queue carries lifetime pattern/tier/risk per vendor, so there is no
+    honest per-year cluster aggregate to serve. The scatter hides its year
+    scrubber accordingly.
+    """
+    code: str
+    label_es: str
+    label_en: str
+    vendors: int
+    t1: int
+    high_risk_rate: float = Field(..., description="Fraction of cluster vendors with avg_risk_score >= 0.40")
+    total_value_mxn: float
+
+
+class ClusterStatsResponse(BaseModel):
+    lens: str
+    clusters: list[ClusterStatItem]
+
+
+# ---------------------------------------------------------------------------
+# Cluster aggregates (faithful-encoding Observatory scatter)
+# ---------------------------------------------------------------------------
+
+_STATS_CACHE_TTL_S = 600.0
+_stats_cache: dict[str, tuple[float, "ClusterStatsResponse"]] = {}
+_stats_cache_lock = threading.Lock()
+
+
+@router.get("/cluster-stats", response_model=ClusterStatsResponse)
+def get_cluster_stats(
+    response: Response,
+    lens: str = Query("patterns", description="Lens: patterns or sectors"),
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """All-time per-cluster aggregates (vendor count, Tier-1 count, high-risk
+    rate, total value) for the Observatory bubble scatter.
+
+    patterns + sectors only — categories/terms keep their static meta on the
+    client. NOT year-sliced: aria_queue is vendor-lifetime, so there is no
+    honest per-year aggregate (the scatter hides its year scrubber).
+    """
+    lens = lens.lower()
+    if lens not in ("patterns", "sectors"):
+        return ClusterStatsResponse(lens=lens, clusters=[])
+
+    now = time.time()
+    with _stats_cache_lock:
+        hit = _stats_cache.get(lens)
+        if hit and now - hit[0] < _STATS_CACHE_TTL_S:
+            response.headers["Cache-Control"] = "public, max-age=300"
+            return hit[1]
+
+    items: list[ClusterStatItem] = []
+    if lens == "patterns":
+        rows = conn.execute(
+            """
+            SELECT primary_pattern,
+                   COUNT(*),
+                   SUM(CASE WHEN ips_tier = 1 THEN 1 ELSE 0 END),
+                   AVG(CASE WHEN avg_risk_score >= 0.40 THEN 1.0 ELSE 0.0 END),
+                   COALESCE(SUM(total_value_mxn), 0)
+            FROM aria_queue
+            WHERE primary_pattern IS NOT NULL AND primary_pattern != ''
+            GROUP BY primary_pattern
+            """
+        ).fetchall()
+        for r in rows:
+            es, en = _PATTERN_LABELS.get(r[0], (r[0], r[0]))
+            items.append(ClusterStatItem(
+                code=r[0], label_es=es, label_en=en,
+                vendors=int(r[1] or 0), t1=int(r[2] or 0),
+                high_risk_rate=round(float(r[3] or 0.0), 4),
+                total_value_mxn=float(r[4] or 0.0),
+            ))
+    else:  # sectors
+        rows = conn.execute(
+            """
+            SELECT s.code, s.name_es, s.name_en,
+                   COUNT(*),
+                   SUM(CASE WHEN aq.ips_tier = 1 THEN 1 ELSE 0 END),
+                   AVG(CASE WHEN aq.avg_risk_score >= 0.40 THEN 1.0 ELSE 0.0 END),
+                   COALESCE(SUM(aq.total_value_mxn), 0)
+            FROM aria_queue aq
+            JOIN sectors s ON aq.primary_sector_id = s.id
+            GROUP BY s.code
+            """
+        ).fetchall()
+        for r in rows:
+            fb = _SECTOR_LABEL_FALLBACK.get(r[0], (r[0], r[0]))
+            items.append(ClusterStatItem(
+                code=r[0], label_es=(r[1] or fb[0]), label_en=(r[2] or fb[1]),
+                vendors=int(r[3] or 0), t1=int(r[4] or 0),
+                high_risk_rate=round(float(r[5] or 0.0), 4),
+                total_value_mxn=float(r[6] or 0.0),
+            ))
+
+    payload = ClusterStatsResponse(lens=lens, clusters=items)
+    with _stats_cache_lock:
+        _stats_cache[lens] = (now, payload)
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return payload
+
+
 # ---------------------------------------------------------------------------
 # Risk level helper
 # ---------------------------------------------------------------------------
