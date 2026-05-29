@@ -1166,7 +1166,13 @@ export const STORIES: StoryDef[] = [
               },
               {
                 name: 'PISA',
-                color: SECTOR_COLORS.gobernacion,
+                // 2026-05-26: swapped gobernacion-rose (#be123c) → cyan (#22d3ee)
+                // PISA's rose visually fused with Grupo Fármacos salud-red at low
+                // brightness / on mobile. PISA's 2017↔2025 peak symmetry is the
+                // story's climax — keeping the curve readable matters. Cyan is
+                // RUBLI's OECD/benchmark accent and reads as a distinct fourth
+                // chromatic family vs the three warm vendor identities.
+                color: '#22d3ee',
                 values: [1.18, 0, 2.41, 0.56, 1.39, 0.73, 2.97, 1.58, 0.18, 0.36, 0.71, 0.94, 2.60, 0.96, 1.23, 0.47, 3.50, 6.42, 2.56, 3.77, 0.13, 0.67, 19.46],
                 annotation: { xIndex: 22, text: '19.46 (2025)', text_es: '19.46 (2025)' },
                 totalCaption: '· 55.6B total',
@@ -1222,7 +1228,7 @@ export const STORIES: StoryDef[] = [
             nodes: [
               { id: 'gf',    label: 'Grupo F.',   sublabel: '133.4B', color: SECTOR_COLORS.salud, highlight: true },
               { id: 'maypo', label: 'Maypo',     sublabel: '88.0B',  color: '#a06820' },
-              { id: 'pisa',  label: 'PISA',      sublabel: '55.6B',  color: SECTOR_COLORS.gobernacion },
+              { id: 'pisa',  label: 'PISA',      sublabel: '55.6B',  color: '#22d3ee' },
               { id: 'dimm',  label: 'DIMM',      sublabel: '51.6B',  color: SECTOR_COLORS.tecnologia },
             ],
             edges: [
@@ -1548,13 +1554,9 @@ export const STORIES: StoryDef[] = [
         pullquote: {
           quote: 'Civilian infrastructure runs at 89 percent single-bid. Out of every ten "competitive" tenders for roads, water, drainage, and urban works, nine arrive with only one bidder.',
           quote_es: 'La infraestructura civil opera al 89 por ciento de oferta única. De cada diez licitaciones "competitivas" para carreteras, agua, drenaje y obra urbana, nueve llegan con un solo oferente.',
-          stat: '89.2%',
-          statLabel: 'Infraestructura sector single-bid rate',
-          statLabel_es: 'Tasa de oferta única en el sector Infraestructura',
-          barValue: 0.892,
-          barLabel: 'six times the OECD red-flag threshold (15%)',
-          barLabel_es: 'seis veces el umbral de bandera roja OCDE (15%)',
-          vizTemplate: 'breach-ceiling',
+          stat: '6 of 12',
+          statLabel: 'sectors above 50% single-bid · all twelve above the OECD 15% threshold',
+          statLabel_es: 'sectores arriba del 50% oferta única · los doce arriba del umbral OCDE 15%',
         },
         sources: [
           'RUBLI sector × is_single_bid aggregation, contracts with is_direct_award=0. April 2026.',
@@ -1885,7 +1887,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI Data Analysis Unit',
     estimatedMinutes: 15,
     status: 'reporteado',
-    leadStat: { value: '82.2%', label: 'direct award rate in 2023', label_es: 'tasa de adjudicación directa en 2023', sublabel: 'highest in 23-year dataset', sublabel_es: 'la más alta en 23 años de datos', color: '#ea580c' },
+    leadStat: { value: '+5.1pp', label: 'drift since Fox baseline, four administrations', label_es: 'desviación desde la línea base Fox, cuatro administraciones', sublabel: '14 consecutive years above 60% — OECD ceiling is 30%', sublabel_es: '14 años consecutivos arriba del 60% — el techo OCDE es 30%', color: '#ea580c' },
     chapters: [
       {
         id: 'ch1',
@@ -2269,8 +2271,8 @@ export const STORIES: StoryDef[] = [
               label: 'AMLO TOTAL FEDERAL PROCUREMENT, 2019-2024',
               label_es: 'CONTRATACIÓN FEDERAL TOTAL AMLO, 2019-2024',
             },
-            annotation: 'Left bar = Peña Nieto-era spend (2013-18, muted). Right bar = AMLO-era spend (2019-24, sector palette). Identical scale. The shape of Mexican federal spending changed direction across this transition.',
-            annotation_es: 'Barra izquierda = gasto del sexenio Peña Nieto (2013-18, atenuado). Barra derecha = gasto del sexenio AMLO (2019-24, paleta sectorial). Misma escala. La forma del gasto federal mexicano cambió de dirección en esta transición.',
+            annotation: 'Left bar = Peña Nieto-era spend (2013-18, muted). Right bar = AMLO-era spend (2019-24, sector palette). Identical scale. Total 2.76T MXN; 9 sectors shown sum to 2.70T — the remaining 60B is Tecnología, Trabajo, and Otros (small individually, excluded for legibility). The shape of Mexican federal spending changed direction across this transition.',
+            annotation_es: 'Barra izquierda = gasto del sexenio Peña Nieto (2013-18, atenuado). Barra derecha = gasto del sexenio AMLO (2019-24, paleta sectorial). Misma escala. Total 2.76T MXN; los 9 sectores mostrados suman 2.70T — los 60B restantes son Tecnología, Trabajo y Otros (individualmente pequeños, excluidos por legibilidad). La forma del gasto federal mexicano cambió de dirección en esta transición.',
             highlightColor: '#a06820',
             highlightLabel: 'AMLO-era spend',
             highlightLabel_es: 'gasto sexenio AMLO',
@@ -2382,26 +2384,26 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'editorial-cleveland-pair',
-          title: 'AMLO-Era High-Risk Rate vs Platform Average — by Category',
-          title_es: 'Tasa de alto riesgo AMLO vs promedio plataforma — por categoría',
+          title: 'AMLO-Era High-Risk Rate vs OECD 15% Ceiling — by Category',
+          title_es: 'Tasa de alto riesgo AMLO vs techo OCDE 15% — por categoría',
           chartId: 'amlo-categories-risk',
           data: {
             mode: 'excess',
             points: [
-              { label: 'Alimentos y Víveres',     label_en: 'Food & Provisions',    value: 32.4, value2: 11.0, highlight: true },
-              { label: 'Medicamentos',            label_en: 'Pharmaceuticals',      value: 22.4, value2: 11.0, highlight: true },
-              { label: 'Servicios Hospitalarios', label_en: 'Hospital Services',    value: 19.4, value2: 11.0, highlight: true },
-              { label: 'Servicios Generales',     label_en: 'General Services',     value: 14.3, value2: 11.0 },
-              { label: 'Carreteras',              label_en: 'Highways',             value: 12.2, value2: 11.0 },
-              { label: 'Material de Curación',    label_en: 'Medical Supplies',     value: 12.1, value2: 11.0 },
-              { label: 'Mantenimiento',           label_en: 'Maintenance',          value:  9.4, value2: 11.0 },
-              { label: 'Construcción de Edificios', label_en: 'Building Construction', value:  8.5, value2: 11.0 },
+              { label: 'Alimentos y Víveres',     label_en: 'Food & Provisions',    value: 32.4, value2: 15.0, highlight: true },
+              { label: 'Medicamentos',            label_en: 'Pharmaceuticals',      value: 22.4, value2: 15.0, highlight: true },
+              { label: 'Servicios Hospitalarios', label_en: 'Hospital Services',    value: 19.4, value2: 15.0, highlight: true },
+              { label: 'Servicios Generales',     label_en: 'General Services',     value: 14.3, value2: 15.0 },
+              { label: 'Carreteras',              label_en: 'Highways',             value: 12.2, value2: 15.0 },
+              { label: 'Material de Curación',    label_en: 'Medical Supplies',     value: 12.1, value2: 15.0 },
+              { label: 'Mantenimiento',           label_en: 'Maintenance',          value:  9.4, value2: 15.0 },
+              { label: 'Construcción de Edificios', label_en: 'Building Construction', value:  8.5, value2: 15.0 },
             ],
             unit: '%',
-            yLabel: 'Excess above platform avg 11% · positive = breach, negative = below',
-            yLabel_es: 'Exceso sobre prom. plataforma 11% · positivo = sobre, negativo = bajo',
-            annotation: 'Bar = AMLO-era high-risk rate minus the 11% platform baseline. Positive = breach (sector palette: salud-red on critical excess, escalating amber on the rest). Food & Provisions (+21.4 pp) and Pharmaceuticals (+11.4 pp) are the largest breaches.',
-            annotation_es: 'Barra = tasa de alto riesgo AMLO menos la línea base plataforma 11%. Positivo = rebasa (paleta: rojo-salud en exceso crítico, ámbar escalonado en el resto). Alimentos (+21.4 pp) y Medicamentos (+11.4 pp) son las mayores brechas.',
+            yLabel: 'Excess above OECD 15% ceiling · positive = breach, negative = below',
+            yLabel_es: 'Exceso sobre techo OCDE 15% · positivo = rebasa, negativo = debajo',
+            annotation: 'Bar = AMLO-era high-risk rate minus the OECD 15% upper ceiling for procurement (2023 Public Procurement Performance Report). Three categories breach: Food & Provisions (+17.4 pp), Pharmaceuticals (+7.4 pp), Hospital Services (+4.4 pp). The chapter pullquote uses the same OECD reference.',
+            annotation_es: 'Barra = tasa de alto riesgo AMLO menos el techo superior OCDE 15% para contratación (Reporte de Desempeño 2023). Tres categorías rebasan: Alimentos y Víveres (+17.4 pp), Medicamentos (+7.4 pp), Servicios Hospitalarios (+4.4 pp). El recuadro destacado usa la misma referencia OCDE.',
           },
         },
         pullquote: {
@@ -2962,9 +2964,9 @@ export const STORIES: StoryDef[] = [
         pullquote: {
           quote: 'At both ends of the value spectrum, oversight fails. Large contracts are politically dangerous to investigate. Small contracts are individually too small to justify the cost.',
           quote_es: 'En ambos extremos del espectro de valor, la fiscalización falla. Los contratos grandes son políticamente peligrosos de investigar. Los pequeños son individualmente demasiado chicos para justificar el costo.',
-          stat: '~40K',
-          statLabel: 'excess contracts structured at threshold values',
-          statLabel_es: 'contratos en exceso estructurados en valores umbral',
+          stat: '0',
+          statLabel: 'systemic enforcement cases against threshold-clustering in 14 years',
+          statLabel_es: 'casos sistémicos de fiscalización contra el agrupamiento en umbrales en 14 años',
         },
         sources: [
           'Transparencia Mexicana. (2024). Diagnóstico de la Corrupción en Compras Municipales y Estatales.',
