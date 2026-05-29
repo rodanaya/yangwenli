@@ -76,6 +76,7 @@ import { AtlasVendorDrawer } from '@/components/atlas/AtlasVendorDrawer'
 //   "Open dossier" navigates to /patterns/:code (subpage).
 import { GalaxyDimmer } from '@/components/atlas/GalaxyDimmer'
 import { SpotlightCard } from '@/components/atlas/SpotlightCard'
+import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
 import type { NamedVendorDot } from '@/components/charts/ConcentrationConstellation'
 import { Z1SectorMap } from '@/components/atlas/Z1SectorMap'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
@@ -565,6 +566,11 @@ function CanvasAtlasView({
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
   const navigate = useNavigate()
+  const [stageParams] = useSearchParams()
+  // 2026-05-29: faithful-encoding Observatory (bubble scatter) is the default
+  // macro view. ?legacy=1 falls back to the canvas constellation — reversible
+  // safety net while the new encoding beds in.
+  const useFaithfulObservatory = stageParams.get('legacy') !== '1'
   const flyToRef = useRef<FlyToClusterFn | null>(null)
   const resetRef = useRef<ResetViewFn | null>(null)
   // Atlas P6 Frontier C — planetary mode: imperative fly to a vendor's world coords.
@@ -1098,6 +1104,20 @@ function CanvasAtlasView({
     dispatch({ type: 'zoom-into-cluster', code: cluster.code })
   }
 
+  // Faithful Observatory: a bubble click opens the cluster's dossier
+  // (overview → dossier IA) instead of in-page semantic zoom. Mirrors the
+  // existing SpotlightCard onOpenDossier routing.
+  const handleScatterNav = (code: string) => {
+    if (mode === 'patterns' || /^P\d$/.test(code)) {
+      navigate(`/patterns/${encodeURIComponent(code)}`)
+    } else if (mode === 'sectors') {
+      const s = SECTORS.find((x) => x.code === code)
+      navigate(s ? `/sectors/${s.id}` : `/aria?pattern=${encodeURIComponent(code)}`)
+    } else {
+      navigate(`/aria?pattern=${encodeURIComponent(code)}`)
+    }
+  }
+
   // Field click in the canvas wrapper (background) escapes zoom.
   // The CanvasConstellation engine handles dot/cluster clicks itself;
   // we listen on a sibling layer for the "click outside any glyph" case.
@@ -1106,8 +1126,26 @@ function CanvasAtlasView({
     <div
       ref={wrapperRef}
       className="relative"
-      style={{ position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }}
+      style={
+        useFaithfulObservatory
+          ? { position: 'relative', width: '100%' }
+          : { position: 'relative', width: '100%', aspectRatio: `${840} / ${540}` }
+      }
     >
+      {useFaithfulObservatory ? (
+        <ObservatoryScatter
+          clusters={activeMeta.map((m) => ({
+            code: m.code,
+            label: m.label,
+            vendors: m.vendors,
+            t1: m.t1,
+            highRiskPct: m.highRiskPct,
+          }))}
+          lang={lang}
+          onClusterClick={handleScatterNav}
+        />
+      ) : (
+      <>
       {isZoomed && zoomedMeta && (
         <AtlasBreadcrumb
           lang={lang}
@@ -1250,6 +1288,8 @@ function CanvasAtlasView({
           }}
           lang={lang}
         />
+      )}
+      </>
       )}
     </div>
   )
