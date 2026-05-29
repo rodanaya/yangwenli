@@ -2143,3 +2143,48 @@ HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) 
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS cert valid, DNS resolves. Bilingual scan clean — no new gaps vs. prior run.
+
+---
+## Visual Review — 2026-05-29T18:09:25Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/atlas | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/aria | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/sectors | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/sectors/salud | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/cases | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/methodology | BLOCKED (egress policy) | N/A |
+| https://rubli.xyz/stories/el-ejercito-fantasma | BLOCKED (egress policy) | N/A |
+
+**Note:** All HTTP checks return "Host not in allowlist" from the managed-cloud egress gateway (Egress Gateway Subordinate CA). TLS handshake succeeds (cert subject: CN=rubli.xyz, valid 2026-05-29 → 2026-06-28, IP 37.60.232.109), confirming DNS and TLS are healthy. The 403 is the gateway blocking outbound traffic, not a server error. Persistent infrastructure constraint — not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (egress policy) | N/A |
+| /api/v1/cases?limit=5 | BLOCKED (egress policy) | N/A |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (egress policy) | N/A |
+| /api/v1/sectors | BLOCKED (egress policy) | N/A |
+
+**Note:** Same egress policy block as HTTP checks. No JSON body returned. No change vs. prior runs.
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** Same false positives as prior runs — no new regressions:
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup, not rendered text
+- `RedThread.tsx:241,242` — JS object key lookups, not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+- `VendorHero.tsx:716` — JSDoc example string, not rendered text
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. TLS cert valid (CN=rubli.xyz, 37.60.232.109), DNS resolves. Bilingual scan clean — no new gaps vs. prior run.
