@@ -1,4 +1,49 @@
 ---
+## Visual Review — 2026-05-30T12:11:05Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | WARN |
+| https://rubli.xyz/atlas | 403 host_not_allowed | WARN |
+| https://rubli.xyz/aria | 403 host_not_allowed | WARN |
+| https://rubli.xyz/sectors | 403 host_not_allowed | WARN |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | WARN |
+| https://rubli.xyz/cases | 403 host_not_allowed | WARN |
+| https://rubli.xyz/methodology | 403 host_not_allowed | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | WARN |
+
+**Note:** All routes blocked by managed-cloud egress policy (`Host not in allowlist`). Persistent infrastructure constraint — not a site regression. Consistent with all prior runs.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | 403 host_not_allowed — empty body | WARN |
+| /api/v1/cases?limit=5 | 403 host_not_allowed — empty body | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | 403 host_not_allowed — empty body | WARN |
+| /api/v1/sectors | 403 host_not_allowed — empty body | WARN |
+
+**Note:** Same egress policy block as HTTP checks. No JSON body returned. No change vs. prior runs.
+
+### Bilingual Gaps
+**Raw i18n key leaks (grep):** Same false positives as prior runs — no new regressions:
+- `Executive.tsx:73,93,113` — proper company nouns (data values, not UI strings)
+- `InstitutionScorecards.tsx:441` — JS object key lookup, not rendered text
+- `RedThread.tsx:241,242` — JS object key lookups, not rendered text
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered
+- `Methodology.tsx:119` — academic citation proper noun
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data
+- `ExploreCanvas.tsx:1416,1417,1431,1497` — code comments and corporate-form token constants
+- `VendorHero.tsx:716` — JSDoc example string, not rendered text
+
+**"Generate Report" / "Generar Reporte" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`Host not in allowlist`) — persistent infrastructure constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
 ## Visual Review — 2026-05-30T00:09:14Z
 
 ### HTTP Status
