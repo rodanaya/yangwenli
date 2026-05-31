@@ -1161,8 +1161,10 @@ function CanvasAtlasView({
       {useFaithfulObservatory ? (
         <ObservatoryScatter
           clusters={scatterClusters}
+          lens={mode}
           lang={lang}
-          onClusterClick={handleScatterNav}
+          onOpenDossier={handleScatterNav}
+          onVendorClick={(id) => navigate(`/vendors/${id}`)}
         />
       ) : (
       <>
