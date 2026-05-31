@@ -82,6 +82,7 @@ function boxHit(a: Box, b: Box, pad = 2): boolean {
 export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVendorClick }: Props) {
   const [focused, setFocused] = useState<string | null>(null)
   const [hoverVendor, setHoverVendor] = useState<number | null>(null)
+  const [hoverBody, setHoverBody] = useState<string | null>(null)
 
   const scales = useMemo(() => {
     if (clusters.length === 0) return { minLogV: 0, maxLogV: 1, maxHr: 1, maxT1: 1 }
@@ -99,16 +100,45 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     return M.left + (PAD_X + t * (1 - 2 * PAD_X)) * PLOT_W
   }
   const yFor = (hr: number) => M.top + (1 - (PAD_Y + (scales.maxHr ? hr / scales.maxHr : 0) * (1 - 2 * PAD_Y))) * PLOT_H
-  const rFor = (t1: number) => 11 + (Math.sqrt(Math.max(1, t1)) / Math.sqrt(scales.maxT1)) * 34
+  // Bodies shrink as the lens gets denser (7 patterns vs 32 categories) so a
+  // crowded lens stays legible.
+  const maxBodyR = clusters.length > 20 ? 19 : clusters.length > 9 ? 26 : 34
+  const rFor = (t1: number) => 8 + (Math.sqrt(Math.max(1, t1)) / Math.sqrt(scales.maxT1)) * (maxBodyR - 8)
 
   const bodies = useMemo(() => {
-    return [...clusters]
+    const arr = [...clusters]
       .map((c) => ({
-        ...c, cx: xFor(c.vendors), cy: yFor(c.highRiskPct), r: rFor(c.t1),
+        ...c, tx: xFor(c.vendors), ty: yFor(c.highRiskPct), r: rFor(c.t1),
         fill: riskRamp(c.highRiskPct), level: getRiskLevelFromScore(c.highRiskPct),
         importance: c.highRiskPct * 0.7 + (Math.sqrt(c.t1) / Math.sqrt(scales.maxT1)) * 0.3,
       }))
       .sort((a, b) => b.importance - a.importance)
+    // De-overlap: gentle force relaxation — push overlapping bodies apart while
+    // a weak spring pulls each back toward its TRUE (scale,risk) position. For
+    // sparse lenses (7 patterns) nothing overlaps so nothing moves; for dense
+    // lenses (32 categories) bodies un-stack into a readable, near-faithful map.
+    const n = arr.length
+    const px = arr.map((b) => b.tx), py = arr.map((b) => b.ty)
+    const GAP = 6
+    for (let iter = 0; iter < 160; iter++) {
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+        const dx = px[j] - px[i], dy = py[j] - py[i]
+        const d = Math.hypot(dx, dy) || 0.001
+        const min = arr[i].r + arr[j].r + GAP
+        if (d < min) {
+          const push = ((min - d) / 2) * 0.85, ux = dx / d, uy = dy / d
+          px[i] -= ux * push; py[i] -= uy * push
+          px[j] += ux * push; py[j] += uy * push
+        }
+      }
+      for (let i = 0; i < n; i++) {
+        px[i] += (arr[i].tx - px[i]) * 0.045
+        py[i] += (arr[i].ty - py[i]) * 0.045
+        px[i] = Math.max(M.left + arr[i].r, Math.min(W - M.right - arr[i].r, px[i]))
+        py[i] = Math.max(M.top + arr[i].r, Math.min(H - M.bottom - arr[i].r, py[i]))
+      }
+    }
+    return arr.map((b, i) => ({ ...b, cx: px[i], cy: py[i] }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clusters, scales])
 
@@ -149,7 +179,10 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     return out
   }, [bodies])
 
-  // Greedy collision-free labels.
+  // Labels: place the most-important first; render ONLY labels that fit with
+  // zero overlap. Anything that can't be placed cleanly is skipped — and shown
+  // on hover instead (you can't legibly stack 32 labels, so don't). This is
+  // what guarantees no text-on-text in the dense lenses.
   const labels = useMemo(() => {
     const placed: Box[] = bodies.map((b) => ({ x: b.cx - b.r, y: b.cy - b.r, w: b.r * 2, h: b.r * 2 }))
     const out: Array<{ code: string; bx: number; by: number; tx: number; ty: number; anchor: 'start' | 'middle' | 'end'; leader: boolean; name: string; stat: string; fill: string }> = []
@@ -157,27 +190,30 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       const name = toTitleCase(b.label)
       const pct = Math.round(b.highRiskPct * 100)
       const stat = `${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${pct}%`
-      const w = Math.max(name.length * 6.6, stat.length * 5.0) + 6, h = 24, g = 7
+      const w = Math.max(name.length * 6.6, stat.length * 5.0) + 6, h = 24, g = 6
       const cands: Array<{ x: number; y: number; anchor: 'start' | 'middle' | 'end' }> = [
         { x: b.cx - w / 2, y: b.cy - b.r - g - h, anchor: 'middle' },
         { x: b.cx - w / 2, y: b.cy + b.r + g, anchor: 'middle' },
         { x: b.cx + b.r + g, y: b.cy - h / 2, anchor: 'start' },
         { x: b.cx - b.r - g - w, y: b.cy - h / 2, anchor: 'end' },
-        { x: b.cx - w / 2, y: b.cy - b.r - g - h - 20, anchor: 'middle' },
-        { x: b.cx - w / 2, y: b.cy + b.r + g + 20, anchor: 'middle' },
-        { x: b.cx + b.r + g + 14, y: b.cy - h / 2 - 16, anchor: 'start' },
-        { x: b.cx - b.r - g - w - 14, y: b.cy - h / 2 - 16, anchor: 'end' },
+        { x: b.cx + b.r + g, y: b.cy - b.r - h + 2, anchor: 'start' },
+        { x: b.cx - b.r - g - w, y: b.cy - b.r - h + 2, anchor: 'end' },
+        { x: b.cx + b.r + g, y: b.cy + b.r - 2, anchor: 'start' },
+        { x: b.cx - b.r - g - w, y: b.cy + b.r - 2, anchor: 'end' },
+        { x: b.cx - w / 2, y: b.cy - b.r - g - h - 22, anchor: 'middle' },
+        { x: b.cx - w / 2, y: b.cy + b.r + g + 22, anchor: 'middle' },
       ]
-      let chosen = cands[0]
+      let chosen: { x: number; y: number; anchor: 'start' | 'middle' | 'end' } | null = null
       for (const c of cands) {
         const box = { x: c.x, y: c.y, w, h }
-        if (box.x < M.left - 80 || box.x + box.w > W - 8 || box.y < M.top - 24 || box.y + box.h > H - M.bottom + 30) continue
-        if (placed.some((p) => boxHit(box, p))) continue
+        if (box.x < M.left - 70 || box.x + box.w > W - 6 || box.y < M.top - 22 || box.y + box.h > H - M.bottom + 28) continue
+        if (placed.some((p) => boxHit(box, p, 3))) continue
         chosen = c; break
       }
+      if (!chosen) continue // no clean slot → hover-only, never overlapping text
       placed.push({ x: chosen.x, y: chosen.y, w, h })
       const tx = chosen.anchor === 'middle' ? chosen.x + w / 2 : chosen.anchor === 'start' ? chosen.x + 3 : chosen.x + w - 3
-      const leader = Math.hypot(chosen.x + w / 2 - b.cx, chosen.y + h / 2 - b.cy) > b.r + 24
+      const leader = Math.hypot(chosen.x + w / 2 - b.cx, chosen.y + h / 2 - b.cy) > b.r + 22
       out.push({ code: b.code, bx: b.cx, by: b.cy, tx, ty: chosen.y, anchor: chosen.anchor, leader, name, stat, fill: b.fill })
     }
     return out
@@ -288,6 +324,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               <motion.g key={b.code} role="button" tabIndex={0} aria-label={aria}
                 onClick={() => setFocused(b.code)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocused(b.code) } }}
+                onMouseEnter={() => setHoverBody(b.code)} onMouseLeave={() => setHoverBody(null)}
+                onFocus={() => setHoverBody(b.code)} onBlur={() => setHoverBody(null)}
                 initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.07, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: `${b.cx}px ${b.cy}px`, cursor: 'pointer', outline: 'none' }}
@@ -313,6 +351,26 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               <text x={l.tx} y={l.ty + 22} textAnchor={l.anchor} fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{l.stat}</text>
             </motion.g>
           ))}
+          {/* hover-reveal: a backed pill for ANY body — the always-discoverable
+              name for orbs whose static label was skipped to avoid overlap */}
+          {hoverBody && !focused && (() => {
+            const b = bodies.find((x) => x.code === hoverBody)
+            if (!b) return null
+            const name = toTitleCase(b.label)
+            const pct = Math.round(b.highRiskPct * 100)
+            const stat = `${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${pct}%`
+            const w = Math.max(name.length * 7.4, stat.length * 5.4) + 18
+            const px = Math.max(M.left + w / 2, Math.min(W - M.right - w / 2, b.cx))
+            const py = b.cy - b.r - 32
+            return (
+              <g style={{ pointerEvents: 'none' }}>
+                <circle cx={b.cx} cy={b.cy} r={b.r + 3} fill="none" stroke={b.fill} strokeWidth={1.5} opacity={0.55} />
+                <rect x={px - w / 2} y={py} width={w} height={30} rx={3} fill={C.plate0} stroke={b.fill} strokeWidth={1} />
+                <text x={px} y={py + 13} textAnchor="middle" fill={C.ink} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
+                <text x={px} y={py + 24} textAnchor="middle" fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{stat}</text>
+              </g>
+            )
+          })()}
         </motion.g>
 
         {/* ─── FOCUS layer: the orb you flew into + its vendors ─── */}
