@@ -6,7 +6,7 @@ import threading
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Response
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
@@ -1163,41 +1163,26 @@ _z2_pool_cache_ts: Dict[int, float] = {}
 _z2_pool_lock = threading.Lock()
 _Z2_POOL_TTL_S = 1800  # 30 minutes
 
+# 2026-05-31 — cold-start fallback (same pattern as /stats/data-quality).
+# The full computation includes a live aggregate over contracts WHERE
+# institution_id=N AND vendor_id IN (≤50) that takes 60s+ for IMSS
+# (1M+ contracts). After every container restart, the in-memory cache
+# is empty → every cold caller exceeds the 60s Caddy edge timeout and
+# Z2 never loads. Fix: serve a degraded fast response (precomputed top
+# vendors with zero HR/DA/SB flag counts) immediately, and warm the
+# full response in a background daemon thread. Subsequent requests hit
+# the warm cache. Set of institution_ids currently being warmed avoids
+# spawning duplicate threads on burst-cold-start.
+_z2_warmup_in_flight: set = set()
+_z2_warmup_lock = threading.Lock()
 
-@router.get("/{institution_id:int}/vendor-pool", response_model=VendorPoolResponse)
-def get_institution_vendor_pool(
-    institution_id: int = Path(..., description="Institution ID"),
-    limit: int = Query(50, ge=10, le=50, description="Top-N vendors by spend (max 50)"),
-):
-    """
-    Z2 "La Captura" — institution vendor-pool dossier.
 
-    Returns the institution's top vendors with per-vendor HR%/DA%/SB% counts
-    plus ARIA investigative signals (ips_tier, primary_pattern, in_ground_truth)
-    and institution-level aggregates needed to render the editorial Z2 register
-    without follow-up requests.
-
-    Strategy:
-      1. Fast top-N lookup from `institution_top_vendors` (precomputed, ≤50 per inst)
-      2. Live aggregate scoped to (institution_id, top_vendor_ids) for HR/DA/SB counts
-      3. LEFT JOIN aria_queue for tier + pattern badges
-      4. Institution totals from `institution_stats` (precomputed)
-
-    Cache shape: always compute + cache the FULL top-50 per institution.
-    The `limit` query param trims the payload on the way out — slicing
-    a 50-row cached response is free, but keying the cache on
-    (inst, limit) would create stale entries when the first caller
-    picked a smaller limit (which is exactly the bug we shipped before).
-    """
-    # Cache hit — slice down if caller wants fewer than the cached 50
-    with _z2_pool_lock:
-        ts = _z2_pool_cache_ts.get(institution_id, 0)
-        if datetime.now().timestamp() - ts < _Z2_POOL_TTL_S and institution_id in _z2_pool_cache:
-            cached = _z2_pool_cache[institution_id]
-            if limit >= len(cached.data):
-                return cached
-            return cached.model_copy(update={"data": cached.data[:limit]})
-
+def _z2_compute_full(institution_id: int) -> Optional[VendorPoolResponse]:
+    """Heavy full Z2 computation — precomputed top vendors + live aggregate
+    for HR/DA/SB flag counts + ARIA lookup. ~60s for IMSS, ~10s for small
+    institutions. Writes to _z2_pool_cache on success. Returns None for
+    404 cases. Extracted so the cold-start background warmup thread can
+    invoke it without re-entering the HTTP handler."""
     with get_db() as conn:
         cur = conn.cursor()
 
@@ -1208,7 +1193,8 @@ def get_institution_vendor_pool(
         )
         inst = cur.fetchone()
         if inst is None:
-            raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+            # 404 — return None so the caller can raise the HTTPException
+            return None
 
         # 2. Institution-level aggregates (precomputed table)
         cur.execute(
@@ -1370,6 +1356,156 @@ def get_institution_vendor_pool(
     if limit < len(response.data):
         return response.model_copy(update={"data": response.data[:limit]})
     return response
+
+
+def _z2_compute_degraded(institution_id: int) -> Optional[VendorPoolResponse]:
+    """Fast degraded Z2 response — precomputed top vendors WITHOUT the live
+    HR/DA/SB flag counts (those require a 60s+ live aggregate). Returns
+    None for 404. Used as cold-start fallback so the page renders
+    immediately; the warmup thread fills the full cache for the next
+    request.
+    """
+    with get_db() as conn:
+        cur = conn.cursor()
+
+        cur.execute(
+            "SELECT id, name, siglas, sector_id FROM institutions WHERE id = ?",
+            (institution_id,),
+        )
+        inst = cur.fetchone()
+        if inst is None:
+            return None
+
+        cur.execute(
+            """
+            SELECT total_contracts, total_value_mxn, vendor_count,
+                   direct_award_pct, high_risk_pct, single_bid_pct
+            FROM institution_stats
+            WHERE institution_id = ?
+            """,
+            (institution_id,),
+        )
+        stats = cur.fetchone()
+        inst_total_value = float(stats["total_value_mxn"]) if stats else 0.0
+        inst_total_contracts = int(stats["total_contracts"]) if stats else 0
+        inst_vendor_count = int(stats["vendor_count"]) if stats else 0
+        inst_da_pct = float(stats["direct_award_pct"]) if stats else 0.0
+        inst_hr_pct = float(stats["high_risk_pct"]) if stats else 0.0
+        inst_sb_pct = float(stats["single_bid_pct"]) if stats else 0.0
+
+        cur.execute(
+            """
+            SELECT vendor_id, vendor_name, contract_count,
+                   total_value_mxn, avg_risk_score, first_year, last_year
+            FROM institution_top_vendors
+            WHERE institution_id = ?
+            ORDER BY total_value_mxn DESC
+            LIMIT 50
+            """,
+            (institution_id,),
+        )
+        top_rows = cur.fetchall()
+
+    items: List[VendorPoolItem] = []
+    top10_value = 0.0
+    for rank, row in enumerate(top_rows, start=1):
+        value = float(row["total_value_mxn"] or 0)
+        share = (value / inst_total_value * 100.0) if inst_total_value > 0 else 0.0
+        if rank <= 10:
+            top10_value += value
+        items.append(VendorPoolItem(
+            rank=rank,
+            vendor_id=row["vendor_id"],
+            vendor_name=row["vendor_name"],
+            contract_count=int(row["contract_count"] or 0),
+            total_value_mxn=value,
+            share_of_institution_pct=round(share, 2),
+            first_year=row["first_year"],
+            last_year=row["last_year"],
+            avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
+            # Degraded fields — filled in by the background warmup
+            high_risk_count=0,
+            high_risk_pct=0.0,
+            direct_award_count=0,
+            direct_award_pct=0.0,
+            single_bid_count=0,
+            single_bid_pct=0.0,
+            ips_tier=None,
+            primary_pattern=None,
+            in_ground_truth=0,
+        ))
+
+    top1 = items[0] if items else None
+    top10_share = (top10_value / inst_total_value * 100.0) if inst_total_value > 0 else 0.0
+
+    return VendorPoolResponse(
+        institution_id=inst["id"],
+        institution_name=inst["name"],
+        siglas=inst["siglas"],
+        sector_id=inst["sector_id"],
+        institution_total_value_mxn=inst_total_value,
+        institution_total_contracts=inst_total_contracts,
+        institution_vendor_count=inst_vendor_count,
+        institution_direct_award_pct=inst_da_pct,
+        institution_high_risk_pct=inst_hr_pct,
+        institution_single_bid_pct=inst_sb_pct,
+        top1_vendor_id=top1.vendor_id if top1 else None,
+        top1_vendor_name=top1.vendor_name if top1 else None,
+        top1_share_pct=top1.share_of_institution_pct if top1 else 0.0,
+        top10_share_pct=round(top10_share, 2),
+        data=items,
+        total=inst_vendor_count,
+    )
+
+
+@router.get("/{institution_id:int}/vendor-pool", response_model=VendorPoolResponse)
+def get_institution_vendor_pool(
+    response: Response,
+    institution_id: int = Path(..., description="Institution ID"),
+    limit: int = Query(50, ge=10, le=50, description="Top-N vendors by spend (max 50)"),
+):
+    """
+    Z2 "La Captura" — institution vendor-pool dossier.
+
+    Cache-first with cold-start fallback. See _z2_compute_full and
+    _z2_compute_degraded for the two execution paths.
+    """
+    # Cache hit — slice down if caller wants fewer than the cached 50
+    with _z2_pool_lock:
+        ts = _z2_pool_cache_ts.get(institution_id, 0)
+        if datetime.now().timestamp() - ts < _Z2_POOL_TTL_S and institution_id in _z2_pool_cache:
+            cached = _z2_pool_cache[institution_id]
+            response.headers["Cache-Control"] = "public, max-age=300"
+            if limit >= len(cached.data):
+                return cached
+            return cached.model_copy(update={"data": cached.data[:limit]})
+
+    # Cold start — return degraded response NOW + warm full cache in background.
+    degraded = _z2_compute_degraded(institution_id)
+    if degraded is None:
+        raise HTTPException(status_code=404, detail=f"Institution {institution_id} not found")
+
+    # Spawn the heavy warmup if no other thread is doing it for this institution.
+    with _z2_warmup_lock:
+        warmup_needed = institution_id not in _z2_warmup_in_flight
+        if warmup_needed:
+            _z2_warmup_in_flight.add(institution_id)
+
+    if warmup_needed:
+        def _warm():
+            try:
+                _z2_compute_full(institution_id)
+            except Exception as e:
+                logger.warning("z2 background warmup failed for inst %d: %s", institution_id, e)
+            finally:
+                with _z2_warmup_lock:
+                    _z2_warmup_in_flight.discard(institution_id)
+        threading.Thread(target=_warm, daemon=True, name=f"z2-warmup-{institution_id}").start()
+
+    response.headers["Cache-Control"] = "no-store"  # don't cache degraded
+    if limit < len(degraded.data):
+        return degraded.model_copy(update={"data": degraded.data[:limit]})
+    return degraded
 
 
 # =============================================================================
