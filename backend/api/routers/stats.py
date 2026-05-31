@@ -481,6 +481,44 @@ class DataQualityResponse(BaseModel):
 
 
 _data_quality_lock = threading.Lock()
+_data_quality_scan_in_flight = threading.Event()
+
+
+def _build_degraded_dq_response() -> Optional[DataQualityResponse]:
+    """Build a quick degraded DataQualityResponse from the lightweight
+    `data_quality` summary key in precomputed_stats. Returns None if not
+    available either. Used as a fast fallback when `data_quality_full`
+    (the 85-second scan result) hasn't been computed yet — the frontend's
+    DQ badge can render off `overall_score` + `total_contracts` alone;
+    the detailed nested arrays are non-blocking.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            row = cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'data_quality'"
+            ).fetchone()
+            if row is None:
+                return None
+            summary = json.loads(row["stat_value"])
+            total = int(summary.get("total_contracts", 0) or 0)
+            with_amount = int(summary.get("contracts_with_amount", 0) or 0)
+            # Derive a rough overall score from amount-fill rate as a stand-in.
+            # The real score lands when the 85s scan completes.
+            score = round(with_amount / total * 100, 2) if total > 0 else 0.0
+            return DataQualityResponse(
+                overall_score=score,
+                total_contracts=total,
+                grade_distribution=[],
+                by_structure=[],
+                field_completeness=[],
+                key_issues=[],
+                last_calculated=None,
+            )
+    except Exception as e:
+        logger.debug("degraded DQ response failed: %s", e)
+        return None
+
 
 @router.get("/data-quality", response_model=DataQualityResponse)
 def get_data_quality(response: Response):
@@ -491,6 +529,13 @@ def get_data_quality(response: Response):
     field completeness rates, and key issues to address.
     Cached for 2 hours in-process. Full result persisted to precomputed_stats
     so subsequent container restarts serve instantly (no 85-second live scan).
+
+    2026-05-31 — added cold-start fallback. The 85-second live scan exceeds
+    the edge proxy's 60s timeout, so cold containers were returning errors
+    to every caller of the global DQ badge. Now: if `data_quality_full` is
+    missing, return a lightweight degraded response built from the existing
+    `data_quality` summary key (good enough for the badge) and kick off the
+    heavy scan in a background thread so the NEXT request gets full data.
     """
     cached = _stats_cache.get("data_quality")
     if cached is not None:
@@ -517,6 +562,26 @@ def get_data_quality(response: Response):
         except Exception as e:
             logger.debug("data_quality_full deserialization failed: %s", e)
 
+    # Cold start: data_quality_full missing. Return a degraded response now
+    # AND kick off the heavy scan in a background thread so the next call
+    # gets the full payload. Without this fallback the 85s scan exceeds the
+    # 60s edge proxy timeout, leaving every caller with a connection error.
+    degraded = _build_degraded_dq_response()
+    if degraded is not None and not _data_quality_scan_in_flight.is_set():
+        _data_quality_scan_in_flight.set()
+        def _warmup():
+            try:
+                # Synthetic Response object — we only call the scan path for
+                # its side effects (cache write + precomputed_stats persist).
+                _run_data_quality_scan()
+            except Exception as e:
+                logger.warning("background data_quality warmup failed: %s", e)
+            finally:
+                _data_quality_scan_in_flight.clear()
+        threading.Thread(target=_warmup, daemon=True, name="dq-warmup").start()
+        response.headers["Cache-Control"] = "no-store"  # don't cache degraded
+        return degraded
+
     # Mutex: only one worker performs the 85-second live scan; the rest wait, then hit cache.
     with _data_quality_lock:
         cached2 = _stats_cache.get("data_quality")
@@ -524,6 +589,16 @@ def get_data_quality(response: Response):
             response.headers["Cache-Control"] = "public, max-age=3600"
             return cached2
 
+    result = _run_data_quality_scan()
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return result
+
+
+def _run_data_quality_scan() -> DataQualityResponse:
+    """Heavy 85-second full-table scan that produces DataQualityResponse.
+    Extracted from get_data_quality() so the cold-start background warmup
+    thread can run it without re-entering the HTTP handler. Writes both
+    in-memory cache and precomputed_stats on success."""
     with get_db() as conn:
         cursor = conn.cursor()
 
@@ -675,7 +750,6 @@ def get_data_quality(response: Response):
             last_calculated=last_calculated
         )
         _stats_cache.set("data_quality", result, ttl=7200)
-        response.headers["Cache-Control"] = "public, max-age=3600"
 
         # Persist full result to precomputed_stats so next container restart is instant.
         try:

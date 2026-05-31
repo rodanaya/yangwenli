@@ -160,7 +160,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-05-26-audit-p3-p4-p5-complete'
+export const BUILD_ID = '2026-05-31-fix-data-quality-cold-start-timeout'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)
