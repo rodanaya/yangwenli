@@ -223,10 +223,13 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             <stop offset="0%" stopColor={RISK_COLORS.critical} stopOpacity={0.07} /><stop offset="100%" stopColor={RISK_COLORS.critical} stopOpacity={0} />
           </radialGradient>
           {bodies.map((b) => (
-            <radialGradient key={`g-${b.code}`} id={`obs-body-${b.code}`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={b.fill} stopOpacity={0.95} />
-              <stop offset="55%" stopColor={b.fill} stopOpacity={0.55} />
-              <stop offset="100%" stopColor={b.fill} stopOpacity={0.12} />
+            // Crisp body: light spot top-left, but the fill stays opaque to the
+            // edge (0.92 → 0.66, NOT to transparent) so the limb stroke reads as
+            // a razor-sharp, size-legible boundary instead of a fuzzy cloud.
+            <radialGradient key={`g-${b.code}`} id={`obs-body-${b.code}`} cx="38%" cy="34%" r="72%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity={0.55} />
+              <stop offset="22%" stopColor={b.fill} stopOpacity={0.92} />
+              <stop offset="100%" stopColor={b.fill} stopOpacity={0.66} />
             </radialGradient>
           ))}
           {bodies.map((b) => (
@@ -287,14 +290,20 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocused(b.code) } }}
                 initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.07, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                style={{ transformOrigin: `${b.cx}px ${b.cy}px`, cursor: 'pointer' }}
+                style={{ transformOrigin: `${b.cx}px ${b.cy}px`, cursor: 'pointer', outline: 'none' }}
               >
                 <title>{aria}</title>
                 <circle cx={b.cx} cy={b.cy} r={Math.max(b.r, 26)} fill="transparent" />
-                <circle cx={b.cx} cy={b.cy} r={b.r * 2.6} fill={`url(#obs-halo-${b.code})`} />
-                <circle cx={b.cx} cy={b.cy} r={b.r} fill={`url(#obs-body-${b.code})`} stroke={b.fill} strokeWidth={1.2} />
-                <circle cx={b.cx} cy={b.cy} r={2.6} fill={b.fill} />
-                <circle cx={b.cx - b.r * 0.3} cy={b.cy - b.r * 0.3} r={Math.max(2, b.r * 0.22)} fill="#fff" opacity={0.6} />
+                {/* tight glow — only the hot bodies, contained so it never blurs the limb */}
+                {(b.level === 'critical' || b.level === 'high') && (
+                  <circle cx={b.cx} cy={b.cy} r={b.r * 1.42} fill={`url(#obs-halo-${b.code})`} />
+                )}
+                {/* body disc with a razor-sharp limb (the crisp edge) */}
+                <circle cx={b.cx} cy={b.cy} r={b.r} fill={`url(#obs-body-${b.code})`} stroke={b.fill} strokeWidth={1.5} />
+                {/* fine engraved inner ring on the larger bodies */}
+                {b.r > 17 && <circle cx={b.cx} cy={b.cy} r={b.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.75} strokeOpacity={0.32} />}
+                {/* crisp star-core */}
+                <circle cx={b.cx} cy={b.cy} r={3.1} fill="#fff" stroke={b.fill} strokeWidth={1.3} />
               </motion.g>
             )
           })}
@@ -327,12 +336,14 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
                     initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }}
                     transition={{ delay: 0.15 + i * 0.025, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'pointer', outline: 'none' }}
                   >
-                    <line x1={FCX} y1={FCY} x2={s.x} y2={s.y} stroke={s.fill} strokeWidth={0.6} opacity={0.18} />
-                    <circle cx={s.x} cy={s.y} r={s.r * 1.8} fill={s.fill} opacity={hovered ? 0.22 : 0.1} />
-                    <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} stroke={hovered ? C.ink : '#fff'} strokeWidth={hovered ? 1.4 : 0.8} strokeOpacity={hovered ? 0.7 : 0.5} />
-                    {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3} fill="none" stroke={s.fill} strokeWidth={1} strokeDasharray="2 2" />}
+                    <line x1={FCX} y1={FCY} x2={s.x} y2={s.y} stroke={s.fill} strokeWidth={0.6} opacity={0.16} />
+                    {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.7} fill={s.fill} opacity={0.18} />}
+                    {/* crisp satellite — solid fill, fine dark-ink limb for definition on cream */}
+                    <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 1.1 : 0.7} strokeOpacity={hovered ? 0.6 : 0.26} />
+                    {s.r > 9 && <circle cx={s.x} cy={s.y} r={1.7} fill="#fff" opacity={0.85} />}
+                    {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 2.6} fill="none" stroke={s.fill} strokeWidth={1} strokeDasharray="2 2" />}
                     {(hovered || i < 7) && (
                       <text x={s.x} y={s.y - s.r - 4} textAnchor="middle" fill={C.ink} fontSize={hovered ? 11 : 9.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 500}>
                         {formatVendorName(s.v.name, hovered ? 34 : 20)}
@@ -343,10 +354,10 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               })}
               {/* central sun */}
               <motion.g initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} style={{ transformOrigin: `${FCX}px ${FCY}px` }}>
-                <circle cx={FCX} cy={FCY} r={80} fill={`url(#obs-halo-${focusedBody.code})`} />
-                <circle cx={FCX} cy={FCY} r={38} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.5} />
-                <circle cx={FCX} cy={FCY} r={5} fill={focusedBody.fill} />
-                <circle cx={FCX - 11} cy={FCY - 11} r={6} fill="#fff" opacity={0.55} />
+                <circle cx={FCX} cy={FCY} r={58} fill={`url(#obs-halo-${focusedBody.code})`} />
+                <circle cx={FCX} cy={FCY} r={38} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.8} />
+                <circle cx={FCX} cy={FCY} r={33} fill="none" stroke="#fff" strokeWidth={0.85} strokeOpacity={0.32} />
+                <circle cx={FCX} cy={FCY} r={4.5} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.6} />
                 <text x={FCX} y={FCY + 64} textAnchor="middle" fill={C.ink} fontSize={17} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700}>
                   {toTitleCase(focusedBody.label)}
                 </text>
