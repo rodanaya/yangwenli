@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   BookOpen,
   Play,
@@ -100,6 +101,12 @@ export function AtlasToolbar({
     }
   }, [lensOpen, keymapOpen])
 
+  // Faithful-encoding Observatory (default) has no time axis or risk-floor
+  // filter, so the year stepper, autoplay, compare-years and risk-floor chips
+  // are inert. Hide them unless ?legacy=1 (the canvas constellation).
+  const [toolbarParams] = useSearchParams()
+  const hideTemporal = toolbarParams.get('legacy') !== '1'
+
   const currentLens = LENS_OPTIONS.find((l) => l.id === mode) ?? LENS_OPTIONS[0]
   const currentYear = years[yearIndex] ?? years[years.length - 1]
   const minYear = 0
@@ -166,7 +173,8 @@ export function AtlasToolbar({
           )}
         </div>
 
-        {/* Year stepper */}
+        {/* Year stepper (hidden in faithful scatter mode) */}
+        {!hideTemporal && (
         <div
           className="h-6 inline-flex items-center rounded-sm"
           style={{ border: '1px solid var(--color-border)' }}
@@ -202,8 +210,10 @@ export function AtlasToolbar({
             <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </button>
         </div>
+        )}
 
-        {/* Risk-floor chips */}
+        {/* Risk-floor chips (hidden in faithful scatter mode) */}
+        {!hideTemporal && (
         <div
           role="group"
           aria-label={lang === 'en' ? 'Risk floor filter' : 'Filtro mínimo de riesgo'}
@@ -230,6 +240,7 @@ export function AtlasToolbar({
             )
           })}
         </div>
+        )}
       </div>
 
       {/* ── Right group (action icons) ── */}
@@ -241,6 +252,9 @@ export function AtlasToolbar({
           <BookOpen className="h-4 w-4" aria-hidden="true" />
         </ToolbarIconButton>
 
+        {/* Autoplay + compare-years (hidden in faithful scatter mode) */}
+        {!hideTemporal && (
+        <>
         <ToolbarIconButton
           onClick={() => setIsPlaying(!isPlaying)}
           ariaLabel={isPlaying
@@ -260,6 +274,8 @@ export function AtlasToolbar({
         >
           <Columns className="h-4 w-4" aria-hidden="true" />
         </ToolbarIconButton>
+        </>
+        )}
 
         <div ref={keymapRef} className="relative">
           <ToolbarIconButton

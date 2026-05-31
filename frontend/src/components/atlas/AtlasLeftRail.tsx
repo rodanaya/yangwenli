@@ -19,6 +19,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Play, Pause, Search, BookOpen, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -115,6 +116,13 @@ export function AtlasLeftRail({
 }: AtlasLeftRailProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
+
+  // Faithful-encoding Observatory (default) has no time axis or risk-floor
+  // filter — aria_queue aggregates are all-time and unfiltered — so the YEAR
+  // scrubber, autoplay and RISK FLOOR controls would be inert. Hide them
+  // unless ?legacy=1 (the old canvas constellation, which uses both).
+  const [railParams] = useSearchParams()
+  const hideTemporal = railParams.get('legacy') !== '1'
 
   // Local vendor search query
   const [vendorQuery, setVendorQuery] = useState('')
@@ -314,7 +322,9 @@ export function AtlasLeftRail({
           })}
         </div>
 
-        {/* ── YEAR ──────────────────────────────────────────────────── */}
+        {/* ── YEAR + RISK FLOOR (hidden in faithful scatter mode) ─────── */}
+        {!hideTemporal && (
+        <>
         <RailSection label={lang === 'en' ? 'YEAR' : 'AÑO'} />
         <div className="px-4 pb-2">
           {/* Big year display — Playfair Italic 800 */}
@@ -431,6 +441,8 @@ export function AtlasLeftRail({
             })}
           </div>
         </div>
+        </>
+        )}
 
         {/* ── FIND A VENDOR ─────────────────────────────────────────── */}
         <RailSection label={lang === 'en' ? 'FIND A VENDOR' : 'BUSCAR PROVEEDOR'} />
