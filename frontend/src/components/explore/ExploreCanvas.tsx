@@ -28,7 +28,7 @@ import {
   SECTORS,
   PATTERN_COLORS,
 } from '@/lib/constants'
-import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatNumber, shortenContractName } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
 import {
@@ -4035,8 +4035,8 @@ function Z3HeroCards({
               </span>
             </div>
             {title && (
-              <div className="font-mono text-[9px] mt-1.5 line-clamp-2" style={{ color: 'var(--color-text-secondary)' }}>
-                {title}
+              <div className="text-[10px] mt-1.5 line-clamp-2" style={{ color: 'var(--color-text-secondary)', fontFamily: "'Source Serif Pro', Georgia, serif" }}>
+                {shortenContractName(title, 90)}
               </div>
             )}
           </button>
@@ -4120,9 +4120,9 @@ function Z3ContractRow({
             {lang === 'en' ? 'SB' : 'UP'}
           </span>
         )}
-        {/* Title (truncates) */}
+        {/* Title (truncates) — sentence-cased from raw COMPRANET caps */}
         <span className="flex-1 min-w-0 truncate" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-          {title ?? '—'}
+          {title ? shortenContractName(title, 120) : '—'}
         </span>
         {/* Risk pill */}
         <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 36 }}>
@@ -4432,22 +4432,25 @@ function Z4Drawer({
               </div>
             </div>
 
-            {/* Description / title */}
+            {/* Description / title — COMPRANET ships these ALL-CAPS. Run
+                through shortenContractName (the canonical sentence-case +
+                institution-abbrev treatment used across the app) so the
+                drawer reads as editorial prose, not a shouting wall of caps.
+                Upright (not italic): 280 chars of italic serif is too much —
+                italic is for short pulls; the left-rule carries the quote feel. */}
             {(contract.description ?? contract.title) && (
               <p
                 className="leading-snug"
                 style={{
                   fontFamily: "'Source Serif Pro', Georgia, serif",
                   fontSize: 13,
-                  fontStyle: 'italic',
                   color: 'var(--color-text-secondary)',
                   borderLeft: `2px solid ${sectorAccent}`,
                   paddingLeft: 10,
                   marginBottom: 16,
                 }}
               >
-                {(contract.description ?? contract.title)?.slice(0, 280)}
-                {((contract.description ?? contract.title)?.length ?? 0) > 280 && '…'}
+                {shortenContractName((contract.description ?? contract.title) ?? '', 280)}
               </p>
             )}
 
