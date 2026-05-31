@@ -2365,3 +2365,44 @@ Scan results (false positives filtered):
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
+## Visual Review — 2026-05-31T18:09:21Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/atlas | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/aria | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/sectors/salud | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/cases | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/methodology | 403 (host_not_allowed) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 (host_not_allowed) | WARN |
+
+**Note:** CDN/WAF `x-deny-reason: host_not_allowed` blocks all requests from the managed-cloud egress IP. No 5xx errors — all blocks are network-layer 403s from the server allowlist policy (persistent infrastructure constraint, not a site regression).
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/sectors | BLOCKED (host_not_allowed — empty body) | WARN |
+
+### Bilingual Gaps
+Scan results (false positives filtered):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` — object property access, not UI string. OK.
+- `TIER_STYLES[tierName]` — style lookup, not UI string. OK.
+- Vendor proper names in `Executive.tsx` — untranslatable legal entity names. OK.
+- Academic citation in `Methodology.tsx` — untranslatable author/title. OK.
+- `ConcentrationConstellation.tsx` pattern labels — correctly bilingual (`isEs ? ... : ...`). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx` — code comments, not rendered strings. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
