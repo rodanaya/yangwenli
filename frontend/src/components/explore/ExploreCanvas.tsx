@@ -3985,10 +3985,11 @@ function Z3HeroCards({
         const level = getRiskLevelFromScore(score)
         const fill = RISK_COLORS[level]
         const isHighlighted = c.id === highlightContractId
-        const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
-          ?? (c.is_direct_award
-            ? (lang === 'en' ? 'direct award' : 'adjudicación directa')
-            : (lang === 'en' ? 'open bid' : 'licitación'))
+        const procType = shortProcType(
+          (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
+          !!c.is_direct_award,
+          lang,
+        )
         const title = (c as ContractListItem & { title?: string }).title
         return (
           <button
@@ -4076,10 +4077,11 @@ function Z3ContractRow({
   const fill = RISK_COLORS[level]
   const riskPct = score > 0 ? Math.round(score * 100) : null
   const title = (c as ContractListItem & { title?: string }).title
-  const procType = (c as ContractListItem & { procedure_type?: string | null }).procedure_type
-    ?? (c.is_direct_award
-      ? (lang === 'en' ? 'direct' : 'directa')
-      : (lang === 'en' ? 'open bid' : 'licitación'))
+  const procType = shortProcType(
+    (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
+    !!c.is_direct_award,
+    lang,
+  )
 
   return (
     <motion.li
@@ -4145,6 +4147,27 @@ function Z3ContractRow({
  * MOST RECENT. Disambiguate by falling through to the next candidate
  * when the same contract would be picked twice.
  */
+/**
+ * Clamp a COMPRANET procedure_type to a short chip label. The raw field is
+ * often a full uppercase sentence ("ADJUDICACIÓN DIRECTA POR ADJUDICACIÓN A
+ * PROVEEDOR CON CONTRATO VIGENTE, BAJO LAS MISMAS CONDICIONES") — too long
+ * for a chip. Map by keyword to a canonical 1–2 word label.
+ */
+function shortProcType(raw: string | null | undefined, isDirectAward: boolean, lang: 'en' | 'es'): string {
+  const s = (raw ?? '').toLowerCase()
+  const direct = lang === 'en' ? 'DIRECT' : 'ADJ. DIRECTA'
+  const open = lang === 'en' ? 'OPEN BID' : 'LICITACIÓN'
+  const invite = lang === 'en' ? 'INVITATION' : 'INVITACIÓN'
+  const framework = lang === 'en' ? 'FRAMEWORK' : 'CONVENIO MARCO'
+  if (!s) return isDirectAward ? direct : open
+  if (s.includes('marco')) return framework
+  if (s.includes('invitaci')) return invite
+  if (s.includes('adjudicaci') || s.includes('direct')) return direct
+  if (s.includes('licitaci') || s.includes('open') || s.includes('bid')) return open
+  // Unknown verbose value — fall back to the direct/open flag, not the blob.
+  return isDirectAward ? direct : open
+}
+
 function pickZ3Top3(contracts: ContractListItem[]): Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }> {
   if (contracts.length === 0) return []
   const used = new Set<number>()
