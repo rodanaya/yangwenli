@@ -249,7 +249,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   }, [focusVendors])
 
   return (
-    <div style={{ position: 'relative', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 14px 36px -24px rgba(80,60,40,0.4)' }}>
+    <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 14px 36px -24px rgba(80,60,40,0.4)', background: C.plate1 }}>
+      <div style={{ position: 'relative', flex: '1 1 0%', minWidth: 0 }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="group" aria-label={lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns'}>
         <defs>
           <radialGradient id="obs-plate" cx="48%" cy="36%" r="82%">
@@ -427,6 +428,11 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     {lang === 'es' ? 'cargando proveedores…' : 'loading vendors…'}
                   </text>
                 )}
+                {!vendorsLoading && satellites.length === 0 && (
+                  <text x={FCX} y={FCY + 100} textAnchor="middle" fill={C.inkFaint} fontSize={10} fontFamily="var(--font-family-mono)" letterSpacing="0.04em">
+                    {lang === 'es' ? 'desglose por proveedor en el expediente ↗' : 'vendor breakdown in the dossier ↗'}
+                  </text>
+                )}
               </motion.g>
             </motion.g>
           )}
@@ -460,7 +466,169 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           <ReadItem glyph="✦" title={lang === 'es' ? 'Clic = entrar' : 'Click = fly in'} body={lang === 'es' ? 'Entra al orbe y ve sus proveedores' : 'Enter the orb, see its vendors'} />
         </div>
       )}
+      </div>
+
+      {/* INDEX — the complete, scannable name list, linked to the constellation */}
+      <ObservatoryIndex
+        bodies={bodies}
+        focusedBody={focusedBody}
+        focusVendors={focusVendors?.vendors ?? null}
+        vendorsLoading={vendorsLoading}
+        lens={lens}
+        lang={lang}
+        hoverBody={hoverBody}
+        setHoverBody={setHoverBody}
+        hoverVendor={hoverVendor}
+        setHoverVendor={setHoverVendor}
+        onPickBody={setFocused}
+        onPickVendor={onVendorClick}
+        onOpenDossier={onOpenDossier}
+        onBack={() => setFocused(null)}
+      />
     </div>
+  )
+}
+
+// ── The Index — every name, ranked + scannable, two-way linked to the orbs ───
+interface IndexBody { code: string; label: string; vendors: number; t1: number; highRiskPct: number; fill: string }
+interface IndexVendor { vendor_id: number; name: string; risk_score: number; risk_level: string; total_amount_mxn: number; total_contracts: number; is_gt: boolean }
+
+function ObservatoryIndex({
+  bodies, focusedBody, focusVendors, vendorsLoading, lens, lang,
+  hoverBody, setHoverBody, hoverVendor, setHoverVendor, onPickBody, onPickVendor, onOpenDossier, onBack,
+}: {
+  bodies: IndexBody[]
+  focusedBody: IndexBody | null
+  focusVendors: IndexVendor[] | null
+  vendorsLoading: boolean
+  lens: string
+  lang: 'en' | 'es'
+  hoverBody: string | null
+  setHoverBody: (c: string | null) => void
+  hoverVendor: number | null
+  setHoverVendor: (id: number | null) => void
+  onPickBody: (code: string) => void
+  onPickVendor: (id: number) => void
+  onOpenDossier: (code: string) => void
+  onBack: () => void
+}) {
+  const lensLabel = (lang === 'es'
+    ? ({ patterns: 'Patrones', sectors: 'Sectores', categories: 'Categorías', sexenios: 'Sexenios' } as Record<string, string>)
+    : ({ patterns: 'Patterns', sectors: 'Sectors', categories: 'Categories', sexenios: 'Terms' } as Record<string, string>))[lens] ?? lens
+
+  return (
+    <aside
+      style={{ flex: '0 0 360px', width: 360, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 640 }}
+      aria-label={lang === 'es' ? 'Índice' : 'Index'}
+    >
+      {/* header */}
+      <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
+        {focusedBody ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <button type="button" onClick={onBack} className="font-mono hover:opacity-70" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                ← {lensLabel}
+              </button>
+              <div style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15, marginTop: 2 }}>
+                {toTitleCase(focusedBody.label)}
+              </div>
+              <div className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2 }}>
+                {lang === 'es' ? 'Mayores proveedores' : 'Top vendors'} · {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'total' : 'total'}
+              </div>
+            </div>
+            <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
+              className="font-mono hover:opacity-80 flex-shrink-0"
+              style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '5px 8px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
+              {lang === 'es' ? 'Expediente ↗' : 'Dossier ↗'}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700 }}>
+              {lensLabel}
+            </span>
+            <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+              {bodies.length} · {lang === 'es' ? 'por riesgo' : 'by risk'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* rows */}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {focusedBody ? (
+          vendorsLoading ? (
+            <div className="font-mono" style={{ padding: 14, fontSize: 10, color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'cargando…' : 'loading…'}</div>
+          ) : focusVendors && focusVendors.length > 0 ? (
+            focusVendors.map((v, i) => (
+              <IndexRow
+                key={v.vendor_id}
+                rank={i + 1}
+                dot={riskRamp(v.risk_score)}
+                name={formatVendorName(v.name, 30)}
+                stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(v.risk_score * 100)}%`}
+                gt={v.is_gt}
+                active={hoverVendor === v.vendor_id}
+                onEnter={() => setHoverVendor(v.vendor_id)}
+                onLeave={() => setHoverVendor(null)}
+                onClick={() => onPickVendor(v.vendor_id)}
+              />
+            ))
+          ) : (
+            // Lenses without a per-vendor breakdown wired (categories / terms):
+            // never a blank dead-end — point to the full dossier instead.
+            <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
+              <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
+                {lang === 'es'
+                  ? 'El desglose por proveedor de esta vista vive en el expediente completo.'
+                  : 'The per-vendor breakdown for this view lives in the full dossier.'}
+              </p>
+              <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
+                className="font-mono hover:opacity-80 self-start"
+                style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '7px 12px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
+                {lang === 'es' ? 'Abrir expediente ↗' : 'Open dossier ↗'}
+              </button>
+            </div>
+          )
+        ) : (
+          bodies.map((b, i) => (
+            <IndexRow
+              key={b.code}
+              rank={i + 1}
+              dot={b.fill}
+              name={toTitleCase(b.label)}
+              stat={`${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${Math.round(b.highRiskPct * 100)}%`}
+              active={hoverBody === b.code}
+              onEnter={() => setHoverBody(b.code)}
+              onLeave={() => setHoverBody(null)}
+              onClick={() => onPickBody(b.code)}
+            />
+          ))
+        )}
+      </div>
+    </aside>
+  )
+}
+
+function IndexRow({ rank, dot, name, stat, gt, active, onEnter, onLeave, onClick }: {
+  rank: number; dot: string; name: string; stat: string; gt?: boolean; active: boolean
+  onEnter: () => void; onLeave: () => void; onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onMouseEnter={onEnter} onMouseLeave={onLeave} onFocus={onEnter} onBlur={onLeave} onClick={onClick}
+      className="w-full text-left flex items-center gap-2.5 transition-colors"
+      style={{
+        padding: '7px 14px', background: active ? 'var(--color-background-elevated)' : 'transparent',
+        borderLeft: `2px solid ${active ? dot : 'transparent'}`, borderTop: 'none', borderRight: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
+      }}
+    >
+      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
+      <span aria-hidden="true" className="flex-shrink-0" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
+      <span className="flex-1 min-w-0 truncate" style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 14, color: 'var(--color-text-primary)' }}>{name}</span>
+      <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{stat}</span>
+    </button>
   )
 }
 
