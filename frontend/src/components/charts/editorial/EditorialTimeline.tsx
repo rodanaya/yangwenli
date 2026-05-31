@@ -25,6 +25,7 @@ import { useMemo } from 'react'
 import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { ADMINISTRATIONS, type Administration } from '@/lib/administrations'
 import { formatCompactMXN } from '@/lib/utils'
+import { CHART_TOKENS } from './tokens'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -72,7 +73,7 @@ function dotColor(event: EditorialTimelineEvent): string {
   if (event.sectorCode && SECTOR_COLORS[event.sectorCode]) {
     return SECTOR_COLORS[event.sectorCode]
   }
-  return '#94a3b8' // slate-400 — text-text-muted equivalent
+  return 'var(--color-text-muted)'
 }
 
 /** Parse year from an ISO-ish date string. */
@@ -144,7 +145,7 @@ export function EditorialTimeline({
       >
         <span
           className="text-[12px] font-mono"
-          style={{ color: '#94a3b8' }}
+          style={{ color: 'var(--color-text-muted)' }}
         >
           {emptyState}
         </span>
@@ -202,9 +203,9 @@ export function EditorialTimeline({
             <text
               x={BAND_LABEL_X}
               y={band.yStart + 10}
-              fontSize={8}
-              fontFamily="ui-monospace, monospace"
-              fill="#94a3b8"
+              fontSize={10}
+              fontFamily={CHART_TOKENS.axis.tickFontFamily}
+              fill="var(--color-text-muted)"
               opacity={0.85}
             >
               {band.admin.short}
@@ -218,7 +219,7 @@ export function EditorialTimeline({
           y1={topPad}
           x2={SPINE_X}
           y2={totalH - bottomPad}
-          stroke="#cbd5e1"
+          stroke="var(--color-border)"
           strokeWidth={1}
         />
 
@@ -236,7 +237,7 @@ export function EditorialTimeline({
                 y1={cy}
                 x2={SPINE_X - 8}
                 y2={cy}
-                stroke="#e2e8f0"
+                stroke="var(--color-border)"
                 strokeWidth={0.5}
               />
 
@@ -271,9 +272,9 @@ export function EditorialTimeline({
                 y={cy}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize={9}
-                fontFamily="ui-monospace, monospace"
-                fill="#94a3b8"
+                fontSize={11}
+                fontFamily={CHART_TOKENS.axis.tickFontFamily}
+                fill="var(--color-text-muted)"
               >
                 {formatEventDate(evt.date)}
               </text>
@@ -328,7 +329,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
         rx={3}
         fill="white"
         fillOpacity={0.04}
-        stroke="#e2e8f0"
+        stroke="var(--color-border)"
         strokeWidth={0.5}
       />
 
@@ -340,7 +341,7 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
         fontSize={11}
         fontFamily="ui-sans-serif, system-ui, sans-serif"
         fontWeight={500}
-        fill="#1e293b"
+        fill="var(--color-text-primary)"
       >
         {evt.title.length > 52 ? evt.title.slice(0, 52) + '…' : evt.title}
       </text>
@@ -351,9 +352,9 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           x={cardLeft + 8}
           y={cy + 8}
           dominantBaseline="middle"
-          fontSize={9}
-          fontFamily="ui-monospace, monospace"
-          fill="#94a3b8"
+          fontSize={11}
+          fontFamily={CHART_TOKENS.axis.tickFontFamily}
+          fill="var(--color-text-muted)"
         >
           {evt.subtitle.length > 60 ? evt.subtitle.slice(0, 60) + '…' : evt.subtitle}
         </text>
@@ -366,9 +367,9 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           y={cy - (evt.subtitle ? 8 : 0)}
           textAnchor="end"
           dominantBaseline="middle"
-          fontSize={10}
-          fontFamily="ui-monospace, monospace"
-          fill="#475569"
+          fontSize={11}
+          fontFamily={CHART_TOKENS.axis.tickFontFamily}
+          fill="var(--color-text-primary)"
         >
           {formatCompactMXN(evt.amount)}
         </text>
@@ -383,18 +384,18 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
             width={evt.badge.length * 5.5 + 8}
             height={12}
             rx={2}
-            fill="#f1f5f9"
-            stroke="#e2e8f0"
+            fill="var(--color-surface-2)"
+            stroke="var(--color-border)"
             strokeWidth={0.5}
           />
           <text
             x={cardLeft + 12}
             y={cy + 22}
             dominantBaseline="middle"
-            fontSize={7}
-            fontFamily="ui-monospace, monospace"
+            fontSize={10}
+            fontFamily={CHART_TOKENS.axis.tickFontFamily}
             fontWeight={600}
-            fill="#64748b"
+            fill="var(--color-text-muted)"
             letterSpacing="0.04em"
             style={{ textTransform: 'uppercase' }}
           >
@@ -410,8 +411,8 @@ function EventCard({ evt, cardLeft, cy, cardWidth }: EventCardProps) {
           y={cy + (evt.subtitle ? 8 : 0)}
           textAnchor="end"
           dominantBaseline="middle"
-          fontSize={10}
-          fill="#94a3b8"
+          fontSize={11}
+          fill="var(--color-text-muted)"
         >
           →
         </text>

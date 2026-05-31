@@ -31,10 +31,13 @@ const DATA: MonthRow[] = [
 ]
 
 const AVG = 48
-const ALERT_COLOR = 'var(--color-sector-salud)'
-const WARNING_COLOR = 'var(--color-sector-infraestructura)'
-const SOFT_WARN = 'var(--color-sector-trabajo)'
-const MUTED_BAR = 'var(--color-text-secondary)'
+// Monotonic severity ramp: muted → medium → high → critical.
+// Sector tokens were misused here as severity steps; risk tokens carry the
+// editorial meaning (escalating year-end anomaly) without polluting identity.
+const ALERT_COLOR = 'var(--color-risk-critical)'
+const WARNING_COLOR = 'var(--color-risk-high)'
+const SOFT_WARN = 'var(--color-risk-medium)'
+const MUTED_BAR = 'var(--color-text-muted)'
 
 const DOTS = 50       // each dot = 1.6B MXN (0-80B domain)
 const DOT_PER_B = DOTS / 80

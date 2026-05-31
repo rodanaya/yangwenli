@@ -9,6 +9,7 @@
 
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { RISK_COLORS } from '@/lib/constants'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Ghost {
@@ -76,23 +77,24 @@ const GHOSTS: Ghost[] = [
 ]
 
 const CLUSTER_LABELS = [
-  { cluster: 1, label: 'Insurgentes Sur 1605', x: 115, y: 55, count: 8 },
-  { cluster: 2, label: 'Bodega Ecatepec',      x: 285, y: 55, count: 10 },
-  { cluster: 3, label: 'Depto. Narvarte',      x: 470, y: 55, count: 7 },
-  { cluster: 4, label: 'Papelería Iztapalapa', x: 170, y: 390, count: 9 },
-  { cluster: 5, label: 'Tlalnepantla bodega',  x: 415, y: 390, count: 8 },
+  { cluster: 1, labelKey: 'ghostNetwork.cluster1', x: 115, y: 55, count: 8 },
+  { cluster: 2, labelKey: 'ghostNetwork.cluster2', x: 285, y: 55, count: 10 },
+  { cluster: 3, labelKey: 'ghostNetwork.cluster3', x: 470, y: 55, count: 7 },
+  { cluster: 4, labelKey: 'ghostNetwork.cluster4', x: 170, y: 390, count: 9 },
+  { cluster: 5, labelKey: 'ghostNetwork.cluster5', x: 415, y: 390, count: 8 },
 ]
 
 function getColor(score: number): string {
-  if (score >= 0.85) return 'var(--color-sector-salud)'
-  if (score >= 0.75) return 'var(--color-risk-critical)'
-  if (score >= 0.65) return 'var(--color-sector-trabajo)'
-  if (score >= 0.55) return 'var(--color-risk-high)'
-  return 'var(--color-text-secondary)'
+  if (score >= 0.60) return RISK_COLORS.critical
+  if (score >= 0.40) return RISK_COLORS.high
+  if (score >= 0.25) return RISK_COLORS.medium
+  return RISK_COLORS.low
 }
 
 export function StoryRedFantasma() {
-  const { t } = useTranslation('storyCharts')
+  const { t, i18n } = useTranslation('storyCharts')
+  const lang = i18n.language
+  const ghostsLabel = lang === 'en' ? 'ghosts' : 'fantasmas'
   return (
     <EditorialChartFrame
       kicker={t('ghostNetwork.kicker')}
@@ -123,8 +125,8 @@ export function StoryRedFantasma() {
               cx={cx}
               cy={cy}
               r={65}
-              fill="#dc262608"
-              stroke="#dc262640"
+              fill="rgba(239,68,68,0.05)"
+              stroke="rgba(239,68,68,0.25)"
               strokeWidth={0.7}
               strokeDasharray="3 4"
               initial={{ scale: 0, opacity: 0 }}
@@ -174,7 +176,7 @@ export function StoryRedFantasma() {
               fontFamily="var(--font-family-mono)"
               fontWeight={600}
             >
-              {cluster.label}
+              {t(cluster.labelKey)}
             </text>
             <text
               x={cluster.x}
@@ -184,7 +186,7 @@ export function StoryRedFantasma() {
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
-              {cluster.count} fantasmas
+              {cluster.count} {ghostsLabel}
             </text>
           </motion.g>
         ))}
@@ -224,27 +226,23 @@ export function StoryRedFantasma() {
         })}
       </svg>
 
-      {/* Legend */}
+      {/* Legend — 4 risk tiers */}
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono text-text-muted pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
+          <span className="w-3 h-3 rounded-full" style={{ background: RISK_COLORS.critical }} aria-hidden="true" />
           <span>{t('ghostNetwork.legendTop')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-risk-high"></div>
+          <span className="w-3 h-3 rounded-full" style={{ background: RISK_COLORS.high }} aria-hidden="true" />
           <span>{t('ghostNetwork.legendHigh')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-risk-critical"></div>
+          <span className="w-3 h-3 rounded-full" style={{ background: RISK_COLORS.medium }} aria-hidden="true" />
           <span>{t('ghostNetwork.legendMid')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-risk-high"></div>
+          <span className="w-3 h-3 rounded-full" style={{ background: RISK_COLORS.low }} aria-hidden="true" />
           <span>{t('ghostNetwork.legendLow')}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-text-muted"></div>
-          <span>{t('ghostNetwork.legendUnder')}</span>
         </div>
       </div>
     </EditorialChartFrame>

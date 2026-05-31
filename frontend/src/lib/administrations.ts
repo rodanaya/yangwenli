@@ -46,6 +46,18 @@ export const ADMIN_DISPLAY: Record<AdministrationKey, string> = {
   sheinbaum: 'Sheinbaum',
 }
 
+/** Identity palette for administrations — used by sexenio matrices,
+ *  timeline bands, and other charts that need to distinguish terms.
+ *  These are identity colors (not severity); they should never be used
+ *  to convey risk. Tokens chosen from the platform's editorial palette. */
+export const ADMIN_COLORS: Record<AdministrationKey, string> = {
+  fox:       '#3b82f6', // blue
+  calderon:  '#22d3ee', // cyan
+  epn:       '#ea580c', // orange
+  amlo:      '#8b5cf6', // violet
+  sheinbaum: '#ec4899', // pink
+}
+
 /** Backward-compatible alias map for legacy string keys with accents. */
 export const ADMIN_DISPLAY_LEGACY: Record<string, string> = {
   Fox: ADMIN_DISPLAY.fox,

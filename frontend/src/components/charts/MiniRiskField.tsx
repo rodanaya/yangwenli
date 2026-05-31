@@ -20,16 +20,17 @@
  */
 
 import { halton, mulberry32 } from '@/lib/particle'
+import { RISK_COLORS } from '@/lib/constants'
 
 const W = 88
 const H = 32
 const N = 60
 
 const DOT = {
-  critical: { r: 1.6, fill: '#ef4444', alpha: 0.95 },
-  high:     { r: 1.2, fill: '#f59e0b', alpha: 0.82 },
-  medium:   { r: 0.9, fill: '#a16207', alpha: 0.60 },
-  low:      { r: 0.6, fill: '#71717a', alpha: 0.38 },
+  critical: { r: 1.6, fill: RISK_COLORS.critical, alpha: 0.95 },
+  high:     { r: 1.2, fill: RISK_COLORS.high,     alpha: 0.82 },
+  medium:   { r: 0.9, fill: RISK_COLORS.medium,   alpha: 0.60 },
+  low:      { r: 0.6, fill: RISK_COLORS.low,      alpha: 0.38 },
 } as const
 
 type Level = keyof typeof DOT

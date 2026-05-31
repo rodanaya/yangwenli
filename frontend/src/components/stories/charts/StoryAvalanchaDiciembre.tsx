@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Month {
-  m: string
+  key: 'monthJan' | 'monthFeb' | 'monthMar' | 'monthApr' | 'monthMay' | 'monthJun' | 'monthJul' | 'monthAug' | 'monthSep' | 'monthOct' | 'monthNov' | 'monthDec'
   value: number // MXN billions
   color: string
   stroke: string
@@ -19,18 +19,18 @@ interface Month {
 
 // December 2014 peak case — 51.4B. Neighboring months from COMPRANET.
 const MONTHS: Month[] = [
-  { m: 'ENE', value: 12, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'FEB', value: 15, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'MAR', value: 18, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'ABR', value: 16, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'MAY', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'JUN', value: 19, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'JUL', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'AGO', value: 20, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
-  { m: 'SEP', value: 22, color: 'var(--color-text-muted)', stroke: 'var(--color-text-muted)' },
-  { m: 'OCT', value: 28, color: 'var(--color-sector-energia)', stroke: '#facc15' },
-  { m: 'NOV', value: 36, color: 'var(--color-sector-infraestructura)', stroke: 'var(--color-risk-high)' },
-  { m: 'DIC', value: 51, color: 'var(--color-sector-salud)', stroke: 'var(--color-risk-critical)' },
+  { key: 'monthJan', value: 12, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthFeb', value: 15, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthMar', value: 18, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthApr', value: 16, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthMay', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthJun', value: 19, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthJul', value: 17, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthAug', value: 20, color: 'var(--color-text-secondary)', stroke: 'var(--color-text-secondary)' },
+  { key: 'monthSep', value: 22, color: 'var(--color-text-muted)', stroke: 'var(--color-text-muted)' },
+  { key: 'monthOct', value: 28, color: 'var(--color-risk-medium)', stroke: 'var(--color-risk-medium)' },
+  { key: 'monthNov', value: 36, color: 'var(--color-risk-high)', stroke: 'var(--color-risk-high)' },
+  { key: 'monthDec', value: 51, color: 'var(--color-risk-critical)', stroke: 'var(--color-risk-critical)' },
 ]
 
 const AVG = 22.6 // average monthly spend 2014
@@ -129,7 +129,7 @@ export function StoryAvalanchaDiciembre() {
           const dotCount = month.value
 
           return (
-            <g key={month.m}>
+            <g key={month.key}>
               {/* Dots stacked bottom-up */}
               {Array.from({ length: dotCount }).map((_, di) => {
                 const cy = baseY - 8 - di * DOT_SPACING_Y
@@ -154,7 +154,7 @@ export function StoryAvalanchaDiciembre() {
                 x={cx}
                 y={baseY - 8 - dotCount * DOT_SPACING_Y - 6}
                 textAnchor="middle"
-                fill={month.color === 'var(--color-sector-salud)' ? 'var(--color-risk-critical)' : month.color === 'var(--color-sector-infraestructura)' ? 'var(--color-risk-high)' : 'var(--color-text-muted)'}
+                fill={month.color === 'var(--color-risk-critical)' ? 'var(--color-risk-critical)' : month.color === 'var(--color-risk-high)' ? 'var(--color-risk-high)' : 'var(--color-text-muted)'}
                 fontSize={9}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
@@ -172,7 +172,7 @@ export function StoryAvalanchaDiciembre() {
                 fontFamily="var(--font-family-mono)"
                 fontWeight={mi === 11 ? 700 : 500}
               >
-                {month.m}
+                {t(`avalanchaDiciembre.${month.key}`)}
               </text>
             </g>
           )

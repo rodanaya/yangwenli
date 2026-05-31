@@ -47,7 +47,7 @@ export function StoryVendorFingerprint() {
       <div className="flex items-center gap-3 -mt-1">
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
                         bg-risk-critical/10 border border-risk-critical/20 text-xs text-risk-critical">
-          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" aria-hidden="true" />
           {t('vendorFingerprint.criticalPill')}
         </div>
       </div>
@@ -55,13 +55,15 @@ export function StoryVendorFingerprint() {
       {/* SHAP factor callouts */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: t('vendorFingerprint.factor1Label'), value: '+1.24', color: 'text-risk-critical', note: t('vendorFingerprint.factor1Note') },
-          { label: t('vendorFingerprint.factor2Label'), value: '+0.88', color: 'text-risk-critical', note: t('vendorFingerprint.factor2Note') },
-          { label: t('vendorFingerprint.factor3Label'), value: '+0.62', color: 'text-risk-high', note: t('vendorFingerprint.factor3Note') },
-          { label: t('vendorFingerprint.factor4Label'), value: '-0.14', color: 'text-teal-400', note: t('vendorFingerprint.factor4Note') },
+          { label: t('vendorFingerprint.factor1Label'), value: '+1.24', color: 'text-risk-critical', note: t('vendorFingerprint.factor1Note'), arrow: '↑' },
+          { label: t('vendorFingerprint.factor2Label'), value: '+0.88', color: 'text-risk-critical', note: t('vendorFingerprint.factor2Note'), arrow: '↑' },
+          { label: t('vendorFingerprint.factor3Label'), value: '+0.62', color: 'text-risk-high', note: t('vendorFingerprint.factor3Note'), arrow: '↑' },
+          { label: t('vendorFingerprint.factor4Label'), value: '-0.14', color: 'text-text-muted', note: t('vendorFingerprint.factor4Note'), arrow: '↓' },
         ].map((f) => (
           <div key={f.label} className="rounded-lg border border-border bg-background-card p-2.5 text-center">
-            <div className={`text-lg font-mono font-bold ${f.color}`}>{f.value}</div>
+            <div className={`text-2xl font-playfair-display italic font-extrabold tabular-nums ${f.color}`}>
+              <span className="text-sm mr-0.5 not-italic" aria-hidden="true">{f.arrow}</span>{f.value}
+            </div>
             <div className="text-[9px] text-text-muted uppercase tracking-wide mt-0.5">{f.label}</div>
             <div className="text-[9px] text-text-muted mt-0.5">{f.note}</div>
           </div>
@@ -88,7 +90,7 @@ export function StoryVendorFingerprint() {
         <p className="text-xs text-text-secondary leading-relaxed">
           {t('vendorFingerprint.readGuidePrefix')}
           <strong className="text-risk-critical">{t('vendorFingerprint.readGuideRedLabel')}</strong>{t('vendorFingerprint.readGuideRedSuffix')}
-          <strong className="text-teal-400">{t('vendorFingerprint.readGuideTealLabel')}</strong>{t('vendorFingerprint.readGuideTealSuffix')}
+          <strong className="text-text-muted">{t('vendorFingerprint.readGuideTealLabel')}</strong>{t('vendorFingerprint.readGuideTealSuffix')}
         </p>
       </div>
     </EditorialChartFrame>

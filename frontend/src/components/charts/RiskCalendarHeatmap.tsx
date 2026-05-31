@@ -20,15 +20,33 @@ const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct',
 const MONTH_ABBR_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
+// Tooltip chrome + no-data tones — centralized so future themes can swap
+// in dark/cream-light variants without editing every cell + tooltip.
+const CHART_TOKENS = {
+  // No-data / empty cell tones (two explicit shades — kept here, not inlined)
+  noDataFill: '#f3f1ec',       // elevated cream — month has 0 contracts
+  veryLowFill: '#e2ddd6',      // warm border gray — risk < 0.15
+  lowFill: '#d4cfc7',          // light zinc — risk < 0.25
+  // Tooltip chrome
+  tooltipBg: '#1a1714',
+  tooltipBorder: '#3f3f46',
+  // December outline
+  decemberOutline: RISK_COLORS.low,
+  // December annotation
+  decemberAccent: '#ea580c',
+  // Peak December dot inside the cell
+  peakDecemberDot: '#1a1714',
+} as const
+
 // Risk color ramp — cream-mode, bible §2 (NO green for low; zinc for low).
 // Breakpoints aligned to v0.8.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
 function riskToColor(risk: number): string {
-  if (risk === 0) return '#f3f1ec'    // elevated cream — no data
-  if (risk < 0.15) return '#e2ddd6'   // warm border gray — very low
-  if (risk < 0.25) return '#d4cfc7'   // light zinc — low
-  if (risk < 0.40) return '#a16207'   // medium (bible)
-  if (risk < 0.60) return '#f59e0b'   // high (bible)
-  return '#ef4444'                    // critical (bible)
+  if (risk === 0) return CHART_TOKENS.noDataFill         // elevated cream — no data
+  if (risk < 0.15) return CHART_TOKENS.veryLowFill        // warm border gray — very low
+  if (risk < 0.25) return CHART_TOKENS.lowFill            // light zinc — low
+  if (risk < 0.40) return RISK_COLORS.medium              // medium (bible)
+  if (risk < 0.60) return RISK_COLORS.high                // high (bible)
+  return RISK_COLORS.critical                             // critical (bible)
 }
 
 function riskLabel(risk: number, isEs: boolean): string {
@@ -106,7 +124,7 @@ export function RiskCalendarHeatmap() {
         >
           <div
             className="font-mono leading-tight text-center whitespace-nowrap"
-            style={{ fontSize: 9, color: '#ea580c' }}
+            style={{ fontSize: 9, color: CHART_TOKENS.decemberAccent }}
           >
             {isES ? '↑ 64% más riesgo en diciembre' : '↑ 64% higher risk in December'}
           </div>
@@ -121,7 +139,7 @@ export function RiskCalendarHeatmap() {
           {/* Tick connecting the label to the December column */}
           <div
             className="mt-0.5"
-            style={{ width: 1, height: 6, backgroundColor: '#ea580c', opacity: 0.55 }}
+            style={{ width: 1, height: 6, backgroundColor: CHART_TOKENS.decemberAccent, opacity: 0.55 }}
           />
         </div>
 
@@ -164,8 +182,8 @@ export function RiskCalendarHeatmap() {
                       style={{
                         width: CELL_W,
                         height: CELL_H,
-                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#f3f1ec',
-                        outline: isDecember ? '1px solid #71717a' : 'none',
+                        backgroundColor: contracts > 0 ? riskToColor(risk) : CHART_TOKENS.noDataFill,
+                        outline: isDecember ? `1px solid ${CHART_TOKENS.decemberOutline}` : 'none',
                         outlineOffset: -1,
                       }}
                       onMouseEnter={(e) => {
@@ -178,7 +196,7 @@ export function RiskCalendarHeatmap() {
                         <span
                           aria-label={isES ? 'Pico de avalancha presupuestal' : 'Budget avalanche peak'}
                           className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono leading-none"
-                          style={{ fontSize: 8, color: '#1a1714' }}
+                          style={{ fontSize: 8, color: CHART_TOKENS.peakDecemberDot }}
                         >
                           ●
                         </span>
@@ -198,8 +216,8 @@ export function RiskCalendarHeatmap() {
             style={{
               left: tooltip.x + 12,
               top: tooltip.y - 8,
-              backgroundColor: '#1a1714',
-              border: '1px solid #3f3f46',
+              backgroundColor: CHART_TOKENS.tooltipBg,
+              border: `1px solid ${CHART_TOKENS.tooltipBorder}`,
             }}
           >
             <p className="font-semibold text-text-primary font-mono">
@@ -226,7 +244,7 @@ export function RiskCalendarHeatmap() {
           {isES ? 'Riesgo' : 'Risk'}:
         </span>
         {[
-          { labelEn: 'None', labelEs: 'Ninguno', color: '#f3f1ec' },
+          { labelEn: 'None', labelEs: 'Ninguno', color: CHART_TOKENS.noDataFill },
           { labelEn: 'Low', labelEs: 'Bajo', color: RISK_COLORS.low },
           { labelEn: 'Medium', labelEs: 'Medio', color: RISK_COLORS.medium },
           { labelEn: 'High', labelEs: 'Alto', color: RISK_COLORS.high },
@@ -235,7 +253,7 @@ export function RiskCalendarHeatmap() {
           <div key={labelEn} className="flex items-center gap-1">
             <div
               className="w-3 h-3 rounded-[2px]"
-              style={{ backgroundColor: color, border: labelEn === 'None' ? '1px solid #3f3f46' : 'none' }}
+              style={{ backgroundColor: color, border: labelEn === 'None' ? `1px solid ${CHART_TOKENS.tooltipBorder}` : 'none' }}
             />
             <span className="text-[10px] font-mono text-text-muted">{isES ? labelEs : labelEn}</span>
           </div>

@@ -126,7 +126,7 @@ export function StoryOceanografia() {
                   y={y}
                   width={barW}
                   height={barH}
-                  fill={isArrest ? 'var(--color-sector-salud)' : 'var(--color-risk-medium)'}
+                  fill={isArrest ? 'var(--color-risk-critical)' : 'var(--color-risk-medium)'}
                   fillOpacity={isArrest ? 0.9 : 0.75}
                   initial={{ height: 0, y: PAD_T + CHART_H }}
                   animate={{ height: barH, y }}
@@ -137,7 +137,7 @@ export function StoryOceanografia() {
                   x={cx}
                   y={y - 4}
                   textAnchor="middle"
-                  fill={isArrest ? 'var(--color-risk-critical)' : '#a8a29e'}
+                  fill={isArrest ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                   fontSize={8.5}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={600}
@@ -166,7 +166,7 @@ export function StoryOceanografia() {
               y1={PAD_T}
               x2={xFor(TIMELINE.length - 1)}
               y2={PAD_T + CHART_H}
-              stroke="var(--color-sector-salud)"
+              stroke="var(--color-risk-critical)"
               strokeWidth={1}
               strokeDasharray="3 3"
               opacity={0.6}
@@ -188,7 +188,7 @@ export function StoryOceanografia() {
           {/* Legend */}
           <g transform={`translate(${PAD_L}, ${H - 14})`}>
             <rect width={10} height={8} fill="var(--color-risk-medium)" fillOpacity={0.75} />
-            <text x={14} y={7} fill="#a8a29e" fontSize={9} fontFamily="var(--font-family-mono)">
+            <text x={14} y={7} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               {t('oceanografia.legendNote')}
             </text>
           </g>

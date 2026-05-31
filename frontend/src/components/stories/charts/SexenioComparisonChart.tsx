@@ -27,10 +27,13 @@ const DATA: MetricRow[] = [
   { metricKey: 'Concentration', unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
 ]
 
-const FOX_COLOR = 'var(--color-text-secondary)'
-const CALDERON_COLOR = 'var(--color-text-muted)'
-const PENA_COLOR = 'var(--color-text-muted)'
-const AMLO_COLOR = 'var(--color-sector-salud)'
+// Monotonic severity ramp: muted → secondary → risk-high → risk-critical.
+// Reads the editorial story (each sexenio worse than the last) without
+// abusing sector identity tokens for severity encoding.
+const FOX_COLOR = 'var(--color-text-muted)'
+const CALDERON_COLOR = 'var(--color-text-secondary)'
+const PENA_COLOR = 'var(--color-risk-high)'
+const AMLO_COLOR = 'var(--color-risk-critical)'
 
 const SEXENIO_ROWS = [
   { key: 'fox',      label: 'Fox',        color: FOX_COLOR,      opacity: 0.55 },

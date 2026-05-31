@@ -73,9 +73,25 @@ export function StorySectorParadox() {
         role="img"
         aria-label={t('sectorParadox.ariaLabel')}
       >
-        {/* Quadrant guides */}
-        <rect x={xFor(75)} y={yFor(20)} width={xFor(100) - xFor(75)} height={yFor(10) - yFor(20)} fill="var(--color-sector-salud)" fillOpacity={0.04} />
-        <rect x={xFor(X_MIN)} y={yFor(20)} width={xFor(75) - xFor(X_MIN)} height={yFor(10) - yFor(20)} fill="var(--color-sector-infraestructura)" fillOpacity={0.05} />
+        {/* Median cross — neutral dashed guides (no colored quadrant tints) */}
+        <line
+          x1={xFor(80)}
+          x2={xFor(80)}
+          y1={PAD.top}
+          y2={H - PAD.bottom}
+          stroke="var(--color-border-hover)"
+          strokeDasharray="4 4"
+          strokeWidth={1}
+        />
+        <line
+          x1={PAD.left}
+          x2={W - PAD.right}
+          y1={yFor(10)}
+          y2={yFor(10)}
+          stroke="var(--color-border-hover)"
+          strokeDasharray="4 4"
+          strokeWidth={1}
+        />
 
         {/* Grid */}
         {[5, 10, 15, 20].map((v) => (
@@ -145,7 +161,7 @@ export function StorySectorParadox() {
                 x={xFor(p.daPct)}
                 y={yFor(p.highRiskPct) + r + 12}
                 textAnchor="middle"
-                fill={isParadox ? '#f4f4f5' : 'var(--color-text-muted)'}
+                fill={isParadox ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}
                 fontSize={isParadox ? 11 : 9}
                 fontWeight={isParadox ? 700 : 500}
                 fontFamily="var(--font-family-mono)"

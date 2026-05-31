@@ -19,6 +19,7 @@
 
 import { useMemo } from 'react'
 import { RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
+import { CHART_TOKENS } from './tokens'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,7 @@ export function EditorialDistribution({
   bins = 60,
   thresholds = DEFAULT_THRESHOLDS,
   height = 200,
-  fillColor = '#94a3b8',
+  fillColor = 'var(--color-text-muted)',
   highlightColor = RISK_COLORS.critical,
   caption,
   i18n,
@@ -221,7 +222,7 @@ export function EditorialDistribution({
             textAnchor="middle"
             dominantBaseline="middle"
             fontSize={12}
-            fill="#94a3b8"
+            fill="var(--color-text-muted)"
           >
             Sin datos
           </text>
@@ -246,8 +247,8 @@ export function EditorialDistribution({
               <text
                 x={x + 3}
                 y={MARGIN.top - 4}
-                fontSize={9}
-                fontFamily="ui-monospace, monospace"
+                fontSize={11}
+                fontFamily={CHART_TOKENS.axis.tickFontFamily}
                 fill={t.color}
                 opacity={0.9}
               >
@@ -257,8 +258,8 @@ export function EditorialDistribution({
               <text
                 x={x + 3}
                 y={MARGIN.top + 10}
-                fontSize={8}
-                fontFamily="ui-monospace, monospace"
+                fontSize={11}
+                fontFamily={CHART_TOKENS.axis.tickFontFamily}
                 fill={t.color}
                 opacity={0.7}
               >
@@ -274,7 +275,7 @@ export function EditorialDistribution({
           y1={MARGIN.top + plotH}
           x2={MARGIN.left + plotW}
           y2={MARGIN.top + plotH}
-          stroke="#cbd5e1"
+          stroke="var(--color-border)"
           strokeWidth={0.5}
         />
 
@@ -282,18 +283,18 @@ export function EditorialDistribution({
         <text
           x={MARGIN.left}
           y={MARGIN.top + plotH + 12}
-          fontSize={9}
-          fontFamily="ui-monospace, monospace"
-          fill="#94a3b8"
+          fontSize={11}
+          fontFamily={CHART_TOKENS.axis.tickFontFamily}
+          fill="var(--color-text-muted)"
         >
           {lo.toFixed(2)}
         </text>
         <text
           x={MARGIN.left + plotW}
           y={MARGIN.top + plotH + 12}
-          fontSize={9}
-          fontFamily="ui-monospace, monospace"
-          fill="#94a3b8"
+          fontSize={11}
+          fontFamily={CHART_TOKENS.axis.tickFontFamily}
+          fill="var(--color-text-muted)"
           textAnchor="end"
         >
           {hi.toFixed(2)}
@@ -310,8 +311,8 @@ export function EditorialDistribution({
               x={labelX}
               y={MARGIN.top + plotH - 6}
               textAnchor="middle"
-              fontSize={8}
-              fontFamily="ui-monospace, monospace"
+              fontSize={11}
+              fontFamily={CHART_TOKENS.axis.tickFontFamily}
               fill={highlightColor}
               opacity={0.75}
             >
@@ -324,7 +325,7 @@ export function EditorialDistribution({
       {caption && (
         <figcaption
           className="mt-1 text-[11px] leading-snug"
-          style={{ color: '#94a3b8' }}
+          style={{ color: 'var(--color-text-muted)' }}
         >
           {caption}
         </figcaption>

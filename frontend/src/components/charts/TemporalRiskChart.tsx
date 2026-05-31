@@ -19,10 +19,21 @@ import {
 } from '@/components/charts/editorial'
 import { analysisApi } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { RISK_COLORS } from '@/lib/constants'
+
+// ============================================================================
+// SCANDAL PALETTE — semantic, not severity. Three intensities for visual
+// rhythm across vertical reference lines.
+// ============================================================================
+const SCANDAL_COLORS = {
+  major: RISK_COLORS.critical, // #dc2626 — COVID
+  high: '#f87171', // soft-critical accent for revealed scandals
+  medium: RISK_COLORS.high, // #f59e0b → audit findings / on-the-record
+} as const
 
 // ============================================================================
 // FALLBACK DATA — approximate values if no API endpoint available
-// Based on RUBLI v6.0 model distribution and known procurement patterns
+// Based on RUBLI v0.8.5 model distribution and known procurement patterns
 // ============================================================================
 
 const FALLBACK_DATA = [
@@ -61,42 +72,32 @@ const ADMIN_ERAS: { x1: number; x2: number; label: string; tone: 'admin' | 'cris
   { x1: 2024, x2: 2025, label: 'SHEINBAUM', tone: 'admin' },
 ]
 
+// 2013–2018 collapsed into a single "Peña Nieto-era scandals" marker to
+// reduce vertical-rule density; original 3 events listed in the callout.
 const SCANDAL_ANNOTATIONS: ScandalAnnotation[] = [
   {
-    year: 2013,
-    label: 'La Estafa Maestra exposed',
-    shortLabel: 'Estafa',
-    color: '#f87171',
-  },
-  {
-    year: 2017,
-    label: 'Odebrecht scandal breaks',
-    shortLabel: 'Odebrecht',
-    color: '#fb923c',
-  },
-  {
-    year: 2018,
-    label: 'Toka IT Monopoly',
-    shortLabel: 'Toka',
-    color: '#8b5cf6',
+    year: 2015,
+    label: 'Peña Nieto-era scandals (Estafa Maestra, Odebrecht, Toka)',
+    shortLabel: 'PN scandals',
+    color: SCANDAL_COLORS.high,
   },
   {
     year: 2020,
     label: 'COVID Emergency Procurement',
     shortLabel: 'COVID',
-    color: '#dc2626',
+    color: SCANDAL_COLORS.major,
   },
   {
     year: 2021,
     label: 'Segalmex audit findings',
     shortLabel: 'Segalmex',
-    color: '#fb923c',
+    color: SCANDAL_COLORS.medium,
   },
   {
     year: 2023,
     label: 'EFOS ghost companies identified',
     shortLabel: 'EFOS',
-    color: '#f87171',
+    color: SCANDAL_COLORS.high,
   },
 ]
 

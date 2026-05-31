@@ -84,7 +84,8 @@ export function StoryHemoserSplitting() {
           const filled = Math.round((item.contracts / MAX_VALUE) * ROWS)
           const xCenter = LABEL_W + colIdx * COL_W + COL_W / 2
           const isPeak = item.year === PEAK_YEAR
-          const color = isPeak ? 'var(--color-sector-salud)' : 'var(--color-text-secondary)'
+          // Peak column carries risk-critical semantics — the 2023 spike IS the anomaly.
+          const color = isPeak ? 'var(--color-risk-critical)' : 'var(--color-text-secondary)'
           const pctOfTotal = ((item.contracts / TOTAL) * 100).toFixed(1)
 
           return (
@@ -127,7 +128,7 @@ export function StoryHemoserSplitting() {
                 x={xCenter}
                 y={TOP_PAD + ROWS * DOT_GAP + 14}
                 textAnchor="middle"
-                fill={isPeak ? 'var(--color-sector-salud)' : 'var(--color-text-muted)'}
+                fill={isPeak ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'}
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={isPeak ? 700 : 400}

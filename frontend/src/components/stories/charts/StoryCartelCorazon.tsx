@@ -14,8 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 interface Device {
-  nameEs: string
-  nameEn: string
+  nameKey: 'deviceStent' | 'devicePacemaker' | 'deviceDefibrillator' | 'deviceValve' | 'devicePump' | 'deviceOxygenator'
   marketK: number // thousands MXN
   imssK: number   // thousands MXN
   volume: number  // annual units
@@ -24,12 +23,12 @@ interface Device {
 // Approximate cardiac device pricing based on Vitalmex-era IMSS contracts.
 // Market price reflects OECD average; IMSS price reflects observed COMPRANET values.
 const DEVICES: Device[] = [
-  { nameEs: 'Stent coronario',           nameEn: 'Coronary stent',                marketK: 18,  imssK: 26,  volume: 8200  },
-  { nameEs: 'Marcapasos',                nameEn: 'Pacemaker',                     marketK: 95,  imssK: 138, volume: 3400  },
-  { nameEs: 'Desfibrilador implantable', nameEn: 'Implantable defibrillator',     marketK: 260, imssK: 370, volume: 1100  },
-  { nameEs: 'Válvula cardíaca',          nameEn: 'Heart valve',                   marketK: 155, imssK: 212, volume: 2100  },
-  { nameEs: 'Bomba circ. extracorpórea', nameEn: 'Extracorporeal circulation pump', marketK: 340, imssK: 458, volume: 480  },
-  { nameEs: 'Oxigenador',                nameEn: 'Oxygenator',                    marketK: 24,  imssK: 34,  volume: 14500 },
+  { nameKey: 'deviceStent',        marketK: 18,  imssK: 26,  volume: 8200  },
+  { nameKey: 'devicePacemaker',    marketK: 95,  imssK: 138, volume: 3400  },
+  { nameKey: 'deviceDefibrillator',marketK: 260, imssK: 370, volume: 1100  },
+  { nameKey: 'deviceValve',        marketK: 155, imssK: 212, volume: 2100  },
+  { nameKey: 'devicePump',         marketK: 340, imssK: 458, volume: 480   },
+  { nameKey: 'deviceOxygenator',   marketK: 24,  imssK: 34,  volume: 14500 },
 ]
 
 const DOT_K = 8 // each dot = 8K MXN
@@ -44,47 +43,37 @@ const ROW_H = STRIP_H * 2 + 16
 const H = 50 + DEVICES.length * ROW_H + 30
 
 export function StoryCartelCorazon() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation('storyCharts')
   const isEs = i18n.language.startsWith('es')
 
   return (
     <EditorialChartFrame
-      kicker={isEs ? 'RUBLI · Cártel del Corazón' : 'RUBLI · Cardiac Cartel'}
-      headline={isEs
-        ? 'Lo que el IMSS pagó vs. lo que vale el mercado — por dispositivo cardíaco'
-        : "What IMSS paid vs. market price — by cardiac device"}
-      lede={isEs
-        ? 'Vitalmex concentró el suministro de dispositivos cardíacos federales por más de una década. Cada punto equivale a $8,000 MXN — el sobrepago en rojo refleja una prima de monopolio del 20-40% documentada por OCDE en mercados médicos capturados.'
-        : 'Vitalmex concentrated the supply of federal cardiac devices for over a decade. Each dot equals $8,000 MXN — the red overpay reflects a 20-40% monopoly premium documented by the OECD in captured medical markets.'}
+      kicker={t('cartelCorazon.kicker')}
+      headline={t('cartelCorazon.headline')}
+      lede={t('cartelCorazon.lede')}
       stats={[
         {
-          value: '$50B',
-          label: isEs ? 'en contratos cardíacos · un solo proveedor' : 'in cardiac contracts · single vendor',
+          value: t('cartelCorazon.stat1Value'),
+          label: t('cartelCorazon.stat1Label'),
           accent: 'var(--color-risk-critical)',
         },
         {
-          value: '$10-20B',
-          label: isEs ? 'sobrepago estimado · prima OCDE 20-40%' : 'estimated overpayment · OECD 20-40% premium',
+          value: t('cartelCorazon.stat2Value'),
+          label: t('cartelCorazon.stat2Label'),
           accent: 'var(--color-risk-high)',
         },
       ]}
       finding={{
-        label: isEs ? 'HALLAZGO' : 'FINDING',
-        body: isEs
-          ? 'COFECE abrió expediente por prácticas monopólicas en el mercado de equipamiento cardíaco — los precios de IMSS estaban entre 28% y 43% encima del precio de mercado OCDE. 10 mil millones de pesos adicionales por año equivaldrían a 50 unidades de hemodinamia regionales.'
-          : 'COFECE opened a docket for monopolistic practices in the cardiac equipment market — IMSS prices were 28% to 43% above the OECD market price. 10 billion additional pesos per year would buy 50 regional hemodynamics units.',
+        label: t('cartelCorazon.findingLabel'),
+        body: t('cartelCorazon.findingBody'),
       }}
-      footer={isEs
-        ? 'Fuente: COMPRANET · Vitalmex portfolio 2010-2024 · estudios OCDE/WHO · expediente COFECE en curso'
-        : 'Source: COMPRANET · Vitalmex portfolio 2010-2024 · OECD/WHO studies · COFECE docket pending'}
+      footer={t('cartelCorazon.footer')}
     >
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label={isEs
-          ? 'Comparación de precios de dispositivos cardíacos: precio de mercado vs. precio pagado por IMSS, mostrando sobrepago'
-          : 'Cardiac device pricing comparison: market price versus IMSS paid price, showing overpayment'}
+        aria-label={t('cartelCorazon.ariaLabel')}
       >
         {/* Header */}
         <text
@@ -96,16 +85,16 @@ export function StoryCartelCorazon() {
           fontFamily="var(--font-family-mono)"
           letterSpacing="0.1em"
         >
-          {isEs ? 'DISPOSITIVO' : 'DEVICE'}
+          {t('cartelCorazon.deviceHeader')}
         </text>
         <g transform={`translate(${LABEL_W}, 20)`}>
           <circle cx={3} cy={2} r={3} fill="var(--color-text-secondary)" />
           <text x={12} y={6} fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-            {isEs ? 'PRECIO MERCADO' : 'MARKET PRICE'}
+            {t('cartelCorazon.marketLegend')}
           </text>
-          <circle cx={140} cy={2} r={3} fill="var(--color-sector-salud)" />
+          <circle cx={140} cy={2} r={3} fill="var(--color-risk-critical)" />
           <text x={149} y={6} fill="var(--color-risk-critical)" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
-            {isEs ? 'PAGADO POR IMSS (SOBREPAGO)' : 'PAID BY IMSS (OVERPAYMENT)'}
+            {t('cartelCorazon.imssLegend')}
           </text>
         </g>
 
@@ -115,11 +104,11 @@ export function StoryCartelCorazon() {
           const imssDots = Math.min(MAX_DOTS, Math.round(device.imssK / DOT_K))
           const overpay = device.imssK - device.marketK
           const premiumPct = ((overpay / device.marketK) * 100).toFixed(0)
-          const deviceName = isEs ? device.nameEs : device.nameEn
-          const unitsLabel = isEs ? 'unid/año' : 'units/yr'
+          const deviceName = t(`cartelCorazon.${device.nameKey}`)
+          const unitsLabel = t('cartelCorazon.unitsLabel')
 
           return (
-            <g key={device.nameEs}>
+            <g key={device.nameKey}>
               {/* Device label */}
               <text
                 x={LABEL_W - 8}
@@ -181,7 +170,7 @@ export function StoryCartelCorazon() {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y0 + STRIP_H + 6 + STRIP_H / 2}
                     r={DOT_R}
-                    fill={isFilled ? (isOverpay ? 'var(--color-sector-salud)' : 'var(--color-text-muted)') : 'var(--color-background-elevated)'}
+                    fill={isFilled ? (isOverpay ? 'var(--color-risk-critical)' : 'var(--color-text-muted)') : 'var(--color-background-elevated)'}
                     stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}

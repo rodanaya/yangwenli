@@ -16,17 +16,16 @@ interface YearRow {
   year: number
   daRate: number
   covid: boolean
-  labelEs?: string
-  labelEn?: string
+  labelKey?: 'labelPandemic' | 'labelRecord' | 'labelTransition'
 }
 
 const DATA: YearRow[] = [
   { year: 2019, daRate: 74.1, covid: false },
-  { year: 2020, daRate: 78.6, covid: true,  labelEs: 'pandemia',                 labelEn: 'pandemic' },
-  { year: 2021, daRate: 79.2, covid: true,  labelEs: 'pandemia',                 labelEn: 'pandemic' },
+  { year: 2020, daRate: 78.6, covid: true,  labelKey: 'labelPandemic' },
+  { year: 2021, daRate: 79.2, covid: true,  labelKey: 'labelPandemic' },
   { year: 2022, daRate: 79.8, covid: false },
-  { year: 2023, daRate: 82.2, covid: false, labelEs: 'RÉCORD · sin emergencia',  labelEn: 'RECORD · no emergency' },
-  { year: 2024, daRate: 78.9, covid: false, labelEs: 'transición',               labelEn: 'transition' },
+  { year: 2023, daRate: 82.2, covid: false, labelKey: 'labelRecord' },
+  { year: 2024, daRate: 78.9, covid: false, labelKey: 'labelTransition' },
 ]
 
 const OECD_LIMIT = 25
@@ -44,35 +43,26 @@ const W = LABEL_W + STRIP_W + VALUE_W + COVID_W + 20
 const H = 64 + DATA.length * ROW_H + 24
 
 export function StoryAnoSinExcusas() {
-  const { i18n } = useTranslation()
-  const isEs = i18n.language.startsWith('es')
+  const { t } = useTranslation('storyCharts')
 
   const oecdDotIdx = Math.round(OECD_LIMIT / 2)
   const LEFT_FOR_DOT = (i: number) => LABEL_W + i * DOT_GAP_X + DOT_GAP_X / 2
 
   return (
     <EditorialChartFrame
-      kicker={isEs ? 'RUBLI · Tasa de adjudicación directa · 2019-2024' : 'RUBLI · Direct award rate · 2019-2024'}
-      headline={isEs
-        ? '2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa'
-        : '2023: the record year without a pandemic, without a declared emergency, without operational excuse'}
-      lede={isEs
-        ? 'Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023 batió el récord histórico verificable con ninguna de las dos excusas disponibles.'
-        : 'Each row is a year. Each dot is 2pp of direct-award rate. The cyan line marks the OECD ceiling (25%). The gray background indicates years with COVID active. 2023 broke the verifiable historical record with neither of the two available excuses.'}
+      kicker={t('anoSinExcusas.kicker')}
+      headline={t('anoSinExcusas.headline')}
+      lede={t('anoSinExcusas.lede')}
       stats={[
-        { value: '82.2%', label: isEs ? 'adj. directa 2023 · récord verificable' : 'direct award 2023 · verifiable record', accent: 'var(--color-risk-critical)' },
-        { value: '3.3x', label: isEs ? 'sobre el máximo OCDE de 25%' : 'above the 25% OECD ceiling', accent: 'var(--color-oecd)' },
-        { value: '+3.0pp', label: isEs ? 'vs. 2022 · sin emergencia que justifique' : 'vs. 2022 · no emergency to justify', accent: 'var(--color-risk-high)' },
+        { value: t('anoSinExcusas.stat1Value'), label: t('anoSinExcusas.stat1Label'), accent: 'var(--color-risk-critical)' },
+        { value: t('anoSinExcusas.stat2Value'), label: t('anoSinExcusas.stat2Label'), accent: 'var(--color-oecd)' },
+        { value: t('anoSinExcusas.stat3Value'), label: t('anoSinExcusas.stat3Label'), accent: 'var(--color-risk-high)' },
       ]}
       finding={{
-        label: isEs ? 'HALLAZGO' : 'FINDING',
-        body: isEs
-          ? 'Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023, subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en excepción temporal: se volvió hábito administrativo permanente.'
-          : 'During the pandemic years (2020-2021), the rate rose 5pp. Without a pandemic, in 2023, it climbed another 3pp to the record. The health emergency did not become a temporary exception — it became a permanent administrative habit.',
+        label: t('anoSinExcusas.findingLabel'),
+        body: t('anoSinExcusas.findingBody'),
       }}
-      footer={isEs
-        ? 'Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023'
-        : 'Source: COMPRANET 2019-2024 · Structure B-D · OECD Public Procurement Report 2023'}
+      footer={t('anoSinExcusas.footer')}
       tone="bare"
     >
       <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
@@ -80,16 +70,14 @@ export function StoryAnoSinExcusas() {
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[680px]"
           role="img"
-          aria-label={isEs
-            ? 'Tasa de adjudicación directa por año 2019-2024 con contexto COVID'
-            : 'Direct award rate by year 2019-2024 with COVID context'}
+          aria-label={t('anoSinExcusas.ariaLabel')}
         >
           {/* Header */}
           <text x={LABEL_W - 8} y={36} textAnchor="end" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            {isEs ? 'AÑO' : 'YEAR'}
+            {t('anoSinExcusas.yearHeader')}
           </text>
           <text x={LABEL_W + STRIP_W / 2} y={20} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            {isEs ? 'TASA DE ADJUDICACIÓN DIRECTA (0% → 100%)' : 'DIRECT AWARD RATE (0% → 100%)'}
+            {t('anoSinExcusas.rateHeader')}
           </text>
 
           {/* OECD line label */}
@@ -113,14 +101,14 @@ export function StoryAnoSinExcusas() {
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
-              {isEs ? 'OCDE 25%' : 'OECD 25%'}
+              {t('anoSinExcusas.oecdLabel')}
             </text>
           </g>
           <text x={LABEL_W + STRIP_W + VALUE_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
             %
           </text>
           <text x={LABEL_W + STRIP_W + VALUE_W + COVID_W / 2} y={36} textAnchor="middle" fill="var(--color-text-secondary)" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-            {isEs ? 'CONTEXTO' : 'CONTEXT'}
+            {t('anoSinExcusas.contextHeader')}
           </text>
 
           {/* Rows */}
@@ -129,8 +117,8 @@ export function StoryAnoSinExcusas() {
             const cy = y0 + ROW_H / 2
             const isRecord = row.year === 2023
             const filled = Math.round(row.daRate / 2)
-            const fillColor = isRecord ? 'var(--color-sector-salud)' : 'var(--color-risk-medium)'
-            const rowLabel = isEs ? row.labelEs : row.labelEn
+            const fillColor = isRecord ? 'var(--color-risk-critical)' : 'var(--color-risk-medium)'
+            const rowLabel = row.labelKey ? t(`anoSinExcusas.${row.labelKey}`) : undefined
 
             return (
               <g key={row.year}>
@@ -142,9 +130,9 @@ export function StoryAnoSinExcusas() {
                     width={STRIP_W + VALUE_W + 8}
                     height={ROW_H - 8}
                     rx={4}
-                    fill="var(--color-sector-salud)"
+                    fill="var(--color-risk-critical)"
                     fillOpacity={0.06}
-                    stroke="var(--color-sector-salud)"
+                    stroke="var(--color-risk-critical)"
                     strokeOpacity={0.3}
                     strokeWidth={0.75}
                   />
@@ -155,7 +143,7 @@ export function StoryAnoSinExcusas() {
                   x={LABEL_W - 10}
                   y={cy - 4}
                   textAnchor="end"
-                  fill={isRecord ? 'var(--color-risk-critical)' : '#e4e4e7'}
+                  fill={isRecord ? 'var(--color-risk-critical)' : 'var(--color-text-primary)'}
                   fontSize={isRecord ? 20 : 16}
                   fontFamily="var(--font-family-serif)"
                   fontWeight={isRecord ? 800 : 600}
@@ -217,7 +205,7 @@ export function StoryAnoSinExcusas() {
                     width={COVID_W - 16}
                     height={ROW_H - 12}
                     rx={3}
-                    fill={row.covid ? 'var(--color-text-secondary)' : '#18181b'}
+                    fill={row.covid ? 'var(--color-text-secondary)' : 'var(--color-background)'}
                     fillOpacity={row.covid ? 0.6 : 0.8}
                     stroke={row.covid ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
                     strokeWidth={0.75}
@@ -226,15 +214,13 @@ export function StoryAnoSinExcusas() {
                     x={(COVID_W - 16) / 2}
                     y={(ROW_H - 12) / 2 + 3}
                     textAnchor="middle"
-                    fill={row.covid ? '#e4e4e7' : 'var(--color-text-muted)'}
+                    fill={row.covid ? 'var(--color-text-primary)' : 'var(--color-text-muted)'}
                     fontSize={9}
                     fontFamily="var(--font-family-mono)"
                     fontWeight={600}
                     letterSpacing="0.05em"
                   >
-                    {isEs
-                      ? (row.covid ? 'COVID activo' : 'sin emergencia')
-                      : (row.covid ? 'COVID active' : 'no emergency')}
+                    {row.covid ? t('anoSinExcusas.covidActive') : t('anoSinExcusas.noEmergency')}
                   </text>
                 </g>
               </g>
@@ -250,9 +236,7 @@ export function StoryAnoSinExcusas() {
             fontSize={9}
             fontFamily="var(--font-family-mono)"
           >
-            {isEs
-              ? 'cada punto = 2pp · fila roja = año récord sin emergencia activa'
-              : 'each dot = 2pp · red row = record year with no active emergency'}
+            {t('anoSinExcusas.bottomLegend')}
           </text>
         </svg>
       </div>

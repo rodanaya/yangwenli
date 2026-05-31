@@ -114,14 +114,14 @@ export function StorySixSigmaHacienda() {
             })}
 
             {/* Result labels */}
-            <text x={65} y={185} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={65} y={185} textAnchor="middle" fill="var(--color-risk-critical)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
               92%
             </text>
             <text x={65} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">
               {t('sixSigma.wonSuffix')}
             </text>
 
-            <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={22} fontFamily="var(--font-family-mono)" fontWeight={700}>
+            <text x={215} y={185} textAnchor="middle" fill="var(--color-oecd)" fontSize={28} fontFamily="var(--font-family-serif)" fontStyle="italic" fontWeight={800} style={{ fontVariantNumeric: 'tabular-nums' }}>
               16%
             </text>
             <text x={215} y={201} textAnchor="middle" fill="var(--color-text-muted)" fontSize={9} fontFamily="var(--font-family-mono)">

@@ -146,7 +146,7 @@ export function StoryTrenMaya() {
                   x={LABEL_W - 24}
                   y={cy + 3}
                   textAnchor="middle"
-                  fill="#fff"
+                  fill="var(--color-background)"
                   fontSize={7}
                   fontFamily="var(--font-family-mono)"
                   fontWeight={700}
@@ -196,7 +196,7 @@ export function StoryTrenMaya() {
                       width={STRIP_W}
                       height={18}
                       rx={3}
-                      fill="#1e293b"
+                      fill="var(--color-background-elevated)"
                       stroke="var(--color-sector-educacion)"
                       strokeWidth={0.75}
                       strokeDasharray="3 3"
@@ -237,9 +237,11 @@ export function StoryTrenMaya() {
                   <text
                     textAnchor="start"
                     fill={color}
-                    fontSize={14}
-                    fontFamily="var(--font-family-mono)"
-                    fontWeight={700}
+                    fontSize={18}
+                    fontFamily="var(--font-family-serif)"
+                    fontStyle="italic"
+                    fontWeight={800}
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
                     y={-2}
                   >
                     {sec.valueB.toFixed(1)}B

@@ -1,11 +1,11 @@
 /**
- * StoryCuartaAdjudicacion — Pure SVG 4-ring donut.
+ * StoryCuartaAdjudicacion — Stepped horizontal bar comparison.
  *
- * Four concentric rings, each representing a presidential era's average
- * direct-award rate. The innermost ring is Calderón; then Peña Nieto;
- * then AMLO sexenio average; the outer ring is AMLO's 2023 peak.
- * Each ring's arc sweep equals its DA percentage — reader sees the
- * staircase literally spiraling outward.
+ * Four horizontal bars stacked top-to-bottom (Calderón → Peña Nieto →
+ * AMLO average → AMLO 2023 peak). Each bar's length equals the era's
+ * direct-award rate; an OECD 25% tick marks the ceiling. Replaces a
+ * concentric ring layout that conflated radius with severity and used
+ * raw-hex track colors.
  */
 
 import { motion } from 'framer-motion'
@@ -13,29 +13,23 @@ import { useTranslation } from 'react-i18next'
 import { EditorialChartFrame } from '../EditorialChartFrame'
 
 const RINGS = [
-  { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: 'var(--color-sector-educacion)', track: '#1e3a8a' },
-  { era: 'Peña Nieto',       years: '2013-2018', rate: 73.1, color: 'var(--color-risk-critical)', track: '#7f1d1d' },
-  { era: 'AMLO (promedio)',  years: '2019-2024', rate: 79.4, color: 'var(--color-risk-high)', track: '#78350f' },
-  { era: 'AMLO · pico 2023', years: '2023',      rate: 82.2, color: 'var(--color-sector-salud)', track: '#450a0a' },
+  { era: 'Calderón',         years: '2007-2012', rate: 42.3, color: 'var(--color-era-calderon, #60a5fa)' },
+  { era: 'Peña Nieto',       years: '2013-2018', rate: 73.1, color: 'var(--color-era-pena, #f87171)' },
+  { era: 'AMLO (promedio)',  years: '2019-2024', rate: 79.4, color: 'var(--color-era-amlo, #fbbf24)' },
+  { era: 'AMLO · pico 2023', years: '2023',      rate: 82.2, color: 'var(--color-risk-critical)' },
 ]
 
-const CX = 220
-const CY = 220
-const STROKE = 16
-const GAP = 6
-const INNER_R = 50
+// Stepped horizontal bar geometry
+const CHART_W = 560
+const ROW_H = 56
+const ROW_GAP = 14
+const LABEL_W = 160
+const VALUE_W = 86
+const BAR_W = CHART_W - LABEL_W - VALUE_W
+const BAR_H = 18
+const CHART_H = RINGS.length * (ROW_H + ROW_GAP) + 28
 
-function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
-  const start = polarToCartesian(cx, cy, r, endAngle)
-  const end = polarToCartesian(cx, cy, r, startAngle)
-  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`
-}
-
-function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
-  const rad = ((deg - 90) * Math.PI) / 180
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
-}
+const OECD_X = LABEL_W + (25 / 100) * BAR_W
 
 export function StoryCuartaAdjudicacion() {
   const { t } = useTranslation('storyCharts')
@@ -48,95 +42,109 @@ export function StoryCuartaAdjudicacion() {
       footer={t('cuartaAdjudicacion.footer')}
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
-        {/* The donut */}
+        {/* Stepped horizontal bars */}
         <div className="flex items-center justify-center">
           <svg
-            viewBox="0 0 440 440"
-            className="w-full max-w-md h-auto"
+            viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+            className="w-full max-w-2xl h-auto"
             role="img"
             aria-label={t('cuartaAdjudicacion.ariaLabel')}
           >
-            {/* OECD 25% reference ring (faint dashed) */}
-            <circle
-              cx={CX}
-              cy={CY}
-              r={INNER_R + RINGS.length * (STROKE + GAP) + 10}
-              fill="none"
+            {/* OECD 25% reference line, drawn first so bars sit on top */}
+            <line
+              x1={OECD_X}
+              x2={OECD_X}
+              y1={4}
+              y2={CHART_H - 12}
               stroke="var(--color-oecd)"
-              strokeOpacity={0.35}
               strokeWidth={1}
               strokeDasharray="3 4"
+              opacity={0.6}
             />
+            <text
+              x={OECD_X}
+              y={CHART_H - 2}
+              textAnchor="middle"
+              fill="var(--color-oecd)"
+              fontSize={9}
+              fontFamily="var(--font-family-mono)"
+              letterSpacing="0.08em"
+            >
+              {`OECD 25%`}
+            </text>
 
             {RINGS.map((ring, i) => {
-              const r = INNER_R + i * (STROKE + GAP) + STROKE / 2
-              const sweep = (ring.rate / 100) * 360
-              // OECD marker at 25%
-              const oecdSweep = (25 / 100) * 360
+              const y = 8 + i * (ROW_H + ROW_GAP)
+              const barLen = (ring.rate / 100) * BAR_W
 
               return (
                 <g key={ring.era}>
-                  {/* Track (full circle, faint) */}
-                  <circle
-                    cx={CX}
-                    cy={CY}
-                    r={r}
-                    fill="none"
-                    stroke={ring.track}
-                    strokeOpacity={0.4}
-                    strokeWidth={STROKE}
+                  {/* Era label */}
+                  <text
+                    x={LABEL_W - 10}
+                    y={y + BAR_H / 2 + 4}
+                    textAnchor="end"
+                    fill="var(--color-text-secondary)"
+                    fontSize={11}
+                    fontFamily="var(--font-family-mono)"
+                    fontWeight={600}
+                  >
+                    {ring.era}
+                  </text>
+                  <text
+                    x={LABEL_W - 10}
+                    y={y + BAR_H / 2 + 18}
+                    textAnchor="end"
+                    fill="var(--color-text-muted)"
+                    fontSize={9}
+                    fontFamily="var(--font-family-mono)"
+                  >
+                    {ring.years}
+                  </text>
+
+                  {/* Track (full bar, neutral) */}
+                  <rect
+                    x={LABEL_W}
+                    y={y}
+                    width={BAR_W}
+                    height={BAR_H}
+                    fill="var(--color-background-elevated)"
+                    stroke="var(--color-border-hover)"
+                    strokeWidth={0.5}
+                    rx={2}
                   />
-                  {/* Filled arc = DA rate */}
-                  <motion.path
-                    d={arcPath(CX, CY, r, 0, sweep)}
-                    fill="none"
-                    stroke={ring.color}
-                    strokeWidth={STROKE}
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.2, delay: i * 0.25, ease: 'easeOut' }}
+                  {/* Filled bar = DA rate */}
+                  <motion.rect
+                    x={LABEL_W}
+                    y={y}
+                    height={BAR_H}
+                    fill={ring.color}
+                    rx={2}
+                    initial={{ width: 0 }}
+                    animate={{ width: barLen }}
+                    transition={{ duration: 1.0, delay: i * 0.18, ease: 'easeOut' }}
                   />
-                  {/* OECD tick on this ring */}
-                  <line
-                    x1={CX + (r - STROKE / 2 - 2) * Math.sin((oecdSweep * Math.PI) / 180)}
-                    y1={CY - (r - STROKE / 2 - 2) * Math.cos((oecdSweep * Math.PI) / 180)}
-                    x2={CX + (r + STROKE / 2 + 2) * Math.sin((oecdSweep * Math.PI) / 180)}
-                    y2={CY - (r + STROKE / 2 + 2) * Math.cos((oecdSweep * Math.PI) / 180)}
-                    stroke="var(--color-oecd)"
-                    strokeWidth={1.5}
-                  />
+
+                  {/* Value */}
+                  <text
+                    x={LABEL_W + BAR_W + 10}
+                    y={y + BAR_H / 2 + 6}
+                    fill={ring.color}
+                    fontSize={20}
+                    fontFamily="'Playfair Display', serif"
+                    fontStyle="italic"
+                    fontWeight={800}
+                    style={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {ring.rate}%
+                  </text>
                 </g>
               )
             })}
-
-            {/* Center text */}
-            <text
-              x={CX}
-              y={CY - 8}
-              textAnchor="middle"
-              fill="var(--color-text-muted)"
-              fontSize={9}
-              fontFamily="var(--font-family-mono)"
-              letterSpacing="0.1em"
-            >
-              {t('cuartaAdjudicacion.centerLabel')}
-            </text>
-            <text
-              x={CX}
-              y={CY + 14}
-              textAnchor="middle"
-              fill="var(--color-oecd)"
-              fontSize={22}
-              fontFamily="var(--font-family-mono)"
-              fontWeight={700}
-            >
-              25%
-            </text>
           </svg>
         </div>
 
-        {/* Ring legend */}
+        {/* Legend */}
         <div className="flex flex-col justify-center gap-3 min-w-[200px]">
           {RINGS.map((ring, i) => (
             <motion.div
@@ -148,7 +156,10 @@ export function StoryCuartaAdjudicacion() {
               style={{ borderColor: ring.color }}
             >
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-mono font-bold" style={{ color: ring.color }}>
+                <span
+                  className="font-playfair-display italic font-extrabold tabular-nums text-2xl"
+                  style={{ color: ring.color }}
+                >
                   {ring.rate}%
                 </span>
                 <span className="text-[10px] font-mono text-text-muted">

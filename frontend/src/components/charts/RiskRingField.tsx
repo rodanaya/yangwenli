@@ -16,12 +16,13 @@
 
 import { motion } from 'framer-motion'
 import { halton, mulberry32 } from '@/lib/particle'
+import { RISK_COLORS } from '@/lib/constants'
 
 const DOT = {
-  critical: { r: 2.2, fill: '#ef4444', alpha: 0.92 },
-  high:     { r: 1.6, fill: '#f59e0b', alpha: 0.78 },
-  medium:   { r: 1.1, fill: '#a16207', alpha: 0.55 },
-  low:      { r: 0.7, fill: '#52525b', alpha: 0.38 },
+  critical: { r: 2.2, fill: RISK_COLORS.critical, alpha: 0.92 },
+  high:     { r: 1.6, fill: RISK_COLORS.high,     alpha: 0.78 },
+  medium:   { r: 1.1, fill: RISK_COLORS.medium,   alpha: 0.55 },
+  low:      { r: 0.7, fill: RISK_COLORS.low,      alpha: 0.38 },
 } as const
 
 type Level = keyof typeof DOT
@@ -143,7 +144,15 @@ export function RiskRingField({
       aria-label="Risk distribution ring field"
     >
       {/* ── Faint guide ring ─────────────────────────────────────────────── */}
-      <circle cx={cx} cy={cy} r={RING_OUTER} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={RING_SPAN} />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={RING_OUTER}
+        fill="none"
+        stroke="var(--color-border)"
+        strokeOpacity={0.35}
+        strokeWidth={RING_SPAN}
+      />
 
       {/* ── Dots (low → critical, so critical paints on top) ─────────────── */}
       {(['low', 'medium', 'high', 'critical'] as Level[]).flatMap((paintLevel) =>
@@ -290,7 +299,7 @@ export function RiskRingField({
         <text
           x={cx}
           y={cy - 5}
-          fill="rgba(255,255,255,0.85)"
+          fill="var(--color-text-primary)"
           fontSize={11}
           fontFamily="var(--font-family-mono, monospace)"
           fontWeight="bold"
@@ -304,7 +313,7 @@ export function RiskRingField({
         <text
           x={cx}
           y={cy + 9}
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontSize={7.5}
           fontFamily="var(--font-family-mono, monospace)"
           textAnchor="middle"

@@ -10,7 +10,9 @@
 
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
+import { cn, formatCompactMXN } from '@/lib/utils'
+import { RISK_COLORS } from '@/lib/constants'
+import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 
 // =============================================================================
 // Static data — 23-year aggregate from RUBLI_NORMALIZED.db
@@ -41,9 +43,9 @@ const DEC_AMOUNT = 4873188
 // =============================================================================
 
 function barColor(month: number): string {
-  if (month === 12) return '#f87171'   // December — danger red
-  if (month === 11 || month === 1) return '#fb923c' // adjacent months — orange
-  return '#3b82f6'                      // all others — blue
+  if (month === 12) return RISK_COLORS.critical   // December — danger red
+  if (month === 11 || month === 1) return RISK_COLORS.high // adjacent months — high-tier amber
+  return 'var(--color-sector-educacion)'                      // all others — sector identity blue
 }
 
 // =============================================================================
@@ -85,9 +87,14 @@ export function SeasonalityCalendar() {
   }, [metric, t])
 
   const decRiskPctHigher = Math.round(((DEC_RISK - OCT_RISK) / OCT_RISK) * 100)
-  const decAmountM = (DEC_AMOUNT / 1_000_000).toFixed(2)
+  const decAmountLabel = formatCompactMXN(DEC_AMOUNT)
 
   return (
+    <EditorialChartFrame
+      kicker={t('seasonality.kicker', { defaultValue: 'RUBLI · Stagionalidad' })}
+      headline={t('seasonality.headline', { defaultValue: 'The December Effect' })}
+      footer={t('seasonality.footer', { defaultValue: 'Source: COMPRANET 2002–2025 · 12-month aggregate' })}
+    >
     <div className="w-full max-w-md mx-auto space-y-4">
       {/* Toggle */}
       <div className="flex items-center justify-center gap-2">
@@ -150,8 +157,8 @@ export function SeasonalityCalendar() {
                           cx={cx}
                           cy={cy}
                           r={DR}
-                          fill={isFilled ? color : '#f3f1ec'}
-                          stroke={isFilled ? undefined : '#e2ddd6'}
+                          fill={isFilled ? color : 'var(--color-background-elevated)'}
+                          stroke={isFilled ? undefined : 'var(--color-border)'}
                           strokeWidth={isFilled ? 0 : 0.5}
                           fillOpacity={isFilled ? (d.month === 12 ? 1 : 0.75) : 1}
                         />
@@ -162,7 +169,7 @@ export function SeasonalityCalendar() {
                       y={HEIGHT + 12}
                       fontSize={9}
                       fontFamily="monospace"
-                      fill={d.month === 12 ? '#f87171' : '#71717a'}
+                      fill={d.month === 12 ? RISK_COLORS.critical : 'var(--color-text-muted)'}
                       fontWeight={d.month === 12 ? 700 : 400}
                       textAnchor="middle"
                     >
@@ -174,9 +181,15 @@ export function SeasonalityCalendar() {
             </svg>
           )
         })()}
-        <p className="mt-3 text-center text-xs font-mono text-text-muted">
+        <p className="mt-3 text-center text-xs font-mono text-text-muted flex items-baseline justify-center gap-2">
           <span className="text-risk-critical font-bold">{t('months.Dec')}</span>
-          {' '}+{decRiskPctHigher}% {t('seasonality.toggle_risk')} {t('seasonality.center_vsAvg')}
+          <span
+            className="font-playfair-display italic font-extrabold tabular-nums text-2xl"
+            style={{ color: RISK_COLORS.critical }}
+          >
+            +{decRiskPctHigher}%
+          </span>
+          <span>{t('seasonality.toggle_risk')} {t('seasonality.center_vsAvg')}</span>
         </p>
       </div>
 
@@ -186,8 +199,15 @@ export function SeasonalityCalendar() {
           DEC
         </span>
         <p className="text-[11px] text-text-secondary leading-relaxed">
-          {t('seasonality.annotation_label')} <span className="text-risk-critical font-bold">+{decRiskPctHigher}%</span> {t('seasonality.toggle_risk')} ·{' '}
-          Avg MX${decAmountM}M per contract
+          {t('seasonality.annotation_label')}{' '}
+          <span
+            className="font-playfair-display italic font-extrabold tabular-nums"
+            style={{ color: RISK_COLORS.critical }}
+          >
+            +{decRiskPctHigher}%
+          </span>{' '}
+          {t('seasonality.toggle_risk')} ·{' '}
+          {t('seasonality.avgPerContract', { defaultValue: 'Avg' })} {decAmountLabel} {t('seasonality.perContract', { defaultValue: 'per contract' })}
         </p>
       </div>
 
@@ -212,5 +232,6 @@ export function SeasonalityCalendar() {
         </span>
       </div>
     </div>
+    </EditorialChartFrame>
   )
 }

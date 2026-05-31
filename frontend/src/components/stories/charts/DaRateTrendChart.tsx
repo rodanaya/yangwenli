@@ -29,16 +29,18 @@ const DATA = [
   { year: 2024, rate: 79.3, era: 'amlo' },
 ]
 
+// Era-specific tokens (not risk semantics, not sector identity).
+// Defined as CSS variables in tokens; fallback hexes preserve previous palette.
 const ERA_FILL: Record<string, string> = {
-  calderon: '#1e3a8a', // navy blue
-  pena:     '#7f1d1d', // dark red
-  amlo:     '#78350f', // dark amber
+  calderon: 'var(--color-era-calderon-band, #1e3a8a)',
+  pena:     'var(--color-era-pena-band, #7f1d1d)',
+  amlo:     'var(--color-era-amlo-band, #78350f)',
 }
 
 const ERA_DOT: Record<string, string> = {
-  calderon: 'var(--color-sector-educacion)',
-  pena:     'var(--color-risk-critical)',
-  amlo:     'var(--color-risk-high)',
+  calderon: 'var(--color-era-calderon, #60a5fa)',
+  pena:     'var(--color-era-pena, #f87171)',
+  amlo:     'var(--color-era-amlo, #fbbf24)',
 }
 
 const ERA_LABEL: Record<string, string> = {
@@ -202,7 +204,7 @@ export function DaRateTrendChart() {
                 cy={yFor(d.rate)}
                 r={isPeak ? 6 : 4}
                 fill={ERA_DOT[d.era]}
-                stroke={isPeak ? '#fef3c7' : '#09090b'}
+                stroke={isPeak ? 'var(--color-background-elevated)' : 'var(--color-background)'}
                 strokeWidth={isPeak ? 2 : 1}
               />
               {isPeak && (

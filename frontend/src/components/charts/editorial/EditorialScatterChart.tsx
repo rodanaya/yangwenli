@@ -101,11 +101,11 @@ export function EditorialScatterChart<T extends object>({
           wrapperClassName="!outline-none"
           cursor={{ strokeDasharray: '3 3', stroke: 'var(--color-border-hover)' }}
           contentStyle={{
-            background: '#1a1714',
+            background: 'var(--color-background-elevated)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 2,
             padding: '8px 10px',
-            color: '#faf9f6',
+            color: 'var(--color-text-primary)',
             fontSize: 11,
             fontFamily: 'var(--font-family-mono)',
           }}

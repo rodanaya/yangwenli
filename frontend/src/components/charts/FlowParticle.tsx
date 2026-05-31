@@ -11,6 +11,7 @@
 import { useMemo } from 'react'
 import { halton } from '@/lib/particle'
 import { FONT_MONO, HAIRLINE_STROKE, RISK_PALETTE } from '@/lib/editorial'
+import { RISK_COLORS } from '@/lib/constants'
 
 export interface FlowNode { id: string; label: string; value?: number }
 export interface FlowLink {
@@ -31,6 +32,10 @@ interface FlowParticleProps {
   className?: string
   sourceLabel?: string
   targetLabel?: string
+  /** Approximate MXN value represented by each dot, used for the legend caption. */
+  mxnPerDot?: number
+  /** Override the scale legend caption entirely. */
+  scaleLegend?: string
 }
 
 export function FlowParticle({
@@ -43,6 +48,8 @@ export function FlowParticle({
   className,
   sourceLabel = 'from',
   targetLabel = 'to',
+  mxnPerDot,
+  scaleLegend,
 }: FlowParticleProps) {
   const { srcY, tgtY, particles } = useMemo(() => {
     const pad = 20
@@ -98,6 +105,14 @@ export function FlowParticle({
   const srcX = pad + 90
   const tgtX = width - pad - 90
 
+  // Scale legend caption — defaults to "each dot ≈ X MDP" when mxnPerDot provided
+  const legendCaption = scaleLegend
+    ?? (typeof mxnPerDot === 'number'
+        ? `Each dot ≈ ${(mxnPerDot / 1_000_000).toFixed(0)} MDP`
+        : null)
+  const legendCx = width / 2 - 36
+  const legendY = height - 6
+
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
@@ -113,10 +128,10 @@ export function FlowParticle({
       <line x1={tgtX} y1={pad} x2={tgtX} y2={height - pad} stroke={HAIRLINE_STROKE} />
 
       {/* Column headers */}
-      <text x={srcX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
+      <text x={srcX} y={pad - 4} fill="var(--color-text-muted)" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
         {sourceLabel.toUpperCase()}
       </text>
-      <text x={tgtX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
+      <text x={tgtX} y={pad - 4} fill="var(--color-text-muted)" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
         {targetLabel.toUpperCase()}
       </text>
 
@@ -127,7 +142,7 @@ export function FlowParticle({
           cx={p.x}
           cy={p.y}
           r={p.critical ? 0.9 : 0.7}
-          fill={p.critical ? RISK_PALETTE.critical : '#f59e0b'}
+          fill={p.critical ? RISK_PALETTE.critical : RISK_COLORS.high}
           fillOpacity={p.alpha}
         />
       ))}
@@ -149,6 +164,24 @@ export function FlowParticle({
           {n.label.slice(0, 20)}
         </text>
       ))}
+      {/* Scale legend — sample dot + caption */}
+      {legendCaption && (
+        <g aria-label="Scale legend">
+          <circle cx={legendCx} cy={legendY - 2} r={0.9} fill={RISK_COLORS.high} fillOpacity={0.85} />
+          <text
+            x={legendCx + 8}
+            y={legendY}
+            fill="var(--color-text-muted)"
+            fontSize={8}
+            textAnchor="start"
+            letterSpacing="0.08em"
+            fontFamily={FONT_MONO}
+          >
+            {legendCaption.toUpperCase()}
+          </text>
+        </g>
+      )}
+
       {/* Target labels — mono for institution identifiers */}
       {targets.map((n) => (
         <text

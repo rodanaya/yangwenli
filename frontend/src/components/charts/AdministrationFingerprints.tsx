@@ -141,7 +141,12 @@ function InsightCard({ label, value, note, color }: {
   return (
     <div className="flex flex-col gap-1 rounded-sm border border-border bg-background-card/60 p-4">
       <p className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-[0.15em]">{label}</p>
-      <p className="text-base font-bold font-mono" style={{ color }}>{value}</p>
+      <p
+        className="font-playfair-display italic font-extrabold tabular-nums text-xl leading-tight"
+        style={{ color }}
+      >
+        {value}
+      </p>
       <p className="text-[11px] text-text-secondary">{note}</p>
     </div>
   )
@@ -187,7 +192,7 @@ export default function AdministrationFingerprints({ adminAggs }: Administration
     <div className="space-y-4">
       <div>
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
-          RUBLI v0.8.5 · Procurement Governance
+          {t('fingerprints.kicker', { defaultValue: 'RUBLI v0.8.5 · Procurement Governance' })}
         </p>
         <h2 className="text-base font-bold text-text-primary font-mono tracking-tight">
           {t('fingerprints.title')}
@@ -214,19 +219,19 @@ export default function AdministrationFingerprints({ adminAggs }: Administration
           label={t('fingerprints.insight_lowest_risk')}
           value={`${DISPLAY_NAMES[lowestHR.name] ?? lowestHR.name} — ${lowestHR.highRiskPct.toFixed(1)}%`}
           note={t('radar.insightLowestNote')}
-          color={ADMIN_META[lowestHR.name]?.accentColorVar ?? '#ef4444'}
+          color={ADMIN_META[lowestHR.name]?.accentColorVar ?? 'var(--color-risk-critical)'}
         />
         <InsightCard
           label={t('fingerprints.insight_highest_da')}
           value={`${DISPLAY_NAMES[highestDA.name] ?? highestDA.name} — ${highestDA.directAwardPct.toFixed(0)}%`}
           note={t('radar.insightHighestDaNote')}
-          color={ADMIN_META[highestDA.name]?.accentColorVar ?? '#f59e0b'}
+          color={ADMIN_META[highestDA.name]?.accentColorVar ?? 'var(--color-risk-high)'}
         />
         <InsightCard
           label={t('fingerprints.insight_biggest_spender')}
           value={`${DISPLAY_NAMES[biggestSpender.name] ?? biggestSpender.name} — ${formatCompactMXN(biggestSpender.totalValue)}`}
           note={t('radar.insightBiggestNote')}
-          color={ADMIN_META[biggestSpender.name]?.accentColorVar ?? '#64748b'}
+          color={ADMIN_META[biggestSpender.name]?.accentColorVar ?? 'var(--color-text-muted)'}
         />
       </div>
     </div>

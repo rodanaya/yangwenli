@@ -20,8 +20,8 @@ interface EraRow {
 }
 
 const DATA: EraRow[] = [
-  { era: 'Calderon',   spendTn: 2.41, daPct: 42.3, contracts: '481K',  cohort: '2007-2012' },
-  { era: 'Pena Nieto', spendTn: 3.06, daPct: 73.1, contracts: '1.23M', cohort: '2013-2018' },
+  { era: 'Calderón',   spendTn: 2.41, daPct: 42.3, contracts: '481K',  cohort: '2007-2012' },
+  { era: 'Peña Nieto', spendTn: 3.06, daPct: 73.1, contracts: '1.23M', cohort: '2013-2018' },
   { era: 'AMLO',       spendTn: 2.76, daPct: 79.4, contracts: '1.05M', cohort: '2019-2024' },
 ]
 
@@ -31,7 +31,7 @@ const DA_DOTS = 50             // each dot = 2pp (0-100% domain)
 const DA_DOT_PER_PCT = DA_DOTS / 100
 
 const SPEND_COLOR = 'var(--color-text-muted)'
-const DA_COLOR = 'var(--color-sector-salud)'
+const DA_COLOR = 'var(--color-risk-critical)'
 
 const DOT_R = 3
 const DOT_GAP = 8

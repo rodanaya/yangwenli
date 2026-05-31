@@ -10,6 +10,8 @@
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { EditorialChartFrame } from '../EditorialChartFrame'
+import { DotStrip } from '@/components/charts/editorial'
+import { formatCompactMXN } from '@/lib/utils'
 
 interface Institution {
   id: string
@@ -144,7 +146,7 @@ export function StoryTrianguloFarmaceutico() {
               animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
             >
-              ${edge.value}B
+              {formatCompactMXN(edge.value * 1_000_000_000)}
             </motion.text>
           )
         })}
@@ -177,7 +179,7 @@ export function StoryTrianguloFarmaceutico() {
               fontSize={9}
               fontFamily="var(--font-family-mono)"
             >
-              {`$${inst.spend}B ${t('trianguloFarmaceutico.spendSuffix')}`}
+              {`${formatCompactMXN(inst.spend * 1_000_000_000)} ${t('trianguloFarmaceutico.spendSuffix')}`}
             </text>
           </motion.g>
         ))}
@@ -208,7 +210,7 @@ export function StoryTrianguloFarmaceutico() {
               fontFamily="var(--font-family-mono)"
               fontWeight={700}
             >
-              ${v.total}B
+              {formatCompactMXN(v.total * 1_000_000_000)}
             </text>
             <text
               x={v.x}
@@ -236,44 +238,21 @@ export function StoryTrianguloFarmaceutico() {
         </g>
       </svg>
 
-      {/* DA rate dot strips */}
+      {/* DA rate dot strips — canonical DotStrip primitive (bible §4) */}
       <div className="space-y-2 pt-2 border-t border-border">
         <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
           {t('trianguloFarmaceutico.daStripsLabel')}
         </p>
-        {VENDORS.map((v) => {
-          const filled = Math.round(v.daRate / 2)
-          return (
-            <div key={v.id} className="flex items-center gap-3">
-              <div className="w-32 text-[11px] font-mono text-text-secondary">{v.label}</div>
-              <svg aria-hidden="true" viewBox="0 0 420 14" className="flex-1 h-3">
-                {Array.from({ length: 50 }).map((_, i) => {
-                  const isFilled = i < filled
-                  const isOecd = i === 12
-                  return (
-                    <g key={i}>
-                      {isOecd && (
-                        <line x1={i * 8 + 4} y1={0} x2={i * 8 + 4} y2={14} stroke="var(--color-oecd)" strokeWidth={0.7} strokeDasharray="2 2" />
-                      )}
-                      <motion.circle
-                        cx={i * 8 + 4}
-                        cy={7}
-                        r={3}
-                        fill={isFilled ? v.color : 'var(--color-background-elevated)'}
-                        stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
-                        strokeWidth={isFilled ? 0 : 0.5}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.15, delay: i * 0.01 }}
-                      />
-                    </g>
-                  )
-                })}
-              </svg>
-              <div className="w-12 text-[11px] font-mono text-risk-critical text-right">{v.daRate}%</div>
-            </div>
-          )
-        })}
+        <DotStrip
+          rows={VENDORS.map((v) => ({
+            label: v.label,
+            fraction: v.daRate / 100,
+            colorRaw: v.color,
+            valueLabel: `${v.daRate}%`,
+          }))}
+          oecdMark={{ fraction: 0.24 }}
+          labelWidth={128}
+        />
       </div>
     </EditorialChartFrame>
   )

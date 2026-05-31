@@ -13,18 +13,20 @@ import { useMemo, useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
+import { ADMIN_COLORS } from '@/lib/administrations'
 import { formatCompactMXN, getLocale } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
+import EditorialChartFrame from '@/components/stories/EditorialChartFrame'
 
 const YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2002 + i)
 
 const ADMINS = [
-  { name: 'Fox', start: 2002, end: 2005, color: '#3b82f6' },
-  { name: 'Calderon', start: 2006, end: 2011, color: '#22d3ee' },
-  { name: 'EPN', start: 2012, end: 2017, color: '#ea580c' },
-  { name: 'AMLO', start: 2018, end: 2023, color: '#8b5cf6' },
-  { name: 'Sheinbaum', start: 2024, end: 2025, color: '#ec4899' },
+  { name: 'Fox',        start: 2002, end: 2005, color: ADMIN_COLORS.fox },
+  { name: 'Calderon',   start: 2006, end: 2011, color: ADMIN_COLORS.calderon },
+  { name: 'EPN',        start: 2012, end: 2017, color: ADMIN_COLORS.epn },
+  { name: 'AMLO',       start: 2018, end: 2023, color: ADMIN_COLORS.amlo },
+  { name: 'Sheinbaum',  start: 2024, end: 2025, color: ADMIN_COLORS.sheinbaum },
 ]
 
 type CellMetric = 'risk' | 'high_risk_pct' | 'direct_award_pct'
@@ -37,6 +39,10 @@ type MetricLabels = Record<CellMetric, string>
  * Uses darker, muted versions of RISK_COLORS for the cell background.
  * The full-brightness RISK_COLORS are reserved for the legend.
  */
+// Low maps to a neutral warm-cream tile (never green). Medium/high/critical
+// come straight from RISK_COLORS so legend, cells, and tooltip all agree.
+const CELL_LOW_BG = '#e2ddd6' // warm neutral baseline; not a risk tier color
+
 function metricColor(value: number, metric: CellMetric): string {
   let t: number
   if (metric === 'risk') {
@@ -45,12 +51,11 @@ function metricColor(value: number, metric: CellMetric): string {
     t = Math.min(value / 100, 1)
   }
   if (t === 0) return 'transparent'
-  // Bible §2: cream-mode ramp, no green for low. Warm zinc → amber → red.
   // Thresholds aligned to v0.8.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
-  if (t < 0.25) return '#e2ddd6'   // warm border — low (zinc, not green)
-  if (t < 0.40) return '#a16207'   // medium (bible canonical)
-  if (t < 0.60) return '#f59e0b'   // high (bible canonical)
-  return '#ef4444'                 // critical (bible canonical)
+  if (t < 0.25) return CELL_LOW_BG
+  if (t < 0.40) return RISK_COLORS.medium
+  if (t < 0.60) return RISK_COLORS.high
+  return RISK_COLORS.critical
 }
 
 interface TooltipData {
@@ -65,7 +70,8 @@ interface TooltipData {
 }
 
 export function SectorRiskHeatmap() {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [metric, setMetric] = useState<CellMetric>('risk')
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
@@ -132,7 +138,26 @@ export function SectorRiskHeatmap() {
   const CELL_H = 20
   const LABEL_W = 100
 
+  const kicker = lang === 'en' ? 'RUBLI · SECTOR × YEAR' : 'RUBLI · SECTOR × AÑO'
+  const headline = lang === 'en'
+    ? 'Sector risk over two decades'
+    : 'Riesgo sectorial a lo largo de dos décadas'
+  const subline = lang === 'en'
+    ? '12 sectors × 24 years · administration bands across the top'
+    : '12 sectores × 24 años · bandas de administración en la parte superior'
+  const source = lang === 'en'
+    ? 'Source: RUBLI analysis · COMPRANET 2002–2025 · risk model v0.8.5'
+    : 'Fuente: análisis RUBLI · COMPRANET 2002–2025 · modelo de riesgo v0.8.5'
+
   return (
+    <EditorialChartFrame
+      kicker={kicker}
+      headline={headline}
+      subline={subline}
+      footer={source}
+      tone="bare"
+      animate={false}
+    >
     <div className="space-y-3">
       {/* Metric toggle */}
       <div className="flex items-center gap-1.5">
@@ -278,10 +303,10 @@ export function SectorRiskHeatmap() {
         <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
         <div className="flex gap-[2px]">
           {[
-            { color: '#e2ddd6', labelKey: 'heatmap.legendLow', fallback: 'Low' },
-            { color: '#a16207', labelKey: 'heatmap.legendMedium', fallback: 'Medium' },
-            { color: '#f59e0b', labelKey: 'heatmap.legendHigh', fallback: 'High' },
-            { color: '#991b1b', labelKey: 'heatmap.legendCritical', fallback: 'Critical' },
+            { color: CELL_LOW_BG, labelKey: 'heatmap.legendLow', fallback: 'Low' },
+            { color: RISK_COLORS.medium, labelKey: 'heatmap.legendMedium', fallback: 'Medium' },
+            { color: RISK_COLORS.high, labelKey: 'heatmap.legendHigh', fallback: 'High' },
+            { color: RISK_COLORS.critical, labelKey: 'heatmap.legendCritical', fallback: 'Critical' },
           ].map((stop) => (
             <div
               key={stop.labelKey}
@@ -298,5 +323,6 @@ export function SectorRiskHeatmap() {
         </div>
       </div>
     </div>
+    </EditorialChartFrame>
   )
 }
