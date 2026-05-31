@@ -2410,3 +2410,45 @@ HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) 
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
+## Visual Review — 2026-05-31T06:10:01Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | WARN |
+| https://rubli.xyz/atlas | 403 | WARN |
+| https://rubli.xyz/aria | 403 | WARN |
+| https://rubli.xyz/sectors | 403 | WARN |
+| https://rubli.xyz/sectors/salud | 403 | WARN |
+| https://rubli.xyz/cases | 403 | WARN |
+| https://rubli.xyz/methodology | 403 | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | WARN |
+
+**Note:** All 403s carry `x-deny-reason: host_not_allowed` — persistent WAF/CDN egress block on this managed cloud container's IP. Consistent with previous runs. Not a site failure.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (host_not_allowed) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (host_not_allowed) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (host_not_allowed) | WARN |
+| /api/v1/sectors | BLOCKED (host_not_allowed) | WARN |
+
+**Note:** API endpoints unreachable for same CDN/WAF reason as frontend routes. No 5xx errors detected — all blocks are network-layer 403s from the allowlist policy.
+
+### Bilingual Gaps
+Scan results (false positives filtered):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` — object property access, not UI string. OK.
+- `TIER_STYLES[tierName]` — style lookup, not UI string. OK.
+- Vendor proper names in `Executive.tsx` — untranslatable legal entity names. OK.
+- Academic citation in `Methodology.tsx` — untranslatable author/title. OK.
+- Corporate-form token constants in `ExploreCanvas.tsx` — code comments, not rendered strings. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
