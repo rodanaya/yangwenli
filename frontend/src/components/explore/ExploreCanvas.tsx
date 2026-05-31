@@ -3574,8 +3574,15 @@ function Z3Panel({
   const bandVariants = useBandVariants(prefersReducedMotion)
   const layoutTransition = prefersReducedMotion ? { duration: 0 } : { duration: Z_LAYOUT_DURATION_S, ease: Z_EASE }
 
-  // Editorial vendor name + display
-  const cleanName = formatVendorName(vendorName, 300)
+  // Editorial vendor name + display. On a direct deep-link (no drill-through
+  // state) the `vendorName` prop is the URL placeholder "Vendor 13885" — fall
+  // back to the vendor_name carried on the fetched contract rows so the
+  // headline + breadcrumb show the real name, not the id.
+  const isPlaceholderName = /^Vendor\s+\d+$/i.test(vendorName?.trim() ?? '')
+  const resolvedVendorName = (isPlaceholderName
+    ? (contracts.find((c) => (c as ContractListItem).vendor_name)?.vendor_name ?? vendorName)
+    : vendorName)
+  const cleanName = formatVendorName(resolvedVendorName, 300)
   const editorialName = toEditorialCase(cleanName)
 
   // Breadcrumb ancestry — crumbs that don't apply quietly disappear
