@@ -599,12 +599,14 @@ export interface VendorPoolItem {
   first_year?: number | null
   last_year?: number | null
   avg_risk_score?: number | null
-  high_risk_count: number
-  high_risk_pct: number
-  direct_award_count: number
-  direct_award_pct: number
-  single_bid_count: number
-  single_bid_pct: number
+  // Flag fields are nullable: null = "not yet computed" (cold-start
+  // degraded fallback), distinct from a real 0. Z2Row renders null as "—".
+  high_risk_count: number | null
+  high_risk_pct: number | null
+  direct_award_count: number | null
+  direct_award_pct: number | null
+  single_bid_count: number | null
+  single_bid_pct: number | null
   ips_tier?: number | null
   primary_pattern?: string | null
   in_ground_truth: number

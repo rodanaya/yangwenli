@@ -201,13 +201,16 @@ class VendorPoolItem(BaseModel):
     last_year: Optional[int] = None
     # Risk
     avg_risk_score: Optional[float] = None
-    high_risk_count: int = 0
-    high_risk_pct: float = 0.0
+    # Flag fields are Optional: None signals "not yet computed" (cold-start
+    # degraded fallback) vs 0.0 which is a real zero. The Z2 register renders
+    # null as "—" + shimmer so a degraded response never reads as a true zero.
+    high_risk_count: Optional[int] = None
+    high_risk_pct: Optional[float] = None
     # Procedure flags (scoped to this institution)
-    direct_award_count: int = 0
-    direct_award_pct: float = 0.0
-    single_bid_count: int = 0
-    single_bid_pct: float = 0.0
+    direct_award_count: Optional[int] = None
+    direct_award_pct: Optional[float] = None
+    single_bid_count: Optional[int] = None
+    single_bid_pct: Optional[float] = None
     # ARIA investigative signals
     ips_tier: Optional[int] = None
     primary_pattern: Optional[str] = None

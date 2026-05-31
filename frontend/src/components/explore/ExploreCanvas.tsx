@@ -2071,6 +2071,7 @@ function Z1Panel({
             onChange={setMode}
             riskMode="risk"
             label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+            labelFor={(m) => lang === 'en' ? m.toUpperCase() : (m === 'spend' ? 'GASTO' : 'RIESGO')}
           />
         </motion.div>
 
@@ -2739,6 +2740,7 @@ function Z2Panel({
             onChange={setMode}
             riskMode="risk"
             label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+            labelFor={(m) => lang === 'en' ? m.toUpperCase() : (m === 'spend' ? 'GASTO' : 'RIESGO')}
           />
         </motion.div>
 
@@ -3006,6 +3008,10 @@ function Z2Row({
     : score >= 0.25 ? RISK_COLORS.medium
     : 'var(--color-text-muted)'
 
+  // flagsKnown=false under the cold-start degraded fallback (backend sends
+  // null for these, NOT 0). Render "—" + shimmer so a degraded response is
+  // never mistaken for a real zero. Warm response fills real counts.
+  const flagsKnown = v.high_risk_pct != null
   const hrPct = v.high_risk_pct ?? 0
   const daPct = v.direct_award_pct ?? 0
   const sbPct = v.single_bid_pct ?? 0
@@ -3013,6 +3019,8 @@ function Z2Row({
   const hrBarColor = hrPct >= 50 ? RISK_COLORS.critical : hrPct >= 25 ? RISK_COLORS.high : hrPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const daColor = daPct >= 80 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const sbColor = sbPct >= 50 ? RISK_COLORS.critical : sbPct >= 25 ? RISK_COLORS.high : sbPct >= 10 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+  // Pending-value glyph for unknown flag fields.
+  const pendingGlyph = <span style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>—</span>
 
   // Vendor initials chip — no logo registry for vendors (1000s of names),
   // so we synthesize a 2-char initial tile in the sector accent.
@@ -3106,7 +3114,7 @@ function Z2Row({
             ))}
           </span>
           <span className="font-mono tabular-nums text-right" style={{ fontSize: 11, fontWeight: 700, color: hrBarColor, width: 36 }}>
-            {hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+            {flagsKnown ? <>{hrPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
         </span>
         {/* Spend trio: MXN / USD / share-of-institution */}
@@ -3132,8 +3140,8 @@ function Z2Row({
         </span>
         {/* DA% */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: daColor }}>
-            {daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: flagsKnown ? daColor : 'var(--color-text-muted)' }}>
+            {flagsKnown ? <>{daPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
           <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'DA' : 'AD'}
@@ -3141,8 +3149,8 @@ function Z2Row({
         </span>
         {/* SB% (single-bid) — new column, the bid-rigging signal */}
         <span className="flex-shrink-0 text-right" style={{ width: 56 }}>
-          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: sbColor }}>
-            {sbPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span>
+          <span className="block font-mono tabular-nums font-bold" style={{ fontSize: 11, color: flagsKnown ? sbColor : 'var(--color-text-muted)' }}>
+            {flagsKnown ? <>{sbPct.toFixed(0)}<span className="text-[8px] font-normal" style={{ color: 'var(--color-text-muted)', marginLeft: 1 }}>%</span></> : pendingGlyph}
           </span>
           <span className="block font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
             {lang === 'en' ? 'SB' : 'UP'}
@@ -3659,8 +3667,12 @@ function Z3Panel({
             </div>
           )}
 
-          {/* Timeline strip — vendor's year-by-year activity with admin bands */}
-          {!isLoading && !isError && byYear.size > 0 && (
+          {/* Timeline strip — vendor's year-by-year activity with admin bands.
+              Only worth its height when the vendor spans 3+ active years; with
+              1–2 years the bars become two giant near-empty columns ("warehouse
+              with a chair"). For 1–2 active years, show a compact one-line
+              caption instead — same information, no wasted canvas. */}
+          {!isLoading && !isError && byYear.size >= 3 && (
             <Z3TimelineStrip
               yearSequence={yearSequence}
               byYear={byYear}
@@ -3669,6 +3681,23 @@ function Z3Panel({
               onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
               lang={lang}
             />
+          )}
+          {!isLoading && !isError && byYear.size > 0 && byYear.size < 3 && (
+            <div className="pt-4 pb-1">
+              <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
+              </div>
+              <div className="font-mono text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
+                {(() => {
+                  const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
+                  const adminMin = getAdministrationByYear(yearMin)?.short
+                  const adminTag = adminMin ? ` · ${adminMin}` : ''
+                  return lang === 'en'
+                    ? `Active ${range} · ${formatNumber(contracts.length)} contracts${adminTag}`
+                    : `Activo ${range} · ${formatNumber(contracts.length)} contratos${adminTag}`
+                })()}
+              </div>
+            </div>
           )}
 
           {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
@@ -3710,6 +3739,7 @@ function Z3Panel({
                 onChange={setMode}
                 riskMode="risk"
                 label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+                labelFor={(m) => lang === 'en' ? m.toUpperCase() : (m === 'time' ? 'TIEMPO' : 'RIESGO')}
               />
             </div>
           )}
@@ -3823,9 +3853,9 @@ function Z3TimelineStrip({
       <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-text-muted)' }}>
         {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
       </div>
-      <div className="relative" style={{ height: 100 }}>
+      <div className="relative" style={{ height: 72 }}>
         {/* Admin band — full-width strip labeled with sexenio short names */}
-        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 14 }}>
+        <div className="absolute top-0 left-0 right-0 flex" style={{ height: 12 }}>
           {segments.map((seg) => {
             const span = seg.to - seg.from + 1
             const offset = seg.from - yearSequence[0]
@@ -3851,7 +3881,7 @@ function Z3TimelineStrip({
           })}
         </div>
         {/* Spend bars — one column per year, click to filter */}
-        <div className="absolute left-0 right-0 flex items-end" style={{ top: 18, bottom: 14 }}>
+        <div className="absolute left-0 right-0 flex items-end" style={{ top: 16, bottom: 14 }}>
           {yearSequence.map((yr) => {
             const cell = byYear.get(yr) ?? { count: 0, amount: 0, riskSum: 0, riskN: 0 }
             const heightPct = cell.amount > 0 ? Math.max(4, (cell.amount / maxYearAmt) * 100) : 0

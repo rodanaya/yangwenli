@@ -1423,13 +1423,15 @@ def _z2_compute_degraded(institution_id: int) -> Optional[VendorPoolResponse]:
             first_year=row["first_year"],
             last_year=row["last_year"],
             avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] is not None else None,
-            # Degraded fields — filled in by the background warmup
-            high_risk_count=0,
-            high_risk_pct=0.0,
-            direct_award_count=0,
-            direct_award_pct=0.0,
-            single_bid_count=0,
-            single_bid_pct=0.0,
+            # Degraded fields — None (NOT 0) signals "not yet computed" so the
+            # Z2 register renders "—" + shimmer instead of a misleading 0%.
+            # Filled with real counts by the background warmup.
+            high_risk_count=None,
+            high_risk_pct=None,
+            direct_award_count=None,
+            direct_award_pct=None,
+            single_bid_count=None,
+            single_bid_pct=None,
             ips_tier=None,
             primary_pattern=None,
             in_ground_truth=0,

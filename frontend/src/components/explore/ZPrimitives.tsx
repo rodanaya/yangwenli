@@ -330,6 +330,7 @@ export function ZSortToggle<TMode extends string>({
   onChange,
   riskMode,
   label,
+  labelFor,
 }: {
   modes: readonly [TMode, TMode]
   active: TMode
@@ -338,6 +339,9 @@ export function ZSortToggle<TMode extends string>({
   riskMode: TMode
   /** Optional uppercased label (e.g. SORT, ORDENAR) shown above the toggle. */
   label?: string
+  /** Maps a mode value to its display text (for i18n). Falls back to the
+   *  raw mode value uppercased when omitted. */
+  labelFor?: (mode: TMode) => string
 }) {
   return (
     <div className="flex flex-col items-end gap-1">
@@ -363,7 +367,7 @@ export function ZSortToggle<TMode extends string>({
                 border: 'none',
               }}
             >
-              {m.toUpperCase()}
+              {labelFor ? labelFor(m) : m.toUpperCase()}
             </button>
           )
         })}
