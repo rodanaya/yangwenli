@@ -9,7 +9,7 @@ import json
 import logging
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -761,38 +761,38 @@ _BUNDLE_FETCHERS: dict = {
 }
 
 
-_BLOCK_TIMEOUT = 15  # seconds — per-block deadline; prevents one slow block from blocking the bundle
+_BLOCK_TIMEOUT = 22  # seconds — shared deadline for all blocks (they run concurrently); stays under the ~30s gateway timeout while giving cold queries room to finish
 
 
 def _build_bundle() -> dict:
-    """Run all 6 fetchers concurrently and return assembled bundle dict.
+    """Run all 6 fetchers concurrently and return the assembled bundle dict.
 
-    Each fetcher gets its own thread so they run in parallel.  A per-block
-    timeout (_BLOCK_TIMEOUT) ensures one slow or stuck block cannot block the
-    whole response — it will be set to null with an error log instead.
-    Exceptions are also caught and set the block to None (never propagated).
+    Each fetcher runs in its own thread (submitted up-front, so they all run in
+    parallel).  We then wait for each future up to a SHARED deadline
+    (_BLOCK_TIMEOUT total — the futures run concurrently, so this caps the whole
+    call, not each block).  A block that misses the deadline or raises comes
+    back null — a timeout is NEVER allowed to propagate, so the endpoint cannot
+    500.  Stragglers are NOT waited on (shutdown(wait=False)); they finish in
+    the background and warm their own handler caches for the next request.
     """
     results: dict = {}
-
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    executor = ThreadPoolExecutor(max_workers=6)
+    try:
         future_to_key = {executor.submit(fn): key for key, fn in _BUNDLE_FETCHERS.items()}
-        for future in as_completed(future_to_key, timeout=_BLOCK_TIMEOUT + 5):
-            key = future_to_key[future]
+        deadline = time.time() + _BLOCK_TIMEOUT
+        for future, key in future_to_key.items():
+            remaining = max(0.1, deadline - time.time())
             try:
-                results[key] = future.result(timeout=_BLOCK_TIMEOUT)
-            except TimeoutError:
-                logger.warning("dashboard-bundle: block '%s' timed out after %ds", key, _BLOCK_TIMEOUT)
+                results[key] = future.result(timeout=remaining)
+            except Exception as exc:  # TimeoutError (too slow) or any failure
+                logger.warning("dashboard-bundle: block '%s' unavailable: %s", key, exc)
                 results[key] = None
-            except Exception as exc:
-                logger.error("dashboard-bundle: block '%s' failed: %s", key, exc)
-                results[key] = None
+    finally:
+        # Never block the response on a stuck/slow block.
+        executor.shutdown(wait=False)
 
-    # Fill in any keys that never completed (as_completed outer timeout)
     for key in _BUNDLE_FETCHERS:
-        if key not in results:
-            logger.warning("dashboard-bundle: block '%s' did not complete in time", key)
-            results[key] = None
-
+        results.setdefault(key, None)
     return results
 
 
@@ -822,8 +822,12 @@ def get_dashboard_bundle():
 
         bundle = _build_bundle()
 
-        with _bundle_cache_lock:
-            _bundle_cache["data"] = bundle
-            _bundle_cache["expires"] = time.time() + _BUNDLE_TTL
+        # Only cache a COMPLETE bundle. If a block timed out (null) we want the
+        # next request to retry it — the handler caches will have warmed by then
+        # — rather than serving the gap for the whole TTL.
+        if all(v is not None for v in bundle.values()):
+            with _bundle_cache_lock:
+                _bundle_cache["data"] = bundle
+                _bundle_cache["expires"] = time.time() + _BUNDLE_TTL
 
         return bundle
