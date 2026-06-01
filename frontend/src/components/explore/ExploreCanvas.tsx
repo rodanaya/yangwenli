@@ -3852,6 +3852,24 @@ function Z3Panel({
             </div>
           )}
 
+          {/* Ledger column header — aligns with the row's money + object columns */}
+          {!isLoading && !isError && visibleContracts.length > 0 && (
+            <div
+              className="flex items-center gap-3 px-2.5 pb-1.5 mb-0.5"
+              style={{ borderBottom: '1px solid var(--color-border)' }}
+            >
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 92, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Amount' : 'Monto'}
+              </span>
+              <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Object · year · procedure · file' : 'Objeto · año · procedimiento · expediente'}
+              </span>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Risk' : 'Riesgo'}
+              </span>
+            </div>
+          )}
+
           {/* Dense register — top 30 contracts, disclosure to /vendors/{id} for full list */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
             <ul role="list" className="space-y-px">
@@ -4159,6 +4177,40 @@ function Z3HeroCards({
 /**
  * Z3ContractRow — dense single-line contract row. Click → Z4 drawer.
  */
+/**
+ * Split a raw COMPRANET contract title into a readable object and an
+ * expediente reference. The field conflates three things — real prose
+ * ("adquisición de medicamentos"), pure procurement codes ("D9P0566",
+ * "AA-050GYR028-E360-2019"), and code+prose hybrids. Rendering codes as
+ * titles is what made the register unreadable.
+ *
+ * Mechanic: walk leading tokens; anything that isn't a plain word (i.e.
+ * contains a digit or code punctuation) is part of the expediente prefix.
+ * The first real word starts the object; the rest is prose. Returns the
+ * sentence-cased object (or null when there's no prose at all) and the
+ * uppercased expediente code (or null).
+ */
+function cleanContractDescription(raw: string): { objeto: string | null; expediente: string | null } {
+  const s = (raw ?? '').replace(/\s+/g, ' ').trim()
+  if (!s) return { objeto: null, expediente: null }
+  const tokens = s.split(' ')
+  // A "word" is pure letters (accents allowed), length ≥ 2 — real prose.
+  const isWord = (t: string) => /^[a-záéíóúñü]{2,}$/i.test(t)
+  let i = 0
+  const codeParts: string[] = []
+  while (i < tokens.length && !isWord(tokens[i])) {
+    codeParts.push(tokens[i])
+    i++
+  }
+  const objectRaw = tokens.slice(i).join(' ').trim()
+  const expediente = codeParts.join(' ').trim()
+  const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
+  return {
+    objeto,
+    expediente: expediente ? expediente.toUpperCase().slice(0, 32) : null,
+  }
+}
+
 function Z3ContractRow({
   c,
   maxAmt,
@@ -4180,16 +4232,20 @@ function Z3ContractRow({
   const level = getRiskLevelFromScore(score)
   const fill = RISK_COLORS[level]
   const riskPct = score > 0 ? Math.round(score * 100) : null
-  // Amount bar — fraction of the vendor's largest contract. Fills the dead
-  // whitespace in the row's middle so the eye sees magnitude + threshold
-  // clustering instead of a flat list.
-  const amtFrac = Math.max(0.02, Math.min(1, Number(c.amount_mxn ?? 0) / Math.max(1, maxAmt)))
-  const title = (c as ContractListItem & { title?: string }).title
+  const amount = Number(c.amount_mxn ?? 0)
+  // Magnitude bar — fraction of the vendor's largest contract, in its OWN lane
+  // under the amount (no longer bleeding behind the description text).
+  const amtFrac = Math.max(0.04, Math.min(1, amount / Math.max(1, maxAmt)))
+  const rawTitle = (c as ContractListItem & { title?: string }).title ?? ''
+  const { objeto, expediente } = cleanContractDescription(rawTitle)
   const procType = shortProcType(
     (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
     !!c.is_direct_award,
     lang,
   )
+  const noObject = !objeto
+  const sep = <span style={{ margin: '0 5px', opacity: 0.5 }}>·</span>
+  const riskLabel = riskPct != null ? `${riskPct}% ${lang === 'en' ? 'risk indicator' : 'indicador de riesgo'}` : ''
 
   return (
     <motion.li
@@ -4201,58 +4257,55 @@ function Z3ContractRow({
       <button
         type="button"
         onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-        className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-sm cursor-pointer"
+        className="w-full text-left flex items-stretch gap-3 px-2.5 py-2 rounded-sm cursor-pointer"
         style={{ background: 'transparent', borderLeft: `2px solid ${fill}` }}
-        title={`${c.contract_year} · ${formatCompactMXN(Number(c.amount_mxn ?? 0))} · ${procType} · ${title ?? ''}`}
+        title={`${c.contract_year} · ${formatCompactMXN(amount)} · ${procType}${expediente ? ` · ${expediente}` : ''}\n${objeto ?? rawTitle}`}
       >
-        {/* Year */}
-        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, color: 'var(--color-text-muted)', width: 32 }}>
-          {c.contract_year}
+        {/* MONEY UNIT — amount over its own magnitude bar */}
+        <span className="flex-shrink-0 flex flex-col justify-center" style={{ width: 92 }}>
+          <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: fill, lineHeight: 1.1 }}>
+            {formatCompactMXN(amount)}
+          </span>
+          <span aria-hidden="true" className="block mt-1 rounded-sm" style={{ width: '100%', height: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
+            <span style={{ display: 'block', width: `${amtFrac * 100}%`, height: '100%', background: fill, opacity: 0.65, borderRadius: 2 }} />
+          </span>
         </span>
-        {/* Amount */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 88 }}>
-          {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-        </span>
-        {/* Procedure chip */}
-        <span
-          className="flex-shrink-0 font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm whitespace-nowrap"
-          style={{
-            background: c.is_direct_award ? `${RISK_COLORS.high}1f` : 'var(--color-border)',
-            color: c.is_direct_award ? RISK_COLORS.high : 'var(--color-text-secondary)',
-            border: c.is_direct_award ? `1px solid ${RISK_COLORS.high}44` : 'none',
-          }}
-        >
-          {procType}
-        </span>
-        {/* Single-bid flag if applicable */}
-        {c.is_single_bid && (
+
+        {/* DESCRIPTION UNIT — object (line 1) + meta sub-line (line 2) */}
+        <span className="flex-1 min-w-0 flex flex-col justify-center">
           <span
-            className="flex-shrink-0 font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm whitespace-nowrap"
+            className="truncate"
             style={{
-              background: `${RISK_COLORS.critical}1f`,
-              color: RISK_COLORS.critical,
-              border: `1px solid ${RISK_COLORS.critical}44`,
+              fontSize: 12.5,
+              lineHeight: 1.3,
+              color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+              fontStyle: noObject ? 'italic' : 'normal',
             }}
           >
-            {lang === 'en' ? 'SB' : 'UP'}
+            {objeto ?? (lang === 'en' ? 'No description on file' : 'Sin objeto declarado')}
           </span>
-        )}
-        {/* Title + amount bar — the bar fills the row's dead middle with a
-            magnitude channel (width ∝ amount / vendor's largest). Title sits
-            on top, sentence-cased from raw COMPRANET caps. */}
-        <span className="flex-1 min-w-0 relative flex items-center">
-          <span
-            aria-hidden="true"
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-sm"
-            style={{ width: `${amtFrac * 100}%`, height: 14, background: fill, opacity: 0.12 }}
-          />
-          <span className="relative truncate" style={{ fontSize: 11, color: 'var(--color-text-secondary)', paddingLeft: 6, paddingRight: 6 }}>
-            {title ? shortenContractName(title, 120) : '—'}
+          <span className="truncate font-mono mt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+            <span className="tabular-nums">{c.contract_year}</span>
+            {sep}
+            <span style={{ color: c.is_direct_award ? RISK_COLORS.high : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}>{procType}</span>
+            {c.is_single_bid && (
+              <>
+                {sep}
+                <span style={{ color: RISK_COLORS.critical, fontWeight: 600 }}>{lang === 'en' ? 'SINGLE BID' : 'ÚNICO POSTOR'}</span>
+              </>
+            )}
+            {expediente && (
+              <>
+                {sep}
+                <span style={{ opacity: 0.85 }}>exp. {expediente}</span>
+              </>
+            )}
           </span>
         </span>
-        {/* Risk pill */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 36 }}>
-          {riskPct ?? '—'}
+
+        {/* RISK — a single tier dot; number on hover (kills the repeated "100") */}
+        <span className="flex-shrink-0 self-center" title={riskLabel} aria-label={riskLabel}>
+          <span className="block rounded-full" style={{ width: 8, height: 8, background: fill }} />
         </span>
       </button>
     </motion.li>
