@@ -350,10 +350,44 @@ def _startup_checks():
 async def lifespan(app: FastAPI):
     """Startup: run checks and warm caches."""
     _startup_checks()
-    logger.info("Starting cache warmup in background...")
-    warmup_thread = threading.Thread(target=_warmup_caches, daemon=True)
-    warmup_thread.start()
+    # Elect a SINGLE warmer across gunicorn workers. This lifespan runs once per
+    # worker process; without election all N workers fire the full warmup (incl.
+    # the ~2-min warm_stories_cache) simultaneously — a thundering herd on the
+    # 5GB DB that spikes load on every deploy (cold caches × N workers). A
+    # non-blocking flock picks one warmer; the rest skip. The lock auto-frees
+    # when the winning process exits, so the next restart re-elects cleanly. If
+    # the elected worker dies mid-warmup, another acquires and takes over.
+    # flock is Unix-only; on platforms without it (Windows dev/test) we warm
+    # unconditionally, preserving the previous behavior.
+    warmup_lock_fd = None
+    should_warm = True
+    try:
+        import fcntl
+        warmup_lock_fd = os.open("/tmp/rubli_warmup.lock", os.O_CREAT | os.O_RDWR, 0o644)
+        try:
+            fcntl.flock(warmup_lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            logger.info("Elected as cache-warmup worker.")
+        except OSError:
+            # Lock held by another worker — it owns the warmup; we skip.
+            should_warm = False
+            os.close(warmup_lock_fd)
+            warmup_lock_fd = None
+            logger.info("Skipping cache warmup — another worker is the elected warmer.")
+    except Exception as e:
+        # fcntl unavailable (non-Unix) or unexpected lock error → warm anyway
+        # (correctness over herd-avoidance; a single-worker dev server won't herd).
+        should_warm = True
+        logger.debug(f"Warmup election unavailable ({e}); warming in this worker.")
+    if should_warm:
+        logger.info("Starting cache warmup in background...")
+        warmup_thread = threading.Thread(target=_warmup_caches, daemon=True)
+        warmup_thread.start()
     yield
+    if warmup_lock_fd is not None:
+        try:
+            os.close(warmup_lock_fd)
+        except Exception:
+            pass
     logger.info("Shutting down.")
 
 
