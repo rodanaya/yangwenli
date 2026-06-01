@@ -22,17 +22,15 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
 import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
-import type { ContractListItem, ContractListResponse, RiskDistribution } from '@/api/types'
+import type { ContractListItem, ContractListResponse } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import {
-  ConcentrationConstellation,
-  type ConstellationMode,
-  type ConstellationRiskRow,
-} from '@/components/charts/ConcentrationConstellation'
+import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
+import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
+import { useScatterClusters } from '@/lib/atlas/useScatterClusters'
 // DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
 // LensVisualization/buildLensTiers retired 2026-05-20 — replaced by Cascade
@@ -228,27 +226,10 @@ export default function Executive() {
 
   const handlePrint = () => window.print()
 
-  // § 1 The Atlas — risk distribution rows for the constellation field
-  // Falls back to the v0.8.5 calibrated proportions if the live API is empty
-  const atlasRows: ConstellationRiskRow[] = useMemo(() => {
-    const rd: RiskDistribution[] = Array.isArray(dashboard?.risk_distribution)
-      ? (dashboard!.risk_distribution as RiskDistribution[])
-      : []
-    if (rd.length >= 4) {
-      return rd.map((r) => ({
-        level: r.risk_level as ConstellationRiskRow['level'],
-        count: r.count,
-        pct: r.percentage,
-      }))
-    }
-    // v0.8.5 calibrated fallback (May 2 2026)
-    return [
-      { level: 'critical', count: 158_667, pct: 5.20 },
-      { level: 'high',     count: 179_026, pct: 5.90 },
-      { level: 'medium',   count: 494_310, pct: 16.20 },
-      { level: 'low',      count: 2_219_291, pct: 72.70 },
-    ]
-  }, [dashboard])
+  // § 1 The Observatory — faithful-scatter cluster data (live per-cluster
+  // aggregates with static-meta fallback), shared with /atlas via the hook so
+  // both surfaces render the identical map.
+  const scatterClusters = useScatterClusters(atlasMode, lang)
 
   // § 1 The Atlas — click navigation: each mode opens the right page
   const handleAtlasClusterClick = (clusterCode: string) => {
@@ -491,25 +472,21 @@ export default function Executive() {
 
           <p className="text-xs text-text-secondary leading-[1.6] mb-4 text-pretty">
             {lang === 'en'
-              ? 'Every dot below represents about 2,500 federal contracts. Critical-risk contracts cluster around their dominant pattern, sector, or presidential term — toggle the mode to re-organize the same population around a different lens. Click any cluster to investigate.'
-              : 'Cada punto representa aproximadamente 2,500 contratos federales. Los contratos de riesgo crítico se agrupan en torno a su patrón, sector o sexenio dominante — alterna el modo para reorganizar la misma población bajo otra lente. Haz clic en cualquier cúmulo para investigar.'}
+              ? 'Each orb is a cluster of the federal contract record — positioned left-to-right by vendor count and bottom-to-top by high-risk rate, sized to the Tier-1 priority leads inside. Toggle the lens to re-cluster the same population by pattern, sector, category, or term, and click any orb to fly into its vendors.'
+              : 'Cada orbe es un cúmulo del registro de contratación federal — ubicado de izquierda a derecha por número de proveedores y de abajo hacia arriba por tasa de alto riesgo, dimensionado según los líderes prioritarios Tier-1 que contiene. Alterna la lente para reagrupar la misma población por patrón, sector, categoría o sexenio, y haz clic en cualquier orbe para entrar a sus proveedores.'}
           </p>
 
-          <PlateFrame
+          {/* The faithful Observatory — same component as /atlas. It carries
+              its own folio frame + how-to-read strip + ranked name index, so it
+              is NOT wrapped in PlateFrame (that would double-frame + double the
+              encoding caption). */}
+          <ObservatoryScatter
+            clusters={scatterClusters}
+            lens={atlasMode}
             lang={lang}
-            folio="II"
-            contextLabel={{ en: 'Executive briefing', es: 'Reporte ejecutivo' }}
-            caption={lang === 'en'
-              ? 'Plate — Each mark stands for ~2,500 federal contracts, organised by pattern, sector, category, or term.'
-              : 'Lámina — Cada marca representa ~2,500 contratos federales agrupados por patrón, sector, categoría o sexenio.'}
-          >
-            <ConcentrationConstellation
-              rows={atlasRows}
-              totalContracts={stats.totalContracts}
-              mode={atlasMode}
-              onClusterClick={handleAtlasClusterClick}
-            />
-          </PlateFrame>
+            onOpenDossier={handleAtlasClusterClick}
+            onVendorClick={(id) => navigate(`/vendors/${id}`)}
+          />
           {/* Footer link into the full /atlas surface — preserves the
               current lens by passing it through as ?lens=<atlasMode>. */}
           <div className="mt-3 flex items-center justify-end">
