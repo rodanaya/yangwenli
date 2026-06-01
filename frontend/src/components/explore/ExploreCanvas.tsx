@@ -4381,6 +4381,10 @@ function Z3MonthlyStrip({
   const maxMonthCount = Math.max(1, ...monthly.map((m) => m.count))
   const activeMonths = monthly.filter((m) => m.count > 0).length
   const peakMonth = monthly.reduce((best, m) => (m.count > best.count ? m : best), monthly[0])
+  // Label bars inline when activity is sparse enough that numbers won't collide.
+  // A single-month dump (98 contracts in one month) reads as a labelled tower,
+  // not an ambiguous lone bar.
+  const showCountLabels = activeMonths > 0 && activeMonths <= 8
   return (
     <div className="pt-3 pb-3">
       <div className="flex items-baseline justify-between mb-2">
@@ -4398,7 +4402,10 @@ function Z3MonthlyStrip({
       <div className="relative" style={{ height: 72 }}>
         <div className="absolute left-0 right-0 flex items-end gap-px" style={{ top: 0, bottom: 14 }}>
           {monthly.map((m) => {
-            const h = m.count > 0 ? Math.max(10, (m.count / maxMonthCount) * 100) : 0
+            // Leave headroom for the inline count label so the peak bar's
+            // number doesn't clip the top of the plot area.
+            const ceiling = showCountLabels ? 80 : 100
+            const h = m.count > 0 ? Math.max(10, (m.count / maxMonthCount) * ceiling) : 0
             const cap =
               m.avgRisk >= 0.60 ? RISK_COLORS.critical
               : m.avgRisk >= 0.40 ? RISK_COLORS.high
@@ -4416,7 +4423,17 @@ function Z3MonthlyStrip({
                   : `${m.label} · ${lang === 'en' ? 'no contracts' : 'sin contratos'}`}
               >
                 {m.count > 0 ? (
-                  <span className="w-full" style={{ height: `${h}%`, background: fill, opacity: fillOpacity, borderTop: `2px solid ${cap}`, minHeight: 5 }} />
+                  <>
+                    {showCountLabels && (
+                      <span
+                        className="font-mono tabular-nums leading-none mb-0.5"
+                        style={{ fontSize: 9, fontWeight: 700, color: m.avgRisk >= 0.40 ? cap : 'var(--color-text-secondary)' }}
+                      >
+                        {m.count}
+                      </span>
+                    )}
+                    <span className="w-full" style={{ height: `${h}%`, background: fill, opacity: fillOpacity, borderTop: `2px solid ${cap}`, minHeight: 5 }} />
+                  </>
                 ) : (
                   <span className="w-full" style={{ height: 1, background: 'var(--color-border)' }} />
                 )}
