@@ -45,7 +45,7 @@ interface Props {
 }
 
 const W = 1180
-const H = 600
+const H = 720
 const M = { top: 60, right: 96, bottom: 78, left: 96 }
 const PLOT_W = W - M.left - M.right
 const PLOT_H = H - M.top - M.bottom
@@ -102,7 +102,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const yFor = (hr: number) => M.top + (1 - (PAD_Y + (scales.maxHr ? hr / scales.maxHr : 0) * (1 - 2 * PAD_Y))) * PLOT_H
   // Bodies shrink as the lens gets denser (7 patterns vs 32 categories) so a
   // crowded lens stays legible.
-  const maxBodyR = clusters.length > 20 ? 19 : clusters.length > 9 ? 26 : 34
+  const maxBodyR = clusters.length > 20 ? 22 : clusters.length > 9 ? 31 : 42
   const rFor = (t1: number) => 8 + (Math.sqrt(Math.max(1, t1)) / Math.sqrt(scales.maxT1)) * (maxBodyR - 8)
 
   const bodies = useMemo(() => {
@@ -228,21 +228,24 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
 
   // ── Focus geometry: central sun + orbiting vendor satellites ───────────────
   const FCX = M.left + PLOT_W * 0.5
-  const FCY = M.top + PLOT_H * 0.46
+  const FCY = M.top + PLOT_H * 0.5
   const satellites = useMemo(() => {
     const vs = focusVendors?.vendors ?? []
     if (vs.length === 0) return []
     const maxAmt = Math.max(...vs.map((v) => v.total_amount_mxn || 1))
     const golden = 2.39996
-    return vs.slice(0, 24).map((v, i) => {
+    // Rings sized to the plot's vertical half-room (~291px from the centered
+    // sun): base 92 + 48/ring keeps ring 3 (236) + dot + label inside the plate.
+    // x is stretched ×1.55 into the chart's wide horizontal room.
+    return vs.slice(0, 22).map((v, i) => {
       const ring = 1 + Math.floor(i / 8)
-      const radius = 92 + ring * 46 + (i % 8) * 2
+      const radius = 92 + ring * 48 + (i % 8) * 3
       const ang = i * golden
       return {
         v,
-        x: FCX + Math.cos(ang) * radius * 1.45,
+        x: FCX + Math.cos(ang) * radius * 1.55,
         y: FCY + Math.sin(ang) * radius,
-        r: 5 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 11,
+        r: 9 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 19,
         fill: riskRamp(v.risk_score),
       }
     })
@@ -381,8 +384,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               {/* tap-anywhere-to-exit scrim */}
               <rect x={0} y={0} width={W} height={H} fill="transparent" onClick={() => setFocused(null)} style={{ cursor: 'zoom-out' }} />
               {/* orbital rings */}
-              {[138, 184, 230].map((rad) => (
-                <ellipse key={rad} cx={FCX} cy={FCY} rx={rad * 1.45} ry={rad} fill="none" stroke={C.grid} strokeWidth={1} strokeDasharray="2 6" />
+              {[140, 188, 236].map((rad) => (
+                <ellipse key={rad} cx={FCX} cy={FCY} rx={rad * 1.55} ry={rad} fill="none" stroke={C.grid} strokeWidth={1} strokeDasharray="2 6" />
               ))}
               {/* satellites */}
               {satellites.map((s, i) => {
@@ -401,11 +404,11 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.7} fill={s.fill} opacity={0.18} />}
                     {/* crisp satellite — solid fill, fine dark-ink limb for definition on cream */}
                     <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 1.1 : 0.7} strokeOpacity={hovered ? 0.6 : 0.26} />
-                    {s.r > 9 && <circle cx={s.x} cy={s.y} r={1.7} fill="#fff" opacity={0.85} />}
-                    {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 2.6} fill="none" stroke={s.fill} strokeWidth={1} strokeDasharray="2 2" />}
-                    {(hovered || i < 7) && (
-                      <text x={s.x} y={s.y - s.r - 4} textAnchor="middle" fill={C.ink} fontSize={hovered ? 11 : 9.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 500}>
-                        {formatVendorName(s.v.name, hovered ? 34 : 20)}
+                    {s.r > 11 && <circle cx={s.x} cy={s.y} r={2.2} fill="#fff" opacity={0.85} />}
+                    {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3.2} fill="none" stroke={s.fill} strokeWidth={1.2} strokeDasharray="2 2" />}
+                    {(hovered || i < 9) && (
+                      <text x={s.x} y={s.y - s.r - 6} textAnchor="middle" fill={C.ink} fontSize={hovered ? 16 : 13} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 3.5 : 2.5} strokeLinejoin="round">
+                        {formatVendorName(s.v.name, hovered ? 38 : 24)}
                       </text>
                     )}
                   </motion.g>
@@ -413,23 +416,23 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               })}
               {/* central sun */}
               <motion.g initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} style={{ transformOrigin: `${FCX}px ${FCY}px` }}>
-                <circle cx={FCX} cy={FCY} r={58} fill={`url(#obs-halo-${focusedBody.code})`} />
-                <circle cx={FCX} cy={FCY} r={38} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.8} />
-                <circle cx={FCX} cy={FCY} r={33} fill="none" stroke="#fff" strokeWidth={0.85} strokeOpacity={0.32} />
-                <circle cx={FCX} cy={FCY} r={4.5} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.6} />
-                <text x={FCX} y={FCY + 64} textAnchor="middle" fill={C.ink} fontSize={17} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700}>
+                <circle cx={FCX} cy={FCY} r={80} fill={`url(#obs-halo-${focusedBody.code})`} />
+                <circle cx={FCX} cy={FCY} r={52} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={2} />
+                <circle cx={FCX} cy={FCY} r={46} fill="none" stroke="#fff" strokeWidth={0.9} strokeOpacity={0.32} />
+                <circle cx={FCX} cy={FCY} r={6} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.8} />
+                <text x={FCX} y={FCY + 82} textAnchor="middle" fill={C.ink} fontSize={22} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={4.5} strokeLinejoin="round">
                   {toTitleCase(focusedBody.label)}
                 </text>
-                <text x={FCX} y={FCY + 80} textAnchor="middle" fill={C.inkMuted} fontSize={10} fontFamily="var(--font-family-mono)" letterSpacing="0.04em">
+                <text x={FCX} y={FCY + 102} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={3} strokeLinejoin="round">
                   {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'proveedores' : 'vendors'} · {focusedBody.t1} T1 · {Math.round(focusedBody.highRiskPct * 100)}% {lang === 'es' ? 'alto riesgo' : 'high-risk'}
                 </text>
                 {vendorsLoading && (
-                  <text x={FCX} y={FCY + 100} textAnchor="middle" fill={C.inkFaint} fontSize={10} fontFamily="var(--font-family-mono)">
+                  <text x={FCX} y={FCY + 122} textAnchor="middle" fill={C.inkFaint} fontSize={11} fontFamily="var(--font-family-mono)">
                     {lang === 'es' ? 'cargando proveedores…' : 'loading vendors…'}
                   </text>
                 )}
                 {!vendorsLoading && satellites.length === 0 && (
-                  <text x={FCX} y={FCY + 100} textAnchor="middle" fill={C.inkFaint} fontSize={10} fontFamily="var(--font-family-mono)" letterSpacing="0.04em">
+                  <text x={FCX} y={FCY + 122} textAnchor="middle" fill={C.inkFaint} fontSize={11} fontFamily="var(--font-family-mono)" letterSpacing="0.04em">
                     {lang === 'es' ? 'desglose por proveedor en el expediente ↗' : 'vendor breakdown in the dossier ↗'}
                   </text>
                 )}
@@ -518,7 +521,7 @@ function ObservatoryIndex({
 
   return (
     <aside
-      style={{ flex: '0 0 360px', width: 360, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 640 }}
+      style={{ flex: '0 0 372px', width: 372, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 820 }}
       aria-label={lang === 'es' ? 'Índice' : 'Index'}
     >
       {/* header */}

@@ -1950,6 +1950,10 @@ export default function Atlas() {
   const canvasEnabled =
     searchParams.get('legacy') !== '1' || searchParams.get('canvas') === '1'
 
+  // Faithful Observatory: all controls live in AtlasToolbar, so the 240px left
+  // rail is redundant — drop it and give the width to the constellation.
+  const faithfulObservatory = searchParams.get('legacy') !== '1'
+
   const totalContractsForYear = snapshot.totalContracts
 
   // ─── atlas-C-P1: bridge callbacks for left rail ──────────────────────────
@@ -2026,6 +2030,7 @@ export default function Atlas() {
         onHighlightChange={setHighlightedClusterCodes}
       />
       <AtlasShell
+        hideLeftRail={faithfulObservatory}
         leftRail={
           <AtlasLeftRail
             lang={lang}

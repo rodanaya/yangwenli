@@ -32,9 +32,16 @@ import { useAtlasState, useAtlasDispatch } from './AtlasContext'
 interface AtlasShellProps {
   leftRail: React.ReactNode
   center: React.ReactNode
+  /**
+   * Drop the 240px left rail and give the whole width to the center pane.
+   * The faithful Observatory's controls all live in AtlasToolbar (lens
+   * dropdown · vendor search · stories · year · risk-floor), so the rail is
+   * fully redundant there — hiding it reclaims 240px for the constellation.
+   */
+  hideLeftRail?: boolean
 }
 
-export function AtlasShell({ leftRail, center }: AtlasShellProps) {
+export function AtlasShell({ leftRail, center, hideLeftRail = false }: AtlasShellProps) {
   const state = useAtlasState()
   const dispatch = useAtlasDispatch()
 
@@ -118,20 +125,26 @@ export function AtlasShell({ leftRail, center }: AtlasShellProps) {
 
   return (
     <div
-      className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0 relative"
+      className={
+        hideLeftRail
+          ? 'grid grid-cols-1 gap-0 relative'
+          : 'grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-0 relative'
+      }
       style={{ minHeight: 'calc(100vh - var(--topbar-h, 64px))' }}
     >
-      {/* ── Left rail ──────────────────────────────────────────────── */}
-      <aside
-        className="hidden lg:flex flex-col border-r border-border overflow-y-auto"
-        style={{
-          position: 'sticky',
-          top: 'var(--topbar-h, 64px)',
-          height: 'calc(100vh - var(--topbar-h, 64px))',
-        }}
-      >
-        {leftRail}
-      </aside>
+      {/* ── Left rail (hidden for the faithful Observatory) ─────────── */}
+      {!hideLeftRail && (
+        <aside
+          className="hidden lg:flex flex-col border-r border-border overflow-y-auto"
+          style={{
+            position: 'sticky',
+            top: 'var(--topbar-h, 64px)',
+            height: 'calc(100vh - var(--topbar-h, 64px))',
+          }}
+        >
+          {leftRail}
+        </aside>
+      )}
 
       {/* ── Center pane — the constellation lives here ─────────────── */}
       <main className="overflow-hidden min-w-0">
