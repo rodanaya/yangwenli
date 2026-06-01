@@ -4385,10 +4385,13 @@ function Z3Fingerprint({
             ))}
             {/* baseline */}
             <span aria-hidden="true" className="absolute left-0 right-0" style={{ bottom: 0, height: 1, background: 'var(--color-border)' }} />
-            {/* dots */}
+            {/* dots — centred in a tight band so the field reads as a
+                distribution strip (overlap = density), not a 2D scatter cloud */}
             {field.dots.map((d, i) => {
               const color = riskRamp(d.risk)
-              const r = d.isMax ? 4 : 3
+              const r = d.isMax ? 4 : 2.5
+              // centre 30px (above the baseline at 64), band ±15px
+              const top = 30 + (d.yFrac - 0.5) * 30
               return (
                 <span
                   key={i}
@@ -4396,12 +4399,12 @@ function Z3Fingerprint({
                   title={`${formatCompactMXN(d.amount)} · ${(d.risk * 100).toFixed(0)}% ${lang === 'en' ? 'risk' : 'riesgo'}`}
                   style={{
                     left: `${d.xPct}%`,
-                    top: `${4 + d.yFrac * (64 - 14)}px`,
+                    top: `${top}px`,
                     width: r * 2,
                     height: r * 2,
                     marginLeft: -r,
                     background: color,
-                    opacity: d.isMax ? 1 : 0.62,
+                    opacity: d.isMax ? 1 : 0.55,
                     boxShadow: d.isMax ? '0 0 0 2px var(--color-background-elevated), 0 0 0 3px #a06820' : undefined,
                   }}
                 />
@@ -4419,8 +4422,8 @@ function Z3Fingerprint({
             <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
               {formatCompactMXN(field.lo)}
             </span>
-            <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.8 }}>
-              {lang === 'en' ? `${valued.length} contracts` : `${valued.length} contratos`}
+            <span className="font-mono" style={{ fontSize: 9, fontStyle: 'italic', color: 'var(--color-text-muted)', opacity: 0.7 }}>
+              {lang === 'en' ? 'each dot = one contract' : 'cada punto = un contrato'}
             </span>
           </div>
         </div>
