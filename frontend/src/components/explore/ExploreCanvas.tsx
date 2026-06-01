@@ -3601,7 +3601,6 @@ function Z3Panel({
     }
     return seq
   })()
-  const maxMonthAmt = monthly ? Math.max(1, ...monthly.map((m) => m.amount)) : 1
 
   // Top-3 cards: BIGGEST / HIGHEST RISK / MOST RECENT. Disambiguate by
   // falling through to the next candidate when picks collide.
@@ -3739,7 +3738,7 @@ function Z3Panel({
             />
           )}
           {!isLoading && !isError && yearSpan <= 3 && monthly && (
-            <Z3MonthlyStrip monthly={monthly} maxMonthAmt={maxMonthAmt} lang={lang} />
+            <Z3MonthlyStrip monthly={monthly} lang={lang} />
           )}
           {!isLoading && !isError && yearSpan <= 3 && !monthly && byYear.size > 0 && (
             <div className="pt-4 pb-1">
@@ -4252,23 +4251,31 @@ function Z3Fingerprint({
   const daPct = (directAwardN / total) * 100
   const hrPct = (hrCount / total) * 100
 
-  // Amount histogram — 10 log-ish buckets between min and max so clustering
-  // near a procedure threshold is visible. Use linear bins on the value range.
+  // Amount histogram — LOG-scale buckets between min and max. Contract values
+  // are heavily right-skewed (one big award + many small ones); linear bins
+  // collapse ~everything into bin 0. Log bins spread the distribution so
+  // clustering near a procedure threshold reads as a visible spike.
   const vals = amounts.filter((a) => a > 0)
   const hist = (() => {
-    if (vals.length === 0) return { bins: [] as number[], lo: 0, hi: 0 }
+    if (vals.length === 0) return { bins: [] as number[], lo: 0, hi: 0, modeBin: -1 }
     const lo = Math.min(...vals)
     const hi = Math.max(...vals)
-    const N = 12
+    const N = 16
     const bins = new Array(N).fill(0)
-    const span = hi - lo || 1
+    const logLo = Math.log10(lo)
+    const logHi = Math.log10(hi)
+    const span = logHi - logLo || 1
     for (const v of vals) {
-      const idx = Math.min(N - 1, Math.floor(((v - lo) / span) * N))
+      const idx = Math.min(N - 1, Math.max(0, Math.floor(((Math.log10(v) - logLo) / span) * N)))
       bins[idx]++
     }
-    return { bins, lo, hi }
+    // Most-populated bin — used to flag clustering ("X% of contracts near Y").
+    let modeBin = 0
+    for (let i = 1; i < N; i++) if (bins[i] > bins[modeBin]) modeBin = i
+    return { bins, lo, hi, modeBin }
   })()
   const maxBin = Math.max(1, ...hist.bins)
+  const modeShare = vals.length > 0 && hist.modeBin >= 0 ? (hist.bins[hist.modeBin] / vals.length) * 100 : 0
 
   const daColor = daPct >= 75 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const hrColor = hrPct >= 75 ? RISK_COLORS.critical : hrPct >= 40 ? RISK_COLORS.high : hrPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
@@ -4305,30 +4312,48 @@ function Z3Fingerprint({
           color={hrColor}
           readout={`${hrPct.toFixed(0)}%`}
         />
-        {/* Amount distribution histogram */}
+        {/* Amount distribution histogram — log-scale, full width below the bars */}
         {hist.bins.length > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)', width: 92 }}>
-              {lang === 'en' ? 'Amounts' : 'Montos'}
-            </span>
-            <span className="flex-1 flex items-end gap-px" style={{ height: 18 }}>
-              {hist.bins.map((b, i) => (
-                <span
-                  key={i}
-                  className="flex-1"
-                  style={{
-                    height: `${Math.max(6, (b / maxBin) * 100)}%`,
-                    background: 'var(--color-text-muted)',
-                    opacity: b > 0 ? 0.55 : 0.12,
-                    borderRadius: 0.5,
-                  }}
-                  title={`${b} ${lang === 'en' ? 'contracts' : 'contratos'}`}
-                />
-              ))}
-            </span>
-            <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 40 }}>
-              {formatCompactMXN(hist.lo)}
-            </span>
+          <div className="pt-1.5">
+            <div className="flex items-baseline justify-between mb-1">
+              <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Amount distribution · log scale' : 'Distribución de montos · escala log'}
+              </span>
+              {modeShare >= 30 && (
+                <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+                  {lang === 'en'
+                    ? `${modeShare.toFixed(0)}% clustered`
+                    : `${modeShare.toFixed(0)}% agrupados`}
+                </span>
+              )}
+            </div>
+            <div className="flex items-end gap-px" style={{ height: 30 }}>
+              {hist.bins.map((b, i) => {
+                const isMode = i === hist.modeBin && b > 0 && modeShare >= 30
+                return (
+                  <span
+                    key={i}
+                    className="flex-1"
+                    style={{
+                      height: `${b > 0 ? Math.max(8, (b / maxBin) * 100) : 0}%`,
+                      background: isMode ? RISK_COLORS.high : 'var(--color-text-muted)',
+                      opacity: b > 0 ? (isMode ? 0.85 : 0.5) : 0.1,
+                      borderRadius: 0.5,
+                      minHeight: b > 0 ? 3 : 0,
+                    }}
+                    title={`${b} ${lang === 'en' ? 'contracts' : 'contratos'}`}
+                  />
+                )
+              })}
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+                {formatCompactMXN(hist.lo)}
+              </span>
+              <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+                {formatCompactMXN(hist.hi)}
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -4345,27 +4370,43 @@ function Z3Fingerprint({
 // ────────────────────────────────────────────────────────────────────────────
 function Z3MonthlyStrip({
   monthly,
-  maxMonthAmt,
   lang,
 }: {
   monthly: Array<{ ym: string; label: string; amount: number; count: number; avgRisk: number; isYearStart: boolean; yearLabel: string }>
-  maxMonthAmt: number
   lang: 'en' | 'es'
 }) {
+  // Height tracks CONTRACT COUNT, not peso amount — a burst vendor's signature
+  // is volume clustered in time. Amount-scaling lets a single large contract
+  // flatten every other month into an invisible sliver (the bug this fixes).
+  const maxMonthCount = Math.max(1, ...monthly.map((m) => m.count))
+  const activeMonths = monthly.filter((m) => m.count > 0).length
+  const peakMonth = monthly.reduce((best, m) => (m.count > best.count ? m : best), monthly[0])
   return (
     <div className="pt-3 pb-3">
-      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
-        {lang === 'en' ? 'Activity by month' : 'Actividad por mes'}
+      <div className="flex items-baseline justify-between mb-2">
+        <div className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+          {lang === 'en' ? 'Activity by month · contracts' : 'Actividad por mes · contratos'}
+        </div>
+        {peakMonth && peakMonth.count > 0 && (
+          <div className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+            {lang === 'en'
+              ? `peak ${peakMonth.count} · ${activeMonths} active mo.`
+              : `pico ${peakMonth.count} · ${activeMonths} meses activos`}
+          </div>
+        )}
       </div>
-      <div className="relative" style={{ height: 56 }}>
+      <div className="relative" style={{ height: 72 }}>
         <div className="absolute left-0 right-0 flex items-end gap-px" style={{ top: 0, bottom: 14 }}>
           {monthly.map((m) => {
-            const h = m.amount > 0 ? Math.max(6, (m.amount / maxMonthAmt) * 100) : 0
+            const h = m.count > 0 ? Math.max(10, (m.count / maxMonthCount) * 100) : 0
             const cap =
               m.avgRisk >= 0.60 ? RISK_COLORS.critical
               : m.avgRisk >= 0.40 ? RISK_COLORS.high
               : m.avgRisk >= 0.25 ? RISK_COLORS.medium
               : 'var(--color-text-muted)'
+            // Fill tracks risk too — high-risk burst months read red, not grey.
+            const fill = m.avgRisk >= 0.40 ? cap : 'var(--color-text-muted)'
+            const fillOpacity = m.avgRisk >= 0.40 ? 0.32 : 0.28
             return (
               <span
                 key={m.ym}
@@ -4374,8 +4415,8 @@ function Z3MonthlyStrip({
                   ? `${m.label} · ${m.count} ${lang === 'en' ? 'contracts' : 'contratos'} · ${formatCompactMXN(m.amount)}`
                   : `${m.label} · ${lang === 'en' ? 'no contracts' : 'sin contratos'}`}
               >
-                {m.amount > 0 ? (
-                  <span className="w-full" style={{ height: `${h}%`, background: 'var(--color-text-muted)', opacity: 0.4, borderTop: `2px solid ${cap}`, minHeight: 4 }} />
+                {m.count > 0 ? (
+                  <span className="w-full" style={{ height: `${h}%`, background: fill, opacity: fillOpacity, borderTop: `2px solid ${cap}`, minHeight: 5 }} />
                 ) : (
                   <span className="w-full" style={{ height: 1, background: 'var(--color-border)' }} />
                 )}
