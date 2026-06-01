@@ -2406,3 +2406,40 @@ Scan results (false positives filtered):
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
+## Visual Review — 2026-06-01T00:10:20Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 | WARN |
+| https://rubli.xyz/atlas | 403 | WARN |
+| https://rubli.xyz/aria | 403 | WARN |
+| https://rubli.xyz/sectors | 403 | WARN |
+| https://rubli.xyz/sectors/salud | 403 | WARN |
+| https://rubli.xyz/cases | 403 | WARN |
+| https://rubli.xyz/methodology | 403 | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 | WARN |
+
+**Note:** All 403s carry `x-deny-reason: host_not_allowed`. The site's CDN allowlist blocks outbound requests from this cloud execution environment. This is a persistent infrastructure constraint (consistent across all prior runs), not a site outage.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | Blocked — "Host not in allowlist" (plain text, not JSON) | WARN |
+| /api/v1/cases?limit=5 | Blocked — same | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | Blocked — same | WARN |
+| /api/v1/sectors | Blocked — same | WARN |
+
+**Note:** API failures are same-root-cause as HTTP 403s (CDN allowlist). Not an API regression.
+
+### Bilingual Gaps
+- **`lang === ?` pattern scan:** `ConcentrationConstellation.tsx` — all 8 pattern labels use `isEs ?` correctly; bilingual.
+- **i18n key leak scan:** Matches were constants/lookups (`WEB_VERDICT_STYLE[…]`, `TIER_STYLES[…]`), code comments, citation data, or vendor name strings — none are raw keys rendered in UI.
+- **"Generate Report" hardcoded:** None detected.
+- **"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+- **Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
