@@ -3554,6 +3554,55 @@ function Z3Panel({
   for (let y = yearMin; y <= yearMax; y++) yearSequence.push(y)
   const maxYearAmt = Math.max(...Array.from(byYear.values()).map((v) => v.amount), 1)
 
+  // Largest single contract — drives the in-row amount bars (turns the dead
+  // whitespace in the register into a magnitude channel).
+  const maxContractAmt = Math.max(1, ...contracts.map((c) => Number(c.amount_mxn ?? 0)))
+
+  // Amounts array for the fingerprint histogram.
+  const contractAmounts = contracts.map((c) => Number(c.amount_mxn ?? 0))
+
+  // Monthly buckets — only used when the vendor spans ≤3 years (a yearly
+  // strip would be 2–3 giant blocks; monthly resolution shows the burst).
+  // Built from contract_date (YYYY-MM-DD); falls back to caption if no dates.
+  const yearSpan = yearMax - yearMin
+  const monthly = (() => {
+    if (yearSpan > 3) return null
+    const byMonth = new Map<string, { amount: number; count: number; riskSum: number; riskN: number }>()
+    let anyDate = false
+    contracts.forEach((c) => {
+      const d = (c.contract_date ?? '').slice(0, 7) // YYYY-MM
+      if (!/^\d{4}-\d{2}$/.test(d)) return
+      anyDate = true
+      const amt = Number(c.amount_mxn ?? 0)
+      const risk = Number(c.risk_score ?? 0)
+      const ex = byMonth.get(d) ?? { amount: 0, count: 0, riskSum: 0, riskN: 0 }
+      ex.amount += amt; ex.count += 1
+      if (risk > 0) { ex.riskSum += risk; ex.riskN += 1 }
+      byMonth.set(d, ex)
+    })
+    if (!anyDate) return null
+    // Continuous month sequence from yearMin-01 to yearMax-12.
+    const seq: Array<{ ym: string; label: string; amount: number; count: number; avgRisk: number; isYearStart: boolean; yearLabel: string }> = []
+    const MONTHS_ES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC']
+    for (let y = yearMin; y <= yearMax; y++) {
+      for (let m = 1; m <= 12; m++) {
+        const ym = `${y}-${String(m).padStart(2, '0')}`
+        const cell = byMonth.get(ym) ?? { amount: 0, count: 0, riskSum: 0, riskN: 0 }
+        seq.push({
+          ym,
+          label: `${MONTHS_ES[m - 1]} ${y}`,
+          amount: cell.amount,
+          count: cell.count,
+          avgRisk: cell.riskN > 0 ? cell.riskSum / cell.riskN : 0,
+          isYearStart: m === 1,
+          yearLabel: `'${String(y).slice(2)}`,
+        })
+      }
+    }
+    return seq
+  })()
+  const maxMonthAmt = monthly ? Math.max(1, ...monthly.map((m) => m.amount)) : 1
+
   // Top-3 cards: BIGGEST / HIGHEST RISK / MOST RECENT. Disambiguate by
   // falling through to the next candidate when picks collide.
   const top3 = pickZ3Top3(contracts)
@@ -3674,12 +3723,12 @@ function Z3Panel({
             </div>
           )}
 
-          {/* Timeline strip — vendor's year-by-year activity with admin bands.
-              Only worth its height when the vendor spans 3+ active years; with
-              1–2 years the bars become two giant near-empty columns ("warehouse
-              with a chair"). For 1–2 active years, show a compact one-line
-              caption instead — same information, no wasted canvas. */}
-          {!isLoading && !isError && byYear.size >= 3 && (
+          {/* ACTIVITY — adaptive temporal view. Spans >3 years → yearly strip
+              with admin bands. Spans ≤3 years with dates → MONTHLY strip
+              (24–48 cols) so the burst is visible. No usable dates → compact
+              caption. This replaces the old "collapse to a text line" which
+              hid the very burst pattern that defines a ghost vendor. */}
+          {!isLoading && !isError && yearSpan > 3 && byYear.size > 0 && (
             <Z3TimelineStrip
               yearSequence={yearSequence}
               byYear={byYear}
@@ -3689,7 +3738,10 @@ function Z3Panel({
               lang={lang}
             />
           )}
-          {!isLoading && !isError && byYear.size > 0 && byYear.size < 3 && (
+          {!isLoading && !isError && yearSpan <= 3 && monthly && (
+            <Z3MonthlyStrip monthly={monthly} maxMonthAmt={maxMonthAmt} lang={lang} />
+          )}
+          {!isLoading && !isError && yearSpan <= 3 && !monthly && byYear.size > 0 && (
             <div className="pt-4 pb-1">
               <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
@@ -3705,6 +3757,19 @@ function Z3Panel({
                 })()}
               </div>
             </div>
+          )}
+
+          {/* FINGERPRINT — procedure mix · risk · amount distribution. Turns
+              the stat-line numbers into pictures so the pattern reads at a
+              glance (a flat contract list hides it). */}
+          {!isLoading && !isError && contracts.length > 0 && (
+            <Z3Fingerprint
+              directAwardN={directAwardN}
+              hrCount={hrCount}
+              total={contracts.length}
+              amounts={contractAmounts}
+              lang={lang}
+            />
           )}
 
           {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
@@ -3758,6 +3823,7 @@ function Z3Panel({
                 <Z3ContractRow
                   key={c.id}
                   c={c}
+                  maxAmt={maxContractAmt}
                   isHighlighted={c.id === highlightContractId}
                   dispatch={dispatch}
                   lang={lang}
@@ -4059,6 +4125,7 @@ function Z3HeroCards({
  */
 function Z3ContractRow({
   c,
+  maxAmt,
   isHighlighted,
   dispatch,
   lang,
@@ -4066,6 +4133,7 @@ function Z3ContractRow({
   prefersReducedMotion,
 }: {
   c: ContractListItem
+  maxAmt: number
   isHighlighted: boolean
   dispatch: ReturnType<typeof useExploreDispatch>
   lang: 'en' | 'es'
@@ -4076,6 +4144,10 @@ function Z3ContractRow({
   const level = getRiskLevelFromScore(score)
   const fill = RISK_COLORS[level]
   const riskPct = score > 0 ? Math.round(score * 100) : null
+  // Amount bar — fraction of the vendor's largest contract. Fills the dead
+  // whitespace in the row's middle so the eye sees magnitude + threshold
+  // clustering instead of a flat list.
+  const amtFrac = Math.max(0.02, Math.min(1, Number(c.amount_mxn ?? 0) / Math.max(1, maxAmt)))
   const title = (c as ContractListItem & { title?: string }).title
   const procType = shortProcType(
     (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
@@ -4129,9 +4201,18 @@ function Z3ContractRow({
             {lang === 'en' ? 'SB' : 'UP'}
           </span>
         )}
-        {/* Title (truncates) — sentence-cased from raw COMPRANET caps */}
-        <span className="flex-1 min-w-0 truncate" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-          {title ? shortenContractName(title, 120) : '—'}
+        {/* Title + amount bar — the bar fills the row's dead middle with a
+            magnitude channel (width ∝ amount / vendor's largest). Title sits
+            on top, sentence-cased from raw COMPRANET caps. */}
+        <span className="flex-1 min-w-0 relative flex items-center">
+          <span
+            aria-hidden="true"
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-sm"
+            style={{ width: `${amtFrac * 100}%`, height: 14, background: fill, opacity: 0.12 }}
+          />
+          <span className="relative truncate" style={{ fontSize: 11, color: 'var(--color-text-secondary)', paddingLeft: 6, paddingRight: 6 }}>
+            {title ? shortenContractName(title, 120) : '—'}
+          </span>
         </span>
         {/* Risk pill */}
         <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 700, color: fill, width: 36 }}>
@@ -4147,6 +4228,174 @@ function Z3ContractRow({
  * MOST RECENT. Disambiguate by falling through to the next candidate
  * when the same contract would be picked twice.
  */
+// ────────────────────────────────────────────────────────────────────────────
+// Z3Fingerprint — the vendor's pattern at a glance. Three compact bars
+// (procedure mix · risk · amount distribution) that turn the stat-line
+// numbers into pictures. A ghost/burst vendor (100% direct award, 100%
+// high-risk, amounts clustered near a threshold) reads instantly here,
+// where a flat contract list hides it.
+// ────────────────────────────────────────────────────────────────────────────
+function Z3Fingerprint({
+  directAwardN,
+  hrCount,
+  total,
+  amounts,
+  lang,
+}: {
+  directAwardN: number
+  hrCount: number
+  total: number
+  amounts: number[]
+  lang: 'en' | 'es'
+}) {
+  if (total === 0) return null
+  const daPct = (directAwardN / total) * 100
+  const hrPct = (hrCount / total) * 100
+
+  // Amount histogram — 10 log-ish buckets between min and max so clustering
+  // near a procedure threshold is visible. Use linear bins on the value range.
+  const vals = amounts.filter((a) => a > 0)
+  const hist = (() => {
+    if (vals.length === 0) return { bins: [] as number[], lo: 0, hi: 0 }
+    const lo = Math.min(...vals)
+    const hi = Math.max(...vals)
+    const N = 12
+    const bins = new Array(N).fill(0)
+    const span = hi - lo || 1
+    for (const v of vals) {
+      const idx = Math.min(N - 1, Math.floor(((v - lo) / span) * N))
+      bins[idx]++
+    }
+    return { bins, lo, hi }
+  })()
+  const maxBin = Math.max(1, ...hist.bins)
+
+  const daColor = daPct >= 75 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+  const hrColor = hrPct >= 75 ? RISK_COLORS.critical : hrPct >= 40 ? RISK_COLORS.high : hrPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
+
+  const Bar = ({ label, pct, color, readout }: { label: string; pct: number; color: string; readout: string }) => (
+    <div className="flex items-center gap-3">
+      <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)', width: 92 }}>
+        {label}
+      </span>
+      <span className="flex-1 relative" style={{ height: 8, background: 'var(--color-border)', borderRadius: 1, overflow: 'hidden' }}>
+        <span style={{ position: 'absolute', inset: 0, width: `${Math.min(100, pct)}%`, background: color }} />
+      </span>
+      <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 11, fontWeight: 700, color, width: 40 }}>
+        {readout}
+      </span>
+    </div>
+  )
+
+  return (
+    <div className="pt-1 pb-3">
+      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+        {lang === 'en' ? 'Fingerprint' : 'Huella'}
+      </div>
+      <div className="space-y-1.5">
+        <Bar
+          label={lang === 'en' ? 'Direct award' : 'Adj. directa'}
+          pct={daPct}
+          color={daColor}
+          readout={`${daPct.toFixed(0)}%`}
+        />
+        <Bar
+          label={lang === 'en' ? 'High risk' : 'Alto riesgo'}
+          pct={hrPct}
+          color={hrColor}
+          readout={`${hrPct.toFixed(0)}%`}
+        />
+        {/* Amount distribution histogram */}
+        {hist.bins.length > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)', width: 92 }}>
+              {lang === 'en' ? 'Amounts' : 'Montos'}
+            </span>
+            <span className="flex-1 flex items-end gap-px" style={{ height: 18 }}>
+              {hist.bins.map((b, i) => (
+                <span
+                  key={i}
+                  className="flex-1"
+                  style={{
+                    height: `${Math.max(6, (b / maxBin) * 100)}%`,
+                    background: 'var(--color-text-muted)',
+                    opacity: b > 0 ? 0.55 : 0.12,
+                    borderRadius: 0.5,
+                  }}
+                  title={`${b} ${lang === 'en' ? 'contracts' : 'contratos'}`}
+                />
+              ))}
+            </span>
+            <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 40 }}>
+              {formatCompactMXN(hist.lo)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z3MonthlyStrip — month-by-month activity for short-span vendors. When a
+// vendor's contracts cram into ≤3 years, the yearly strip degenerates to 2–3
+// giant blocks; monthly resolution (24–36 columns) reveals the BURST that
+// defines a ghost vendor. Falls back to the caller's caption when dates are
+// missing.
+// ────────────────────────────────────────────────────────────────────────────
+function Z3MonthlyStrip({
+  monthly,
+  maxMonthAmt,
+  lang,
+}: {
+  monthly: Array<{ ym: string; label: string; amount: number; count: number; avgRisk: number; isYearStart: boolean; yearLabel: string }>
+  maxMonthAmt: number
+  lang: 'en' | 'es'
+}) {
+  return (
+    <div className="pt-3 pb-3">
+      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+        {lang === 'en' ? 'Activity by month' : 'Actividad por mes'}
+      </div>
+      <div className="relative" style={{ height: 56 }}>
+        <div className="absolute left-0 right-0 flex items-end gap-px" style={{ top: 0, bottom: 14 }}>
+          {monthly.map((m) => {
+            const h = m.amount > 0 ? Math.max(6, (m.amount / maxMonthAmt) * 100) : 0
+            const cap =
+              m.avgRisk >= 0.60 ? RISK_COLORS.critical
+              : m.avgRisk >= 0.40 ? RISK_COLORS.high
+              : m.avgRisk >= 0.25 ? RISK_COLORS.medium
+              : 'var(--color-text-muted)'
+            return (
+              <span
+                key={m.ym}
+                className="flex-1 flex flex-col justify-end items-center h-full"
+                title={m.count > 0
+                  ? `${m.label} · ${m.count} ${lang === 'en' ? 'contracts' : 'contratos'} · ${formatCompactMXN(m.amount)}`
+                  : `${m.label} · ${lang === 'en' ? 'no contracts' : 'sin contratos'}`}
+              >
+                {m.amount > 0 ? (
+                  <span className="w-full" style={{ height: `${h}%`, background: 'var(--color-text-muted)', opacity: 0.4, borderTop: `2px solid ${cap}`, minHeight: 4 }} />
+                ) : (
+                  <span className="w-full" style={{ height: 1, background: 'var(--color-border)' }} />
+                )}
+              </span>
+            )
+          })}
+        </div>
+        {/* Year ticks */}
+        <div className="absolute bottom-0 left-0 right-0 flex" style={{ height: 12 }}>
+          {monthly.map((m) => (
+            <span key={m.ym} className="flex-1 font-mono" style={{ fontSize: 8, color: 'var(--color-text-muted)', textAlign: 'left' }}>
+              {m.isYearStart ? m.yearLabel : ''}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /**
  * Clamp a COMPRANET procedure_type to a short chip label. The raw field is
  * often a full uppercase sentence ("ADJUDICACIÓN DIRECTA POR ADJUDICACIÓN A
