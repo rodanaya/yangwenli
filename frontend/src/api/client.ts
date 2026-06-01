@@ -60,6 +60,7 @@ import type {
   InvestigationFilterParams,
   ExternalEvidence,
   ExecutiveSummaryResponse,
+  DashboardBundleResponse,
   RiskExplanation,
   ASFInstitutionResponse,
   SectorASFResponse,
@@ -1165,6 +1166,16 @@ export const analysisApi = {
     }>
   }> {
     const { data } = await api.get('/executive/capture-leaders')
+    return data
+  },
+
+  /**
+   * Get ALL 6 Dashboard data blocks in a single cached, server-side-concurrent
+   * call (replaces 6 separate round-trips). Each block mirrors its standalone
+   * endpoint, or is null if that block failed/timed out — consume per-section.
+   */
+  async getDashboardBundle(): Promise<DashboardBundleResponse> {
+    const { data } = await api.get<DashboardBundleResponse>('/executive/dashboard-bundle')
     return data
   },
 

@@ -9,9 +9,12 @@ import json
 import logging
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response as FastAPIResponse
+from pydantic import BaseModel
 
 from ..dependencies import get_db
 
@@ -640,3 +643,187 @@ def get_capture_leaders():
         except Exception as e:
             logger.error(f"Capture leaders error: {e}")
             raise HTTPException(status_code=500, detail="Failed to fetch capture leaders")
+
+
+# ---------------------------------------------------------------------------
+# Dashboard bundle — single endpoint that returns all 6 Dashboard blocks
+# concurrently so the frontend makes one round-trip instead of six.
+# ---------------------------------------------------------------------------
+
+# Separate cache dict so it doesn't interfere with the individual handler caches.
+_bundle_cache: dict = {"data": None, "expires": 0}
+_bundle_cache_lock = threading.Lock()
+_bundle_compute_lock = threading.Lock()
+_BUNDLE_TTL = 120  # 2 minutes — shorter than individual handlers (600s / 3600s)
+
+
+class DashboardBundleResponse(BaseModel):
+    """All 6 Dashboard data blocks bundled into a single response.
+
+    Every field is Optional — if an individual block fails it will be null
+    rather than 500-ing the whole bundle.  The frontend falls back per-section.
+    """
+    fast_dashboard: Optional[Dict[str, Any]] = None
+    recent_critical: Optional[Dict[str, Any]] = None
+    aria_stats: Optional[Dict[str, Any]] = None
+    executive_summary: Optional[Dict[str, Any]] = None
+    case_stats: Optional[Dict[str, Any]] = None
+    capture_leaders: Optional[Dict[str, Any]] = None
+
+
+def _fetch_fast_dashboard() -> dict:
+    """Call the fast-dashboard handler with a throwaway Response object."""
+    from .stats import get_fast_dashboard
+    dummy = FastAPIResponse()
+    result = get_fast_dashboard(dummy)
+    # FastDashboardResponse is a Pydantic model; serialise to plain dict.
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    return dict(result)
+
+
+def _fetch_recent_critical() -> dict:
+    """Return top-5 most-recent critical contracts as a ContractListResponse dict.
+
+    Uses contract_service directly (plain values, no Query() wrappers) so we
+    avoid the FastAPI dependency-injection machinery while keeping the exact
+    same response shape as GET /contracts?risk_level=critical&per_page=5&...
+    """
+    from ..services.contract_service import contract_service
+    from ..models.contract import ContractListItem, PaginationMeta
+
+    with get_db() as conn:
+        result = contract_service.list_contracts(
+            conn,
+            risk_level="critical",
+            per_page=5,
+            page=1,
+            sort_by="contract_date",
+            sort_order="desc",
+        )
+    items = [ContractListItem(**item).model_dump() for item in result.data]
+    pagination = PaginationMeta(**result.pagination).model_dump()
+    return {"data": items, "pagination": pagination}
+
+
+def _fetch_aria_stats() -> dict:
+    """Call the ARIA /aria/stats handler — this is what the frontend's
+    ariaApi.getStats() hits (AriaStatsResponse with latest_run tier counts),
+    NOT investigation/stats."""
+    from .aria import get_aria_stats
+    with get_db() as conn:
+        result = get_aria_stats(conn)
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    return dict(result)
+
+
+def _fetch_case_stats() -> dict:
+    """Call the cases /stats handler."""
+    from .cases import get_stats as _get_case_stats
+    result = _get_case_stats()
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    # dict or Pydantic dict-compatible
+    if isinstance(result, dict):
+        return result
+    return dict(result)
+
+
+def _fetch_executive_summary() -> dict:
+    """Call the executive summary handler (same file)."""
+    result = get_executive_summary()
+    if isinstance(result, dict):
+        return result
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    return dict(result)
+
+
+def _fetch_capture_leaders() -> dict:
+    """Call the capture leaders handler (same file)."""
+    result = get_capture_leaders()
+    if isinstance(result, dict):
+        return result
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    return dict(result)
+
+
+# Mapping: bundle key → fetcher function
+_BUNDLE_FETCHERS: dict = {
+    "fast_dashboard": _fetch_fast_dashboard,
+    "recent_critical": _fetch_recent_critical,
+    "aria_stats": _fetch_aria_stats,
+    "executive_summary": _fetch_executive_summary,
+    "case_stats": _fetch_case_stats,
+    "capture_leaders": _fetch_capture_leaders,
+}
+
+
+_BLOCK_TIMEOUT = 15  # seconds — per-block deadline; prevents one slow block from blocking the bundle
+
+
+def _build_bundle() -> dict:
+    """Run all 6 fetchers concurrently and return assembled bundle dict.
+
+    Each fetcher gets its own thread so they run in parallel.  A per-block
+    timeout (_BLOCK_TIMEOUT) ensures one slow or stuck block cannot block the
+    whole response — it will be set to null with an error log instead.
+    Exceptions are also caught and set the block to None (never propagated).
+    """
+    results: dict = {}
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        future_to_key = {executor.submit(fn): key for key, fn in _BUNDLE_FETCHERS.items()}
+        for future in as_completed(future_to_key, timeout=_BLOCK_TIMEOUT + 5):
+            key = future_to_key[future]
+            try:
+                results[key] = future.result(timeout=_BLOCK_TIMEOUT)
+            except TimeoutError:
+                logger.warning("dashboard-bundle: block '%s' timed out after %ds", key, _BLOCK_TIMEOUT)
+                results[key] = None
+            except Exception as exc:
+                logger.error("dashboard-bundle: block '%s' failed: %s", key, exc)
+                results[key] = None
+
+    # Fill in any keys that never completed (as_completed outer timeout)
+    for key in _BUNDLE_FETCHERS:
+        if key not in results:
+            logger.warning("dashboard-bundle: block '%s' did not complete in time", key)
+            results[key] = None
+
+    return results
+
+
+@router.get("/dashboard-bundle", response_model=DashboardBundleResponse)
+def get_dashboard_bundle():
+    """Return all 6 Executive Dashboard data blocks in a single cached response.
+
+    The 6 blocks are fetched concurrently so total latency equals the slowest
+    individual block (not their sum).  Each block uses the same caching path
+    as its standalone endpoint; the bundle adds a 120-second in-process cache
+    on top so repeated cold-cache hits still converge quickly.
+
+    Any block that raises an exception is set to null rather than failing the
+    whole response — the frontend falls back per-section.
+    """
+    now = time.time()
+    # Fast path: in-process cache hit
+    if _bundle_cache["data"] and now < _bundle_cache["expires"]:
+        return _bundle_cache["data"]
+
+    # Prevent stampede on concurrent requests to a cold cache
+    with _bundle_compute_lock:
+        # Double-check after acquiring lock
+        now = time.time()
+        if _bundle_cache["data"] and now < _bundle_cache["expires"]:
+            return _bundle_cache["data"]
+
+        bundle = _build_bundle()
+
+        with _bundle_cache_lock:
+            _bundle_cache["data"] = bundle
+            _bundle_cache["expires"] = time.time() + _BUNDLE_TTL
+
+        return bundle

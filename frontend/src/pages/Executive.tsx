@@ -21,9 +21,6 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi, contractApi, ariaApi, caseLibraryApi } from '@/api/client'
-import type { ContractListItem, ContractListResponse } from '@/api/types'
-import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber, formatCompactUSD } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, GROUND_TRUTH_CASE_COUNT_FALLBACK, GROUND_TRUTH_VENDOR_COUNT_FALLBACK } from '@/lib/constants'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
@@ -31,6 +28,7 @@ import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
 import { ObservatoryScatter } from '@/components/atlas/ObservatoryScatter'
 import { useScatterClusters } from '@/lib/atlas/useScatterClusters'
+import { useExecutiveData } from '@/hooks/useExecutiveData'
 // DashboardSledgehammer removed 2026-05-05 — duplicated MacroArc's 74% headline
 import { MacroArc } from '@/components/dashboard/MacroArc'
 // LensVisualization/buildLensTiers retired 2026-05-20 — replaced by Cascade
@@ -136,61 +134,21 @@ export default function Executive() {
   // § 1 The Atlas — constellation mode (PATRONES / SECTORES / SEXENIOS)
   const [atlasMode, setAtlasMode] = useState<ConstellationMode>('patterns')
 
-  // Fetch live dashboard data for accurate stats
-  const { data: dashboard } = useQuery({
-    queryKey: ['executive', 'fastDashboard'],
-    queryFn: () => analysisApi.getFastDashboard(),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // Recent critical contracts — live news-wire for the front page
-  const { data: recentCriticalData } = useQuery<ContractListResponse>({
-    queryKey: ['executive', 'recentCritical'],
-    queryFn: () => contractApi.getAll({
-      risk_level: 'critical',
-      per_page: 5,
-      sort_by: 'contract_date',
-      sort_order: 'desc',
-    }),
-    staleTime: 10 * 60 * 1000,
-    retry: 1,
-  })
-  const recentCritical: ContractListItem[] = recentCriticalData?.data ?? []
-
-  // § 2 La Lente — live ARIA platform stats (T1-T4 vendor distribution)
-  const { data: ariaStats } = useQuery({
-    queryKey: ['executive', 'aria-stats-v3'],
-    queryFn: () => ariaApi.getStats(),
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
-
-  // Fix B (audit 2026-05-07) — live GT case count for the homepage hero.
-  // Was hardcoded as "1,363" in two places below. The ground-truth corpus
-  // grows over time; this ensures the headline number drifts with the data.
-  const { data: executiveSummary } = useQuery({
-    queryKey: ['executive', 'summary-gt'],
-    queryFn: () => analysisApi.getExecutiveSummary(),
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
+  // All 6 Dashboard data blocks in ONE cached, server-side-concurrent request
+  // via /executive/dashboard-bundle (was 6 separate calls fanning out on
+  // mount). Each block falls back to null/empty per-section; bundleLoading /
+  // bundleError drive the page-level loading + error chrome.
+  const {
+    dashboard,
+    recentCritical,
+    ariaStats,
+    executiveSummary,
+    caseStats,
+    captureLeaders: captureLeadersData,
+    isLoading: bundleLoading,
+    isError: bundleError,
+  } = useExecutiveData()
   const gtCaseCount = executiveSummary?.ground_truth?.cases ?? GROUND_TRUTH_CASE_COUNT_FALLBACK
-
-  // § 2 La Lente — GT case corpus growth signal
-  const { data: caseStats } = useQuery({
-    queryKey: ['executive', 'case-stats-v3'],
-    queryFn: () => caseLibraryApi.getStats(),
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
-
-  // Finding 04 — P6 capture leaders: live top-5 by capture score
-  const { data: captureLeadersData } = useQuery({
-    queryKey: ['executive', 'capture-leaders'],
-    queryFn: () => analysisApi.getCaptureLeaders(),
-    staleTime: 60 * 60 * 1000,
-    retry: 0,
-  })
 
   const stats = useMemo(() => {
     const d = dashboard
@@ -385,6 +343,29 @@ export default function Executive() {
               ? 'Built by RUBLI · Data: COMPRANET 2002–2025 · Updated May 2026 · Model v0.8.5'
               : 'Por RUBLI · Datos: COMPRANET 2002–2025 · Actualizado may 2026 · Modelo v0.8.5'}
           </p>
+
+          {/* Live-data status — the whole page loads from ONE bundled request
+              (useExecutiveData). While it resolves the sections show reference
+              figures; this pill signals loading, and on failure tells the
+              reader the figures are reference values (graceful per-section
+              fallback, never a blank page). */}
+          {(bundleLoading || bundleError) && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="mt-1.5 inline-flex items-center gap-1.5 text-[9.5px] font-mono uppercase tracking-[0.12em]"
+              style={{ color: bundleError ? 'var(--color-text-secondary)' : 'var(--color-text-muted)' }}
+            >
+              <span
+                aria-hidden="true"
+                className={bundleLoading ? 'animate-pulse' : ''}
+                style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor' }}
+              />
+              {bundleError
+                ? (lang === 'en' ? 'Live data unavailable — reference figures shown' : 'Datos en vivo no disponibles — se muestran cifras de referencia')
+                : (lang === 'en' ? 'Loading live data…' : 'Cargando datos en vivo…')}
+            </div>
+          )}
 
           {/* Lede — EB Garamond regular 17px / 1.55, max-width 68ch */}
           <p

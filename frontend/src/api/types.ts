@@ -1977,6 +1977,33 @@ export interface MlAnomaliesResponse {
 
 export type FastDashboardResponse = FastDashboardData
 
+/** Top-5 institutional-capture leaders (P6) — GET /executive/capture-leaders. */
+export interface CaptureLeadersResponse {
+  leaders: Array<{
+    label: string
+    institution_name: string
+    top: number
+    second: number
+    gap: number
+    peak_year: number
+    captured: boolean
+  }>
+}
+
+/**
+ * GET /executive/dashboard-bundle — all 6 Dashboard blocks in one cached,
+ * server-side-concurrent call. Each block is the SAME shape as its standalone
+ * endpoint, or `null` if that block failed/timed out (per-section fallback).
+ */
+export interface DashboardBundleResponse {
+  fast_dashboard: FastDashboardResponse | null
+  recent_critical: ContractListResponse | null
+  aria_stats: AriaStatsResponse | null
+  executive_summary: ExecutiveSummaryResponse | null
+  case_stats: ScandalStats | null
+  capture_leaders: CaptureLeadersResponse | null
+}
+
 // ============================================================================
 // New Types for API expansion
 // ============================================================================
