@@ -154,6 +154,10 @@ INDEXES = [
     "CREATE INDEX IF NOT EXISTS idx_aria_queue_tier    ON aria_queue (ips_tier)",
     "CREATE INDEX IF NOT EXISTS idx_aria_queue_run     ON aria_queue (aria_run_id)",
     "CREATE INDEX IF NOT EXISTS idx_aria_queue_pattern ON aria_queue (primary_pattern)",
+    # Covering indexes for the Observatory /atlas cluster-stats aggregates — keep
+    # GROUP BY primary_pattern / primary_sector_id index-only (no 248K-row scan).
+    "CREATE INDEX IF NOT EXISTS idx_aria_queue_pattern_stats ON aria_queue (primary_pattern, ips_tier, avg_risk_score, total_value_mxn)",
+    "CREATE INDEX IF NOT EXISTS idx_aria_queue_sector_stats  ON aria_queue (primary_sector_id, ips_tier, avg_risk_score, total_value_mxn)",
     "CREATE INDEX IF NOT EXISTS idx_aria_queue_efos    ON aria_queue (is_efos_definitivo)",
     "CREATE INDEX IF NOT EXISTS idx_aria_queue_gt      ON aria_queue (in_ground_truth)",
     "CREATE INDEX IF NOT EXISTS idx_aria_gt_vendor     ON aria_gt_updates (vendor_id)",

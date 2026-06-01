@@ -44,6 +44,16 @@ INDEXES = [
      "CREATE INDEX IF NOT EXISTS idx_cobid_collusion_shared ON co_bidding_stats(is_potential_collusion, shared_procedures DESC)"),
     ("idx_cobid_collusion_rate",
      "CREATE INDEX IF NOT EXISTS idx_cobid_collusion_rate ON co_bidding_stats(is_potential_collusion, co_bid_rate DESC)"),
+    # CRITICAL (Jun-2026): Observatory /atlas cluster-stats covering indexes. The
+    # bubble aggregates GROUP BY primary_pattern / primary_sector_id with COUNT +
+    # SUM(ips_tier) + AVG(avg_risk_score>=.4) + SUM(total_value_mxn). Without a
+    # covering index that's a full 248K-row scan/row-lookup (1.7s/4.3s warm, >gateway
+    # timeout cold on the 5GB deploy DB → 502s → static fallback). Covering indexes
+    # make both index-only scans (6ms / 57ms), cold-safe — no caching needed.
+    ("idx_aria_queue_pattern_stats",
+     "CREATE INDEX IF NOT EXISTS idx_aria_queue_pattern_stats ON aria_queue(primary_pattern, ips_tier, avg_risk_score, total_value_mxn)"),
+    ("idx_aria_queue_sector_stats",
+     "CREATE INDEX IF NOT EXISTS idx_aria_queue_sector_stats ON aria_queue(primary_sector_id, ips_tier, avg_risk_score, total_value_mxn)"),
 ]
 
 def table_exists(conn, name):
