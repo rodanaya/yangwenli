@@ -24,6 +24,7 @@ import type { ContractListItem } from '@/api/types'
 import {
   RISK_COLORS,
   getRiskLevelFromScore,
+  riskRamp,
   SECTOR_COLORS,
   SECTORS,
   PATTERN_COLORS,
@@ -3558,8 +3559,12 @@ function Z3Panel({
   // whitespace in the register into a magnitude channel).
   const maxContractAmt = Math.max(1, ...contracts.map((c) => Number(c.amount_mxn ?? 0)))
 
-  // Amounts array for the fingerprint histogram.
-  const contractAmounts = contracts.map((c) => Number(c.amount_mxn ?? 0))
+  // (amount, risk) pairs for the amount dot-field — each contract a risk-colored
+  // dot on a log axis (NYT Upshot named-outlier mechanic).
+  const contractPoints = contracts.map((c) => ({
+    amount: Number(c.amount_mxn ?? 0),
+    risk: Number(c.risk_score ?? 0),
+  }))
 
   // Monthly buckets — only used when the vendor spans ≤3 years (a yearly
   // strip would be 2–3 giant blocks; monthly resolution shows the burst).
@@ -3722,53 +3727,85 @@ function Z3Panel({
             </div>
           )}
 
-          {/* ACTIVITY — adaptive temporal view. Spans >3 years → yearly strip
-              with admin bands. Spans ≤3 years with dates → MONTHLY strip
-              (24–48 cols) so the burst is visible. No usable dates → compact
-              caption. This replaces the old "collapse to a text line" which
-              hid the very burst pattern that defines a ghost vendor. */}
-          {!isLoading && !isError && yearSpan > 3 && byYear.size > 0 && (
-            <Z3TimelineStrip
-              yearSequence={yearSequence}
-              byYear={byYear}
-              maxYearAmt={maxYearAmt}
-              selectedYear={yearFilter}
-              onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
-              lang={lang}
-            />
-          )}
-          {!isLoading && !isError && yearSpan <= 3 && monthly && (
-            <Z3MonthlyStrip monthly={monthly} lang={lang} />
-          )}
-          {!isLoading && !isError && yearSpan <= 3 && !monthly && byYear.size > 0 && (
-            <div className="pt-4 pb-1">
-              <div className="font-mono text-[9px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-text-muted)' }}>
-                {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
-              </div>
-              <div className="font-mono text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
-                {(() => {
-                  const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
-                  const adminMin = getAdministrationByYear(yearMin)?.short
-                  const adminTag = adminMin ? ` · ${adminMin}` : ''
-                  return lang === 'en'
-                    ? `Active ${range} · ${formatNumber(contracts.length)} contracts${adminTag}`
-                    : `Activo ${range} · ${formatNumber(contracts.length)} contratos${adminTag}`
-                })()}
-              </div>
-            </div>
-          )}
-
-          {/* FINGERPRINT — procedure mix · risk · amount distribution. Turns
-              the stat-line numbers into pictures so the pattern reads at a
-              glance (a flat contract list hides it). */}
+          {/* ─── FINGERPRINT PLATE ──────────────────────────────────────────
+              One framed editorial plate (inset ochre border, archival eyebrow)
+              instead of three strips stranded in whitespace. Two columns on
+              lg+: temporal activity (left) · procedure-mix / risk / amount
+              dot-field (right). Reference: Ordnance-Survey plate chrome +
+              NYT Upshot named-outlier dot strip for the amount field. */}
           {!isLoading && !isError && contracts.length > 0 && (
-            <Z3Fingerprint
-              directAwardN={directAwardN}
-              hrCount={hrCount}
-              total={contracts.length}
-              amounts={contractAmounts}
-              lang={lang}
-            />
+            <section
+              className="mt-3 mb-2 rounded-sm overflow-hidden"
+              style={{
+                border: '1px solid var(--color-border)',
+                boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
+                background: 'var(--color-background-elevated)',
+              }}
+            >
+              <div
+                className="flex items-baseline justify-between px-4 py-2"
+                style={{ borderBottom: '1px solid var(--color-border)' }}
+              >
+                <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+                  <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'Fingerprint' : 'Huella'}</span>
+                  <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
+                  <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'How they operated' : 'Cómo operaron'}</span>
+                </div>
+                <div className="font-mono tabular-nums" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+                  {formatNumber(contracts.length)} {lang === 'en' ? 'contracts' : 'contratos'}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr]">
+                {/* LEFT — temporal activity (yearly strip / monthly burst / caption) */}
+                <div className="px-4 py-3 min-w-0">
+                  {yearSpan > 3 && byYear.size > 0 && (
+                    <Z3TimelineStrip
+                      yearSequence={yearSequence}
+                      byYear={byYear}
+                      maxYearAmt={maxYearAmt}
+                      selectedYear={yearFilter}
+                      onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
+                      lang={lang}
+                    />
+                  )}
+                  {yearSpan <= 3 && monthly && (
+                    <Z3MonthlyStrip monthly={monthly} lang={lang} />
+                  )}
+                  {yearSpan <= 3 && !monthly && byYear.size > 0 && (
+                    <div>
+                      <div className="font-mono uppercase mb-1" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+                        {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
+                      </div>
+                      <div className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        {(() => {
+                          const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
+                          const adminMin = getAdministrationByYear(yearMin)?.short
+                          const adminTag = adminMin ? ` · ${adminMin}` : ''
+                          return lang === 'en'
+                            ? `Active ${range} · ${formatNumber(contracts.length)} contracts${adminTag}`
+                            : `Activo ${range} · ${formatNumber(contracts.length)} contratos${adminTag}`
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT — procedure mix · risk · amount dot-field */}
+                <div
+                  className="px-4 py-3 min-w-0 border-t lg:border-t-0 lg:border-l"
+                  style={{ borderColor: 'var(--color-border)' }}
+                >
+                  <Z3Fingerprint
+                    directAwardN={directAwardN}
+                    hrCount={hrCount}
+                    total={contracts.length}
+                    points={contractPoints}
+                    lang={lang}
+                  />
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
@@ -4238,125 +4275,156 @@ function Z3Fingerprint({
   directAwardN,
   hrCount,
   total,
-  amounts,
+  points,
   lang,
 }: {
   directAwardN: number
   hrCount: number
   total: number
-  amounts: number[]
+  points: Array<{ amount: number; risk: number }>
   lang: 'en' | 'es'
 }) {
   if (total === 0) return null
   const daPct = (directAwardN / total) * 100
   const hrPct = (hrCount / total) * 100
 
-  // Amount histogram — LOG-scale buckets between min and max. Contract values
-  // are heavily right-skewed (one big award + many small ones); linear bins
-  // collapse ~everything into bin 0. Log bins spread the distribution so
-  // clustering near a procedure threshold reads as a visible spike.
-  const vals = amounts.filter((a) => a > 0)
-  const hist = (() => {
-    if (vals.length === 0) return { bins: [] as number[], lo: 0, hi: 0, modeBin: -1 }
-    const lo = Math.min(...vals)
-    const hi = Math.max(...vals)
-    const N = 16
-    const bins = new Array(N).fill(0)
+  // Amount dot-field — each contract a risk-coloured dot positioned by log10
+  // amount on the x-axis, with deterministic vertical jitter. A pile of dots
+  // at one x = many awards of similar size (the ghost signature); a lone dot
+  // far right = the single large outlier. Reference: Reuters *Forever
+  // Pollution* strip plot + NYT Upshot named-outlier callout.
+  const valued = points.filter((p) => p.amount > 0)
+  const field = (() => {
+    if (valued.length === 0) return null
+    const lo = Math.min(...valued.map((p) => p.amount))
+    const hi = Math.max(...valued.map((p) => p.amount))
     const logLo = Math.log10(lo)
     const logHi = Math.log10(hi)
     const span = logHi - logLo || 1
-    for (const v of vals) {
-      const idx = Math.min(N - 1, Math.max(0, Math.floor(((Math.log10(v) - logLo) / span) * N)))
-      bins[idx]++
+    // Deterministic [0,1) jitter so the field is stable across renders.
+    const jitter = (i: number) => {
+      const v = Math.sin((i + 1) * 12.9898) * 43758.5453
+      return v - Math.floor(v)
     }
-    // Most-populated bin — used to flag clustering ("X% of contracts near Y").
-    let modeBin = 0
-    for (let i = 1; i < N; i++) if (bins[i] > bins[modeBin]) modeBin = i
-    return { bins, lo, hi, modeBin }
+    const dots = valued
+      .map((p, i) => ({
+        xPct: Math.min(100, Math.max(0, ((Math.log10(p.amount) - logLo) / span) * 100)),
+        yFrac: jitter(i),
+        amount: p.amount,
+        risk: p.risk,
+        isMax: p.amount === hi,
+      }))
+      // Draw the cluster first, outliers last so the big dot sits on top.
+      .sort((a, b) => a.amount - b.amount)
+    // Power-of-ten gridlines inside the range.
+    const ticks: number[] = []
+    for (let p = Math.ceil(logLo); p <= Math.floor(logHi); p++) {
+      ticks.push(((p - logLo) / span) * 100)
+    }
+    return { lo, hi, dots, ticks }
   })()
-  const maxBin = Math.max(1, ...hist.bins)
-  const modeShare = vals.length > 0 && hist.modeBin >= 0 ? (hist.bins[hist.modeBin] / vals.length) * 100 : 0
 
   const daColor = daPct >= 75 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
   const hrColor = hrPct >= 75 ? RISK_COLORS.critical : hrPct >= 40 ? RISK_COLORS.high : hrPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
 
-  const Bar = ({ label, pct, color, readout }: { label: string; pct: number; color: string; readout: string }) => (
-    <div className="flex items-center gap-3">
-      <span className="font-mono uppercase flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)', width: 92 }}>
-        {label}
-      </span>
-      <span className="flex-1 relative" style={{ height: 8, background: 'var(--color-border)', borderRadius: 1, overflow: 'hidden' }}>
-        <span style={{ position: 'absolute', inset: 0, width: `${Math.min(100, pct)}%`, background: color }} />
-      </span>
-      <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 11, fontWeight: 700, color, width: 40 }}>
-        {readout}
+  // Stacked-label rate bar: label + big readout on one line, full-width bar
+  // below. Reads cleanly in the narrow right column (vs. an inline thin line).
+  const RateBar = ({ label, pct, color, readout }: { label: string; pct: number; color: string; readout: string }) => (
+    <div>
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+          {label}
+        </span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>
+          {readout}
+        </span>
+      </div>
+      <span className="block relative w-full" style={{ height: 7, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
+        <span style={{ position: 'absolute', inset: 0, width: `${Math.min(100, pct)}%`, background: color, borderRadius: 2 }} />
       </span>
     </div>
   )
 
   return (
-    <div className="pt-1 pb-3">
-      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
-        {lang === 'en' ? 'Fingerprint' : 'Huella'}
-      </div>
-      <div className="space-y-1.5">
-        <Bar
+    <div className="flex flex-col gap-3.5">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <RateBar
           label={lang === 'en' ? 'Direct award' : 'Adj. directa'}
           pct={daPct}
           color={daColor}
           readout={`${daPct.toFixed(0)}%`}
         />
-        <Bar
+        <RateBar
           label={lang === 'en' ? 'High risk' : 'Alto riesgo'}
           pct={hrPct}
           color={hrColor}
           readout={`${hrPct.toFixed(0)}%`}
         />
-        {/* Amount distribution histogram — log-scale, full width below the bars */}
-        {hist.bins.length > 0 && (
-          <div className="pt-1.5">
-            <div className="flex items-baseline justify-between mb-1">
-              <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--color-text-muted)' }}>
-                {lang === 'en' ? 'Amount distribution · log scale' : 'Distribución de montos · escala log'}
-              </span>
-              {modeShare >= 30 && (
-                <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
-                  {lang === 'en'
-                    ? `${modeShare.toFixed(0)}% clustered`
-                    : `${modeShare.toFixed(0)}% agrupados`}
-                </span>
-              )}
-            </div>
-            <div className="flex items-end gap-px" style={{ height: 30 }}>
-              {hist.bins.map((b, i) => {
-                const isMode = i === hist.modeBin && b > 0 && modeShare >= 30
-                return (
-                  <span
-                    key={i}
-                    className="flex-1"
-                    style={{
-                      height: `${b > 0 ? Math.max(8, (b / maxBin) * 100) : 0}%`,
-                      background: isMode ? RISK_COLORS.high : 'var(--color-text-muted)',
-                      opacity: b > 0 ? (isMode ? 0.85 : 0.5) : 0.1,
-                      borderRadius: 0.5,
-                      minHeight: b > 0 ? 3 : 0,
-                    }}
-                    title={`${b} ${lang === 'en' ? 'contracts' : 'contratos'}`}
-                  />
-                )
-              })}
-            </div>
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
-                {formatCompactMXN(hist.lo)}
-              </span>
-              <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
-                {formatCompactMXN(hist.hi)}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Amount dot-field */}
+      {field && (
+        <div>
+          <div className="flex items-baseline justify-between mb-1.5">
+            <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              {lang === 'en' ? 'Amount per contract' : 'Monto por contrato'}
+            </span>
+            <span className="font-mono" style={{ fontSize: 9, fontStyle: 'italic', color: 'var(--color-text-muted)', opacity: 0.8 }}>
+              {lang === 'en' ? 'log scale' : 'escala log'}
+            </span>
+          </div>
+          <div className="relative w-full" style={{ height: 64 }}>
+            {/* power-of-ten gridlines */}
+            {field.ticks.map((t, i) => (
+              <span
+                key={`t${i}`}
+                aria-hidden="true"
+                className="absolute top-0 bottom-0"
+                style={{ left: `${t}%`, width: 1, background: 'var(--color-border)', opacity: 0.6 }}
+              />
+            ))}
+            {/* baseline */}
+            <span aria-hidden="true" className="absolute left-0 right-0" style={{ bottom: 0, height: 1, background: 'var(--color-border)' }} />
+            {/* dots */}
+            {field.dots.map((d, i) => {
+              const color = riskRamp(d.risk)
+              const r = d.isMax ? 4 : 3
+              return (
+                <span
+                  key={i}
+                  className="absolute rounded-full"
+                  title={`${formatCompactMXN(d.amount)} · ${(d.risk * 100).toFixed(0)}% ${lang === 'en' ? 'risk' : 'riesgo'}`}
+                  style={{
+                    left: `${d.xPct}%`,
+                    top: `${4 + d.yFrac * (64 - 14)}px`,
+                    width: r * 2,
+                    height: r * 2,
+                    marginLeft: -r,
+                    background: color,
+                    opacity: d.isMax ? 1 : 0.62,
+                    boxShadow: d.isMax ? '0 0 0 2px var(--color-background-elevated), 0 0 0 3px #a06820' : undefined,
+                  }}
+                />
+              )
+            })}
+            {/* named outlier callout — the single largest award */}
+            <span
+              className="absolute font-mono tabular-nums whitespace-nowrap"
+              style={{ right: 0, top: -2, fontSize: 9, fontWeight: 700, color: '#a06820' }}
+            >
+              {formatCompactMXN(field.hi)} →
+            </span>
+          </div>
+          <div className="flex items-baseline justify-between mt-1">
+            <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>
+              {formatCompactMXN(field.lo)}
+            </span>
+            <span className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.8 }}>
+              {lang === 'en' ? `${valued.length} contracts` : `${valued.length} contratos`}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -4411,9 +4479,10 @@ function Z3MonthlyStrip({
               : m.avgRisk >= 0.40 ? RISK_COLORS.high
               : m.avgRisk >= 0.25 ? RISK_COLORS.medium
               : 'var(--color-text-muted)'
-            // Fill tracks risk too — high-risk burst months read red, not grey.
+            // Fill tracks risk too — high-risk burst months read solid red, not
+            // a faint grey ghost. The peak month should dominate the strip.
             const fill = m.avgRisk >= 0.40 ? cap : 'var(--color-text-muted)'
-            const fillOpacity = m.avgRisk >= 0.40 ? 0.32 : 0.28
+            const fillOpacity = m.avgRisk >= 0.60 ? 0.8 : m.avgRisk >= 0.40 ? 0.62 : 0.34
             return (
               <span
                 key={m.ym}
