@@ -3864,9 +3864,6 @@ function Z3Panel({
               <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Object · year · procedure · file' : 'Objeto · año · procedimiento · expediente'}
               </span>
-              <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-                {lang === 'en' ? 'Risk' : 'Riesgo'}
-              </span>
             </div>
           )}
 
@@ -4216,12 +4213,12 @@ function cleanContractDescription(raw: string): { objeto: string | null; expedie
     else objWords.push(t)
   }
   const objectRaw = objWords.join(' ').trim()
-  const expediente = codeParts.join(' ').trim()
   const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
-  return {
-    objeto,
-    expediente: expediente ? expediente.toUpperCase().slice(0, 32) : null,
-  }
+  // Show only the primary expediente code (first token); flag extras with "…"
+  // so the reference never clips mid-token at a hard character cap.
+  const codeFirst = codeParts[0] ? codeParts[0].toUpperCase().slice(0, 28) : ''
+  const expediente = codeFirst ? (codeParts.length > 1 ? `${codeFirst} …` : codeFirst) : null
+  return { objeto, expediente }
 }
 
 function Z3ContractRow({
@@ -4284,20 +4281,30 @@ function Z3ContractRow({
           </span>
         </span>
 
-        {/* DESCRIPTION UNIT — object (line 1) + meta sub-line (line 2) */}
+        {/* DESCRIPTION UNIT — object (line 1) + meta sub-line (line 2).
+            Risk rides as a small dot at the head of the object (next to the
+            text, not floating in a far-right column). */}
         <span className="flex-1 min-w-0 flex flex-col justify-center">
-          <span
-            className="truncate"
-            style={{
-              fontSize: 12.5,
-              lineHeight: 1.3,
-              color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
-              fontStyle: noObject ? 'italic' : 'normal',
-            }}
-          >
-            {objeto ?? (lang === 'en' ? 'No description on file' : 'Sin objeto declarado')}
+          <span className="flex items-center gap-2 min-w-0">
+            <span
+              className="flex-shrink-0 rounded-full"
+              style={{ width: 7, height: 7, background: fill }}
+              title={riskLabel}
+              aria-label={riskLabel}
+            />
+            <span
+              className="truncate"
+              style={{
+                fontSize: 12.5,
+                lineHeight: 1.3,
+                color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+                fontStyle: noObject ? 'italic' : 'normal',
+              }}
+            >
+              {objeto ?? (lang === 'en' ? 'No description on file' : 'Sin objeto declarado')}
+            </span>
           </span>
-          <span className="truncate font-mono mt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+          <span className="truncate font-mono mt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', paddingLeft: 15 }}>
             <span className="tabular-nums">{c.contract_year}</span>
             {sep}
             <span style={{ color: c.is_direct_award ? RISK_COLORS.high : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}>{procType}</span>
@@ -4314,11 +4321,6 @@ function Z3ContractRow({
               </>
             )}
           </span>
-        </span>
-
-        {/* RISK — a single tier dot; number on hover (kills the repeated "100") */}
-        <span className="flex-shrink-0 self-center" title={riskLabel} aria-label={riskLabel}>
-          <span className="block rounded-full" style={{ width: 8, height: 8, background: fill }} />
         </span>
       </button>
     </motion.li>
