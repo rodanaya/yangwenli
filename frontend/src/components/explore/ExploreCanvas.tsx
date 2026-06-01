@@ -4194,15 +4194,28 @@ function cleanContractDescription(raw: string): { objeto: string | null; expedie
   const s = (raw ?? '').replace(/\s+/g, ' ').trim()
   if (!s) return { objeto: null, expediente: null }
   const tokens = s.split(' ')
+  // Strip surrounding punctuation before classifying so "medicamentos," still
+  // reads as a word (the trailing-comma bug that ate prose into the code).
+  const core = (t: string) => t.replace(/^[^0-9a-záéíóúñü]+/i, '').replace(/[^0-9a-záéíóúñü]+$/i, '')
   // A "word" is pure letters (accents allowed), length ≥ 2 — real prose.
-  const isWord = (t: string) => /^[a-záéíóúñü]{2,}$/i.test(t)
+  const isWord = (t: string) => /^[a-záéíóúñü]{2,}$/i.test(core(t))
+  // A "code" has a digit AND code punctuation (hyphen/slash), long enough to be
+  // an expediente — catches both leading prefixes and codes embedded mid-prose.
+  const isCode = (t: string) => /\d/.test(t) && /[-/]/.test(t) && core(t).length >= 5
+  // 1) consume the leading code prefix (classic "AA-050... adquisición de…")
   let i = 0
   const codeParts: string[] = []
   while (i < tokens.length && !isWord(tokens[i])) {
     codeParts.push(tokens[i])
     i++
   }
-  const objectRaw = tokens.slice(i).join(' ').trim()
+  // 2) from the remaining prose, pull out any embedded expediente codes too
+  const objWords: string[] = []
+  for (const t of tokens.slice(i)) {
+    if (isCode(t)) codeParts.push(t)
+    else objWords.push(t)
+  }
+  const objectRaw = objWords.join(' ').trim()
   const expediente = codeParts.join(' ').trim()
   const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
   return {
