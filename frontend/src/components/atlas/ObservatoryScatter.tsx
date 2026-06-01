@@ -408,7 +408,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3.2} fill="none" stroke={s.fill} strokeWidth={1.2} strokeDasharray="2 2" />}
                     {(hovered || i < 9) && (
                       <text x={s.x} y={s.y - s.r - 6} textAnchor="middle" fill={C.ink} fontSize={hovered ? 16 : 13} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 3.5 : 2.5} strokeLinejoin="round">
-                        {formatVendorName(s.v.name, hovered ? 38 : 24)}
+                        {formatVendorName(s.v.name, hovered ? 72 : 26)}
                       </text>
                     )}
                   </motion.g>
@@ -521,7 +521,7 @@ function ObservatoryIndex({
 
   return (
     <aside
-      style={{ flex: '0 0 372px', width: 372, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 820 }}
+      style={{ flex: '0 0 408px', width: 408, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 820 }}
       aria-label={lang === 'es' ? 'Índice' : 'Index'}
     >
       {/* header */}
@@ -568,7 +568,7 @@ function ObservatoryIndex({
                 key={v.vendor_id}
                 rank={i + 1}
                 dot={riskRamp(v.risk_score)}
-                name={formatVendorName(v.name, 30)}
+                name={formatVendorName(v.name, 72)}
                 stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(v.risk_score * 100)}%`}
                 gt={v.is_gt}
                 active={hoverVendor === v.vendor_id}
@@ -621,16 +621,20 @@ function IndexRow({ rank, dot, name, stat, gt, active, onEnter, onLeave, onClick
     <button
       type="button"
       onMouseEnter={onEnter} onMouseLeave={onLeave} onFocus={onEnter} onBlur={onLeave} onClick={onClick}
-      className="w-full text-left flex items-center gap-2.5 transition-colors"
+      className="w-full text-left flex flex-col gap-0.5 transition-colors"
       style={{
-        padding: '7px 14px', background: active ? 'var(--color-background-elevated)' : 'transparent',
+        padding: '8px 14px', background: active ? 'var(--color-background-elevated)' : 'transparent',
         borderLeft: `2px solid ${active ? dot : 'transparent'}`, borderTop: 'none', borderRight: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
       }}
     >
-      <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
-      <span aria-hidden="true" className="flex-shrink-0" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
-      <span className="flex-1 min-w-0 truncate" style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 14, color: 'var(--color-text-primary)' }}>{name}</span>
-      <span className="font-mono tabular-nums flex-shrink-0 text-right" style={{ fontSize: 9, color: 'var(--color-text-muted)' }}>{stat}</span>
+      {/* line 1 — rank · risk dot · FULL name (wraps, never truncates) */}
+      <span className="flex items-baseline gap-2.5">
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
+        <span aria-hidden="true" className="flex-shrink-0 self-center" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
+        <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
+      </span>
+      {/* line 2 — stat, indented under the name */}
+      <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 30 }}>{stat}</span>
     </button>
   )
 }
