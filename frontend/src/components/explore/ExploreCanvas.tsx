@@ -4050,7 +4050,7 @@ function Z3Panel({
             </div>
           )}
 
-          {/* Column header — aligns with the flag-gutter row (money · señal · objeto · año) */}
+          {/* Column header — aligns with the table row */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
             <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 86, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
@@ -4059,11 +4059,17 @@ function Z3Panel({
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Flags' : 'Señal'}
               </span>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 60, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Date' : 'Fecha'}
+              </span>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Procedure' : 'Procedim.'}
+              </span>
+              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 150, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'File' : 'Expediente'}
+              </span>
               <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Object' : 'Objeto'}
-              </span>
-              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 26, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-                {lang === 'en' ? 'Yr' : 'Año'}
               </span>
             </div>
           )}
@@ -4366,7 +4372,19 @@ function Z3ContractRow({
     { on: flags.amendment, glyph: '↻', color: OCHRE, label: lang === 'en' ? 'amendment / convenio (text-derived)' : 'convenio modificatorio (según texto)' },
   ]
   const yr = Number(c.contract_year)
-  const title = `${yr || ''} · ${formatCompactMXN(amount)}${expediente ? ` · ${expediente}` : ''}${flags.repeated ? ` · ${repeatLabel}` : ''}\n${objeto ?? ''}`
+  // FECHA column — month + year from contract_date, falling back to the year.
+  const MES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
+  const cd = (c as ContractListItem & { contract_date?: string }).contract_date ?? ''
+  const dm = /^(\d{4})-(\d{2})/.exec(cd)
+  const fecha = dm ? `${MES[Number(dm[2]) - 1]} '${dm[1].slice(2)}` : (yr ? `'${String(yr).slice(2)}` : '—')
+  // PROC column — compact procedure label; direct-award rendered in ochre.
+  const ptRaw = ((c as ContractListItem & { procedure_type?: string }).procedure_type ?? '').toLowerCase()
+  const proc = ptRaw.includes('marco') ? (lang === 'en' ? 'FRAMEWORK' : 'C. MARCO')
+    : ptRaw.includes('invitaci') ? (lang === 'en' ? 'INVITATION' : 'INVITACIÓN')
+    : (ptRaw.includes('licitaci') || ptRaw.includes('open') || ptRaw.includes('bid')) ? (lang === 'en' ? 'OPEN BID' : 'LICITACIÓN')
+    : (c.is_direct_award || ptRaw.includes('adjudicaci') || ptRaw.includes('direct')) ? (lang === 'en' ? 'DIRECT' : 'ADJ. DIRECTA')
+    : '—'
+  const title = `${fecha} · ${formatCompactMXN(amount)} · ${proc}${expediente ? ` · ${expediente}` : ''}${flags.repeated ? ` · ${repeatLabel}` : ''}\n${objeto ?? ''}`
 
   return (
     <motion.li
@@ -4412,17 +4430,30 @@ function Z3ContractRow({
           ))}
         </span>
 
-        {/* OBJETO — real prose, or the expediente reframed as an archival folio ref */}
+        {/* FECHA */}
+        <span className="flex-shrink-0 font-mono tabular-nums" style={{ width: 60, fontSize: 10, color: 'var(--color-text-muted)' }}>
+          {fecha}
+        </span>
+
+        {/* PROCEDIMIENTO — direct-award in ochre (the baseline pathology), else muted */}
+        <span
+          className="flex-shrink-0 truncate font-mono uppercase"
+          style={{ width: 96, fontSize: 9, letterSpacing: '0.04em', color: c.is_direct_award ? OCHRE : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}
+        >
+          {proc}
+        </span>
+
+        {/* EXPEDIENTE — the contract reference, always its own column (mono, demoted) */}
+        <span className="flex-shrink-0 truncate font-mono" style={{ width: 150, fontSize: 10, color: 'var(--color-text-muted)', opacity: 0.85 }}>
+          {expediente ?? '—'}
+        </span>
+
+        {/* OBJETO — the prose, flexing last so it fills to the right edge (no mid-row gap) */}
         <span
           className="flex-1 min-w-0 truncate"
           style={{ fontSize: 12.5, fontFamily: "'EB Garamond', Georgia, serif", color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)' }}
         >
-          {objeto ?? <span className="font-mono" style={{ fontSize: 10, fontStyle: 'italic' }}>— exp. {expediente ?? '—'}</span>}
-        </span>
-
-        {/* YEAR */}
-        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ width: 26, fontSize: 10, color: 'var(--color-text-muted)' }}>
-          {yr ? `'${String(yr).slice(2)}` : ''}
+          {objeto ?? <span style={{ fontStyle: 'italic' }}>—</span>}
         </span>
       </button>
     </motion.li>
