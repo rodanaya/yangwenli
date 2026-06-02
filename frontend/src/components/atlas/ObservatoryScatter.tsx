@@ -1,26 +1,28 @@
 /**
  * ObservatoryScatter — "The Firmament": the faithful Observatory macro view as
- * a luminous celestial chart you can fly into.
+ * a full-bleed luminous celestial chart you fly a CAMERA into.
  *
- * Faithful encoding (every channel = real data) is unchanged:
- *   • x  = scale (vendor count, log)   • y = high-risk rate
- *   • r  = Tier-1 priority leads        • hue = risk ramp on the rate
+ * Faithful encoding (every channel = real data):
+ *   • x = scale (vendor count, log)   • y = high-risk rate
+ *   • r = Tier-1 priority leads        • hue = risk ramp on the rate
  *
- * 2026-05-31 redesign v2 (DESIGNUS), per feedback "too dark / poor contrast"
- * and "clicking should fly me INTO that orb, not dump me on a page":
- *   - LIGHT engraved-plate aesthetic (warm cream) for high contrast + on-theme.
- *     Drama comes from luminous glowing bodies, an ignition entrance, a
- *     starfield + graticule and constellation lines — not from a black box.
- *   - CLICK A BODY → fly into it: the orb expands to a central sun and its top
- *     vendors animate in as orbiting satellites (real cluster-vendors data),
- *     each hoverable + clickable through to its Red-Thread. A secondary
- *     "open full dossier" + a back affordance escape the focus.
+ * 2026-06-01 redesign v3 (DESIGNUS), per feedback "elegant but we're not
+ * exploiting the space and there's no transition when zooming in / do we need
+ * the list?":
+ *   - FULL-BLEED. The permanent name index is retired — the constellation owns
+ *     the whole width. Names live IN the space: on-chart labels, a hover card,
+ *     and a SUMMONABLE drawer (the full ranked list, on demand) instead of a
+ *     column that permanently halves the canvas.
+ *   - REAL camera zoom. Clicking an orb animates the SVG viewBox toward that
+ *     orb so it grows IN PLACE into the focus and its vendors spiral out of it;
+ *     Back flies the camera out. (The viewBox is driven by a framer-motion
+ *     value bound straight to the attribute — zero per-frame React re-renders.)
  *
- * Labels use a greedy collision-avoider (leader lines when offset) — no text
- * ever overlaps text. Fully keyboard-accessible.
+ * Labels use a greedy collision-avoider — no text ever overlaps text.
+ * Fully keyboard-accessible.
  */
-import { useMemo, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { riskRamp, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
@@ -51,6 +53,7 @@ const PLOT_W = W - M.left - M.right
 const PLOT_H = H - M.top - M.bottom
 const PAD_X = 0.075
 const PAD_Y = 0.12
+const FOCUS_ZOOM = 2.25 // camera magnification when flown into an orb
 
 // Light celestial palette — warm cream plate, dark ink type (high contrast).
 const C = {
@@ -83,6 +86,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const [focused, setFocused] = useState<string | null>(null)
   const [hoverVendor, setHoverVendor] = useState<number | null>(null)
   const [hoverBody, setHoverBody] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const scales = useMemo(() => {
     if (clusters.length === 0) return { minLogV: 0, maxLogV: 1, maxHr: 1, maxT1: 1 }
@@ -100,8 +104,6 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     return M.left + (PAD_X + t * (1 - 2 * PAD_X)) * PLOT_W
   }
   const yFor = (hr: number) => M.top + (1 - (PAD_Y + (scales.maxHr ? hr / scales.maxHr : 0) * (1 - 2 * PAD_Y))) * PLOT_H
-  // Bodies shrink as the lens gets denser (7 patterns vs 32 categories) so a
-  // crowded lens stays legible.
   const maxBodyR = clusters.length > 20 ? 22 : clusters.length > 9 ? 31 : 42
   const rFor = (t1: number) => 8 + (Math.sqrt(Math.max(1, t1)) / Math.sqrt(scales.maxT1)) * (maxBodyR - 8)
 
@@ -114,9 +116,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       }))
       .sort((a, b) => b.importance - a.importance)
     // De-overlap: gentle force relaxation — push overlapping bodies apart while
-    // a weak spring pulls each back toward its TRUE (scale,risk) position. For
-    // sparse lenses (7 patterns) nothing overlaps so nothing moves; for dense
-    // lenses (32 categories) bodies un-stack into a readable, near-faithful map.
+    // a weak spring pulls each back toward its TRUE (scale,risk) position.
     const n = arr.length
     const px = arr.map((b) => b.tx), py = arr.map((b) => b.ty)
     const GAP = 6
@@ -145,8 +145,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const focusedBody = bodies.find((b) => b.code === focused) ?? null
 
   // Pre-warm ALL clusters' top vendors via the cached batch endpoint on mount,
-  // so flying into an orb is instant (the single per-cluster query is a slow
-  // uncached JOIN; the batch is optimized + cached). Background, non-blocking.
+  // so flying into an orb is instant.
   const codes = useMemo(() => clusters.map((c) => c.code).sort(), [clusters])
   const { data: vendorBatch, isLoading: batchLoading } = useQuery({
     queryKey: ['obs-batch-vendors', lens, codes],
@@ -180,9 +179,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   }, [bodies])
 
   // Labels: place the most-important first; render ONLY labels that fit with
-  // zero overlap. Anything that can't be placed cleanly is skipped — and shown
-  // on hover instead (you can't legibly stack 32 labels, so don't). This is
-  // what guarantees no text-on-text in the dense lenses.
+  // zero overlap. Anything that can't be placed cleanly is hover-only.
   const labels = useMemo(() => {
     const placed: Box[] = bodies.map((b) => ({ x: b.cx - b.r, y: b.cy - b.r, w: b.r * 2, h: b.r * 2 }))
     const out: Array<{ code: string; bx: number; by: number; tx: number; ty: number; anchor: 'start' | 'middle' | 'end'; leader: boolean; name: string; stat: string; fill: string }> = []
@@ -210,7 +207,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
         if (placed.some((p) => boxHit(box, p, 3))) continue
         chosen = c; break
       }
-      if (!chosen) continue // no clean slot → hover-only, never overlapping text
+      if (!chosen) continue
       placed.push({ x: chosen.x, y: chosen.y, w, h })
       const tx = chosen.anchor === 'middle' ? chosen.x + w / 2 : chosen.anchor === 'start' ? chosen.x + 3 : chosen.x + w - 3
       const leader = Math.hypot(chosen.x + w / 2 - b.cx, chosen.y + h / 2 - b.cy) > b.r + 22
@@ -226,35 +223,89 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   }, [scales])
   const yTicks = [0, 0.2, 0.4, 0.6, 0.8].filter((v) => v <= scales.maxHr)
 
-  // ── Focus geometry: central sun + orbiting vendor satellites ───────────────
-  const FCX = M.left + PLOT_W * 0.5
-  const FCY = M.top + PLOT_H * 0.5
+  // ── Camera zoom (viewBox driven by a motion value — no per-frame re-render) ─
+  const svgRef = useRef<SVGSVGElement>(null)
+  const zoom = useMotionValue(0)
+  // The target viewBox is kept in a ref so it stays valid through the zoom-OUT
+  // (we only clear `focused` after the animation completes), and so the change
+  // handler reads the current target without re-subscribing.
+  const targetRef = useRef<Box>({ x: 0, y: 0, w: W, h: H })
+  const baseDim = useTransform(zoom, [0, 1], [1, 0.05])
+  const focusIn = useTransform(zoom, [0.35, 1], [0, 1])
+
+  useEffect(() => {
+    const apply = (z: number) => {
+      const t = targetRef.current
+      const x = t.x * z, y = t.y * z
+      const w = W + (t.w - W) * z, h = H + (t.h - H) * z
+      svgRef.current?.setAttribute('viewBox', `${x} ${y} ${w} ${h}`)
+    }
+    apply(zoom.get())
+    const unsub = zoom.on('change', apply)
+    return unsub
+  }, [zoom])
+
+  const flyTo = (b: { code: string; cx: number; cy: number }) => {
+    targetRef.current = {
+      x: b.cx - (W / FOCUS_ZOOM) / 2,
+      y: b.cy - (H / FOCUS_ZOOM) / 2,
+      w: W / FOCUS_ZOOM,
+      h: H / FOCUS_ZOOM,
+    }
+    setDrawerOpen(false)
+    setHoverBody(null)
+    setFocused(b.code)
+    animate(zoom, 1, { duration: 0.9, ease: [0.16, 1, 0.3, 1] })
+  }
+  const flyBack = () => {
+    setDrawerOpen(false)
+    setHoverVendor(null)
+    animate(zoom, 0, { duration: 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+  }
+
+  // Satellites orbit the focused orb's OWN position (the camera magnifies them
+  // ~FOCUS_ZOOM×, so they're sized small in SVG units to read right on screen).
   const satellites = useMemo(() => {
+    if (!focusedBody) return []
     const vs = focusVendors?.vendors ?? []
     if (vs.length === 0) return []
     const maxAmt = Math.max(...vs.map((v) => v.total_amount_mxn || 1))
     const golden = 2.39996
-    // Rings sized to the plot's vertical half-room (~291px from the centered
-    // sun): base 92 + 48/ring keeps ring 3 (236) + dot + label inside the plate.
-    // x is stretched ×1.55 into the chart's wide horizontal room.
-    return vs.slice(0, 22).map((v, i) => {
-      const ring = 1 + Math.floor(i / 8)
-      const radius = 92 + ring * 48 + (i % 8) * 3
-      const ang = i * golden
+    const cx = focusedBody.cx, cy = focusedBody.cy
+    const base = focusedBody.r + 26
+    return vs.slice(0, 20).map((v, i) => {
+      const ring = 1 + Math.floor(i / 6)
+      const radius = base + ring * 30 + (i % 6) * 3
+      const ang = i * golden + ring * 0.6
       return {
         v,
-        x: FCX + Math.cos(ang) * radius * 1.55,
-        y: FCY + Math.sin(ang) * radius,
-        r: 9 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 19,
+        x: cx + Math.cos(ang) * radius * 1.35,
+        y: cy + Math.sin(ang) * radius,
+        r: 3.5 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 8.5,
         fill: riskRamp(v.risk_score),
       }
     })
-  }, [focusVendors])
+  }, [focusedBody, focusVendors])
+
+  const drawerVendors = focusVendors?.vendors ?? null
+  const drawerCount = focusedBody ? formatNumber(focusedBody.vendors) : String(bodies.length)
+  const lensLabel = (lang === 'es'
+    ? ({ patterns: 'Patrones', sectors: 'Sectores', categories: 'Categorías', sexenios: 'Sexenios' } as Record<string, string>)
+    : ({ patterns: 'Patterns', sectors: 'Sectors', categories: 'Categories', sexenios: 'Terms' } as Record<string, string>))[lens] ?? lens
 
   return (
-    <div style={{ display: 'flex', alignItems: 'stretch', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 14px 36px -24px rgba(80,60,40,0.4)', background: C.plate1 }}>
-      <div style={{ position: 'relative', flex: '1 1 0%', minWidth: 0 }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="group" aria-label={lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns'}>
+    <div style={{ position: 'relative', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 14px 36px -24px rgba(80,60,40,0.4)', background: C.plate1 }}>
+      {/* Plain <svg> (not motion.svg): the viewBox is an UNCONTROLLED attribute
+          owned by the camera effect via setAttribute. React keeps the JSX prop
+          constant so it never clobbers our animated value on a re-render. */}
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        style={{ display: 'block' }}
+        role="group"
+        aria-label={lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns'}
+      >
         <defs>
           <radialGradient id="obs-plate" cx="48%" cy="36%" r="82%">
             <stop offset="0%" stopColor={C.plate0} /><stop offset="100%" stopColor={C.plate1} />
@@ -263,9 +314,6 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
             <stop offset="0%" stopColor={RISK_COLORS.critical} stopOpacity={0.07} /><stop offset="100%" stopColor={RISK_COLORS.critical} stopOpacity={0} />
           </radialGradient>
           {bodies.map((b) => (
-            // Crisp body: light spot top-left, but the fill stays opaque to the
-            // edge (0.92 → 0.66, NOT to transparent) so the limb stroke reads as
-            // a razor-sharp, size-legible boundary instead of a fuzzy cloud.
             <radialGradient key={`g-${b.code}`} id={`obs-body-${b.code}`} cx="38%" cy="34%" r="72%">
               <stop offset="0%" stopColor="#ffffff" stopOpacity={0.55} />
               <stop offset="22%" stopColor={b.fill} stopOpacity={0.92} />
@@ -280,38 +328,40 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           ))}
         </defs>
 
+        {/* Plate fills well beyond [0,W]×[0,H] so the camera never reveals a hard
+            edge when it centers on an orb near the chart border. */}
+        <rect x={-W} y={-H} width={W * 3} height={H * 3} fill={C.plate1} />
         <rect x={0} y={0} width={W} height={H} fill="url(#obs-plate)" />
         <rect x={M.left + PLOT_W * 0.5} y={M.top} width={PLOT_W * 0.5 + M.right} height={PLOT_H * 0.5} fill="url(#obs-danger)" />
-        {STARS.map((s, i) => (<circle key={`s${i}`} cx={M.left + s.x * PLOT_W} cy={M.top + s.y * PLOT_H} r={s.r} fill={C.star} opacity={s.a} />))}
 
-        {/* graticule */}
-        {yTicks.map((v) => (
-          <g key={`y${v}`}>
-            <line x1={M.left} y1={yFor(v)} x2={W - M.right} y2={yFor(v)} stroke={C.grid} strokeWidth={1} />
-            <text x={M.left - 12} y={yFor(v) + 3} textAnchor="end" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{Math.round(v * 100)}%</text>
-          </g>
-        ))}
-        {xTicks.map((v) => (
-          <g key={`x${v}`}>
-            <line x1={xFor(v)} y1={M.top} x2={xFor(v)} y2={H - M.bottom} stroke={C.grid} strokeWidth={1} />
-            <text x={xFor(v)} y={H - M.bottom + 20} textAnchor="middle" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{v >= 1000 ? `${v / 1000}k` : v}</text>
-          </g>
-        ))}
-        <rect x={M.left} y={M.top} width={PLOT_W} height={PLOT_H} fill="none" stroke={C.grid} strokeWidth={1} />
-        {[[M.left, M.top, 1, 1], [W - M.right, M.top, -1, 1], [M.left, H - M.bottom, 1, -1], [W - M.right, H - M.bottom, -1, -1]].map(([cx, cy, sx, sy], i) => (
-          <g key={`c${i}`} stroke={C.gridStrong} strokeWidth={1.2}>
-            <line x1={cx} y1={cy} x2={cx + sx * 12} y2={cy} /><line x1={cx} y1={cy} x2={cx} y2={cy + sy * 12} />
-          </g>
-        ))}
-        <text x={M.left + PLOT_W / 2} y={H - 20} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
-          {lang === 'es' ? 'ESCALA · PROVEEDORES (log) →' : 'SCALE · VENDOR COUNT (log) →'}
-        </text>
-        <text transform={`translate(28, ${M.top + PLOT_H / 2}) rotate(-90)`} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
-          {lang === 'es' ? '↑ TASA DE ALTO RIESGO' : '↑ HIGH-RISK RATE'}
-        </text>
+        {/* ─── BASE firmament (dims as the camera flies in) ─── */}
+        <motion.g style={{ opacity: baseDim, pointerEvents: focused ? 'none' : 'auto' }}>
+          {STARS.map((s, i) => (<circle key={`s${i}`} cx={M.left + s.x * PLOT_W} cy={M.top + s.y * PLOT_H} r={s.r} fill={C.star} opacity={s.a} />))}
+          {yTicks.map((v) => (
+            <g key={`y${v}`}>
+              <line x1={M.left} y1={yFor(v)} x2={W - M.right} y2={yFor(v)} stroke={C.grid} strokeWidth={1} />
+              <text x={M.left - 12} y={yFor(v) + 3} textAnchor="end" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{Math.round(v * 100)}%</text>
+            </g>
+          ))}
+          {xTicks.map((v) => (
+            <g key={`x${v}`}>
+              <line x1={xFor(v)} y1={M.top} x2={xFor(v)} y2={H - M.bottom} stroke={C.grid} strokeWidth={1} />
+              <text x={xFor(v)} y={H - M.bottom + 20} textAnchor="middle" fill={C.inkMuted} fontSize={11} fontFamily="var(--font-family-mono)">{v >= 1000 ? `${v / 1000}k` : v}</text>
+            </g>
+          ))}
+          <rect x={M.left} y={M.top} width={PLOT_W} height={PLOT_H} fill="none" stroke={C.grid} strokeWidth={1} />
+          {[[M.left, M.top, 1, 1], [W - M.right, M.top, -1, 1], [M.left, H - M.bottom, 1, -1], [W - M.right, H - M.bottom, -1, -1]].map(([cx, cy, sx, sy], i) => (
+            <g key={`c${i}`} stroke={C.gridStrong} strokeWidth={1.2}>
+              <line x1={cx} y1={cy} x2={cx + sx * 12} y2={cy} /><line x1={cx} y1={cy} x2={cx} y2={cy + sy * 12} />
+            </g>
+          ))}
+          <text x={M.left + PLOT_W / 2} y={H - 20} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
+            {lang === 'es' ? 'ESCALA · PROVEEDORES (log) →' : 'SCALE · VENDOR COUNT (log) →'}
+          </text>
+          <text transform={`translate(28, ${M.top + PLOT_H / 2}) rotate(-90)`} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.14em">
+            {lang === 'es' ? '↑ TASA DE ALTO RIESGO' : '↑ HIGH-RISK RATE'}
+          </text>
 
-        {/* ─── BASE firmament (dim when focused) ─── */}
-        <motion.g animate={{ opacity: focused ? 0.12 : 1 }} transition={{ duration: 0.5 }} style={{ pointerEvents: focused ? 'none' : 'auto' }}>
           {links.map((l, i) => (
             <motion.line key={`l${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={C.grid} strokeWidth={1} strokeDasharray="1 5" strokeLinecap="round"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 + i * 0.05, duration: 0.6 }} />
@@ -322,12 +372,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           {bodies.map((b, i) => {
             const pct = Math.round(b.highRiskPct * 100)
             const aria = lang === 'es'
-              ? `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} proveedores, ${b.t1} Tier-1, ${pct}% alto riesgo. Explorar.`
-              : `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} vendors, ${b.t1} Tier-1, ${pct}% high-risk. Explore.`
+              ? `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} proveedores, ${b.t1} Tier-1, ${pct}% alto riesgo. Entrar.`
+              : `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} vendors, ${b.t1} Tier-1, ${pct}% high-risk. Fly in.`
             return (
               <motion.g key={b.code} role="button" tabIndex={0} aria-label={aria}
-                onClick={() => setFocused(b.code)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocused(b.code) } }}
+                onClick={() => flyTo(b)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyTo(b) } }}
                 onMouseEnter={() => setHoverBody(b.code)} onMouseLeave={() => setHoverBody(null)}
                 onFocus={() => setHoverBody(b.code)} onBlur={() => setHoverBody(null)}
                 initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
@@ -336,15 +386,11 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               >
                 <title>{aria}</title>
                 <circle cx={b.cx} cy={b.cy} r={Math.max(b.r, 26)} fill="transparent" />
-                {/* tight glow — only the hot bodies, contained so it never blurs the limb */}
                 {(b.level === 'critical' || b.level === 'high') && (
                   <circle cx={b.cx} cy={b.cy} r={b.r * 1.42} fill={`url(#obs-halo-${b.code})`} />
                 )}
-                {/* body disc with a razor-sharp limb (the crisp edge) */}
                 <circle cx={b.cx} cy={b.cy} r={b.r} fill={`url(#obs-body-${b.code})`} stroke={b.fill} strokeWidth={1.5} />
-                {/* fine engraved inner ring on the larger bodies */}
                 {b.r > 17 && <circle cx={b.cx} cy={b.cy} r={b.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.75} strokeOpacity={0.32} />}
-                {/* crisp star-core */}
                 <circle cx={b.cx} cy={b.cy} r={3.1} fill="#fff" stroke={b.fill} strokeWidth={1.3} />
               </motion.g>
             )
@@ -355,8 +401,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               <text x={l.tx} y={l.ty + 22} textAnchor={l.anchor} fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{l.stat}</text>
             </motion.g>
           ))}
-          {/* hover-reveal: a backed pill for ANY body — the always-discoverable
-              name for orbs whose static label was skipped to avoid overlap */}
+          {/* hover card — the always-discoverable name for any orb */}
           {hoverBody && !focused && (() => {
             const b = bodies.find((x) => x.code === hoverBody)
             if (!b) return null
@@ -377,239 +422,171 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           })()}
         </motion.g>
 
-        {/* ─── FOCUS layer: the orb you flew into + its vendors ─── */}
-        <AnimatePresence>
-          {focusedBody && (
-            <motion.g key="focus" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.45 }}>
-              {/* tap-anywhere-to-exit scrim */}
-              <rect x={0} y={0} width={W} height={H} fill="transparent" onClick={() => setFocused(null)} style={{ cursor: 'zoom-out' }} />
-              {/* orbital rings */}
-              {[140, 188, 236].map((rad) => (
-                <ellipse key={rad} cx={FCX} cy={FCY} rx={rad * 1.55} ry={rad} fill="none" stroke={C.grid} strokeWidth={1} strokeDasharray="2 6" />
-              ))}
-              {/* satellites */}
-              {satellites.map((s, i) => {
-                const hovered = hoverVendor === s.v.vendor_id
-                return (
-                  <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
-                    aria-label={`${formatVendorName(s.v.name, 60)} — ${formatCompactMXN(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir hilo' : 'Open thread'}`}
-                    onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter') onVendorClick(s.v.vendor_id) }}
-                    onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
-                    initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }}
-                    transition={{ delay: 0.15 + i * 0.025, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ cursor: 'pointer', outline: 'none' }}
-                  >
-                    <line x1={FCX} y1={FCY} x2={s.x} y2={s.y} stroke={s.fill} strokeWidth={0.6} opacity={0.16} />
-                    {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.7} fill={s.fill} opacity={0.18} />}
-                    {/* crisp satellite — solid fill, fine dark-ink limb for definition on cream */}
-                    <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 1.1 : 0.7} strokeOpacity={hovered ? 0.6 : 0.26} />
-                    {s.r > 11 && <circle cx={s.x} cy={s.y} r={2.2} fill="#fff" opacity={0.85} />}
-                    {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3.2} fill="none" stroke={s.fill} strokeWidth={1.2} strokeDasharray="2 2" />}
-                    {(hovered || i < 9) && (
-                      <text x={s.x} y={s.y - s.r - 6} textAnchor="middle" fill={C.ink} fontSize={hovered ? 16 : 13} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 3.5 : 2.5} strokeLinejoin="round">
-                        {formatVendorName(s.v.name, hovered ? 72 : 26)}
-                      </text>
-                    )}
-                  </motion.g>
-                )
-              })}
-              {/* central sun */}
-              <motion.g initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }} style={{ transformOrigin: `${FCX}px ${FCY}px` }}>
-                <circle cx={FCX} cy={FCY} r={80} fill={`url(#obs-halo-${focusedBody.code})`} />
-                <circle cx={FCX} cy={FCY} r={52} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={2} />
-                <circle cx={FCX} cy={FCY} r={46} fill="none" stroke="#fff" strokeWidth={0.9} strokeOpacity={0.32} />
-                <circle cx={FCX} cy={FCY} r={6} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.8} />
-                <text x={FCX} y={FCY + 82} textAnchor="middle" fill={C.ink} fontSize={22} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={4.5} strokeLinejoin="round">
-                  {toTitleCase(focusedBody.label)}
-                </text>
-                <text x={FCX} y={FCY + 102} textAnchor="middle" fill={C.inkMuted} fontSize={12} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={3} strokeLinejoin="round">
-                  {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'proveedores' : 'vendors'} · {focusedBody.t1} T1 · {Math.round(focusedBody.highRiskPct * 100)}% {lang === 'es' ? 'alto riesgo' : 'high-risk'}
-                </text>
-                {vendorsLoading && (
-                  <text x={FCX} y={FCY + 122} textAnchor="middle" fill={C.inkFaint} fontSize={11} fontFamily="var(--font-family-mono)">
-                    {lang === 'es' ? 'cargando proveedores…' : 'loading vendors…'}
-                  </text>
-                )}
-                {!vendorsLoading && satellites.length === 0 && (
-                  <text x={FCX} y={FCY + 122} textAnchor="middle" fill={C.inkFaint} fontSize={11} fontFamily="var(--font-family-mono)" letterSpacing="0.04em">
-                    {lang === 'es' ? 'desglose por proveedor en el expediente ↗' : 'vendor breakdown in the dossier ↗'}
-                  </text>
-                )}
-              </motion.g>
-            </motion.g>
-          )}
-        </AnimatePresence>
+        {/* ─── FOCUS layer: the orb (now the sun) + its vendors, fades in with the camera ─── */}
+        {focusedBody && (
+          <motion.g style={{ opacity: focusIn }}>
+            {/* tap-anywhere-to-exit scrim, behind the bodies */}
+            <rect x={focusedBody.cx - W} y={focusedBody.cy - H} width={W * 2} height={H * 2} fill="transparent" onClick={flyBack} style={{ cursor: 'zoom-out' }} />
+            {/* orbital rings around the orb */}
+            {[1, 2, 3].map((ring) => {
+              const rad = (focusedBody.r + 26) + ring * 30
+              return <ellipse key={ring} cx={focusedBody.cx} cy={focusedBody.cy} rx={rad * 1.35} ry={rad} fill="none" stroke={C.grid} strokeWidth={0.6} strokeDasharray="2 5" />
+            })}
+            {/* satellites */}
+            {satellites.map((s, i) => {
+              const hovered = hoverVendor === s.v.vendor_id
+              return (
+                <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
+                  aria-label={`${formatVendorName(s.v.name, 60)} — ${formatCompactMXN(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
+                  onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') onVendorClick(s.v.vendor_id) }}
+                  onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
+                  initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.45 + i * 0.02, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ cursor: 'pointer', outline: 'none' }}
+                >
+                  <line x1={focusedBody.cx} y1={focusedBody.cy} x2={s.x} y2={s.y} stroke={s.fill} strokeWidth={0.4} opacity={0.18} />
+                  {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.8} fill={s.fill} opacity={0.18} />}
+                  <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 0.6 : 0.35} strokeOpacity={hovered ? 0.6 : 0.28} />
+                  {s.r > 7 && <circle cx={s.x} cy={s.y} r={1.1} fill="#fff" opacity={0.85} />}
+                  {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 1.6} fill="none" stroke={s.fill} strokeWidth={0.6} strokeDasharray="1.5 1.5" />}
+                  {(hovered || i < 10) && (
+                    <text x={s.x} y={s.y - s.r - 3} textAnchor="middle" fill={C.ink} fontSize={hovered ? 7.5 : 6.2} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 1.8 : 1.3} strokeLinejoin="round">
+                      {formatVendorName(s.v.name, hovered ? 40 : 22)}
+                    </text>
+                  )}
+                </motion.g>
+              )
+            })}
+            {/* the focused orb, redrawn bright over the dimmed base — this IS the sun */}
+            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r * 1.5} fill={`url(#obs-halo-${focusedBody.code})`} />
+            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.5} />
+            {focusedBody.r > 17 && <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.75} strokeOpacity={0.32} />}
+            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={3.1} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.3} />
+            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 14} textAnchor="middle" fill={C.ink} fontSize={11} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
+              {toTitleCase(focusedBody.label)}
+            </text>
+            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 25} textAnchor="middle" fill={C.inkMuted} fontSize={6} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.6} strokeLinejoin="round">
+              {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'prov' : 'vend'} · {focusedBody.t1} T1 · {Math.round(focusedBody.highRiskPct * 100)}%
+            </text>
+            {vendorsLoading && (
+              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 38} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)">
+                {lang === 'es' ? 'cargando…' : 'loading…'}
+              </text>
+            )}
+            {!vendorsLoading && satellites.length === 0 && (
+              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 38} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)">
+                {lang === 'es' ? 'desglose en el expediente ↗' : 'breakdown in the dossier ↗'}
+              </text>
+            )}
+          </motion.g>
+        )}
       </svg>
 
-      {/* HTML overlay: focus controls */}
-      <AnimatePresence>
+      {/* ── Top-right controls (HTML overlay) ── */}
+      <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8, zIndex: 4 }}>
         {focusedBody && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.3 }}
-            style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8 }}>
+          <>
             <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
               className="font-mono hover:opacity-80 transition-opacity"
               style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '6px 11px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
-              {lang === 'es' ? 'Expediente completo ↗' : 'Full dossier ↗'}
+              {lang === 'es' ? 'Expediente ↗' : 'Dossier ↗'}
             </button>
-            <button type="button" onClick={() => setFocused(null)}
+            <button type="button" onClick={flyBack}
               className="font-mono hover:opacity-80 transition-opacity"
               style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'var(--color-background-card)', border: '1px solid var(--color-border)', padding: '6px 11px', borderRadius: 3, cursor: 'pointer' }}>
               ← {lang === 'es' ? 'Volver' : 'Back'}
             </button>
-          </motion.div>
+          </>
         )}
-      </AnimatePresence>
+        {/* summon the full list — replaces the permanent index column */}
+        <button type="button" onClick={() => setDrawerOpen(true)}
+          className="font-mono hover:opacity-80 transition-opacity inline-flex items-center gap-1.5"
+          style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'var(--color-background-card)', border: '1px solid var(--color-border)', padding: '6px 10px', borderRadius: 3, cursor: 'pointer', fontWeight: 600 }}>
+          <span aria-hidden="true">▤</span>
+          {drawerCount} {focusedBody ? (lang === 'es' ? 'prov.' : 'vend.') : lensLabel}
+        </button>
+      </div>
 
       {/* how-to-read strip (hidden while focused) */}
       {!focused && (
         <div className="grid grid-cols-1 sm:grid-cols-3" style={{ background: C.plate1, borderTop: '1px solid var(--color-border)' }}>
           <ReadItem glyph="◉" title={lang === 'es' ? 'Posición' : 'Position'} body={lang === 'es' ? 'Derecha = más proveedores · Arriba = mayor tasa' : 'Right = more vendors · Up = higher rate'} />
           <ReadItem glyph="⬤" title={lang === 'es' ? 'Tamaño' : 'Size'} body={lang === 'es' ? 'Área ∝ proveedores Tier-1' : 'Area ∝ Tier-1 vendors'} />
-          <ReadItem glyph="✦" title={lang === 'es' ? 'Clic = entrar' : 'Click = fly in'} body={lang === 'es' ? 'Entra al orbe y ve sus proveedores' : 'Enter the orb, see its vendors'} />
+          <ReadItem glyph="✦" title={lang === 'es' ? 'Clic = entrar' : 'Click = fly in'} body={lang === 'es' ? 'La cámara entra al orbe y ve sus proveedores' : 'The camera flies into the orb to its vendors'} />
         </div>
       )}
-      </div>
 
-      {/* INDEX — the complete, scannable name list, linked to the constellation */}
-      <ObservatoryIndex
-        bodies={bodies}
-        focusedBody={focusedBody}
-        focusVendors={focusVendors?.vendors ?? null}
-        vendorsLoading={vendorsLoading}
-        lens={lens}
-        lang={lang}
-        hoverBody={hoverBody}
-        setHoverBody={setHoverBody}
-        hoverVendor={hoverVendor}
-        setHoverVendor={setHoverVendor}
-        onPickBody={setFocused}
-        onPickVendor={onVendorClick}
-        onOpenDossier={onOpenDossier}
-        onBack={() => setFocused(null)}
-      />
-    </div>
-  )
-}
-
-// ── The Index — every name, ranked + scannable, two-way linked to the orbs ───
-interface IndexBody { code: string; label: string; vendors: number; t1: number; highRiskPct: number; fill: string }
-interface IndexVendor { vendor_id: number; name: string; risk_score: number; risk_level: string; total_amount_mxn: number; total_contracts: number; is_gt: boolean }
-
-function ObservatoryIndex({
-  bodies, focusedBody, focusVendors, vendorsLoading, lens, lang,
-  hoverBody, setHoverBody, hoverVendor, setHoverVendor, onPickBody, onPickVendor, onOpenDossier, onBack,
-}: {
-  bodies: IndexBody[]
-  focusedBody: IndexBody | null
-  focusVendors: IndexVendor[] | null
-  vendorsLoading: boolean
-  lens: string
-  lang: 'en' | 'es'
-  hoverBody: string | null
-  setHoverBody: (c: string | null) => void
-  hoverVendor: number | null
-  setHoverVendor: (id: number | null) => void
-  onPickBody: (code: string) => void
-  onPickVendor: (id: number) => void
-  onOpenDossier: (code: string) => void
-  onBack: () => void
-}) {
-  const lensLabel = (lang === 'es'
-    ? ({ patterns: 'Patrones', sectors: 'Sectores', categories: 'Categorías', sexenios: 'Sexenios' } as Record<string, string>)
-    : ({ patterns: 'Patterns', sectors: 'Sectors', categories: 'Categories', sexenios: 'Terms' } as Record<string, string>))[lens] ?? lens
-
-  return (
-    <aside
-      style={{ flex: '0 0 408px', width: 408, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--color-border)', background: 'var(--color-background-card)', maxHeight: 820 }}
-      aria-label={lang === 'es' ? 'Índice' : 'Index'}
-    >
-      {/* header */}
-      <div style={{ padding: '12px 14px 10px', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
-        {focusedBody ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <button type="button" onClick={onBack} className="font-mono hover:opacity-70" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                ← {lensLabel}
-              </button>
-              <div style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15, marginTop: 2 }}>
-                {toTitleCase(focusedBody.label)}
-              </div>
-              <div className="font-mono" style={{ fontSize: 9, color: 'var(--color-text-muted)', marginTop: 2 }}>
-                {lang === 'es' ? 'Mayores proveedores' : 'Top vendors'} · {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'total' : 'total'}
-              </div>
-            </div>
-            <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
-              className="font-mono hover:opacity-80 flex-shrink-0"
-              style={{ fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '5px 8px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
-              {lang === 'es' ? 'Expediente ↗' : 'Dossier ↗'}
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-baseline justify-between">
-            <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700 }}>
-              {lensLabel}
-            </span>
-            <span className="font-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-              {bodies.length} · {lang === 'es' ? 'por riesgo' : 'by risk'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* rows */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        {focusedBody ? (
-          vendorsLoading ? (
-            <div className="font-mono" style={{ padding: 14, fontSize: 10, color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'cargando…' : 'loading…'}</div>
-          ) : focusVendors && focusVendors.length > 0 ? (
-            focusVendors.map((v, i) => (
-              <IndexRow
-                key={v.vendor_id}
-                rank={i + 1}
-                dot={riskRamp(v.risk_score)}
-                name={formatVendorName(v.name, 72)}
-                stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(v.risk_score * 100)}%`}
-                gt={v.is_gt}
-                active={hoverVendor === v.vendor_id}
-                onEnter={() => setHoverVendor(v.vendor_id)}
-                onLeave={() => setHoverVendor(null)}
-                onClick={() => onPickVendor(v.vendor_id)}
-              />
-            ))
-          ) : (
-            // Lenses without a per-vendor breakdown wired (categories / terms):
-            // never a blank dead-end — point to the full dossier instead.
-            <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
-              <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
-                {lang === 'es'
-                  ? 'El desglose por proveedor de esta vista vive en el expediente completo.'
-                  : 'The per-vendor breakdown for this view lives in the full dossier.'}
-              </p>
-              <button type="button" onClick={() => onOpenDossier(focusedBody.code)}
-                className="font-mono hover:opacity-80 self-start"
-                style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '7px 12px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
-                {lang === 'es' ? 'Abrir expediente ↗' : 'Open dossier ↗'}
-              </button>
-            </div>
-          )
-        ) : (
-          bodies.map((b, i) => (
-            <IndexRow
-              key={b.code}
-              rank={i + 1}
-              dot={b.fill}
-              name={toTitleCase(b.label)}
-              stat={`${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${Math.round(b.highRiskPct * 100)}%`}
-              active={hoverBody === b.code}
-              onEnter={() => setHoverBody(b.code)}
-              onLeave={() => setHoverBody(null)}
-              onClick={() => onPickBody(b.code)}
+      {/* ── Summonable drawer — the complete ranked list, on demand ── */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+              onClick={() => setDrawerOpen(false)}
+              style={{ position: 'absolute', inset: 0, background: 'rgba(40,30,20,0.18)', zIndex: 8 }}
             />
-          ))
+            <motion.aside
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 300 }}
+              style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 380, maxWidth: '85%', zIndex: 9, background: 'var(--color-background-card)', borderLeft: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', boxShadow: '-18px 0 40px -28px rgba(40,30,20,0.5)' }}
+              aria-label={lang === 'es' ? 'Índice completo' : 'Full index'}
+            >
+              <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-border)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div className="min-w-0">
+                  {focusedBody ? (
+                    <>
+                      <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Mayores proveedores' : 'Top vendors'}</div>
+                      <div style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
+                    </>
+                  ) : (
+                    <div className="font-mono" style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700 }}>{lensLabel} · {bodies.length} · {lang === 'es' ? 'por riesgo' : 'by risk'}</div>
+                  )}
+                </div>
+                <button type="button" onClick={() => setDrawerOpen(false)} aria-label={lang === 'es' ? 'Cerrar' : 'Close'}
+                  className="font-mono hover:opacity-70 flex-shrink-0"
+                  style={{ fontSize: 16, lineHeight: 1, color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>×</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto' }}>
+                {focusedBody ? (
+                  vendorsLoading ? (
+                    <div className="font-mono" style={{ padding: 14, fontSize: 10, color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'cargando…' : 'loading…'}</div>
+                  ) : drawerVendors && drawerVendors.length > 0 ? (
+                    drawerVendors.map((v, i) => (
+                      <IndexRow key={v.vendor_id} rank={i + 1} dot={riskRamp(v.risk_score)}
+                        name={formatVendorName(v.name, 72)}
+                        stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(v.risk_score * 100)}%`}
+                        gt={v.is_gt} active={hoverVendor === v.vendor_id}
+                        onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
+                        onClick={() => onVendorClick(v.vendor_id)} />
+                    ))
+                  ) : (
+                    <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
+                      <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
+                        {lang === 'es' ? 'El desglose por proveedor de esta vista vive en el expediente completo.' : 'The per-vendor breakdown for this view lives in the full dossier.'}
+                      </p>
+                      <button type="button" onClick={() => onOpenDossier(focusedBody.code)} className="font-mono hover:opacity-80 self-start"
+                        style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#fff', background: focusedBody.fill, border: 'none', padding: '7px 12px', borderRadius: 3, cursor: 'pointer', fontWeight: 700 }}>
+                        {lang === 'es' ? 'Abrir expediente ↗' : 'Open dossier ↗'}
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  bodies.map((b, i) => (
+                    <IndexRow key={b.code} rank={i + 1} dot={b.fill}
+                      name={toTitleCase(b.label)}
+                      stat={`${formatNumber(b.vendors)} ${lang === 'es' ? 'prov' : 'vend'} · ${b.t1} T1 · ${Math.round(b.highRiskPct * 100)}%`}
+                      active={hoverBody === b.code}
+                      onEnter={() => setHoverBody(b.code)} onLeave={() => setHoverBody(null)}
+                      onClick={() => flyTo(b)} />
+                  ))
+                )}
+              </div>
+            </motion.aside>
+          </>
         )}
-      </div>
-    </aside>
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -627,13 +604,11 @@ function IndexRow({ rank, dot, name, stat, gt, active, onEnter, onLeave, onClick
         borderLeft: `2px solid ${active ? dot : 'transparent'}`, borderTop: 'none', borderRight: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
       }}
     >
-      {/* line 1 — rank · risk dot · FULL name (wraps, never truncates) */}
       <span className="flex items-baseline gap-2.5">
         <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
         <span aria-hidden="true" className="flex-shrink-0 self-center" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
         <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
       </span>
-      {/* line 2 — stat, indented under the name */}
       <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 30 }}>{stat}</span>
     </button>
   )
