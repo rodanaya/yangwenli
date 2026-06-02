@@ -3607,6 +3607,44 @@ function Z3Panel({
     return seq
   })()
 
+  // Activity SHAPE analysis — drives the adaptive activity module. A
+  // time-proportional strip looks skewed and ugly when a vendor transacts in
+  // only 1–2 periods (it reserves canvas for empty months). When activity is
+  // concentrated we replace the strip with an editorial concentration stat:
+  // the emptiness becomes the finding ("98 of 100 in a single month"), never
+  // dead space. Rich vendors keep the full month/year strip.
+  const activityShape = (() => {
+    const total = contracts.length
+    if (total === 0) return null
+    type Period = { label: string; count: number }
+    let periods: Period[]
+    let granularity: 'month' | 'year'
+    if (monthly) {
+      granularity = 'month'
+      periods = monthly.filter((m) => m.count > 0).map((m) => ({ label: m.label, count: m.count }))
+    } else {
+      granularity = 'year'
+      periods = Array.from(byYear.entries())
+        .filter(([, v]) => v.count > 0)
+        .map(([y, v]) => ({ label: String(y), count: v.count }))
+    }
+    if (periods.length === 0) return null
+    const sorted = [...periods].sort((a, b) => b.count - a.count)
+    const peak = sorted[0]
+    const peakShare = peak.count / total
+    const secondary = sorted[1] ?? null
+    const concentrated = periods.length <= 2 || peakShare >= 0.6
+    return {
+      granularity,
+      total,
+      activeCount: periods.length,
+      peak,
+      peakShare,
+      secondary,
+      concentrated,
+    }
+  })()
+
   // Top-3 cards: BIGGEST / HIGHEST RISK / MOST RECENT. Disambiguate by
   // falling through to the next candidate when picks collide.
   const top3 = pickZ3Top3(contracts)
@@ -3757,9 +3795,13 @@ function Z3Panel({
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr]">
-                {/* LEFT — temporal activity (yearly strip / monthly burst / caption) */}
-                <div className="px-4 py-3 min-w-0">
-                  {yearSpan > 3 && byYear.size > 0 && (
+                {/* LEFT — ADAPTIVE temporal activity. Concentrated vendors →
+                    editorial concentration stat (no empty axis). Spread vendors
+                    → month/year strip. */}
+                <div className="px-4 py-3 min-w-0 flex flex-col justify-center">
+                  {activityShape?.concentrated ? (
+                    <Z3ConcentrationStat shape={activityShape} lang={lang} />
+                  ) : yearSpan > 3 && byYear.size > 0 ? (
                     <Z3TimelineStrip
                       yearSequence={yearSequence}
                       byYear={byYear}
@@ -3768,11 +3810,9 @@ function Z3Panel({
                       onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
                       lang={lang}
                     />
-                  )}
-                  {yearSpan <= 3 && monthly && (
+                  ) : monthly ? (
                     <Z3MonthlyStrip monthly={monthly} lang={lang} />
-                  )}
-                  {yearSpan <= 3 && !monthly && byYear.size > 0 && (
+                  ) : byYear.size > 0 ? (
                     <div>
                       <div className="font-mono uppercase mb-1" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
                         {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
@@ -3788,7 +3828,7 @@ function Z3Panel({
                         })()}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* RIGHT — procedure mix · risk · amount dot-field */}
@@ -4494,6 +4534,80 @@ function Z3Fingerprint({
               {lang === 'en' ? 'each dot = one contract' : 'cada punto = un contrato'}
             </span>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Z3ConcentrationStat — the ADAPTIVE activity module for concentrated vendors.
+// When a vendor's contracts pile into 1–2 periods, a time-proportional strip is
+// mostly empty canvas (skewed and ugly). Instead state the concentration as the
+// finding: a sledgehammer number ("98 of 100 contracts"), the dominant period,
+// a single proportion bar, and what's left. The emptiness becomes the story.
+// Reference: NYT Upshot anchor-stat + FT bullet proportion bar.
+// ────────────────────────────────────────────────────────────────────────────
+function Z3ConcentrationStat({
+  shape,
+  lang,
+}: {
+  shape: {
+    granularity: 'month' | 'year'
+    total: number
+    activeCount: number
+    peak: { label: string; count: number }
+    peakShare: number
+    secondary: { label: string; count: number } | null
+    concentrated: boolean
+  }
+  lang: 'en' | 'es'
+}) {
+  const { granularity, total, activeCount, peak, peakShare, secondary } = shape
+  const pct = Math.round(peakShare * 100)
+  const remaining = total - peak.count
+  const accent = '#a06820' // platform ochre — concentration ≠ risk, stays editorial
+  const unitSing = granularity === 'month' ? (lang === 'en' ? 'month' : 'mes') : (lang === 'en' ? 'year' : 'año')
+  const unitPlur = granularity === 'month' ? (lang === 'en' ? 'months' : 'meses') : (lang === 'en' ? 'years' : 'años')
+
+  const subline = activeCount === 1
+    ? (lang === 'en' ? `all in one ${unitSing} · ${peak.label}` : `todo en un solo ${unitSing} · ${peak.label}`)
+    : (lang === 'en' ? `${pct}% in ${peak.label}` : `${pct}% en ${peak.label}`)
+
+  const footer = secondary
+    ? (activeCount === 2
+        ? (lang === 'en' ? `remaining ${remaining} · ${secondary.label}` : `restantes ${remaining} · ${secondary.label}`)
+        : (lang === 'en' ? `remaining ${remaining} across ${activeCount - 1} other ${unitPlur}` : `restantes ${remaining} en ${activeCount - 1} ${unitPlur} más`))
+    : null
+
+  return (
+    <div>
+      <div className="font-mono uppercase mb-2" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
+        {lang === 'en' ? 'Activity · concentration' : 'Actividad · concentración'}
+      </div>
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span
+          className="tabular-nums"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontStyle: 'italic', fontWeight: 800, fontSize: 34, lineHeight: 1, color: accent }}
+        >
+          {peak.count}
+        </span>
+        <span style={{ fontSize: 12.5, color: 'var(--color-text-secondary)' }}>
+          {lang === 'en' ? `of ${total} contracts` : `de ${total} contratos`}
+        </span>
+      </div>
+      <div className="font-mono mt-1.5" style={{ fontSize: 10.5, color: 'var(--color-text-primary)' }}>
+        {subline}
+      </div>
+      <div className="flex items-center gap-2 mt-2.5">
+        <span className="flex-1 relative" style={{ height: 8, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
+          <span style={{ position: 'absolute', inset: 0, width: `${pct}%`, background: accent, borderRadius: 2 }} />
+        </span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 12, fontWeight: 700, color: accent }}>{pct}%</span>
+      </div>
+      {footer && (
+        <div className="font-mono mt-1.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+          {footer}
         </div>
       )}
     </div>
