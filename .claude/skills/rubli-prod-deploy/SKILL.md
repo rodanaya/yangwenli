@@ -82,17 +82,36 @@ required variable RUBLI_WRITE_KEY is missing a value: RUBLI_WRITE_KEY must be se
 
 ## The canonical deploy command
 
+**Always deploy via the lock-guarded script — never raw `docker compose up`.**
+Multiple agent sessions sometimes deploy at once; two concurrent `compose up`
+runs collide on container names + the network and take the site down. The
+script serializes deploys with an flock(1) lock, does an in-place `up` (no
+down-window), and auto-recovers from a collision.
+
+```bash
+ssh root@37.60.232.109 "bash /opt/rubli/scripts/deploy-safe.sh"
+```
+
+This is the safe path for any deploy — code change, env change, schema
+change, doesn't matter. ~3-5 minutes total, idempotent, and concurrency-safe
+(a second deploy queues on the lock instead of racing). The script lives at
+`scripts/deploy-safe.sh` in the repo, so it ships with the code; if the VPS
+predates it, `git fetch origin && git reset --hard origin/main` first.
+
+### Raw fallback (only if the script is missing)
+
 ```bash
 ssh root@37.60.232.109 "cd /opt/rubli && \
   git fetch origin && \
   git reset --hard origin/main && \
-  docker compose -f docker-compose.prod.yml --env-file .env.prod down --remove-orphans && \
-  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build"
+  docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans"
 ```
 
-This is the safe path for any deploy — code change, env change, schema
-change, doesn't matter. ~3-5 minutes total, idempotent. Uses `down`
-instead of `rm -f` to avoid container name collision bugs (Gotcha 3).
+Note: prefer in-place `up -d --build` over `down && up` — the `down` opens a
+window where the site is fully offline, and if another deploy interleaves
+during that window you get the container-name collision (Gotcha 3). Only fall
+back to `down --remove-orphans` + `docker rm -f <names>` when recovering a
+stuck/collided state by hand.
 
 For a frontend-only fast iteration where you've already deployed
 recently and the backend container is healthy, you *can* use:
