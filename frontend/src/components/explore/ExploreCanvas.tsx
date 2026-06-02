@@ -3621,16 +3621,25 @@ function Z3Panel({
     },
   ]
 
-  // Pick the strongest PROCEDURALLY-MEANINGFUL deviation for the headline finding
-  // (severity order: DA → single-bid → risk → price; raw scale never promoted).
+  // Pick the strongest PROCEDURALLY-MEANINGFUL deviation for the headline finding.
+  // Prefer a genuine OVER-norm deviation (vendor above the sector median) by
+  // severity order, so the headline never reads "0.79× the norm" for a value
+  // that's alarming in absolute terms but below its (captured) sector's median.
   const strongest = (() => {
     const order: Z3LedgerRow['key'][] = ['direct_award', 'single_bid', 'risk', 'price']
     const byKey = (k: Z3LedgerRow['key']) => ledgerRows.find((r) => r.key === k)!
+    const isOver = (r: Z3LedgerRow) => r.medianVal != null && r.vendorVal > r.medianVal
+    // 1) genuine over-norm + meaningful (ratio ≥ 1.5 or alarm), by severity
     for (const k of order) {
       const r = byKey(k)
-      if (r.alarm || (r.ratio != null && r.ratio >= 1.5 && r.medianVal != null)) return r
+      if (isOver(r) && (r.alarm || (r.ratio != null && r.ratio >= 1.5))) return r
     }
-    // none strongly over-norm → highest percentile row, else null
+    // 2) absolute-alarm even if at/below the (captured) sector median
+    for (const k of order) {
+      const r = byKey(k)
+      if (r.alarm) return r
+    }
+    // 3) highest percentile row, else null
     const withP = ledgerRows.filter((r) => r.percentile != null)
     if (withP.length) return withP.reduce((b, r) => ((r.percentile ?? 0) > (b.percentile ?? 0) ? r : b))
     return null
@@ -4621,8 +4630,8 @@ function Z3IndictmentFinding({
         : <>{vendorName} ganó el {strong(fmtVal(r))} de sus contratos como único postor{ratioClause}.</>
     } else if (r.key === 'risk') {
       body = lang === 'en'
-        ? <>{vendorName} carries {strong(fmtVal(r))} of its contracts at high risk{ratioClause}.</>
-        : <>{vendorName} tiene el {strong(fmtVal(r))} de sus contratos en alto riesgo{ratioClause}.</>
+        ? <>{vendorName} carries an average risk score of {strong(fmtVal(r))}{ratioClause}.</>
+        : <>{vendorName} tiene un riesgo promedio de {strong(fmtVal(r))}{ratioClause}.</>
     } else {
       body = lang === 'en'
         ? <>{vendorName} paid {strong(fmtVal(r))} per contract{ratioClause}.</>
