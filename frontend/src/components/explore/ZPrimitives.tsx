@@ -332,7 +332,7 @@ export function ZSortToggle<TMode extends string>({
   label,
   labelFor,
 }: {
-  modes: readonly [TMode, TMode]
+  modes: readonly TMode[]
   active: TMode
   onChange: (next: TMode) => void
   /** Which mode value should render the risk-critical accent (vs. plain accent). */

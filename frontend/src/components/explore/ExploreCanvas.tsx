@@ -3466,7 +3466,7 @@ function computeZ2Badges(
 // Z3Panel — editorial contract view: "LOS 3 QUE IMPORTAN" + year bars + full list
 // ────────────────────────────────────────────────────────────────────────────
 
-type Z3Mode = 'time' | 'risk'
+type Z3Mode = 'time' | 'risk' | 'weight'
 
 function Z3Panel({
   vendorId,
@@ -3667,10 +3667,6 @@ function Z3Panel({
   for (let y = yearMin; y <= yearMax; y++) yearSequence.push(y)
   const maxYearAmt = Math.max(...Array.from(byYear.values()).map((v) => v.amount), 1)
 
-  // Largest single contract — drives the in-row amount bars (turns the dead
-  // whitespace in the register into a magnitude channel).
-  const maxContractAmt = Math.max(1, ...contracts.map((c) => Number(c.amount_mxn ?? 0)))
-
   // (amount, risk) pairs for the amount dot-field — each contract a risk-colored
   // dot on a log axis (NYT Upshot named-outlier mechanic).
   const contractPoints = contracts.map((c) => ({
@@ -3766,21 +3762,73 @@ function Z3Panel({
     }
   })()
 
-  // Top-3 cards: BIGGEST / HIGHEST RISK / MOST RECENT. Disambiguate by
-  // falling through to the next candidate when picks collide.
-  const top3 = pickZ3Top3(contracts)
+  // ─── EL EXPEDIENTE — per-contract forensic flags (client-side, over the
+  // fetched sample). The flag gutter replaces the uniform risk dot: each slot
+  // lights only when its signal fires, so a monotonous burst renders the repeat
+  // slot as a solid vertical rail and the outliers as the dark gaps in it.
+  const flagData = (() => {
+    const valued = contracts.map((c) => Number(c.amount_mxn) || 0).filter((a) => a > 0).sort((a, b) => a - b)
+    // Top-decile threshold within THIS vendor's own sample (needs ≥10 to mean anything).
+    const decileThreshold = valued.length >= 10 ? (valued[Math.floor(valued.length * 0.9)] ?? Infinity) : Infinity
+    // Repeated-amount map — round to nearest 100 MXN to catch near-identical splits.
+    const repeatMap = new Map<number, number>()
+    contracts.forEach((c) => {
+      const a = Number(c.amount_mxn) || 0
+      if (a <= 0) return
+      const k = Math.round(a / 100) * 100
+      repeatMap.set(k, (repeatMap.get(k) ?? 0) + 1)
+    })
+    const isRoundish = (a: number) => {
+      if (a <= 0) return false
+      if (a % 10000 === 0) return true
+      const step = 50000
+      const next = Math.ceil(a / step) * step
+      return next > a && (next - a) / a <= 0.03
+    }
+    const amendRe = /modific|convenio/i
+    const info = new Map<number, { repeat: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }>()
+    contracts.forEach((c) => {
+      const a = Number(c.amount_mxn) || 0
+      const repeat = a > 0 ? (repeatMap.get(Math.round(a / 100) * 100) ?? 0) : 0
+      const singleBid = !!c.is_single_bid
+      const decile = a > 0 && a >= decileThreshold
+      const blob = `${(c as ContractListItem & { title?: string; procedure_type?: string }).title ?? ''} ${(c as ContractListItem & { procedure_type?: string }).procedure_type ?? ''}`
+      const amendment = amendRe.test(blob)
+      const round = isRoundish(a)
+      const count = (repeat >= 3 ? 1 : 0) + (singleBid ? 1 : 0) + (decile ? 1 : 0) + (amendment ? 1 : 0)
+      info.set(c.id, { repeat, singleBid, decile, amendment, round, count })
+    })
+    // Log-scale bounds for the per-row magnitude tick (so a narrow band still separates).
+    const logLo = valued.length ? Math.log10(valued[0]) : 0
+    const logHi = valued.length ? Math.log10(valued[valued.length - 1]) : 1
+    // Census
+    const repeatedRows = contracts.filter((c) => (info.get(c.id)?.repeat ?? 0) >= 3).length
+    const distinctRepeatedValues = Array.from(repeatMap.values()).filter((n) => n >= 3).length
+    const noCompetition = contracts.filter((c) => c.is_direct_award || c.is_single_bid).length
+    let peakAmt = 0, peakMult = 0
+    repeatMap.forEach((n, k) => { if (n > peakMult) { peakMult = n; peakAmt = k } })
+    const yearCount = new Set(contracts.map((c) => Number(c.contract_year)).filter(Boolean)).size
+    return {
+      info, logLo, logHi,
+      census: { shown: contracts.length, repeatedRows, distinctRepeatedValues, noCompetition, peakAmt, peakMult, yearCount },
+    }
+  })()
 
   // Sort + year filter for the contracts register
-  const [mode, setMode] = useState<Z3Mode>('time')
+  const [mode, setMode] = useState<Z3Mode>('weight')
   const [yearFilter, setYearFilter] = useState<number | null>(null)
   const filtered = yearFilter ? contracts.filter((c) => Number(c.contract_year) === yearFilter) : contracts
   const sortedContracts = useMemo(() => {
+    const flagCount = (c: ContractListItem) => flagData.info.get(c.id)?.count ?? 0
     return [...filtered].sort((a, b) =>
-      mode === 'risk'
-        ? (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0)
-        : (Number(b.contract_year) || 0) - (Number(a.contract_year) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0),
+      mode === 'weight'
+        ? flagCount(b) - flagCount(a) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0)
+        : mode === 'risk'
+          ? (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0)
+          : (Number(b.contract_year) || 0) - (Number(a.contract_year) || 0) || (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0),
     )
-  }, [filtered, mode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, mode, flagData])
 
   const prefersReducedMotion = useReducedMotion() ?? false
   const bandVariants = useBandVariants(prefersReducedMotion)
@@ -3926,61 +3974,81 @@ function Z3Panel({
             </>
           )}
 
-          {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
-          {!isLoading && !isError && top3.length > 0 && (
-            <Z3HeroCards
-              top3={top3}
-              highlightContractId={highlightContractId ?? null}
-              dispatch={dispatch}
-              lang={lang}
-            />
-          )}
-
-          {/* Sort toggle + filter chip */}
+          {/* ─── EL EXPEDIENTE — census header + flag-weight sort. The census
+              counts the lit flags as a prosecutorial sentence BEFORE you scroll;
+              all counts are sample-scoped ("Muestra de N") when isSample, since
+              the register is the ≤100-row sample, not the population. */}
           {!isLoading && !isError && contracts.length > 0 && (
-            <div className="flex items-center justify-between pt-4 pb-2 gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-mono text-[9px] uppercase tracking-[0.14em]" style={{ color: 'var(--color-text-muted)' }}>
-                  {lang === 'en' ? 'Contracts' : 'Contratos'}
-                </span>
-                {yearFilter && (
-                  <button
-                    type="button"
-                    onClick={() => setYearFilter(null)}
-                    className="font-mono text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm cursor-pointer"
-                    style={{
-                      background: `${sectorAccent}1f`,
-                      color: sectorAccent,
-                      border: `1px solid ${sectorAccent}55`,
-                    }}
-                    title={lang === 'en' ? 'Clear year filter' : 'Quitar filtro de año'}
-                  >
-                    {yearFilter} ×
-                  </button>
-                )}
+            <div className="pt-4 pb-1.5">
+              <div className="font-mono uppercase mb-1" style={{ fontSize: 9, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+                <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The record' : 'El expediente'}</span>
+                <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
+                <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'the evidence' : 'la evidencia'}</span>
               </div>
-              <ZSortToggle
-                modes={['time', 'risk'] as const}
-                active={mode}
-                onChange={setMode}
-                riskMode="risk"
-                label={lang === 'en' ? 'SORT' : 'ORDENAR'}
-                labelFor={(m) => lang === 'en' ? m.toUpperCase() : (m === 'time' ? 'TIEMPO' : 'RIESGO')}
-              />
+              <p style={{ fontSize: 12.5, fontFamily: "'EB Garamond', Georgia, serif", color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                {(() => {
+                  const cs = flagData.census
+                  const cl: string[] = []
+                  cl.push(isSample
+                    ? (lang === 'en' ? `Sample of ${formatNumber(cs.shown)}` : `Muestra de ${formatNumber(cs.shown)}`)
+                    : (lang === 'en' ? `${formatNumber(cs.shown)} contracts` : `${formatNumber(cs.shown)} contratos`))
+                  if (cs.repeatedRows > 0) cl.push(lang === 'en'
+                    ? `${cs.repeatedRows} repeated amounts in ${cs.distinctRepeatedValues} values`
+                    : `${cs.repeatedRows} montos repetidos en ${cs.distinctRepeatedValues} valores`)
+                  if (cs.noCompetition > 0) cl.push(lang === 'en' ? `${cs.noCompetition} without competition` : `${cs.noCompetition} sin competencia`)
+                  if (cs.peakMult >= 3) cl.push(lang === 'en' ? `peak ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}` : `pico ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}`)
+                  if (cs.repeatedRows === 0 && cs.yearCount > 1) cl.push(lang === 'en' ? `${cs.yearCount} years` : `${cs.yearCount} años`)
+                  return cl.join('  ·  ')
+                })()}
+              </p>
+              <div className="flex items-center justify-between mt-2 gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>
+                  <span><span style={{ color: OCHRE, fontWeight: 700 }}>≡</span> {lang === 'en' ? 'repeat' : 'repetido'}</span>
+                  <span><span style={{ color: RISK_COLORS.critical, fontWeight: 700 }}>①</span> {lang === 'en' ? 'single bid' : 'único postor'}</span>
+                  <span><span style={{ color: RISK_COLORS.medium, fontWeight: 700 }}>▲</span> {lang === 'en' ? 'top decile' : 'decil'}</span>
+                  <span><span style={{ color: OCHRE, fontWeight: 700 }}>↻</span> {lang === 'en' ? 'amendment' : 'convenio'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {yearFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setYearFilter(null)}
+                      className="font-mono text-[9px] uppercase tracking-[0.12em] px-1.5 py-0.5 rounded-sm cursor-pointer"
+                      style={{ background: `${sectorAccent}1f`, color: sectorAccent, border: `1px solid ${sectorAccent}55` }}
+                      title={lang === 'en' ? 'Clear year filter' : 'Quitar filtro de año'}
+                    >
+                      {yearFilter} ×
+                    </button>
+                  )}
+                  <ZSortToggle
+                    modes={['weight', 'risk', 'time'] as const}
+                    active={mode}
+                    onChange={setMode}
+                    riskMode="risk"
+                    label={lang === 'en' ? 'SORT' : 'ORDENAR'}
+                    labelFor={(m) => lang === 'en'
+                      ? (m === 'weight' ? 'FLAGS' : m.toUpperCase())
+                      : (m === 'weight' ? 'SEÑAL' : m === 'risk' ? 'RIESGO' : 'TIEMPO')}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Ledger column header — aligns with the row's money + object columns */}
+          {/* Column header — aligns with the flag-gutter row (money · señal · objeto · año) */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
-            <div
-              className="flex items-center gap-3 px-2.5 pb-1.5 mb-0.5"
-              style={{ borderBottom: '1px solid var(--color-border)' }}
-            >
-              <span className="flex-shrink-0 font-mono uppercase" style={{ width: 92, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+            <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 86, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Amount' : 'Monto'}
               </span>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Flags' : 'Señal'}
+              </span>
               <span className="flex-1 min-w-0 font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-                {lang === 'en' ? 'Object · year · procedure · file' : 'Objeto · año · procedimiento · expediente'}
+                {lang === 'en' ? 'Object' : 'Objeto'}
+              </span>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 26, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                {lang === 'en' ? 'Yr' : 'Año'}
               </span>
             </div>
           )}
@@ -3992,7 +4060,9 @@ function Z3Panel({
                 <Z3ContractRow
                   key={c.id}
                   c={c}
-                  maxAmt={maxContractAmt}
+                  flags={flagData.info.get(c.id) ?? { repeat: 0, singleBid: false, decile: false, amendment: false, round: false, count: 0 }}
+                  logLo={flagData.logLo}
+                  logHi={flagData.logHi}
                   isHighlighted={c.id === highlightContractId}
                   dispatch={dispatch}
                   lang={lang}
@@ -4186,106 +4256,6 @@ function Z3TimelineStrip({
 }
 
 /**
- * Z3HeroCards — three editorial cards picking BIGGEST / HIGHEST RISK /
- * MOST RECENT contracts. Each card carries year, amount, procedure
- * chip, risk-tier color rail. Click jumps to the Z4 drawer.
- */
-function Z3HeroCards({
-  top3,
-  highlightContractId,
-  dispatch,
-  lang,
-}: {
-  top3: Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }>
-  highlightContractId: number | null
-  dispatch: ReturnType<typeof useExploreDispatch>
-  lang: 'en' | 'es'
-}) {
-  const labels: Record<'biggest' | 'risk' | 'recent', [string, string]> = {
-    biggest: ['BIGGEST', 'EL MÁS GRANDE'],
-    risk:    ['HIGHEST RISK', 'MAYOR RIESGO'],
-    recent:  ['MOST RECENT', 'MÁS RECIENTE'],
-  }
-  return (
-    <div className="pt-3 pb-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
-      {top3.map(({ contract: c, pick }) => {
-        const score = Number(c.risk_score ?? 0)
-        const level = getRiskLevelFromScore(score)
-        const fill = RISK_COLORS[level]
-        const isHighlighted = c.id === highlightContractId
-        const procType = shortProcType(
-          (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
-          !!c.is_direct_award,
-          lang,
-        )
-        const title = (c as ContractListItem & { title?: string }).title
-        return (
-          <button
-            key={pick}
-            type="button"
-            onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-            className="text-left rounded-sm p-2.5 cursor-pointer transition-colors"
-            style={{
-              borderLeft: `3px solid ${fill}`,
-              background: isHighlighted ? `${fill}10` : 'var(--color-background-elevated)',
-              minHeight: 92,
-            }}
-            onMouseEnter={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-card)' }}
-            onMouseLeave={(e) => { if (!isHighlighted) (e.currentTarget as HTMLElement).style.background = 'var(--color-background-elevated)' }}
-          >
-            <div
-              className="font-mono text-[8px] uppercase tracking-[0.14em] mb-1"
-              style={{ color: fill, fontWeight: 700 }}
-            >
-              {lang === 'en' ? labels[pick][0] : labels[pick][1]}
-            </div>
-            <div className="font-mono text-[10px] tabular-nums mb-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              {c.contract_year}
-            </div>
-            <div
-              className="font-serif tabular-nums leading-tight"
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 18,
-                fontWeight: 800,
-                color: fill,
-              }}
-            >
-              {formatCompactMXN(Number(c.amount_mxn ?? 0))}
-            </div>
-            <div className="font-mono text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              ≈ {formatCompactUSD(Number(c.amount_mxn ?? 0))}
-            </div>
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              <span
-                className="font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm"
-                style={{ background: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
-              >
-                {procType}
-              </span>
-              <span
-                className="font-mono text-[8px] uppercase tracking-[0.08em] px-1 py-0.5 rounded-sm"
-                style={{ background: `${fill}1f`, color: fill, border: `1px solid ${fill}44` }}
-              >
-                {lang === 'en' ? `risk ${Math.round(score * 100)}` : `riesgo ${Math.round(score * 100)}`}
-              </span>
-            </div>
-            {title && (
-              <div className="text-[10px] mt-1.5 line-clamp-2" style={{ color: 'var(--color-text-secondary)', fontFamily: "'Source Serif Pro', Georgia, serif" }}>
-                {shortenContractName(title, 90)}
-              </div>
-            )}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-/**
- * Z3ContractRow — dense single-line contract row. Click → Z4 drawer.
- */
-/**
  * Split a raw COMPRANET contract title into a readable object and an
  * expediente reference. The field conflates three things — real prose
  * ("adquisición de medicamentos"), pure procurement codes ("D9P0566",
@@ -4332,9 +4302,13 @@ function cleanContractDescription(raw: string): { objeto: string | null; expedie
   return { objeto, expediente }
 }
 
+type Z3RowFlags = { repeat: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }
+
 function Z3ContractRow({
   c,
-  maxAmt,
+  flags,
+  logLo,
+  logHi,
   isHighlighted,
   dispatch,
   lang,
@@ -4342,7 +4316,9 @@ function Z3ContractRow({
   prefersReducedMotion,
 }: {
   c: ContractListItem
-  maxAmt: number
+  flags: Z3RowFlags
+  logLo: number
+  logHi: number
   isHighlighted: boolean
   dispatch: ReturnType<typeof useExploreDispatch>
   lang: 'en' | 'es'
@@ -4350,99 +4326,91 @@ function Z3ContractRow({
   prefersReducedMotion: boolean
 }) {
   const score = Number(c.risk_score ?? 0)
-  const level = getRiskLevelFromScore(score)
-  const fill = RISK_COLORS[level]
-  const riskPct = score > 0 ? Math.round(score * 100) : null
+  const rail = RISK_COLORS[getRiskLevelFromScore(score)]
   const amount = Number(c.amount_mxn ?? 0)
-  // Magnitude bar — fraction of the vendor's largest contract, in its OWN lane
-  // under the amount (no longer bleeding behind the description text).
-  const amtFrac = Math.max(0.04, Math.min(1, amount / Math.max(1, maxAmt)))
-  const rawTitle = (c as ContractListItem & { title?: string }).title ?? ''
-  const { objeto, expediente } = cleanContractDescription(rawTitle)
-  const procType = shortProcType(
-    (c as ContractListItem & { procedure_type?: string | null }).procedure_type,
-    !!c.is_direct_award,
-    lang,
-  )
+  const { objeto, expediente } = cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '')
   const noObject = !objeto
-  const sep = <span style={{ margin: '0 5px', opacity: 0.5 }}>·</span>
-  const riskLabel = riskPct != null ? `${riskPct}% ${lang === 'en' ? 'risk indicator' : 'indicador de riesgo'}` : ''
+  // Money is INK by default; it flips critical-red ONLY on compound anomalies
+  // (≥2 lit flags) — so color pulls the eye to genuinely stacked rows, not to
+  // the uniform high-risk of a captured vendor.
+  const moneyColor = flags.count >= 2 ? RISK_COLORS.critical : 'var(--color-text-primary)'
+  // Magnitude tick on a LOG scale so a narrow 240k–430k band still separates
+  // (the linear bar collapsed when every contract was similar-sized).
+  const span = logHi - logLo || 1
+  const tickFrac = amount > 0 ? Math.max(0.08, Math.min(1, (Math.log10(amount) - logLo) / span)) : 0
+
+  // The flag gutter — slots light only when their signal fires. Glyphs differ
+  // by FORM (not color alone) and each carries an aria-label (WCAG).
+  const slots: Array<{ on: boolean; glyph: string; color: string; label: string }> = [
+    { on: flags.repeat >= 3, glyph: '≡', color: OCHRE, label: lang === 'en' ? `amount repeated ${flags.repeat}× in sample — possible split` : `monto repetido ${flags.repeat}× en la muestra — posible fraccionamiento` },
+    { on: flags.singleBid, glyph: '①', color: RISK_COLORS.critical, label: lang === 'en' ? 'single bidder' : 'único postor' },
+    { on: flags.decile, glyph: '▲', color: RISK_COLORS.medium, label: lang === 'en' ? "top-decile amount for this vendor" : 'monto en el decil superior del proveedor' },
+    { on: flags.amendment, glyph: '↻', color: OCHRE, label: lang === 'en' ? 'amendment / convenio (text-derived)' : 'convenio modificatorio (según texto)' },
+  ]
+  const yr = Number(c.contract_year)
+  const title = `${yr || ''} · ${formatCompactMXN(amount)}${expediente ? ` · ${expediente}` : ''}${flags.repeat >= 3 ? (lang === 'en' ? ` · repeated ${flags.repeat}×` : ` · repetido ${flags.repeat}×`) : ''}\n${objeto ?? ''}`
 
   return (
     <motion.li
       layout
       transition={{ layout: layoutTransition }}
       whileHover={prefersReducedMotion ? undefined : { backgroundColor: 'var(--color-background-card)', transition: { duration: 0.12 } }}
-      style={isHighlighted ? { background: `${fill}14` } : undefined}
+      style={isHighlighted ? { background: `${rail}14` } : undefined}
     >
       <button
         type="button"
         onClick={() => dispatch({ type: 'drill-into-contract', contractId: c.id })}
-        className="w-full text-left flex items-stretch gap-3 px-2.5 py-2 rounded-sm cursor-pointer"
-        style={{ background: 'transparent', borderLeft: `2px solid ${fill}` }}
-        title={`${c.contract_year} · ${formatCompactMXN(amount)} · ${procType}${expediente ? ` · ${expediente}` : ''}\n${objeto ?? rawTitle}`}
+        className="w-full text-left flex items-center gap-2.5 pl-2.5 pr-2 py-1.5 cursor-pointer"
+        style={{
+          background: 'transparent',
+          borderLeft: `2px solid ${rail}`,
+          boxShadow: c.is_direct_award ? `inset 1px 0 0 ${OCHRE}` : undefined,
+          borderBottom: '1px solid var(--color-border)',
+        }}
+        title={title}
       >
-        {/* MONEY UNIT — amount over its own magnitude bar */}
-        <span className="flex-shrink-0 flex flex-col justify-center" style={{ width: 92 }}>
-          <span className="font-mono tabular-nums" style={{ fontSize: 13, fontWeight: 700, color: fill, lineHeight: 1.1 }}>
+        {/* MONEY + log magnitude tick */}
+        <span className="flex-shrink-0 flex flex-col justify-center" style={{ width: 86 }}>
+          <span className="font-mono tabular-nums text-right block" style={{ fontSize: 13, fontWeight: 700, color: moneyColor, lineHeight: 1.1 }}>
             {formatCompactMXN(amount)}
           </span>
-          <span aria-hidden="true" className="block mt-1 rounded-sm" style={{ width: '100%', height: 3, background: 'var(--color-border)', overflow: 'hidden' }}>
-            <span style={{ display: 'block', width: `${amtFrac * 100}%`, height: '100%', background: fill, opacity: 0.65, borderRadius: 2 }} />
+          <span aria-hidden="true" className="block mt-0.5" style={{ width: '100%', height: 2 }}>
+            <span style={{ display: 'block', width: `${tickFrac * 100}%`, height: '100%', marginLeft: 'auto', opacity: 0.55, background: flags.round ? `repeating-linear-gradient(90deg, ${rail} 0 2px, transparent 2px 4px)` : rail }} />
           </span>
         </span>
 
-        {/* DESCRIPTION UNIT — object (line 1) + meta sub-line (line 2).
-            Risk rides as a small dot at the head of the object (next to the
-            text, not floating in a far-right column). */}
-        <span className="flex-1 min-w-0 flex flex-col justify-center">
-          <span className="flex items-center gap-2 min-w-0">
+        {/* FLAG GUTTER — the anchor channel */}
+        <span className="flex-shrink-0 flex items-center justify-end gap-[3px]" style={{ width: 56 }} aria-label={lang === 'en' ? 'flags' : 'señales'}>
+          {slots.map((s, i) => (
             <span
-              className="flex-shrink-0 rounded-full"
-              style={{ width: 7, height: 7, background: fill }}
-              title={riskLabel}
-              aria-label={riskLabel}
-            />
-            <span
-              className="truncate"
-              style={{
-                fontSize: 12.5,
-                lineHeight: 1.3,
-                color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
-                fontStyle: noObject ? 'italic' : 'normal',
-              }}
+              key={i}
+              className="inline-flex items-center justify-center font-mono"
+              style={{ width: 11, height: 11, fontSize: 10, lineHeight: 1, fontWeight: 700, color: s.on ? s.color : 'var(--color-border)', opacity: s.on ? 1 : 0.3 }}
+              title={s.on ? s.label : ''}
+              aria-label={s.on ? s.label : undefined}
             >
-              {objeto ?? (lang === 'en' ? 'No description on file' : 'Sin objeto declarado')}
+              {s.on ? s.glyph : '·'}
             </span>
-          </span>
-          <span className="truncate font-mono mt-0.5" style={{ fontSize: 9.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', paddingLeft: 15 }}>
-            <span className="tabular-nums">{c.contract_year}</span>
-            {sep}
-            <span style={{ color: c.is_direct_award ? RISK_COLORS.high : 'var(--color-text-muted)', fontWeight: c.is_direct_award ? 600 : 400 }}>{procType}</span>
-            {c.is_single_bid && (
-              <>
-                {sep}
-                <span style={{ color: RISK_COLORS.critical, fontWeight: 600 }}>{lang === 'en' ? 'SINGLE BID' : 'ÚNICO POSTOR'}</span>
-              </>
-            )}
-            {expediente && (
-              <>
-                {sep}
-                <span style={{ opacity: 0.85 }}>exp. {expediente}</span>
-              </>
-            )}
-          </span>
+          ))}
+        </span>
+
+        {/* OBJETO — real prose, or the expediente reframed as an archival folio ref */}
+        <span
+          className="flex-1 min-w-0 truncate"
+          style={{ fontSize: 12.5, fontFamily: "'EB Garamond', Georgia, serif", color: noObject ? 'var(--color-text-muted)' : 'var(--color-text-primary)' }}
+        >
+          {objeto ?? <span className="font-mono" style={{ fontSize: 10, fontStyle: 'italic' }}>— exp. {expediente ?? '—'}</span>}
+        </span>
+
+        {/* YEAR */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ width: 26, fontSize: 10, color: 'var(--color-text-muted)' }}>
+          {yr ? `'${String(yr).slice(2)}` : ''}
         </span>
       </button>
     </motion.li>
   )
 }
 
-/**
- * Pick the three editorial top contracts: BIGGEST / HIGHEST RISK /
- * MOST RECENT. Disambiguate by falling through to the next candidate
- * when the same contract would be picked twice.
- */
 // ────────────────────────────────────────────────────────────────────────────
 // Z3Fingerprint — the vendor's pattern at a glance. Three compact bars
 // (procedure mix · risk · amount distribution) that turn the stat-line
@@ -4943,48 +4911,6 @@ function Z3MonthlyStrip({
     </div>
   )
 }
-
-/**
- * Clamp a COMPRANET procedure_type to a short chip label. The raw field is
- * often a full uppercase sentence ("ADJUDICACIÓN DIRECTA POR ADJUDICACIÓN A
- * PROVEEDOR CON CONTRATO VIGENTE, BAJO LAS MISMAS CONDICIONES") — too long
- * for a chip. Map by keyword to a canonical 1–2 word label.
- */
-function shortProcType(raw: string | null | undefined, isDirectAward: boolean, lang: 'en' | 'es'): string {
-  const s = (raw ?? '').toLowerCase()
-  const direct = lang === 'en' ? 'DIRECT' : 'ADJ. DIRECTA'
-  const open = lang === 'en' ? 'OPEN BID' : 'LICITACIÓN'
-  const invite = lang === 'en' ? 'INVITATION' : 'INVITACIÓN'
-  const framework = lang === 'en' ? 'FRAMEWORK' : 'CONVENIO MARCO'
-  if (!s) return isDirectAward ? direct : open
-  if (s.includes('marco')) return framework
-  if (s.includes('invitaci')) return invite
-  if (s.includes('adjudicaci') || s.includes('direct')) return direct
-  if (s.includes('licitaci') || s.includes('open') || s.includes('bid')) return open
-  // Unknown verbose value — fall back to the direct/open flag, not the blob.
-  return isDirectAward ? direct : open
-}
-
-function pickZ3Top3(contracts: ContractListItem[]): Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }> {
-  if (contracts.length === 0) return []
-  const used = new Set<number>()
-  const result: Array<{ contract: ContractListItem; pick: 'biggest' | 'risk' | 'recent' }> = []
-
-  const byAmount = [...contracts].sort((a, b) => (Number(b.amount_mxn) || 0) - (Number(a.amount_mxn) || 0))
-  const byRisk = [...contracts].sort((a, b) => (Number(b.risk_score) || 0) - (Number(a.risk_score) || 0))
-  const byRecent = [...contracts].sort((a, b) => (Number(b.contract_year) || 0) - (Number(a.contract_year) || 0))
-
-  const take = (list: ContractListItem[], pick: 'biggest' | 'risk' | 'recent') => {
-    for (const c of list) {
-      if (!used.has(c.id)) { used.add(c.id); result.push({ contract: c, pick }); return }
-    }
-  }
-  take(byAmount, 'biggest')
-  take(byRisk, 'risk')
-  take(byRecent, 'recent')
-  return result
-}
-
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z4 — Contract drawer
