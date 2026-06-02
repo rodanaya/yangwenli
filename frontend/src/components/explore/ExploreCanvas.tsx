@@ -3499,6 +3499,20 @@ function Z3Panel({
     staleTime: 5 * 60 * 1000,
   })
 
+  // Peer comparison — sector medians + percentiles for the DEVIATION LEDGER.
+  // Non-blocking: the page renders without it (ledger degrades to vendor-only
+  // values + dimmed ticks). The vendor's OWN rates are computed from the
+  // fetched rows below, NOT from vendor_stats (direct_award_pct is corrupted).
+  const { data: peerData } = useQuery({
+    queryKey: ['explore', 'z3-peers', vendorId],
+    queryFn: async () => {
+      const { vendorApi } = await import('@/api/client')
+      return vendorApi.getPeerComparison(vendorId)
+    },
+    enabled: vendorId > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const contracts = data?.data ?? []
   const totalContractSpend = contracts.reduce((s, c) => s + (Number(c.amount_mxn) || 0), 0)
 
@@ -3532,6 +3546,83 @@ function Z3Panel({
     return s >= 0.40
   }).length
   const hrPct = contracts.length > 0 ? (hrCount / contracts.length) * 100 : 0
+  const singleBidPct = contracts.length > 0 ? (singleBidN / contracts.length) * 100 : 0
+  const avgRisk = contracts.length > 0 ? contracts.reduce((s, c) => s + (Number(c.risk_score) || 0), 0) / contracts.length : 0
+  const vendorPricePer = contracts.length > 0 ? totalContractSpend / contracts.length : 0
+  const sampled = contracts.length >= 100 // per_page cap → every absolute is a sample
+
+  // Multi-sector detection — comparing a conglomerate to one sector median is
+  // apples-to-oranges. Flag (but still show, per design) when the top sector
+  // holds < 70% of contracts.
+  const sectorShare = (() => {
+    if (contracts.length === 0) return 1
+    const counts = new Map<number, number>()
+    contracts.forEach((c) => { const s = Number(c.sector_id ?? 0); if (s > 0) counts.set(s, (counts.get(s) ?? 0) + 1) })
+    const top = Math.max(0, ...counts.values())
+    return top / contracts.length
+  })()
+  const multiSector = contracts.length > 0 && sectorShare < 0.7
+
+  // ─── DEVIATION LEDGER model ────────────────────────────────────────────────
+  // Vendor values from the fetched rows (safe path). Sector median + percentile
+  // from the peer endpoint. Rates are 0–1 fractions there → ×100 for display.
+  const peerOf = (k: string) => (peerData?.metrics ?? []).find((m) => m.metric === k)
+  const pct = (v: number | null | undefined) => (v == null ? null : v * 100)
+  const smallN = contracts.length > 0 && contracts.length < 5
+
+  const ratioOf = (v: number, m: number | null) => (m && m > 0 ? v / m : null)
+  const daMed = pct(peerOf('direct_award_pct')?.peer_median)
+  const sbMed = pct(peerOf('single_bid_pct')?.peer_median)
+  const rkMed = pct(peerOf('avg_risk_score')?.peer_median)
+  const ppMed = peerOf('price_per_contract')?.peer_median ?? null
+  const ledgerRows: Z3LedgerRow[] = [
+    {
+      key: 'direct_award',
+      label: lang === 'en' ? 'Direct award' : 'Adj. directa',
+      kind: 'pct', vendorVal: daPct, medianVal: daMed,
+      percentile: peerOf('direct_award_pct')?.percentile ?? null,
+      absoluteRef: { value: 25, label: 'OECD' },
+      alarm: daPct >= 75, ratio: ratioOf(daPct, daMed),
+    },
+    {
+      key: 'single_bid',
+      label: lang === 'en' ? 'Single bid' : 'Único postor',
+      kind: 'pct', vendorVal: singleBidPct, medianVal: sbMed,
+      percentile: peerOf('single_bid_pct')?.percentile ?? null,
+      absoluteRef: null, alarm: singleBidPct >= 50, ratio: ratioOf(singleBidPct, sbMed),
+    },
+    {
+      key: 'risk',
+      label: lang === 'en' ? 'High-risk rate' : 'Tasa alto riesgo',
+      kind: 'pct', vendorVal: hrPct, medianVal: rkMed,
+      percentile: peerOf('avg_risk_score')?.percentile ?? null,
+      absoluteRef: null, alarm: avgRisk >= 0.40, ratio: ratioOf(hrPct, rkMed),
+    },
+    {
+      key: 'price',
+      label: lang === 'en' ? 'Price / contract' : 'Precio / contrato',
+      kind: 'mxn', vendorVal: vendorPricePer, medianVal: ppMed,
+      percentile: peerOf('price_per_contract')?.percentile ?? null,
+      absoluteRef: null,
+      alarm: (peerOf('price_per_contract')?.percentile ?? 0) >= 90,
+      ratio: ratioOf(vendorPricePer, ppMed),
+    },
+  ]
+
+  // Pick the strongest PROCEDURALLY-MEANINGFUL deviation for the headline finding
+  // (severity order: DA → single-bid → risk → price; raw scale never promoted).
+  const strongest = (() => {
+    const order: Z3LedgerRow['key'][] = ['direct_award', 'single_bid', 'risk', 'price']
+    const byKey = (k: Z3LedgerRow['key']) => ledgerRows.find((r) => r.key === k)!
+    for (const k of order) {
+      const r = byKey(k)
+      if (r.alarm || (r.ratio != null && r.ratio >= 1.5 && r.medianVal != null)) return r
+    }
+    // none strongly over-norm → highest percentile row, else null
+    const withP = ledgerRows.filter((r) => r.percentile != null)
+    if (withP.length) return withP.reduce((b, r) => ((r.percentile ?? 0) > (b.percentile ?? 0) ? r : b))
+    return null
+  })()
 
   // Year buckets for the timeline strip — covers the FULL year range
   // 2002 → latest year so admin bands stay continuous even in idle years.
@@ -3565,6 +3656,15 @@ function Z3Panel({
     amount: Number(c.amount_mxn ?? 0),
     risk: Number(c.risk_score ?? 0),
   }))
+  // Gate the amount dot-field: only show when there are enough valued contracts
+  // AND enough spread to be a real distribution — else omit (don't shrink to a
+  // few stranded dots). ≥20 contracts & ≥1.3 decades of amount span.
+  const showAmountField = (() => {
+    const amts = contractPoints.map((p) => p.amount).filter((a) => a > 0)
+    if (amts.length < 20) return false
+    const span = Math.log10(Math.max(...amts) / Math.min(...amts))
+    return span >= 1.3
+  })()
 
   // Monthly buckets — only used when the vendor spans ≤3 years (a yearly
   // strip would be 2–3 giant blocks; monthly resolution shows the burst).
@@ -3688,18 +3788,6 @@ function Z3Panel({
   }
   crumbs.push({ label: editorialName.slice(0, 32) })
 
-  // Pull-line — picks the strongest narrative frame from the data
-  const pullLine = computeZ3PullLine({
-    editorialName,
-    institutionName: ancestryInstitutionName,
-    totalContractSpend,
-    contractCount: contracts.length,
-    hrPct,
-    daPct,
-    byYear,
-    lang,
-  })
-
   const RENDER_LIMIT = 30
   const visibleContracts = sortedContracts.slice(0, RENDER_LIMIT)
 
@@ -3736,15 +3824,8 @@ function Z3Panel({
           kicker={lang === 'en' ? '§ EL HISTORIAL · VENDOR DEEP' : '§ EL HISTORIAL · PROVEEDOR'}
           headline={
             lang === 'en'
-              ? <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>what they actually did</em></>
-              : <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>qué hicieron en realidad</em></>
-          }
-          stat={
-            isLoading
-              ? '...'
-              : lang === 'en'
-                ? `${formatNumber(contracts.length)} contracts · ${formatCompactMXN(totalContractSpend)} · ${hrPct.toFixed(0)}% high-risk · ${daPct.toFixed(0)}% direct award · ${formatNumber(singleBidN)} single-bid`
-                : `${formatNumber(contracts.length)} contratos · ${formatCompactMXN(totalContractSpend)} · ${hrPct.toFixed(0)}% alto riesgo · ${daPct.toFixed(0)}% adj. directa · ${formatNumber(singleBidN)} único postor`
+              ? <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>how far from the norm</em></>
+              : <>{editorialName} — <em style={{ fontStyle: 'italic', fontWeight: 800 }}>qué tan lejos de la norma</em></>
           }
         />
 
@@ -3765,87 +3846,57 @@ function Z3Panel({
             </div>
           )}
 
-          {/* ─── FINGERPRINT PLATE ──────────────────────────────────────────
-              One framed editorial plate (inset ochre border, archival eyebrow)
-              instead of three strips stranded in whitespace. Two columns on
-              lg+: temporal activity (left) · procedure-mix / risk / amount
-              dot-field (right). Reference: Ordnance-Survey plate chrome +
-              NYT Upshot named-outlier dot strip for the amount field. */}
+          {/* ─── EL DESVÍO — indictment finding + deviation ledger spine ──────
+              The page reads as one argument: a prose FINDING (the strongest
+              deviation, stated once), then the DEVIATION LEDGER (the proof,
+              fixed geometry at any N), then CONTEXT (the magnitudes the ratios
+              normalize away), then self-suppressing evidence modules. */}
           {!isLoading && !isError && contracts.length > 0 && (
-            <section
-              className="mt-3 mb-2 rounded-sm overflow-hidden"
-              style={{
-                border: '1px solid var(--color-border)',
-                boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
-                background: 'var(--color-background-elevated)',
-              }}
-            >
-              <div
-                className="flex items-baseline justify-between px-4 py-2"
-                style={{ borderBottom: '1px solid var(--color-border)' }}
-              >
-                <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
-                  <span style={{ color: '#a06820', fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'Fingerprint' : 'Huella'}</span>
-                  <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
-                  <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'How they operated' : 'Cómo operaron'}</span>
-                </div>
-                <div className="font-mono tabular-nums" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-                  {formatNumber(contracts.length)} {lang === 'en' ? 'contracts' : 'contratos'}
-                </div>
-              </div>
+            <>
+              <Z3IndictmentFinding
+                strongest={strongest}
+                vendorName={editorialName}
+                smallN={smallN}
+                lang={lang}
+              />
+              <Z3DeviationLedger rows={ledgerRows} smallN={smallN} multiSector={multiSector} lang={lang} />
+              <Z3ContextStrip
+                count={contracts.length}
+                totalSpend={totalContractSpend}
+                yearMin={yearMin}
+                yearMax={yearMax}
+                sampled={sampled}
+                lang={lang}
+              />
 
-              <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_1fr]">
-                {/* LEFT — ADAPTIVE temporal activity. Concentrated vendors →
-                    editorial concentration stat (no empty axis). Spread vendors
-                    → month/year strip. */}
-                <div className="px-4 py-3 min-w-0 flex flex-col justify-center">
-                  {activityShape?.concentrated ? (
-                    <Z3ConcentrationStat shape={activityShape} lang={lang} />
-                  ) : yearSpan > 3 && byYear.size > 0 ? (
-                    <Z3TimelineStrip
-                      yearSequence={yearSequence}
-                      byYear={byYear}
-                      maxYearAmt={maxYearAmt}
-                      selectedYear={yearFilter}
-                      onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
-                      lang={lang}
-                    />
-                  ) : monthly ? (
-                    <Z3MonthlyStrip monthly={monthly} lang={lang} />
-                  ) : byYear.size > 0 ? (
-                    <div>
-                      <div className="font-mono uppercase mb-1" style={{ fontSize: 9, letterSpacing: '0.14em', color: 'var(--color-text-muted)' }}>
-                        {lang === 'en' ? 'Activity by year' : 'Actividad por año'}
-                      </div>
-                      <div className="font-mono" style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                        {(() => {
-                          const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
-                          const adminMin = getAdministrationByYear(yearMin)?.short
-                          const adminTag = adminMin ? ` · ${adminMin}` : ''
-                          return lang === 'en'
-                            ? `Active ${range} · ${formatNumber(contracts.length)} contracts${adminTag}`
-                            : `Activo ${range} · ${formatNumber(contracts.length)} contratos${adminTag}`
-                        })()}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* RIGHT — procedure mix · risk · amount dot-field */}
-                <div
-                  className="px-4 py-3 min-w-0 border-t lg:border-t-0 lg:border-l"
-                  style={{ borderColor: 'var(--color-border)' }}
-                >
-                  <Z3Fingerprint
-                    directAwardN={directAwardN}
-                    hrCount={hrCount}
-                    total={contracts.length}
-                    points={contractPoints}
+              {/* WHEN — self-suppressing temporal evidence. Concentrated → the
+                  editorial concentration stat; spread → the year/month strip. */}
+              <div className="mt-3 px-1">
+                {activityShape?.concentrated ? (
+                  <Z3ConcentrationStat shape={activityShape} lang={lang} />
+                ) : yearSpan > 3 && byYear.size > 0 ? (
+                  <Z3TimelineStrip
+                    yearSequence={yearSequence}
+                    byYear={byYear}
+                    maxYearAmt={maxYearAmt}
+                    selectedYear={yearFilter}
+                    onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
                     lang={lang}
                   />
-                </div>
+                ) : monthly ? (
+                  <Z3MonthlyStrip monthly={monthly} lang={lang} />
+                ) : null}
               </div>
-            </section>
+
+              {/* AMOUNT — gated dot-field. Renders ONLY with enough contracts and
+                  spread to be a real distribution (≥20 valued & ≥1.3 decades);
+                  below that it is omitted, not shrunk to a few stranded dots. */}
+              {showAmountField && (
+                <div className="mt-3 px-1">
+                  <Z3Fingerprint points={contractPoints} lang={lang} />
+                </div>
+              )}
+            </>
           )}
 
           {/* Top-3 hero cards — BIGGEST / HIGHEST RISK / MOST RECENT */}
@@ -3939,14 +3990,7 @@ function Z3Panel({
           )}
         </motion.div>
 
-        {/* Pull-line — editorial finding */}
-        {!isLoading && !isError && contracts.length > 0 && (
-          <ZPullLine custom={3} variants={bandVariants}>
-            {pullLine}
-          </ZPullLine>
-        )}
-
-        {/* Footer */}
+        {/* Footer — (the editorial finding now leads the view as the indictment band) */}
         {!isLoading && !isError && contracts.length > 0 && (
           <div className="px-4 sm:px-6 py-2 flex-shrink-0 flex items-center justify-between" style={{ borderTop: '1px solid var(--color-border)' }}>
             <span className="font-mono text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
@@ -4380,21 +4424,13 @@ function Z3ContractRow({
 // where a flat contract list hides it.
 // ────────────────────────────────────────────────────────────────────────────
 function Z3Fingerprint({
-  directAwardN,
-  hrCount,
-  total,
   points,
   lang,
 }: {
-  directAwardN: number
-  hrCount: number
-  total: number
   points: Array<{ amount: number; risk: number }>
   lang: 'en' | 'es'
 }) {
-  if (total === 0) return null
-  const daPct = (directAwardN / total) * 100
-  const hrPct = (hrCount / total) * 100
+  if (points.length === 0) return null
 
   // Amount dot-field — each contract a risk-coloured dot positioned by log10
   // amount on the x-axis, with deterministic vertical jitter. A pile of dots
@@ -4432,44 +4468,8 @@ function Z3Fingerprint({
     return { lo, hi, dots, ticks }
   })()
 
-  const daColor = daPct >= 75 ? RISK_COLORS.critical : daPct >= 50 ? RISK_COLORS.high : daPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
-  const hrColor = hrPct >= 75 ? RISK_COLORS.critical : hrPct >= 40 ? RISK_COLORS.high : hrPct >= 25 ? RISK_COLORS.medium : 'var(--color-text-muted)'
-
-  // Stacked-label rate bar: label + big readout on one line, full-width bar
-  // below. Reads cleanly in the narrow right column (vs. an inline thin line).
-  const RateBar = ({ label, pct, color, readout }: { label: string; pct: number; color: string; readout: string }) => (
-    <div>
-      <div className="flex items-baseline justify-between mb-1">
-        <span className="font-mono uppercase" style={{ fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-          {label}
-        </span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 15, fontWeight: 700, color, lineHeight: 1 }}>
-          {readout}
-        </span>
-      </div>
-      <span className="block relative w-full" style={{ height: 7, background: 'var(--color-border)', borderRadius: 2, overflow: 'hidden' }}>
-        <span style={{ position: 'absolute', inset: 0, width: `${Math.min(100, pct)}%`, background: color, borderRadius: 2 }} />
-      </span>
-    </div>
-  )
-
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-        <RateBar
-          label={lang === 'en' ? 'Direct award' : 'Adj. directa'}
-          pct={daPct}
-          color={daColor}
-          readout={`${daPct.toFixed(0)}%`}
-        />
-        <RateBar
-          label={lang === 'en' ? 'High risk' : 'Alto riesgo'}
-          pct={hrPct}
-          color={hrColor}
-          readout={`${hrPct.toFixed(0)}%`}
-        />
-      </div>
-
       {/* Amount dot-field */}
       {field && (
         <div>
@@ -4536,6 +4536,210 @@ function Z3Fingerprint({
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EL DESVÍO — the deviation-ledger spine. A vendor is a row of DEVIATIONS from
+// its sector's norm, not a timeline of contracts. Ink is driven by deviation
+// magnitude, never data volume — so a 1-contract vendor and a 4000-contract
+// vendor render with identical geometry, and sparse data can never skew it.
+// Reference: FT bullet-vs-benchmark, NYT Upshot sledgehammer, ProPublica.
+// ════════════════════════════════════════════════════════════════════════════
+
+export type Z3LedgerRow = {
+  key: 'direct_award' | 'single_bid' | 'risk' | 'price'
+  label: string
+  kind: 'pct' | 'mxn'
+  vendorVal: number
+  medianVal: number | null
+  percentile: number | null
+  absoluteRef: { value: number; label: string } | null
+  alarm: boolean
+  ratio: number | null
+}
+
+const OCHRE = '#a06820'
+const OECD_CYAN = '#0891b2'
+
+// One prose finding sentence under the headline — the strongest deviation,
+// stated once. Numbers in strong weight + deviation hue. Below ~5 contracts the
+// verb softens to "se desvía" (a true ratio, but not an accusation).
+function Z3IndictmentFinding({
+  strongest,
+  vendorName,
+  smallN,
+  lang,
+}: {
+  strongest: Z3LedgerRow | null
+  vendorName: string
+  smallN: boolean
+  lang: 'en' | 'es'
+}) {
+  const accent = strongest?.alarm ? RISK_COLORS.critical : OCHRE
+  const strong = (s: string) => (
+    <span style={{ fontWeight: 700, color: accent, fontStyle: 'normal' }}>{s}</span>
+  )
+  const fmtVal = (r: Z3LedgerRow) => (r.kind === 'mxn' ? formatCompactMXN(r.vendorVal) : `${r.vendorVal.toFixed(0)}%`)
+  const fmtMed = (r: Z3LedgerRow) => (r.medianVal == null ? '—' : r.kind === 'mxn' ? formatCompactMXN(r.medianVal) : `${r.medianVal.toFixed(0)}%`)
+
+  let body: React.ReactNode
+  if (!strongest) {
+    body = lang === 'en'
+      ? <>{vendorName} <span>operates close to the sector norm on the measured indicators.</span></>
+      : <>{vendorName} <span>opera cerca de la norma del sector en los indicadores medidos.</span></>
+  } else if (smallN && strongest.ratio != null) {
+    body = lang === 'en'
+      ? <>{vendorName} deviates {strong(`${strongest.ratio.toFixed(1)}×`)} from the sector norm on {strongest.label.toLowerCase()} ({fmtVal(strongest)} vs {fmtMed(strongest)}).</>
+      : <>{vendorName} se desvía {strong(`${strongest.ratio.toFixed(1)}×`)} de la norma del sector en {strongest.label.toLowerCase()} ({fmtVal(strongest)} vs {fmtMed(strongest)}).</>
+  } else {
+    const r = strongest
+    const ratioClause = r.ratio != null
+      ? (lang === 'en' ? <> — {strong(`${r.ratio.toFixed(1)}×`)} the sector norm ({fmtMed(r)})</> : <> — {strong(`${r.ratio.toFixed(1)}×`)} la norma del sector ({fmtMed(r)})</>)
+      : (r.percentile != null ? (lang === 'en' ? <> — {strong(`p${Math.round(r.percentile)}`)} in its sector</> : <> — {strong(`percentil ${Math.round(r.percentile)}`)} del sector</>) : null)
+    if (r.key === 'direct_award') {
+      body = lang === 'en'
+        ? <>{vendorName} took {strong(fmtVal(r))} of its contracts without competition{ratioClause}.</>
+        : <>{vendorName} obtuvo el {strong(fmtVal(r))} de sus contratos sin competencia{ratioClause}.</>
+    } else if (r.key === 'single_bid') {
+      body = lang === 'en'
+        ? <>{vendorName} won {strong(fmtVal(r))} of its contracts as the only bidder{ratioClause}.</>
+        : <>{vendorName} ganó el {strong(fmtVal(r))} de sus contratos como único postor{ratioClause}.</>
+    } else if (r.key === 'risk') {
+      body = lang === 'en'
+        ? <>{vendorName} carries {strong(fmtVal(r))} of its contracts at high risk{ratioClause}.</>
+        : <>{vendorName} tiene el {strong(fmtVal(r))} de sus contratos en alto riesgo{ratioClause}.</>
+    } else {
+      body = lang === 'en'
+        ? <>{vendorName} paid {strong(fmtVal(r))} per contract{ratioClause}.</>
+        : <>{vendorName} pagó {strong(fmtVal(r))} por contrato{ratioClause}.</>
+    }
+  }
+
+  return (
+    <div className="px-4 sm:px-6 pt-1 pb-3">
+      <div className="flex items-start gap-3 max-w-3xl">
+        <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
+        <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic' }}>
+          {body}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// One bullet-vs-benchmark row. Geometry is identical for every vendor; the
+// deviation WEDGE between the vendor marker and the sector median tick IS the
+// finding. Dual-anchored: a sector-median tick AND (where relevant) an absolute
+// reference (OECD 25%), so a captured sector's norm can't read as exoneration.
+function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boolean; lang: 'en' | 'es' }) {
+  const hasMedian = row.medianVal != null
+  const domainMax = row.kind === 'pct'
+    ? 100
+    : Math.max(row.vendorVal, row.medianVal ?? 0, 1) * 1.5
+  const clamp = (n: number) => Math.max(0, Math.min(1, n))
+  const vPos = clamp(row.vendorVal / domainMax)
+  const mPos = hasMedian ? clamp((row.medianVal as number) / domainMax) : null
+  const refPos = row.absoluteRef ? clamp(row.absoluteRef.value / domainMax) : null
+  const overNorm = hasMedian && row.vendorVal > (row.medianVal as number)
+  const wedgeColor = row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-muted)'
+  const showPctile = !smallN && row.percentile != null
+  const fmt = (v: number) => (row.kind === 'mxn' ? formatCompactMXN(v) : `${v.toFixed(0)}%`)
+  const lo = mPos != null ? Math.min(vPos, mPos) : vPos
+  const hi = mPos != null ? Math.max(vPos, mPos) : vPos
+
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <span className="flex-shrink-0 font-mono uppercase" style={{ fontSize: 9.5, letterSpacing: '0.08em', color: 'var(--color-text-muted)', width: 104 }}>
+        {row.label}
+      </span>
+      <span className="flex-1 relative" style={{ height: 22 }}>
+        {/* baseline track */}
+        <span aria-hidden="true" className="absolute left-0 right-0" style={{ top: '50%', height: 2, background: 'var(--color-border)', borderRadius: 1, transform: 'translateY(-50%)' }} />
+        {/* deviation wedge between median and vendor */}
+        {mPos != null && hi > lo && (
+          <span
+            aria-hidden="true"
+            className="absolute"
+            style={{
+              left: `${lo * 100}%`, width: `${(hi - lo) * 100}%`, top: '50%', height: 9,
+              transform: 'translateY(-50%)',
+              background: smallN ? 'transparent' : wedgeColor,
+              border: smallN ? `1px dashed ${wedgeColor}` : 'none',
+              opacity: smallN ? 0.7 : (overNorm ? 0.7 : 0.4),
+              borderRadius: 1,
+            }}
+          />
+        )}
+        {/* OECD absolute reference tick (cyan) */}
+        {refPos != null && (
+          <span aria-hidden="true" className="absolute" style={{ left: `${refPos * 100}%`, top: 1, bottom: 1, width: 1.5, background: OECD_CYAN }} title={`${row.absoluteRef?.label} ${row.absoluteRef?.value}%`} />
+        )}
+        {/* sector median tick */}
+        {mPos != null && (
+          <span aria-hidden="true" className="absolute" style={{ left: `${mPos * 100}%`, top: 0, bottom: 0, width: 1, background: 'var(--color-text-secondary)', opacity: 0.7 }} />
+        )}
+        {/* vendor marker */}
+        <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 9, height: 9, marginLeft: -4.5, transform: 'translateY(-50%)', background: row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-secondary)', boxShadow: '0 0 0 2px var(--color-background-elevated)' }} />
+      </span>
+      {/* readout */}
+      <span className="flex-shrink-0 text-right flex items-baseline justify-end gap-1.5" style={{ width: 150 }}>
+        <span className="font-mono tabular-nums" style={{ fontSize: 12.5, fontWeight: 700, color: row.alarm ? RISK_COLORS.critical : 'var(--color-text-primary)' }}>
+          {fmt(row.vendorVal)}
+        </span>
+        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
+          {hasMedian ? (lang === 'en' ? `vs ${fmt(row.medianVal as number)}` : `vs ${fmt(row.medianVal as number)}`) : '·'}
+        </span>
+        {showPctile && (
+          <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
+            p{Math.round(row.percentile as number)}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}
+
+function Z3DeviationLedger({ rows, smallN, multiSector, lang }: { rows: Z3LedgerRow[]; smallN: boolean; multiSector: boolean; lang: 'en' | 'es' }) {
+  return (
+    <section className="mt-3 mb-2 rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', background: 'var(--color-background-elevated)' }}>
+      <div className="flex items-baseline justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <div className="font-mono uppercase" style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--color-text-muted)' }}>
+          <span style={{ color: OCHRE, fontStyle: 'italic', fontWeight: 600 }}>§ {lang === 'en' ? 'The deviation' : 'El desvío'}</span>
+          <span style={{ margin: '0 7px', opacity: 0.45 }}>·</span>
+          <span style={{ fontWeight: 300 }}>{lang === 'en' ? 'vs the sector norm' : 'frente a la norma del sector'}</span>
+        </div>
+        <div className="flex items-center gap-2.5 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+          <span className="flex items-center gap-1"><span style={{ width: 8, height: 1, background: 'var(--color-text-secondary)', display: 'inline-block' }} /> {lang === 'en' ? 'median' : 'mediana'}</span>
+          <span className="flex items-center gap-1"><span style={{ width: 8, height: 2, background: OECD_CYAN, display: 'inline-block' }} /> OECD 25%</span>
+        </div>
+      </div>
+      <div className="px-4 py-2.5">
+        {rows.map((r) => <Z3DeviationRow key={r.key} row={r} smallN={smallN} lang={lang} />)}
+      </div>
+      {(smallN || multiSector) && (
+        <div className="px-4 pb-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+          {smallN && (lang === 'en' ? 'small sample — percentiles omitted. ' : 'muestra pequeña — percentiles omitidos. ')}
+          {multiSector && (lang === 'en' ? 'multi-sector vendor — sector baseline approximate.' : 'proveedor multi-sector — base sectorial aproximada.')}
+        </div>
+      )}
+    </section>
+  )
+}
+
+// One-line magnitude context the deviation ratios normalize away — so scale is
+// never hidden, especially when a dramatic ratio comes from a tiny vendor.
+function Z3ContextStrip({ count, totalSpend, yearMin, yearMax, sampled, lang }: { count: number; totalSpend: number; yearMin: number; yearMax: number; sampled: boolean; lang: 'en' | 'es' }) {
+  const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
+  const cLabel = lang === 'en' ? 'contracts' : 'contratos'
+  const sep = <span style={{ margin: '0 7px', opacity: 0.5 }}>·</span>
+  return (
+    <div className="px-4 sm:px-6 pb-1 font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
+      <span className="tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatNumber(count)}{sampled ? '+' : ''} {cLabel}</span>
+      {sep}<span className="tabular-nums">{formatCompactMXN(totalSpend)} ≈ {formatCompactUSD(totalSpend)}</span>
+      {sep}<span>{lang === 'en' ? `active ${range}` : `activo ${range}`}</span>
+      {sampled && <>{sep}<span style={{ fontStyle: 'italic' }}>{lang === 'en' ? 'of ~100 sampled' : 'de ~100 muestreados'}</span></>}
     </div>
   )
 }
@@ -4749,75 +4953,6 @@ function pickZ3Top3(contracts: ContractListItem[]): Array<{ contract: ContractLi
   return result
 }
 
-/**
- * Pull-line picks the strongest narrative frame from vendor data.
- *   GT-pattern frames first (would need GT flag; deferred to v2)
- *   Sexenio concentration > 50% → administration frame
- *   Burst year > 40% → year frame
- *   HR% > 80% → procurement-pathology frame
- *   Otherwise standard summary
- */
-function computeZ3PullLine({
-  editorialName,
-  institutionName,
-  totalContractSpend,
-  contractCount,
-  hrPct,
-  daPct,
-  byYear,
-  lang,
-}: {
-  editorialName: string
-  institutionName: string | null
-  totalContractSpend: number
-  contractCount: number
-  hrPct: number
-  daPct: number
-  byYear: Map<number, { count: number; amount: number; riskSum: number; riskN: number }>
-  lang: 'en' | 'es'
-}): React.ReactNode {
-  // Sexenio breakdown
-  const sexenioSpend: Record<string, number> = {}
-  byYear.forEach((v, yr) => {
-    const admin = getAdministrationByYear(yr)
-    if (!admin) return
-    sexenioSpend[admin.short] = (sexenioSpend[admin.short] ?? 0) + v.amount
-  })
-  let topSexenio: [string, number] | null = null
-  for (const [key, val] of Object.entries(sexenioSpend)) {
-    if (!topSexenio || val > topSexenio[1]) topSexenio = [key, val]
-  }
-  const topSexenioPct = topSexenio && totalContractSpend > 0 ? (topSexenio[1] / totalContractSpend) * 100 : 0
-
-  // Burst year
-  let burstYear: [number, number] | null = null
-  byYear.forEach((v, yr) => {
-    if (!burstYear || v.amount > burstYear[1]) burstYear = [yr, v.amount]
-  })
-  const burstYearPct = burstYear && totalContractSpend > 0 ? ((burstYear as [number, number])[1] / totalContractSpend) * 100 : 0
-
-  const inst = institutionName ? toEditorialCase(institutionName) : null
-
-  if (topSexenioPct >= 50 && topSexenio) {
-    return lang === 'en'
-      ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> collected <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> from {inst}</> : ''} — <strong className="font-semibold">{topSexenioPct.toFixed(0)}%</strong> arrived under {topSexenio[0]}.</>
-      : <><strong className="font-semibold text-text-primary">{editorialName}</strong> recibió <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> de {inst}</> : ''} — el <strong className="font-semibold">{topSexenioPct.toFixed(0)}%</strong> llegó bajo {topSexenio[0]}.</>
-  }
-  if (burstYearPct >= 40 && burstYear) {
-    return lang === 'en'
-      ? <><strong className="font-semibold">{burstYearPct.toFixed(0)}%</strong> of {editorialName}'s lifetime revenue arrived in <strong className="font-semibold text-text-primary">{(burstYear as [number, number])[0]}</strong> alone.</>
-      : <>El <strong className="font-semibold">{burstYearPct.toFixed(0)}%</strong> de los ingresos de {editorialName} llegó en <strong className="font-semibold text-text-primary">{(burstYear as [number, number])[0]}</strong> solamente.</>
-  }
-  if (hrPct >= 80) {
-    return lang === 'en'
-      ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> holds {formatNumber(contractCount)} contracts worth <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong> — <strong className="font-semibold">{hrPct.toFixed(0)}% flagged</strong> high or critical, <strong className="font-semibold">{daPct.toFixed(0)}% direct-award</strong>.</>
-      : <><strong className="font-semibold text-text-primary">{editorialName}</strong> tiene {formatNumber(contractCount)} contratos por <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong> — <strong className="font-semibold">{hrPct.toFixed(0)}% marcados</strong> alto o crítico, <strong className="font-semibold">{daPct.toFixed(0)}% adj. directa</strong>.</>
-  }
-  // Standard summary
-  return lang === 'en'
-    ? <><strong className="font-semibold text-text-primary">{editorialName}</strong> holds {formatNumber(contractCount)} contracts worth <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> with {inst}</> : ''}.</>
-    : <><strong className="font-semibold text-text-primary">{editorialName}</strong> tiene {formatNumber(contractCount)} contratos por <strong className="font-semibold">{formatCompactMXN(totalContractSpend)}</strong>{inst ? <> con {inst}</> : ''}.</>
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Z4 — Contract drawer

@@ -2007,6 +2007,46 @@ def get_vendor_peer_comparison(
                 label_en=label,
             ))
 
+        # price_per_contract — computed metric (total value / contract count) for
+        # the Z3 deviation ledger. Appended separately so the 5 column metrics
+        # above keep their exact behavior. The expression is a constant string
+        # (no user input); vendor_id/sector_id remain parameterized. NULL rows
+        # (zero contracts) are excluded so they don't skew the median.
+        ppc_expr = "(total_value_mxn * 1.0 / NULLIF(total_contracts, 0))"
+        tv = vs["total_value_mxn"] or 0
+        tc = vs["total_contracts"] or 0
+        ppc_val = (tv / tc) if tc else None
+        if sector_id:
+            ppc_row = cursor.execute(f"""
+                SELECT
+                    (SELECT COUNT(*) FROM vendor_stats
+                     WHERE primary_sector_id = ? AND {ppc_expr} IS NOT NULL AND {ppc_expr} <= ?) * 100.0 /
+                    NULLIF((SELECT COUNT(*) FROM vendor_stats
+                            WHERE primary_sector_id = ? AND {ppc_expr} IS NOT NULL), 0) as pctile,
+                    (SELECT {ppc_expr} FROM vendor_stats
+                     WHERE primary_sector_id = ? AND {ppc_expr} IS NOT NULL
+                     ORDER BY {ppc_expr} LIMIT 1 OFFSET
+                     (SELECT COUNT(*) / 2 FROM vendor_stats
+                      WHERE primary_sector_id = ? AND {ppc_expr} IS NOT NULL)) as median_val
+            """, (sector_id, ppc_val or 0, sector_id, sector_id, sector_id)).fetchone()
+        else:
+            ppc_row = cursor.execute(f"""
+                SELECT
+                    (SELECT COUNT(*) FROM vendor_stats
+                     WHERE {ppc_expr} IS NOT NULL AND {ppc_expr} <= ?) * 100.0 /
+                    NULLIF((SELECT COUNT(*) FROM vendor_stats WHERE {ppc_expr} IS NOT NULL), 0) as pctile,
+                    (SELECT {ppc_expr} FROM vendor_stats WHERE {ppc_expr} IS NOT NULL
+                     ORDER BY {ppc_expr} LIMIT 1 OFFSET
+                     (SELECT COUNT(*) / 2 FROM vendor_stats WHERE {ppc_expr} IS NOT NULL)) as median_val
+            """, (ppc_val or 0,)).fetchone()
+        metrics.append(PeerComparisonMetric(
+            metric="price_per_contract",
+            value=round(ppc_val, 2) if ppc_val is not None else None,
+            peer_median=round(ppc_row["median_val"], 2) if ppc_row and ppc_row["median_val"] is not None else None,
+            percentile=round(ppc_row["pctile"], 1) if ppc_row and ppc_row["pctile"] is not None else None,
+            label_en="Price per Contract (MXN)",
+        ))
+
         result = PeerComparisonResponse(vendor_id=vendor_id, sector_id=sector_id, metrics=metrics)
         _set_vendor_cache(cache_key, result)
         return result
