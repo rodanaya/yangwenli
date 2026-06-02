@@ -3770,13 +3770,21 @@ function Z3Panel({
     const valued = contracts.map((c) => Number(c.amount_mxn) || 0).filter((a) => a > 0).sort((a, b) => a - b)
     // Top-decile threshold within THIS vendor's own sample (needs ≥10 to mean anything).
     const decileThreshold = valued.length >= 10 ? (valued[Math.floor(valued.length * 0.9)] ?? Infinity) : Infinity
-    // Repeated-amount map — round to nearest 100 MXN to catch near-identical splits.
-    const repeatMap = new Map<number, number>()
+    // Repeated-AMOUNT map — round to nearest 100 MXN to catch near-identical splits.
+    const amtMap = new Map<number, number>()
+    // Repeated-OBJECT map — real vendors repeat the procurement object ("medicamentos")
+    // far more than the exact amount; categorical repetition is the live monotony
+    // signal (verified: vendor 29277 has 0 repeated amounts but 71 repeated objects).
+    const objMap = new Map<string, number>()
+    const normObj = (c: ContractListItem) => {
+      const o = cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '').objeto
+      return o ? o.toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 30) : ''
+    }
     contracts.forEach((c) => {
       const a = Number(c.amount_mxn) || 0
-      if (a <= 0) return
-      const k = Math.round(a / 100) * 100
-      repeatMap.set(k, (repeatMap.get(k) ?? 0) + 1)
+      if (a > 0) { const k = Math.round(a / 100) * 100; amtMap.set(k, (amtMap.get(k) ?? 0) + 1) }
+      const o = normObj(c)
+      if (o) objMap.set(o, (objMap.get(o) ?? 0) + 1)
     })
     const isRoundish = (a: number) => {
       if (a <= 0) return false
@@ -3786,31 +3794,35 @@ function Z3Panel({
       return next > a && (next - a) / a <= 0.03
     }
     const amendRe = /modific|convenio/i
-    const info = new Map<number, { repeat: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }>()
+    const info = new Map<number, { repeated: boolean; repeatAmt: number; repeatObj: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }>()
     contracts.forEach((c) => {
       const a = Number(c.amount_mxn) || 0
-      const repeat = a > 0 ? (repeatMap.get(Math.round(a / 100) * 100) ?? 0) : 0
+      const repeatAmt = a > 0 ? (amtMap.get(Math.round(a / 100) * 100) ?? 0) : 0
+      const o = normObj(c)
+      const repeatObj = o ? (objMap.get(o) ?? 0) : 0
+      const repeated = repeatAmt >= 3 || repeatObj >= 3   // ≡ slot: amount OR object cluster
       const singleBid = !!c.is_single_bid
       const decile = a > 0 && a >= decileThreshold
       const blob = `${(c as ContractListItem & { title?: string; procedure_type?: string }).title ?? ''} ${(c as ContractListItem & { procedure_type?: string }).procedure_type ?? ''}`
       const amendment = amendRe.test(blob)
       const round = isRoundish(a)
-      const count = (repeat >= 3 ? 1 : 0) + (singleBid ? 1 : 0) + (decile ? 1 : 0) + (amendment ? 1 : 0)
-      info.set(c.id, { repeat, singleBid, decile, amendment, round, count })
+      const count = (repeated ? 1 : 0) + (singleBid ? 1 : 0) + (decile ? 1 : 0) + (amendment ? 1 : 0)
+      info.set(c.id, { repeated, repeatAmt, repeatObj, singleBid, decile, amendment, round, count })
     })
     // Log-scale bounds for the per-row magnitude tick (so a narrow band still separates).
     const logLo = valued.length ? Math.log10(valued[0]) : 0
     const logHi = valued.length ? Math.log10(valued[valued.length - 1]) : 1
     // Census
-    const repeatedRows = contracts.filter((c) => (info.get(c.id)?.repeat ?? 0) >= 3).length
-    const distinctRepeatedValues = Array.from(repeatMap.values()).filter((n) => n >= 3).length
+    const repeatedRows = contracts.filter((c) => info.get(c.id)?.repeated).length
     const noCompetition = contracts.filter((c) => c.is_direct_award || c.is_single_bid).length
     let peakAmt = 0, peakMult = 0
-    repeatMap.forEach((n, k) => { if (n > peakMult) { peakMult = n; peakAmt = k } })
+    amtMap.forEach((n, k) => { if (n > peakMult) { peakMult = n; peakAmt = k } })
+    let topObj = '', topObjN = 0
+    objMap.forEach((n, o) => { if (n > topObjN) { topObjN = n; topObj = o } })
     const yearCount = new Set(contracts.map((c) => Number(c.contract_year)).filter(Boolean)).size
     return {
       info, logLo, logHi,
-      census: { shown: contracts.length, repeatedRows, distinctRepeatedValues, noCompetition, peakAmt, peakMult, yearCount },
+      census: { shown: contracts.length, repeatedRows, noCompetition, peakAmt, peakMult, topObj, topObjN, yearCount },
     }
   })()
 
@@ -3992,9 +4004,12 @@ function Z3Panel({
                   cl.push(isSample
                     ? (lang === 'en' ? `Sample of ${formatNumber(cs.shown)}` : `Muestra de ${formatNumber(cs.shown)}`)
                     : (lang === 'en' ? `${formatNumber(cs.shown)} contracts` : `${formatNumber(cs.shown)} contratos`))
-                  if (cs.repeatedRows > 0) cl.push(lang === 'en'
-                    ? `${cs.repeatedRows} repeated amounts in ${cs.distinctRepeatedValues} values`
-                    : `${cs.repeatedRows} montos repetidos en ${cs.distinctRepeatedValues} valores`)
+                  if (cs.repeatedRows > 0) {
+                    const topClause = cs.topObjN >= 3 ? ` (${cs.topObj} ×${cs.topObjN})` : ''
+                    cl.push(lang === 'en'
+                      ? `${cs.repeatedRows} repeated${topClause}`
+                      : `${cs.repeatedRows} repetidos${topClause}`)
+                  }
                   if (cs.noCompetition > 0) cl.push(lang === 'en' ? `${cs.noCompetition} without competition` : `${cs.noCompetition} sin competencia`)
                   if (cs.peakMult >= 3) cl.push(lang === 'en' ? `peak ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}` : `pico ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}`)
                   if (cs.repeatedRows === 0 && cs.yearCount > 1) cl.push(lang === 'en' ? `${cs.yearCount} years` : `${cs.yearCount} años`)
@@ -4060,7 +4075,7 @@ function Z3Panel({
                 <Z3ContractRow
                   key={c.id}
                   c={c}
-                  flags={flagData.info.get(c.id) ?? { repeat: 0, singleBid: false, decile: false, amendment: false, round: false, count: 0 }}
+                  flags={flagData.info.get(c.id) ?? { repeated: false, repeatAmt: 0, repeatObj: 0, singleBid: false, decile: false, amendment: false, round: false, count: 0 }}
                   logLo={flagData.logLo}
                   logHi={flagData.logHi}
                   isHighlighted={c.id === highlightContractId}
@@ -4302,7 +4317,7 @@ function cleanContractDescription(raw: string): { objeto: string | null; expedie
   return { objeto, expediente }
 }
 
-type Z3RowFlags = { repeat: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }
+type Z3RowFlags = { repeated: boolean; repeatAmt: number; repeatObj: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }
 
 function Z3ContractRow({
   c,
@@ -4341,14 +4356,17 @@ function Z3ContractRow({
 
   // The flag gutter — slots light only when their signal fires. Glyphs differ
   // by FORM (not color alone) and each carries an aria-label (WCAG).
+  const repeatLabel = flags.repeatObj >= 3
+    ? (lang === 'en' ? `same object repeated ${flags.repeatObj}× in sample` : `mismo objeto repetido ${flags.repeatObj}× en la muestra`)
+    : (lang === 'en' ? `amount repeated ${flags.repeatAmt}× in sample — possible split` : `monto repetido ${flags.repeatAmt}× en la muestra — posible fraccionamiento`)
   const slots: Array<{ on: boolean; glyph: string; color: string; label: string }> = [
-    { on: flags.repeat >= 3, glyph: '≡', color: OCHRE, label: lang === 'en' ? `amount repeated ${flags.repeat}× in sample — possible split` : `monto repetido ${flags.repeat}× en la muestra — posible fraccionamiento` },
+    { on: flags.repeated, glyph: '≡', color: OCHRE, label: repeatLabel },
     { on: flags.singleBid, glyph: '①', color: RISK_COLORS.critical, label: lang === 'en' ? 'single bidder' : 'único postor' },
     { on: flags.decile, glyph: '▲', color: RISK_COLORS.medium, label: lang === 'en' ? "top-decile amount for this vendor" : 'monto en el decil superior del proveedor' },
     { on: flags.amendment, glyph: '↻', color: OCHRE, label: lang === 'en' ? 'amendment / convenio (text-derived)' : 'convenio modificatorio (según texto)' },
   ]
   const yr = Number(c.contract_year)
-  const title = `${yr || ''} · ${formatCompactMXN(amount)}${expediente ? ` · ${expediente}` : ''}${flags.repeat >= 3 ? (lang === 'en' ? ` · repeated ${flags.repeat}×` : ` · repetido ${flags.repeat}×`) : ''}\n${objeto ?? ''}`
+  const title = `${yr || ''} · ${formatCompactMXN(amount)}${expediente ? ` · ${expediente}` : ''}${flags.repeated ? ` · ${repeatLabel}` : ''}\n${objeto ?? ''}`
 
   return (
     <motion.li
