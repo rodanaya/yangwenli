@@ -3772,19 +3772,29 @@ function Z3Panel({
     const decileThreshold = valued.length >= 10 ? (valued[Math.floor(valued.length * 0.9)] ?? Infinity) : Infinity
     // Repeated-AMOUNT map — round to nearest 100 MXN to catch near-identical splits.
     const amtMap = new Map<number, number>()
-    // Repeated-OBJECT map — real vendors repeat the procurement object ("medicamentos")
-    // far more than the exact amount; categorical repetition is the live monotony
-    // signal (verified: vendor 29277 has 0 repeated amounts but 71 repeated objects).
-    const objMap = new Map<string, number>()
-    const normObj = (c: ContractListItem) => {
+    // Repeated-OBJECT map — real vendors repeat the procurement OBJECT
+    // ("medicamentos") far more than the exact amount. Group by a COARSE keyword
+    // key (accent-stripped, procurement verbs/stopwords dropped, first
+    // significant word's 5-char root) so morphological + phrasing variants —
+    // medicamentos / medicamento / medicinas, adquisición vs compra — merge into
+    // one rail instead of splintering. A readable label is kept for the census.
+    const STOP = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'o', 'por', 'con', 'para', 'en', 'un', 'una', 'al', 'adquisicion', 'compra', 'adjudicacion', 'adq', 'conv', 'directa', 'mediante', 'contratacion', 'servicio', 'servicios', 'suministro', 'bien', 'bienes'])
+    const objKey = (c: ContractListItem) => {
       const o = cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '').objeto
-      return o ? o.toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 30) : ''
+      if (!o) return ''
+      const words = o.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').split(/\s+/).filter((w) => w.length >= 3 && !STOP.has(w))
+      return words.length ? words[0].slice(0, 5) : ''
     }
+    const objCount = new Map<string, number>()
+    const objLabel = new Map<string, string>() // key -> first readable objeto seen (for the census)
     contracts.forEach((c) => {
       const a = Number(c.amount_mxn) || 0
       if (a > 0) { const k = Math.round(a / 100) * 100; amtMap.set(k, (amtMap.get(k) ?? 0) + 1) }
-      const o = normObj(c)
-      if (o) objMap.set(o, (objMap.get(o) ?? 0) + 1)
+      const k = objKey(c)
+      if (k) {
+        objCount.set(k, (objCount.get(k) ?? 0) + 1)
+        if (!objLabel.has(k)) objLabel.set(k, cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '').objeto ?? '')
+      }
     })
     const isRoundish = (a: number) => {
       if (a <= 0) return false
@@ -3798,8 +3808,8 @@ function Z3Panel({
     contracts.forEach((c) => {
       const a = Number(c.amount_mxn) || 0
       const repeatAmt = a > 0 ? (amtMap.get(Math.round(a / 100) * 100) ?? 0) : 0
-      const o = normObj(c)
-      const repeatObj = o ? (objMap.get(o) ?? 0) : 0
+      const k = objKey(c)
+      const repeatObj = k ? (objCount.get(k) ?? 0) : 0
       const repeated = repeatAmt >= 3 || repeatObj >= 3   // ≡ slot: amount OR object cluster
       const singleBid = !!c.is_single_bid
       const decile = a > 0 && a >= decileThreshold
@@ -3817,8 +3827,9 @@ function Z3Panel({
     const noCompetition = contracts.filter((c) => c.is_direct_award || c.is_single_bid).length
     let peakAmt = 0, peakMult = 0
     amtMap.forEach((n, k) => { if (n > peakMult) { peakMult = n; peakAmt = k } })
-    let topObj = '', topObjN = 0
-    objMap.forEach((n, o) => { if (n > topObjN) { topObjN = n; topObj = o } })
+    let topKey = '', topObjN = 0
+    objCount.forEach((n, k) => { if (n > topObjN) { topObjN = n; topKey = k } })
+    const topObj = objLabel.get(topKey) ?? ''
     const yearCount = new Set(contracts.map((c) => Number(c.contract_year)).filter(Boolean)).size
     return {
       info, logLo, logHi,
@@ -4053,7 +4064,7 @@ function Z3Panel({
           {/* Column header — aligns with the table row */}
           {!isLoading && !isError && visibleContracts.length > 0 && (
             <div className="flex items-center gap-2.5 pl-2.5 pr-2 pb-1" style={{ borderBottom: '1px solid var(--color-border)' }}>
-              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 86, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Amount' : 'Monto'}
               </span>
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
@@ -4406,8 +4417,8 @@ function Z3ContractRow({
         title={title}
       >
         {/* MONEY + log magnitude tick */}
-        <span className="flex-shrink-0 flex flex-col justify-center" style={{ width: 86 }}>
-          <span className="font-mono tabular-nums text-right block" style={{ fontSize: 13, fontWeight: 700, color: moneyColor, lineHeight: 1.1 }}>
+        <span className="flex-shrink-0 flex flex-col justify-center" style={{ width: 96 }}>
+          <span className="font-mono tabular-nums text-right block whitespace-nowrap" style={{ fontSize: 13, fontWeight: 700, color: moneyColor, lineHeight: 1.1 }}>
             {formatCompactMXN(amount)}
           </span>
           <span aria-hidden="true" className="block mt-0.5" style={{ width: '100%', height: 2 }}>
