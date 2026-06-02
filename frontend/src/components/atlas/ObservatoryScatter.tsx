@@ -53,7 +53,48 @@ const PLOT_W = W - M.left - M.right
 const PLOT_H = H - M.top - M.bottom
 const PAD_X = 0.075
 const PAD_Y = 0.12
-const FOCUS_ZOOM = 2.25 // camera magnification when flown into an orb
+
+// ── Orbit + camera geometry — SHARED so the zoom always frames the whole swarm.
+// 14 satellites in 2 rings of 7: fewer, fully-labelled orbs read far better than
+// 20 crowded ones (the drawer carries the long tail). The earlier fixed-window
+// camera clipped the outer ring at every lens; the frame is now FIT to content.
+const SAT_COUNT = 14
+const SAT_PER_RING = 7
+const ORBIT_BASE_PAD = 22    // gap from the sun's limb to ring 1
+const ORBIT_RING_STEP = 34
+const ORBIT_X = 1.12         // gentle x-stretch (was 1.35, which starved the binding y axis)
+const SAT_MAX_R = 12         // worst-case satellite radius
+const ORBIT_LABEL_PAD = 20   // headroom reserved for a satellite's name label
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+
+/** Max orbit radius for an orb of body-radius r (MUST match the satellites memo). */
+function orbitMaxRadius(r: number): number {
+  const rings = Math.ceil(SAT_COUNT / SAT_PER_RING) // = 2
+  return (r + ORBIT_BASE_PAD) + rings * ORBIT_RING_STEP
+}
+
+/**
+ * Camera target viewBox for flying into an orb — FIT to the sun + its entire
+ * satellite cloud + labels + margin (NOT a fixed zoom), keeping the chart aspect
+ * so nothing distorts, and biased toward the plate interior so an edge orb does
+ * not waste half the frame on empty plate. THIS is what guarantees "you can see
+ * all the orbs" — the zoom adapts to orb size (big orb pulls back, small zooms in).
+ */
+function focusFrameFor(b: { cx: number; cy: number; r: number }): { x: number; y: number; w: number; h: number } {
+  const maxR = orbitMaxRadius(b.r)
+  const contentHalfX = maxR * ORBIT_X + SAT_MAX_R + 28
+  const contentHalfY = maxR + SAT_MAX_R + ORBIT_LABEL_PAD + 18
+  // fit BOTH axes while preserving the W:H aspect (clamp a sane min so tiny orbs don't over-zoom)
+  const halfW = Math.max(contentHalfX, contentHalfY * (W / H), 210)
+  const halfH = halfW * (H / W)
+  // slack = how far we can shift the frame before the cloud would clip
+  const slackX = Math.max(0, halfW - contentHalfX)
+  const slackY = Math.max(0, halfH - contentHalfY)
+  const cx = b.cx + clamp(W / 2 - b.cx, -slackX, slackX) * 0.6
+  const cy = b.cy + clamp(H / 2 - b.cy, -slackY, slackY) * 0.6
+  return { x: cx - halfW, y: cy - halfH, w: 2 * halfW, h: 2 * halfH }
+}
 
 // Light celestial palette — warm cream plate, dark ink type (high contrast).
 const C = {
@@ -245,13 +286,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     return unsub
   }, [zoom])
 
-  const flyTo = (b: { code: string; cx: number; cy: number }) => {
-    targetRef.current = {
-      x: b.cx - (W / FOCUS_ZOOM) / 2,
-      y: b.cy - (H / FOCUS_ZOOM) / 2,
-      w: W / FOCUS_ZOOM,
-      h: H / FOCUS_ZOOM,
-    }
+  const flyTo = (b: { code: string; cx: number; cy: number; r: number }) => {
+    targetRef.current = focusFrameFor(b)
     setDrawerOpen(false)
     setHoverBody(null)
     setFocused(b.code)
@@ -263,8 +299,29 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     animate(zoom, 0, { duration: 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
   }
 
-  // Satellites orbit the focused orb's OWN position (the camera magnifies them
-  // ~FOCUS_ZOOM×, so they're sized small in SVG units to read right on screen).
+  // Recovery: if the lens changed out from under a focused orb (the code no
+  // longer exists in the new bodies), fly the camera home instead of stranding
+  // the user on a blank zoomed frame with no Back button.
+  useEffect(() => {
+    if (focused && !focusedBody) {
+      animate(zoom, 0, { duration: 0.4, onComplete: () => setFocused(null) })
+    }
+  }, [focused, focusedBody, zoom])
+
+  // Escape key: close the drawer, else fly back out of focus.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (drawerOpen) setDrawerOpen(false)
+      else if (focused) animate(zoom, 0, { duration: 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [drawerOpen, focused, zoom])
+
+  // Satellites orbit the focused orb's OWN position, sized small in SVG units
+  // (the adaptive camera magnifies them to read on screen). Geometry MUST match
+  // orbitMaxRadius()/focusFrameFor() so the frame fits the whole cloud.
   const satellites = useMemo(() => {
     if (!focusedBody) return []
     const vs = focusVendors?.vendors ?? []
@@ -272,16 +329,16 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     const maxAmt = Math.max(...vs.map((v) => v.total_amount_mxn || 1))
     const golden = 2.39996
     const cx = focusedBody.cx, cy = focusedBody.cy
-    const base = focusedBody.r + 26
-    return vs.slice(0, 20).map((v, i) => {
-      const ring = 1 + Math.floor(i / 6)
-      const radius = base + ring * 30 + (i % 6) * 3
-      const ang = i * golden + ring * 0.6
+    const base = focusedBody.r + ORBIT_BASE_PAD
+    return vs.slice(0, SAT_COUNT).map((v, i) => {
+      const ring = 1 + Math.floor(i / SAT_PER_RING)
+      const radius = base + ring * ORBIT_RING_STEP
+      const ang = i * golden + ring * 0.4
       return {
         v,
-        x: cx + Math.cos(ang) * radius * 1.35,
+        x: cx + Math.cos(ang) * radius * ORBIT_X,
         y: cy + Math.sin(ang) * radius,
-        r: 3.5 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 8.5,
+        r: 3.5 + (Math.sqrt(v.total_amount_mxn || 1) / Math.sqrt(maxAmt)) * 8,
         fill: riskRamp(v.risk_score),
       }
     })
@@ -302,7 +359,8 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
-        style={{ display: 'block' }}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ display: 'block', width: '100%', maxHeight: 'calc(100vh - 184px)' }}
         role="group"
         aria-label={lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns'}
       >
@@ -375,7 +433,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               ? `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} proveedores, ${b.t1} Tier-1, ${pct}% alto riesgo. Entrar.`
               : `${toTitleCase(b.label)}: ${formatNumber(b.vendors)} vendors, ${b.t1} Tier-1, ${pct}% high-risk. Fly in.`
             return (
-              <motion.g key={b.code} role="button" tabIndex={0} aria-label={aria}
+              <motion.g key={b.code} role="button" tabIndex={focused ? -1 : 0} aria-label={aria}
                 onClick={() => flyTo(b)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyTo(b) } }}
                 onMouseEnter={() => setHoverBody(b.code)} onMouseLeave={() => setHoverBody(null)}
@@ -422,60 +480,82 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           })()}
         </motion.g>
 
-        {/* ─── FOCUS layer: the orb (now the sun) + its vendors, fades in with the camera ─── */}
+        {/* ─── FOCUS layer: the orb (now a SUN) + its vendors, fades in with the camera ─── */}
         {focusedBody && (
           <motion.g style={{ opacity: focusIn }}>
-            {/* tap-anywhere-to-exit scrim, behind the bodies */}
-            <rect x={focusedBody.cx - W} y={focusedBody.cy - H} width={W * 2} height={H * 2} fill="transparent" onClick={flyBack} style={{ cursor: 'zoom-out' }} />
-            {/* orbital rings around the orb */}
-            {[1, 2, 3].map((ring) => {
-              const rad = (focusedBody.r + 26) + ring * 30
-              return <ellipse key={ring} cx={focusedBody.cx} cy={focusedBody.cy} rx={rad * 1.35} ry={rad} fill="none" stroke={C.grid} strokeWidth={0.6} strokeDasharray="2 5" />
-            })}
-            {/* satellites */}
+            {/* tap-empty-to-exit scrim — only fires once the camera has settled, so
+                a click during the fly-in cannot abort the zoom */}
+            <rect x={focusedBody.cx - W} y={focusedBody.cy - H} width={W * 2} height={H * 2} fill="transparent"
+              onClick={() => { if (zoom.get() > 0.9) flyBack() }} style={{ cursor: 'zoom-out' }} />
+
+            {/* orbital rings — slow idle drift gives the system life; only drawn
+                when there are satellites to orbit them */}
+            {satellites.length > 0 && (
+              <motion.g
+                animate={{ rotate: 360 }}
+                transition={{ duration: 180, ease: 'linear', repeat: Infinity }}
+                style={{ transformOrigin: `${focusedBody.cx}px ${focusedBody.cy}px` }}
+              >
+                {[1, 2].map((ring) => {
+                  const rad = (focusedBody.r + ORBIT_BASE_PAD) + ring * ORBIT_RING_STEP
+                  return <ellipse key={ring} cx={focusedBody.cx} cy={focusedBody.cy} rx={rad * ORBIT_X} ry={rad} fill="none" stroke={C.grid} strokeWidth={0.6} strokeDasharray="2 5" />
+                })}
+              </motion.g>
+            )}
+
+            {/* satellites — every drawn orb is labelled */}
             {satellites.map((s, i) => {
               const hovered = hoverVendor === s.v.vendor_id
               return (
                 <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
                   aria-label={`${formatVendorName(s.v.name, 60)} — ${formatCompactMXN(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
                   onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') onVendorClick(s.v.vendor_id) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVendorClick(s.v.vendor_id) } }}
                   onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
                   initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.45 + i * 0.02, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: 0.42 + i * 0.025, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   style={{ cursor: 'pointer', outline: 'none' }}
                 >
                   <line x1={focusedBody.cx} y1={focusedBody.cy} x2={s.x} y2={s.y} stroke={s.fill} strokeWidth={0.4} opacity={0.18} />
                   {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.8} fill={s.fill} opacity={0.18} />}
-                  <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 0.6 : 0.35} strokeOpacity={hovered ? 0.6 : 0.28} />
-                  {s.r > 7 && <circle cx={s.x} cy={s.y} r={1.1} fill="#fff" opacity={0.85} />}
-                  {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 1.6} fill="none" stroke={s.fill} strokeWidth={0.6} strokeDasharray="1.5 1.5" />}
-                  {(hovered || i < 10) && (
-                    <text x={s.x} y={s.y - s.r - 3} textAnchor="middle" fill={C.ink} fontSize={hovered ? 7.5 : 6.2} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 1.8 : 1.3} strokeLinejoin="round">
-                      {formatVendorName(s.v.name, hovered ? 40 : 22)}
-                    </text>
-                  )}
+                  <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={C.ink} strokeWidth={hovered ? 0.7 : 0.4} strokeOpacity={hovered ? 0.6 : 0.3} />
+                  {s.r > 7 && <circle cx={s.x} cy={s.y} r={1.2} fill="#fff" opacity={0.85} />}
+                  {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 1.8} fill="none" stroke={s.fill} strokeWidth={0.7} strokeDasharray="1.5 1.5" />}
+                  <text x={s.x} y={s.y - s.r - 3.5} textAnchor="middle" fill={C.ink} fontSize={hovered ? 8.5 : 7} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={hovered ? 700 : 600} paintOrder="stroke" stroke={C.plate0} strokeWidth={hovered ? 2 : 1.5} strokeLinejoin="round">
+                    {formatVendorName(s.v.name, hovered ? 40 : 26)}
+                  </text>
                 </motion.g>
               )
             })}
-            {/* the focused orb, redrawn bright over the dimmed base — this IS the sun */}
-            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r * 1.5} fill={`url(#obs-halo-${focusedBody.code})`} />
-            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.5} />
-            {focusedBody.r > 17 && <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.75} strokeOpacity={0.32} />}
-            <circle cx={focusedBody.cx} cy={focusedBody.cy} r={3.1} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.3} />
-            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 14} textAnchor="middle" fill={C.ink} fontSize={11} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
+
+            {/* ─ the SUN: the focused orb, ignited (corona + brightened core + idle pulse) ─ */}
+            <motion.g
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ duration: 5, ease: 'easeInOut', repeat: Infinity }}
+              style={{ transformOrigin: `${focusedBody.cx}px ${focusedBody.cy}px` }}
+            >
+              <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r * 3.0} fill={`url(#obs-halo-${focusedBody.code})`} opacity={0.55} />
+              <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r * 1.85} fill={`url(#obs-halo-${focusedBody.code})`} />
+              <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r} fill={`url(#obs-body-${focusedBody.code})`} stroke={focusedBody.fill} strokeWidth={1.6} />
+              {focusedBody.r > 14 && <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.8} strokeOpacity={0.36} />}
+              <circle cx={focusedBody.cx} cy={focusedBody.cy} r={focusedBody.r * 0.4} fill="#fff" opacity={0.42} />
+              <circle cx={focusedBody.cx} cy={focusedBody.cy} r={3.4} fill="#fff" stroke={focusedBody.fill} strokeWidth={1.3} />
+            </motion.g>
+
+            {/* sun caption — clear of the orbit (between the sun and ring 1) */}
+            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 15} textAnchor="middle" fill={C.ink} fontSize={11} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.6} strokeLinejoin="round">
               {toTitleCase(focusedBody.label)}
             </text>
-            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 25} textAnchor="middle" fill={C.inkMuted} fontSize={6} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.6} strokeLinejoin="round">
+            <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 26} textAnchor="middle" fill={C.inkMuted} fontSize={6.2} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.7} strokeLinejoin="round">
               {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'prov' : 'vend'} · {focusedBody.t1} T1 · {Math.round(focusedBody.highRiskPct * 100)}%
             </text>
             {vendorsLoading && (
-              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 38} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)">
+              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 39} textAnchor="middle" fill={C.inkFaint} fontSize={6.2} fontFamily="var(--font-family-mono)">
                 {lang === 'es' ? 'cargando…' : 'loading…'}
               </text>
             )}
             {!vendorsLoading && satellites.length === 0 && (
-              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 38} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)">
+              <text x={focusedBody.cx} y={focusedBody.cy + focusedBody.r + 39} textAnchor="middle" fill={C.inkFaint} fontSize={6.2} fontFamily="var(--font-family-mono)">
                 {lang === 'es' ? 'desglose en el expediente ↗' : 'breakdown in the dossier ↗'}
               </text>
             )}
