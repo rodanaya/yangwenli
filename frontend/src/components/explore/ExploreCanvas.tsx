@@ -3541,15 +3541,10 @@ function Z3Panel({
   const directAwardN = contracts.filter((c) => c.is_direct_award).length
   const singleBidN = contracts.filter((c) => c.is_single_bid).length
   const daPct = contracts.length > 0 ? (directAwardN / contracts.length) * 100 : 0
-  const hrCount = contracts.filter((c) => {
-    const s = Number(c.risk_score ?? 0)
-    return s >= 0.40
-  }).length
-  const hrPct = contracts.length > 0 ? (hrCount / contracts.length) * 100 : 0
   const singleBidPct = contracts.length > 0 ? (singleBidN / contracts.length) * 100 : 0
   const avgRisk = contracts.length > 0 ? contracts.reduce((s, c) => s + (Number(c.risk_score) || 0), 0) / contracts.length : 0
   const vendorPricePer = contracts.length > 0 ? totalContractSpend / contracts.length : 0
-  const sampled = contracts.length >= 100 // per_page cap → every absolute is a sample
+  const sampleCount = contracts.length
 
   // Multi-sector detection — comparing a conglomerate to one sector median is
   // apples-to-oranges. Flag (but still show, per design) when the top sector
@@ -3564,48 +3559,65 @@ function Z3Panel({
   const multiSector = contracts.length > 0 && sectorShare < 0.7
 
   // ─── DEVIATION LEDGER model ────────────────────────────────────────────────
-  // Vendor values from the fetched rows (safe path). Sector median + percentile
-  // from the peer endpoint. Rates are 0–1 fractions there → ×100 for display.
+  // The ledger compares the vendor to its sector on a POPULATION basis
+  // (vendor_stats via the peer endpoint), NEVER the ≤100-row fetch — that sample
+  // is unrepresentative for large vendors (a 6,303-contract vendor returns 100
+  // rows). Units from the endpoint: direct_award_pct / single_bid_pct are stored
+  // 0–100; avg_risk_score is a 0–1 fraction (→ ×100); price/value are MXN.
+  // Vendor values fall back to the sample only when the endpoint is unavailable.
   const peerOf = (k: string) => (peerData?.metrics ?? []).find((m) => m.metric === k)
-  const pct = (v: number | null | undefined) => (v == null ? null : v * 100)
-  const smallN = contracts.length > 0 && contracts.length < 5
-
+  const clampPct = (v: number | null | undefined) => (v == null ? null : Math.max(0, Math.min(100, v)))
   const ratioOf = (v: number, m: number | null) => (m && m > 0 ? v / m : null)
-  const daMed = pct(peerOf('direct_award_pct')?.peer_median)
-  const sbMed = pct(peerOf('single_bid_pct')?.peer_median)
-  const rkMed = pct(peerOf('avg_risk_score')?.peer_median)
-  const ppMed = peerOf('price_per_contract')?.peer_median ?? null
+  const daV = peerOf('direct_award_pct'); const sbV = peerOf('single_bid_pct')
+  const rkV = peerOf('avg_risk_score'); const ppV = peerOf('price_per_contract')
+  const popContracts = peerOf('total_contracts')?.value ?? null
+  const popValue = peerOf('total_value_mxn')?.value ?? null
+  // Context strip uses the population totals (fall back to the sample).
+  const ctxCount = popContracts ?? sampleCount
+  const ctxValue = popValue ?? totalContractSpend
+  const isSample = popContracts != null && popContracts > sampleCount
+
+  const daVendor = clampPct(daV?.value) ?? daPct
+  const sbVendor = clampPct(sbV?.value) ?? singleBidPct
+  const rkVendor = rkV?.value != null ? rkV.value * 100 : avgRisk * 100
+  const ppVendor = ppV?.value ?? vendorPricePer
+  const daMedian = clampPct(daV?.peer_median)
+  const sbMedian = clampPct(sbV?.peer_median)
+  const rkMedian = rkV?.peer_median != null ? rkV.peer_median * 100 : null
+  const ppMedian = ppV?.peer_median ?? null
+  const smallN = ctxCount > 0 && ctxCount < 5
+
   const ledgerRows: Z3LedgerRow[] = [
     {
       key: 'direct_award',
       label: lang === 'en' ? 'Direct award' : 'Adj. directa',
-      kind: 'pct', vendorVal: daPct, medianVal: daMed,
-      percentile: peerOf('direct_award_pct')?.percentile ?? null,
+      kind: 'pct', vendorVal: daVendor, medianVal: daMedian,
+      percentile: daV?.percentile ?? null,
       absoluteRef: { value: 25, label: 'OECD' },
-      alarm: daPct >= 75, ratio: ratioOf(daPct, daMed),
+      alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
     },
     {
       key: 'single_bid',
       label: lang === 'en' ? 'Single bid' : 'Único postor',
-      kind: 'pct', vendorVal: singleBidPct, medianVal: sbMed,
-      percentile: peerOf('single_bid_pct')?.percentile ?? null,
-      absoluteRef: null, alarm: singleBidPct >= 50, ratio: ratioOf(singleBidPct, sbMed),
+      kind: 'pct', vendorVal: sbVendor, medianVal: sbMedian,
+      percentile: sbV?.percentile ?? null,
+      absoluteRef: null, alarm: sbVendor >= 50, ratio: ratioOf(sbVendor, sbMedian),
     },
     {
       key: 'risk',
-      label: lang === 'en' ? 'High-risk rate' : 'Tasa alto riesgo',
-      kind: 'pct', vendorVal: hrPct, medianVal: rkMed,
-      percentile: peerOf('avg_risk_score')?.percentile ?? null,
-      absoluteRef: null, alarm: avgRisk >= 0.40, ratio: ratioOf(hrPct, rkMed),
+      label: lang === 'en' ? 'Avg risk score' : 'Riesgo promedio',
+      kind: 'pct', vendorVal: rkVendor, medianVal: rkMedian,
+      percentile: rkV?.percentile ?? null,
+      absoluteRef: null, alarm: rkVendor >= 40, ratio: ratioOf(rkVendor, rkMedian),
     },
     {
       key: 'price',
       label: lang === 'en' ? 'Price / contract' : 'Precio / contrato',
-      kind: 'mxn', vendorVal: vendorPricePer, medianVal: ppMed,
-      percentile: peerOf('price_per_contract')?.percentile ?? null,
+      kind: 'mxn', vendorVal: ppVendor, medianVal: ppMedian,
+      percentile: ppV?.percentile ?? null,
       absoluteRef: null,
-      alarm: (peerOf('price_per_contract')?.percentile ?? 0) >= 90,
-      ratio: ratioOf(vendorPricePer, ppMed),
+      alarm: (ppV?.percentile ?? 0) >= 90,
+      ratio: ratioOf(ppVendor, ppMedian),
     },
   ]
 
@@ -3861,11 +3873,12 @@ function Z3Panel({
               />
               <Z3DeviationLedger rows={ledgerRows} smallN={smallN} multiSector={multiSector} lang={lang} />
               <Z3ContextStrip
-                count={contracts.length}
-                totalSpend={totalContractSpend}
+                count={ctxCount}
+                totalSpend={ctxValue}
                 yearMin={yearMin}
                 yearMax={yearMax}
-                sampled={sampled}
+                sampled={isSample}
+                shownCount={sampleCount}
                 lang={lang}
               />
 
@@ -4644,7 +4657,7 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
   const refPos = row.absoluteRef ? clamp(row.absoluteRef.value / domainMax) : null
   const overNorm = hasMedian && row.vendorVal > (row.medianVal as number)
   const wedgeColor = row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-muted)'
-  const showPctile = !smallN && row.percentile != null
+  const showPctile = row.percentile != null
   const fmt = (v: number) => (row.kind === 'mxn' ? formatCompactMXN(v) : `${v.toFixed(0)}%`)
   const lo = mPos != null ? Math.min(vPos, mPos) : vPos
   const hi = mPos != null ? Math.max(vPos, mPos) : vPos
@@ -4720,7 +4733,7 @@ function Z3DeviationLedger({ rows, smallN, multiSector, lang }: { rows: Z3Ledger
       </div>
       {(smallN || multiSector) && (
         <div className="px-4 pb-2 font-mono" style={{ fontSize: 8.5, letterSpacing: '0.04em', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-          {smallN && (lang === 'en' ? 'small sample — percentiles omitted. ' : 'muestra pequeña — percentiles omitidos. ')}
+          {smallN && (lang === 'en' ? 'few contracts — interpret deviations with caution. ' : 'pocos contratos — interpretar los desvíos con cautela. ')}
           {multiSector && (lang === 'en' ? 'multi-sector vendor — sector baseline approximate.' : 'proveedor multi-sector — base sectorial aproximada.')}
         </div>
       )}
@@ -4730,16 +4743,16 @@ function Z3DeviationLedger({ rows, smallN, multiSector, lang }: { rows: Z3Ledger
 
 // One-line magnitude context the deviation ratios normalize away — so scale is
 // never hidden, especially when a dramatic ratio comes from a tiny vendor.
-function Z3ContextStrip({ count, totalSpend, yearMin, yearMax, sampled, lang }: { count: number; totalSpend: number; yearMin: number; yearMax: number; sampled: boolean; lang: 'en' | 'es' }) {
+function Z3ContextStrip({ count, totalSpend, yearMin, yearMax, sampled, shownCount, lang }: { count: number; totalSpend: number; yearMin: number; yearMax: number; sampled: boolean; shownCount: number; lang: 'en' | 'es' }) {
   const range = yearMin === yearMax ? `${yearMin}` : `${yearMin}–${yearMax}`
   const cLabel = lang === 'en' ? 'contracts' : 'contratos'
   const sep = <span style={{ margin: '0 7px', opacity: 0.5 }}>·</span>
   return (
     <div className="px-4 sm:px-6 pb-1 font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
-      <span className="tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatNumber(count)}{sampled ? '+' : ''} {cLabel}</span>
+      <span className="tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatNumber(count)} {cLabel}</span>
       {sep}<span className="tabular-nums">{formatCompactMXN(totalSpend)} ≈ {formatCompactUSD(totalSpend)}</span>
       {sep}<span>{lang === 'en' ? `active ${range}` : `activo ${range}`}</span>
-      {sampled && <>{sep}<span style={{ fontStyle: 'italic' }}>{lang === 'en' ? 'of ~100 sampled' : 'de ~100 muestreados'}</span></>}
+      {sampled && <>{sep}<span style={{ fontStyle: 'italic' }}>{lang === 'en' ? `${formatNumber(shownCount)} sampled below` : `${formatNumber(shownCount)} en muestra abajo`}</span></>}
     </div>
   )
 }
