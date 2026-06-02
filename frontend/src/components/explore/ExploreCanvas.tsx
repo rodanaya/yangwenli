@@ -3891,24 +3891,29 @@ function Z3Panel({
                 lang={lang}
               />
 
-              {/* WHEN — self-suppressing temporal evidence. Concentrated → the
-                  editorial concentration stat; spread → the year/month strip. */}
-              <div className="mt-3 px-1">
-                {activityShape?.concentrated ? (
-                  <Z3ConcentrationStat shape={activityShape} lang={lang} />
-                ) : yearSpan > 3 && byYear.size > 0 ? (
-                  <Z3TimelineStrip
-                    yearSequence={yearSequence}
-                    byYear={byYear}
-                    maxYearAmt={maxYearAmt}
-                    selectedYear={yearFilter}
-                    onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
-                    lang={lang}
-                  />
-                ) : monthly ? (
-                  <Z3MonthlyStrip monthly={monthly} lang={lang} />
-                ) : null}
-              </div>
+              {/* WHEN — self-suppressing temporal evidence. SUPPRESSED for sampled
+                  (large) vendors: the ≤100-row slice misrepresents the real
+                  temporal distribution (a 6,303-contract vendor's '98 of 100 in
+                  one month' is a fetch artifact). Only shown when the fetched
+                  rows ARE the full population. */}
+              {!isSample && (
+                <div className="mt-3 px-1">
+                  {activityShape?.concentrated ? (
+                    <Z3ConcentrationStat shape={activityShape} lang={lang} />
+                  ) : yearSpan > 3 && byYear.size > 0 ? (
+                    <Z3TimelineStrip
+                      yearSequence={yearSequence}
+                      byYear={byYear}
+                      maxYearAmt={maxYearAmt}
+                      selectedYear={yearFilter}
+                      onYearClick={(y) => setYearFilter((current) => (current === y ? null : y))}
+                      lang={lang}
+                    />
+                  ) : monthly ? (
+                    <Z3MonthlyStrip monthly={monthly} lang={lang} />
+                  ) : null}
+                </div>
+              )}
 
               {/* AMOUNT — gated dot-field. Renders ONLY with enough contracts and
                   spread to be a real distribution (≥20 valued & ≥1.3 decades);
@@ -4667,7 +4672,10 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
   const overNorm = hasMedian && row.vendorVal > (row.medianVal as number)
   const wedgeColor = row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-muted)'
   const showPctile = row.percentile != null
-  const fmt = (v: number) => (row.kind === 'mxn' ? formatCompactMXN(v) : `${v.toFixed(0)}%`)
+  // Compact money for the readout — abbreviate even below 1M (formatCompactMXN
+  // returns full pesos under 1M, which overflows the 150px readout column).
+  const fmtMoney = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)} MDP` : v >= 1e3 ? `${Math.round(v / 1e3)}K` : `$${Math.round(v)}`)
+  const fmt = (v: number) => (row.kind === 'mxn' ? fmtMoney(v) : `${v.toFixed(0)}%`)
   const lo = mPos != null ? Math.min(vPos, mPos) : vPos
   const hi = mPos != null ? Math.max(vPos, mPos) : vPos
 
@@ -4705,16 +4713,17 @@ function Z3DeviationRow({ row, smallN, lang }: { row: Z3LedgerRow; smallN: boole
         {/* vendor marker */}
         <span className="absolute rounded-full" style={{ left: `${vPos * 100}%`, top: '50%', width: 9, height: 9, marginLeft: -4.5, transform: 'translateY(-50%)', background: row.alarm ? RISK_COLORS.critical : overNorm ? OCHRE : 'var(--color-text-secondary)', boxShadow: '0 0 0 2px var(--color-background-elevated)' }} />
       </span>
-      {/* readout */}
-      <span className="flex-shrink-0 text-right flex items-baseline justify-end gap-1.5" style={{ width: 150 }}>
+      {/* readout — value · ratio (or vs-median when no ratio) · percentile.
+          The ratio is shorter and more meaningful than a long peso median. */}
+      <span className="flex-shrink-0 text-right flex items-baseline justify-end gap-1.5" style={{ width: 132 }}>
         <span className="font-mono tabular-nums" style={{ fontSize: 12.5, fontWeight: 700, color: row.alarm ? RISK_COLORS.critical : 'var(--color-text-primary)' }}>
           {fmt(row.vendorVal)}
         </span>
-        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: 'var(--color-text-muted)' }}>
-          {hasMedian ? (lang === 'en' ? `vs ${fmt(row.medianVal as number)}` : `vs ${fmt(row.medianVal as number)}`) : '·'}
+        <span className="font-mono tabular-nums" style={{ fontSize: 9.5, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
+          {row.ratio != null ? `${row.ratio.toFixed(1)}×` : hasMedian ? (lang === 'en' ? `vs ${fmt(row.medianVal as number)}` : `vs ${fmt(row.medianVal as number)}`) : '·'}
         </span>
         {showPctile && (
-          <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: overNorm ? (row.alarm ? RISK_COLORS.critical : OCHRE) : 'var(--color-text-muted)' }}>
+          <span className="font-mono tabular-nums" style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-text-muted)' }}>
             p{Math.round(row.percentile as number)}
           </span>
         )}
@@ -4760,7 +4769,8 @@ function Z3ContextStrip({ count, totalSpend, yearMin, yearMax, sampled, shownCou
     <div className="px-4 sm:px-6 pb-1 font-mono" style={{ fontSize: 10, letterSpacing: '0.04em', color: 'var(--color-text-muted)' }}>
       <span className="tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>{formatNumber(count)} {cLabel}</span>
       {sep}<span className="tabular-nums">{formatCompactMXN(totalSpend)} ≈ {formatCompactUSD(totalSpend)}</span>
-      {sep}<span>{lang === 'en' ? `active ${range}` : `activo ${range}`}</span>
+      {/* span is sample-derived (the ≤100 rows) — only honest for non-sampled vendors */}
+      {!sampled && <>{sep}<span>{lang === 'en' ? `active ${range}` : `activo ${range}`}</span></>}
       {sampled && <>{sep}<span style={{ fontStyle: 'italic' }}>{lang === 'en' ? `${formatNumber(shownCount)} sampled below` : `${formatNumber(shownCount)} en muestra abajo`}</span></>}
     </div>
   )
