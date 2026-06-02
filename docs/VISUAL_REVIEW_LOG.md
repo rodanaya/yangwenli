@@ -1,4 +1,48 @@
 ---
+## Visual Review — 2026-06-02T12:10:31Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed | WARN |
+| https://rubli.xyz/atlas | 403 host_not_allowed | WARN |
+| https://rubli.xyz/aria | 403 host_not_allowed | WARN |
+| https://rubli.xyz/sectors | 403 host_not_allowed | WARN |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed | WARN |
+| https://rubli.xyz/cases | 403 host_not_allowed | WARN |
+| https://rubli.xyz/methodology | 403 host_not_allowed | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed | WARN |
+
+Note: All 403s carry `host_not_allowed` — Cloudflare WAF blocking managed-cloud egress IPs. Persistent infrastructure constraint; not indicative of site downtime.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/sectors | BLOCKED (host_not_allowed — empty body) | WARN |
+
+### Bilingual Gaps
+Scan results (false positives filtered):
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a UI string. OK.
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup, not UI string. OK.
+- Vendor proper names in `Executive.tsx:69,89,109` — untranslatable legal entity names. OK.
+- Academic citation in `Methodology.tsx:119` — untranslatable author/title. OK.
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...`). OK.
+- Corporate-form token constants in `ExploreCanvas.tsx:1417-1418` — code comments/data, not rendered strings. OK.
+- `VendorHero.tsx:716` — JSDoc example string, not rendered text. OK.
+- `StoryMoneySankeyChart.tsx:22,37` — static chart fixture data. OK.
+- `CaseLibrary.tsx:219` — inside a JSX comment, not rendered. OK.
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx:197,290` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
 ## Visual Review — 2026-06-02T00:10:05Z
 
 ### HTTP Status
