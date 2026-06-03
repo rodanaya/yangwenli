@@ -12,7 +12,7 @@
  * 0–100; avg_risk_score is a 0–1 fraction (→ ×100); price_per_contract is MXN.
  * direct_award_pct can be corrupted >100 in vendor_stats, so rates are clamped.
  */
-import { RISK_COLORS } from '@/lib/constants'
+import { RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import type { VendorPeerComparisonResponse, PeerComparisonMetric } from '@/api/types'
 
@@ -55,7 +55,7 @@ export function buildDeviationRows(
     {
       key: 'direct_award', label: lang === 'en' ? 'Direct award' : 'Adj. directa', kind: 'pct',
       vendorVal: daVendor, medianVal: daMedian, percentile: da?.percentile ?? null,
-      absoluteRef: { value: 25, label: 'OECD' }, alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
+      absoluteRef: { value: OECD_DIRECT_AWARD_LIMIT * 100, label: 'OECD' }, alarm: daVendor >= 75, ratio: ratioOf(daVendor, daMedian),
     },
     {
       key: 'single_bid', label: lang === 'en' ? 'Single bid' : 'Único postor', kind: 'pct',

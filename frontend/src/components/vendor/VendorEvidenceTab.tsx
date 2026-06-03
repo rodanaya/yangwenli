@@ -47,12 +47,7 @@ export function VendorEvidenceTab({
   const { t, i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
 
-  const riskFactors = shap?.top_risk_factors ?? []
   const protectFactors = shap?.top_protect_factors ?? []
-  const maxRisk = riskFactors.reduce(
-    (m, f) => Math.max(m, Math.abs(f.shap)),
-    0.001
-  )
   const maxProtect = protectFactors.reduce(
     (m, f) => Math.max(m, Math.abs(f.shap)),
     0.001
@@ -159,38 +154,9 @@ export function VendorEvidenceTab({
         )}
       </section>
 
-      {/* Full SHAP — risk-increasing factors */}
-      <section
-        aria-labelledby="shap-risk-title"
-        className="pt-6 border-t border-border/40"
-      >
-        <SectionTitle id="shap-risk-title">
-          {isEs ? 'Factores que elevan el riesgo' : 'Risk-increasing factors'}
-        </SectionTitle>
-        {riskFactors.length > 0 ? (
-          <div className="space-y-3">
-            {riskFactors.map((f) => {
-              const label = isEs ? f.label_es : parseFactorLabel(f.factor).label
-              return (
-                <DotBarRow
-                  key={f.factor}
-                  label={label || f.factor}
-                  readout={`+${f.shap.toFixed(2)}`}
-                  value={Math.abs(f.shap)}
-                  max={maxRisk}
-                  color="var(--color-risk-critical)"
-                />
-              )
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted italic">
-            {t('vendors:noContributingFactors')}
-          </p>
-        )}
-      </section>
-
-      {/* Protective factors */}
+      {/* Protective factors — the only on-page φᵢ list (the risk-increasing
+          factors are the waterfall above; a second ranked bar-list of the same
+          contributions was redundant — standards §3.5, removed 2026-06-03). */}
       {protectFactors.length > 0 && (
         <section
           aria-labelledby="shap-protect-title"
