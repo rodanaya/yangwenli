@@ -40,10 +40,11 @@ import { RiskSpendBeeswarm } from '@/components/sectors/RiskSpendBeeswarm'
 
 type SortKey = 'total_value_mxn' | 'avg_risk_score' | 'total_contracts' | 'name'
 
+// Locale-aware compact MXN. The bespoke "MX$3.1T/B/M" branches were English-only
+// (no billones / MDP), so Spanish rendered English-loaned abbreviations across
+// all 12 call sites — delegate to the canonical helper, which renders ES as
+// "3.1 billones MXN" / "X,XXX MDP" (Mexican media convention).
 function formatSpend(value: number): string {
-  if (value >= 1_000_000_000_000) return `MX$${(value / 1_000_000_000_000).toFixed(1)}T`
-  if (value >= 1_000_000_000) return `MX$${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `MX$${(value / 1_000_000).toFixed(0)}M`
   return formatCompactMXN(value)
 }
 
