@@ -2744,3 +2744,48 @@ Scan results (false positives filtered):
 
 ### Overall: WARN
 HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean — no new gaps vs. prior run.
+
+---
+## Visual Review — 2026-06-03T00:10:17Z
+
+### HTTP Status
+| Route | Status | Pass? |
+|---|---|---|
+| https://rubli.xyz/ | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/atlas | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/aria | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/sectors | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/sectors/salud | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/cases | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/methodology | 403 host_not_allowed (cloud egress block) | WARN |
+| https://rubli.xyz/stories/el-ejercito-fantasma | 403 host_not_allowed (cloud egress block) | WARN |
+
+Note: All 403s return "Host not in allowlist" — Cloudflare/firewall rejects requests from this managed cloud execution environment's IP range. Consistent with all prior runs; not indicative of site downtime.
+
+### API Health
+| Endpoint | Result | Pass? |
+|---|---|---|
+| /api/v1/executive/summary | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?limit=5 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/cases?vendor_id=4325&limit=50 | BLOCKED (host_not_allowed — empty body) | WARN |
+| /api/v1/sectors | BLOCKED (host_not_allowed — empty body) | WARN |
+
+### Bilingual Gaps
+Grep results analyzed:
+
+- `WEB_VERDICT_STYLE[article.verdict]` / `WEB_VERDICT_KEYS[article.verdict]` in `RedThread.tsx:241-242` — object property access, not a rendered UI string. **OK.**
+- `TIER_STYLES[tierName]` in `InstitutionScorecards.tsx:441` — style lookup map, not rendered. **OK.**
+- Vendor legal names in `Executive.tsx:69,89,109` — untranslatable proper names (legal entity names). **OK.**
+- Academic citation in `Methodology.tsx:119` — untranslatable author/title. **OK.**
+- Pattern labels in `ConcentrationConstellation.tsx:155-167` — correctly bilingual (`isEs ? ... : ...` pattern throughout). **OK.**
+- Corporate-form token constants in `ExploreCanvas.tsx:1417-1418` — code comment, not rendered string. **OK.**
+- `StoryMoneySankeyChart.tsx:22,37` — internal data fixture with vendor name string. Low severity; not user-facing label. **OK.**
+
+**"Generate Report" hardcoded:** None detected.
+**"SIGN IN" / "INICIAR SESIÓN" hardcoded:** None detected.
+**Pre-existing finding (carried forward):** `ContractCompareModal.tsx` — `label="Risk Score"`, `label="Risk Factors"` hardcoded English without Spanish variants. Low severity, stable, not a regression.
+
+**New gaps vs prior run:** None.
+
+### Overall: WARN
+HTTP and API checks blocked by managed-cloud egress policy (`host_not_allowed`) — persistent infrastructure constraint consistent with all prior runs, not a site failure. Bilingual scan clean; no new gaps detected.
