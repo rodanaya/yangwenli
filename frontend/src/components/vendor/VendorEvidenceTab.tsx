@@ -22,6 +22,8 @@ import { BenchmarkRow, type BenchmarkRowProps } from '@/components/editorial/Ben
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { getVerdictForVendor } from '@/lib/entity/verdict'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { VendorDeviationLedger } from './VendorDeviationLedger'
+import { formatVendorName } from '@/lib/vendor/formatName'
 
 interface VendorEvidenceTabProps {
   vendor: VendorDetailResponse
@@ -222,66 +224,18 @@ export function VendorEvidenceTab({
           className="pt-6 border-t border-border/40"
         >
           <SectionTitle id="peer-title">
-            {isEs ? '§ 9 · La Comparación (sector)' : '§ 9 · Sector Comparison'}
+            {isEs ? '§ 9 · El Desvío (vs sector)' : '§ 9 · The Deviation (vs sector)'}
           </SectionTitle>
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose mb-4">
             {isEs
-              ? `Métricas clave del proveedor frente a la mediana de ${vendor.primary_sector_name ?? 'su sector'}.`
-              : `Key metrics versus the sector median for ${vendor.primary_sector_name ?? 'this sector'}.`}
+              ? `Qué tan lejos opera de la mediana de ${vendor.primary_sector_name ?? 'su sector'} — adjudicación directa, único postor, riesgo y precio por contrato. Sobre la población completa de contratos.`
+              : `How far it operates from the ${vendor.primary_sector_name ?? 'sector'} median — direct award, single bid, risk, and price per contract. Over the full contract population.`}
           </p>
-          <div className="space-y-3">
-            {peerComparison.metrics
-              .filter((m) => m.value != null && m.peer_median != null)
-              .map((m) => {
-                // For risk score and rate metrics, higher = worse (red).
-                // For total_contracts / total_value, higher is neutral.
-                const isRiskMetric = m.metric === 'avg_risk_score' || m.metric === 'direct_award_pct' || m.metric === 'single_bid_pct'
-                const pct = m.percentile ?? 0
-                const dotColor = isRiskMetric
-                  ? pct >= 75 ? 'var(--color-risk-critical)' : pct >= 50 ? 'var(--color-risk-high)' : 'var(--color-text-muted)'
-                  : 'var(--color-accent)'
-                const label = (() => {
-                  switch (m.metric) {
-                    case 'avg_risk_score': return isEs ? 'Puntuación de riesgo' : 'Risk score'
-                    case 'total_contracts': return isEs ? 'Contratos totales' : 'Total contracts'
-                    case 'total_value_mxn': return isEs ? 'Valor total (MXN)' : 'Total value (MXN)'
-                    case 'direct_award_pct': return isEs ? 'Adjudicación directa' : 'Direct award rate'
-                    case 'single_bid_pct': return isEs ? 'Licitación sin competencia' : 'Single-bid rate'
-                    default: return m.label_en
-                  }
-                })()
-                const readout = (() => {
-                  const v = m.value ?? 0
-                  const med = m.peer_median ?? 0
-                  if (m.metric === 'total_value_mxn') {
-                    const fmtV = v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `$${(v / 1e6).toFixed(0)}M` : `$${v.toFixed(0)}`
-                    const fmtM = med >= 1e9 ? `$${(med / 1e9).toFixed(1)}B` : med >= 1e6 ? `$${(med / 1e6).toFixed(0)}M` : `$${med.toFixed(0)}`
-                    return `${fmtV} vs ${fmtM} median`
-                  }
-                  if (m.metric === 'total_contracts') {
-                    return `${v.toFixed(0)} vs ${med.toFixed(0)} median`
-                  }
-                  return `${(v * 100).toFixed(0)}% vs ${(med * 100).toFixed(0)}% median`
-                })()
-                return (
-                  <DotBarRow
-                    key={m.metric}
-                    label={label}
-                    readout={readout}
-                    value={pct}
-                    max={100}
-                    color={dotColor}
-                  />
-                )
-              })}
-          </div>
-          {vendor.sector_risk_percentile != null && (
-            <p className="text-[11px] text-text-muted font-mono mt-3">
-              {isEs
-                ? `Percentil ${vendor.sector_risk_percentile} · riesgo vs. ${vendor.primary_sector_name ?? 'sector'}`
-                : `${vendor.sector_risk_percentile}th percentile · risk vs. ${vendor.primary_sector_name ?? 'sector'}`}
-            </p>
-          )}
+          <VendorDeviationLedger
+            peerComparison={peerComparison}
+            vendorName={formatVendorName(vendor.name) || (isEs ? 'Este proveedor' : 'This vendor')}
+            lang={isEs ? 'es' : 'en'}
+          />
         </section>
       )}
 
