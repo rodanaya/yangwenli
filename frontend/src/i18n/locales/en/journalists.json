@@ -9,9 +9,17 @@
     "desk": "Investigations Desk",
     "updated": "Updated",
     "activeLabel": "Active leads",
-    "deck": "investigations into how MX$422 billion moved through Mexican federal procurement. Each story begins with 3.05 million contracts and ends with the people who signed them.",
+    "deck": "investigations into MX$9.9T of federal contracting — where three of four pesos were awarded without competition.",
     "totalLabel": "Investigations",
-    "prosecutedLabel": "Prosecuted"
+    "prosecutedLabel": "Prosecuted",
+    "statContracts": "contracts",
+    "statHighRisk": "high-risk+",
+    "statValidated": "validated",
+    "statInvestigations": "investigations",
+    "startHere": "Start here:",
+    "lookupVendor": "Look up a vendor",
+    "institutionRanking": "Institution ranking",
+    "caseLibrary": "Case library"
   },
   "picks": {
     "kicker": "Editor's Picks",
@@ -61,7 +69,9 @@
     "reporteado": "REPORTED",
     "solo_datos": "DATA LEAD"
   },
-  "featuredLabel": "FEATURED INVESTIGATION",
+  "featuredLabel": "LEAD INVESTIGATION",
+  "observatoryBand": "a living constellation of 1,200 vendor clusters.",
+  "observatoryExplore": "Explore →",
   "eraLabel": {
     "pena": "EPN · 2012–2018",
     "amlo": "4T · 2018–2024",

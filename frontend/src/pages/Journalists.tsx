@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ariaApi } from '@/api/client'
+import { ariaApi, analysisApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
@@ -24,6 +24,13 @@ type StatusKind = 'procesado' | 'auditado' | 'reporteado' | 'solo_datos'
 
 type Era = 'pena' | 'amlo' | 'cross'
 
+interface LeadStat {
+  value: string
+  value_es?: string
+  label: string
+  label_es?: string
+}
+
 interface Investigation {
   slug: string
   headline: string
@@ -32,12 +39,13 @@ interface Investigation {
   sub_es?: string
   type: FraudType
   status: StatusKind
-  amount: number // MXN billions — kept for featured card stats panel
+  amount: number // MXN billions — kept for sub-stat
   era: Era
-  contracts: number // kept for featured card stats panel
+  contracts: number
   brief: string // 2-sentence abstract shown on the grid card
   brief_es?: string
-  yearSpan?: string // explicit time span for featured card (e.g. '2018–2024')
+  yearSpan?: string
+  leadStat?: LeadStat
 }
 
 const INVESTIGATIONS: Investigation[] = [
@@ -76,6 +84,11 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 530000,
     yearSpan: '2002–2025',
     brief: '15,923 vendors show behavioral capture signatures at IMSS, CFE, PEMEX, SCT, and CONAGUA. That\'s nearly a trillion pesos of systematically captured contracting.',
+    leadStat: {
+      value: '15,923',
+      label: 'vendors with capture signatures at top-5 agencies',
+      label_es: 'proveedores con firmas de captura en las 5 dependencias principales',
+    },
   },
   {
     slug: 'marea-de-adjudicaciones',
@@ -100,6 +113,11 @@ const INVESTIGATIONS: Investigation[] = [
     contracts: 1049729,
     yearSpan: '2018–2024',
     brief: 'AMLO\'s 12.6% high-risk rate is the highest of any administration in 23 years. Every administration since Fox has been riskier than its predecessor — 5.1 percentage points of drift in 24 years.',
+    leadStat: {
+      value: '12.6%',
+      label: 'highest high-risk rate in 23 years',
+      label_es: 'la tasa de riesgo alto+ más alta en 23 años',
+    },
   },
   {
     slug: 'el-ejercito-fantasma',
@@ -193,6 +211,12 @@ const INVESTIGATIONS: Investigation[] = [
     yearSpan: '2002–2025',
     brief: "Three multinational voucher companies have divided Mexico's federal payment-card market across five administrations with a 96.7% direct-award rate and 2,868 single-bid wins. A market-structure problem, not just procurement.",
     brief_es: 'Tres empresas multinacionales de vales han dividido el mercado federal de tarjetas de pago de México a lo largo de cinco administraciones con una tasa de adjudicación directa del 96.7% y 2,868 licitaciones ganadas por única oferta. Un problema de estructura de mercado, no solo de contratación.',
+    leadStat: {
+      value: '96.7%',
+      value_es: '96.7%',
+      label: 'direct-award rate · 3 vendors · 5 administrations',
+      label_es: 'tasa de adjudicación directa · 3 proveedores · 5 sexenios',
+    },
   },
 ]
 
@@ -200,8 +224,6 @@ const INVESTIGATIONS: Investigation[] = [
 // Visual system
 // ---------------------------------------------------------------------------
 
-// Routed through canonical risk + sector tokens. Was 5 hex constants per
-// FRAUD_COLOR + 4 dark-mode pill styles per STATUS_META. Cream-mode now.
 const FRAUD_COLOR: Record<FraudType, string> = {
   ghost_company: 'var(--color-risk-critical)',
   monopoly: 'var(--color-sector-educacion)',
@@ -254,19 +276,11 @@ const ERA_LABEL: Record<Era, string> = {
   cross: 'CROSS-ERA',
 }
 
-// Map MX$ billion amount → 0..1 intensity, log-scaled.
-// Linear scaling was useless: amounts span 0–6240 (3 orders of magnitude),
-//
-// Locale-aware (Apr 2026 fix): the bare "B" suffix collides with the Spanish
-// "billón" (= 10¹², English trillion). Spanish output now follows Mexican
-// press convention: MDP for ≥10⁹, "billones MXN" for ≥10¹². The `amount`
-// input is in billion-MXN units (e.g. 133.2 == 133.2B) and is rescaled
-// to raw pesos before formatting.
+// Locale-aware display of the sub-stat (amount in billions)
 function formatBillions(amount: number, lang: 'en' | 'es' = 'en'): string {
-  if (amount === 0) return 'DATA LEAD'
+  if (amount === 0) return '—'
   if (lang === 'es') {
     if (amount >= 1000) return `${(amount / 1000).toFixed(2)} billones MXN`
-    // Mexican convention: 133.2B → "133,200 MDP"
     const mdp = Math.round(amount * 1000)
     return `${new Intl.NumberFormat('es-MX').format(mdp)} MDP`
   }
@@ -275,101 +289,7 @@ function formatBillions(amount: number, lang: 'en' | 'es' = 'en'): string {
 }
 
 // ---------------------------------------------------------------------------
-// Editorial decorative SVG artwork — used in lead + section breaks.
-// Procurement-themed abstract patterns. Never a stock photo.
-// ---------------------------------------------------------------------------
-
-function NewsroomArtwork({
-  accent,
-  variant = 'cluster',
-}: { accent: string; variant?: 'cluster' | 'grid' | 'spike' }) {
-  if (variant === 'spike') {
-    // Vertical risk-spike pattern — like a seismograph
-    return (
-      <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        {Array.from({ length: 40 }).map((_, i) => {
-          const x = 10 + i * 9.5
-          // Pseudo-random heights with a critical spike near middle
-          const heights = [40, 35, 50, 45, 60, 55, 70, 65, 80, 75, 90, 100, 120, 140, 160, 220, 200, 180, 160, 140, 120, 100, 90, 80, 75, 70, 65, 60, 55, 50, 45, 50, 60, 55, 50, 45, 40, 45, 40, 35]
-          const h = heights[i] ?? 60
-          return (
-            <rect key={i} x={x} y={260 - h} width={5} height={h} fill={accent} opacity={0.3 + (h / 280) * 0.5} rx={1} />
-          )
-        })}
-      </svg>
-    )
-  }
-  if (variant === 'grid') {
-    return (
-      <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-        {Array.from({ length: 7 }).map((_, row) =>
-          Array.from({ length: 12 }).map((_, col) => (
-            <rect
-              key={`${row}-${col}`}
-              x={20 + col * 32}
-              y={20 + row * 32}
-              width={28}
-              height={20}
-              fill={accent}
-              opacity={0.06 + Math.random() * 0.18}
-              rx={1.5}
-            />
-          ))
-        )}
-      </svg>
-    )
-  }
-  // 'cluster' — constellation
-  return (
-    <svg viewBox="0 0 400 280" className="w-full h-full" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <radialGradient id="newsroom-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={accent} stopOpacity="0.5" />
-          <stop offset="100%" stopColor={accent} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      {Array.from({ length: 12 * 8 }).map((_, i) => {
-        const cols = 12
-        const col = i % cols
-        const row = Math.floor(i / cols)
-        return (
-          <circle
-            key={i}
-            cx={20 + col * 32}
-            cy={20 + row * 32}
-            r={1.4}
-            fill={accent}
-            opacity={0.15}
-          />
-        )
-      })}
-      {/* Cluster glow */}
-      <circle cx={210} cy={140} r={60} fill="url(#newsroom-glow)" />
-      {/* Bright critical dots */}
-      {[
-        [195, 130], [210, 122], [218, 138], [228, 128], [232, 142], [220, 152], [205, 148],
-      ].map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r={2.4} fill={accent} opacity={0.85} />
-      ))}
-      {/* Hairline edges */}
-      {[
-        [195, 130, 210, 122], [210, 122, 218, 138], [218, 138, 228, 128], [218, 138, 220, 152],
-        [220, 152, 205, 148], [228, 128, 232, 142], [232, 142, 220, 152],
-      ].map(([x1, y1, x2, y2], i) => (
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={0.6} opacity={0.45} />
-      ))}
-      {/* Outliers */}
-      {[[60, 50], [340, 60], [360, 220], [50, 220], [60, 130]].map(([x, y], i) => (
-        <circle key={`o-${i}`} cx={x} cy={y} r={1.8} fill={accent} opacity={0.5} />
-      ))}
-    </svg>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // ObservatoryTourBadge — small chip that surfaces the matching atlas tour
-// for a story slug. Renders nothing if the slug has no paired tour. Click
-// stops propagation (so it doesn't trigger the card's outer navigate).
 // ---------------------------------------------------------------------------
 
 function ObservatoryTourBadge({ slug, accent, lang }: { slug: string; accent: string; lang: 'en' | 'es' }) {
@@ -396,19 +316,29 @@ function ObservatoryTourBadge({ slug, accent, lang }: { slug: string; accent: st
 }
 
 // ---------------------------------------------------------------------------
-// LEAD STORY — top of page, full-bleed hero with artwork backdrop
+// LEAD STORY — top of page, full-bleed hero
 // ---------------------------------------------------------------------------
 
 function LeadStoryCard({ item }: { item: Investigation }) {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation('journalists')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const isEs = lang === 'es'
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
-  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: lang === 'es' ? (item.sub_es ?? item.sub) : item.sub })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: isEs ? (item.headline_es ?? item.headline) : item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: isEs ? (item.sub_es ?? item.sub) : item.sub })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: isEs ? (item.brief_es ?? item.brief) : item.brief })
   const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
+
+  // Editorial figure: use leadStat if available, otherwise fall back to amount
+  const leadStatValue = item.leadStat
+    ? (isEs && item.leadStat.value_es ? item.leadStat.value_es : item.leadStat.value)
+    : formatBillions(item.amount, lang)
+  const leadStatLabel = item.leadStat
+    ? (isEs && item.leadStat.label_es ? item.leadStat.label_es : item.leadStat.label)
+    : (isEs ? 'gasto validado en contratos' : 'validated contract spend')
+
   return (
     <article
       onClick={() => navigate(`/stories/${item.slug}`)}
@@ -421,15 +351,6 @@ function LeadStoryCard({ item }: { item: Investigation }) {
     >
       {/* Top accent bar */}
       <div className="absolute inset-x-0 top-0 h-[3px] z-10" style={{ background: accent }} />
-
-      {/* Decorative artwork backdrop — sits in the right portion */}
-      <div className="absolute right-0 top-0 bottom-0 w-[55%] opacity-50 pointer-events-none hidden md:block">
-        <NewsroomArtwork accent={accent} variant="cluster" />
-      </div>
-      <div
-        className="absolute right-0 top-0 bottom-0 w-[55%] hidden md:block pointer-events-none"
-        style={{ background: `linear-gradient(90deg, var(--color-background-card) 0%, transparent 30%, transparent 100%)` }}
-      />
 
       <div className="relative z-10 grid lg:grid-cols-12 gap-x-10 gap-y-6 p-8 sm:p-10 md:p-14">
         {/* LEFT COLUMN — editorial */}
@@ -487,27 +408,30 @@ function LeadStoryCard({ item }: { item: Investigation }) {
           </span>
         </div>
 
-        {/* RIGHT COLUMN — stat block (sits over artwork backdrop) */}
+        {/* RIGHT COLUMN — editorial stat block */}
         <div className="lg:col-span-5 flex flex-col justify-between gap-6 lg:border-l lg:border-border lg:pl-10">
+          {/* Hero editorial figure */}
           <div>
             <div
               className="font-extrabold text-text-primary leading-[0.9] tracking-[-0.04em] tabular-nums"
               style={{
                 fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
                 fontSize: 'clamp(2.5rem, 6.5vw, 5rem)',
+                color: accent,
               }}
             >
-              {formatBillions(item.amount, lang)}
+              {leadStatValue}
             </div>
             <p className="text-[11px] font-mono uppercase tracking-[0.16em] text-text-muted mt-3">
-              {t('lead.statTotal', { defaultValue: 'Validated contract spend' })}
+              {leadStatLabel}
             </p>
           </div>
 
+          {/* Sub-stats grid */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <div className="border-l-2 pl-3" style={{ borderColor: accent }}>
               <div className="text-2xl font-mono font-bold text-text-primary tabular-nums leading-none">
-                {item.contracts.toLocaleString('en-US')}
+                {item.contracts > 0 ? item.contracts.toLocaleString('en-US') : '—'}
               </div>
               <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1.5">
                 {t('lead.statContracts', { defaultValue: 'Contracts' })}
@@ -524,11 +448,24 @@ function LeadStoryCard({ item }: { item: Investigation }) {
           </div>
 
           {/* Sub copy */}
-          <div className="pt-4 border-t border-border/60">
-            <p className="text-[11px] font-mono text-text-muted leading-[1.5] tabular-nums">
-              {sub}
-            </p>
-          </div>
+          {item.amount > 0 && (
+            <div className="pt-4 border-t border-border/60">
+              <p className="text-[11px] font-mono text-text-muted leading-[1.5] tabular-nums">
+                {isEs ? 'Gasto validado:' : 'Validated spend:'}{' '}
+                <span className="text-text-secondary">{formatBillions(item.amount, lang)}</span>
+              </p>
+              <p className="text-[11px] font-mono text-text-muted leading-[1.5] tabular-nums mt-1">
+                {sub}
+              </p>
+            </div>
+          )}
+          {item.amount === 0 && (
+            <div className="pt-4 border-t border-border/60">
+              <p className="text-[11px] font-mono text-text-muted leading-[1.5] tabular-nums">
+                {sub}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </article>
@@ -536,354 +473,7 @@ function LeadStoryCard({ item }: { item: Investigation }) {
 }
 
 // ---------------------------------------------------------------------------
-// EDITORS PICK card — tier 2, 2-up side by side
-// ---------------------------------------------------------------------------
-
-function EditorsPickCard({ item, art }: { item: Investigation; art: 'spike' | 'grid' | 'cluster' }) {
-  const { t, i18n } = useTranslation('journalists')
-  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
-  const accent = FRAUD_COLOR[item.type]
-  const status = STATUS_META[item.status]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
-  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
-  return (
-    <Link
-      to={`/stories/${item.slug}`}
-      className="group relative flex flex-col bg-background-card rounded-sm overflow-hidden transition-shadow hover:shadow-xl"
-      style={{ border: '1px solid var(--color-border)' }}
-      aria-label={headline}
-    >
-      {/* Top accent */}
-      <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: accent }} />
-      {/* Small decoration in corner */}
-      <div
-        className="absolute right-0 top-0 w-[160px] h-[110px] opacity-35 pointer-events-none"
-        style={{ background: `linear-gradient(180deg, transparent 70%, var(--color-background-card) 100%)` }}
-      >
-        <NewsroomArtwork accent={accent} variant={art} />
-      </div>
-
-      <div className="relative p-6 sm:p-7 flex flex-col flex-1">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
-            {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
-          </span>
-          <span className="text-[9px] font-mono text-text-muted">·</span>
-          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
-          </span>
-        </div>
-
-        <h3
-          className="text-text-primary leading-[1.12] mb-4 text-balance"
-          style={{
-            fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-            fontSize: 'clamp(1.4rem, 2.3vw, 1.85rem)',
-            fontWeight: 700,
-            letterSpacing: '-0.02em',
-          }}
-        >
-          {headline}
-        </h3>
-
-        <p className="text-[14px] leading-[1.6] text-text-secondary mb-5 flex-1 text-pretty">
-          {brief}
-        </p>
-
-        {/* Stat row */}
-        <div className="flex items-center gap-6 mb-4 pt-4 border-t border-border/60">
-          <div>
-            <div
-              className="font-extrabold tabular-nums leading-none"
-              style={{
-                fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-                color: accent,
-                fontSize: 24,
-              }}
-            >
-              {formatBillions(item.amount, lang)}
-            </div>
-            <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
-              {t('lead.statTotal', { defaultValue: 'Validated spend' })}
-            </p>
-          </div>
-          {item.contracts > 0 && (
-            <div className="border-l border-border/60 pl-5">
-              <div className="text-lg font-mono font-bold text-text-primary tabular-nums leading-none">
-                {item.contracts.toLocaleString('en-US')}
-              </div>
-              <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
-                {t('lead.statContracts', { defaultValue: 'Contracts' })}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={cn(
-                'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
-                status.color, status.border, status.bg,
-              )}
-            >
-              [{statusLabel}]
-            </span>
-            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
-          </div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold transition-transform" style={{ color: accent }}>
-            {t('cards.readStory', { defaultValue: 'Read story' })}
-            <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
-          </span>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// DATA LEADS — compact numbered list of solo_datos investigations
-// ---------------------------------------------------------------------------
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function DataLeadsList({ items }: { items: Investigation[] }) {
-  const { t, i18n } = useTranslation('journalists')
-  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
-  return (
-    <div className="space-y-1.5">
-      {items.map((item, idx) => {
-        const accent = FRAUD_COLOR[item.type]
-        const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
-        return (
-          <Link
-            key={item.slug}
-            to={`/stories/${item.slug}`}
-            className="group block py-3 px-1 transition-colors"
-            style={{ borderBottom: '1px solid var(--color-border)' }}
-            aria-label={headline}
-          >
-            <div className="flex items-baseline gap-4 sm:gap-6">
-              {/* Number */}
-              <span
-                className="font-mono font-bold text-text-muted tabular-nums leading-none flex-shrink-0"
-                style={{ fontSize: 'clamp(20px, 2.4vw, 28px)', minWidth: 44 }}
-              >
-                {String(idx + 1).padStart(2, '0')}
-              </span>
-              {/* Body */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="text-[9px] font-mono font-bold uppercase tracking-[0.16em]" style={{ color: accent }}>
-                    {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
-                  </span>
-                  <span className="text-[9px] font-mono text-text-muted">·</span>
-                  <span className="text-[9px] font-mono uppercase tracking-[0.1em] text-text-muted">
-                    {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
-                  </span>
-                </div>
-                <h4
-                  className="text-text-primary leading-[1.25] group-hover:opacity-80 transition-opacity"
-                  style={{
-                    fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-                    fontSize: 'clamp(15px, 1.7vw, 18px)',
-                    fontWeight: 600,
-                  }}
-                >
-                  {headline}
-                </h4>
-                {item.sub && (
-                  <p className="text-[12px] font-mono text-text-muted mt-1 truncate tabular-nums">
-                    {item.sub}
-                  </p>
-                )}
-              </div>
-              {/* Arrow */}
-              <span
-                className="font-mono text-text-muted flex-shrink-0 transition-transform group-hover:translate-x-1 group-hover:text-text-primary"
-                style={{ fontSize: 18 }}
-              >→</span>
-            </div>
-          </Link>
-        )
-      })}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Observatory Feature Callout — what El Observatorio does that the
-// Spatial Map doesn't: narrative tours, constellation drill-downs, year
-// scrubber, X-ray filter, vendor search. Differentiates the two surfaces
-// so readers don't confuse "map" with "constellation intelligence."
-// ---------------------------------------------------------------------------
-
-const OBSERVATORY_FEATURES = [
-  {
-    icon: '◆',
-    titleEn: '3 Multi-Chapter Narratives',
-    titleEs: '3 Narrativas de Múltiples Capítulos',
-    descEn: 'Each story arc has 5–6 chapters with dwell time — the Cartel, La Estafa Maestra, The COVID Year.',
-    descEs: 'Cada arco tiene 5–6 capítulos con tiempo de pausa — El Cártel, La Estafa Maestra, El Año COVID.',
-  },
-  {
-    icon: '⬡',
-    titleEn: '4 Investigation Lenses',
-    titleEs: '4 Lentes de Investigación',
-    descEn: 'Switch instantly between Patterns (P1–P7), Sectors, Categories, and Contract Terms. Each lens reconfigures the constellation.',
-    descEs: 'Cambia entre Patrones (P1–P7), Sectores, Categorías y Términos contractuales. Cada lente reconfigura la constelación.',
-  },
-  {
-    icon: '◉',
-    titleEn: 'Year Scrubber 2008–2025',
-    titleEs: 'Control de Año 2008–2025',
-    descEn: 'Watch the risk constellation evolve across 17 years. Pin a cluster, then drag the year — the dot moves, the ring stays.',
-    descEs: 'Observa la constelación de riesgo evolucionar en 17 años. Fija un cluster, arrastra el año — el punto se mueve, el anillo permanece.',
-  },
-  {
-    icon: '◐',
-    titleEn: 'X-Ray Filter',
-    titleEs: 'Filtro de Rayos X',
-    descEn: 'Strip away the noise floor — show only medium+, high+, or critical-only risk contracts. The Spatial Map has no equivalent.',
-    descEs: 'Elimina el ruido — muestra solo contratos de riesgo medio+, alto+ o crítico. El Mapa Espacial no tiene equivalente.',
-  },
-  {
-    icon: '↔',
-    titleEn: 'Compare Two Years',
-    titleEs: 'Comparar Dos Años',
-    descEn: 'Dual-canvas side-by-side with shared lens and pinned cluster. See how capture patterns evolved between administrations.',
-    descEs: 'Doble lienzo con lente compartido y cluster fijado. Observa cómo evolucionaron los patrones entre administraciones.',
-  },
-  {
-    icon: '⌖',
-    titleEn: 'Vendor Search + Pin',
-    titleEs: 'Búsqueda de Proveedor + Fijación',
-    descEn: '21 curated vendors — type "BAXTER" or "HEMOSER" and the constellation auto-centers with a pulsing ring on their cluster.',
-    descEs: '21 proveedores seleccionados — escribe "BAXTER" o "HEMOSER" y la constelación se centra con un anillo pulsante.',
-  },
-] as const
-
-function ObservatoryFeatureCallout({ lang }: { lang: 'en' | 'es' }) {
-  const isEs = lang === 'es'
-  return (
-    <section
-      className="my-14 sm:my-16 rounded-sm overflow-hidden relative"
-      style={{ border: '1px solid var(--color-accent)', borderLeftWidth: 3 }}
-    >
-      {/* Header strip */}
-      <div
-        className="relative flex items-center gap-4 px-6 sm:px-8 py-5 border-b overflow-hidden"
-        style={{
-          borderColor: 'var(--color-border)',
-          background: 'linear-gradient(135deg, rgba(160,104,32,0.08) 0%, var(--color-background-elevated) 60%)',
-        }}
-      >
-        {/* Mini constellation preview */}
-        <div className="hidden md:block flex-shrink-0 w-[120px] h-[80px] opacity-70" aria-hidden="true">
-          <svg aria-hidden="true" viewBox="0 0 120 80" className="w-full h-full">
-            {/* Background dots grid */}
-            {Array.from({ length: 24 }).map((_, i) => (
-              <circle key={i} cx={10 + (i % 6) * 20} cy={10 + Math.floor(i / 6) * 20} r={1} fill="var(--color-accent)" opacity={0.2} />
-            ))}
-            {/* Cluster edges */}
-            {[[55,30,70,22],[70,22,78,35],[78,35,68,45],[68,45,55,40],[55,40,55,30],[70,22,82,28],[82,28,78,35]].map(([x1,y1,x2,y2],i) => (
-              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--color-accent)" strokeWidth={0.8} opacity={0.55} />
-            ))}
-            {/* Bright cluster dots */}
-            {[[55,30,2.5],[70,22,3],[78,35,2],[68,45,2],[55,40,2],[82,28,1.8]].map(([x,y,r],i) => (
-              <circle key={`d${i}`} cx={x} cy={y} r={r} fill="var(--color-accent)" opacity={i === 1 ? 1 : 0.75} />
-            ))}
-            {/* Pulsing ring on lead dot */}
-            <circle cx={70} cy={22} r={6} fill="none" stroke="var(--color-accent)" strokeWidth={0.8} opacity={0.35} />
-            {/* Outlier dots */}
-            {[[20,55,1.5],[100,20,1.5],[105,60,1.2],[15,20,1.2]].map(([x,y,r],i) => (
-              <circle key={`o${i}`} cx={x} cy={y} r={r} fill="var(--color-accent)" opacity={0.4} />
-            ))}
-          </svg>
-        </div>
-
-        <div className="flex-1">
-          <p
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] mb-1.5"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            ◆ {isEs ? 'EL OBSERVATORIO — NO ES UN MAPA' : 'EL OBSERVATORIO — NOT A MAP'}
-          </p>
-          <h2
-            className="text-text-primary"
-            style={{
-              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-              fontSize: 'clamp(1.25rem, 2vw, 1.65rem)',
-              fontWeight: 700,
-              fontStyle: 'italic',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {isEs ? 'Una constelación, no un mapa.' : 'A constellation, not a map.'}
-          </h2>
-          <p className="text-[11px] text-text-muted mt-1.5 max-w-lg leading-[1.5]" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic' }}>
-            {isEs
-              ? 'El Mapa Espacial muestra adónde fue el dinero geográficamente. El Observatorio muestra quién lo capturó — y cómo los patrones evolucionaron entre administraciones.'
-              : 'The Spatial Map shows where money went geographically. El Observatorio shows who captured it — and how patterns evolved across administrations.'}
-          </p>
-        </div>
-        <Link
-          to="/atlas"
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] rounded-sm border transition-colors hover:border-accent hover:text-accent"
-          style={{ borderColor: 'var(--color-accent)', color: 'var(--color-accent)', background: 'rgba(160,104,32,0.06)' }}
-        >
-          {isEs ? 'Entrar al Observatorio →' : 'Enter Observatory →'}
-        </Link>
-      </div>
-
-      {/* Feature grid */}
-      <div className="px-6 sm:px-8 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
-        {OBSERVATORY_FEATURES.map((f, i) => (
-          <div key={i} className="flex gap-3">
-            <span
-              className="text-base leading-none flex-shrink-0 mt-0.5"
-              style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-family-mono)' }}
-              aria-hidden="true"
-            >
-              {f.icon}
-            </span>
-            <div>
-              <p className="text-[12px] font-mono font-bold tracking-[0.05em] text-text-primary mb-0.5">
-                {isEs ? f.titleEs : f.titleEn}
-              </p>
-              <p className="text-[11px] leading-[1.5] text-text-muted">
-                {isEs ? f.descEs : f.descEn}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer CTA */}
-      <div
-        className="flex items-center justify-between gap-4 px-6 sm:px-8 py-3 border-t"
-        style={{ borderColor: 'var(--color-border)', background: 'var(--color-background-card)' }}
-      >
-        <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
-          {isEs
-            ? '1,200 puntos · 4 lentes · scrubber 2008–2025 · filtro X-ray · búsqueda de proveedor'
-            : '1,200 dots · 4 lenses · year scrubber 2008–2025 · X-ray filter · vendor search'}
-        </p>
-        <Link
-          to="/atlas"
-          className="sm:hidden inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] transition-colors"
-          style={{ color: 'var(--color-accent)', whiteSpace: 'nowrap' }}
-        >
-          {isEs ? 'Entrar →' : 'Enter →'}
-        </Link>
-      </div>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Section break — decorative divider with accent dot
+// Section break
 // ---------------------------------------------------------------------------
 
 function SectionBreak() {
@@ -897,155 +487,111 @@ function SectionBreak() {
 }
 
 // ---------------------------------------------------------------------------
-// (Legacy) Featured Investigation — full-width hero (kept for back-compat,
-// no longer rendered from main page)
+// Unified InvestigationCard — replaces both EditorsPickCard and GridCard
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function FeaturedCard({ item }: { item: Investigation }) {
-  const navigate = useNavigate()
+function InvestigationCard({ item, variant }: { item: Investigation; variant: 'pick' | 'grid' }) {
   const { t, i18n } = useTranslation('journalists')
   const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
-  const status = STATUS_META[item.status]
+  const isEs = lang === 'es'
   const accent = FRAUD_COLOR[item.type]
+  const status = STATUS_META[item.status]
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: isEs ? (item.headline_es ?? item.headline) : item.headline })
+  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: isEs ? (item.brief_es ?? item.brief) : item.brief })
+  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
 
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
-  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: lang === 'es' ? (item.sub_es ?? item.sub) : item.sub })
+  const leadStatValue = item.leadStat
+    ? (isEs && item.leadStat.value_es ? item.leadStat.value_es : item.leadStat.value)
+    : (item.amount > 0 ? formatBillions(item.amount, lang) : null)
+  const leadStatLabel = item.leadStat
+    ? (isEs && item.leadStat.label_es ? item.leadStat.label_es : item.leadStat.label)
+    : (item.amount > 0 ? (isEs ? 'gasto validado' : 'validated spend') : null)
 
-  return (
-    <button
-      onClick={() => navigate(`/stories/${item.slug}`)}
-      className={cn(
-        'group relative block w-full text-left',
-        'bg-background-card border border-border rounded-sm',
-        'overflow-hidden transition-colors duration-200',
-        'hover:border-border-hover'
-      )}
-      aria-label={headline}
-    >
-      {/* Accent glow */}
-      <div
-        className="absolute -top-32 -right-24 w-[28rem] h-[28rem] rounded-full opacity-[0.05] blur-3xl pointer-events-none"
-        style={{ background: accent }}
-      />
+  if (variant === 'pick') {
+    return (
+      <Link
+        to={`/stories/${item.slug}`}
+        className="group relative flex flex-col bg-background-card rounded-sm overflow-hidden transition-shadow hover:shadow-xl"
+        style={{ border: '1px solid var(--color-border)' }}
+        aria-label={headline}
+      >
+        {/* Top accent */}
+        <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: accent }} />
 
-      {/* Top accent rule */}
-      <div
-        className="absolute inset-x-0 top-0 h-[2px]"
-        style={{ background: accent, opacity: 0.9 }}
-      />
-
-      <div className="relative z-10 grid lg:grid-cols-5 gap-10 p-8 sm:p-10 lg:p-12">
-        {/* LEFT — editorial */}
-        <div className="lg:col-span-3">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-risk-critical">
-              {t('featuredLabel')}
-            </span>
-            <span className="h-px w-8 bg-risk-critical/50" />
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+        <div className="relative p-6 sm:p-7 flex flex-col flex-1">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: accent }}>
               {t(`typeLabel.${item.type}`, { defaultValue: FRAUD_LABEL[item.type] })}
+            </span>
+            <span className="text-[9px] font-mono text-text-muted">·</span>
+            <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
+              {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
             </span>
           </div>
 
-          <h2
-            className="text-text-primary leading-[1.08] mb-5 font-serif"
+          <h3
+            className="text-text-primary leading-[1.12] mb-4 text-balance"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
-              fontSize: 'clamp(1.75rem, 3.6vw, 2.75rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.025em',
+              fontSize: 'clamp(1.4rem, 2.3vw, 1.85rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
             }}
           >
             {headline}
-          </h2>
+          </h3>
 
-          <p className="text-sm sm:text-base text-text-secondary font-mono tabular-nums mb-8">
-            {sub}
+          <p className="text-[14px] leading-[1.6] text-text-secondary mb-5 flex-1 text-pretty">
+            {brief}
           </p>
 
-          <div className="flex flex-wrap items-center gap-2.5 mb-8">
-            <span
-              className={cn(
-                'inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] border rounded-sm',
-                status.color,
-                status.border,
-                status.bg
-              )}
-            >
-              [{status.label}]
-            </span>
-            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-border bg-background-card rounded-sm">
-              {t(`eraLabel.${item.era}`, { defaultValue: ERA_LABEL[item.era] })}
-            </span>
-            <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
-          </div>
-
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-risk-critical group-hover:text-risk-critical transition-colors">
-            {t('cards.readInvestigation')}
-            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-              →
-            </span>
-          </span>
-        </div>
-
-        {/* RIGHT — three stats */}
-        <div className="lg:col-span-2 flex flex-col justify-between gap-6 lg:border-l lg:border-border lg:pl-10">
-          <div>
-            <div
-              className="font-mono font-bold text-text-primary leading-none"
-              style={{
-                fontSize: 'clamp(3rem, 6vw, 5rem)',
-                letterSpacing: '-0.04em',
-              }}
-            >
-              {formatBillions(item.amount, lang)}
-            </div>
-            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3">
-              Validated contract spend
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div
-              className="border-l-2 pl-3"
-              style={{ borderColor: accent }}
-            >
-              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
-                {item.contracts.toLocaleString('en-US')}
+          {/* Mono stat — the editorial figure */}
+          {leadStatValue && (
+            <div className="flex items-end gap-4 mb-4 pt-4 border-t border-border/60">
+              <div>
+                <div
+                  className="font-extrabold tabular-nums leading-none"
+                  style={{
+                    fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                    color: accent,
+                    fontSize: 24,
+                  }}
+                >
+                  {leadStatValue}
+                </div>
+                {leadStatLabel && (
+                  <p className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
+                    {leadStatLabel}
+                  </p>
+                )}
               </div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
-                Contracts
-              </p>
             </div>
-            <div className="border-l-2 border-border-hover pl-3">
-              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
-                {item.yearSpan ?? item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
-              </div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
-                Time span
-              </p>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={cn(
+                  'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
+                  status.color, status.border, status.bg,
+                )}
+              >
+                [{statusLabel}]
+              </span>
+              <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
             </div>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-[0.12em] font-bold transition-transform" style={{ color: accent }}>
+              {t('cards.readStory', { defaultValue: 'Read story' })}
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+            </span>
           </div>
         </div>
-      </div>
-    </button>
-  )
-}
+      </Link>
+    )
+  }
 
-// ---------------------------------------------------------------------------
-// Investigation grid card
-// ---------------------------------------------------------------------------
-
-function GridCard({ item }: { item: Investigation }) {
-  const { t, i18n } = useTranslation('journalists')
-  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
-  const accent = FRAUD_COLOR[item.type]
-  const status = STATUS_META[item.status]
-  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: lang === 'es' ? (item.headline_es ?? item.headline) : item.headline })
-  const brief = t(`investigations.${item.slug}.brief`, { defaultValue: lang === 'es' ? (item.brief_es ?? item.brief) : item.brief })
-  const statusLabel = t(`status.${item.status}`, { defaultValue: status.label })
-
+  // variant === 'grid'
   return (
     <Link
       to={`/stories/${item.slug}`}
@@ -1060,7 +606,6 @@ function GridCard({ item }: { item: Investigation }) {
       <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} />
 
       <div className="pl-5 pr-5 pt-4 pb-4 flex flex-col flex-1">
-
         {/* Top: fraud type + era */}
         <div className="flex items-center gap-2 mb-4">
           <span
@@ -1088,7 +633,7 @@ function GridCard({ item }: { item: Investigation }) {
           {headline}
         </h3>
 
-        {/* Brief abstract — pushed to bottom of content area */}
+        {/* Brief abstract */}
         <p className="mt-auto mb-5 text-[13px] leading-[1.6] text-text-primary">
           {brief}
         </p>
@@ -1107,138 +652,46 @@ function GridCard({ item }: { item: Investigation }) {
             <ObservatoryTourBadge slug={item.slug} accent={accent} lang={lang} />
           </div>
           <span className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-text-muted group-hover:text-text-primary transition-colors">
-            {t('cards.readStory')}
+            {t('cards.readStory', { defaultValue: 'Read story' })}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true">→</span>
           </span>
         </div>
-
       </div>
     </Link>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Filter strip
+// Type legend — non-interactive color key for the dossier grid
 // ---------------------------------------------------------------------------
 
-type FilterKey =
-  | 'all'
-  | 'ghost_company'
-  | 'monopoly'
-  | 'overpricing'
-  | 'procurement_fraud'
-  | 'era_pena'
-  | 'era_amlo'
-  | 'era_cross'
-
-interface FilterDef {
-  key: FilterKey
-  label: string
-  match: (i: Investigation) => boolean
-  accent?: string
-}
-
-function FilterStrip({
-  active,
-  onChange,
-  counts,
-}: {
-  active: FilterKey
-  onChange: (k: FilterKey) => void
-  counts: Record<FilterKey, number>
-}) {
-  const { t } = useTranslation('journalists')
-
-  const filters: FilterDef[] = [
-    { key: 'all', label: t('filters.all', { defaultValue: 'All' }), match: () => true },
-    {
-      key: 'ghost_company',
-      label: t('filters.ghost', { defaultValue: 'Ghost Companies' }),
-      match: (i) => i.type === 'ghost_company',
-      accent: FRAUD_COLOR.ghost_company,
-    },
-    {
-      key: 'monopoly',
-      label: t('filters.monopoly', { defaultValue: 'Monopoly' }),
-      match: (i) => i.type === 'monopoly',
-      accent: FRAUD_COLOR.monopoly,
-    },
-    {
-      key: 'overpricing',
-      label: t('filters.overpricing', { defaultValue: 'Overpricing' }),
-      match: (i) => i.type === 'overpricing',
-      accent: FRAUD_COLOR.overpricing,
-    },
-    {
-      key: 'procurement_fraud',
-      label: t('filters.fraud', { defaultValue: 'Procurement Fraud' }),
-      match: (i) => i.type === 'procurement_fraud' || i.type === 'embezzlement',
-      accent: FRAUD_COLOR.procurement_fraud,
-    },
-    {
-      key: 'era_pena',
-      label: t('filters.eraPena', { defaultValue: 'Peña era' }),
-      match: (i) => i.era === 'pena',
-    },
-    {
-      key: 'era_amlo',
-      label: t('filters.eraAmlo', { defaultValue: '4T era' }),
-      match: (i) => i.era === 'amlo',
-    },
-    {
-      key: 'era_cross',
-      label: t('filters.eraCross', { defaultValue: 'Cross-era' }),
-      match: (i) => i.era === 'cross',
-    },
+function DossierLegend({ lang }: { lang: 'en' | 'es' }) {
+  const isEs = lang === 'es'
+  const items: Array<{ type: FraudType; labelEn: string; labelEs: string }> = [
+    { type: 'ghost_company', labelEn: 'Ghost Companies', labelEs: 'Empresas Fantasma' },
+    { type: 'monopoly', labelEn: 'Monopoly / Capture', labelEs: 'Monopolio / Captura' },
+    { type: 'overpricing', labelEn: 'Overpricing', labelEs: 'Sobreprecio' },
+    { type: 'procurement_fraud', labelEn: 'Procurement Fraud', labelEs: 'Fraude en Licitación' },
   ]
-
   return (
-    <div
-      role="tablist"
-      aria-label={t('filters.aria', { defaultValue: 'Filter investigations' })}
-      className="flex flex-wrap gap-2"
-    >
-      {filters.map((f) => {
-        const isActive = active === f.key
-        if (counts[f.key] === 0 && !isActive) return null
-        return (
-          <button
-            key={f.key}
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(f.key)}
-            className={cn(
-              'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em] border transition-colors',
-              isActive
-                ? 'bg-background-elevated text-text-primary border-border font-bold'
-                : 'bg-transparent text-text-secondary border-border hover:text-text-primary hover:border-border-hover'
-            )}
-          >
-            {f.accent && !isActive && (
-              <span
-                className="block w-1.5 h-1.5"
-                style={{ background: f.accent }}
-                aria-hidden="true"
-              />
-            )}
-            <span>{f.label}</span>
-            <span
-              className={cn(
-                'tabular-nums text-[10px]',
-                isActive ? 'text-text-muted' : 'text-text-muted'
-              )}
-            >
-              {counts[f.key]}
-            </span>
-          </button>
-        )
-      })}
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-hidden="true">
+      {items.map(({ type, labelEn, labelEs }) => (
+        <span key={type} className="inline-flex items-center gap-1.5">
+          <span
+            className="inline-block w-2 h-2 rounded-[1px] flex-shrink-0"
+            style={{ background: FRAUD_COLOR[type] }}
+          />
+          <span className="text-[10px] font-mono uppercase tracking-[0.1em] text-text-muted">
+            {isEs ? labelEs : labelEn}
+          </span>
+        </span>
+      ))}
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// ARIA T1 live ticker — compact bottom strip
+// ARIA T1 live ticker
 // ---------------------------------------------------------------------------
 
 function AriaLiveTicker() {
@@ -1315,20 +768,34 @@ function AriaLiveTicker() {
 
 export default function Journalists() {
   const { t, i18n } = useTranslation('journalists')
-  const [active, setActive] = useState<FilterKey>('all')
   const [searchParams, setSearchParams] = useSearchParams()
-  // Cross-surface lens filter — when readers arrive from /atlas with a
-  // pattern or sector lens active, pre-filter the dossier to stories
-  // matching that lens tag. URL takes precedence; clearing the badge
-  // strips the param and restores the local FilterStrip predicate.
+  const lang: 'en' | 'es' = i18n.language.startsWith('es') ? 'es' : 'en'
+  const isEs = lang === 'es'
+
+  // Cross-surface lens filter
   const lensPattern = searchParams.get('pattern') as AriaPattern | null
   const lensSector = searchParams.get('sector') as SectorCode | null
   const lensFilterActive = !!(lensPattern || lensSector)
 
-  // Editorial weighting: lead = top by amount; editor's picks = next 2 by
-  // amount. Both are pulled out of the filterable dossier so they don't
-  // duplicate. Dossier = the remaining 7 stories — that's what the filter
-  // strip operates on.
+  // Executive summary — wire stat strip; graceful fallback to hardcoded values
+  const { data: execData } = useQuery({
+    queryKey: ['executive', 'summary', 'journalists'],
+    queryFn: () => analysisApi.getExecutiveSummary(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const statContracts = execData?.headline?.total_contracts ?? 3051294
+  // high_risk_rate from /executive/summary is ALREADY a percentage (e.g. 10.9),
+  // NOT a 0..1 fraction — display directly, do not ×100. Fallback 11.0 = v0.8.5 HR.
+  const rawHrRate = execData?.risk?.high_risk_rate
+  const statHrPct = rawHrRate != null ? rawHrRate : 11.0
+  // Display as percentage string
+  const hrDisplay = `${statHrPct.toFixed(1)}%`
+  // Total value in trillions
+  const totalValueMXN = execData?.headline?.total_value ?? 9.9e12
+  const totalValueT = totalValueMXN / 1e12
+
+  // Stable editorial ranking: lead = el-sexenio-del-riesgo (amount=2760 tops the sort)
   const editorialRanked = useMemo(
     () => [...INVESTIGATIONS].sort((a, b) => b.amount - a.amount),
     [],
@@ -1345,60 +812,7 @@ export default function Journalists() {
     [tierTwoSlugSet],
   )
 
-  // Backward-compat alias — legacy filter logic still references `remaining`
-  const remaining = dossier
-  // suppress unused-var: kept for narrative parity with previous version
-  void lead
-
-  // Count within dossier only — promoted/featured stories are shown above the
-  // filter strip so their count would mislead (badge shows 10, grid shows 7).
-  const counts = useMemo<Record<FilterKey, number>>(() => {
-    const base = (pred: (i: Investigation) => boolean) =>
-      dossier.filter(pred).length
-    return {
-      all: dossier.length,
-      ghost_company: base((i) => i.type === 'ghost_company'),
-      monopoly: base((i) => i.type === 'monopoly'),
-      overpricing: base((i) => i.type === 'overpricing'),
-      procurement_fraud: base(
-        (i) => i.type === 'procurement_fraud' || i.type === 'embezzlement'
-      ),
-      era_pena: base((i) => i.era === 'pena'),
-      era_amlo: base((i) => i.era === 'amlo'),
-      era_cross: base((i) => i.era === 'cross'),
-    }
-  }, [dossier])
-
-  const filtered = useMemo(() => {
-    switch (active) {
-      case 'all':
-        return remaining
-      case 'ghost_company':
-        return remaining.filter((i) => i.type === 'ghost_company')
-      case 'monopoly':
-        return remaining.filter((i) => i.type === 'monopoly')
-      case 'overpricing':
-        return remaining.filter((i) => i.type === 'overpricing')
-      case 'procurement_fraud':
-        return remaining.filter(
-          (i) => i.type === 'procurement_fraud' || i.type === 'embezzlement'
-        )
-      case 'era_pena':
-        return remaining.filter((i) => i.era === 'pena')
-      case 'era_amlo':
-        return remaining.filter((i) => i.era === 'amlo')
-      case 'era_cross':
-        return remaining.filter((i) => i.era === 'cross')
-      default:
-        return remaining
-    }
-  }, [active, remaining])
-
-  // Apply the cross-surface lens filter on top of the local filter strip.
-  // When ?pattern= or ?sector= is in the URL (typically arriving from
-  // /atlas with that lens active), narrow the visible dossier to stories
-  // tagged for that lens. Both filters can stack — e.g. ?pattern=P5 +
-  // local filter "monopoly" yields the intersection.
+  // Lens filtering — applied to full dossier (non-promoted)
   const lensFilteredSlugs = useMemo(() => {
     if (!lensFilterActive) return null
     return new Set(
@@ -1410,41 +824,11 @@ export default function Journalists() {
   }, [lensPattern, lensSector, lensFilterActive])
 
   const dossierFiltered = useMemo(() => {
-    if (!lensFilteredSlugs) return filtered
-    return filtered.filter((i) => lensFilteredSlugs.has(i.slug))
-  }, [filtered, lensFilteredSlugs])
+    if (!lensFilteredSlugs) return dossier
+    return dossier.filter((i) => lensFilteredSlugs.has(i.slug))
+  }, [dossier, lensFilteredSlugs])
 
-  // When a filter yields an empty dossier grid, tell users how many matching
-  // stories are in the promoted (featured/editor's picks) tier above ↑
-  const promoted = useMemo(
-    () => INVESTIGATIONS.filter((i) => tierTwoSlugSet.has(i.slug)),
-    [tierTwoSlugSet],
-  )
-  const promotedMatchCount = useMemo(() => {
-    if (active === 'all') return 0
-    return promoted.filter((i) => {
-      switch (active) {
-        case 'ghost_company': return i.type === 'ghost_company'
-        case 'monopoly': return i.type === 'monopoly'
-        case 'overpricing': return i.type === 'overpricing'
-        case 'procurement_fraud': return i.type === 'procurement_fraud' || i.type === 'embezzlement'
-        case 'era_pena': return i.era === 'pena'
-        case 'era_amlo': return i.era === 'amlo'
-        case 'era_cross': return i.era === 'cross'
-        default: return false
-      }
-    }).length
-  }, [active, promoted])
-
-  // Summary stats for the masthead
-  const totalCount = INVESTIGATIONS.length
-  const prosecutedCount = INVESTIGATIONS.filter(
-    (i) => i.status === 'procesado'
-  ).length
-  const activeLeadsCount = INVESTIGATIONS.filter(
-    (i) => i.status === 'reporteado' || i.status === 'solo_datos'
-  ).length
-  const updatedDate = new Date().toLocaleDateString(i18n.language.startsWith('es') ? 'es-MX' : 'en-US', {
+  const updatedDate = new Date().toLocaleDateString(isEs ? 'es-MX' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -1457,6 +841,7 @@ export default function Journalists() {
             MASTHEAD
         ================================================================= */}
         <header className="pt-14 sm:pt-20 pb-10">
+          {/* Top byline row */}
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-border">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
@@ -1473,6 +858,7 @@ export default function Journalists() {
             </span>
           </div>
 
+          {/* Nameplate — kept unchanged */}
           <h1
             className="text-text-primary"
             style={{
@@ -1487,6 +873,7 @@ export default function Journalists() {
             <span className="italic text-risk-critical">{t('masthead.headline', { defaultValue: 'Investigations' })}</span>
           </h1>
 
+          {/* Deck — scope-true, no conflicting number */}
           <p
             className="mt-6 max-w-3xl text-text-secondary"
             style={{
@@ -1496,56 +883,82 @@ export default function Journalists() {
               lineHeight: 1.55,
             }}
           >
-            {totalCount}{' '}{t('masthead.deck', {
-              defaultValue:
-                'investigations into how MX$422 billion moved through Mexican federal procurement. Each story begins with 3.05 million contracts and ends with the people who signed them.',
-            })}
+            {isEs
+              ? `${INVESTIGATIONS.length} investigaciones sobre ${totalValueT.toFixed(1)} billones MXN en contratación pública federal — donde tres de cada cuatro pesos se adjudicaron sin competencia.`
+              : `${INVESTIGATIONS.length} investigations into MX$${totalValueT.toFixed(1)}T of federal contracting — where three of four pesos were awarded without competition.`}
           </p>
 
-          {/* Subline: counts */}
-          <div className="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-3 text-[11px] font-mono uppercase tracking-[0.12em] text-text-muted">
-            <span>
-              <span className="text-text-primary font-bold tabular-nums">
-                {totalCount}
-              </span>{' '}
-              {t('masthead.totalLabel', { defaultValue: 'Investigations' })}
+          {/* Stat strip — 4 real figures, hairline-separated */}
+          <div
+            className="mt-8 flex flex-wrap items-baseline gap-x-0 gap-y-3 text-[11px] font-mono uppercase tracking-[0.12em]"
+            role="list"
+            aria-label={isEs ? 'Cifras clave' : 'Key figures'}
+          >
+            {[
+              {
+                value: statContracts.toLocaleString('en-US'),
+                label: isEs ? 'contratos' : 'contracts',
+              },
+              {
+                value: hrDisplay,
+                label: isEs ? 'riesgo alto+' : 'high-risk+',
+              },
+              {
+                value: isEs ? `${totalValueT.toFixed(1)} billones MXN` : `MX$${totalValueT.toFixed(1)}T`,
+                label: isEs ? 'validado' : 'validated',
+              },
+              {
+                value: String(INVESTIGATIONS.length),
+                label: isEs ? 'investigaciones' : 'investigations',
+              },
+            ].map((stat, idx, arr) => (
+              <span key={stat.label} className="inline-flex items-baseline gap-2" role="listitem">
+                <span className="text-text-primary font-bold tabular-nums">{stat.value}</span>
+                <span className="text-text-muted">{stat.label}</span>
+                {idx < arr.length - 1 && (
+                  <span className="mx-3 text-border" aria-hidden="true">·</span>
+                )}
+              </span>
+            ))}
+          </div>
+
+          {/* Lookup row — reader query interface */}
+          <div className="mt-6 flex flex-wrap items-center gap-2.5">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mr-1">
+              {isEs ? 'Empieza aquí:' : 'Start here:'}
             </span>
-            <span className="text-text-primary">·</span>
-            <span
-              title={i18n.language.startsWith('es')
-                ? 'Casos con acusación formal de corrupción registrada en medios oficiales o resolución judicial'
-                : 'Cases with formal corruption charges documented in official media or judicial resolution'}
+            <Link
+              to="/explore?tab=vendors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] border border-border rounded-sm bg-background-card text-text-secondary hover:text-text-primary transition-colors"
+              style={{ '--tw-ring-color': 'var(--color-accent)' } as React.CSSProperties}
             >
-              <span className="text-risk-critical font-bold tabular-nums">
-                {prosecutedCount === 0 ? '0' : prosecutedCount}
-              </span>{' '}
-              {i18n.language.startsWith('es') ? 'procesados' : 'prosecuted'}
-            </span>
-            <span className="text-text-primary">·</span>
-            <span>
-              <span className="text-risk-high font-bold tabular-nums">
-                {activeLeadsCount}
-              </span>{' '}
-              {t('masthead.activeLabel', { defaultValue: 'Active leads' })}
-            </span>
+              {isEs ? 'Investigar un proveedor' : 'Look up a vendor'} →
+            </Link>
+            <Link
+              to="/institutions"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] border border-border rounded-sm bg-background-card text-text-secondary hover:text-text-primary transition-colors"
+            >
+              {isEs ? 'Ranking de instituciones' : 'Institution ranking'} →
+            </Link>
+            <Link
+              to="/cases"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.1em] border border-border rounded-sm bg-background-card text-text-secondary hover:text-text-primary transition-colors"
+            >
+              {isEs ? 'Biblioteca de casos' : 'Case library'} →
+            </Link>
           </div>
         </header>
 
         {/* =================================================================
             TIER 1 — LEAD STORY
-            ================================================================= */}
+        ================================================================= */}
         <section className="mb-14 sm:mb-16">
           <LeadStoryCard item={lead} />
         </section>
 
         {/* =================================================================
-            OBSERVATORY FEATURE CALLOUT — moved above picks for prominence
-            ================================================================= */}
-        <ObservatoryFeatureCallout lang={i18n.language.startsWith('es') ? 'es' : 'en'} />
-
-        {/* =================================================================
-            TIER 2 — EDITOR'S PICKS (2 stories side-by-side)
-            ================================================================= */}
+            TIER 2 — EDITOR'S PICKS (2-up, unified InvestigationCard)
+        ================================================================= */}
         {editorsPicks.length === 2 && (
           <>
             <SectionBreak />
@@ -1574,11 +987,11 @@ export default function Journalists() {
                 </p>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-                {editorsPicks.map((item, i) => (
-                  <EditorsPickCard
+                {editorsPicks.map((item) => (
+                  <InvestigationCard
                     key={item.slug}
                     item={item}
-                    art={i === 0 ? 'spike' : 'grid'}
+                    variant="pick"
                   />
                 ))}
               </div>
@@ -1587,11 +1000,11 @@ export default function Journalists() {
         )}
 
         {/* =================================================================
-            TIER 3 — THE FULL DOSSIER (filterable grid)
-            ================================================================= */}
+            TIER 3 — THE FULL DOSSIER (one ranked grid, light legend)
+        ================================================================= */}
         <SectionBreak />
         <section className="mb-8">
-          <div className="flex items-end justify-between gap-6 mb-5">
+          <div className="flex items-end justify-between gap-6 mb-4">
             <div>
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-muted mb-1.5">
                 ◆ {t('grid.kicker', { defaultValue: 'The Full Dossier' })}
@@ -1599,8 +1012,7 @@ export default function Journalists() {
               <h2
                 className="text-text-primary"
                 style={{
-                  fontFamily:
-                    'var(--font-family-serif, "Playfair Display", serif)',
+                  fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
                   fontSize: 'clamp(1.5rem, 2.4vw, 2rem)',
                   fontWeight: 700,
                   letterSpacing: '-0.02em',
@@ -1610,16 +1022,15 @@ export default function Journalists() {
               </h2>
             </div>
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums pb-2">
-              {dossierFiltered.length} / {remaining.length}{' '}
+              {dossierFiltered.length} / {dossier.length}{' '}
               {t('grid.showing', { defaultValue: 'showing' })}
             </span>
           </div>
 
-          <FilterStrip active={active} onChange={setActive} counts={counts} />
+          {/* Non-interactive type legend */}
+          <DossierLegend lang={lang} />
 
-          {/* Cross-surface lens-filter pill — only visible when arriving
-              from /atlas with ?pattern= or ?sector= active. Click clears
-              the URL param and restores the local filter alone. */}
+          {/* Cross-surface lens-filter pill */}
           {lensFilterActive && (
             <div className="mt-4 flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
@@ -1644,21 +1055,16 @@ export default function Journalists() {
           )}
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-14 sm:mb-16">
           {dossierFiltered.map((item) => (
-            <GridCard key={item.slug} item={item} />
+            <InvestigationCard key={item.slug} item={item} variant="grid" />
           ))}
           {dossierFiltered.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-border rounded-sm">
               <p className="text-sm font-mono text-text-muted">
-                {promotedMatchCount > 0
-                  ? t('grid.featuredAbove', {
-                      count: promotedMatchCount,
-                      defaultValue: `${promotedMatchCount} matching investigation${promotedMatchCount !== 1 ? 's' : ''} appear${promotedMatchCount === 1 ? 's' : ''} in the featured section above ↑`,
-                    })
-                  : t('grid.empty', {
-                      defaultValue: 'No investigations match this filter.',
-                    })}
+                {t('grid.empty', {
+                  defaultValue: 'No investigations match this filter.',
+                })}
               </p>
             </div>
           )}
@@ -1670,7 +1076,39 @@ export default function Journalists() {
         <AriaLiveTicker />
 
         {/* =================================================================
-            FOOTER
+            OBSERVATORY — slim one-line link band
+        ================================================================= */}
+        <div
+          className="mt-14 sm:mt-16 py-4 px-5 flex items-center gap-4 rounded-sm border border-border hover:border-border-hover transition-colors"
+          style={{ background: 'var(--color-background-card)' }}
+        >
+          <span
+            className="text-[11px] font-mono font-bold uppercase tracking-[0.2em] flex-shrink-0"
+            style={{ color: 'var(--color-accent)' }}
+            aria-hidden="true"
+          >
+            ◆
+          </span>
+          <p className="text-[12px] font-mono text-text-secondary flex-1 min-w-0">
+            <span className="font-bold text-text-primary">
+              {isEs ? 'El Observatorio' : 'El Observatorio'}
+            </span>
+            {' — '}
+            {isEs
+              ? 'una constelación viva de 1,200 clusters de proveedores.'
+              : 'a living constellation of 1,200 vendor clusters.'}
+          </p>
+          <Link
+            to="/atlas"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-[0.14em] transition-colors hover:opacity-80 whitespace-nowrap"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            {isEs ? 'Explorar →' : 'Explore →'}
+          </Link>
+        </div>
+
+        {/* =================================================================
+            FOOTER — kept unchanged
         ================================================================= */}
         <footer className="mt-16 pt-8 pb-16 border-t border-border">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">

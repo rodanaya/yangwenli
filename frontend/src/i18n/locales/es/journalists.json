@@ -9,9 +9,17 @@
     "desk": "Mesa de Investigaciones",
     "updated": "Actualizado",
     "activeLabel": "Pistas activas",
-    "deck": "investigaciones sobre cómo MX$422 mil millones de pesos transitaron por la contratación pública federal. Cada historia comienza con 3.05 millones de contratos y termina con las personas que los firmaron.",
+    "deck": "investigaciones sobre 9.9 billones MXN en contratación pública federal — donde tres de cada cuatro pesos se adjudicaron sin competencia.",
     "totalLabel": "Investigaciones",
-    "prosecutedLabel": "Procesadas"
+    "prosecutedLabel": "Procesadas",
+    "statContracts": "contratos",
+    "statHighRisk": "riesgo alto+",
+    "statValidated": "validado",
+    "statInvestigations": "investigaciones",
+    "startHere": "Empieza aquí:",
+    "lookupVendor": "Investigar un proveedor",
+    "institutionRanking": "Ranking de instituciones",
+    "caseLibrary": "Biblioteca de casos"
   },
   "picks": {
     "kicker": "Selección del Editor",
@@ -62,6 +70,8 @@
     "solo_datos": "PISTA DE DATOS"
   },
   "featuredLabel": "INVESTIGACIÓN PRINCIPAL",
+  "observatoryBand": "una constelación viva de 1,200 clusters de proveedores.",
+  "observatoryExplore": "Explorar →",
   "eraLabel": {
     "pena": "EPN · 2012–2018",
     "amlo": "4T · 2018–2024",
