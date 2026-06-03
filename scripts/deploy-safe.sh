@@ -37,6 +37,12 @@ git fetch origin -q
 git reset --hard origin/main
 echo "[deploy] at $(git log --oneline -1)"
 
+# ── Force a clean frontend image FIRST. Docker layer-caching has repeatedly
+#    served a STALE bundle (source changed but the cached `npm run build` layer
+#    was reused) — a fresh hash that silently lacks the latest code. --no-cache
+#    on the frontend guarantees the bundle reflects the checked-out source.
+$COMPOSE build --no-cache frontend || { echo "[deploy] frontend --no-cache build FAILED"; exit 1; }
+
 # ── In-place recreate (no down-window). Retry once with cleanup on collision ──
 if ! $COMPOSE up -d --build --remove-orphans; then
   echo "[deploy] up failed (likely a stale-container collision) — cleaning + retrying"
