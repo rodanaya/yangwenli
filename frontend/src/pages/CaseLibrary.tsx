@@ -15,6 +15,7 @@ import type {
 import { formatCompactMXN } from '@/lib/utils'
 import { ADMINISTRATIONS, getAdministrationByYear } from '@/lib/administrations'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Art direction
@@ -894,6 +895,7 @@ export default function CaseLibrary() {
             </p>
           </>
         )}
+        <PageFooter />
       </div>
     </div>
   )

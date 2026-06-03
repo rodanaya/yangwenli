@@ -59,6 +59,7 @@ import {
 } from 'lucide-react'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
+import { PageFooter } from '@/components/layout/PageFooter'
 // AdminVendorBreakdown is used in the default 'profile' tab — keep eager.
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 // All other charts only render when user navigates within the page —
@@ -1620,6 +1621,7 @@ export default function Administrations() {
 
       </> /* end profile tab */
       )}
+      <PageFooter />
     </div>
       </div>
     </div>

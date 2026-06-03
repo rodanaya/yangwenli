@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { AlertTriangle, TrendingUp, Info, Calendar, Zap } from 'lucide-react'
 import { analysisApi } from '@/api/client'
+import { PageFooter } from '@/components/layout/PageFooter'
 import { cn, formatNumber } from '@/lib/utils'
 import { DotBar } from '@/components/ui/DotBar'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
@@ -927,6 +928,7 @@ export default function ProcurementCalendar() {
         </div>
       </div>
         </Act>
+      <PageFooter />
       </div>
 
       {/* Tooltip rendered at root level to avoid clipping */}

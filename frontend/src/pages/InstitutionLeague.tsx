@@ -47,6 +47,7 @@ import {
 import { scorecardApi } from '@/api/client'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // Reverse-lookup: sector display name (Spanish or English) → canonical code,
 // so we can resolve a SECTOR_COLORS swatch from the `sector_name` returned by
@@ -1771,6 +1772,7 @@ export default function InstitutionLeague() {
           </div>
         )}
       </section>
+      <PageFooter />
       </div>
       </div>
     </div>

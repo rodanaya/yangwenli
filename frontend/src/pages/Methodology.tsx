@@ -29,6 +29,7 @@ import {
 import { RiskFactorTable } from '@/components/RiskExplainer'
 import { CitationBlock } from '@/components/CitationBlock'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // ============================================================================
 // Static Data
@@ -1652,6 +1653,7 @@ export function Methodology() {
       </div>
 
       <CitationBlock context="RUBLI methodology — v0.8.5 risk model" className="mt-2" />
+      <PageFooter />
     </div>
       </div>
     </div>

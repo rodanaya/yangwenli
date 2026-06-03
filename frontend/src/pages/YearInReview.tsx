@@ -41,6 +41,7 @@ import {
   ChevronRight,
   ExternalLink,
 } from 'lucide-react'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // =============================================================================
 // Constants
@@ -1656,6 +1657,7 @@ export default function YearInReview() {
         </div>
 
       </div>
+      <PageFooter />
     </div>
   )
 }

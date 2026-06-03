@@ -9,6 +9,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
+import { PageFooter } from '@/components/layout/PageFooter'
 import { analysisApi } from '@/api/client'
 import { CURRENT_MODEL_VERSION, RISK_COLORS } from '@/lib/constants'
 import { useGroundTruthCount } from '@/hooks/useGroundTruthCount'
@@ -882,6 +883,7 @@ export default function ModelTransparency() {
           <AuditTrailTab />
         </TabPanel>
       </SimpleTabs>
+      <PageFooter />
     </div>
   )
 }

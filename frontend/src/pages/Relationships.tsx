@@ -25,6 +25,7 @@ import {
 import { ChevronRight, AlertTriangle, ArrowRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { PlateFrame } from '@/components/atlas/PlateFrame'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // ─── Capture helpers ──────────────────────────────────────────────────────────
 
@@ -402,7 +403,7 @@ export default function Relationships() {
             </div>
           )}
         </section>
-
+        <PageFooter />
       </div>
     </div>
   )

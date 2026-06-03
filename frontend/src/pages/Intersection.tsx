@@ -29,6 +29,7 @@ import { SECTOR_COLORS, SECTORS, CURRENT_MODEL_VERSION, getSectorName } from '@/
 import { useGroundTruthCount } from '@/hooks/useGroundTruthCount'
 import { ChevronRight, AlertTriangle } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 function RegistryBadges({ v }: { v: IntersectionVendor }) {
   const badges: Array<{ label: string; color: string; title: string }> = []
@@ -786,6 +787,7 @@ export default function Intersection() {
           </div>
         )}
       </div>
+      <PageFooter />
     </div>
   )
 }

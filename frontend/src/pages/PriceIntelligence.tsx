@@ -21,6 +21,7 @@ import { useState, useMemo } from 'react'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CitationBlock } from '@/components/CitationBlock'
 import { ShareButton } from '@/components/ShareButton'
+import { PageFooter } from '@/components/layout/PageFooter'
 // Recharts removed — replaced with pure SVG field visualizations
 import { Act } from '@/components/layout/Act'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -2159,6 +2160,7 @@ export default function PriceIntelligence() {
 
       <CitationBlock context="Price anomaly analysis — 7,090 anomalies" className="mt-2" />
         </Act>
+      <PageFooter />
     </div>
   )
 }
