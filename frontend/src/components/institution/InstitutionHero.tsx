@@ -29,14 +29,11 @@ import {
   formatNumber,
 } from '@/lib/utils'
 
-// Dossier section anchors for institutions — five sections + methodology
+// Dossier section anchors — the five narrative chapters were removed in the
+// 2026-06-03 operational rebuild; these are the real reference sections.
 const TOC_ANCHORS: Array<{ id: string; en: string; es: string; numeral?: string }> = [
-  { id: 'subject',     en: 'Subject',     es: 'Sujeto',      numeral: 'I'   },
-  { id: 'timeline',    en: 'Timeline',    es: 'Cronología',  numeral: 'II'  },
-  { id: 'suppliers',   en: 'Suppliers',   es: 'Proveedores', numeral: 'III' },
-  { id: 'spending',    en: 'Spending',    es: 'Gasto',       numeral: 'IV'  },
-  { id: 'risk',        en: 'Risk',        es: 'Riesgo',      numeral: 'V'   },
-  { id: 'methodology', en: 'Methodology', es: 'Metodología'                 },
+  { id: 'suppliers',   en: 'Suppliers',   es: 'Proveedores' },
+  { id: 'methodology', en: 'Methodology', es: 'Metodología' },
 ]
 
 interface InstitutionHeroProps {
@@ -78,14 +75,12 @@ export function InstitutionHero({
           top: 0,
           height: 6,
           background: sectorAccent,
-          marginLeft: 'calc(-1 * var(--container-pad, 0px))',
-          marginRight: 'calc(-1 * var(--container-pad, 0px))',
         }}
       />
 
-      <div className="pt-16 pb-12">
+      <div className="pt-8 pb-6">
         {/* Row 1 — index strip + actions */}
-        <div className="flex items-baseline justify-between gap-4 mb-7">
+        <div className="flex items-baseline justify-between gap-4 mb-5">
           <div
             className="font-mono tabular-nums"
             style={{
@@ -172,10 +167,10 @@ export function InstitutionHero({
         </div>
 
         {/* Hairline */}
-        <div aria-hidden="true" className="mt-8" style={{ height: 1, background: 'var(--color-border)' }} />
+        <div aria-hidden="true" className="mt-6" style={{ height: 1, background: 'var(--color-border)' }} />
 
         {/* Lede */}
-        <div className="mt-10" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+        <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
           <p
             style={{
               fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
@@ -238,7 +233,7 @@ function VerdictCard({
   return (
     <aside
       className="flex-shrink-0 relative"
-      style={{ width: 168, paddingTop: 10, paddingBottom: 12, paddingLeft: 18, paddingRight: 18 }}
+      style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 18, paddingRight: 18 }}
     >
       <div
         aria-hidden="true"
@@ -252,7 +247,7 @@ function VerdictCard({
             fontFamily: '"Playfair Display", Georgia, serif',
             fontStyle: 'italic',
             fontWeight: 800,
-            fontSize: 52,
+            fontSize: 46,
             lineHeight: 1,
             color: verdictColor,
             letterSpacing: '-0.02em',
