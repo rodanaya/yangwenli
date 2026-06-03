@@ -675,21 +675,43 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                   {s.r > 4 && <circle cx={s.x - s.r * 0.28} cy={s.y - s.r * 0.3} r={Math.max(0.9, s.r * 0.22)} fill="#fff" opacity={0.85} />}
                   {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3} fill="none" stroke={C.ink} strokeWidth={0.8} strokeDasharray="2.4 1.6" strokeOpacity={0.6} />}
                   {kbFocus && <circle cx={s.x} cy={s.y} r={s.r + 4.5} fill="none" stroke={C.ink} strokeWidth={1.4} />}
-                  {active && (
-                    <text x={s.x} y={s.y - s.r - 5} textAnchor="middle" fill={C.ink} fontSize={8.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.2} strokeLinejoin="round">
-                      {formatVendorName(s.v.name, 44)}
-                    </text>
-                  )}
                 </motion.g>
               )
             })}
 
-            {/* fit-only labels — collision-free, NEVER stacked (hover + ledger carry the rest) */}
-            {subLabels.map((l) => (
+            {/* fit-only labels — collision-free, NEVER stacked. The active vendor's
+                label is dropped here; its name moves to the opaque hover card below. */}
+            {subLabels.filter((l) => l.id !== (hoverVendor ?? focusVendorId)).map((l) => (
               <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
                 {l.name}
               </text>
             ))}
+
+            {/* hover/focus card — opaque plate, drawn LAST (top-most) so the active
+                vendor's full name is ALWAYS legible, even over a crowded label field.
+                (The old inline label sat under the fit-only labels and tangled with
+                neighbours — the "can't read the hovered name" bug.) */}
+            {(() => {
+              const activeId = hoverVendor ?? focusVendorId
+              if (activeId == null) return null
+              const s = subScatter.find((x) => x.v.vendor_id === activeId)
+              if (!s) return null
+              const name = formatVendorName(s.v.name, 42)
+              const sub = `${fmtAmount(s.v.total_amount_mxn)} · ${Math.round(s.risk * 100)}%`
+              const w = Math.max(name.length * 4.5, sub.length * 4.4) + 14
+              const h = 21
+              const cardX = clamp(s.x, focusedBody.cx - SUB_HALF_W + w / 2 + 2, focusedBody.cx + SUB_HALF_W - w / 2 - 2)
+              const above = s.y - s.r - h - 4
+              const cardY = above < focusedBody.cy - SUB_HALF_H + 2 ? s.y + s.r + 4 : above
+              return (
+                <g style={{ pointerEvents: 'none' }}>
+                  <circle cx={s.x} cy={s.y} r={s.r + 2.5} fill="none" stroke={s.fill} strokeWidth={1} opacity={0.7} />
+                  <rect x={cardX - w / 2} y={cardY} width={w} height={h} rx={3} fill={C.plate0} stroke={s.fill} strokeWidth={0.8} />
+                  <text x={cardX} y={cardY + 9} textAnchor="middle" fill={C.ink} fontSize={8} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700}>{name}</text>
+                  <text x={cardX} y={cardY + 17.5} textAnchor="middle" fill={C.inkMuted} fontSize={6} fontFamily="var(--font-family-mono)">{sub}</text>
+                </g>
+              )
+            })()}
 
             {vendorsLoading && (
               <text x={focusedBody.cx} y={focusedBody.cy} textAnchor="middle" fill={C.inkFaint} fontSize={7} fontFamily="var(--font-family-mono)">
