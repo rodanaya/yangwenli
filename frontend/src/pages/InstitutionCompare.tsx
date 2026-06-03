@@ -42,7 +42,7 @@ const HHI_COLORS: Record<string, string> = {
   captura: '#dc2626',
   high: '#f97316',
   medium: '#eab308',
-  low: '#22c55e',
+  low: '#64748b', // slate — Bible §3.10: low concentration isn't "safe/green"
 }
 
 function getHHILevel(hhi: number): string {

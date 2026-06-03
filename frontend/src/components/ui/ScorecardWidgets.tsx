@@ -43,9 +43,12 @@ function formatRiskDriver(raw: string): string {
 }
 
 export const GRADE10_COLORS: Record<string, { bg: string; text: string; border: string; bar: string }> = {
-  'S':  { bg: '#f0fdf4', text: '#047857', border: '#6ee7b7', bar: '#10b981' },
-  'A':  { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0', bar: '#22c55e' },
-  'B+': { bg: '#f7fee7', text: '#4d7c0f', border: '#bef264', bar: '#84cc16' },
+  // Bible §3.10: the good-end grades (S/A/B+) are neutral slate, never
+  // green/lime — a procurement model can't certify integrity. Warm escalation
+  // (yellow → orange → red) below carries the bad end.
+  'S':  { bg: '#f1f5f9', text: '#334155', border: '#cbd5e1', bar: '#475569' },
+  'A':  { bg: '#f1f5f9', text: '#475569', border: '#cbd5e1', bar: '#64748b' },
+  'B+': { bg: '#f8fafc', text: '#64748b', border: '#e2e8f0', bar: '#94a3b8' },
   'B':  { bg: '#fefce8', text: '#854d0e', border: '#fde047', bar: '#eab308' },
   'C+': { bg: '#fffbeb', text: '#b45309', border: '#fcd34d', bar: '#f59e0b' },
   'C':  { bg: '#fff7ed', text: '#c2410c', border: '#fdba74', bar: '#f97316' },

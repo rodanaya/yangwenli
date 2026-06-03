@@ -36,9 +36,12 @@ function computeProcurementGrade(agg: AdminAgg): ProcurementGradeResult {
   }
 }
 
+// Bible §3.10: the good-end grades are neutral slate (mirrors TIER_STYLES
+// Excelente/Satisfactorio), never green — a procurement model can't certify
+// "good". The warm escalation (yellow → orange → red) carries the bad end.
 const GRADE_COLORS: Record<string, string> = {
-  A: '#16a34a',
-  B: '#84cc16',
+  A: '#334155', // slate-700
+  B: '#64748b', // slate-500
   C: '#eab308',
   D: '#f97316',
   F: '#dc2626',

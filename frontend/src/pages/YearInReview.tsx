@@ -271,7 +271,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
             Math.max(1, Math.round((Math.abs(clamped) / Math.max(maxAbs, 1)) * DOTS_PER_SIDE)),
           )
           const isPos = row.growthPct >= 0
-          const color = isPos ? '#4ade80' : '#f87171'
+          // §3.10: growth isn't "good/green" on a corruption platform — neutral slate.
+          const color = isPos ? '#64748b' : '#f87171'
           const emptyDot = 'var(--color-background-elevated)'
           const rowCenterY = cy + ROW_H / 2
 
@@ -549,7 +550,7 @@ function ProcedureTypeSection({
           const directDots = Math.round((directPct / 100) * N_DOTS)
           const svgW = N_DOTS * DOT_GAP + DOT_R * 2
           const directColor = isAboveOECD ? '#dc2626' : '#ea580c'
-          const competitiveColor = '#059669'
+          const competitiveColor = '#64748b' // slate — §3.10: competitive share isn't green-for-good
           return (
             <>
               <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase tracking-[0.15em]">
@@ -1297,8 +1298,8 @@ export default function YearInReview() {
                 const color = item.delta == null
                   ? 'var(--color-text-muted)'
                   : item.invertColor
-                    ? (isUp ? '#f87171' : '#4ade80')
-                    : (isUp ? '#4ade80' : '#f87171')
+                    ? (isUp ? '#f87171' : '#64748b')
+                    : (isUp ? '#64748b' : '#f87171')
                 const Icon = isUp ? TrendingUp : TrendingDown
                 return (
                   <div

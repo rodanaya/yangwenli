@@ -105,7 +105,9 @@ function FeatureBar({ feature, maxContrib }: {
           const DOTS_PER_SIDE = 14, DR = 2, DG = 5
           const totalW = DOTS_PER_SIDE * DG * 2
           const filled = Math.max(1, Math.round((barWidth / 100) * DOTS_PER_SIDE))
-          const color = isPositive ? '#ef4444' : '#10b981'
+          // Bible §3.10: protective (risk-decreasing) factors are neutral slate,
+          // never green — a procurement-only model can't certify a factor "good".
+          const color = isPositive ? '#ef4444' : '#64748b'
           return (
             <svg viewBox={`0 0 ${totalW} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
               {/* Center line */}

@@ -80,7 +80,8 @@ export function WaterfallRiskChart({
           const y = i * ROW_H
           const barPx = (Math.abs(entry.contribution) / maxVal) * (BAR_AREA / 2 - 5)
           const isPos = entry.contribution >= 0
-          const color = isPos ? '#dc2626' : '#16a34a'
+          // Bible §3.10: risk-decreasing contributions are neutral slate, not green.
+          const color = isPos ? '#dc2626' : '#64748b'
           const x1 = isPos ? centerX : centerX - barPx
 
           return (

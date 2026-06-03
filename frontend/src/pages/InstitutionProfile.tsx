@@ -441,7 +441,7 @@ export function InstitutionProfile() {
     const last3 = history.slice(-3)
     const slope = (last3[last3.length - 1].hhi - last3[0].hhi) / (last3.length - 1)
     if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: 'var(--color-risk-critical)' }
-    if (slope < -50) return { label: lang === 'en' ? 'Diversifying' : 'Diversificando', color: '#16a34a' }
+    if (slope < -50) return { label: lang === 'en' ? 'Diversifying' : 'Diversificando', color: '#64748b' }
     return { label: lang === 'en' ? 'Stable' : 'Estable', color: '#eab308' }
   }, [institution?.supplier_diversity?.history])
 
@@ -1084,7 +1084,7 @@ export function InstitutionProfile() {
                       const pct = m.percentile
                       const isWorse = pct > 75
                       const isBetter = pct < 25
-                      const markerColor = isWorse ? '#dc2626' : isBetter ? '#16a34a' : '#eab308'
+                      const markerColor = isWorse ? '#dc2626' : isBetter ? '#64748b' : '#eab308'
                       return (
                         <div key={m.metric}>
                           <div className="flex items-center justify-between mb-1">
@@ -1792,7 +1792,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
 }) {
   const { i18n } = useTranslation('institutions')
   const lang = i18n.language.startsWith('es') ? 'es' : 'en'
-  const barColor = diff != null && diff > highThreshold ? '#dc2626' : diff != null && diff > 0 ? '#ea580c' : '#16a34a'
+  const barColor = diff != null && diff > highThreshold ? '#dc2626' : diff != null && diff > 0 ? '#ea580c' : '#64748b'
   return (
     <div>
       <div className="flex items-center justify-between mb-1">

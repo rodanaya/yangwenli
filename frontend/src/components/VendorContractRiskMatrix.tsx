@@ -50,7 +50,7 @@ const RISK_COLORS: Record<string, string> = {
   critical: '#dc2626',
   high:     '#ea580c',
   medium:   '#eab308',
-  low:      '#22c55e',
+  low:      '#71717a', // zinc — Bible §3.10: no green for low risk
   unknown:  '#64748b',
 }
 

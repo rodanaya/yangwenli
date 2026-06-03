@@ -1351,7 +1351,7 @@ export default function CategoryProfile() {
         // Canonical procedure labels
         const PROC_LABELS: Record<string, { es: string; en: string; color: string }> = {
           directa:     { es: 'Adjudicación directa', en: 'Direct award',   color: '#f87171' },
-          licitacion:  { es: 'Licitación pública',   en: 'Public tender',  color: '#34d399' },
+          licitacion:  { es: 'Licitación pública',   en: 'Public tender',  color: '#334155' }, // slate-700 — §3.10: not green-for-good
           invitacion:  { es: 'Invitación a 3',       en: 'Invitation ×3',  color: '#fbbf24' },
           otro:        { es: 'Otro',                 en: 'Other',          color: '#94a3b8' },
           desconocido: { es: 'Desconocido',          en: 'Unknown',        color: '#64748b' },
@@ -1403,7 +1403,7 @@ export default function CategoryProfile() {
                   <div className="text-center">
                     <div
                       className="text-2xl font-bold tabular-nums"
-                      style={{ fontFamily: 'var(--font-serif)', color: daPct > 70 ? '#f87171' : daPct > 50 ? '#fb923c' : '#34d399' }}
+                      style={{ fontFamily: 'var(--font-serif)', color: daPct > 70 ? '#f87171' : daPct > 50 ? '#fb923c' : '#64748b' }}
                     >
                       {daPct.toFixed(0)}%
                     </div>
@@ -1420,7 +1420,7 @@ export default function CategoryProfile() {
                   <div className="text-center">
                     <div
                       className="text-2xl font-bold tabular-nums"
-                      style={{ fontFamily: 'var(--font-serif)', color: (tendRow?.pct_contracts ?? 0) > 20 ? '#34d399' : '#94a3b8' }}
+                      style={{ fontFamily: 'var(--font-serif)', color: (tendRow?.pct_contracts ?? 0) > 20 ? '#334155' : '#94a3b8' }}
                     >
                       {(tendRow?.pct_contracts ?? 0).toFixed(0)}%
                     </div>
