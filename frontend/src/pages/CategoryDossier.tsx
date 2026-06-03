@@ -126,7 +126,7 @@ export default function CategoryDossier() {
   })
   const { data: topVendorsData } = useQuery({
     queryKey: ['cat-dossier', 'top-vendors', categoryId],
-    queryFn: () => categoriesApi.getTopVendors(categoryId, 25),
+    queryFn: () => categoriesApi.getTopVendors(categoryId, 10),
     enabled: validId,
     staleTime: 5 * 60 * 1000,
   })
@@ -139,9 +139,15 @@ export default function CategoryDossier() {
   // Hooks must run on every render in the same order — keep this before the
   // early returns below. React error #310 fired here on first ship.
   const categoryTrends = useMemo(() => {
-    if (!trendsData?.categories) return []
-    const arr = (trendsData.categories as Array<{ category_id: number; trend: Array<{ year: number; total_value: number; total_contracts: number; avg_risk: number | null }> }>).find((t) => t.category_id === categoryId)
-    return arr?.trend ?? []
+    // /categories/trends returns a FLAT { data: [{category_id, year, contracts,
+    // value, avg_risk}], total } — one row per category-year, not nested under
+    // a `.categories[].trend` array (the prior reshape read a key that never
+    // existed, so the timeline was silently always empty).
+    if (!trendsData?.data) return []
+    return (trendsData.data as Array<{ category_id: number; year: number; contracts: number; value: number; avg_risk: number | null }>)
+      .filter((t) => t.category_id === categoryId)
+      .map((t) => ({ year: t.year, total_value: t.value, total_contracts: t.contracts, avg_risk: t.avg_risk }))
+      .sort((a, b) => a.year - b.year)
   }, [trendsData, categoryId])
 
   if (!validId) {
@@ -191,10 +197,10 @@ export default function CategoryDossier() {
   const hrPct = c.high_risk_pct ?? 0
   const daPct = c.direct_award_pct ?? 0
 
-  // Verdict — same convention as institution/sector: HR% as the signal.
-  const hrLevel: 'critical' | 'high' | 'medium' | 'low' =
-    hrPct >= 25 ? 'critical' : hrPct >= 15 ? 'high' : hrPct >= 5 ? 'medium' : 'low'
-  const verdictColor = RISK_COLORS[hrLevel]
+  // Verdict — the categories /summary endpoint exposes no high_risk_pct (unlike
+  // institution/sector, which verdict on HR%), so average risk is the signal
+  // here. Avoids a misleading "0% high-risk" seal.
+  const verdictColor = RISK_COLORS[riskLevel]
 
   // Concentration + vendor rows from the fast endpoint.
   const concentration = topVendorsData
@@ -250,18 +256,18 @@ export default function CategoryDossier() {
               <div aria-hidden="true" className="absolute top-0 left-0 right-0" style={{ height: 2, background: verdictColor }} />
               <div className="text-center">
                 <div className="tabular-nums" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: 46, lineHeight: 1, color: verdictColor, letterSpacing: '-0.02em' }}>
-                  {hrPct.toFixed(0)}<span className="font-mono" style={{ fontSize: 18, fontStyle: 'normal', fontWeight: 400, color: 'var(--color-text-muted)', marginLeft: 2 }}>%</span>
+                  {riskPct || '—'}
                 </div>
                 <div className="font-mono mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', opacity: 0.6, letterSpacing: '0.10em', textTransform: 'uppercase' }}>
-                  {lang === 'es' ? 'contratos de alto riesgo' : 'high-risk contracts'}
+                  {lang === 'es' ? 'riesgo prom. · de 100' : 'avg risk · of 100'}
                 </div>
               </div>
               <div aria-hidden="true" className="my-3 mx-auto" style={{ height: 1, width: '60%', background: 'var(--color-border)' }} />
               <div className="font-mono text-center" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: verdictColor, fontWeight: 700 }}>
-                {lang === 'es' ? localizeLevel(hrLevel, 'es') : hrLevel.toUpperCase()}
+                {lang === 'es' ? localizeLevel(riskLevel, 'es') : riskLevel.toUpperCase()}
               </div>
               <div className="font-mono text-center mt-1" style={{ fontSize: 9, color: 'var(--color-text-muted)', letterSpacing: '0.06em' }}>
-                {lang === 'es' ? 'riesgo prom.' : 'avg risk'} {riskPct} ({lang === 'es' ? localizeLevel(riskLevel, 'es').toLowerCase() : riskLevel})
+                {Math.round(daPct)}% {lang === 'es' ? 'adj. directa' : 'direct-award'}
               </div>
             </aside>
           </div>

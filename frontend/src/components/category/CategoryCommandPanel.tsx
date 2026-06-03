@@ -219,8 +219,11 @@ export function CategoryDiagnosticGrid({
 }) {
   const isEs = lang === 'es'
 
-  // Market concentration — the category's distinctive signal.
-  const hhi = concentration?.hhi ?? 0
+  // Market concentration — the category's distinctive signal. The fast endpoint
+  // returns HHI normalized to 0–1 (Σ share²); convert to the conventional 0–10000
+  // points scale so the DOJ/FTC bands (1500 / 2500) read correctly.
+  const hhiRaw = concentration?.hhi ?? 0
+  const hhi = hhiRaw <= 1 ? Math.round(hhiRaw * 10000) : Math.round(hhiRaw)
   const top3 = concentration?.top3_share_pct ?? 0
   // HHI bands (US DOJ/FTC): <1500 competitive · 1500–2500 moderate · >2500 high.
   const hhiScaleMax = Math.max(2500, hhi)
@@ -246,13 +249,14 @@ export function CategoryDiagnosticGrid({
     <div className="grid gap-4 md:grid-cols-2">
       {/* ─ Market concentration ─ */}
       <Panel label={isEs ? 'Concentración del mercado' : 'Market concentration'} accent={accent}>
-        {concentration && hhi > 0 ? (
+        {concentration && (hhi > 0 || top3 > 0) ? (
           <div className="space-y-3">
+            {hhi > 0 && (
             <div>
               <div className="flex items-baseline justify-between mb-1">
                 <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>HHI</span>
                 <span className="font-mono tabular-nums" style={{ fontSize: 11, fontWeight: 600, color: hhiColor }}>
-                  {formatNumber(Math.round(hhi))}
+                  {formatNumber(hhi)}
                   <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> · {concentrationLabel(concentration.concentration_label, isEs)}</span>
                 </span>
               </div>
@@ -263,6 +267,7 @@ export function CategoryDiagnosticGrid({
                 <div aria-hidden="true" style={{ position: 'absolute', top: -2, bottom: -2, left: `${Math.min(100, (2500 / hhiScaleMax) * 100)}%`, width: 1, background: 'var(--color-text-muted)' }} />
               </div>
             </div>
+            )}
             <div>
               <div className="flex items-baseline justify-between mb-1">
                 <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--color-text-secondary)' }}>
