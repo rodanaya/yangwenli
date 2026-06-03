@@ -290,17 +290,22 @@ of these because they hide in `style={{}}` objects and SVG attributes. Extend it
 | The Spoils | `/` | **interactive** ✓ honored | 2259 · 0.9 (fixed canvas) | Good (cramped by design) | S-tier cells drop their descriptive tag → anonymous colour blocks (`ExploreCanvas.tsx:1180`) |
 | Dashboard | `/dashboard` | **contemplative** ✓ honored | 1697 · 9.3 | Good per-screen, **too long** | **Green-for-safe** OECD ceiling line `stroke="#10b981"` (`Executive.tsx:754`) — Bible §3.10 breach |
 | Sectors | `/sectors` | operational + editorial spine ✓ | 1464 · 4.1 | Slightly airy | Money **English-only**: `formatSpend()` has no ES branch, 12 call sites (`Sectors.tsx:43`) |
-| Vendor dossier | `/vendors/:id` | **operational** ✓ honored | 1708 · 8.4 | Good (in-band) | Within-page OECD limit contradiction 25% vs 30% (`VendorActivityTab.tsx:283`) |
+| Vendor dossier | `/vendors/:id` | **operational** ✓ honored | 1708 · 7.4 | Good (in-band) | OECD 25/30 contradiction — **RESOLVED** (centralized `OECD_*` constants, 2026-06-03) |
 | Atlas / Observatory | `/atlas` | **contemplative** ✓ honored | — · ~1 viewport | Good (airy by design) | PlateFrame `minimal` suppresses the lens-aware folio index (`Atlas.tsx:2529`) |
-| Institution dossier | `/institutions/:id` | **operational** ✗ **NOT honored** | ~8+ · airy | **Too airy** (old anti-pattern) | **Entire page is the pre-rebuild story-chapter layout** |
+| Institution dossier | `/institutions/:id` | **operational** ✓ honored | — · 3.9 | Good (**rebuilt 2026-06-03**) | — `InstitutionCommandPanel` (stat strip + 2×2 grid) + supplier table |
+| Category dossier | `/categories/:id` | **operational** ✓ honored | — · 1.8 | Good (**rebuilt 2026-06-03**) | HHI-scale + flat-`trends` data-shape bugs fixed in preview verification |
+| Sector dossier | `/sectors/:id` | **operational** ✓ honored | — · 4.4 | Good (**rebuilt 2026-06-03**) | backend `statistics.total_institutions = 0` (frontend-guarded; backend fix pending) |
 
-**Highest-value cross-site finding:** the operational rebuild has **not propagated
-to its sibling**. `/institutions/:id` (`InstitutionDossier.tsx`, last touched May 26,
-never rebuilt) still imports `TimelineHourglass` + `MoneyStaircase` and renders five
-`ChapterShell`s + Roman-numeral headings — exactly the pattern `/vendors/:id` rejected.
-Because the vendor dossier no longer imports `components/dossier/primitives.tsx`, those
-chapter primitives are now **institution-only** → reworking them carries **zero
-vendor-page blast radius**. This is backlog P0.
+**The operational rebuild has now propagated across all four core dossiers**
+(vendor → institution → category → sector). Each shares the same masthead grammar:
+tightened hero (`showTOC=false`, no rail bleed, verdict 46px) → `*StatStrip`
+(`repeat(auto-fit, minmax(116px, 1fr))`) → `*DiagnosticGrid` (2×2: a distinctive
+signal · OECD deviation · top entities · risk over time) → full-width entity table
+(`EntityIdentityChip`) → `ProvenanceFooter`. The per-entity distinctive signal varies:
+institution/sector = risk-band distribution, category = market concentration (HHI).
+The four `*CommandPanel.tsx` files are ~70% structurally identical — **converging them
+into shared `dossier/command/` primitives is the next highest-value refactor** (P2),
+but each was shipped standalone to keep blast radius zero.
 
 ---
 
@@ -308,8 +313,10 @@ vendor-page blast radius**. This is backlog P0.
 
 | # | Page / target | Priority | Rough scope |
 |---|---|---|---|
-| **1** | **`/institutions/:id` operational rebuild** | **P0** | Port the `/vendors/:id` pattern: tighten `InstitutionHero`, build `InstitutionCommandPanel` (stat strip + 2×2 grid), demote the 5 chapters to full-width `DossierSectionHeader` reference sections, kill the SignatureBar duplication, route suppliers through `EntityIdentityChip`. Zero vendor blast radius. ~1–1.5 days. |
-| **2** | **`/vendors/:id` finish** (top-5 below) | **P0** | Centralize OECD limits + fix the 25/30 contradiction; collapse the 5× OECD / 3× SHAP redundancy; restore cumulative-spend (toggle on "Risk over time"); fix non-bleed rail + white panels; A11y (AA red, non-colour severity); prune stale `TOC_ANCHORS`. The exemplar must be exemplary before others copy it. ~0.5–1 day. |
+| ~~1~~ | ~~`/institutions/:id` operational rebuild~~ | ✅ **DONE** 2026-06-03 | `InstitutionCommandPanel` (stat strip + 2×2 grid) + tightened hero + supplier table; dead chapters removed (commit 73f49e5a). **`/categories/:id` and `/sectors/:id` rebuilt the same day** (b1a88452 / 89584262) — all four core dossiers now operational. |
+| ~~2~~ | ~~`/vendors/:id` finish~~ | ✅ **DONE** 2026-06-03 | OECD 25/30 contradiction fixed via centralized `OECD_*` constants (3 sources); SHAP/OECD redundancy collapsed; AA risk colours; non-bleed rail + transparent panels; `TOC_ANCHORS` pruned (commits 77fb7a77 / 700878a9). Cumulative-spend toggle still deferred. |
+| **1b** | **Converge the 4 `*CommandPanel.tsx`** | **P2** | `Vendor/Institution/Category/Sector` command panels are ~70% identical (`Panel`, `EmptyNote`, the stat-strip grid, the OECD bullet bars, the risk sparkline, the entity table). Extract shared `dossier/command/` primitives. Shipped standalone to keep blast radius zero; now safe to converge. ~0.5 day. |
+| **2b** | **Backend: `sector.statistics.total_institutions = 0`** | **P2** | The sector detail endpoint returns 0 institutions for every sector (frontend now guards it — hero/lede suppress the clause, table labelled "top N"). Fix the aggregate so the true count surfaces. Also: `/categories/summary` lacks `high_risk_pct` (category verdict falls back to avg-risk). ~0.5 day. |
 | **3** | **Add `OECD_*` constants + extend `lint-tokens`** | **P1** | New constants in `lib/constants`; linter scans SVG attrs for green/risk-hex, flags undefined-CSS-var consumers + unloaded `Source Serif Pro`. Then fix `Executive.tsx:754` green ceiling, swap `#dc2626→RISK_COLORS.critical`, load-or-drop Source Serif Pro globally. ~0.5 day. |
 | **4** | **`/dashboard` length + redundancy** | **P1** | Collapse the triple spend→bypass→flag→catch narrative; group 11 sections into 3–4 movements; drop `hover:shadow-lg` SaaS gloss. ~0.5 day. |
 | **5** | **`/sectors` bilingual + density** | **P2** | Delete `formatSpend`, call `formatCompactMXN` (fixes ES money at 12 sites); tighten the 3 stacked editorial heros; unify `<h2>` weights; EB Garamond + ochre-fragment on the hero. ~0.5 day. |
