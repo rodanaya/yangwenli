@@ -25,7 +25,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion'
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { riskRamp, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { formatNumber, formatCompactMXN, formatCompactUSD } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { halton } from '@/lib/particle'
 import { atlasApi } from '@/api/client'
@@ -136,6 +136,9 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const [focusBodyCode, setFocusBodyCode] = useState<string | null>(null)
   const reduce = useReducedMotion()
   const dur = (s: number) => (reduce ? 0 : s)
+  // Vendor amounts: EN readers get USD scale to feel the impact (platform
+  // convention); ES keeps native MXN (Mexican procurement reads in pesos).
+  const fmtAmount = (mxn: number) => (lang === 'en' ? formatCompactUSD(mxn) : formatCompactMXN(mxn))
 
   const scales = useMemo(() => {
     if (clusters.length === 0) return { minLogV: 0, maxLogV: 1, maxHr: 1, maxT1: 1 }
@@ -654,7 +657,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               const tierRing = lvl === 'critical' ? 1.5 : lvl === 'high' ? 0.75 : 0
               return (
                 <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
-                  aria-label={`${formatVendorName(s.v.name, 60)} — ${formatCompactMXN(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
+                  aria-label={`${formatVendorName(s.v.name, 60)} — ${fmtAmount(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
                   onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVendorClick(s.v.vendor_id) } }}
                   onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
@@ -778,7 +781,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                       {drawerVendorsFull.map((v, i) => (
                         <IndexRow key={v.vendor_id} rank={i + 1} dot={riskRamp(safeRisk01(v.risk_score))}
                           name={formatVendorName(v.name, 72)}
-                          stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(safeRisk01(v.risk_score) * 100)}%`}
+                          stat={`${fmtAmount(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(safeRisk01(v.risk_score) * 100)}%`}
                           gt={v.is_gt} active={hoverVendor === v.vendor_id}
                           onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
                           onClick={() => onVendorClick(v.vendor_id)} />
