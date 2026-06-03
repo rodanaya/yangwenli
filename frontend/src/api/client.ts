@@ -586,6 +586,11 @@ export const vendorApi = {
     return data
   },
 
+  async getContractAggregate(vendorId: number): Promise<import('@/api/types').VendorContractAggregate> {
+    const { data } = await api.get(`/vendors/${vendorId}/contract-aggregate`)
+    return data
+  },
+
   async getLinkedScandals(vendorId: number): Promise<import('@/api/types').VendorLinkedScandalsResponse> {
     const { data } = await api.get(`/vendors/${vendorId}/linked-scandals`)
     return data

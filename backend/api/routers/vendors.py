@@ -2053,6 +2053,106 @@ def get_vendor_peer_comparison(
 
 
 # =============================================================================
+# CONTRACT AGGREGATE — full-population counts + per-year histogram
+# =============================================================================
+# The Z3 register/census/activity render a ≤100-row SAMPLE for large vendors.
+# This endpoint returns POPULATION-level counts (over all the vendor's contracts)
+# so the census can say "84 of 6,303 repeated" instead of "84 of 100 sampled",
+# and the activity timeline can show the real distribution. Amounts are guarded
+# by MAX_CONTRACT_VALUE (data-quality rule). Cached per vendor.
+
+class VendorYearBucket(BaseModel):
+    year: int
+    count: int
+    amount: float
+    avg_risk: float
+
+
+class VendorAggregateResponse(BaseModel):
+    vendor_id: int
+    total_contracts: int
+    total_value_mxn: float
+    no_competition: int      # direct-award OR single-bid
+    direct_award: int
+    single_bid: int
+    year_min: Optional[int]
+    year_max: Optional[int]
+    by_year: List[VendorYearBucket]
+    repeat_rows: int         # contracts whose (rounded) amount repeats >= 3x
+    repeat_distinct: int     # distinct repeated amount values
+    peak_amount: Optional[float]
+    peak_mult: int
+
+
+@router.get("/{vendor_id:int}/contract-aggregate", response_model=VendorAggregateResponse)
+def get_vendor_contract_aggregate(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """Population-level contract counts + per-year histogram for one vendor."""
+    cache_key = f"agg:{vendor_id}"
+    cached = _get_vendor_cache(cache_key)
+    if cached is not None:
+        return cached
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        overall = cursor.execute("""
+            SELECT
+                COUNT(*) AS n,
+                COALESCE(SUM(CASE WHEN amount_mxn <= ? THEN amount_mxn ELSE 0 END), 0) AS val,
+                SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) AS da,
+                SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) AS sb,
+                SUM(CASE WHEN is_direct_award = 1 OR is_single_bid = 1 THEN 1 ELSE 0 END) AS noc,
+                MIN(contract_year) AS ymin,
+                MAX(contract_year) AS ymax
+            FROM contracts WHERE vendor_id = ?
+        """, (MAX_CONTRACT_VALUE, vendor_id)).fetchone()
+        if not overall or (overall["n"] or 0) == 0:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} has no contracts")
+
+        years = cursor.execute("""
+            SELECT contract_year AS y, COUNT(*) AS c,
+                   COALESCE(SUM(CASE WHEN amount_mxn <= ? THEN amount_mxn ELSE 0 END), 0) AS a,
+                   AVG(risk_score) AS r
+            FROM contracts WHERE vendor_id = ? AND contract_year IS NOT NULL
+            GROUP BY contract_year ORDER BY contract_year
+        """, (MAX_CONTRACT_VALUE, vendor_id)).fetchall()
+        by_year = [
+            VendorYearBucket(year=int(y["y"]), count=y["c"], amount=round(y["a"] or 0, 2), avg_risk=round(y["r"] or 0, 4))
+            for y in years
+        ]
+
+        # Repeated amounts across the FULL population (round to nearest 100 MXN).
+        reps = cursor.execute("""
+            SELECT CAST(ROUND(amount_mxn / 100.0) * 100 AS INTEGER) AS k, COUNT(*) AS c
+            FROM contracts WHERE vendor_id = ? AND amount_mxn > 0
+            GROUP BY k HAVING COUNT(*) >= 3
+        """, (vendor_id,)).fetchall()
+        repeat_rows = sum(r["c"] for r in reps)
+        repeat_distinct = len(reps)
+        peak = max(reps, key=lambda r: r["c"], default=None)
+
+        result = VendorAggregateResponse(
+            vendor_id=vendor_id,
+            total_contracts=overall["n"],
+            total_value_mxn=round(overall["val"] or 0, 2),
+            no_competition=overall["noc"] or 0,
+            direct_award=overall["da"] or 0,
+            single_bid=overall["sb"] or 0,
+            year_min=overall["ymin"],
+            year_max=overall["ymax"],
+            by_year=by_year,
+            repeat_rows=repeat_rows,
+            repeat_distinct=repeat_distinct,
+            peak_amount=float(peak["k"]) if peak else None,
+            peak_mult=peak["c"] if peak else 0,
+        )
+        _set_vendor_cache(cache_key, result)
+        return result
+
+
+# =============================================================================
 # LINKED SCANDALS
 # =============================================================================
 

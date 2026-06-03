@@ -2049,6 +2049,29 @@ export interface VendorPeerComparisonResponse {
   metrics: PeerComparisonMetric[]
 }
 
+export interface VendorYearBucket {
+  year: number
+  count: number
+  amount: number
+  avg_risk: number
+}
+
+export interface VendorContractAggregate {
+  vendor_id: number
+  total_contracts: number
+  total_value_mxn: number
+  no_competition: number
+  direct_award: number
+  single_bid: number
+  year_min: number | null
+  year_max: number | null
+  by_year: VendorYearBucket[]
+  repeat_rows: number
+  repeat_distinct: number
+  peak_amount: number | null
+  peak_mult: number
+}
+
 export interface VendorWaterfallContribution {
   feature: string
   z_score: number

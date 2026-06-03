@@ -3513,6 +3513,19 @@ function Z3Panel({
     staleTime: 5 * 60 * 1000,
   })
 
+  // Population aggregate — full-vendor counts + per-year histogram, so the
+  // census + activity make population-scale claims instead of sample ones (the
+  // register list itself stays the ≤100-row sample). Non-blocking.
+  const { data: aggData } = useQuery({
+    queryKey: ['explore', 'z3-agg', vendorId],
+    queryFn: async () => {
+      const { vendorApi } = await import('@/api/client')
+      return vendorApi.getContractAggregate(vendorId)
+    },
+    enabled: vendorId > 0,
+    staleTime: 5 * 60 * 1000,
+  })
+
   const contracts = data?.data ?? []
   const totalContractSpend = contracts.reduce((s, c) => s + (Number(c.amount_mxn) || 0), 0)
 
@@ -3666,6 +3679,25 @@ function Z3Panel({
   const yearSequence: number[] = []
   for (let y = yearMin; y <= yearMax; y++) yearSequence.push(y)
   const maxYearAmt = Math.max(...Array.from(byYear.values()).map((v) => v.amount), 1)
+
+  // POPULATION year histogram (from the aggregate) — drives the activity timeline
+  // at full scale, so a sampled vendor's real distribution shows instead of the
+  // unrepresentative ≤100-row slice.
+  const popYear = (() => {
+    const buckets = aggData?.by_year ?? []
+    if (buckets.length === 0) return null
+    const m = new Map<number, { count: number; amount: number; riskSum: number; riskN: number }>()
+    let lo = Infinity, hi = -Infinity
+    buckets.forEach((b) => {
+      if (b.year < 2002 || b.year > 2030) return
+      m.set(b.year, { count: b.count, amount: b.amount, riskSum: (b.avg_risk || 0) * b.count, riskN: b.count })
+      lo = Math.min(lo, b.year); hi = Math.max(hi, b.year)
+    })
+    if (m.size === 0) return null
+    const seq: number[] = []
+    for (let y = lo; y <= hi; y++) seq.push(y)
+    return { map: m, seq, maxAmt: Math.max(...Array.from(m.values()).map((v) => v.amount), 1), span: hi - lo }
+  })()
 
   // (amount, risk) pairs for the amount dot-field — each contract a risk-colored
   // dot on a log axis (NYT Upshot named-outlier mechanic).
@@ -3962,12 +3994,22 @@ function Z3Panel({
                 lang={lang}
               />
 
-              {/* WHEN — self-suppressing temporal evidence. SUPPRESSED for sampled
-                  (large) vendors: the ≤100-row slice misrepresents the real
-                  temporal distribution (a 6,303-contract vendor's '98 of 100 in
-                  one month' is a fetch artifact). Only shown when the fetched
-                  rows ARE the full population. */}
-              {!isSample && (
+              {/* WHEN — temporal evidence. With the population aggregate we show
+                  the REAL year histogram (read-only — the register below is a
+                  sample, so year-click can't filter it). Without it, fall back to
+                  the sample logic, still suppressed when the sample is partial. */}
+              {popYear ? (
+                <div className="mt-3 px-1">
+                  <Z3TimelineStrip
+                    yearSequence={popYear.seq}
+                    byYear={popYear.map}
+                    maxYearAmt={popYear.maxAmt}
+                    selectedYear={null}
+                    onYearClick={() => {}}
+                    lang={lang}
+                  />
+                </div>
+              ) : !isSample ? (
                 <div className="mt-3 px-1">
                   {activityShape?.concentrated ? (
                     <Z3ConcentrationStat shape={activityShape} lang={lang} />
@@ -3984,7 +4026,7 @@ function Z3Panel({
                     <Z3MonthlyStrip monthly={monthly} lang={lang} />
                   ) : null}
                 </div>
-              )}
+              ) : null}
 
               {/* AMOUNT — gated dot-field. Renders ONLY with enough contracts and
                   spread to be a real distribution (≥20 valued & ≥1.3 decades);
@@ -4010,16 +4052,31 @@ function Z3Panel({
               </div>
               <p style={{ fontSize: 12.5, fontFamily: "'EB Garamond', Georgia, serif", color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
                 {(() => {
-                  const cs = flagData.census
                   const cl: string[] = []
+                  if (aggData) {
+                    // POPULATION census — full-vendor counts, no sample caveat.
+                    const tot = aggData.total_contracts
+                    if (aggData.no_competition > 0) cl.push(lang === 'en'
+                      ? `${formatNumber(aggData.no_competition)} of ${formatNumber(tot)} without competition`
+                      : `${formatNumber(aggData.no_competition)} de ${formatNumber(tot)} sin competencia`)
+                    else cl.push(lang === 'en' ? `${formatNumber(tot)} contracts` : `${formatNumber(tot)} contratos`)
+                    if (aggData.repeat_rows > 0) {
+                      const pk = aggData.peak_mult >= 3 && aggData.peak_amount != null ? ` (${formatCompactMXN(aggData.peak_amount)} ×${aggData.peak_mult})` : ''
+                      cl.push(lang === 'en' ? `${aggData.repeat_rows} repeated amounts${pk}` : `${aggData.repeat_rows} montos repetidos${pk}`)
+                    }
+                    if (aggData.year_min && aggData.year_max) cl.push(aggData.year_min === aggData.year_max
+                      ? (lang === 'en' ? `all in ${aggData.year_min}` : `todo en ${aggData.year_min}`)
+                      : (lang === 'en' ? `active ${aggData.year_min}–${aggData.year_max}` : `activo ${aggData.year_min}–${aggData.year_max}`))
+                    return cl.join('  ·  ')
+                  }
+                  // Fallback — sample census (aggregate unavailable).
+                  const cs = flagData.census
                   cl.push(isSample
                     ? (lang === 'en' ? `Sample of ${formatNumber(cs.shown)}` : `Muestra de ${formatNumber(cs.shown)}`)
                     : (lang === 'en' ? `${formatNumber(cs.shown)} contracts` : `${formatNumber(cs.shown)} contratos`))
                   if (cs.repeatedRows > 0) {
                     const topClause = cs.topObjN >= 3 ? ` (${cs.topObj} ×${cs.topObjN})` : ''
-                    cl.push(lang === 'en'
-                      ? `${cs.repeatedRows} repeated${topClause}`
-                      : `${cs.repeatedRows} repetidos${topClause}`)
+                    cl.push(lang === 'en' ? `${cs.repeatedRows} repeated${topClause}` : `${cs.repeatedRows} repetidos${topClause}`)
                   }
                   if (cs.noCompetition > 0) cl.push(lang === 'en' ? `${cs.noCompetition} without competition` : `${cs.noCompetition} sin competencia`)
                   if (cs.peakMult >= 3) cl.push(lang === 'en' ? `peak ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}` : `pico ${formatCompactMXN(cs.peakAmt)} ×${cs.peakMult}`)
