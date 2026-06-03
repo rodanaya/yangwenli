@@ -29,7 +29,7 @@ import {
   SECTORS,
   PATTERN_COLORS,
 } from '@/lib/constants'
-import { formatCompactMXN, formatCompactUSD, formatNumber, shortenContractName } from '@/lib/utils'
+import { formatCompactMXN, formatCompactUSD, formatCompactUSDByYear, formatNumber, shortenContractName } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
 import {
@@ -4067,6 +4067,9 @@ function Z3Panel({
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 96, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Amount' : 'Monto'}
               </span>
+              <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 70, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
+                ≈USD
+              </span>
               <span className="flex-shrink-0 text-right font-mono uppercase" style={{ width: 56, fontSize: 9, letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
                 {lang === 'en' ? 'Flags' : 'Señal'}
               </span>
@@ -4424,6 +4427,11 @@ function Z3ContractRow({
           <span aria-hidden="true" className="block mt-0.5" style={{ width: '100%', height: 2 }}>
             <span style={{ display: 'block', width: `${tickFrac * 100}%`, height: '100%', marginLeft: 'auto', opacity: 0.55, background: flags.round ? `repeating-linear-gradient(90deg, ${rail} 0 2px, transparent 2px 4px)` : rail }} />
           </span>
+        </span>
+
+        {/* USD — converted at the contract's own year rate (MXN_USD_RATES) */}
+        <span className="flex-shrink-0 text-right font-mono tabular-nums" style={{ width: 70, fontSize: 10, color: 'var(--color-text-muted)' }}>
+          {amount > 0 ? `≈${formatCompactUSDByYear(amount, yr).replace(' USD', '')}` : ''}
         </span>
 
         {/* FLAG GUTTER — the anchor channel */}
