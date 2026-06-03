@@ -1,18 +1,22 @@
 /**
  * SectorDossier — canonical unified dossier at /sectors/:id.
  *
- * Built 2026-05-26 (DESIGNUS round 8, Phase 3). Composes the sector
- * investigation in scroll order:
+ * 2026-06-03 (DESIGNUS — operational rebuild, P0 propagation from
+ * docs/WEBSITE_STANDARDS.md). Reclassified from a four-chapter narrative
+ * (Subject / Timeline·TimelineHourglass / Institutions / Risk — ChapterShells
+ * with Roman numerals) into a dense OPERATIONAL dossier, matching the vendor,
+ * institution and category dossiers:
  *
- *   Hero        — cover slug
- *   Chapter I   — Subject · scale of sector spending
- *   Chapter II  — Timeline · year-by-year trend (TimelineHourglass reused)
- *   Chapter III — Institutions · who spends in this sector
- *   Chapter IV  — Risk · sector profile + verdict
- *   Methodology — provenance footer
+ *   Hero          — identity + verdict seal (high-risk %)
+ *   Command panel — SectorStatStrip + SectorDiagnosticGrid (decisive numbers ·
+ *                   where the risk sits · OECD deviation · top institutions ·
+ *                   risk over time)
+ *   Institutions  — full-width institution reference table (EntityIdentityChip)
+ *   Methodology   — provenance footer
  *
- * Replaces SectorProfile's 4-tab card-grid layout. Legacy SectorProfile
- * file kept on disk for reference (no other importer).
+ * The thread chapter components (SectorChapter{Subject,Institutions,Risk},
+ * TimelineHourglass) are no longer imported here. Legacy SectorProfile retains
+ * its card-grid for /print.
  */
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -21,24 +25,45 @@ import { sectorApi, atlasApi } from '@/api/client'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 
 import { SectorHero } from '@/components/sector/SectorHero'
-import { SectorChapterSubject } from '@/components/sector/SectorChapterSubject'
-import { SectorChapterInstitutions } from '@/components/sector/SectorChapterInstitutions'
-import { SectorChapterRisk } from '@/components/sector/SectorChapterRisk'
-
-// Reused from vendor/institution dossier
-import { TimelineHourglass } from '@/components/thread/TimelineHourglass'
+import {
+  SectorStatStrip,
+  SectorDiagnosticGrid,
+  SectorInstitutionTable,
+} from '@/components/sector/SectorCommandPanel'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SECTOR_COLORS } from '@/lib/constants'
 
-function ChapterDivider({ sectorAccent }: { sectorAccent?: string }) {
-  const color = sectorAccent ?? 'var(--color-border)'
+// Reference-section header — tight, left-aligned (mirrors the other dossiers).
+function DossierSectionHeader({
+  id,
+  eyebrow,
+  title,
+  meta,
+  accent,
+}: {
+  id: string
+  eyebrow: string
+  title: string
+  meta?: string
+  accent: string
+}) {
   return (
-    <div className="flex items-center justify-center gap-4 py-12">
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
-      <div className="w-1.5 h-1.5 rounded-full" style={{ background: color, opacity: 0.5 }} />
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
+    <div className="flex items-baseline justify-between gap-4 pb-2 mb-5" style={{ borderBottom: `1px solid ${accent}33` }}>
+      <div className="flex items-baseline gap-3 min-w-0">
+        <span id={`${id}-eyebrow`} className="font-mono flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: accent, fontWeight: 700 }}>
+          § {eyebrow}
+        </span>
+        <h2 style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontWeight: 500, fontSize: 18, color: 'var(--color-text-primary)', letterSpacing: '-0.005em' }}>
+          {title}
+        </h2>
+      </div>
+      {meta && (
+        <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}>
+          {meta}
+        </span>
+      )}
     </div>
   )
 }
@@ -46,51 +71,23 @@ function ChapterDivider({ sectorAccent }: { sectorAccent?: string }) {
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
-    <section id="methodology" className="py-16 px-4 sm:px-8 max-w-4xl mx-auto">
-      <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 32, textAlign: 'center' }}>
-        <p
-          className="font-mono mb-3"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            fontWeight: 500,
-          }}
-        >
-          § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-        </p>
-        <p
-          style={{
-            fontFamily: '"Source Serif Pro", Georgia, serif',
-            fontStyle: 'italic',
-            fontSize: 14,
-            color: 'var(--color-text-secondary)',
-            maxWidth: '64ch',
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}
-        >
-          {lang === 'es'
-            ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel sectorial son indicadores estadísticos del patrón procurador, no determinaciones legales.'
-            : 'COMPRANET data 2002–2025. v0.8.5 risk model. Sector-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/methodology')}
-          className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-secondary)',
-            background: 'none',
-            border: 'none',
-          }}
-        >
-          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-        </button>
-      </div>
+    <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
+        § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
+      </p>
+      <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+        {lang === 'es'
+          ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel sectorial son indicadores estadísticos del patrón procurador, no determinaciones legales.'
+          : 'COMPRANET data 2002–2025. v0.8.5 risk model. Sector-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
+      </p>
+      <button
+        type="button"
+        onClick={() => navigate('/methodology')}
+        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+        style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'none', border: 'none' }}
+      >
+        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+      </button>
     </section>
   )
 }
@@ -137,9 +134,7 @@ export default function SectorDossier() {
   if (!validId) {
     return (
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <h2 className="text-lg font-semibold mb-2">
-          {lang === 'es' ? 'Sector inválido' : 'Invalid sector'}
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">{lang === 'es' ? 'Sector inválido' : 'Invalid sector'}</h2>
         <Button onClick={() => navigate('/sectors')}>
           <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
           {lang === 'es' ? 'Volver a sectores' : 'Back to sectors'}
@@ -154,9 +149,7 @@ export default function SectorDossier() {
         <div className="flex items-center justify-center h-16 w-16 rounded-full bg-background-card border border-border mb-5">
           <AlertTriangle className="h-8 w-8 text-risk-high" aria-hidden="true" />
         </div>
-        <h2 className="text-lg font-semibold mb-2">
-          {lang === 'es' ? 'Sector no encontrado' : 'Sector not found'}
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">{lang === 'es' ? 'Sector no encontrado' : 'Sector not found'}</h2>
         <Button onClick={() => navigate('/sectors')}>
           <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
           {lang === 'es' ? 'Volver a sectores' : 'Back to sectors'}
@@ -166,16 +159,16 @@ export default function SectorDossier() {
   }
 
   const sectorAccent = SECTOR_COLORS[sector.code] ?? '#64748b'
+  const institutions = institutionsResp?.institutions ?? []
 
-  // Timeline reshape — sector trends → TimelineHourglass shape
-  const timelineForChapters = (sector.trends ?? []).map((t) => ({
-    year: t.year,
-    avg_risk_score: t.avg_risk_score,
-    contract_count: t.total_contracts,
-    total_value: t.total_value_mxn,
-  }))
+  // The institution list is always a top-by-spend capped subset (limit 60,
+  // ≥50 contracts) and sector.statistics.total_institutions is 0 (backend gap),
+  // so "top N" is the only honest framing — never "N institutions" (which would
+  // imply that's the full roster).
+  const instMeta = institutions.length === 0
+    ? undefined
+    : lang === 'es' ? `Las ${institutions.length} principales` : `Top ${institutions.length}`
 
-  const sectorName = sector.name.charAt(0).toUpperCase() + sector.name.slice(1).toLowerCase()
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
 
   return (
@@ -190,32 +183,36 @@ export default function SectorDossier() {
         </button>
       )}
 
-      <SectorHero sector={sector} showTOC={true} />
+      {/* HERO */}
+      <SectorHero sector={sector} showTOC={false} />
 
-      <SectorChapterSubject sector={sector} />
+      {/* COMMAND PANEL */}
+      <div className="mt-6">
+        <SectorStatStrip stats={sector.statistics} trends={sector.trends ?? []} lang={lang} />
+      </div>
+      <div className="mt-7">
+        <SectorDiagnosticGrid
+          stats={sector.statistics}
+          institutions={institutions}
+          trends={sector.trends ?? []}
+          accent={sectorAccent}
+          lang={lang}
+        />
+      </div>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <TimelineHourglass
-        timeline={timelineForChapters}
-        totalContracts={sector.statistics.total_contracts}
-        vendorName={sectorName}
-        primarySectorName={sector.code}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <SectorChapterInstitutions
-        sectorCode={sector.code}
-        sectorName={sectorName}
-        institutions={institutionsResp?.institutions ?? []}
-        totalSpend={sector.statistics.total_value_mxn}
-        totalInstitutions={sector.statistics.total_institutions}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <SectorChapterRisk sector={sector} />
+      {/* REFERENCE — full institution table */}
+      <div className="mt-14">
+        <section id="institutions" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="institutions"
+            eyebrow={lang === 'es' ? 'Instituciones' : 'Institutions'}
+            title={lang === 'es' ? 'Quién gasta en el sector' : 'Who spends in the sector'}
+            meta={instMeta}
+            accent={sectorAccent}
+          />
+          <SectorInstitutionTable institutions={institutions} totalSpend={sector.statistics.total_value_mxn ?? 0} lang={lang} />
+        </section>
+      </div>
 
       <ProvenanceFooter lang={lang} />
     </div>

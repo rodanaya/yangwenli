@@ -22,11 +22,8 @@ import {
 } from '@/lib/utils'
 
 const TOC_ANCHORS: Array<{ id: string; en: string; es: string; numeral?: string }> = [
-  { id: 'subject',     en: 'Subject',     es: 'Sujeto',        numeral: 'I'   },
-  { id: 'timeline',    en: 'Timeline',    es: 'Cronología',    numeral: 'II'  },
-  { id: 'institutions',en: 'Institutions',es: 'Instituciones', numeral: 'III' },
-  { id: 'risk',        en: 'Risk',        es: 'Riesgo',        numeral: 'IV'  },
-  { id: 'methodology', en: 'Methodology', es: 'Metodología'                   },
+  { id: 'institutions',en: 'Institutions',es: 'Instituciones' },
+  { id: 'methodology', en: 'Methodology', es: 'Metodología'   },
 ]
 
 interface SectorHeroProps {
@@ -60,18 +57,12 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
       <div
         aria-hidden="true"
         className="absolute left-0 right-0"
-        style={{
-          top: 0,
-          height: 6,
-          background: sectorAccent,
-          marginLeft: 'calc(-1 * var(--container-pad, 0px))',
-          marginRight: 'calc(-1 * var(--container-pad, 0px))',
-        }}
+        style={{ top: 0, height: 6, background: sectorAccent }}
       />
 
-      <div className="pt-16 pb-12">
+      <div className="pt-8 pb-8">
         {/* Row 1 — index strip + actions */}
-        <div className="flex items-baseline justify-between gap-4 mb-7">
+        <div className="flex items-baseline justify-between gap-4 mb-5">
           <div
             className="font-mono tabular-nums"
             style={{
@@ -113,7 +104,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
                 fontStyle: 'italic',
                 fontWeight: 500,
-                fontSize: 'clamp(36px, 4.6vw, 52px)',
+                fontSize: 'clamp(32px, 4.4vw, 46px)',
                 lineHeight: 1.04,
                 letterSpacing: '-0.012em',
                 color: 'var(--color-text-primary)',
@@ -131,9 +122,15 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                 letterSpacing: '0.02em',
               }}
             >
-              {lang === 'es'
-                ? `Agregado sectorial · ${formatNumber(stats.total_institutions)} instituciones · ${formatNumber(stats.total_vendors)} proveedores`
-                : `Sector aggregate · ${formatNumber(stats.total_institutions)} institutions · ${formatNumber(stats.total_vendors)} suppliers`}
+              {(() => {
+                // total_institutions is 0 in sector statistics (backend gap);
+                // suppress the institutions clause rather than print "0".
+                const hasInst = (stats.total_institutions ?? 0) > 0
+                const inst = formatNumber(stats.total_institutions)
+                const vend = formatNumber(stats.total_vendors)
+                if (lang === 'es') return hasInst ? `Agregado sectorial · ${inst} instituciones · ${vend} proveedores` : `Agregado sectorial · ${vend} proveedores`
+                return hasInst ? `Sector aggregate · ${inst} institutions · ${vend} suppliers` : `Sector aggregate · ${vend} suppliers`
+              })()}
             </div>
 
             {/* Metadata rule */}
@@ -154,7 +151,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
           {/* Verdict card seal */}
           <aside
             className="flex-shrink-0 relative"
-            style={{ width: 168, paddingTop: 10, paddingBottom: 12, paddingLeft: 18, paddingRight: 18 }}
+            style={{ width: 168, paddingTop: 6, paddingBottom: 8, paddingLeft: 18, paddingRight: 18 }}
           >
             <div
               aria-hidden="true"
@@ -168,7 +165,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
                   fontFamily: '"Playfair Display", Georgia, serif',
                   fontStyle: 'italic',
                   fontWeight: 800,
-                  fontSize: 52,
+                  fontSize: 46,
                   lineHeight: 1,
                   color: verdictColor,
                   letterSpacing: '-0.02em',
@@ -215,10 +212,10 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         </div>
 
         {/* Hairline */}
-        <div aria-hidden="true" className="mt-8" style={{ height: 1, background: 'var(--color-border)' }} />
+        <div aria-hidden="true" className="mt-6" style={{ height: 1, background: 'var(--color-border)' }} />
 
         {/* Lede with drop cap */}
-        <div className="mt-10" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
+        <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
           <p
             style={{
               fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
@@ -351,17 +348,27 @@ function buildSectorLede({
   const vendors = formatNumber(stats.total_vendors)
   const da = Math.round(stats.direct_award_pct)
 
+  // total_institutions is 0 in sector statistics (backend gap) — drop the
+  // institutions clause when absent rather than asserting "0 institutions".
+  const hasInst = (stats.total_institutions ?? 0) > 0
+  // "(across) X institutions and Y suppliers" → suppliers-only when no inst count
+  const scaleEs = hasInst ? `entre ${inst} instituciones y ${vendors} proveedores` : `entre ${vendors} proveedores`
+  const scaleEn = hasInst ? `across ${inst} institutions and ${vendors} suppliers` : `across ${vendors} suppliers`
+  // "(across) X institutions" → suppliers-only when no inst count
+  const acrossEs = hasInst ? `entre ${inst} instituciones` : `entre ${vendors} proveedores`
+  const acrossEn = hasInst ? `across ${inst} institutions` : `across ${vendors} suppliers`
+
   if (hrPct >= 15) {
     return lang === 'es'
-      ? `${name} mueve ${spend} (≈${usd}) repartidos entre ${inst} instituciones y ${vendors} proveedores. ${hrPct.toFixed(0)}% de los contratos del sector fueron marcados por el modelo, ${da}% adjudicados sin licitación pública — un perfil sectorial con tensión.`
-      : `${name} moves ${spend} (≈${usd}) across ${inst} institutions and ${vendors} suppliers. ${hrPct.toFixed(0)}% of the sector's contracts are flagged by the model, ${da}% direct-award — a sector profile under tension.`
+      ? `${name} mueve ${spend} (≈${usd}) repartidos ${scaleEs}. ${hrPct.toFixed(0)}% de los contratos del sector fueron marcados por el modelo, ${da}% adjudicados sin licitación pública — un perfil sectorial con tensión.`
+      : `${name} moves ${spend} (≈${usd}) ${scaleEn}. ${hrPct.toFixed(0)}% of the sector's contracts are flagged by the model, ${da}% direct-award — a sector profile under tension.`
   }
   if (avgRisk > 0 && getRiskLevelFromScore(avgRisk) !== 'low') {
     return lang === 'es'
-      ? `${name} agrupa ${spend} (≈${usd}) entre ${inst} instituciones, con un riesgo promedio ${Math.round(avgRisk * 100)} y ${da}% de adjudicación directa.`
-      : `${name} aggregates ${spend} (≈${usd}) across ${inst} institutions, with an average risk of ${Math.round(avgRisk * 100)} and ${da}% direct-award.`
+      ? `${name} agrupa ${spend} (≈${usd}) ${acrossEs}, con un riesgo promedio ${Math.round(avgRisk * 100)} y ${da}% de adjudicación directa.`
+      : `${name} aggregates ${spend} (≈${usd}) ${acrossEn}, with an average risk of ${Math.round(avgRisk * 100)} and ${da}% direct-award.`
   }
   return lang === 'es'
-    ? `${name} es un agregado sectorial de ${spend} (≈${usd}) distribuidos en ${inst} instituciones y ${vendors} proveedores. ${da}% adjudicación directa.`
-    : `${name} is a sector aggregate of ${spend} (≈${usd}) distributed across ${inst} institutions and ${vendors} suppliers. ${da}% direct-award.`
+    ? `${name} es un agregado sectorial de ${spend} (≈${usd}) distribuido ${scaleEs}. ${da}% adjudicación directa.`
+    : `${name} is a sector aggregate of ${spend} (≈${usd}) distributed ${scaleEn}. ${da}% direct-award.`
 }
