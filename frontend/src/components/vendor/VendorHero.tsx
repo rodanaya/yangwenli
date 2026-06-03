@@ -51,19 +51,14 @@ import {
 import { formatVendorName } from '@/lib/vendor/formatName'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
 
-// Dossier section anchors — must match id="..." attributes on the
-// VendorDossier shell's sections. Roman numerals are reserved for the
-// six narrative chapters; sans-numerals for the reference sections.
+// Dossier section anchors — must match the id="..." attributes on the
+// VendorDossier shell. The six narrative chapters were removed in the 2026-06-03
+// operational rebuild; these are the real reference sections (no roman numerals).
 const TOC_ANCHORS: Array<{ id: string; en: string; es: string; numeral?: string }> = [
-  { id: 'subject',     en: 'Subject',     es: 'Sujeto',      numeral: 'I'   },
-  { id: 'timeline',    en: 'Timeline',    es: 'Cronología',  numeral: 'II'  },
-  { id: 'network',     en: 'Network',     es: 'Red',         numeral: 'III' },
-  { id: 'money',       en: 'Money',       es: 'Dinero',      numeral: 'IV'  },
-  { id: 'pattern',     en: 'Pattern',     es: 'Patrón',      numeral: 'V'   },
-  { id: 'verdict',     en: 'Verdict',     es: 'Veredicto',   numeral: 'VI'  },
-  { id: 'evidence',    en: 'Evidence',    es: 'Evidencia'                   },
-  { id: 'activity',    en: 'Activity',    es: 'Actividad'                   },
-  { id: 'methodology', en: 'Methodology', es: 'Metodología'                 },
+  { id: 'evidence',    en: 'Evidence',    es: 'Evidencia'    },
+  { id: 'activity',    en: 'Activity',    es: 'Actividad'    },
+  { id: 'network',     en: 'Network',     es: 'Red'          },
+  { id: 'methodology', en: 'Methodology', es: 'Metodología'  },
 ]
 
 interface VendorHeroProps {
@@ -117,7 +112,9 @@ export function VendorHero({
 
   return (
     <header className="relative">
-      {/* ─── 6px sector rail, full bleed ─────────────────────────────── */}
+      {/* ─── 6px sector rail — content-width top rule. (Honest: a true viewport
+          bleed would run under the fixed left sidebar; the old `--container-pad`
+          bleed was undefined and silently did nothing anyway — standards §4.) ── */}
       <div
         aria-hidden="true"
         className="absolute left-0 right-0"
@@ -125,9 +122,6 @@ export function VendorHero({
           top: 0,
           height: 6,
           background: sectorAccent,
-          // Bleed past container edges. Caller can override with overflow: hidden.
-          marginLeft: 'calc(-1 * var(--container-pad, 0px))',
-          marginRight: 'calc(-1 * var(--container-pad, 0px))',
         }}
       />
 

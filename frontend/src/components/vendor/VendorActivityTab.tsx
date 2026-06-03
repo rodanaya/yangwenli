@@ -37,7 +37,7 @@ import {
 import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
 
 // Forensic-ink ochre for the flag gutter glyphs (matches the dashboard amber /
@@ -278,9 +278,9 @@ export function VendorActivityTab({
                     </span>
                   </div>
                   <DotBar value={daPct} max={100} color={daColor} />
-                  {daVal > 25 && (
+                  {daVal > OECD_DIRECT_AWARD_LIMIT * 100 && (
                     <p className="text-[10px] text-text-muted font-mono mt-1">
-                      {(daVal / 25).toFixed(1)}× {isEs ? 'el límite OCDE (25%)' : 'OECD limit (25%)'}
+                      {(daVal / (OECD_DIRECT_AWARD_LIMIT * 100)).toFixed(1)}× {isEs ? `el límite OCDE (${OECD_DIRECT_AWARD_LIMIT * 100}%)` : `OECD limit (${OECD_DIRECT_AWARD_LIMIT * 100}%)`}
                     </p>
                   )}
                 </div>

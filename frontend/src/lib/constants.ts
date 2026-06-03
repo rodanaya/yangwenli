@@ -136,6 +136,25 @@ export const RISK_COLORS = {
   low: '#71717a',
 } as const
 
+// AA-safe risk colours for TEXT / NUMERALS on the warm #faf9f6 page. RISK_COLORS
+// are tuned for FILLS/bars/dots and fail WCAG AA as small coloured text
+// (critical #ef4444 = 3.57:1, high #f59e0b = 2.04:1). Use these for any
+// risk-coloured number/label; keep RISK_COLORS for fills, strokes, dots, bars.
+export const RISK_TEXT_COLORS = {
+  critical: '#b91c1c',  // red-700  (~5.9:1)
+  high: '#b45309',      // amber-700 (passes AA)
+  medium: '#a16207',    // amber-800 (already AA-safe)
+  low: '#71717a',       // zinc-500
+} as const
+
+// OECD procurement-integrity limits — the SINGLE source. Never retype these per
+// section (the 25%/30% same-metric contradiction on /vendors/:id came from doing
+// exactly that). Direct award ≤30%, single bid ≤10%; model high-risk baseline ~11%.
+// See docs/WEBSITE_STANDARDS.md anti-pattern A7.
+export const OECD_DIRECT_AWARD_LIMIT = 0.30
+export const OECD_SINGLE_BID_LIMIT = 0.10
+export const MODEL_HR_BASELINE = 0.11
+
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
 export const CURRENT_MODEL_VERSION = 'v0.8.5'
 
@@ -160,7 +179,7 @@ export const GROUND_TRUTH_VENDOR_COUNT_FALLBACK = 1554
 
 
 
-export const BUILD_ID = '2026-06-03-explore-audit-dedup'
+export const BUILD_ID = '2026-06-03-vendor-oecd-a11y-fixes'
 
 // Risk thresholds (calibrated under v0.6.5; preserved unchanged through v0.8.5
 // retraining — medium was raised from 0.15→0.25 to make medium actionable)

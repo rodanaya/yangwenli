@@ -21,7 +21,11 @@ import { EditorialAreaChart } from '@/components/charts/editorial'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import {
   RISK_COLORS,
+  RISK_TEXT_COLORS,
   SECTOR_COLORS,
+  OECD_DIRECT_AWARD_LIMIT,
+  OECD_SINGLE_BID_LIMIT,
+  MODEL_HR_BASELINE,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
 import { parseFactorLabel } from '@/lib/risk-factors'
@@ -65,10 +69,13 @@ export function VendorStatStrip({
       ? vendor.last_contract_year - vendor.first_contract_year + 1
       : null
 
-  // OECD limits: direct award ≤30%, single bid ≤10%.
-  const daColor = da == null ? undefined : da > 30 ? RISK_COLORS.critical : da > 15 ? RISK_COLORS.high : undefined
-  const sbColor = sb == null ? undefined : sb > 10 ? RISK_COLORS.critical : sb > 5 ? RISK_COLORS.high : undefined
-  const hrColor = hr == null ? undefined : hr >= 60 ? RISK_COLORS.critical : hr >= 30 ? RISK_COLORS.high : undefined
+  // OECD limits (single source — see @/lib/constants). Colour the NUMBER with the
+  // AA-safe RISK_TEXT_COLORS (RISK_COLORS fills fail WCAG AA as small coloured text).
+  const daLimit = OECD_DIRECT_AWARD_LIMIT * 100 // 30
+  const sbLimit = OECD_SINGLE_BID_LIMIT * 100   // 10
+  const daColor = da == null ? undefined : da > daLimit ? RISK_TEXT_COLORS.critical : da > daLimit / 2 ? RISK_TEXT_COLORS.high : undefined
+  const sbColor = sb == null ? undefined : sb > sbLimit ? RISK_TEXT_COLORS.critical : sb > sbLimit / 2 ? RISK_TEXT_COLORS.high : undefined
+  const hrColor = hr == null ? undefined : hr >= 60 ? RISK_TEXT_COLORS.critical : hr >= 30 ? RISK_TEXT_COLORS.high : undefined
 
   const cells: Array<{ label: string; value: string; sub?: string; color?: string } | null> = [
     {
@@ -89,13 +96,13 @@ export function VendorStatStrip({
     da == null ? null : {
       label: isEs ? 'Adj. directa' : 'Direct award',
       value: `${Math.round(da)}%`,
-      sub: da > 30 ? `${(da / 30).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤30% OCDE' : '≤30% OECD'),
+      sub: da > daLimit ? `${(da / daLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${daLimit}% OCDE` : `≤${daLimit}% OECD`),
       color: daColor,
     },
     sb == null ? null : {
       label: isEs ? 'Único postor' : 'Single bid',
       value: `${Math.round(sb)}%`,
-      sub: sb > 10 ? `${(sb / 10).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? '≤10% OCDE' : '≤10% OECD'),
+      sub: sb > sbLimit ? `${(sb / sbLimit).toFixed(1)}× ${isEs ? 'OCDE' : 'OECD'}` : (isEs ? `≤${sbLimit}% OCDE` : `≤${sbLimit}% OECD`),
       color: sbColor,
     },
     {
@@ -115,7 +122,9 @@ export function VendorStatStrip({
       className="grid border-t border-b"
       style={{
         borderColor: 'var(--color-border)',
-        gridTemplateColumns: `repeat(${shown.length}, minmax(0, 1fr))`,
+        // auto-fit wraps the readout on narrow viewports instead of clipping/
+        // ellipsizing labels — ~116px min keeps every mono label on one line.
+        gridTemplateColumns: 'repeat(auto-fit, minmax(116px, 1fr))',
       }}
     >
       {shown.map((c, i) => (
@@ -189,10 +198,12 @@ function Panel({
     <section
       style={{
         border: '1px solid var(--color-border)',
-        boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.05)',
+        boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)',
         borderRadius: 3,
         padding: '14px 16px 16px',
-        background: 'var(--color-background-card, transparent)',
+        // Transparent (not --color-background-card = #fff) so the panel reads as an
+        // inked plate on the warm #faf9f6 page, not a white SaaS card (standards A8).
+        background: 'transparent',
       }}
     >
       <div
@@ -252,9 +263,10 @@ export function VendorDiagnosticGrid({
   const da = ratePct(vendor.direct_award_pct)
   const sb = ratePct(vendor.single_bid_pct)
   const benchRows: Array<{ label: string; pct: number; limit: number; over: boolean }> = []
-  if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: 30, over: da > 30 })
-  if (sb != null) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: 10, over: sb > 10 })
-  if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: 11, over: hr > 11 })
+  const daLim = OECD_DIRECT_AWARD_LIMIT * 100, sbLim = OECD_SINGLE_BID_LIMIT * 100, hrLim = MODEL_HR_BASELINE * 100
+  if (da != null) benchRows.push({ label: isEs ? 'Adjudicación directa' : 'Direct award', pct: da, limit: daLim, over: da > daLim })
+  if (sb != null) benchRows.push({ label: isEs ? 'Único postor' : 'Single bid', pct: sb, limit: sbLim, over: sb > sbLim })
+  if (hr != null) benchRows.push({ label: isEs ? 'Alto riesgo' : 'High-risk', pct: hr, limit: hrLim, over: hr > hrLim })
 
   const trend = useMemo(
     () =>
@@ -293,7 +305,7 @@ export function VendorDiagnosticGrid({
         {benchRows.length > 0 ? (
           <div className="space-y-3">
             {benchRows.map((r) => {
-              const color = r.over ? RISK_COLORS.critical : 'var(--color-text-muted)'
+              const color = r.over ? RISK_TEXT_COLORS.critical : 'var(--color-text-muted)'
               return (
                 <div key={r.label}>
                   <div className="flex items-baseline justify-between mb-1">
@@ -331,7 +343,7 @@ export function VendorDiagnosticGrid({
                     <EntityIdentityChip type="institution" id={inst.institution_id} name={inst.institution_name} size="sm" />
                   </div>
                   <div className="flex items-baseline gap-2.5 flex-shrink-0 font-mono tabular-nums" style={{ fontSize: 11 }}>
-                    <span style={{ color: share >= 40 ? RISK_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{Math.round(share)}%</span>
+                    <span style={{ color: share >= 40 ? RISK_TEXT_COLORS.high : 'var(--color-text-secondary)', fontWeight: 600 }}>{Math.round(share)}%</span>
                     <span style={{ color: 'var(--color-text-muted)' }}>{formatCompactMXN(inst.total_value_mxn)}</span>
                   </div>
                 </li>
