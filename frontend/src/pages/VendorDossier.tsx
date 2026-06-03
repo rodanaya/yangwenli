@@ -484,6 +484,7 @@ export default function VendorDossier() {
             lifecycle={data.lifecycle.data}
             institutions={data.institutions.data}
             peerComparison={data.peerComparison.data}
+            contractAggregate={data.contractAggregate.data}
           />
         </div>
       </section>

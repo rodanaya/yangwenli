@@ -13,6 +13,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   ContractListItem,
+  VendorContractAggregate,
   VendorDetailResponse,
   VendorInstitutionListResponse,
   VendorPeerComparisonResponse,
@@ -28,14 +29,21 @@ import { Button } from '@/components/ui/button'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import {
   formatCompactMXN,
+  formatCompactUSDByYear,
   formatDate,
   getRiskLevel,
   shortenContractName,
 } from '@/lib/utils'
+import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
 import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { DotBar } from '@/components/ui/DotBar'
+
+// Forensic-ink ochre for the flag gutter glyphs (matches the dashboard amber /
+// EL DESVÍO ledger). Applied via inline style — a hex in className is stripped
+// by the token linter and would silently fall back to the inherited color.
+const OCHRE = '#a06820'
 
 interface LifecycleTimelineEntry {
   year: number
@@ -58,6 +66,13 @@ interface VendorActivityTabProps {
   lifecycle?: { timeline?: LifecycleTimelineEntry[] } | null
   institutions?: VendorInstitutionListResponse | null
   peerComparison?: VendorPeerComparisonResponse | null
+  /**
+   * Population-scoped contract census (all contracts, server-computed). When
+   * present, the register prints an honest "X de Y sin competencia · activo
+   * AAAA–AAAA" census instead of a page-sample claim. Optional so the legacy
+   * VendorProfile call site keeps compiling.
+   */
+  contractAggregate?: VendorContractAggregate | null
 }
 
 const CONTRACTS_PER_PAGE = 50
@@ -72,9 +87,22 @@ export function VendorActivityTab({
   lifecycle,
   institutions,
   peerComparison,
+  contractAggregate,
 }: VendorActivityTabProps) {
   const { i18n } = useTranslation(['vendors'])
   const isEs = i18n.language.startsWith('es')
+
+  // Per-row forensic flags (≡ repeat · ① single-bid · ▲ top-decile · ↻
+  // amendment) computed over the CURRENT PAGE. Page-scoped by construction —
+  // the census line below labels population vs page honestly.
+  const audit = useMemo(
+    () => computeContractFlags(contracts?.data ?? []),
+    [contracts?.data]
+  )
+  const pageFlagged = useMemo(
+    () => (contracts?.data ?? []).filter((c) => (audit.info.get(c.id)?.count ?? 0) > 0).length,
+    [contracts?.data, audit]
+  )
 
   const riskTrend = useMemo(() => {
     if (!lifecycle?.timeline?.length) return []
@@ -351,20 +379,59 @@ export function VendorActivityTab({
         </section>
       )}
 
-      {/* § · Contratos — paginated table */}
+      {/* § · El Expediente — forensic contract register (flag gutter) */}
       <section
         aria-labelledby="contracts-title"
         className="pt-6 border-t border-border/40"
       >
-        <div className="flex items-center justify-between mb-3">
-          <SectionTitle id="contracts-title" className="mb-0">
-            {isEs ? '§ · Contratos' : '§ · Contracts'}
-          </SectionTitle>
-          <span className="text-[11px] text-text-muted font-mono tabular-nums">
-            {totalContracts.toLocaleString(isEs ? 'es-MX' : 'en-US')}{' '}
-            {isEs ? 'total' : 'total'}
-          </span>
-        </div>
+        {(() => {
+          const loc = isEs ? 'es-MX' : 'en-US'
+          const popTotal = contractAggregate?.total_contracts ?? totalContracts
+          const noComp = contractAggregate?.no_competition
+          const yrMin = contractAggregate?.year_min ?? vendor.first_contract_year ?? null
+          const yrMax = contractAggregate?.year_max ?? vendor.last_contract_year ?? null
+          const shown = contracts?.data?.length ?? 0
+          return (
+            <>
+              <div className="mb-1 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+                <SectionTitle id="contracts-title" className="mb-0">
+                  {isEs ? '§ · El Expediente' : '§ · The Register'}
+                </SectionTitle>
+                <div className="flex flex-wrap items-baseline gap-x-2 text-[11px] font-mono tabular-nums text-text-muted">
+                  <span className="text-text-secondary">
+                    {popTotal.toLocaleString(loc)} {isEs ? 'contratos' : 'contracts'}
+                  </span>
+                  {noComp != null && popTotal > 0 && (
+                    <span>
+                      · {noComp.toLocaleString(loc)} {isEs ? 'sin competencia' : 'no competition'} (
+                      {Math.round((noComp / popTotal) * 100)}%)
+                    </span>
+                  )}
+                  {yrMin != null && yrMax != null && (
+                    <span>
+                      · {isEs ? 'activo' : 'active'} {yrMin}
+                      {yrMax !== yrMin ? `–${yrMax}` : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {shown > 0 && (
+                <p className="mb-3 text-[10px] font-mono text-text-muted/80 leading-relaxed">
+                  {isEs
+                    ? `Señales en esta página (${shown} de ${popTotal.toLocaleString(loc)} · ${pageFlagged} marcados): `
+                    : `Flags on this page (${shown} of ${popTotal.toLocaleString(loc)} · ${pageFlagged} flagged): `}
+                  <span style={{ color: OCHRE }}>≡</span> {isEs ? 'repetido' : 'repeated'}
+                  {' · '}
+                  <span style={{ color: OCHRE }}>①</span> {isEs ? 'postor único' : 'single bid'}
+                  {' · '}
+                  <span style={{ color: OCHRE }}>▲</span> {isEs ? 'decil superior' : 'top decile'}
+                  {' · '}
+                  <span style={{ color: OCHRE }}>↻</span> {isEs ? 'convenio' : 'amendment'}
+                </p>
+              )}
+            </>
+          )
+        })()}
         {contractsLoading ? (
           <div
             className="space-y-2"
@@ -382,14 +449,20 @@ export function VendorActivityTab({
               <table className="w-full text-sm" aria-label={isEs ? 'Contratos del proveedor' : 'Vendor contracts'}>
                 <thead className="bg-background-elevated text-[10px] uppercase tracking-widest text-text-muted">
                   <tr>
-                    <th scope="col" className="text-left px-3 py-2 font-semibold">
-                      {isEs ? 'Descripción' : 'Description'}
+                    <th scope="col" className="w-[72px] text-center px-2 py-2 font-semibold">
+                      {isEs ? 'Señal' : 'Flag'}
                     </th>
                     <th scope="col" className="text-left px-3 py-2 font-semibold">
+                      {isEs ? 'Objeto' : 'Object'}
+                    </th>
+                    <th scope="col" className="hidden lg:table-cell text-left px-3 py-2 font-semibold">
                       {isEs ? 'Institución' : 'Institution'}
                     </th>
                     <th scope="col" className="text-right px-3 py-2 font-semibold">
                       {isEs ? 'Monto' : 'Amount'}
+                    </th>
+                    <th scope="col" className="hidden sm:table-cell text-right px-3 py-2 font-semibold">
+                      ≈ USD
                     </th>
                     <th scope="col" className="text-center px-3 py-2 font-semibold">
                       {isEs ? 'Fecha' : 'Date'}
@@ -400,7 +473,11 @@ export function VendorActivityTab({
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts.data.map((c) => (
+                  {contracts.data.map((c) => {
+                    const flags = audit.info.get(c.id)
+                    const heavy = (flags?.count ?? 0) >= 2
+                    const clean = cleanContractDescription(c.title ?? '')
+                    return (
                     <tr
                       key={c.id}
                       onClick={() => onContractClick?.(c)}
@@ -419,25 +496,44 @@ export function VendorActivityTab({
                       }
                       className="border-t border-border/30 hover:bg-background-elevated/50 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]"
                     >
-                      <td className="px-3 py-2 max-w-[280px] truncate text-text-primary" title={c.title ?? undefined}>
-                        {c.title ? shortenContractName(c.title) : '—'}
+                      <td className="px-2 py-2 text-center align-top">
+                        <FlagGutter flags={flags} isEs={isEs} />
                       </td>
-                      <td className="px-3 py-2 max-w-[220px] truncate text-text-secondary">
+                      <td className="px-3 py-2 align-top">
+                        <div className="max-w-[300px]">
+                          <div className="truncate text-text-primary" title={c.title ?? undefined}>
+                            {clean.objeto ?? (c.title ? shortenContractName(c.title) : '—')}
+                          </div>
+                          {clean.expediente && (
+                            <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wide text-text-muted/70 truncate">
+                              {clean.expediente}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="hidden lg:table-cell px-3 py-2 max-w-[180px] truncate text-text-secondary align-top">
                         {c.institution_name ?? '—'}
                       </td>
-                      <td className="px-3 py-2 text-right font-mono tabular-nums">
+                      <td
+                        className="px-3 py-2 text-right font-mono tabular-nums whitespace-nowrap align-top"
+                        style={heavy ? { color: RISK_COLORS.critical } : undefined}
+                      >
                         {formatCompactMXN(c.amount_mxn ?? 0)}
                       </td>
-                      <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted">
+                      <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-[11px] text-text-muted whitespace-nowrap align-top">
+                        {formatCompactUSDByYear(c.amount_mxn ?? 0, c.contract_year)}
+                      </td>
+                      <td className="px-3 py-2 text-center font-mono tabular-nums text-text-muted align-top">
                         {c.contract_date ? formatDate(c.contract_date) : '—'}
                       </td>
-                      <td className="px-3 py-2 text-center">
+                      <td className="px-3 py-2 text-center align-top">
                         {c.risk_score != null && (
                           <RiskLevelPill level={getRiskLevel(c.risk_score)} score={c.risk_score} />
                         )}
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -476,6 +572,46 @@ export function VendorActivityTab({
         )}
       </section>
     </div>
+  )
+}
+
+/**
+ * FlagGutter — renders the per-contract forensic signals as a compact glyph row.
+ * ≡ repeated amount/object · ① single-bid · ▲ within-page top-decile · ↻ amendment.
+ * Glyphs are uniform ochre (the column reads as a texture); severity is carried
+ * by the money column turning red at ≥2 flags. A no-flag row shows a faint middot.
+ */
+function FlagGutter({ flags, isEs }: { flags?: ContractFlags; isEs: boolean }) {
+  if (!flags || flags.count === 0) {
+    return (
+      <span className="text-text-muted/40" aria-hidden="true">
+        ·
+      </span>
+    )
+  }
+  const items: Array<{ glyph: string; label: string }> = []
+  if (flags.repeated)
+    items.push({ glyph: '≡', label: isEs ? 'monto u objeto repetido' : 'repeated amount or object' })
+  if (flags.singleBid)
+    items.push({ glyph: '①', label: isEs ? 'licitación de un solo postor' : 'single-bid tender' })
+  if (flags.decile)
+    items.push({ glyph: '▲', label: isEs ? 'decil superior en esta página' : 'top decile on this page' })
+  if (flags.amendment)
+    items.push({ glyph: '↻', label: isEs ? 'convenio modificatorio' : 'amendment' })
+  const srLabel = items.map((i) => i.label).join(', ')
+  return (
+    <span
+      className="inline-flex items-center justify-center gap-1 font-mono text-[13px] leading-none"
+      style={{ color: OCHRE }}
+      title={srLabel}
+    >
+      <span className="sr-only">{srLabel}</span>
+      {items.map((it, idx) => (
+        <span key={idx} aria-hidden="true">
+          {it.glyph}
+        </span>
+      ))}
+    </span>
   )
 }
 

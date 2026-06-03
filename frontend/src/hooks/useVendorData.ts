@@ -95,6 +95,18 @@ export function useVendorData(
     staleTime: 2 * MIN,
   })
 
+  // Population-scoped contract census (total / no-competition / single-bid /
+  // active-year range / repeat structure) computed server-side over ALL of the
+  // vendor's contracts — not the 50-row page. Lets the Activity register print
+  // an honest "X de Y sin competencia" census instead of a page-sample claim.
+  const contractAggregate = useQuery({
+    queryKey: ['vendor', vendorId, 'contract-aggregate'],
+    queryFn: () => vendorApi.getContractAggregate(vendorId!),
+    enabled: vendorFound,
+    staleTime: 10 * MIN,
+    retry: false,
+  })
+
   const institutions = useQuery({
     queryKey: ['vendor', vendorId, 'institutions'],
     queryFn: () => vendorApi.getInstitutions(vendorId!),
@@ -233,6 +245,7 @@ export function useVendorData(
     scorecard,
     // activity
     contracts,
+    contractAggregate,
     institutions,
     lifecycle,
     footprint,
