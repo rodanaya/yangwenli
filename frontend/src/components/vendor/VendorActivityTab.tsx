@@ -504,7 +504,11 @@ export function VendorActivityTab({
                           <div className="truncate text-text-primary" title={c.title ?? undefined}>
                             {clean.objeto ?? (c.title ? shortenContractName(c.title) : '—')}
                           </div>
-                          {clean.expediente && (
+                          {/* Only show the expediente code as a sub-line when a real
+                              objeto was extracted. If objeto cleaning failed (a bare-code
+                              title), the line above already shows the code — a second
+                              code line would just duplicate it (e.g. "D9p0143 D9P0143"). */}
+                          {clean.objeto && clean.expediente && (
                             <div className="mt-0.5 text-[10px] font-mono uppercase tracking-wide text-text-muted/70 truncate">
                               {clean.expediente}
                             </div>
