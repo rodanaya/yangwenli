@@ -22,8 +22,8 @@
  * Fully keyboard-accessible.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
-import { useQuery } from '@tanstack/react-query'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion'
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query'
 import { riskRamp, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { formatNumber, formatCompactMXN } from '@/lib/utils'
 import { formatVendorName } from '@/lib/vendor/formatName'
@@ -62,10 +62,24 @@ const PAD_Y = 0.12
 const SUB_HALF_W = 285   // sub-plot half-width  (SVG units, around the cluster orb)
 const SUB_HALF_H = 170   // sub-plot half-height
 const SUB_PAD = 30       // inset so orbs + labels stay off the frame edge
-const SUB_COUNT = 40     // max vendors plotted on-chart
+const SUB_COUNT = 30     // max vendors plotted on-chart — tied to the batch fetch limit
 const SUB_MAX_R = 13     // worst-case vendor orb radius
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+
+// Risk hardened against bad API data: a NaN/undefined risk_score would propagate
+// through the fan math (collapse → NaN → every ty → NaN) and blank the chart.
+const safeRisk01 = (v: number) => (Number.isFinite(v) ? clamp(v, 0, 1) : 0)
+
+// Below this risk SPREAD across a cluster's vendors the y-axis (risk) carries no
+// usable signal, so the sub-scatter fans vendors vertically by a stable hash (an
+// equal-risk cloud) instead of asserting a false gradient. Chosen below the 0.25
+// medium-risk band so a cluster spanning two risk tiers still plots faithfully.
+const RISK_FAN_THRESHOLD = 0.2
+// collapse ≥ this ⇒ the vertical order is mostly arbitrary, so the y-axis label
+// switches to a neutral "≈ equal risk" and the gridline greys out (honesty: the
+// fan must never be read as a risk ranking).
+const FAN_LABEL_AT = 0.5
 
 /**
  * Camera target viewBox for flying into a cluster — frames the vendor sub-scatter
@@ -116,6 +130,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const [hoverVendor, setHoverVendor] = useState<number | null>(null)
   const [hoverBody, setHoverBody] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  // Keyboard-focus tracking (distinct from hover) so we can paint a visible focus
+  // ring on the orb the user tabbed to — SVG can't render :focus-visible.
+  const [focusVendorId, setFocusVendorId] = useState<number | null>(null)
+  const [focusBodyCode, setFocusBodyCode] = useState<string | null>(null)
+  const reduce = useReducedMotion()
+  const dur = (s: number) => (reduce ? 0 : s)
 
   const scales = useMemo(() => {
     if (clusters.length === 0) return { minLogV: 0, maxLogV: 1, maxHr: 1, maxT1: 1 }
@@ -178,7 +198,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   const codes = useMemo(() => clusters.map((c) => c.code).sort(), [clusters])
   const { data: vendorBatch, isLoading: batchLoading } = useQuery({
     queryKey: ['obs-batch-vendors', lens, codes],
-    queryFn: () => atlasApi.getClusterVendorsBatch({ lens, codes, limit: 30 }),
+    queryFn: () => atlasApi.getClusterVendorsBatch({ lens, codes, limit: SUB_COUNT }),
     enabled: codes.length > 0,
     staleTime: 10 * 60 * 1000,
   })
@@ -279,12 +299,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     setDrawerOpen(false)
     setHoverBody(null)
     setFocused(b.code)
-    animate(zoom, 1, { duration: 0.9, ease: [0.16, 1, 0.3, 1] })
+    animate(zoom, 1, { duration: dur(0.9), ease: [0.16, 1, 0.3, 1] })
   }
   const flyBack = () => {
     setDrawerOpen(false)
     setHoverVendor(null)
-    animate(zoom, 0, { duration: 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+    animate(zoom, 0, { duration: dur(0.6), ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
   }
 
   // Recovery: if the lens changed out from under a focused orb (the code no
@@ -292,20 +312,33 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
   // the user on a blank zoomed frame with no Back button.
   useEffect(() => {
     if (focused && !focusedBody) {
-      animate(zoom, 0, { duration: 0.4, onComplete: () => setFocused(null) })
+      animate(zoom, 0, { duration: reduce ? 0 : 0.4, onComplete: () => setFocused(null) })
     }
-  }, [focused, focusedBody, zoom])
+  }, [focused, focusedBody, zoom, reduce])
 
   // Escape key: close the drawer, else fly back out of focus.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
       if (drawerOpen) setDrawerOpen(false)
-      else if (focused) animate(zoom, 0, { duration: 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
+      else if (focused) animate(zoom, 0, { duration: reduce ? 0 : 0.6, ease: [0.5, 0, 0.2, 1], onComplete: () => setFocused(null) })
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [drawerOpen, focused, zoom])
+  }, [drawerOpen, focused, zoom, reduce])
+
+  // How collapsed the risk axis is for the focused cluster (0 = risk varies and y
+  // is faithful · 1 = all vendors share ~one risk so y is an arbitrary fan). Lifted
+  // OUT of subScatter so the render layer can honestly relabel the y-axis — the
+  // fan must never be read as a risk gradient.
+  const fanState = useMemo(() => {
+    const vs = (focusVendors?.vendors ?? []).slice(0, SUB_COUNT)
+    if (vs.length === 0) return { collapse: 0 }
+    const risks = vs.map((v) => safeRisk01(v.risk_score))
+    const rMin = Math.min(...risks), rMax = Math.max(...risks)
+    return { collapse: clamp(1 - (rMax - rMin) / RISK_FAN_THRESHOLD, 0, 1) }
+  }, [focusVendors])
+  const fanned = !!focusedBody && fanState.collapse >= FAN_LABEL_AT
 
   // L2 sub-scatter: the focused cluster's vendors as a FAITHFUL mini-scatter
   // (x = contract value · y = risk · size = contracts), de-overlapped inside a
@@ -319,15 +352,15 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     const logs = vs.map((v) => Math.log10(Math.max(1, v.total_amount_mxn || 1)))
     const minA = Math.min(...logs), maxA = Math.max(...logs)
     const maxC = Math.max(...vs.map((v) => v.total_contracts || 1))
-    const risks = vs.map((v) => clamp(v.risk_score, 0, 1))
-    const rMin = Math.min(...risks), rMax = Math.max(...risks)
+    const risks = vs.map((v) => safeRisk01(v.risk_score))
     // When a cluster's vendors share ~the same risk (e.g. all-max-risk Ghost),
     // the y-axis carries no signal and orbs collapse onto a single line — a
-    // crowded horizontal smear where few labels fit. Detect that and fan them
-    // into the empty vertical space with a stable per-vendor offset, so they
-    // read as an equal-risk cloud. Faithful risk-y is preserved whenever risk
-    // actually varies (collapse → 0), so high-variance clusters are untouched.
-    const collapse = clamp(1 - (rMax - rMin) / 0.2, 0, 1)
+    // crowded horizontal smear where few labels fit. We fan them into the empty
+    // vertical space with a stable per-vendor offset, so they read as an
+    // equal-risk cloud (the y-axis label switches to "≈ equal risk" — see fanned).
+    // Faithful risk-y is preserved whenever risk varies (collapse → 0). `collapse`
+    // is read straight from fanState so the chart and the axis label can't drift.
+    const collapse = fanState.collapse
     const hash01 = (id: number) => ((Math.imul(id ^ 0x9e3779b9, 2654435761) >>> 0) % 1000) / 1000
     const arr = vs.map((v, i) => {
       const t = maxA === minA ? 0.5 : (logs[i] - minA) / (maxA - minA)
@@ -335,10 +368,11 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       const tyFan = cy + (hash01(v.vendor_id) - 0.5) * 2 * (SUB_HALF_H - SUB_PAD)
       return {
         v,
+        risk: risks[i],
         tx: cx + (t - 0.5) * 2 * (SUB_HALF_W - SUB_PAD),
         ty: tyFaithful * (1 - collapse) + tyFan * collapse,
         r: 3 + (Math.sqrt(v.total_contracts || 1) / Math.sqrt(maxC)) * 10,
-        fill: riskRamp(v.risk_score),
+        fill: riskRamp(risks[i]),
         imp: v.total_amount_mxn || 0,
       }
     }).sort((a, b) => b.imp - a.imp)
@@ -364,7 +398,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
       }
     }
     return arr.map((a, i) => ({ ...a, x: px[i], y: py[i] }))
-  }, [focusedBody, focusVendors])
+  }, [focusedBody, focusVendors, fanState])
 
   // Fit-only labels over the sub-scatter (most valuable first) — collision-free,
   // skipped when there's no clean slot (hover + the ledger carry the rest). This
@@ -376,7 +410,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     const out: Array<{ id: number; x: number; y: number; anchor: 'start' | 'middle' | 'end'; name: string; fill: string }> = []
     for (const s of subScatter) {
       const name = formatVendorName(s.v.name, 26)
-      const w = name.length * 4.4 + 5, h = 10, g = 3.5
+      const w = name.length * 5 + 5, h = 11, g = 3.5   // sized for the 6.8px render below
       const cands: Array<{ x: number; y: number; anchor: 'start' | 'middle' | 'end' }> = [
         { x: s.x - w / 2, y: s.y - s.r - g - h, anchor: 'middle' },
         { x: s.x - w / 2, y: s.y + s.r + g, anchor: 'middle' },
@@ -398,11 +432,33 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
     return out
   }, [focusedBody, subScatter])
 
-  const drawerVendors = focusVendors?.vendors ?? null
+  // Drawer = the COMPLETE ranked tail (keyset-paginated by risk indicator), not
+  // just the on-chart top-30 — the batch endpoint caps at 30, this walks the rest,
+  // so "full list" is literally true and a deep high-value vendor is reachable.
+  const drawerQuery = useInfiniteQuery({
+    queryKey: ['obs-drawer-vendors', lens, focused],
+    queryFn: ({ pageParam }) => atlasApi.getClusterVendors({ lens, code: focused as string, limit: 60, cursor: pageParam }),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (last) => last.next_cursor ?? undefined,
+    enabled: drawerOpen && !!focused,
+    staleTime: 5 * 60 * 1000,
+  })
+  const drawerVendorsFull = useMemo(
+    () => (drawerQuery.data ? drawerQuery.data.pages.flatMap((p) => p.vendors) : null),
+    [drawerQuery.data],
+  )
   const drawerCount = focusedBody ? formatNumber(focusedBody.vendors) : String(bodies.length)
   const lensLabel = (lang === 'es'
     ? ({ patterns: 'Patrones', sectors: 'Sectores', categories: 'Categorías', sexenios: 'Sexenios' } as Record<string, string>)
     : ({ patterns: 'Patterns', sectors: 'Sectors', categories: 'Categories', sexenios: 'Terms' } as Record<string, string>))[lens] ?? lens
+
+  // Screen-reader narrative — the faithful encoding is the whole point, so announce
+  // it (cluster + how many vendors, by what criterion) whenever the camera flies in.
+  const srAnnounce = focusedBody
+    ? (lang === 'es'
+        ? `Enfocado: ${toTitleCase(focusedBody.label)}. ${subScatter.length} mayores proveedores por riesgo, de ${formatNumber(focusedBody.vendors)} en total; valor de contrato en el eje horizontal.`
+        : `Focused: ${toTitleCase(focusedBody.label)}. Top ${subScatter.length} vendors by risk indicator, of ${formatNumber(focusedBody.vendors)} total; contract value on the horizontal axis.`)
+    : ''
 
   return (
     <div style={{ position: 'relative', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--color-border)', boxShadow: '0 14px 36px -24px rgba(80,60,40,0.4)', background: C.plate1 }}>
@@ -416,7 +472,11 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
         preserveAspectRatio="xMidYMid meet"
         style={{ display: 'block', width: '100%', maxHeight: 'calc(100vh - 184px)' }}
         role="group"
-        aria-label={lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns'}
+        aria-label={focusedBody
+          ? (lang === 'es'
+              ? `${toTitleCase(focusedBody.label)}: ${subScatter.length} mayores proveedores por riesgo; valor de contrato en el eje horizontal`
+              : `${toTitleCase(focusedBody.label)}: top ${subScatter.length} vendors by risk; contract value on the horizontal axis`)
+          : (lang === 'es' ? 'Carta celeste de patrones' : 'Celestial chart of patterns')}
       >
         <defs>
           <radialGradient id="obs-plate" cx="48%" cy="36%" r="82%">
@@ -424,6 +484,12 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           </radialGradient>
           <radialGradient id="obs-danger" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor={RISK_COLORS.critical} stopOpacity={0.07} /><stop offset="100%" stopColor={RISK_COLORS.critical} stopOpacity={0} />
+          </radialGradient>
+          {/* One shared top-left "sheen" overlay → every L2 vendor orb reads as a
+              luminous sphere (not a flat disk) without a per-vendor gradient def. */}
+          <radialGradient id="obs-sub-sheen" cx="36%" cy="30%" r="68%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity={0.5} />
+            <stop offset="42%" stopColor="#ffffff" stopOpacity={0} />
           </radialGradient>
           {bodies.map((b) => (
             <radialGradient key={`g-${b.code}`} id={`obs-body-${b.code}`} cx="38%" cy="34%" r="72%">
@@ -491,9 +557,9 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 onClick={() => flyTo(b)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyTo(b) } }}
                 onMouseEnter={() => setHoverBody(b.code)} onMouseLeave={() => setHoverBody(null)}
-                onFocus={() => setHoverBody(b.code)} onBlur={() => setHoverBody(null)}
+                onFocus={() => { setHoverBody(b.code); setFocusBodyCode(b.code) }} onBlur={() => { setHoverBody(null); setFocusBodyCode(null) }}
                 initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.07, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ delay: reduce ? 0 : i * 0.07, duration: dur(0.7), ease: [0.16, 1, 0.3, 1] }}
                 style={{ transformOrigin: `${b.cx}px ${b.cy}px`, cursor: 'pointer', outline: 'none' }}
               >
                 <title>{aria}</title>
@@ -504,6 +570,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 <circle cx={b.cx} cy={b.cy} r={b.r} fill={`url(#obs-body-${b.code})`} stroke={b.fill} strokeWidth={1.5} />
                 {b.r > 17 && <circle cx={b.cx} cy={b.cy} r={b.r - 3.5} fill="none" stroke="#fff" strokeWidth={0.75} strokeOpacity={0.32} />}
                 <circle cx={b.cx} cy={b.cy} r={3.1} fill="#fff" stroke={b.fill} strokeWidth={1.3} />
+                {focusBodyCode === b.code && <circle cx={b.cx} cy={b.cy} r={b.r + 6} fill="none" stroke={C.ink} strokeWidth={1.6} />}
               </motion.g>
             )
           })}
@@ -536,48 +603,77 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
 
         {/* ─── FOCUS layer: the orb (now a SUN) + its vendors, fades in with the camera ─── */}
         {focusedBody && (
-          <motion.g style={{ opacity: focusIn }}>
+          <motion.g style={{ opacity: focusIn }} role="group"
+            aria-label={lang === 'es' ? `Proveedores de ${toTitleCase(focusedBody.label)}` : `Vendors in ${toTitleCase(focusedBody.label)}`}>
             {/* tap-empty-to-exit scrim — only fires once the camera has settled */}
             <rect x={focusedBody.cx - W} y={focusedBody.cy - H} width={W * 2} height={H * 2} fill="transparent"
               onClick={() => { if (zoom.get() > 0.9) flyBack() }} style={{ cursor: 'zoom-out' }} />
 
             {/* sub-plot frame + faithful axis hints (x = value · y = risk) */}
             <rect x={focusedBody.cx - SUB_HALF_W} y={focusedBody.cy - SUB_HALF_H} width={SUB_HALF_W * 2} height={SUB_HALF_H * 2} rx={4} fill="none" stroke={C.grid} strokeWidth={0.6} />
-            <text x={focusedBody.cx} y={focusedBody.cy + SUB_HALF_H + 13} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+            <text x={focusedBody.cx} y={focusedBody.cy + SUB_HALF_H + 13} textAnchor="middle" fill={C.inkFaint} fontSize={6.5} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
               {lang === 'es' ? 'VALOR DE CONTRATO →' : 'CONTRACT VALUE →'}
             </text>
-            <text transform={`translate(${focusedBody.cx - SUB_HALF_W - 9}, ${focusedBody.cy}) rotate(-90)`} textAnchor="middle" fill={C.inkFaint} fontSize={6} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
-              {lang === 'es' ? '↑ RIESGO' : '↑ RISK'}
+            {/* HONESTY: when the cluster's vendors share ~one risk, vertical position
+                is an arbitrary fan — the axis must NOT assert a risk gradient. */}
+            <text transform={`translate(${focusedBody.cx - SUB_HALF_W - 9}, ${focusedBody.cy}) rotate(-90)`} textAnchor="middle" fill={fanned ? C.inkMuted : C.inkFaint} fontSize={6.5} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+              {fanned
+                ? (lang === 'es' ? '≈ MISMO RIESGO · ORDEN ARBITRARIO' : '≈ EQUAL RISK · ARBITRARY SPREAD')
+                : (lang === 'es' ? '↑ RIESGO' : '↑ RISK')}
             </text>
             {/* cluster identity — top-left kicker (the orb you flew into) */}
             <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 13} fill={C.ink} fontSize={11} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
               {toTitleCase(focusedBody.label)}
             </text>
-            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 4} fill={C.inkMuted} fontSize={5.6} fontFamily="var(--font-family-mono)" letterSpacing="0.04em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.5} strokeLinejoin="round">
-              {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'prov.' : 'vend.'} · {subScatter.length} {lang === 'es' ? 'mostrados' : 'shown'} · {focusedBody.t1} T1
+            {/* HONESTY: these are the top-N by RISK (backend orders avg_risk_score
+                DESC), not a value-complete sample — the label names the criterion so
+                a high-value/mid-risk vendor's absence is never read as "doesn't exist". */}
+            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 4} fill={C.inkMuted} fontSize={7} fontFamily="var(--font-family-mono)" letterSpacing="0.02em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.5} strokeLinejoin="round">
+              {formatNumber(focusedBody.vendors)} {lang === 'es' ? 'prov.' : 'vend.'} · {lang === 'es' ? `${subScatter.length} de mayor riesgo` : `top ${subScatter.length} by risk`} · {focusedBody.t1} T1
             </text>
+            {/* L2 micro-legend — the two encodings the macro how-to-read strip can't
+                explain while it's hidden: orb size and the documented-case ring. */}
+            <text x={focusedBody.cx + SUB_HALF_W - 2} y={focusedBody.cy - SUB_HALF_H - 4} textAnchor="end" fill={C.inkFaint} fontSize={5.8} fontFamily="var(--font-family-mono)" letterSpacing="0.02em" paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round">
+              {lang === 'es' ? '◯ tamaño ∝ contratos · ⊝ caso documentado' : '◯ size ∝ contracts · ⊝ documented case'}
+            </text>
+            {/* +N unlabeled cue — names with no collision-free slot are reachable via
+                hover/keyboard and the full list; click jumps straight to it. */}
+            {subScatter.length > subLabels.length && (
+              <text x={focusedBody.cx + SUB_HALF_W - 2} y={focusedBody.cy + SUB_HALF_H + 13} textAnchor="end" fill={C.inkMuted} fontSize={6} fontFamily="var(--font-family-mono)" letterSpacing="0.02em" style={{ cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); setDrawerOpen(true) }}>
+                +{subScatter.length - subLabels.length} {lang === 'es' ? 'sin etiqueta · ver lista ▤' : 'unlabeled · open list ▤'}
+              </text>
+            )}
 
-            {/* vendor orbs — positioned by value × risk, de-overlapped (no orbit) */}
+            {/* vendor orbs — positioned by value × risk, de-overlapped (no orbit).
+                Risk is carried by hue AND by a redundant ring weight (colour-blind
+                safe): heavy ring = critical · thin ring = high · none = medium. */}
             {subScatter.map((s, i) => {
-              const hovered = hoverVendor === s.v.vendor_id
-              const lvl = getRiskLevelFromScore(s.v.risk_score)
+              const active = hoverVendor === s.v.vendor_id || focusVendorId === s.v.vendor_id
+              const kbFocus = focusVendorId === s.v.vendor_id
+              const lvl = getRiskLevelFromScore(s.risk)
+              const tierRing = lvl === 'critical' ? 1.5 : lvl === 'high' ? 0.75 : 0
               return (
                 <motion.g key={s.v.vendor_id} role="button" tabIndex={0}
                   aria-label={`${formatVendorName(s.v.name, 60)} — ${formatCompactMXN(s.v.total_amount_mxn)}, ${s.v.risk_level}. ${lang === 'es' ? 'Abrir' : 'Open'}`}
                   onClick={(e) => { e.stopPropagation(); onVendorClick(s.v.vendor_id) }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVendorClick(s.v.vendor_id) } }}
                   onMouseEnter={() => setHoverVendor(s.v.vendor_id)} onMouseLeave={() => setHoverVendor(null)}
+                  onFocus={() => { setHoverVendor(s.v.vendor_id); setFocusVendorId(s.v.vendor_id) }}
+                  onBlur={() => { setHoverVendor(null); setFocusVendorId(null) }}
                   initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + Math.min(i, 24) * 0.018, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ delay: reduce ? 0 : 0.4 + Math.min(i, 24) * 0.018, duration: dur(0.45), ease: [0.16, 1, 0.3, 1] }}
                   style={{ cursor: 'pointer', outline: 'none' }}
                 >
-                  {hovered && <circle cx={s.x} cy={s.y} r={s.r * 1.7} fill={s.fill} opacity={0.18} />}
+                  {active && <circle cx={s.x} cy={s.y} r={s.r * 1.7} fill={s.fill} opacity={0.18} />}
                   {(lvl === 'critical' || lvl === 'high') && <circle cx={s.x} cy={s.y} r={s.r * 1.5} fill={s.fill} opacity={lvl === 'critical' ? 0.16 : 0.1} />}
-                  <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={hovered ? C.ink : s.fill} strokeWidth={hovered ? 0.9 : 0.6} strokeOpacity={hovered ? 0.6 : 0.5} />
-                  {s.r > 7 && <circle cx={s.x} cy={s.y} r={1.3} fill="#fff" opacity={0.8} />}
-                  {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 1.8} fill="none" stroke={s.fill} strokeWidth={0.7} strokeDasharray="1.5 1.5" />}
-                  {hovered && (
-                    <text x={s.x} y={s.y - s.r - 4} textAnchor="middle" fill={C.ink} fontSize={8.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.2} strokeLinejoin="round">
+                  <circle cx={s.x} cy={s.y} r={s.r} fill={s.fill} fillOpacity={0.92} stroke={s.fill} strokeWidth={0.6} strokeOpacity={0.5} />
+                  <circle cx={s.x} cy={s.y} r={s.r} fill="url(#obs-sub-sheen)" />
+                  {tierRing > 0 && <circle cx={s.x} cy={s.y} r={s.r + 1.5} fill="none" stroke={s.fill} strokeWidth={tierRing} strokeOpacity={0.9} />}
+                  {s.r > 4 && <circle cx={s.x - s.r * 0.28} cy={s.y - s.r * 0.3} r={Math.max(0.9, s.r * 0.22)} fill="#fff" opacity={0.85} />}
+                  {s.v.is_gt && <circle cx={s.x} cy={s.y} r={s.r + 3} fill="none" stroke={C.ink} strokeWidth={0.8} strokeDasharray="2.4 1.6" strokeOpacity={0.6} />}
+                  {kbFocus && <circle cx={s.x} cy={s.y} r={s.r + 4.5} fill="none" stroke={C.ink} strokeWidth={1.4} />}
+                  {active && (
+                    <text x={s.x} y={s.y - s.r - 5} textAnchor="middle" fill={C.ink} fontSize={8.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.2} strokeLinejoin="round">
                       {formatVendorName(s.v.name, 44)}
                     </text>
                   )}
@@ -587,7 +683,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
 
             {/* fit-only labels — collision-free, NEVER stacked (hover + ledger carry the rest) */}
             {subLabels.map((l) => (
-              <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
+              <text key={l.id} x={l.x} y={l.y} textAnchor={l.anchor} fill={C.ink} fontSize={6.8} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600} paintOrder="stroke" stroke={C.plate0} strokeWidth={1.4} strokeLinejoin="round" style={{ pointerEvents: 'none' }}>
                 {l.name}
               </text>
             ))}
@@ -605,6 +701,9 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           </motion.g>
         )}
       </svg>
+
+      {/* Screen-reader-only live region: narrates the focused cluster on fly-in. */}
+      <div aria-live="polite" className="sr-only">{srAnnounce}</div>
 
       {/* ── Top-right controls (HTML overlay) ── */}
       <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 8, zIndex: 4 }}>
@@ -659,7 +758,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 <div className="min-w-0">
                   {focusedBody ? (
                     <>
-                      <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Mayores proveedores' : 'Top vendors'}</div>
+                      <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Proveedores · por riesgo' : 'Vendors · by risk'}</div>
                       <div style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
                     </>
                   ) : (
@@ -672,17 +771,32 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
               </div>
               <div style={{ flex: 1, overflowY: 'auto' }}>
                 {focusedBody ? (
-                  vendorsLoading ? (
+                  drawerQuery.isLoading && !drawerVendorsFull ? (
                     <div className="font-mono" style={{ padding: 14, fontSize: 10, color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'cargando…' : 'loading…'}</div>
-                  ) : drawerVendors && drawerVendors.length > 0 ? (
-                    drawerVendors.map((v, i) => (
-                      <IndexRow key={v.vendor_id} rank={i + 1} dot={riskRamp(v.risk_score)}
-                        name={formatVendorName(v.name, 72)}
-                        stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(v.risk_score * 100)}%`}
-                        gt={v.is_gt} active={hoverVendor === v.vendor_id}
-                        onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
-                        onClick={() => onVendorClick(v.vendor_id)} />
-                    ))
+                  ) : drawerVendorsFull && drawerVendorsFull.length > 0 ? (
+                    <>
+                      {drawerVendorsFull.map((v, i) => (
+                        <IndexRow key={v.vendor_id} rank={i + 1} dot={riskRamp(safeRisk01(v.risk_score))}
+                          name={formatVendorName(v.name, 72)}
+                          stat={`${formatCompactMXN(v.total_amount_mxn)} · ${v.total_contracts} ${lang === 'es' ? 'contr' : 'contr'} · ${Math.round(safeRisk01(v.risk_score) * 100)}%`}
+                          gt={v.is_gt} active={hoverVendor === v.vendor_id}
+                          onEnter={() => setHoverVendor(v.vendor_id)} onLeave={() => setHoverVendor(null)}
+                          onClick={() => onVendorClick(v.vendor_id)} />
+                      ))}
+                      {drawerQuery.hasNextPage ? (
+                        <button type="button" onClick={() => drawerQuery.fetchNextPage()} disabled={drawerQuery.isFetchingNextPage}
+                          className="w-full font-mono hover:opacity-80"
+                          style={{ padding: '10px 14px', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', background: 'var(--color-background-elevated)', border: 'none', borderTop: '1px solid var(--color-border)', cursor: 'pointer' }}>
+                          {drawerQuery.isFetchingNextPage
+                            ? (lang === 'es' ? 'cargando…' : 'loading…')
+                            : (lang === 'es' ? `Cargar más — ${drawerVendorsFull.length} de ${formatNumber(focusedBody.vendors)}` : `Load more — ${drawerVendorsFull.length} of ${formatNumber(focusedBody.vendors)}`)}
+                        </button>
+                      ) : (
+                        <div className="font-mono" style={{ padding: '10px 14px', fontSize: 9, color: 'var(--color-text-muted)', textAlign: 'center', borderTop: '1px solid var(--color-border)' }}>
+                          {lang === 'es' ? `${drawerVendorsFull.length} proveedores · lista completa` : `${drawerVendorsFull.length} vendors · complete list`}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
                       <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
