@@ -1413,7 +1413,7 @@ export default function CategoryProfile() {
                     {sector_da_avg != null && (
                       <div className="text-[10px] text-text-muted mt-0.5">
                         {isEs ? 'sector' : 'sector'} {sectorDa.toFixed(0)}%
-                        <span className={daPct > sectorDa ? ' text-risk-high' : ' text-signal-live'}> {daPct > sectorDa ? '▲' : '▼'}</span>
+                        <span className={daPct > sectorDa ? ' text-risk-high' : ' text-text-muted'}> {daPct > sectorDa ? '▲' : '▼'}</span>
                       </div>
                     )}
                   </div>

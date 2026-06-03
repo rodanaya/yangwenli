@@ -175,7 +175,9 @@ export function VendorEvidenceTab({
                   readout={f.shap.toFixed(2)}
                   value={Math.abs(f.shap)}
                   max={maxProtect}
-                  color="var(--color-signal-live)"
+                  // §3.10: protective (risk-decreasing) factors are neutral, not
+                  // green — a protective factor isn't "good", just lower-risk.
+                  color="var(--color-text-secondary)"
                 />
               )
             })}
