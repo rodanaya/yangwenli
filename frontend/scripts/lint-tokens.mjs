@@ -101,6 +101,20 @@ const PATTERNS = [
     regex: 'text-emerald-|bg-emerald-|border-emerald-',
     severity: 'fail',
   },
+  // Green HEX in an SVG color attr (fill=/stroke=/stopColor="#10b981"…). This is
+  // the exact vector that put a green-for-safe OECD-ceiling line on /dashboard
+  // (Executive.tsx:754) past review — the generic "raw hex in SVG attr" pattern
+  // above is only a 'warn', so a green reference mark read as "just a chart
+  // colour". Greens used as SECTOR identity (ambiente/agricultura/hacienda) come
+  // from SECTOR_COLORS as a *variable* (fill={SECTOR_COLORS[code]}), never an
+  // inline hex, so this fails ONLY hard-coded green-as-signal. (The Tailwind
+  // green palette by hex: emerald 34d399/10b981/059669/047857, green
+  // 4ade80/22c55e/16a34a/15803d/166534.)
+  {
+    name: 'Green hex in SVG color attr (fill=/stroke=/stopColor) — no green-for-safety (bible §3.10); use SECTOR_COLORS var or a neutral token',
+    regex: "(fill|stroke|stopColor)=[\"']#(34d399|10b981|059669|047857|4ade80|22c55e|16a34a|15803d|166534)",
+    severity: 'fail',
+  },
   // ── WARN tier (debt tracking; doesn't block build) ───────────────────
   // Raw 6-digit hex literals in pages/components. Should come from
   // lib/constants (RISK_COLORS, SECTOR_COLORS) or var(--…) tokens.

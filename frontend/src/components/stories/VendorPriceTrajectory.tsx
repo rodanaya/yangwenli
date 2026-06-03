@@ -195,16 +195,16 @@ export function VendorPriceTrajectory({ lang = 'es' }: Props) {
             y={bandTop}
             width={xWidth}
             height={bandBottom - bandTop}
-            fill="#166534"
-            fillOpacity={0.18}
+            fill="var(--color-text-muted)"
+            fillOpacity={0.16}
           />
           <text
             x={xMin + 8}
             y={bandTop + 13}
             fontSize={9}
             fontFamily="monospace"
-            fill="#4ade80"
-            fillOpacity={0.7}
+            fill="var(--color-text-muted)"
+            fillOpacity={0.9}
           >
             {zoneLabel}
           </text>

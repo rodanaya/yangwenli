@@ -257,8 +257,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         aria-label="Sector year-over-year growth diverging dot chart"
       >
         {/* Header */}
-        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#f87171" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
-        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#4ade80" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
+        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="var(--color-text-muted)" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="var(--color-text-secondary)" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
 
         {/* Zero axis */}
         <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="var(--color-border)" strokeWidth={0.75} />

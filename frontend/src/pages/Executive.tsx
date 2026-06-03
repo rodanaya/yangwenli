@@ -750,8 +750,10 @@ export default function Executive() {
                           fillOpacity={isDA ? 0.85 : 0.55} />
                       )
                     })}
+                    {/* OECD ceiling reference mark — neutral, never green: a
+                        procurement-only model can't certify "safe" (Bible §3.10) */}
                     <line x1={4 + 30 * 7.5 / 25} x2={4 + 30 * 7.5 / 25} y1={1} y2={21}
-                      stroke="#10b981" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.7} />
+                      stroke="var(--color-text-muted)" strokeWidth={1.2} strokeDasharray="2 2" opacity={0.8} />
                   </svg>
                   <div className="mt-2.5 pt-1.5 text-[9px] font-mono text-text-muted leading-[1.4]" style={{ borderTop: '1px solid rgba(160, 104, 32, 0.18)' }}>
                     {lang === 'en' ? '2.5× the OECD recommended ceiling' : '2.5× el umbral recomendado OCDE'}
