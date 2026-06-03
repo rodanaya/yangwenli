@@ -30,6 +30,7 @@ import {
   PATTERN_COLORS,
 } from '@/lib/constants'
 import { formatCompactMXN, formatCompactUSD, formatCompactUSDByYear, formatNumber, shortenContractName } from '@/lib/utils'
+import { cleanContractDescription, computeContractFlags, type ContractFlags } from '@/lib/contract-audit'
 import { formatVendorName } from '@/lib/vendor/formatName'
 import { getAdministrationByYear } from '@/lib/administrations'
 import {
@@ -3799,74 +3800,16 @@ function Z3Panel({
   // lights only when its signal fires, so a monotonous burst renders the repeat
   // slot as a solid vertical rail and the outliers as the dark gaps in it.
   const flagData = (() => {
+    // De-dup (2026-06-03): per-contract classification + census now come from the
+    // shared lib/contract-audit — single source of truth with the dossier register
+    // (VendorActivityTab § El Expediente). Previously this was a ~70-line inline
+    // copy that could silently drift from the dossier's. logLo/logHi stay local:
+    // they drive the explore-only per-row magnitude tick, which the table lacks.
+    const audit = computeContractFlags(contracts)
     const valued = contracts.map((c) => Number(c.amount_mxn) || 0).filter((a) => a > 0).sort((a, b) => a - b)
-    // Top-decile threshold within THIS vendor's own sample (needs ≥10 to mean anything).
-    const decileThreshold = valued.length >= 10 ? (valued[Math.floor(valued.length * 0.9)] ?? Infinity) : Infinity
-    // Repeated-AMOUNT map — round to nearest 100 MXN to catch near-identical splits.
-    const amtMap = new Map<number, number>()
-    // Repeated-OBJECT map — real vendors repeat the procurement OBJECT
-    // ("medicamentos") far more than the exact amount. Group by a COARSE keyword
-    // key (accent-stripped, procurement verbs/stopwords dropped, first
-    // significant word's 5-char root) so morphological + phrasing variants —
-    // medicamentos / medicamento / medicinas, adquisición vs compra — merge into
-    // one rail instead of splintering. A readable label is kept for the census.
-    const STOP = new Set(['de', 'del', 'la', 'el', 'los', 'las', 'y', 'o', 'por', 'con', 'para', 'en', 'un', 'una', 'al', 'adquisicion', 'compra', 'adjudicacion', 'adq', 'conv', 'directa', 'mediante', 'contratacion', 'servicio', 'servicios', 'suministro', 'bien', 'bienes'])
-    const objKey = (c: ContractListItem) => {
-      const o = cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '').objeto
-      if (!o) return ''
-      const words = o.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').split(/\s+/).filter((w) => w.length >= 3 && !STOP.has(w))
-      return words.length ? words[0].slice(0, 5) : ''
-    }
-    const objCount = new Map<string, number>()
-    const objLabel = new Map<string, string>() // key -> first readable objeto seen (for the census)
-    contracts.forEach((c) => {
-      const a = Number(c.amount_mxn) || 0
-      if (a > 0) { const k = Math.round(a / 100) * 100; amtMap.set(k, (amtMap.get(k) ?? 0) + 1) }
-      const k = objKey(c)
-      if (k) {
-        objCount.set(k, (objCount.get(k) ?? 0) + 1)
-        if (!objLabel.has(k)) objLabel.set(k, cleanContractDescription((c as ContractListItem & { title?: string }).title ?? '').objeto ?? '')
-      }
-    })
-    const isRoundish = (a: number) => {
-      if (a <= 0) return false
-      if (a % 10000 === 0) return true
-      const step = 50000
-      const next = Math.ceil(a / step) * step
-      return next > a && (next - a) / a <= 0.03
-    }
-    const amendRe = /modific|convenio/i
-    const info = new Map<number, { repeated: boolean; repeatAmt: number; repeatObj: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }>()
-    contracts.forEach((c) => {
-      const a = Number(c.amount_mxn) || 0
-      const repeatAmt = a > 0 ? (amtMap.get(Math.round(a / 100) * 100) ?? 0) : 0
-      const k = objKey(c)
-      const repeatObj = k ? (objCount.get(k) ?? 0) : 0
-      const repeated = repeatAmt >= 3 || repeatObj >= 3   // ≡ slot: amount OR object cluster
-      const singleBid = !!c.is_single_bid
-      const decile = a > 0 && a >= decileThreshold
-      const blob = `${(c as ContractListItem & { title?: string; procedure_type?: string }).title ?? ''} ${(c as ContractListItem & { procedure_type?: string }).procedure_type ?? ''}`
-      const amendment = amendRe.test(blob)
-      const round = isRoundish(a)
-      const count = (repeated ? 1 : 0) + (singleBid ? 1 : 0) + (decile ? 1 : 0) + (amendment ? 1 : 0)
-      info.set(c.id, { repeated, repeatAmt, repeatObj, singleBid, decile, amendment, round, count })
-    })
-    // Log-scale bounds for the per-row magnitude tick (so a narrow band still separates).
     const logLo = valued.length ? Math.log10(valued[0]) : 0
     const logHi = valued.length ? Math.log10(valued[valued.length - 1]) : 1
-    // Census
-    const repeatedRows = contracts.filter((c) => info.get(c.id)?.repeated).length
-    const noCompetition = contracts.filter((c) => c.is_direct_award || c.is_single_bid).length
-    let peakAmt = 0, peakMult = 0
-    amtMap.forEach((n, k) => { if (n > peakMult) { peakMult = n; peakAmt = k } })
-    let topKey = '', topObjN = 0
-    objCount.forEach((n, k) => { if (n > topObjN) { topObjN = n; topKey = k } })
-    const topObj = objLabel.get(topKey) ?? ''
-    const yearCount = new Set(contracts.map((c) => Number(c.contract_year)).filter(Boolean)).size
-    return {
-      info, logLo, logHi,
-      census: { shown: contracts.length, repeatedRows, noCompetition, peakAmt, peakMult, topObj, topObjN, yearCount },
-    }
+    return { info: audit.info, logLo, logHi, census: audit.census }
   })()
 
   // Sort + year filter for the contracts register
@@ -4347,54 +4290,13 @@ function Z3TimelineStrip({
   )
 }
 
-/**
- * Split a raw COMPRANET contract title into a readable object and an
- * expediente reference. The field conflates three things — real prose
- * ("adquisición de medicamentos"), pure procurement codes ("D9P0566",
- * "AA-050GYR028-E360-2019"), and code+prose hybrids. Rendering codes as
- * titles is what made the register unreadable.
- *
- * Mechanic: walk leading tokens; anything that isn't a plain word (i.e.
- * contains a digit or code punctuation) is part of the expediente prefix.
- * The first real word starts the object; the rest is prose. Returns the
- * sentence-cased object (or null when there's no prose at all) and the
- * uppercased expediente code (or null).
- */
-function cleanContractDescription(raw: string): { objeto: string | null; expediente: string | null } {
-  const s = (raw ?? '').replace(/\s+/g, ' ').trim()
-  if (!s) return { objeto: null, expediente: null }
-  const tokens = s.split(' ')
-  // Strip surrounding punctuation before classifying so "medicamentos," still
-  // reads as a word (the trailing-comma bug that ate prose into the code).
-  const core = (t: string) => t.replace(/^[^0-9a-záéíóúñü]+/i, '').replace(/[^0-9a-záéíóúñü]+$/i, '')
-  // A "word" is pure letters (accents allowed), length ≥ 2 — real prose.
-  const isWord = (t: string) => /^[a-záéíóúñü]{2,}$/i.test(core(t))
-  // A "code" has a digit AND code punctuation (hyphen/slash), long enough to be
-  // an expediente — catches both leading prefixes and codes embedded mid-prose.
-  const isCode = (t: string) => /\d/.test(t) && /[-/]/.test(t) && core(t).length >= 5
-  // 1) consume the leading code prefix (classic "AA-050... adquisición de…")
-  let i = 0
-  const codeParts: string[] = []
-  while (i < tokens.length && !isWord(tokens[i])) {
-    codeParts.push(tokens[i])
-    i++
-  }
-  // 2) from the remaining prose, pull out any embedded expediente codes too
-  const objWords: string[] = []
-  for (const t of tokens.slice(i)) {
-    if (isCode(t)) codeParts.push(t)
-    else objWords.push(t)
-  }
-  const objectRaw = objWords.join(' ').trim()
-  const objeto = objectRaw ? shortenContractName(objectRaw, 90) : null
-  // Show only the primary expediente code (first token); flag extras with "…"
-  // so the reference never clips mid-token at a hard character cap.
-  const codeFirst = codeParts[0] ? codeParts[0].toUpperCase().slice(0, 28) : ''
-  const expediente = codeFirst ? (codeParts.length > 1 ? `${codeFirst} …` : codeFirst) : null
-  return { objeto, expediente }
-}
-
-type Z3RowFlags = { repeated: boolean; repeatAmt: number; repeatObj: number; singleBid: boolean; decile: boolean; amendment: boolean; round: boolean; count: number }
+// cleanContractDescription + the per-row flag classification now live in the
+// shared @/lib/contract-audit (imported above) — single source of truth with the
+// dossier register (VendorActivityTab § El Expediente). The ~50-line inline copies
+// that used to live here were verbatim duplicates that could silently drift.
+// Z3RowFlags is the shared ContractFlags shape (kept as a local alias so the many
+// Z3ContractRow call sites don't churn).
+type Z3RowFlags = ContractFlags
 
 function Z3ContractRow({
   c,
