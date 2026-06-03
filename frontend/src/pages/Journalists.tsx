@@ -2,12 +2,14 @@ import { useMemo } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { ariaApi, analysisApi } from '@/api/client'
+import { ariaApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 import { findStoryByLongformSlug } from '@/lib/atlas-stories'
 import { getStoriesByLensTag, type AriaPattern, type SectorCode } from '@/lib/story-content'
 import { SECTOR_NAMES_EN } from '@/lib/constants'
 import { EntityIdentityChip } from '@/components/ui/EntityIdentityChip'
+import { useExecutiveSummary } from '@/hooks/useExecutiveSummary'
+import { PageFooter } from '@/components/layout/PageFooter'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -777,22 +779,10 @@ export default function Journalists() {
   const lensSector = searchParams.get('sector') as SectorCode | null
   const lensFilterActive = !!(lensPattern || lensSector)
 
-  // Executive summary — wire stat strip; graceful fallback to hardcoded values
-  const { data: execData } = useQuery({
-    queryKey: ['executive', 'summary', 'journalists'],
-    queryFn: () => analysisApi.getExecutiveSummary(),
-    staleTime: 30 * 60 * 1000,
-  })
-
-  const statContracts = execData?.headline?.total_contracts ?? 3051294
-  // high_risk_rate from /executive/summary is ALREADY a percentage (e.g. 10.9),
-  // NOT a 0..1 fraction — display directly, do not ×100. Fallback 11.0 = v0.8.5 HR.
-  const rawHrRate = execData?.risk?.high_risk_rate
-  const statHrPct = rawHrRate != null ? rawHrRate : 11.0
-  // Display as percentage string
-  const hrDisplay = `${statHrPct.toFixed(1)}%`
-  // Total value in trillions
-  const totalValueMXN = execData?.headline?.total_value ?? 9.9e12
+  // Headline figures from the shared source (one query, consistent everywhere —
+  // footer + stat strip + deck all read the same live numbers).
+  const { totalContracts: statContracts, highRiskRatePct, totalValueMXN } = useExecutiveSummary()
+  const hrDisplay = `${highRiskRatePct.toFixed(1)}%`
   const totalValueT = totalValueMXN / 1e12
 
   // Stable editorial ranking: lead = el-sexenio-del-riesgo (amount=2760 tops the sort)
@@ -1108,31 +1098,9 @@ export default function Journalists() {
         </div>
 
         {/* =================================================================
-            FOOTER — kept unchanged
+            FOOTER — shared credibility strip (live contract count)
         ================================================================= */}
-        <footer className="mt-16 pt-8 pb-16 border-t border-border">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
-            <span>
-              {t('footer.source')}:{' '}
-              <span className="text-text-secondary">COMPRANET / SHCP</span>
-            </span>
-            <span className="text-text-primary">·</span>
-            <span>
-              {t('footer.riskModel')}{' '}
-              <span className="text-text-secondary tabular-nums">v0.8.5</span>
-            </span>
-            <span className="text-text-primary">·</span>
-            <span>
-              {t('footer.testAuc')}{' '}
-              <span className="text-text-secondary tabular-nums">0.785</span>
-            </span>
-            <span className="text-text-primary">·</span>
-            <span>
-              <span className="text-text-secondary tabular-nums">3,051,294</span>{' '}
-              {t('footer.contractsAnalyzed')}
-            </span>
-          </div>
-        </footer>
+        <PageFooter />
       </div>
     </div>
   )
