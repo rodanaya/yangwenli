@@ -131,10 +131,10 @@ export function VendorHero({
         }}
       />
 
-      <div className="pt-16 pb-12">
+      <div className="pt-8 pb-6">
 
         {/* ─── Row 1: index strip + actions ─────────────────────────── */}
-        <div className="flex items-baseline justify-between gap-4 mb-7">
+        <div className="flex items-baseline justify-between gap-4 mb-5">
           <div
             className="font-mono tabular-nums"
             style={{
@@ -233,7 +233,7 @@ export function VendorHero({
         {/* Full-width hairline below the headline row */}
         <div
           aria-hidden="true"
-          className="mt-8"
+          className="mt-6"
           style={{ height: 1, background: 'var(--color-border)' }}
         />
 
@@ -241,7 +241,7 @@ export function VendorHero({
         {flags.length > 0 && (
           <aside
             aria-labelledby="vendor-marginal-note"
-            className="mt-8"
+            className="mt-5"
             style={{
               borderLeft: `2px solid var(--color-accent)`,
               paddingLeft: 14,
@@ -342,8 +342,8 @@ function VerdictCard({
       className="flex-shrink-0 relative"
       style={{
         width: 168,
-        paddingTop: 10,
-        paddingBottom: 12,
+        paddingTop: 6,
+        paddingBottom: 8,
         paddingLeft: 18,
         paddingRight: 18,
       }}
@@ -363,7 +363,7 @@ function VerdictCard({
             fontFamily: '"Playfair Display", Georgia, serif',
             fontStyle: 'italic',
             fontWeight: 800,
-            fontSize: 52,
+            fontSize: 46,
             lineHeight: 1,
             color: riskColor,
             letterSpacing: '-0.02em',
@@ -574,7 +574,7 @@ function Lede({ text, sectorAccent }: { text: string; sectorAccent: string }) {
   const rest = text.slice(1)
   return (
     <div
-      className="mt-10"
+      className="mt-6"
       style={{
         borderLeft: `2px solid ${sectorAccent}`,
         paddingLeft: 20,

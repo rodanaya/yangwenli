@@ -1,25 +1,23 @@
 /**
  * VendorDossier — canonical unified dossier at /vendors/:id.
  *
- * Built 2026-05-25 (DESIGNUS round 6, Phase 1 final step). Composes the
- * full vendor investigation in scroll order:
+ * 2026-06-03 (DESIGNUS — operational rebuild). Reclassified from a long-form
+ * narrative (six full-viewport story chapters, ~18,000px) into a dense
+ * OPERATIONAL dossier an investigator can triage without scrolling:
  *
- *   Hero          — cover slug (Component 1/10)
- *   Chapter I     — Subject: scale (Component 2/10)
- *   Chapter II    — Timeline: shape (Component 3/10)
- *   Chapter III   — Network: web of relationships (Component 4/10)
- *   Chapter IV    — Money: cumulative journey (Component 5/10)
- *   Chapter V     — Pattern: model's reading (Component 6/10)
- *   Chapter VI    — Verdict: where this leaves us (Component 7/10)
- *   Evidence      — reference data: SHAP + waterfall + peer (Component 8/10)
- *   Activity      — reference data: timeline + contracts table (Component 9/10)
- *   Network ref   — reference data: ARIA + external + linked cases (10/10)
- *   Methodology   — provenance footer
+ *   Hero            — identity + verdict seal (name · score · tier · flags)
+ *   Command panel   — VendorStatStrip + VendorDiagnosticGrid (the at-a-glance:
+ *                     the decisive numbers, why flagged, OECD deviation, top
+ *                     clients, risk-over-time). Replaces the six narrative
+ *                     chapters, which merely duplicated the reference tabs.
+ *   Evidence        — full SHAP / waterfall / peer / external signals
+ *   Activity        — risk timeline + institutions + paginated contracts table
+ *   Network         — ARIA / external registries / linked cases / co-bidders
+ *   Methodology     — provenance footer
  *
- * Replaces the previous /vendors/:id redirect-into-/explore behavior
- * (Gap 2 May 11 decision). The dossier is now the canonical destination;
- * /explore remains the entry instrument. /print/vendors/:id retains the
- * legacy VendorProfile for printable / fallback use.
+ * The scroll-driven narrative version still lives at /thread/:vendorId; the
+ * thread chapter components (TimelineHourglass, MoneyStaircase, …) are no
+ * longer imported here. /print/vendors/:id retains the legacy VendorProfile.
  */
 
 import { lazy, Suspense, useState } from 'react'
@@ -33,16 +31,10 @@ import type { ContractListItem, VendorLinkedScandalsResponse } from '@/api/types
 import { useVendorData } from '@/hooks/useVendorData'
 import { buildVendorFlags } from '@/components/vendor/buildFlags'
 import { VendorHero } from '@/components/vendor/VendorHero'
+import { VendorStatStrip, VendorDiagnosticGrid } from '@/components/vendor/VendorCommandPanel'
 import { VendorEvidenceTab } from '@/components/vendor/VendorEvidenceTab'
 import { VendorActivityTab } from '@/components/vendor/VendorActivityTab'
 import { VendorNetworkTab } from '@/components/vendor/VendorNetworkTab'
-
-import { ChapterSubject } from '@/components/thread/ChapterSubject'
-import { TimelineHourglass } from '@/components/thread/TimelineHourglass'
-import { ConcentricConstellation } from '@/components/thread/ConcentricConstellation'
-import { MoneyStaircase } from '@/components/thread/MoneyStaircase'
-import { PatternDiagnostic } from '@/components/thread/PatternDiagnostic'
-import { ChapterVerdict } from '@/components/thread/ChapterVerdict'
 
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -55,73 +47,63 @@ const NetworkGraphModal = lazy(() =>
   import('@/components/NetworkGraphModal').then((m) => ({ default: m.NetworkGraphModal })),
 )
 
-// ─── Reference-section heading — smaller than ChapterHeading ────────────────
+// ─── Reference-section header — tight, left-aligned (replaces the old centered
+//     py-12 plate). Mono § eyebrow + italic title + sector-tinted rule. ───────
 
-function ReferenceSectionHeading({
-  label,
+function DossierSectionHeader({
+  id,
+  eyebrow,
   title,
-  subtitle,
-  sectorAccent,
+  meta,
+  accent,
 }: {
-  label: string
+  id: string
+  eyebrow: string
   title: string
-  subtitle: string
-  sectorAccent: string
+  meta?: string
+  accent: string
 }) {
   return (
-    <header className="text-center py-12">
-      <div
-        className="font-mono mb-3"
-        style={{
-          fontSize: 10,
-          letterSpacing: '0.20em',
-          textTransform: 'uppercase',
-          color: sectorAccent,
-          fontWeight: 700,
-        }}
-      >
-        § {label}
+    <div
+      className="flex items-baseline justify-between gap-4 pb-2 mb-5"
+      style={{ borderBottom: `1px solid ${accent}33` }}
+    >
+      <div className="flex items-baseline gap-3 min-w-0">
+        <span
+          id={`${id}-eyebrow`}
+          className="font-mono flex-shrink-0"
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: accent,
+            fontWeight: 700,
+          }}
+        >
+          § {eyebrow}
+        </span>
+        <h2
+          className="truncate"
+          style={{
+            fontFamily: '"EB Garamond", Georgia, serif',
+            fontStyle: 'italic',
+            fontWeight: 500,
+            fontSize: 18,
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.005em',
+          }}
+        >
+          {title}
+        </h2>
       </div>
-      <h2
-        style={{
-          fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
-          fontWeight: 600,
-          fontSize: 20,
-          letterSpacing: '0.20em',
-          textTransform: 'uppercase',
-          color: 'var(--color-text-primary)',
-          marginBottom: 6,
-        }}
-      >
-        {title}
-      </h2>
-      <p
-        style={{
-          fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
-          fontStyle: 'italic',
-          fontWeight: 400,
-          fontSize: 14,
-          color: 'var(--color-text-muted)',
-          maxWidth: '40ch',
-          margin: '0 auto',
-          lineHeight: 1.4,
-        }}
-      >
-        {subtitle}
-      </p>
-    </header>
-  )
-}
-
-// ─── Section divider ────────────────────────────────────────────────────────
-
-function ChapterDivider({ sectorAccent }: { sectorAccent?: string }) {
-  const color = sectorAccent ?? 'var(--color-border)'
-  return (
-    <div className="flex items-center justify-center gap-4 py-12">
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
-      <div className="w-1.5 h-1.5 rounded-full" style={{ background: color, opacity: 0.5 }} />
-      <div className="h-px w-24" style={{ background: 'var(--color-border)' }} />
+      {meta && (
+        <span
+          className="font-mono tabular-nums flex-shrink-0"
+          style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--color-text-muted)' }}
+        >
+          {meta}
+        </span>
+      )}
     </div>
   )
 }
@@ -131,67 +113,48 @@ function ChapterDivider({ sectorAccent }: { sectorAccent?: string }) {
 function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
   const navigate = useNavigate()
   return (
-    <section id="methodology" className="py-16 px-4 sm:px-8 max-w-4xl mx-auto">
-      <div
+    <section id="methodology" className="mt-16 pt-6" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <p
+        className="font-mono mb-2"
         style={{
-          borderTop: '1px solid var(--color-border)',
-          paddingTop: 32,
-          textAlign: 'center',
+          fontSize: 9.5,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-muted)',
+          fontWeight: 500,
         }}
       >
-        <p
-          className="font-mono mb-3"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-muted)',
-            fontWeight: 500,
-          }}
-        >
-          § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
-        </p>
-        <p
-          style={{
-            fontFamily: '"Source Serif Pro", Georgia, serif',
-            fontStyle: 'italic',
-            fontSize: 14,
-            color: 'var(--color-text-secondary)',
-            maxWidth: '64ch',
-            margin: '0 auto',
-            lineHeight: 1.6,
-          }}
-        >
-          {lang === 'es' ? (
-            <>
-              Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,427
-              casos de corrupción documentados. Las señales del modelo son
-              indicadores estadísticos, no determinaciones legales.
-            </>
-          ) : (
-            <>
-              COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,427 documented
-              corruption cases. Model signals are statistical indicators, not legal
-              determinations.
-            </>
-          )}
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/methodology')}
-          className="mt-4 font-mono cursor-pointer hover:opacity-70 transition-opacity"
-          style={{
-            fontSize: 10,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: 'var(--color-text-secondary)',
-            background: 'none',
-            border: 'none',
-          }}
-        >
-          {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
-        </button>
-      </div>
+        § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
+      </p>
+      <p
+        style={{
+          fontFamily: '"Source Serif Pro", Georgia, serif',
+          fontStyle: 'italic',
+          fontSize: 13.5,
+          color: 'var(--color-text-secondary)',
+          maxWidth: '72ch',
+          lineHeight: 1.55,
+        }}
+      >
+        {lang === 'es'
+          ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5 entrenado con 1,427 casos de corrupción documentados. Las señales del modelo son indicadores estadísticos, no determinaciones legales.'
+          : 'COMPRANET data 2002–2025. v0.8.5 risk model trained on 1,427 documented corruption cases. Model signals are statistical indicators, not legal determinations.'}
+      </p>
+      <button
+        type="button"
+        onClick={() => navigate('/methodology')}
+        className="mt-3 font-mono cursor-pointer hover:opacity-70 transition-opacity"
+        style={{
+          fontSize: 10,
+          letterSpacing: '0.14em',
+          textTransform: 'uppercase',
+          color: 'var(--color-text-secondary)',
+          background: 'none',
+          border: 'none',
+        }}
+      >
+        {lang === 'es' ? 'Ver metodología completa' : 'See full methodology'} ↗
+      </button>
     </section>
   )
 }
@@ -284,52 +247,20 @@ export default function VendorDossier() {
   const fromAria = location.state && (location.state as { from?: string }).from === '/aria'
   const isGroundTruth = !!data.groundTruthStatus.data?.is_known_bad
 
-  // Timeline data shape for narrative chapters (Timeline + Money) — comes
-  // from the risk-timeline endpoint via the `lifecycle` query in useVendorData
-  const timelineForChapters = (data.lifecycle.data?.timeline ?? []).map((item) => ({
+  // Timeline (risk-over-years) for the diagnostic grid's "risk over time" panel.
+  const timelineForGrid = (data.lifecycle.data?.timeline ?? []).map((item) => ({
     year: item.year,
     avg_risk_score: item.avg_risk_score ?? null,
-    contract_count: item.contract_count,
-    total_value: item.total_value,
   }))
 
-  // Co-bidders data shape for Network chapter
-  const coBiddersForChapter = data.coBidders.data?.co_bidders ?? null
-
-  // Institutions data shape for Network chapter institutional footprint
-  const institutionsForChapter = (data.institutions.data?.data ?? []).map((inst) => ({
+  // Top institutions for the "where the money goes" panel.
+  const institutionsForGrid = (data.institutions.data?.data ?? []).map((inst) => ({
     institution_id: inst.institution_id,
     institution_name: inst.institution_name,
-    institution_type: inst.institution_type,
-    contract_count: inst.contract_count,
     total_value_mxn: inst.total_value_mxn,
-    avg_risk_score: inst.avg_risk_score,
-    first_year: inst.first_year,
-    last_year: inst.last_year,
   }))
 
-  // SHAP waterfall for Pattern chapter
-  const waterfallForChapter = (data.waterfall.data ?? []).map((f) => ({
-    feature: f.feature,
-    contribution: f.contribution,
-    z_score: f.z_score,
-    label_en: f.label_en,
-  }))
-
-  // ARIA data shape for Verdict + Network chapters
-  const ariaForChapters = data.aria.data ? {
-    ips_final: data.aria.data.ips_final,
-    ips_tier: data.aria.data.ips_tier,
-    primary_pattern: data.aria.data.primary_pattern ?? null,
-    review_status: data.aria.data.review_status ?? '',
-    is_efos_definitivo: !!data.aria.data.is_efos_definitivo,
-    is_sfp_sanctioned: !!data.aria.data.is_sfp_sanctioned,
-    in_ground_truth: !!data.aria.data.in_ground_truth,
-    memo_text: data.aria.data.memo_text ?? null,
-    web_evidence_score: data.aria.data.web_evidence_score ?? null,
-    web_evidence_verdict: data.aria.data.web_evidence_verdict ?? null,
-    web_evidence_updated_at: data.aria.data.web_evidence_updated_at ?? null,
-  } : null
+  const contractsTotal = data.contracts.data?.pagination?.total ?? vendor.total_contracts
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -343,7 +274,7 @@ export default function VendorDossier() {
         </button>
       )}
 
-      {/* HERO */}
+      {/* HERO — identity + verdict seal */}
       <VendorHero
         vendor={vendor}
         scorecard={data.scorecard.data}
@@ -351,7 +282,7 @@ export default function VendorDossier() {
         shap={data.shap.data}
         ariaTier={data.aria.data?.ips_tier ?? null}
         isGroundTruth={isGroundTruth}
-        showTOC={true}
+        showTOC={false}
         actions={
           <Button
             variant="outline"
@@ -367,91 +298,30 @@ export default function VendorDossier() {
         }
       />
 
-      {/* ─── Narrative chapters I–VI ─────────────────────────────── */}
-
-      <ChapterSubject
-        vendor={{
-          name: vendor.name,
-          total_value_mxn: vendor.total_value_mxn,
-          total_contracts: vendor.total_contracts,
-          primary_sector_name: vendor.primary_sector_name,
-          avg_risk_score: vendor.avg_risk_score,
-          first_contract_year: vendor.first_contract_year,
-          last_contract_year: vendor.last_contract_year,
-          high_risk_pct: vendor.high_risk_pct,
-          direct_award_pct: vendor.direct_award_pct,
-        }}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <TimelineHourglass
-        timeline={timelineForChapters}
-        vendorFirstYear={vendor.first_contract_year}
-        vendorLastYear={vendor.last_contract_year}
-        totalContracts={vendor.total_contracts}
-        vendorName={vendor.name}
-        primarySectorName={vendor.primary_sector_name}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <ConcentricConstellation
-        vendorId={vendorId}
-        subjectName={vendor.name}
-        sectorName={vendor.primary_sector_name ?? null}
-        totalInstitutions={vendor.total_institutions}
-        sectorsCount={vendor.sectors_count}
-        coBidders={coBiddersForChapter ?? []}
-        institutions={institutionsForChapter}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <MoneyStaircase
-        timeline={timelineForChapters}
-        vendorName={vendor.name}
-        primarySectorName={vendor.primary_sector_name}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <PatternDiagnostic
-        features={waterfallForChapter}
-        ariaPattern={ariaForChapters?.primary_pattern}
-        primarySectorName={vendor.primary_sector_name}
-        isLoading={data.waterfall.isLoading}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <ChapterVerdict
-        vendorId={vendorId}
-        vendor={{
-          name: vendor.name,
-          avg_risk_score: vendor.avg_risk_score,
-          in_ground_truth: isGroundTruth,
-          total_institutions: vendor.total_institutions,
-          sectors_count: vendor.sectors_count,
-          total_contracts: vendor.total_contracts,
-          primary_sector_name: vendor.primary_sector_name,
-        }}
-        coBidderCount={coBiddersForChapter?.length ?? 0}
-        aria={ariaForChapters}
-      />
-
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      {/* ─── Reference sections (8/9/10) ──────────────────────────── */}
-
-      <section id="evidence">
-        <ReferenceSectionHeading
-          label={lang === 'es' ? 'EVIDENCIA' : 'EVIDENCE'}
-          title={lang === 'es' ? 'Material de respaldo' : 'Supporting material'}
-          subtitle={lang === 'es' ? 'Descomposición SHAP completa, comparación con pares del sector y desglose de factores de riesgo.' : 'Full SHAP decomposition, sector-peer comparison, and risk-factor breakdown.'}
-          sectorAccent={sectorAccent}
+      {/* COMMAND PANEL — the operational at-a-glance (replaces 6 chapters) */}
+      <div className="mt-6">
+        <VendorStatStrip vendor={vendor} lang={lang} />
+      </div>
+      <div className="mt-7">
+        <VendorDiagnosticGrid
+          vendor={vendor}
+          shap={data.shap.data}
+          institutions={institutionsForGrid}
+          timeline={timelineForGrid}
+          lang={lang}
         />
-        <div className="max-w-4xl mx-auto px-4 sm:px-8">
+      </div>
+
+      {/* REFERENCE — the full record, full-width, tight section headers */}
+      <div className="mt-14 space-y-14">
+        <section id="evidence" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="evidence"
+            eyebrow={lang === 'es' ? 'Evidencia' : 'Evidence'}
+            title={lang === 'es' ? 'La lectura del modelo' : "The model's reading"}
+            meta={lang === 'es' ? 'SHAP · pares · señales' : 'SHAP · peers · signals'}
+            accent={sectorAccent}
+          />
           <VendorEvidenceTab
             vendor={vendor}
             waterfall={data.waterfall.data}
@@ -461,19 +331,16 @@ export default function VendorDossier() {
             groundTruth={data.groundTruthStatus.data}
             peerComparison={data.peerComparison.data}
           />
-        </div>
-      </section>
+        </section>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <section id="activity">
-        <ReferenceSectionHeading
-          label={lang === 'es' ? 'ACTIVIDAD' : 'ACTIVITY'}
-          title={lang === 'es' ? 'Historial completo' : 'Full track record'}
-          subtitle={lang === 'es' ? 'Cronología de riesgo, tabla paginada de contratos con filtros, instituciones cliente.' : 'Risk timeline, paginated contracts table with filters, client institutions.'}
-          sectorAccent={sectorAccent}
-        />
-        <div className="max-w-4xl mx-auto px-4 sm:px-8">
+        <section id="activity" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="activity"
+            eyebrow={lang === 'es' ? 'Actividad' : 'Activity'}
+            title={lang === 'es' ? 'El historial' : 'The track record'}
+            meta={`${contractsTotal.toLocaleString(lang === 'es' ? 'es-MX' : 'en-US')} ${lang === 'es' ? 'contratos' : 'contracts'}`}
+            accent={sectorAccent}
+          />
           <VendorActivityTab
             vendor={vendor}
             contracts={data.contracts.data}
@@ -486,19 +353,16 @@ export default function VendorDossier() {
             peerComparison={data.peerComparison.data}
             contractAggregate={data.contractAggregate.data}
           />
-        </div>
-      </section>
+        </section>
 
-      <ChapterDivider sectorAccent={sectorAccent} />
-
-      <section id="network">
-        <ReferenceSectionHeading
-          label={lang === 'es' ? 'RED' : 'NETWORK'}
-          title={lang === 'es' ? 'Vínculos y validación' : 'Ties and validation'}
-          subtitle={lang === 'es' ? 'Cola ARIA, registros externos (EFOS, SFP, GT), casos vinculados, red completa de co-licitantes.' : 'ARIA queue, external registries (EFOS, SFP, GT), linked cases, full co-bidder network.'}
-          sectorAccent={sectorAccent}
-        />
-        <div className="max-w-4xl mx-auto px-4 sm:px-8">
+        <section id="network" className="scroll-mt-20">
+          <DossierSectionHeader
+            id="network"
+            eyebrow={lang === 'es' ? 'Red' : 'Network'}
+            title={lang === 'es' ? 'Vínculos y validación' : 'Ties and validation'}
+            meta={lang === 'es' ? 'ARIA · registros · casos' : 'ARIA · registries · cases'}
+            accent={sectorAccent}
+          />
           <VendorNetworkTab
             vendor={vendor}
             aria={data.aria.data}
@@ -508,8 +372,8 @@ export default function VendorDossier() {
             shap={data.shap.data}
             onOpenNetworkGraph={() => setNetworkOpen(true)}
           />
-        </div>
-      </section>
+        </section>
+      </div>
 
       <ProvenanceFooter lang={lang} />
 
