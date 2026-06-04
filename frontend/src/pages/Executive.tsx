@@ -541,7 +541,7 @@ export default function Executive() {
             Reads as one argument: spend → bypass → flag → catch.
             Each tile carries a chapter kicker (I/II/III/IV) and a tail
             connector ("of which …") that ties to the next step. ─── */}
-        <section className="mb-12">
+        <section className="mb-8">
           <PlateFrame
             lang={lang}
             folio="V"
@@ -647,7 +647,7 @@ export default function Executive() {
               <div className="relative flex flex-col">
                 <ChapterRail step={step} delay={0.05 + steps.indexOf(step) * 0.06} />
                 <div
-                  className={`${tileBase} surface-card rounded-sm mt-2 hover:shadow-lg`}
+                  className={`${tileBase} surface-card rounded-sm mt-2`}
                   onClick={onActivate}
                   onKeyDown={(e) => { if (e.key === 'Enter') onActivate() }}
                   tabIndex={0}
@@ -852,7 +852,7 @@ export default function Executive() {
         </section>
 
         {/* ─── KEY FINDINGS — specific discoveries with animated visualizations ─── */}
-        <section className="mb-12" aria-labelledby="findings-title">
+        <section className="mb-8" aria-labelledby="findings-title">
           <div id="findings-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'What the analysis found' : 'Lo que encontró el análisis'}
           </div>
@@ -865,7 +865,7 @@ export default function Executive() {
 
             {/* Finding 01 — Ghost Economy: compare-gap animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#dc2626' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -971,7 +971,7 @@ export default function Executive() {
 
             {/* Finding 02 — Audit Blindspot: fill animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#f59e0b' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1074,7 +1074,7 @@ export default function Executive() {
 
             {/* Finding 03 — Threshold Gaming: two-bar comparison */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#8b5cf6' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1254,7 +1254,7 @@ export default function Executive() {
 
             {/* Finding 04 — Institutional Capture: dot-field animation */}
             <motion.article
-              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group hover:shadow-lg transition-shadow focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+              className="surface-card rounded-sm p-5 border-l-2 cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               style={{ borderLeftColor: '#a06820' }}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1410,7 +1410,7 @@ export default function Executive() {
         </section>
 
         {/* ─── PESOS AT RISK — estimated overpayment by pattern ─── */}
-        <section className="mb-12" aria-labelledby="pesos-title">
+        <section className="mb-8" aria-labelledby="pesos-title">
           <div id="pesos-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? 'Pesos at risk — estimated exposure by corruption pattern' : 'Pesos en riesgo — exposición estimada por patrón'}
           </div>
@@ -1443,7 +1443,7 @@ export default function Executive() {
         {/* SPENDING CATEGORIES — restored 2026-05-05 from d-P1 cut.
             User feedback: the bare link card 'shows nothing'; bringing back
             the actual 2-row proportional treemap of top 8 categories. */}
-        <section className="mb-12" aria-labelledby="categories-title">
+        <section className="mb-8" aria-labelledby="categories-title">
           <div className="flex items-start justify-between mb-1">
             <div id="categories-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted">
               {lang === 'en' ? 'Where the money goes — top spending categories' : 'Dónde va el dinero — principales categorías de gasto'}
@@ -1474,7 +1474,7 @@ export default function Executive() {
         </section>
 
         {/* ─── § 2 LA LENTE — concentric-rings narrowing visualization ─── */}
-        <section className="mb-12" aria-labelledby="la-lente-title">
+        <section className="mb-8" aria-labelledby="la-lente-title">
           <div id="la-lente-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
             {lang === 'en' ? '§ 2 · The Lens — narrowing 3.1M to 299' : '§ 2 · La Lente — de 3.1M a 299'}
           </div>
@@ -1775,7 +1775,7 @@ export default function Executive() {
         </section>
 
         {/* ─── § 5 HISTORIAS EJEMPLARES — try-it dossiers ─── */}
-        <section className="mb-12" aria-labelledby="historias-title">
+        <section className="mb-8" aria-labelledby="historias-title">
           <div id="historias-title" className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
             {lang === 'en' ? '§ 5 · Example dossiers — open one' : '§ 5 · Historias ejemplares — abre una'}
           </div>
@@ -1856,7 +1856,7 @@ export default function Executive() {
         <div className="h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-40 mb-10" />
 
         {/* ─── Documented Cases Timeline ─── */}
-        <section className="mb-12">
+        <section className="mb-8">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
             <Clock className="h-3 w-3" aria-hidden="true" />
             {lang === 'en' ? 'Documented corruption cases · 2008–2025' : 'Casos documentados de corrupción · 2008–2025'}
@@ -1879,7 +1879,7 @@ export default function Executive() {
         </section>
 
         {/* ─── Recommendations by Audience ─── */}
-        <section className="mb-12">
+        <section className="mb-8">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
             {t('recommendations.sectionLabel')}
           </div>
@@ -1912,7 +1912,7 @@ export default function Executive() {
 
         {/* ─── Recent Critical Alerts — live news wire ─── */}
         {recentCritical.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-8">
             <div className="flex items-center justify-between mb-2">
               <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-risk-critical animate-pulse" aria-hidden />
@@ -1989,7 +1989,7 @@ export default function Executive() {
         )}
 
         {/* ─── CTA ─── */}
-        <section className="mb-12 print-hide">
+        <section className="mb-8 print-hide">
           <div
             className="rounded-sm p-8 border border-accent/30"
             style={{ background: 'linear-gradient(135deg, rgba(160,104,32,0.06), rgba(160,104,32,0.02))' }}
