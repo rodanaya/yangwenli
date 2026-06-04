@@ -16,7 +16,7 @@
  *
  * Five typographic registers, used exclusively:
  *   1. Headline serif (EB Garamond italic)        — vendor name
- *   2. Editorial serif (Source Serif Pro italic)  — lede paragraph
+ *   2. Editorial serif (EB Garamond italic)        — lede paragraph
  *   3. Display num (Playfair Italic 800)          — verdict number, drop cap
  *   4. Mono kicker (IBM Plex Mono)                — index, §, metadata, TOC
  *   5. Body sans (system)                         — chips, controls
@@ -558,7 +558,7 @@ function VendorMetaRule({
 }
 
 /**
- * The lede — single paragraph in Source Serif Pro italic with a Playfair
+ * The lede — single paragraph in EB Garamond italic with a Playfair
  * drop cap on the first letter. Sector-accent left rule. The signature
  * editorial gesture of the hero.
  */
@@ -577,7 +577,7 @@ function Lede({ text, sectorAccent }: { text: string; sectorAccent: string }) {
     >
       <p
         style={{
-          fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontSize: 17,
           lineHeight: 1.55,

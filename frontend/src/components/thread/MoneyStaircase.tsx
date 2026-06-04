@@ -562,7 +562,7 @@ function MoneyCaption({
       </div>
       <p
         style={{
-          fontFamily: '"Source Serif Pro", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontSize: 15,
           lineHeight: 1.6,

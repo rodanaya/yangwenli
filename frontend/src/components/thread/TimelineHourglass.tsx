@@ -241,7 +241,7 @@ export function TimelineHourglass({
                   key={e.year}
                   className="flex items-baseline gap-3"
                   style={{
-                    fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+                    fontFamily: '"EB Garamond", Georgia, serif',
                     fontStyle: 'italic',
                     fontSize: 14,
                     lineHeight: 1.5,
@@ -621,7 +621,7 @@ function TimelineCaption({
       </div>
       <p
         style={{
-          fontFamily: '"Source Serif Pro", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontSize: 15,
           lineHeight: 1.6,

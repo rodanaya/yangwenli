@@ -247,7 +247,7 @@ export function ChapterVerdict({
               </span>
               <span
                 style={{
-                  fontFamily: '"Source Serif Pro", Georgia, serif',
+                  fontFamily: '"EB Garamond", Georgia, serif',
                   fontSize: 14,
                   color: 'var(--color-text-primary)',
                 }}
@@ -308,7 +308,7 @@ export function ChapterVerdict({
               <div
                 className={cn('text-text-secondary leading-relaxed', !memoExpanded && 'line-clamp-4')}
                 style={{
-                  fontFamily: '"Source Serif Pro", Georgia, serif',
+                  fontFamily: '"EB Garamond", Georgia, serif',
                   fontSize: 13,
                   ...(memoExpanded ? {} : { display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' as const, overflow: 'hidden' }),
                 }}
@@ -372,7 +372,7 @@ export function ChapterVerdict({
                   </div>
                   <p
                     style={{
-                      fontFamily: '"Source Serif Pro", Georgia, serif',
+                      fontFamily: '"EB Garamond", Georgia, serif',
                       fontSize: 13,
                       lineHeight: 1.5,
                       color: 'var(--color-text-primary)',

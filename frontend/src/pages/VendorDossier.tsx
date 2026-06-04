@@ -128,7 +128,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       </p>
       <p
         style={{
-          fontFamily: '"Source Serif Pro", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontSize: 13.5,
           color: 'var(--color-text-secondary)',

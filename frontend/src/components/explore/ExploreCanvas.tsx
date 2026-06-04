@@ -3253,7 +3253,7 @@ function Z2Shelf({
             className="text-text-secondary leading-snug"
             style={{
               fontSize: 11,
-              fontFamily: "'Source Serif Pro', Georgia, serif",
+              fontFamily: "'EB Garamond', Georgia, serif",
               fontStyle: 'italic',
             }}
           >
@@ -4643,7 +4643,7 @@ function Z3IndictmentFinding({
     <div className="px-4 sm:px-6 pt-1 pb-3">
       <div className="flex items-start gap-3 max-w-3xl">
         <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
-        <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic' }}>
+        <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>
           {body}
         </p>
       </div>
@@ -5153,7 +5153,7 @@ function Z4Drawer({
               <p
                 className="leading-snug"
                 style={{
-                  fontFamily: "'Source Serif Pro', Georgia, serif",
+                  fontFamily: "'EB Garamond', Georgia, serif",
                   fontSize: 13,
                   color: 'var(--color-text-secondary)',
                   borderLeft: `2px solid ${sectorAccent}`,

@@ -170,7 +170,7 @@ export function ConcentricConstellation({
                     <span
                       className="flex-1 min-w-0 truncate"
                       style={{
-                        fontFamily: '"Source Serif Pro", Georgia, serif',
+                        fontFamily: '"EB Garamond", Georgia, serif',
                         fontSize: 14,
                         color: 'var(--color-text-primary)',
                       }}
@@ -226,7 +226,7 @@ export function ConcentricConstellation({
             </div>
             <p
               style={{
-                fontFamily: '"Source Serif Pro", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 15,
                 lineHeight: 1.6,
@@ -370,7 +370,7 @@ function ConstellationSvg({
         y={cy + 32}
         textAnchor="middle"
         fontSize={11}
-        fontFamily='"Source Serif Pro", Georgia, serif'
+        fontFamily='"EB Garamond", Georgia, serif'
         fontStyle="italic"
         fontWeight={600}
         fill="var(--color-text-primary)"

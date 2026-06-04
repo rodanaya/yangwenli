@@ -66,7 +66,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
         </p>
         <p
           style={{
-            fontFamily: '"Source Serif Pro", Georgia, serif',
+            fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'italic',
             fontSize: 14,
             color: 'var(--color-text-secondary)',
@@ -338,7 +338,7 @@ export default function ContractDossier() {
                 <p
                   className="mt-4"
                   style={{
-                    fontFamily: '"Source Serif Pro", Georgia, serif',
+                    fontFamily: '"EB Garamond", Georgia, serif',
                     fontStyle: 'italic',
                     fontSize: 15,
                     lineHeight: 1.5,
@@ -430,7 +430,7 @@ export default function ContractDossier() {
           <div className="mt-10" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
             <p
               style={{
-                fontFamily: '"Source Serif Pro", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 17,
                 lineHeight: 1.55,
@@ -526,7 +526,7 @@ export default function ContractDossier() {
               <p
                 className="mb-5"
                 style={{
-                  fontFamily: '"Source Serif Pro", Georgia, serif',
+                  fontFamily: '"EB Garamond", Georgia, serif',
                   fontStyle: 'italic',
                   fontSize: 14,
                   lineHeight: 1.6,
@@ -549,7 +549,7 @@ export default function ContractDossier() {
                       </span>
                       <span
                         className="flex-1 min-w-0"
-                        style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 14, color: 'var(--color-text-primary)' }}
+                        style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, color: 'var(--color-text-primary)' }}
                       >
                         {f.label}
                       </span>
@@ -582,7 +582,7 @@ export default function ContractDossier() {
             <p
               className="mt-7 text-center"
               style={{
-                fontFamily: '"Source Serif Pro", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 14,
                 color: 'var(--color-text-muted)',
@@ -669,7 +669,7 @@ function TransactionField({
 }) {
   const navigate = useNavigate()
   const valueStyle: React.CSSProperties = {
-    fontFamily: mono ? 'var(--font-family-mono, monospace)' : '"Source Serif Pro", Georgia, serif',
+    fontFamily: mono ? 'var(--font-family-mono, monospace)' : '"EB Garamond", Georgia, serif',
     fontSize: 14,
     color: 'var(--color-text-primary)',
     fontVariantNumeric: mono ? 'tabular-nums' : undefined,

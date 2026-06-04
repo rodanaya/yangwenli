@@ -579,7 +579,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
           })}
           {labels.map((l, i) => (
             <motion.g key={`t-${l.code}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 + i * 0.05, duration: 0.5 }} style={{ pointerEvents: 'none' }}>
-              <text x={l.tx} y={l.ty + 11} textAnchor={l.anchor} fill={C.ink} fontSize={12.5} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={600}>{l.name}</text>
+              <text x={l.tx} y={l.ty + 11} textAnchor={l.anchor} fill={C.ink} fontSize={12.5} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={600}>{l.name}</text>
               <text x={l.tx} y={l.ty + 22} textAnchor={l.anchor} fill={C.inkMuted} fontSize={9} fontFamily="var(--font-family-mono)">{l.stat}</text>
             </motion.g>
           ))}
@@ -625,7 +625,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                 : (lang === 'es' ? '↑ RIESGO' : '↑ RISK')}
             </text>
             {/* cluster identity — top-left kicker (the orb you flew into) */}
-            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 13} fill={C.ink} fontSize={11} fontFamily='"EB Garamond","Source Serif Pro",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
+            <text x={focusedBody.cx - SUB_HALF_W + 2} y={focusedBody.cy - SUB_HALF_H - 13} fill={C.ink} fontSize={11} fontFamily='"EB Garamond",Georgia,serif' fontStyle="italic" fontWeight={700} paintOrder="stroke" stroke={C.plate0} strokeWidth={2.4} strokeLinejoin="round">
               {toTitleCase(focusedBody.label)}
             </text>
             {/* HONESTY: these are the top-N by RISK (backend orders avg_risk_score
@@ -784,7 +784,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                   {focusedBody ? (
                     <>
                       <div className="font-mono" style={{ fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--color-text-muted)' }}>{lang === 'es' ? 'Proveedores · por riesgo' : 'Vendors · by risk'}</div>
-                      <div style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
+                      <div style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'italic', fontWeight: 700, fontSize: 16, color: 'var(--color-text-primary)', lineHeight: 1.15 }}>{toTitleCase(focusedBody.label)}</div>
                     </>
                   ) : (
                     <div className="font-mono" style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 700 }}>{lensLabel} · {bodies.length} · {lang === 'es' ? 'por riesgo' : 'by risk'}</div>
@@ -824,7 +824,7 @@ export function ObservatoryScatter({ clusters, lens, lang, onOpenDossier, onVend
                     </>
                   ) : (
                     <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 11 }}>
-                      <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
+                      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)', margin: 0 }}>
                         {lang === 'es' ? 'El desglose por proveedor de esta vista vive en el expediente completo.' : 'The per-vendor breakdown for this view lives in the full dossier.'}
                       </p>
                       <button type="button" onClick={() => onOpenDossier(focusedBody.code)} className="font-mono hover:opacity-80 self-start"
@@ -869,7 +869,7 @@ function IndexRow({ rank, dot, name, stat, gt, active, onEnter, onLeave, onClick
       <span className="flex items-baseline gap-2.5">
         <span className="font-mono tabular-nums flex-shrink-0" style={{ fontSize: 9, color: 'var(--color-text-muted)', width: 18 }}>{rank}</span>
         <span aria-hidden="true" className="flex-shrink-0 self-center" style={{ width: 8, height: 8, borderRadius: 999, background: dot, boxShadow: gt ? `0 0 0 2px var(--color-background-card), 0 0 0 3px ${dot}` : 'none' }} />
-        <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond","Source Serif Pro",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
+        <span className="flex-1 min-w-0" style={{ fontFamily: '"EB Garamond",Georgia,serif', fontStyle: 'italic', fontWeight: 500, fontSize: 15, lineHeight: 1.2, color: 'var(--color-text-primary)', overflowWrap: 'anywhere' }}>{name}</span>
       </span>
       <span className="font-mono tabular-nums" style={{ fontSize: 9, color: 'var(--color-text-muted)', paddingLeft: 30 }}>{stat}</span>
     </button>
@@ -883,7 +883,7 @@ function ReadItem({ glyph, title, body }: { glyph: string; title: string; body: 
         <span aria-hidden="true" style={{ color: RISK_COLORS.high, fontSize: 12 }}>{glyph}</span>
         <span className="font-mono" style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', fontWeight: 600 }}>{title}</span>
       </div>
-      <p className="mt-0.5" style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>{body}</p>
+      <p className="mt-0.5" style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>{body}</p>
     </div>
   )
 }

@@ -86,7 +86,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Categorías clasificadas con el modelo automático. Modelo de riesgo v0.8.5. Las señales agregadas a nivel de categoría son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. Categories classified by the auto-model. v0.8.5 risk model. Category-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
@@ -276,7 +276,7 @@ export default function CategoryDossier() {
 
           {/* Lede */}
           <div className="mt-6" style={{ borderLeft: `2px solid ${accent}`, paddingLeft: 20, maxWidth: '68ch' }}>
-            <p style={{ fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 17, lineHeight: 1.55, color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}>
+            <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 17, lineHeight: 1.55, color: 'var(--color-text-secondary)', letterSpacing: '0.005em' }}>
               <span aria-hidden="true" style={{ fontFamily: '"Playfair Display", Georgia, serif', fontStyle: 'italic', fontWeight: 800, fontSize: '3.5em', float: 'left', lineHeight: 0.85, color: accent, marginRight: '0.08em', marginTop: '0.05em', marginBottom: '-0.05em' }}>
                 {dropChar}
               </span>

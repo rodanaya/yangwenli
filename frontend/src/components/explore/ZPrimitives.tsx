@@ -264,7 +264,7 @@ export function ZPullLine({
           className="text-text-secondary leading-snug"
           style={{
             fontSize: 13,
-            fontFamily: "'Source Serif Pro', Georgia, serif",
+            fontFamily: "'EB Garamond', Georgia, serif",
             fontStyle: 'italic',
           }}
         >

@@ -218,7 +218,7 @@ export function SectorHero({ sector, actions, showTOC = true }: SectorHeroProps)
         <div className="mt-6" style={{ borderLeft: `2px solid ${sectorAccent}`, paddingLeft: 20, maxWidth: '68ch' }}>
           <p
             style={{
-              fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+              fontFamily: '"EB Garamond", Georgia, serif',
               fontStyle: 'italic',
               fontSize: 17,
               lineHeight: 1.55,

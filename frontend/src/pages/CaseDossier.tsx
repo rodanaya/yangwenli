@@ -178,7 +178,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
           § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
         </p>
         <p
-          style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: '64ch', margin: '0 auto', lineHeight: 1.6 }}
+          style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 14, color: 'var(--color-text-secondary)', maxWidth: '64ch', margin: '0 auto', lineHeight: 1.6 }}
         >
           {lang === 'es'
             ? 'Casos compilados de periodismo investigativo, auditorías de la ASF y procesos judiciales públicos. Los vínculos a proveedores se construyen con coincidencia exacta de RFC o nombre. La presencia en esta biblioteca no constituye una determinación de culpabilidad.'
@@ -297,7 +297,7 @@ function CaseHero({
         {/* Title */}
         <h1
           style={{
-            fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+            fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'italic',
             fontWeight: 500,
             fontSize: 'clamp(36px, 5vw, 64px)',
@@ -434,7 +434,7 @@ function ChapterCase({ scandal, accent, lang }: { scandal: ScandalDetail; accent
         <FadeIn className="mt-7" delay={0.08}>
           <p
             style={{
-              fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+              fontFamily: '"EB Garamond", Georgia, serif',
               fontSize: 16,
               lineHeight: 1.7,
               color: 'var(--color-text-secondary)',
@@ -491,7 +491,7 @@ function ChapterDamage({
         <FadeIn className="mt-6 text-center" delay={0.05}>
           <p
             style={{
-              fontFamily: '"Source Serif Pro", Georgia, serif',
+              fontFamily: '"EB Garamond", Georgia, serif',
               fontStyle: 'italic',
               fontSize: 14,
               color: 'var(--color-text-muted)',
@@ -526,7 +526,7 @@ function ChapterDamage({
           </p>
           <p
             style={{
-              fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+              fontFamily: '"EB Garamond", Georgia, serif',
               fontStyle: 'italic',
               fontSize: 16,
               lineHeight: 1.55,
@@ -539,7 +539,7 @@ function ChapterDamage({
           {scandal.legal_status_note && (
             <p
               className="mt-3"
-              style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 14, color: 'var(--color-text-muted)', maxWidth: '60ch' }}
+              style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 14, color: 'var(--color-text-muted)', maxWidth: '60ch' }}
             >
               {scandal.legal_status_note}
             </p>
@@ -589,7 +589,7 @@ function ChapterActors({
                 <div className="flex-1 min-w-0">
                   <p
                     style={{
-                      fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+                      fontFamily: '"EB Garamond", Georgia, serif',
                       fontStyle: 'italic',
                       fontWeight: 500,
                       fontSize: 17,
@@ -602,7 +602,7 @@ function ChapterActors({
                   {actor.title && (
                     <p
                       className="mt-1"
-                      style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-secondary)' }}
+                      style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-secondary)' }}
                     >
                       {actor.title}
                     </p>
@@ -610,7 +610,7 @@ function ChapterActors({
                   {actor.note && (
                     <p
                       className="mt-1.5"
-                      style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}
+                      style={{ fontFamily: '"EB Garamond", Georgia, serif', fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.5 }}
                     >
                       {actor.note}
                     </p>
@@ -727,7 +727,7 @@ function VendorRow({ vendor, accent, lang }: { vendor: LinkedVendor; accent: str
         <span
           className="flex-1 min-w-0 truncate"
           style={{
-            fontFamily: '"EB Garamond", "Source Serif Pro", Georgia, serif',
+            fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'italic',
             fontWeight: 500,
             fontSize: 16,
@@ -807,7 +807,7 @@ function ChapterSources({
                 <div className="flex-1 min-w-0">
                   <p
                     style={{
-                      fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+                      fontFamily: '"EB Garamond", Georgia, serif',
                       fontSize: 15,
                       lineHeight: 1.4,
                       color: 'var(--color-text-primary)',
@@ -822,7 +822,7 @@ function ChapterSources({
                     >
                       {typeLabel}
                     </span>
-                    <span style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                    <span style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--color-text-secondary)' }}>
                       {s.outlet}
                     </span>
                     {s.date && (

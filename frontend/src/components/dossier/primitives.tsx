@@ -86,7 +86,7 @@ export function ChapterHeading({
       </div>
       <h2
         style={{
-          fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontWeight: 600,
           fontSize: 18,
           letterSpacing: '0.30em',
@@ -99,7 +99,7 @@ export function ChapterHeading({
       </h2>
       <p
         style={{
-          fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+          fontFamily: '"EB Garamond", Georgia, serif',
           fontStyle: 'italic',
           fontWeight: 400,
           fontSize: 15,
@@ -169,7 +169,7 @@ export function LedeParagraph({
   return (
     <p
       style={{
-        fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+        fontFamily: '"EB Garamond", Georgia, serif',
         fontStyle: 'italic',
         fontSize: 18,
         lineHeight: 1.55,
@@ -285,7 +285,7 @@ export function EquivalenceList({
           key={i}
           className="flex items-baseline gap-3"
           style={{
-            fontFamily: '"Source Serif Pro", "EB Garamond", Georgia, serif',
+            fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'italic',
             fontSize: 16,
             lineHeight: 1.55,
@@ -459,7 +459,7 @@ export function SignatureBar({
         <div
           className="mt-1.5 flex items-baseline gap-1.5"
           style={{
-            fontFamily: '"Source Serif Pro", Georgia, serif',
+            fontFamily: '"EB Garamond", Georgia, serif',
             fontStyle: 'italic',
             fontSize: 12,
             color: 'var(--color-text-muted)',

@@ -167,7 +167,7 @@ export function VendorDeviationLedger({
       {finding && (
         <div className="flex items-start gap-3 max-w-3xl mb-3">
           <span className="inline-block self-stretch w-[3px] flex-shrink-0 rounded-sm" style={{ background: accent }} aria-hidden="true" />
-          <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'Source Serif Pro', Georgia, serif", fontStyle: 'italic' }}>{finding}</p>
+          <p className="text-text-secondary leading-snug" style={{ fontSize: 15, fontFamily: "'EB Garamond', Georgia, serif", fontStyle: 'italic' }}>{finding}</p>
         </div>
       )}
       <section className="rounded-sm overflow-hidden" style={{ border: '1px solid var(--color-border)', boxShadow: 'inset 0 0 0 1px rgba(160, 104, 32, 0.06)', background: 'var(--color-background-elevated)' }}>

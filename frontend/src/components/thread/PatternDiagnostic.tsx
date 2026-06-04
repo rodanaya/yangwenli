@@ -127,7 +127,7 @@ export function PatternDiagnostic({
             </div>
             <p
               style={{
-                fontFamily: '"Source Serif Pro", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 14,
                 lineHeight: 1.55,
@@ -154,7 +154,7 @@ export function PatternDiagnostic({
             <p
               className="text-center"
               style={{
-                fontFamily: '"Source Serif Pro", Georgia, serif',
+                fontFamily: '"EB Garamond", Georgia, serif',
                 fontStyle: 'italic',
                 fontSize: 14,
                 color: 'var(--color-text-muted)',
@@ -292,7 +292,7 @@ function LabReport({
                 <div
                   className="leading-tight truncate"
                   style={{
-                    fontFamily: '"Source Serif Pro", Georgia, serif',
+                    fontFamily: '"EB Garamond", Georgia, serif',
                     fontSize: 13,
                     color: 'var(--color-text-primary)',
                   }}

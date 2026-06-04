@@ -75,7 +75,7 @@ function ProvenanceFooter({ lang }: { lang: 'en' | 'es' }) {
       <p className="font-mono mb-2" style={{ fontSize: 9.5, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--color-text-muted)', fontWeight: 500 }}>
         § {lang === 'es' ? 'Metodología y procedencia' : 'Methodology and provenance'}
       </p>
-      <p style={{ fontFamily: '"Source Serif Pro", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
+      <p style={{ fontFamily: '"EB Garamond", Georgia, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--color-text-secondary)', maxWidth: '72ch', lineHeight: 1.55 }}>
         {lang === 'es'
           ? 'Datos COMPRANET 2002–2025. Modelo de riesgo v0.8.5. Las señales agregadas a nivel institucional son indicadores estadísticos del patrón procurador, no determinaciones legales.'
           : 'COMPRANET data 2002–2025. v0.8.5 risk model. Institution-level aggregate signals are statistical indicators of procurement pattern, not legal determinations.'}
