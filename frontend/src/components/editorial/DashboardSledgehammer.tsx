@@ -4,37 +4,82 @@
  * Pudding "30 Years of American Anxieties" pattern: one giant annotated
  * number that tells the reader exactly which fact to remember.
  *
- * The number is the direct-award rate (live from getFastDashboard, falling
- * back to the 2023 hardcoded value of 74%). Color: #dc2626 (sector_salud red).
- * OECD reference in cyan #22d3ee per the FT annotation spec.
+ * Generalized 2026-06-04 (Administrations P2): the eyebrow / deck / OECD
+ * ceiling / accent / micro-stats are all overridable so the primitive can
+ * front any "one number is the thesis" page. Defaults reproduce the original
+ * Dashboard direct-award hero (74% · OECD ≤25% · salud red), so existing
+ * call sites — there are currently none; it was retired from Executive on
+ * 2026-05-05 — would behave unchanged.
  */
 
-interface Props {
-  /** Direct-award percentage (0–100). Live value from dashboard.overview.direct_award_pct */
-  daRate: number
-  lang: 'en' | 'es'
+interface MicroStat {
+  value: string
+  label: string
 }
 
-export function DashboardSledgehammer({ daRate, lang }: Props) {
+interface Props {
+  /** The headline percentage (0–100). e.g. dashboard.overview.direct_award_pct */
+  daRate: number
+  lang: 'en' | 'es'
+  /** Eyebrow above the number. Default: the Dashboard's "EN 2023, MÉXICO ADJUDICÓ". */
+  eyebrow?: string
+  /** Line under the number. Default: "of federal contracts without competition." */
+  deck?: string
+  /**
+   * OECD direct-award ceiling used for the "N× the ceiling" line.
+   * Default 25 (OECD's recommended threshold). Pass OECD_DIRECT_AWARD_LIMIT*100
+   * (30) to align with the platform constant.
+   */
+  oecdLimitPct?: number
+  /** Number + accent-bar color. Default salud red #dc2626. */
+  accentColor?: string
+  /** Optional mono micro-stats row beneath the OECD line. */
+  microStats?: MicroStat[]
+  /** Fully override the OECD reference line text (else computed from oecdLimitPct). */
+  oecdLine?: string
+}
+
+export function DashboardSledgehammer({
+  daRate,
+  lang,
+  eyebrow,
+  deck,
+  oecdLimitPct = 25,
+  accentColor = '#dc2626',
+  microStats,
+  oecdLine,
+}: Props) {
   // Round to 1 decimal, clamp to [0, 100]
   const pct = Math.max(0, Math.min(100, daRate))
   const display = `${pct.toFixed(1)}%`
-  // OECD recommends ≤ 25%; compute the ceiling multiplier dynamically
-  const multiplier = (pct / 25).toFixed(1)
+  // Compute the ceiling multiplier dynamically
+  const multiplier = (pct / oecdLimitPct).toFixed(1)
+
+  const eyebrowText = eyebrow ?? 'EN 2023, MÉXICO ADJUDICÓ'
+  const deckText =
+    deck ??
+    (lang === 'en'
+      ? 'of federal contracts without competition.'
+      : 'de contratos federales sin competencia.')
+  const oecdText =
+    oecdLine ??
+    (lang === 'en'
+      ? `OECD recommends ≤ ${oecdLimitPct}%. Mexico is at ${multiplier}× that ceiling.`
+      : `OCDE recomienda ≤ ${oecdLimitPct}%. México está a ${multiplier}× ese techo.`)
 
   return (
     <div
       className="surface-card rounded-sm p-8 md:p-12 relative overflow-hidden"
       aria-label={
         lang === 'en'
-          ? `In 2023 Mexico awarded ${display} of federal contracts without competition — ${multiplier}× the OECD recommended ceiling of 25%.`
-          : `En 2023 México adjudicó el ${display} de contratos federales sin competencia — ${multiplier}× el umbral OCDE del 25%.`
+          ? `Mexico awarded ${display} of federal contracts without competition — ${multiplier}× the OECD recommended ceiling of ${oecdLimitPct}%.`
+          : `México adjudicó el ${display} de contratos federales sin competencia — ${multiplier}× el umbral OCDE del ${oecdLimitPct}%.`
       }
     >
       {/* Subtle left accent bar */}
       <div
         className="absolute left-0 top-0 bottom-0 w-[3px]"
-        style={{ background: '#dc2626' }}
+        style={{ background: accentColor }}
         aria-hidden
       />
 
@@ -43,7 +88,7 @@ export function DashboardSledgehammer({ daRate, lang }: Props) {
         className="font-mono text-[11px] uppercase tracking-[0.18em] mb-4"
         style={{ color: 'var(--color-text-muted)' }}
       >
-        {lang === 'en' ? 'EN 2023, MÉXICO ADJUDICÓ' : 'EN 2023, MÉXICO ADJUDICÓ'}
+        {eyebrowText}
       </div>
 
       {/* The sledgehammer number */}
@@ -52,7 +97,7 @@ export function DashboardSledgehammer({ daRate, lang }: Props) {
         style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: 'clamp(96px, 14vw, 180px)',
-          color: '#dc2626',
+          color: accentColor,
           letterSpacing: '-0.03em',
         }}
         aria-hidden
@@ -68,9 +113,7 @@ export function DashboardSledgehammer({ daRate, lang }: Props) {
           color: 'var(--color-text-secondary)',
         }}
       >
-        {lang === 'en'
-          ? 'of federal contracts without competition.'
-          : 'de contratos federales sin competencia.'}
+        {deckText}
       </div>
 
       {/* Divider */}
@@ -80,15 +123,44 @@ export function DashboardSledgehammer({ daRate, lang }: Props) {
         aria-hidden
       />
 
-      {/* OECD reference lines */}
+      {/* OECD reference line */}
       <div
         className="font-mono text-[11px] leading-[1.8] uppercase tracking-[0.1em]"
         style={{ color: 'var(--color-oecd)' }}
       >
-        {lang === 'en'
-          ? `OECD recommends ≤ 25%. Mexico is at ${multiplier}× that ceiling.`
-          : `OCDE recomienda ≤ 25%. México está a ${multiplier}× ese techo.`}
+        {oecdText}
       </div>
+
+      {/* Optional micro-stats row */}
+      {microStats && microStats.length > 0 && (
+        <div className="mt-6 flex flex-wrap items-baseline gap-x-7 gap-y-2">
+          {microStats.map((s) => (
+            <div key={s.label} className="flex items-baseline gap-2">
+              <span
+                className="tabular-nums font-semibold"
+                style={{
+                  fontFamily: 'var(--font-family-serif)',
+                  fontStyle: 'italic',
+                  fontSize: 17,
+                  color: 'var(--color-text-primary)',
+                }}
+              >
+                {s.value}
+              </span>
+              <span
+                className="font-mono uppercase"
+                style={{
+                  fontSize: 9.5,
+                  letterSpacing: '0.12em',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

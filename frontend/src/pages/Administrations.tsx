@@ -8,7 +8,6 @@
  */
 
 import { useMemo, useState } from 'react'
-import { DotBar } from '@/components/ui/DotBar'
 import { PresidentAvatar } from '@/components/administrations/PresidentAvatar'
 import { DeltaBadge } from '@/components/administrations/DeltaBadge'
 import { AdminDossierPanel } from '@/components/administrations/AdminDossierPanel'
@@ -32,7 +31,8 @@ import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
-import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS, RISK_COLORS, OECD_DIRECT_AWARD_LIMIT } from '@/lib/constants'
+import { DashboardSledgehammer } from '@/components/editorial/DashboardSledgehammer'
 import { analysisApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
@@ -57,8 +57,10 @@ import { ShareButton } from '@/components/ShareButton'
 import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 import {
   EditorialLineChart,
+  DotStrip,
   type ChartAnnotation,
   type LineSeries,
+  type DotStripRow,
 } from '@/components/charts/editorial'
 import { EditorialChartFrame } from '@/components/stories/EditorialChartFrame'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
@@ -238,6 +240,15 @@ export default function Administrations() {
       risk: yoyData.reduce((s, y) => s + y.avg_risk * y.contracts, 0) / total,
     }
   }, [yoyData])
+
+  // Per-admin "standings" summary for the §4 matrix overall column.
+  const adminSummary = useMemo(() => {
+    const out: Record<string, { risk: number; da: number; hr: number; sb: number }> = {}
+    for (const a of adminAggs) {
+      out[a.name] = { risk: a.avgRisk, da: a.directAwardPct, hr: a.highRiskPct, sb: a.singleBidPct }
+    }
+    return out
+  }, [adminAggs])
 
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
   const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin) ?? ADMINISTRATIONS[0]
@@ -458,7 +469,7 @@ export default function Administrations() {
       </svg>
       <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8" style={{ zIndex: 1 }}>
 
-        {/* ── HERO (Folio·XI — keep as-is for P1) ── */}
+        {/* ── HERO — Folio·XI + 65.3% sledgehammer (P2) ── */}
         <header className="mb-8 pb-5 border-b border-border">
           <div
             className="flex items-center gap-3 mb-3"
@@ -481,99 +492,30 @@ export default function Administrations() {
               </span>
             </span>
           </div>
-          <div className="flex items-baseline justify-between gap-6 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <h1
-                style={{
-                  fontFamily: '"EB Garamond", "Playfair Display", Georgia, serif',
-                  fontStyle: 'italic',
-                  fontWeight: 500,
-                  fontSize: 'clamp(30px, 4.4vw, 52px)',
-                  lineHeight: 1.02,
-                  letterSpacing: '-0.012em',
-                  color: 'var(--color-text-primary)',
-                }}
-              >
-                {isEs ? (
-                  <>
-                    Cinco administraciones,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
-                      un solo patrón.
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    Five administrations,{' '}
-                    <span style={{ fontStyle: 'normal', fontWeight: 600, color: 'var(--color-accent)' }}>
-                      one pattern.
-                    </span>
-                  </>
-                )}
-              </h1>
-              <p
-                className="mt-4"
-                style={{
-                  fontFamily: '"EB Garamond", Georgia, serif',
-                  fontSize: '17px',
-                  lineHeight: 1.55,
-                  maxWidth: '68ch',
-                  color: 'var(--color-text-secondary)',
-                  letterSpacing: '0.005em',
-                }}
-              >
-                {isEs
-                  ? 'Cinco gobiernos federales, tres partidos, una métrica constante: la adjudicación directa permanece sobre el techo OCDE en cada sexenio.'
-                  : 'Five federal administrations, three parties, one constant: the direct-award rate stays above the OECD ceiling under every term.'}
-              </p>
-            </div>
-            <div className="flex items-baseline gap-5 flex-shrink-0">
-              <div className="text-right">
-                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-text-primary)' }}>5</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Administraciones' : 'Administrations'}</div>
-              </div>
-              <div className="text-right">
-                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-accent)' }}>9.9T MXN</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Gasto total' : 'Total spend'}</div>
-              </div>
-              <div className="text-right">
-                <div className="tabular-nums leading-none" style={{ fontFamily: 'var(--font-family-serif)', fontStyle: 'italic', fontWeight: 700, fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)', color: 'var(--color-text-primary)' }}>3.1M</div>
-                <div className="text-[9px] uppercase tracking-[0.12em] text-text-muted mt-1">{isEs ? 'Contratos' : 'Contracts'}</div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-4">
-            {adminAggs.length > 0 && (() => {
-              const sorted = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
-              const highest = sorted[0]
-              const lowest = sorted[sorted.length - 1]
-              return (
-                <>
-                  <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" aria-hidden="true" />
-                    <span>
-                      {t('classifiedHeader.highestRiskNote')}{' '}
-                      <strong className="text-risk-critical">{highest.highRiskPct.toFixed(2)}%</strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-text-muted">
-                    <span className="w-2 h-2 rounded-full bg-risk-low" aria-hidden="true" />
-                    <span>
-                      {t('classifiedHeader.lowestRiskNote')}{' '}
-                      <strong className="text-risk-low">{lowest.highRiskPct.toFixed(2)}%</strong>
-                    </span>
-                  </div>
-                </>
-              )
-            })()}
-            <div className="ml-auto flex items-center gap-3">
-              <FuentePill source="COMPRANET" verified={true} />
-              <MetodologiaTooltip
-                title={t('narrative')}
-                body={t('comparisonTableDesc')}
-                link="/methodology"
-              />
-              <ShareButton label={t('share', 'Share')} />
-            </div>
+          <DashboardSledgehammer
+            daRate={allTimeAvg.da}
+            lang={isEs ? 'es' : 'en'}
+            eyebrow={isEs
+              ? '§ CINCO ADMINISTRACIONES · UN SOLO PATRÓN'
+              : '§ FIVE ADMINISTRATIONS · ONE PATTERN'}
+            deck={isEs
+              ? 'de contratos federales adjudicados sin competencia — bajo cada administración, 2002–2025.'
+              : 'of federal contracts awarded without competition — under every administration, 2002–2025.'}
+            oecdLimitPct={Math.round(OECD_DIRECT_AWARD_LIMIT * 100)}
+            microStats={[
+              { value: '5', label: isEs ? 'Sexenios' : 'Administrations' },
+              { value: isEs ? '9.9 billones MXN' : '9.9T MXN', label: isEs ? 'Gasto total' : 'Total spend' },
+              { value: '3.1M', label: isEs ? 'Contratos' : 'Contracts' },
+            ]}
+          />
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+            <FuentePill source="COMPRANET" verified={true} />
+            <MetodologiaTooltip
+              title={t('narrative')}
+              body={t('comparisonTableDesc')}
+              link="/methodology"
+            />
+            <ShareButton label={t('share', 'Share')} />
           </div>
         </header>
 
@@ -653,55 +595,49 @@ export default function Administrations() {
           </EditorialChartFrame>
           </ScrollReveal>
 
-          {/* ── §2 EVERY PRESIDENT ABOVE THE LINE — high-risk dot-bars ── */}
+          {/* ── §2 FIVE PRESIDENTS, RANKED BY RISK — high-risk DotStrip ── */}
           <div className="bg-background-card rounded-sm border border-border/40 p-5">
-            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
-              {isEs ? '§ CADA PRESIDENTE, SOBRE LA LÍNEA' : '§ EVERY PRESIDENT, ABOVE THE LINE'}
+            <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-1">
+              {isEs ? '§ CINCO PRESIDENTES · RIESGO COMPARADO' : '§ FIVE PRESIDENTS · RISK COMPARED'}
             </div>
-            <div className="space-y-2.5">
-              {[...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct).map((a) => {
-                const maxHrPct = Math.max(...adminAggs.map(ag => ag.highRiskPct), 1)
-                const barWidth = (a.highRiskPct / maxHrPct) * 100
+            <p className="text-xs text-text-muted mb-4 max-w-[62ch] leading-relaxed">
+              {isEs
+                ? 'Proporción de contratos de alto riesgo por administración, de mayor a menor. La línea cian marca el promedio nacional.'
+                : 'Share of high-risk contracts by administration, ranked high to low. The cyan line marks the national average.'}
+            </p>
+            {adminAggs.length > 0 && (() => {
+              const ranked = [...adminAggs].sort((a, b) => b.highRiskPct - a.highRiskPct)
+              const scaleMax = Math.max(...adminAggs.map((ag) => ag.highRiskPct), allTimeAvg.hr, 1) * 1.15
+              const rows: DotStripRow[] = ranked.map((a) => {
                 const isAmlo = a.name === 'AMLO'
-                const adminMeta = ADMINISTRATIONS.find(ad => ad.name === a.name)
+                const adminMeta = ADMINISTRATIONS.find((ad) => ad.name === a.name)
                 const partyColor = PARTY_COLORS[adminMeta?.party || ''] || '#64748b'
-                return (
-                  <div key={a.name} className="group">
-                    <div className="flex items-center gap-3">
-                      <span className={cn(
-                        'text-xs font-mono w-24 text-right',
-                        a.name === selectedAdmin ? 'font-bold text-text-primary' : 'text-text-muted'
-                      )}>
-                        {ADMIN_DISPLAY_NAMES[a.name] ?? a.name}
-                      </span>
-                      <div className="flex-1 relative flex items-center">
-                        <DotBar
-                          value={barWidth}
-                          max={100}
-                          color={isAmlo ? 'var(--color-risk-critical)' : partyColor}
-                          emptyColor="var(--color-background-elevated)"
-                          emptyStroke="var(--color-border-hover)"
-                          dots={40}
-                          dotR={3}
-                          dotGap={8}
-                        />
-                        {isAmlo && (
-                          <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse pl-2">
-                            {t('evidenceSection.amloMultiplier')}
-                          </span>
-                        )}
-                      </div>
-                      <span className={cn(
-                        'text-xs font-mono font-bold w-14 text-right',
-                        isAmlo ? 'text-risk-critical' : a.highRiskPct < 5 ? 'text-text-muted' : 'text-text-secondary'
-                      )}>
-                        {a.highRiskPct.toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                const multiple = allTimeAvg.hr > 0 ? a.highRiskPct / allTimeAvg.hr : 0
+                const party = adminMeta?.party ?? ''
+                return {
+                  label: ADMIN_DISPLAY_NAMES[a.name] ?? a.name,
+                  sublabel: isAmlo
+                    ? `${party} · ${multiple.toFixed(1)}× ${isEs ? 'promedio' : 'avg'}`
+                    : party,
+                  fraction: a.highRiskPct / scaleMax,
+                  colorRaw: isAmlo ? RISK_COLORS.critical : partyColor,
+                  valueLabel: a.highRiskPct.toFixed(1) + '%',
+                }
+              })
+              return (
+                <DotStrip
+                  rows={rows}
+                  labelWidth={150}
+                  rowHeight={32}
+                  oecdMark={{
+                    fraction: allTimeAvg.hr / scaleMax,
+                    label: isEs
+                      ? `Promedio nacional · ${allTimeAvg.hr.toFixed(1)}%`
+                      : `National average · ${allTimeAvg.hr.toFixed(1)}%`,
+                  }}
+                />
+              )
+            })()}
             <p className="mt-3 text-[10px] text-text-muted italic leading-relaxed">
               {t('evidenceSection.registryNote')}
             </p>
@@ -743,6 +679,7 @@ export default function Administrations() {
           <AdminSectorMatrix
             selectedAdmin={selectedAdmin}
             liveMatrix={liveAdminSectorMatrix}
+            summary={adminSummary}
             metric={matrixMetric}
             onMetricChange={setMatrixMetric}
           />

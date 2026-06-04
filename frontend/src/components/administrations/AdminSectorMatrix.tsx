@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { ADMINISTRATIONS, PARTY_COLORS } from './data'
@@ -132,21 +133,61 @@ const METRIC_LABELS: Record<MatrixMetric, string> = {
 export function AdminSectorMatrix({
   selectedAdmin,
   liveMatrix,
+  summary,
   metric,
   onMetricChange,
 }: {
   selectedAdmin: AdminName
   liveMatrix: Record<string, Record<string, { risk: number; da: number; hr: number; sb: number }>> | null
+  /** Per-admin overall values (the "standings" column). Same shape as a cell. */
+  summary: Record<string, { risk: number; da: number; hr: number; sb: number }> | null
   metric: MatrixMetric
   onMetricChange: (m: MatrixMetric) => void
 }) {
   const { t } = useTranslation('administrations')
   const isLive = liveMatrix !== null
 
-  // Compute max MXN for mini bar normalization — use total_value if available, else use risk * da as proxy
-  // For now use spend proxy: risk * da * 1e9 is not available; use count (contracts) is also not in matrix.
-  // Mini bar width: we can only compute relative intensity per admin×sector from the risk value.
-  // We normalize across all cells in the matrix.
+  // Standings sort. 'overall' = per-admin summary, 'chrono' = ADMINISTRATIONS
+  // order, or a sector key. Default: overall descending → worst at the top.
+  const OVERALL_KEY = 'overall'
+  const [sortKey, setSortKey] = useState<string>(OVERALL_KEY)
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
+
+  const valueFor = (adminName: string, key: string): number => {
+    if (key === OVERALL_KEY) {
+      const s = summary?.[adminName]
+      return s ? getCellValue(metric, s) : 0
+    }
+    const cell = liveMatrix?.[adminName]?.[key]
+    return cell ? getCellValue(metric, cell) : 0
+  }
+
+  const sortedAdmins = useMemo(() => {
+    if (sortKey === 'chrono') return ADMINISTRATIONS
+    const arr = [...ADMINISTRATIONS]
+    arr.sort((a, b) => {
+      const d = valueFor(b.name, sortKey) - valueFor(a.name, sortKey)
+      return sortDir === 'desc' ? d : -d
+    })
+    return arr
+    // valueFor closes over metric/liveMatrix/summary — list them so re-sorts track data + metric changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sortKey, sortDir, metric, liveMatrix, summary])
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))
+    } else {
+      setSortKey(key)
+      setSortDir('desc')
+    }
+  }
+  const ariaSort = (key: string): 'descending' | 'ascending' | 'none' =>
+    sortKey === key ? (sortDir === 'desc' ? 'descending' : 'ascending') : 'none'
+  const sortCaret = (key: string) =>
+    sortKey === key ? (sortDir === 'desc' ? ' ▼' : ' ▲') : ''
+
+  // Compute max value across all cells for the mini intensity bar normalization.
   const allCellValues: number[] = []
   if (liveMatrix) {
     for (const admin of ADMINISTRATIONS) {
@@ -187,6 +228,28 @@ export function AdminSectorMatrix({
                 </button>
               ))}
             </div>
+            {/* Ranked ⇄ chronological toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                if (sortKey === 'chrono') {
+                  setSortKey(OVERALL_KEY)
+                  setSortDir('desc')
+                } else {
+                  setSortKey('chrono')
+                }
+              }}
+              aria-pressed={sortKey === 'chrono'}
+              title={t('matrixChronoHint', 'Toggle chronological / ranked order')}
+              className={cn(
+                'px-2 py-0.5 rounded-sm text-[10px] font-mono border transition-colors',
+                sortKey === 'chrono'
+                  ? 'border-accent/40 bg-accent/20 text-accent'
+                  : 'border-border/40 text-text-muted hover:text-text-primary',
+              )}
+            >
+              {t('matrixChrono', 'Crono')}
+            </button>
             {/* Risk-level legend */}
             <div className="flex items-center gap-2 text-[9px] font-mono">
               <span className="px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}>CRIT</span>
@@ -201,28 +264,49 @@ export function AdminSectorMatrix({
         <table className="border-separate" style={{ borderSpacing: 3 }} aria-label="Administration sector comparison matrix">
           <thead>
             <tr>
-              <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">
+              <th scope="col" className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-28 whitespace-nowrap">
                 {t('matrixLegend.administration')}
               </th>
+              <th scope="col" aria-sort={ariaSort(OVERALL_KEY)} className="text-center pb-1 align-bottom px-1">
+                <button
+                  type="button"
+                  onClick={() => handleSort(OVERALL_KEY)}
+                  className={cn(
+                    'text-[9px] font-mono font-bold tracking-wider block w-full transition-colors',
+                    sortKey === OVERALL_KEY ? 'text-accent' : 'text-text-muted hover:text-text-primary',
+                  )}
+                  style={{ minWidth: 64 }}
+                  title={t('matrixOverallHint', 'Sort by overall standing')}
+                >
+                  {t('matrixOverall', 'GENERAL')}{sortCaret(OVERALL_KEY)}
+                </button>
+              </th>
               {MATRIX_SECTORS.map((sector) => (
-                <th scope="col" key={sector.key} className="text-center pb-1 align-bottom" title={sector.name}>
-                  <span
-                    className="text-[9px] text-text-muted font-mono font-semibold tracking-wider block"
+                <th scope="col" key={sector.key} aria-sort={ariaSort(sector.key)} className="text-center pb-1 align-bottom" title={sector.name}>
+                  <button
+                    type="button"
+                    onClick={() => handleSort(sector.key)}
+                    className={cn(
+                      'text-[9px] font-mono font-semibold tracking-wider block w-full transition-colors',
+                      sortKey === sector.key ? 'text-accent' : 'text-text-muted hover:text-text-primary',
+                    )}
                     style={{ minWidth: 72 }}
                   >
-                    {sector.code}
-                  </span>
+                    {sector.code}{sortCaret(sector.key)}
+                  </button>
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {ADMINISTRATIONS.map((admin) => {
+            {sortedAdmins.map((admin, rankIdx) => {
               const liveRow = liveMatrix?.[admin.name]
               const isSelected = admin.name === selectedAdmin
               const isAMLO = admin.name === 'AMLO'
               const partyColor = PARTY_COLORS[admin.party] || '#64748b'
               const adminColor = admin.color || partyColor
+              const overall = summary?.[admin.name] ?? null
+              const overallLevel = getRiskLevel((overall?.risk ?? 0) * 100)
               return (
                 <tr
                   key={admin.name}
@@ -230,6 +314,11 @@ export function AdminSectorMatrix({
                 >
                   <td className="pr-3 py-0.5">
                     <div className="flex items-center gap-1.5">
+                      {sortKey !== 'chrono' && (
+                        <span className="text-[9px] font-mono tabular-nums text-text-muted/70 w-3 text-right flex-shrink-0">
+                          {rankIdx + 1}
+                        </span>
+                      )}
                       <span
                         className="h-2 w-2 rounded-full flex-shrink-0"
                         style={{ backgroundColor: partyColor }}
@@ -242,9 +331,28 @@ export function AdminSectorMatrix({
                       >
                         {admin.name}
                       </span>
-                      {isAMLO && (
-                        <span className="text-[8px] font-mono text-risk-critical ml-0.5">12.9%</span>
-                      )}
+                    </div>
+                  </td>
+                  {/* OVERALL standing — the anchor column */}
+                  <td className="p-0">
+                    <div
+                      className="flex items-center justify-center select-none"
+                      style={{
+                        minWidth: 64,
+                        minHeight: 48,
+                        backgroundColor: getCellBg(overallLevel),
+                        border: '1px solid var(--color-border-hover)',
+                        borderRadius: 3,
+                      }}
+                      title={overall ? `${admin.name} · ${METRIC_LABELS[metric]}: ${getCellDisplay(metric, overall)}` : '--'}
+                      aria-label={overall ? `${admin.name} overall ${METRIC_LABELS[metric]}: ${getCellDisplay(metric, overall)}` : undefined}
+                    >
+                      <span
+                        className="font-bold tabular-nums leading-none"
+                        style={{ fontFamily: 'var(--font-family-serif)', fontSize: 19, color: getCellColor(overallLevel) }}
+                      >
+                        {overall ? getCellDisplay(metric, overall) : '–'}
+                      </span>
                     </div>
                   </td>
                   {MATRIX_SECTORS.map((sector) => {
